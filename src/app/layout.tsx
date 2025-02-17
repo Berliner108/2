@@ -1,9 +1,10 @@
-'use client'; // Client-only Hook
+// src/app/layout.tsx
 import '../styles/layout.css'; // CSS-Datei für Layout importieren
 import Header from './Header'; // Header importieren
-import React from 'react'; // React importieren
+import React from 'react';
 import Footer from './Footer'; // Den Footer importieren
 
+// Definiere metadata ohne "use client"
 export const metadata = {
   title: 'Mein Shop',
 };
@@ -29,9 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
       </head>
       <body>
-        <header>
-          <Header /> {/* Hier wird der Header eingefügt */}
-        </header>
+        <Header />
         <main>{children}</main>
         <Footer /> {/* Footer hier einfügen */}
       </body>
