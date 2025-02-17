@@ -1,4 +1,4 @@
-'use client'; // Damit useEffect und andere Client-only Hooks verwendet werden können
+'use client'; // Client-only Hook
 import React, { useState, useEffect } from 'react';
 import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
@@ -29,7 +29,7 @@ const Footer = () => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []); // Hier bleibt die Abhängigkeitsliste leer, weil 'comments' nicht dynamisch ist
+  }, [comments]); // Füge 'comments' als Abhängigkeit hinzu
 
   return (
     <footer className="footer">
@@ -47,7 +47,7 @@ const Footer = () => {
           <li><a href="/kontakt">Kontakt</a></li>
           <li><a href="/agb">AGB</a></li>
         </ul>
-        
+
         <div className="socialLinks">
           <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
             <FaFacebook size={30} />
