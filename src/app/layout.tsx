@@ -1,7 +1,7 @@
-// src/app/layout.tsx
+'use client'; // Client-only Hook
 import '../styles/layout.css'; // CSS-Datei für Layout importieren
 import Header from './Header'; // Header importieren
-import React from 'react';
+import React from 'react'; // React importieren
 import Footer from './Footer'; // Den Footer importieren
 
 export const metadata = {
@@ -30,7 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <header>
-          <h1>Mein Shop</h1>
+          <Header /> {/* Hier wird der Header eingefügt */}
         </header>
         <main>{children}</main>
         <Footer /> {/* Footer hier einfügen */}

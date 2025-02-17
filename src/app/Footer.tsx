@@ -1,16 +1,17 @@
 'use client'; // Client-only Hook
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // useMemo importiert
 import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 
 const Footer = () => {
-  const comments = [
+  // Verwende useMemo, um das 'comments' Array nur einmal zu erstellen
+  const comments = useMemo(() => [
     "Beste Qualität garantiert!",
     "Kostenloser Versand ab 50€",
     "Kundenzufriedenheit steht an erster Stelle",
     "Sichere Zahlung mit SSL-Verschlüsselung",
     "Über 10.000 zufriedene Kunden!",
-  ];
+  ], []); // Das Array wird nur einmal erstellt und nicht bei jedem Rendern neu erzeugt
 
   const [currentComment, setCurrentComment] = useState(comments[0]);
   const [fade, setFade] = useState(true); // Steuert die Animation
@@ -29,7 +30,7 @@ const Footer = () => {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [comments]); // Füge 'comments' als Abhängigkeit hinzu
+  }, [comments]); // Da comments jetzt stabil ist, brauchst du hier keine Veränderung
 
   return (
     <footer className="footer">
