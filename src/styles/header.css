@@ -1,0 +1,15 @@
+/* src/styles/header.css */
+.header {
+    background-color: black;
+    color: white;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Verhindert horizontales Scrollen */
+  }
+  

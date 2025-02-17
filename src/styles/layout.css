@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+
+/* src/styles/layout.css */
+body {
+  font-family: 'Oswald', sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
+}
+  
+  header {
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .footer {
+    display: flex;
+    background-color: #333;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #333;
+    color: white;
+    margin-top: 20px;
+  }
+  
+  /* Kommentar Styling */
+.comment {
+  font-style: italic;
+  color: #b0b0b0;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+}
+
+/* Fade-Effekt */
+.fade-out {
+  opacity: 0;
+}
+  .column {
+    width: 30%;
+  }
+  .column1 {
+    width: 30%;
+    text-align: center;
+  }
+  
+  h2 {
+    font-size: 18px;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  ul li {
+    margin-bottom: 10px;
+  }
+  
+  ul li a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  ul li a:hover {
+    text-decoration: underline;
+  }
+  
+  .socialLinks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+  
+  .socialLinks a {
+    color: white;
+    margin-right: 10px;
+  }
+  
+  .socialLinks a:hover {
+    color: #00e5ff; /* Farbe, wenn die Icons hover sind */
+  }
+  
+  @media (max-width: 768px) {
+    .footer {
+      flex-direction: column; /* Spalten untereinander anordnen */
+      align-items: center; /* Zentrierte Ausrichtung */
+      text-align: center;
+    }
+  
+    .column, .column1 {
+      width: 100%; /* Jede Spalte nimmt die volle Breite ein */
+      padding: 00px 0;
+    }
+  
+    .socialLinks {
+      justify-content: center; /* Icons bleiben zentriert */
+      gap: 10px;
+    }
+  }
+
+
+  
+  main {
+    padding: 20px;
+    min-height: 100vh; /* Stellt sicher, dass der Hauptinhalt den gesamten Bildschirm ausfüllt */
+    background-color: #fff;
+  }
+  

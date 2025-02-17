@@ -1,0 +1,16 @@
+{
+  "name": "My App",
+  "short_name": "App",
+  "icons": [
+    {
+      "src": "/favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    }
+  ]
+}
