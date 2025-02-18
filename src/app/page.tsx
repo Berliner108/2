@@ -14,13 +14,7 @@ const Page = () => {
         <h1>Willkommen zu meiner Seite</h1>
         <h1>Willkommen zu meiner Seite</h1>
         <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
-        <h1>Willkommen zu meiner Seite</h1>
+        
 
       </div>
     </div>

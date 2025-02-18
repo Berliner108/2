@@ -6,7 +6,7 @@ import Footer from './Footer'; // Den Footer importieren
 
 // Definiere metadata ohne "use client"
 export const metadata = {
-  title: 'Mein Shop',
+  title: 'Beschichter Scout',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
