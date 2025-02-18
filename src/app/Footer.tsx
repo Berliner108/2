@@ -6,7 +6,7 @@ import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 const Footer = () => {
   // Verwende useMemo, um das 'comments' Array nur einmal zu erstellen
   const comments = useMemo(() => [
-    "Alle Arbeitsmittel für Beschichter aus einer Hand - Erstklassig!",
+    "Endlich alle Arbeitsmittel für Beschichter aus einer Hand - Erstklassig!",
     "Tolles Portal! Endlich kann ich mühelos Angebote einholen und vergleichen.",
     "Unsere Aufträge konnten wir mit Beschichter Scout fast verdoppeln.",
     "Sehr zufrieden mit dem Service und der intuitiven Gestaltung der Plattform.",
