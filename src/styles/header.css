@@ -1,15 +1,74 @@
 /* src/styles/header.css */
 .header {
     background-color: black;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
     color: white;
-    width: 100%;
-    text-align: center;
-    padding: 10px;
   }
   
-  body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden; /* Verhindert horizontales Scrollen */
+  /* Linke Seite: Logo & "Mein Shop" */
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  .shop-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    position: absolute;
+    top: 51.5%;
+    left: 2%; /* Text neben dem Logo */
+    transform: translateY(-50%);
+    white-space: nowrap; /* Kein Umbruch */
+  }
+  
+  .shop-black {
+    color: black;
+  }
+  
+  .shop-white {
+    color: white;
+  }
+  
+  /* Mittiger Text */
+  .header-center {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .header-text {
+    font-size: 22px;
+    font-weight: bold;
+  }
+  
+  /* Rechte Seite: Login & Registrieren */
+  .header-right {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .header-button {
+    background-color: #00b4d8;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background 0.3s;
+    white-space: nowrap;
+  }
+  
+  .header-button:hover {
+    background-color: #0088a9;
   }
   

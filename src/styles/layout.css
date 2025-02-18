@@ -9,10 +9,10 @@ body {
   overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
 }
   
-  header {
-    background-color: #333;
+header {
+    background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     color: white;
-    padding: 20px;
+    padding: 15px;
     text-align: center;
   }
   
@@ -99,10 +99,7 @@ body {
       justify-content: center; /* Icons bleiben zentriert */
       gap: 10px;
     }
-  }
-
-
-  
+  }  
   main {
     padding: 20px;
     min-height: 100vh; /* Stellt sicher, dass der Hauptinhalt den gesamten Bildschirm ausfüllt */
