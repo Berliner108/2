@@ -1,20 +1,26 @@
-// src/app/Header.tsx
-import React from 'react';
+'use client'; // Diese Direktive markiert die Datei als Client-Komponente
+
+import React, { useState } from 'react';
 import '../styles/header.css'; // CSS-Datei für den Header importieren
 
 const Header = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
-    <header className="header">
-      {/* Linke Seite: Logo + "Mein Shop" */}
-      <div className="header-left">
+    <header>
+      <div className="header-container">
+        {/* Logo und Text "Mein Shop" */}
         <div className="logo-container">
-          {/* SVG Logo */}
           <svg width="138" height="80" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
-            <path 
+            <path
               d="M10,40 Q90,60 170,40" 
               fill="none" 
               stroke="url(#turquoiseGradient)" 
-              strokeWidth="50" 
+              strokeWidth="45" 
               strokeLinecap="round" />
             <defs>
               <linearGradient id="turquoiseGradient" x1="0%" y1="50%" x2="100%" y2="50%">
@@ -25,23 +31,51 @@ const Header = () => {
           </svg>
 
           {/* Text "Mein Shop" */}
-          <span className="shop-title">
-            <span className="shop-black">Beschichter S</span> 
-            <span className="shop-white">cout</span>
-          </span>
+          <div className="shop-title">
+            <span className="black-text">Beschichter S</span>
+            <span className="white-text">cout</span>
+          </div>
         </div>
+
+        {/* Mittelpositionierter Text */}
+        <div className="center-text">
+          <span>Die Nr.1 Plattform für Oberflächentechnik</span>
+        </div>
+
+        {/* Desktop Nav Links */}
+        <div className="nav-links desktop">
+          <ul>
+            <li>
+              <a href="/login">Login</a>
+            </li>
+            <li>
+              <a href="/register">Registrieren</a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Hamburger Menu Button (Nur auf mobilen Geräten sichtbar) */}
+        <button 
+          className="menu-button" 
+          onClick={toggleMenu}
+        >
+          ☰
+        </button>
       </div>
 
-      {/* Mittiger Text */}
-      <div className="header-center">
-        <span className="header-text">Die Nr.1 Plattform für Oberflächentechnik</span>
-      </div>
-
-      {/* Rechte Seite: Login & Registrieren */}
-      <div className="header-right">
-        <a href="/login" className="header-button">Login</a>
-        <a href="/register" className="header-button">Registrieren</a>
-      </div>
+      {/* Hamburger Menu für mobile Ansicht */}
+      {menuOpen && (
+        <div className="nav-links mobile">
+          <ul>
+            <li>
+              <a href="/login">Login</a>
+            </li>
+            <li>
+              <a href="/register">Registrieren</a>
+            </li>
+          </ul>
+        </div>
+      )}
     </header>
   );
 };

@@ -6,11 +6,14 @@ import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 const Footer = () => {
   // Verwende useMemo, um das 'comments' Array nur einmal zu erstellen
   const comments = useMemo(() => [
-    "Beste Qualität garantiert!",
-    "Kostenloser Versand ab 50€",
-    "Kundenzufriedenheit steht an erster Stelle",
-    "Sichere Zahlung mit SSL-Verschlüsselung",
-    "Über 10.000 zufriedene Kunden!",
+    "Alle Arbeitsmittel für Beschichter aus einer Hand - Spitze!",
+    "Tolles Portal, das mir die Angebotssuche um Vieles erleichtert.",
+    "Unsere Aufträge konnten wir mit Beschichter Scout fast verdoppeln.",
+    "Sehr zufrieden mit dem Service und der intuitiven Gestaltung der Plattform.",
+    "Mit Beschichter Scout sind wir bei Reklamationen nicht mehr auf uns alleine gestellt.",
+    "Für meine wöchentlichen Serienaufträge konnte ich nun ein passendes Angebot finden.",
+    "Ab jetzt bekommen wir Geld für unser Altpulver, statt es kostenpflichtig entsorgen zu müssen.",
+    "Mit Beschichter Scout können wir unser Restpulver endlich revitalisieren!",
   ], []); // Das Array wird nur einmal erstellt und nicht bei jedem Rendern neu erzeugt
 
   const [currentComment, setCurrentComment] = useState(comments[0]);
@@ -36,17 +39,21 @@ const Footer = () => {
     <footer className="footer">
       {/* Linke Spalte: Kommentare */}
       <div className="column">
-        <h3>Kommentare</h3>
+        <h3>Was unsere User sagen:</h3>
         <p className={`comment ${fade ? "fade-in" : "fade-out"}`}>{currentComment}</p>
       </div>
-
+        
       {/* Mittlere Spalte: Links & Social Media */}
       <div className="column1">
-        <h3>Informationen</h3>
+        
         <ul>
-          <li><a href="/impressum">Impressum</a></li>
-          <li><a href="/kontakt">Kontakt</a></li>
-          <li><a href="/agb">AGB</a></li>
+          <li><a href="/Karriere"><b>Karriere</b></a></li>
+          <li><a href="/Kontakt"><b>Kontakt</b></a></li>
+          <li><a href="/Datenschutz"><b>Datenschutz</b></a></li>
+          <li><a href="/Cookies"><b>Cookie Richtlinie</b></a></li>
+          <li><a href="/Impressum"><b>Impressum</b></a></li>
+          <li><a href="/Agb"><b>AGB</b></a></li>   
+          
         </ul>
 
         <div className="socialLinks">
@@ -71,13 +78,16 @@ const Footer = () => {
           <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
             <FaInstagram size={30} />
           </a>
+          
         </div>
+        <p>© Beschichter Scout I Alle Rechte vorbehalten</p> 
       </div>
 
       <div className="column1">
-        <h2>Mehr</h2>
+        <h2>Unsere Zahlungsmöglichkeiten</h2>
         {/* Hier kannst du zusätzliche Inhalte hinzufügen */}
       </div>
+      
     </footer>
   );
 };
