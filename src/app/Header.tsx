@@ -60,8 +60,11 @@ const Header = () => {
 
         {/* Hamburger Menu Button */}
         <button className="menu-button" onClick={toggleMenu}>
-          <b>☰</b>
+            <div></div>
+            <div></div>
+            <div></div>
         </button>
+
       </div>
 
       {/* Hamburger Menu für mobile Ansicht */}

@@ -96,9 +96,25 @@
   /* Hamburger Menu Styles (Mobile) */
   @media (max-width: 768px) {
     .menu-button {
-      display: block;
-      color: white;      
-    }  
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px; /* Abstand zwischen den Strichen */
+      }
+      
+      .menu-button div {
+        width: 30px;
+        height: 4px;
+        background-color: white;
+        border-radius: 10px; /* Macht die Enden rund */
+        transition: 0.3s ease-in-out;
+        margin-right: 15%;
+      }
+       
     .header-container {
       height: 55px;
     }
