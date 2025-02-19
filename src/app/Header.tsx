@@ -1,7 +1,8 @@
-'use client'; // Diese Direktive markiert die Datei als Client-Komponente
+'use client';
 
 import React, { useState } from 'react';
-import '../styles/header.css'; // CSS-Datei für den Header importieren
+import Link from 'next/link';
+import '../styles/header.css';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,53 +14,53 @@ const Header = () => {
   return (
     <header>
       <div className="header-container">
-        {/* Logo und Text "Mein Shop" */}
-        <div className="logo-container">
-          <svg width="138" height="80" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M10,40 Q90,60 170,40" 
-              fill="none" 
-              stroke="url(#turquoiseGradient)" 
-              strokeWidth="45" 
-              strokeLinecap="round" />
-            <defs>
-              <linearGradient id="turquoiseGradient" x1="0%" y1="50%" x2="100%" y2="50%">
-                <stop offset="0%" style={{ stopColor: '#00e5ff', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#00b4d8', stopOpacity: 1 }} />
-              </linearGradient>
-            </defs>
-          </svg>
+        {/* Logo + Text als Home-Link */}
+        <Link href="/" className="home-link">
+          <div className="logo-container">
+            <svg width="118" height="80" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10,40 Q90,60 170,40" 
+                fill="none" 
+                stroke="url(#turquoiseGradient)" 
+                strokeWidth="40" 
+                strokeLinecap="round"
+              />
+              <defs>
+                <linearGradient id="turquoiseGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+                  <stop offset="0%" style={{ stopColor: '#00e5ff', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#00b4d8', stopOpacity: 1 }} />
+                </linearGradient>
+              </defs>
+            </svg>
 
-          {/* Text "Mein Shop" */}
-          <div className="shop-title">
-            <span className="black-text">Beschichter S</span>
-            <span className="white-text">cout</span>
+            {/* Text "Mein Shop" */}
+            <div className="shop-title">
+              <span className="black-text">Beschichter S</span>
+              <span className="white-text">cout</span>
+            </div>
           </div>
-        </div>
 
-        {/* Mittelpositionierter Text */}
-        <div className="center-text">
-          <span>Die Nr.1 Plattform für Oberflächentechnik</span>
-        </div>
+          {/* Mittelpositionierter Text als Teil des Links */}
+          <div className="center-text">
+            <span>Die Nr.1 Plattform für Oberflächentechnik</span>
+          </div>
+        </Link>
 
         {/* Desktop Nav Links */}
         <div className="nav-links desktop">
           <ul>
             <li>
-              <a href="/login">Login</a>
+              <Link href="/login">Login</Link>
             </li>
             <li>
-              <a href="/register">Registrieren</a>
+              <Link href="/register">Registrieren</Link>
             </li>
           </ul>
         </div>
 
-        {/* Hamburger Menu Button (Nur auf mobilen Geräten sichtbar) */}
-        <button 
-          className="menu-button" 
-          onClick={toggleMenu}
-        >
-          ☰
+        {/* Hamburger Menu Button */}
+        <button className="menu-button" onClick={toggleMenu}>
+          <b>☰</b>
         </button>
       </div>
 
@@ -68,10 +69,10 @@ const Header = () => {
         <div className="nav-links mobile">
           <ul>
             <li>
-              <a href="/login">Login</a>
+              <Link href="/login">Login</Link>
             </li>
             <li>
-              <a href="/register">Registrieren</a>
+              <Link href="/register">Registrieren</Link>
             </li>
           </ul>
         </div>

@@ -7,20 +7,40 @@
     padding: 00px;
     background-color: transparent; /* Kein Hintergrund */
   }
+  .home-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+  }
+  
+  .home-link:hover {
+    opacity: 2.8;
+  } 
   
   .logo-container {
     display: flex;
     align-items: center;
     position: relative;
+    margin-left: 20px;
+  }
+  .full-width-bar {
+    width: 100%;        /* Breite auf 100% setzen */
+    background-color: black; /* Schwarzer Hintergrund */
+    color: white;      /* Weißer Text */
+    text-align: center; /* Text zentrieren */
+    padding: 10px 0;    /* Padding für vertikalen Abstand */
+    font-size: 18px;    /* Schriftgröße */
+    display: none;
   }
   
   .shop-title {
     font-family: 'Oswald', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     white-space: nowrap;
-    margin-left: -135px;
-    margin-top: 3;
+    margin-left: -113px;
+    margin-top: 6;
   }
   
   .black-text {
@@ -36,10 +56,11 @@
     left: 50%;
     transform: translateX(-50%);
     font-family: 'Oswald', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     color: white;
     white-space: nowrap;
+    margin-top: 24px;
   }
   
   .nav-links.desktop {
@@ -65,7 +86,7 @@
     color: white;
     text-decoration: none;
     padding: 0.5em 1em;
-    border: 1px solid white;
+    border: 1.5px solid white;
     border-radius: 5px;
     transition: background 0.3s, color 0.3s;
     white-space: nowrap;
@@ -82,12 +103,15 @@
     font-size: 30px;
     cursor: pointer;
     display: none;
+    color: white;
   }
   
   /* Hamburger Menu Styles (Mobile) */
   @media (max-width: 768px) {
     .menu-button {
       display: block;
+      color: white;
+      
     }
   
     .nav-links.mobile {
@@ -101,9 +125,21 @@
       transition: transform 0.3s ease-in-out;
       padding: 20px;
     }
+    .logo-container {
+        display: flex;
+        justify-content: center; /* Horizontale Zentrierung */
+        align-items: center; /* Vertikale Zentrierung */
+        text-align: center;
+        left: 50%;
+    }
   
     .nav-links.mobile.open {
       transform: translateX(0);
+    }
+    .full-width-bar {
+        display: block;      /* Nur in der mobilen Version sichtbar */
+        margin-top: 5px;
+        background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     }
   
     .nav-links.mobile ul {
@@ -128,5 +164,9 @@
     .nav-links.mobile {
       display: none; /* Hamburger Menu wird in der Desktop-Version ausgeblendet */
     }
+    .full-width-bar {
+        display: none; /* Nur in der mobilen Version sichtbar */
+    }
+    
   }
   
