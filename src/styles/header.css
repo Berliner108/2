@@ -1,5 +1,4 @@
 /* src/styles/header.css */
-
 .header-container {
     display: flex;
     justify-content: space-between;
@@ -12,12 +11,10 @@
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-  }
-  
+  }  
   .home-link:hover {
     opacity: 2.8;
-  } 
-  
+  }   
   .logo-container {
     display: flex;
     align-items: center;
@@ -32,25 +29,21 @@
     padding: 10px 0;    /* Padding für vertikalen Abstand */
     font-size: 18px;    /* Schriftgröße */
     display: none;
-  }
-  
+  }  
   .shop-title {
     font-family: 'Oswald', sans-serif;
     font-size: 20px;
     font-weight: bold;
     white-space: nowrap;
     margin-left: -113px;
-    margin-top: 4.5;
-  }
-  
+    margin-top: 6;
+  }  
   .black-text {
     color: black;
-  }
-  
+  }  
   .white-text {
     color: white;
-  }
-  
+  }  
   .center-text {
     position: absolute;
     left: 50%;
@@ -61,22 +54,18 @@
     color: white;
     white-space: nowrap;
     margin-top: 24px;
-  }
-  
+  }  
   .nav-links.desktop {
     display: flex;
-  }
-  
+  }  
   .nav-links.desktop ul {
     display: flex;
     list-style: none;
     padding: 5px;
-  }
-  
+  }  
   .nav-links.desktop li {
     margin: 0 8px;
-  }
-  
+  }  
   .nav-links.desktop a {
     color: white;
     text-decoration: none;
@@ -94,8 +83,7 @@
   .nav-links.desktop a:hover {
     background: white;
     color: #40E0D0;
-  }
-  
+  }  
   /* Hamburger Menu Button */
   .menu-button {
     background: none;
@@ -104,16 +92,16 @@
     cursor: pointer;
     display: none;
     color: white;
-  }
-  
+  }  
   /* Hamburger Menu Styles (Mobile) */
   @media (max-width: 768px) {
     .menu-button {
       display: block;
-      color: white;
-      
+      color: white;      
+    }  
+    .header-container {
+      height: 55px;
     }
-  
     .nav-links.mobile {
       position: absolute;
       top: 0;
@@ -126,13 +114,11 @@
       padding: 20px;
     }
     .logo-container {
-        display: flex;
-        justify-content: center; /* Horizontale Zentrierung */
-        align-items: center; /* Vertikale Zentrierung */
-        text-align: center;
-        left: 50%;
-    }
-  
+        position: absolute; 
+        left: 45%; /* Setzt den linken Rand auf 50% der Seitenbreite */
+        transform: translateX(-50%); /* Verschiebt das Element um die Hälfte seiner eigenen Breite zurück */
+        top: -15px; /* Falls nötig, um es vertikal zu positionieren */
+    } 
     .nav-links.mobile.open {
       transform: translateX(0);
     }
@@ -140,25 +126,20 @@
         display: block;      /* Nur in der mobilen Version sichtbar */
         margin-top: 5px;
         background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
-    }
-  
+    }  
     .nav-links.mobile ul {
       flex-direction: column;
-    }
-  
+    }  
     .nav-links.mobile li {
       margin: 20px 0;
-    }
-  
+    }  
     .nav-links.desktop {
       display: none; /* Desktop Links werden in der mobilen Ansicht ausgeblendet */
-    }
-  
+    }  
     .center-text {
       display: none; /* Der mittlere Text wird in der mobilen Ansicht ausgeblendet */
     }
-  }
-  
+  }  
   /* Desktop Version sichtbar */
   @media (min-width: 769px) {
     .nav-links.mobile {
@@ -166,7 +147,6 @@
     }
     .full-width-bar {
         display: none; /* Nur in der mobilen Version sichtbar */
-    }
-    
+    }    
   }
   
