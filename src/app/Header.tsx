@@ -22,7 +22,7 @@ const Header = () => {
                 d="M10,40 Q90,60 170,40" 
                 fill="none" 
                 stroke="url(#turquoiseGradient)" 
-                strokeWidth="40" 
+                strokeWidth="43" 
                 strokeLinecap="round"
               />
               <defs>

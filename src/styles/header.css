@@ -22,7 +22,7 @@
     display: flex;
     align-items: center;
     position: relative;
-    margin-left: 20px;
+    margin-left: 40px;
   }
   .full-width-bar {
     width: 100%;        /* Breite auf 100% setzen */
@@ -40,7 +40,7 @@
     font-weight: bold;
     white-space: nowrap;
     margin-left: -113px;
-    margin-top: 6;
+    margin-top: 4.5;
   }
   
   .black-text {

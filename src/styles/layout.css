@@ -4,15 +4,14 @@
 /* src/styles/layout.css */
 body {
   font-family: 'Oswald', sans-serif;
-  margin: 0;
-  padding: 0;
+  margin: 0;  
   overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
 }
   
 header {
     background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     color: white;
-    padding: 10px;
+    padding: 1px;
     text-align: center;
   }
   
@@ -89,6 +88,7 @@ header {
       flex-direction: column; /* Spalten untereinander anordnen */
       align-items: center; /* Zentrierte Ausrichtung */
       text-align: center;
+      text-decoration: none;
     }
   
     .column, .column1 {
