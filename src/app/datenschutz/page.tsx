@@ -1,6 +1,5 @@
-// /src/pages/datenschutzbestimmungen.tsx
-
 import React from 'react';
+import Link from 'next/link'; // Importiere Link für Navigation
 import styles from './datenschutz.module.css';
 
 const Datenschutzbestimmungen = () => {
@@ -18,7 +17,8 @@ const Datenschutzbestimmungen = () => {
         <p>
           Deine Daten werden nur zur Verbesserung unserer Dienstleistungen verwendet.
         </p>
-        <a href="/">Zurück zur Startseite</a>
+        {/* Korrektur: <Link> statt <a> */}
+        <Link href="/">Zurück zur Startseite</Link>
       </div>
       <footer className={styles.footer}>
         <p>&copy; 2025 Dein Unternehmen</p>

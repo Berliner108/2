@@ -1,7 +1,7 @@
-// /src/pages/impressum/page.tsx
 'use client';
 
 import React from 'react';
+import Link from 'next/link'; // Importiere Link für Navigation
 import styles from './impressum.module.css';
 
 const Impressum = () => {
@@ -28,6 +28,8 @@ const Impressum = () => {
         <p>
           Der Inhalt dieser Webseite wird mit größtmöglicher Sorgfalt erstellt. Dennoch übernehmen wir keine Haftung für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte.
         </p>
+        {/* Korrektur: <Link> statt <a> für die Navigation */}
+        <Link href="/">Zurück zur Startseite</Link>
       </section>
       <footer className={styles.footer}>
         <p>&copy; 2025 Musterfirma GmbH. Alle Rechte vorbehalten.</p>

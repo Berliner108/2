@@ -1,6 +1,5 @@
-// /src/pages/karriere.tsx
-
 import React from 'react';
+import Link from 'next/link';
 import styles from './karriere.module.css';
 
 const Karriere = () => {
@@ -14,7 +13,7 @@ const Karriere = () => {
         <p>
           Bei uns hast du die Möglichkeit, dich weiterzuentwickeln. Schau dir unsere offenen Stellen an.
         </p>
-        <a href="/">Zurück zur Startseite</a>
+        <Link href="/">Zurück zur Startseite</Link>
       </div>
       <footer className={styles.footer}>
         <p>&copy; 2025 Dein Unternehmen</p>

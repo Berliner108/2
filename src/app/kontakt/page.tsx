@@ -1,6 +1,5 @@
-// /src/pages/kontakt.tsx
-
 import React from 'react';
+import Link from 'next/link';
 import styles from './kontakt.module.css';
 
 const Kontakt = () => {
@@ -14,7 +13,7 @@ const Kontakt = () => {
         <p>
           Du kannst uns per E-Mail oder Telefon erreichen. Wir freuen uns auf deine Nachricht.
         </p>
-        <a href="/">Zurück zur Startseite</a>
+        <Link href="/">Zurück zur Startseite</Link>
       </div>
       <footer className={styles.footer}>
         <p>&copy; 2025 Dein Unternehmen</p>

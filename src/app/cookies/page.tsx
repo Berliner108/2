@@ -1,6 +1,5 @@
-// /src/pages/cookie-richtlinie.tsx
-
 import React from 'react';
+import Link from 'next/link'; // Importiere Link
 import styles from './cookies.module.css';
 
 const CookieRichtlinie = () => {
@@ -18,7 +17,8 @@ const CookieRichtlinie = () => {
         <p>
           Cookies sind kleine Textdateien, die auf deinem Gerät gespeichert werden, um Daten zu speichern.
         </p>
-        <a href="/">Zurück zur Startseite</a>
+        {/* Korrektur: <Link> statt <a> */}
+        <Link href="/">Zurück zur Startseite</Link>
       </div>
       <footer className={styles.footer}>
         <p>&copy; 2025 Dein Unternehmen</p>

@@ -1,6 +1,5 @@
-// /src/pages/agb.tsx
-
 import React from 'react';
+import Link from 'next/link'; // Importiere Link für Navigation
 import styles from './agb.module.css';
 
 const AGB = () => {
@@ -14,7 +13,8 @@ const AGB = () => {
         <p>
           Hier findest du unsere Allgemeinen Geschäftsbedingungen für die Nutzung unserer Dienste.
         </p>
-        <a href="/">Zurück zur Startseite</a>
+        {/* Korrektur: <Link> statt <a> */}
+        <Link href="/">Zurück zur Startseite</Link>
       </div>
       <footer className={styles.footer}>
         <p>&copy; 2025 Dein Unternehmen</p>
