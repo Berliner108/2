@@ -66,6 +66,10 @@ const Header = () => {
         </button>
 
       </div>
+      {/* Full Width Bar (Nur Mobil) */}
+      <div className="full-width-bar">
+        Die Nr.1 Plattform für Oberflächentechnik
+      </div>
 
       {/* Hamburger Menu für mobile Ansicht */}
       {menuOpen && (
@@ -79,6 +83,8 @@ const Header = () => {
             </li>
           </ul>
         </div>
+        
+        
       )}
     </header>
   );

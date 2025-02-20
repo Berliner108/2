@@ -44,6 +44,11 @@ header {
     text-align: center;
     font-size: 17px;
   }
+  .column2 {
+    width: 30%;
+    text-align: center;
+    font-size: 17px;
+  }
   
   h2 {
     font-size: 18px;
@@ -95,11 +100,35 @@ header {
       width: 100%; /* Jede Spalte nimmt die volle Breite ein */
       padding: 00px 0;
       margin-top: 10px;
+      
     }
+    .column2 {
+        width: 100%; /* Jede Spalte nimmt die volle Breite ein */
+        padding: 00px 0;
+        margin-top: 10px;
+        background: none !important; /* Kein Hintergrund */
+        color: inherit !important; /* Keine Farbänderung */        
+    }
+   
+    .column2 a {
+        outline: none;
+    }
+        
+    .column2 a:focus {
+        outline: none;
+        background: none !important;
+        color: inherit !important;
+    }
+    .column2 a:focus {
+        border: none;
+        box-shadow: none;
+    }
+      
+      
   
     .socialLinks {
-      justify-content: center; /* Icons bleiben zentriert */
-      gap: 10px;
+       justify-content: center; /* Icons bleiben zentriert */
+       gap: 10px;
     }
   }  
   main {

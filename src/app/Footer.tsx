@@ -44,7 +44,7 @@ const Footer = () => {
       </div>
         
       {/* Mittlere Spalte: Links & Social Media */}
-      <div className="column1">
+      <div className="column2">
         
         <ul>
           <li><a href="/Karriere"><b>Karriere</b></a></li>
