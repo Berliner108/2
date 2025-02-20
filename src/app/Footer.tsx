@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react'; // useMemo importiert
 import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
+import Link from 'next/link'; // Hier importierst du Link von Next.js
 
 const Footer = () => {
   // Verwende useMemo, um das 'comments' Array nur einmal zu erstellen
@@ -47,12 +48,12 @@ const Footer = () => {
       <div className="column2">
         
         <ul>
-          <li><a href="/Karriere"><b>Karriere</b></a></li>
-          <li><a href="/Kontakt"><b>Kontakt</b></a></li>
-          <li><a href="/Datenschutz"><b>Datenschutz</b></a></li>
-          <li><a href="/Cookies"><b>Cookie Richtlinie</b></a></li>
-          <li><a href="/Impressum"><b>Impressum</b></a></li>
-          <li><a href="/Agb"><b>AGB</b></a></li>   
+          <li><Link href="/karriere"><b>Karriere</b></Link></li> {/* Der Link zur Karriere-Seite */}
+          <li><Link href="/kontakt"><b>Kontakt</b></Link></li> {/* Der Link zur Kontakt-Seite */}
+          <li><Link href="/datenschutz"><b>Datenschutz</b></Link></li> {/* Der Link zur Datenschutz-Seite */}
+          <li><Link href="/cookies"><b>Cookie Richtlinie</b></Link></li> {/* Der Link zur Cookies-Seite */}
+          <li><Link href="/impressum"><b>Impressum</b></Link></li> {/* Der Link zur Impressum-Seite */}
+          <li><Link href="/agb"><b>AGB</b></Link></li> {/* Der Link zur AGB-Seite */}   
           
         </ul>
 
