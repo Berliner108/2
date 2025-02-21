@@ -1,77 +1,30 @@
-/* /src/pages/agb.module.css */
-
 .container {
-  font-family: 'Arial', sans-serif;
-  background-color: #f4f4f4;
-  color: #333;
+  max-width: 800px;
+  margin: 40px auto;
   padding: 20px;
-  max-width: 1200px;
-  margin-top: 20px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.header h1 {
-  font-size: 36px;
-  color: #0070f3;
-}
-
-.content {
-  background-color: #ffffff;
-  padding: 20px;
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.content h2 {
-  font-size: 24px;
-  margin-top: 20px;
-  color: #0070f3;
-}
-
-.content p {
-  font-size: 16px;
-  line-height: 1.6;
-  margin: 10px 0;
-}
-
-.content a {
-  color: #0070f3;
-  text-decoration: none;
-}
-
-.content a:hover {
-  text-decoration: underline;
-}
-
-.footer {
+.heading {
   text-align: center;
-  margin-top: 40px;
-  font-size: 14px;
-  color: #777;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-@media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
+.section {
+  margin-bottom: 20px;
+}
 
-  .header h1 {
-    font-size: 28px;
-  }
+.sectionTitle {
+  color: #40E0D0; /* Türkis passend zu deinem Design */
+  border-bottom: 2px solid #40E0D0;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
 
-  .content h2 {
-    font-size: 20px;
-  }
-
-  .content p {
-    font-size: 14px;
-  }
-
-  .footer {
-    font-size: 12px;
-  }
+.text {
+  color: #555;
+  line-height: 1.6;
 }

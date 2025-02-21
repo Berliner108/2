@@ -4,38 +4,64 @@ import React from 'react';
 import Link from 'next/link'; // Importiere Link für Navigation
 import styles from './impressum.module.css';
 
-const Impressum = () => {
+
+const ImpressumPage = () => {
   return (
-    <div className={styles.impressumContainer}>
-      <header className={styles.header}>
-        <h1>Impressum</h1>
-      </header>
-      <section className={styles.content}>
-        <h2>Angaben gemäß § 5 TMG</h2>
-        <p>
-          Musterfirma GmbH<br />
-          Musterstraße 123<br />
-          12345 Musterstadt
+    <main className={styles.container}>
+      <h1 className={styles.heading}>Impressum</h1>
+      
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Angaben gemäß § 5 TMG</h2>
+        <p className={styles.text}>
+          Mein Unternehmen GmbH<br />
+          Musterstraße 1<br />
+          12345 Musterstadt<br />
+          Deutschland
         </p>
-        <h2>Vertreten durch:</h2>
-        <p>Max Mustermann</p>
-        <h2>Kontakt</h2>
-        <p>
-          E-Mail: <a href="mailto:info@musterfirma.de">info@musterfirma.de</a><br />
-          Telefon: +49 123 456 789
-        </p>
-        <h2>Haftungsausschluss</h2>
-        <p>
-          Der Inhalt dieser Webseite wird mit größtmöglicher Sorgfalt erstellt. Dennoch übernehmen wir keine Haftung für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte.
-        </p>
-        {/* Korrektur: <Link> statt <a> für die Navigation */}
-        <Link href="/">Zurück zur Startseite</Link>
       </section>
-      <footer className={styles.footer}>
-        <p>&copy; 2025 Musterfirma GmbH. Alle Rechte vorbehalten.</p>
-      </footer>
-    </div>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Vertreten durch</h2>
+        <p className={styles.text}>
+          Max Mustermann (Geschäftsführer)
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Kontakt</h2>
+        <p className={styles.text}>
+          Telefon: +49 123 456789<br />
+          E-Mail: kontakt@mein-unternehmen.de
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Umsatzsteuer-ID</h2>
+        <p className={styles.text}>
+          Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: DE123456789
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Haftung für Inhalte</h2>
+        <p className={styles.text}>
+          Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen 
+          Gesetzen verantwortlich. Nach §§ 8 bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, 
+          übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf 
+          eine rechtswidrige Tätigkeit hinweisen.
+        </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Urheberrecht</h2>
+        <p className={styles.text}>
+          Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen 
+          Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen 
+          des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+        </p>
+      </section>
+    </main>
   );
 };
 
-export default Impressum;
+export default ImpressumPage;
