@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link'; // Importiere Link für Navigation
+
 
 import styles from './agb.module.css';
 
