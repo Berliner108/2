@@ -53,7 +53,7 @@ const Header = () => {
               <Link href="/login">Login</Link>
             </li>
             <li>
-              <Link href="/register">Registrieren</Link>
+              <Link href="/registrieren">Registrieren</Link>
             </li>
           </ul>
         </div>

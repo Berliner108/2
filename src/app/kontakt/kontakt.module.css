@@ -1,78 +1,117 @@
-/* /src/pages/kontakt.module.css */
+/* kontakt.module.css */
 
-.container {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Stil für das Haupt-Element */
+.main {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f5f5f5; /* Hintergrundfarbe für main */
+}
+
+/* Stil für den Container */
+.contactInfoContainer {
+  width: 70%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Stil für das Kontaktformular */
+.contactInfo {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Lokale Klasse für h2 */
+.title {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Lokale Klasse für p */
+.description {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Lokale Klasse für das Formular */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Lokale Klasse für Label */
+.label {
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Eingabefelder */
+.inputField {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Textarea */
+.textareaField {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Button */
+.button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+.button:active {
+  background-color: #388e3c;
+}
+
+/* Neue Media Query für mobile Geräte */
+@media (max-width: 768px) {
+  .contactInfoContainer {
+    width: 90%; /* Container auf 90% der Breite anpassen */
   }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
+
+  .title {
+    font-size: 1.2rem; /* Kleinere Schriftgröße für Titel */
   }
-  
-  .header h1 {
-    font-size: 36px;
-    color: #0070f3;
+
+  .description {
+    font-size: 0.9rem; /* Kleinere Schriftgröße für Beschreibung */
   }
-  
-  .content {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  .inputField, .textareaField, .button {
+    font-size: 0.9rem; /* Kleinere Schriftgröße für Eingabefelder */
   }
-  
-  .content h2 {
-    font-size: 24px;
-    margin-top: 20px;
-    color: #0070f3;
+
+  .form {
+    gap: 12px; /* Weniger Abstand zwischen den Formularelementen */
   }
-  
-  .content p {
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 10px 0;
+
+  .checkboxContainer {
+    font-size: 0.9rem; /* Kleinere Schriftgröße für die Checkbox */
   }
-  
-  .content a {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  
-  .content a:hover {
-    text-decoration: underline;
-  }
-  
-  .footer {
-    text-align: center;
-    margin-top: 40px;
-    font-size: 14px;
-    color: #777;
-  }
-  
-  @media (max-width: 768px) {
-    .container {
-      padding: 10px;
-    }
-  
-    .header h1 {
-      font-size: 28px;
-    }
-  
-    .content h2 {
-      font-size: 20px;
-    }
-  
-    .content p {
-      font-size: 14px;
-    }
-  
-    .footer {
-      font-size: 12px;
-    }
-  }
-  
+}

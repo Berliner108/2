@@ -5,24 +5,23 @@
     align-items: center;
     padding: 00px;
     background-color: transparent; /* Kein Hintergrund */
-  }
-  .home-link {
+}
+.home-link {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-decoration: none;
-    
-  }  
-  .home-link:hover {
+}  
+.home-link:hover {
     opacity: 2.8;
-  }   
-  .logo-container {
+}   
+.logo-container {
     display: flex;
     align-items: center;
     position: relative;
     margin-left: 40px;
-  }
-  .full-width-bar {
+}
+.full-width-bar {
     width: 100%;        /* Breite auf 100% setzen */
     background-color: white; /* Schwarzer Hintergrund */
     color: black;      /* Weißer Text */
@@ -30,8 +29,8 @@
     padding: 10px 0;    /* Padding für vertikalen Abstand */
     font-size: 18px;    /* Schriftgröße */
     display: none;
-  }  
-  .shop-title {
+}  
+.shop-title {
     font-family: 'Oswald', sans-serif;
     font-size: 20px;
     font-weight: bold;
@@ -58,6 +57,7 @@
   }  
   .nav-links.desktop {
     display: flex;
+    font-size: 14px;
   }  
   .nav-links.desktop ul {
     display: flex;
@@ -71,10 +71,6 @@
     color: white;
     text-decoration: none;
     font-weight: bold;
-  }
-  .nav-links.desktop a {
-    color: white;
-    text-decoration: none;
     padding: 0.5em 1em;
     border: 1.5px solid white;
     border-radius: 5px;

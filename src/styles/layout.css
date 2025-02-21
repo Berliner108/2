@@ -6,37 +6,31 @@ body {
   font-family: 'Oswald', sans-serif;
   margin: 0;  
   overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
-}
-  
+}  
 header {
     background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     color: white;
-    padding: 1px;
-    text-align: center;
-  }
-  
-  .footer {
+    padding: 1px;    
+  }  
+.footer {
     display: flex;
     background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     justify-content: space-between;
     padding: 20px;    
     color: white;
-    margin-top: 20px;
-  }
-  
-  /* Kommentar Styling */
+    
+  }  
 .comment {
   font-style: italic;
   color: #b0b0b0;
   opacity: 1;
   transition: opacity 0.5s ease-in-out;
 }
-
 /* Fade-Effekt */
 .fade-out {
   opacity: 0;
 }
-  .column {
+.column {
     width: 30%;
   }
   .column1 {
@@ -123,17 +117,14 @@ header {
         border: none;
         box-shadow: none;
     }
-      
-      
-  
     .socialLinks {
        justify-content: center; /* Icons bleiben zentriert */
        gap: 10px;
     }
   }  
   main {
-    padding: 20px;
+    
     min-height: 100vh; /* Stellt sicher, dass der Hauptinhalt den gesamten Bildschirm ausfüllt */
-    background-color: #fff;
+    background-color: #f5f5f5;
   }
   
