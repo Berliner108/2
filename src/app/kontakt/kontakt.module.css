@@ -25,8 +25,13 @@
 
 /* Lokale Klasse für h2 */
 .title {
-  font-size: 1.5rem;
+  font-size: 1.9rem;
   color: #333;
+}
+.title2 {
+  font-size: 1.2rem;
+  color: #333;
+
 }
 
 /* Lokale Klasse für p */
@@ -71,15 +76,16 @@
 }
 
 /* Button */
-.button {
-  background-color: #40E0D0; /* Neue Farbe für den Button */
-  color: white;
+
+.button {  
+  background: #40E0D0;
   border: none;
-  padding: 12px 20px;
-  font-size: 1rem;
-  cursor: pointer;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1rem; 
   border-radius: 4px;
-  transition: background-color 0.3s;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
 }
 
 .button:hover {
@@ -98,6 +104,9 @@
   }
 
   .title {
+    font-size: 1.9rem; /* Kleinere Schriftgröße für Titel */
+  }
+  .title2 {
     font-size: 1.2rem; /* Kleinere Schriftgröße für Titel */
   }
 

@@ -40,14 +40,14 @@ const ContactPage = () => {
     <main className={styles.main}>
       <div className={styles.contactInfoContainer}>
         <div className={styles.contactInfo}>
-          <h2 className={styles.title}>Kontaktformular</h2>
+          <h1 className={styles.title}>Kontaktformular</h1>
           <p className={styles.description}>
            Bitte beachten Sie, dass wir nicht der Verkäufer oder Dienstleister der Aufträge sind und daher 
            keine Fragen zu einzelnen Angeboten beantworten können. Bei Fragen zu einem bestimmten Inserat 
            wenden Sie sich bitte direkt an den Verkäufer. Die entsprechenden Kontaktmöglichkeiten finden 
            Sie bei jedem Inserat in der rechten Randspalte.
           </p>
-          <h2 className={styles.title}>Ihre Frage oder Anmerkung</h2>
+          <h2 className={styles.title2}>Ihre Frage oder Anmerkung</h2>
           <form onSubmit={handleSubmit} className={styles.form}>
           <label htmlFor="subject" className={styles.label}>Betreff / Inserat:</label>
             <input

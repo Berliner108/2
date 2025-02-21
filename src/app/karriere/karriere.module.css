@@ -1,78 +1,79 @@
-/* /src/pages/karriere.module.css */
-
 .container {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    padding: 20px;
-    max-width: 1200px;
-    margin-top: 20px;
-  }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  .header h1 {
-    font-size: 36px;
-    color: #0070f3;
-  }
-  
-  .content {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .content h2 {
-    font-size: 24px;
-    margin-top: 20px;
-    color: #0070f3;
-  }
-  
-  .content p {
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 10px 0;
-  }
-  
-  .content a {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  
-  .content a:hover {
-    text-decoration: underline;
-  }
-  
-  .footer {
-    text-align: center;
-    margin-top: 40px;
-    font-size: 14px;
-    color: #777;
-  }
-  
-  @media (max-width: 768px) {
-    .container {
-      padding: 10px;
-    }
-  
-    .header h1 {
-      font-size: 28px;
-    }
-  
-    .content h2 {
-      font-size: 20px;
-    }
-  
-    .content p {
-      font-size: 14px;
-    }
-  
-    .footer {
-      font-size: 12px;
-    }
-  }
-  
+  max-width: 80%;
+  margin: 20 auto;
+  margin-bottom: -20px;
+  padding: 40px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.highlight {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 40px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #333; /* Unterstrich */
+  display: inline-block;
+}
+
+.ceo {
+  text-align: center;
+  font-size: 1rem;
+  color: #555;
+  margin-top: 5px;
+}
+
+.intro h1 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.intro p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.jobs {
+  text-align: center;
+}
+
+.jobs h2 {
+  font-size: 1.8rem;
+  color: #222;
+  margin-bottom: 20px;
+}
+
+.jobs ul {
+  list-style: none;
+  padding: 0;
+}
+
+.jobs li {
+  margin: 10px 0;
+}
+
+.jobLink {
+  display: inline-block;
+  padding: 10px 15px;
+  font-size: 1.1rem;
+  color: #40E0D0;
+  text-decoration: none;
+  border: 2px solid #40E0D0;
+  border-radius: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.jobLink:hover {
+  background: linear-gradient(to right, #40E0D0, #1E90FF);
+  color: white;
+  border-color: #1E90FF;
+}

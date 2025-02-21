@@ -1,0 +1,40 @@
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 22px;
+    margin-top: 20px;
+}
+
+.list {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.applyButton {
+    background: linear-gradient(135deg, #40E0D0, #1E90FF);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin-top: 20px;
+}
+
+.applyButton:hover {
+    background: linear-gradient(135deg, #1E90FF, #40E0D0);
+    transform: scale(1.05);
+}
