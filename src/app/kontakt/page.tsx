@@ -13,10 +13,11 @@ const ContactPage = () => {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
 
-    // Handle the checkbox separately
+    // Wenn es sich um ein Checkbox-Element handelt, verwenden wir 'checked', andernfalls 'value'
     if (type === 'checkbox') {
+      const { checked } = e.target as HTMLInputElement; // explizit Typ auf HTMLInputElement setzen
       setFormData({
         ...formData,
         [name]: checked
