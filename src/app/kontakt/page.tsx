@@ -42,31 +42,14 @@ const ContactPage = () => {
         <div className={styles.contactInfo}>
           <h2 className={styles.title}>Kontaktformular</h2>
           <p className={styles.description}>
-            Wir freuen uns auf deine Nachricht. Bitte fülle das Formular aus, und wir melden uns so schnell wie
-            möglich bei dir.
+           Bitte beachten Sie, dass wir nicht der Verkäufer oder Dienstleister der Aufträge sind und daher 
+           keine Fragen zu einzelnen Angeboten beantworten können. Bei Fragen zu einem bestimmten Inserat 
+           wenden Sie sich bitte direkt an den Verkäufer. Die entsprechenden Kontaktmöglichkeiten finden 
+           Sie bei jedem Inserat in der rechten Randspalte.
           </p>
+          <h2 className={styles.title}>Ihre Frage oder Anmerkung</h2>
           <form onSubmit={handleSubmit} className={styles.form}>
-            <label htmlFor="name" className={styles.label}>Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-            <label htmlFor="email" className={styles.label}>E-Mail</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={styles.inputField}
-              required
-            />
-            <label htmlFor="subject" className={styles.label}>Betreff / Inserat</label>
+          <label htmlFor="subject" className={styles.label}>Betreff / Inserat:</label>
             <input
               type="text"
               id="subject"
@@ -76,7 +59,28 @@ const ContactPage = () => {
               className={styles.inputField}
               required
             />
-            <label htmlFor="message" className={styles.label}>Nachricht</label>
+            <label htmlFor="email" className={styles.label}>E-Mail:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={styles.inputField}
+              required
+            />
+            
+            <label htmlFor="name" className={styles.label}>Name:</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={styles.inputField}
+              required
+            />
+            <label htmlFor="message" className={styles.label}>Nachricht:</label>
             <textarea
               id="message"
               name="message"
@@ -93,7 +97,7 @@ const ContactPage = () => {
                   checked={formData.gdpr}
                   onChange={handleChange}
                 />
-                Ich bin mit der Datenschutzerklärung einverstanden.
+                Ja, ich habe die <a href="/datenschutz">Datenschutzerklärung</a> gelesen und bin damit einverstanden.
               </label>
             </div>
             <button type="submit" className={styles.button}>Absenden</button>
