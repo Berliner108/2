@@ -1,30 +1,68 @@
 .container {
-  max-width: 800px;
-  margin: 40px auto;
+  max-width: 90%;
+  margin: 20 auto;
   padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Oswald, sans-serif;
+  color: #333;
+  background-color: white;
 }
 
 .heading {
+  font-size: 2em;
   text-align: center;
   margin-bottom: 20px;
-  color: #333;
 }
 
 .section {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
-.sectionTitle {
-  color: #40E0D0; /* Türkis passend zu deinem Design */
-  border-bottom: 2px solid #40E0D0;
-  padding-bottom: 5px;
+.subheading {
+  font-size: 1.5em;
   margin-bottom: 10px;
 }
 
 .text {
-  color: #555;
   line-height: 1.6;
+  margin-bottom: 10px;
+}
+.backButtonContainer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.backButton {
+  display: inline-block;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  background: linear-gradient(to right, #40E0D0, #1E90FF);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.backButton:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+
+
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .heading {
+    font-size: 1.8em;
+  }
+
+  .subheading {
+    font-size: 1.3em;
+  }
 }
