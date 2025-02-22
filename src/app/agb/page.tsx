@@ -143,7 +143,14 @@ const AgbPage = () => {
           einzusetzen.</p>
 
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>5. Personal</h2>
+
+      <section className={styles.section}>
+          <p>5.1. Sofern nach den zwischen den Vertragspartnern getroffenen Vereinbarungen
+          Mitarbeiter des AG vom AN übernommen werden, ist darüber eine separate
+          schriftliche Vereinbarung zu treffen.</p>
+      </section>
+      <h2 className={styles.subheading}>6. Change Requests</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -155,7 +162,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>7. Leistungsstörungen</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -167,7 +174,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>8. Vertragsstrafe</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -179,7 +186,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>9. Haftung</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -191,7 +198,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>10. Vertragsstrafe</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -203,7 +210,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>11. Vergütung</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -215,7 +222,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>12. Höhere Gewalt</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -227,7 +234,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>13. Nutzungsrechte an Softwareprodukten und Unterlagen</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -239,7 +246,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>14. Erfüllungsgrade und Wiederherstellungszeiten</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -251,7 +258,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>15. Laufzeit des Vertrags</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -263,7 +270,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>16. Datenschutz</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -275,7 +282,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>17. Geheimhaltung</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -287,7 +294,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>18. Abwerbeverbot</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -299,7 +306,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>19. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -311,7 +318,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>20. Mediationsklausel</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -323,7 +330,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>21. Einstellungen von Inhalten</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -335,7 +342,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>22. Verantwortlichkeit für Inhalte</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -347,7 +354,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>23. Nutzungsrechte</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -359,7 +366,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>24. Rechte an der Datenbank</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -371,7 +378,7 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>25. Gewährleistung und Haftung</h2>
 
       <section className={styles.section}>
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
@@ -383,29 +390,15 @@ const AgbPage = () => {
           genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
           schriftlich anerkannt wurden.</p>
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>26. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
-      </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
-
-      <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+         <p>
+          Es gilt das Recht der Republik Österreich. Gerichtsstand ist Wien, soweit der Nutzer Kaufmann oder eine juristische Person ist.</p>
+        <p>Sollte eine Bestimmung dieser AGB unwirksam sein, bleiben die übrigen Bestimmungen davon unberührt. Die unwirksame Regelung 
+          wird durch eine rechtswirksame ersetzt, die dem wirtschaftlichen Zweck der ursprünglichen möglichst nahekommt.</p>
+        <p>Beschichter Scout behält sich das Recht vor, diese AGB jederzeit zu ändern. Änderungen werden den Nutzern rechtzeitig mitgeteilt. 
+          Bei fortgesetzter Nutzung der Plattform gelten die geänderten Bedingungen als akzeptiert.</p>
       </section>
       
       <Link href="/" legacyBehavior>
