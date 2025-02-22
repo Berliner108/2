@@ -76,17 +76,72 @@ const AgbPage = () => {
           entsprechenden Zahlungsbedingungen voraus.</p>
 
       </section>
-      <h2 className={styles.subheading}>1. Allgemeines</h2>
+      <h2 className={styles.subheading}>4. Mitwirkungs- und Beistellungspflichten</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+          <p>4.1. Der AG verpflichtet sich, alle Maßnahmen zu unterstützen, die für die Erbringung
+          der Dienstleistungen durch den AN erforderlich sind. Der AG verpflichtet sich
+          weiters, alle Maßnahmen zu ergreifen, die zur Erfüllung des Vertrags erforderlich
+          sind und die nicht im Leistungsumfang des AN enthalten sind.</p>
+          <p>4.2. Sofern die Dienstleistungen vor Ort beim AG erbracht werden, stellt der AG die zur
+          Erbringung der Dienstleistungen durch den AN erforderlichen Netzkomponenten,
+          Anschlüsse, Versorgungsstrom inkl. Spitzenspannungsausgleich,
+          Notstromversorgungen, Stellflächen für Anlagen, Arbeitsplätze, Infrastruktur sowie
+          allfällige sonst benötigte Ressourcen in erforderlichem Umfang und Qualität (z.B.
+          Klimatisierung) unentgeltlich zur Verfügung. Jedenfalls ist der AG für die
+          Einhaltung der vom jeweiligen Hersteller geforderten Voraussetzungen für den
+          Betrieb der Hardware verantwortlich. Ebenso hat der AG für die Raum- und
+          Gebäudesicherheit, unter anderem für den Schutz vor Wasser, Feuer und Zutritt
+          Unbefugter Sorge zu tragen. Der AG ist für besondere Sicherheitsvorkehrungen
+          (z.B. Sicherheitszellen) in seinen Räumlichkeiten selbst verantwortlich. Der AG ist
+          nicht berechtigt, den Mitarbeitern des AN Weisungen - gleich welcher Art - zu
+          erteilen und wird alle Wünsche bezüglich der Leistungserbringung ausschließlich an
+          den vom AN benannten Ansprechpartner herantragen.</p>
+          <p>4.3. Der AG stellt zu den vereinbarten Terminen und auf eigene Kosten sämtliche vom
+          AN zur Durchführung des Auftrages benötigten Informationen, Daten und
+          Unterlagen in der vom AN geforderten Form zur Verfügung und unterstützt den AN
+          auf Wunsch bei der Problemanalyse und Störungsbeseitigung, der Koordination von
+          Verarbeitungsaufträgen und der Abstimmung der Dienstleistungen. Änderungen in
+          den Arbeitsabläufen beim AG, die Änderungen in den vom AN für den AG zu
+          erbringenden Dienstleistungen verursachen können, bedürfen der vorherigen
+          Abstimmung mit dem AN hinsichtlich ihrer technischen und kommerziellen
+          Auswirkungen.</p>
+          <p>4.4. Soweit dies nicht ausdrücklich im Leistungsumfang vom AN enthalten ist, wird der
+          AG auf eigenes Risiko und auf eigene Kosten für eine Netzanbindung sorgen.</p>
+          <p>4.5. Der AG ist verpflichtet, die zur Nutzung der Dienstleistungen vom AN
+          erforderlichen Passwörter und Log-Ins vertraulich zu behandeln.</p>
+          <p>4.6. Der AG wird die dem AN übergebenen Daten und Informationen zusätzlich bei sich
+          verwahren, so dass sie bei Verlust oder Beschädigung jederzeit rekonstruiert
+          werden können.</p>
+          <p>4.7. Der AG wird alle ihm obliegenden Mitwirkungspflichten so zeitgerecht erbringen,
+          dass der AN in der Erbringung der Dienstleistungen nicht behindert wird. Der AG
+          stellt sicher, dass der AN und/oder die durch den AN beauftragten Dritten für die
+          Erbringung der Dienstleistungen den erforderlichen Zugang zu den Räumlichkeiten
+          beim AG erhalten.
+          Der AG ist dafür verantwortlich, dass die an der Vertragserfüllung beteiligten
+          Mitarbeiter seiner verbundenen Unternehmen oder von ihm beauftragte Dritte
+          entsprechend an der Vertragserfüllung mitwirken.</p>
+          <p>4.8. Erfüllt der AG seine Mitwirkungspflichten nicht zu den vereinbarten Terminen oder
+          in dem vorgesehenen Umfang, gelten die vom AN erbrachten Leistungen trotz
+          möglicher Einschränkungen dennoch als vertragskonform erbracht.
+          Zeitpläne für die von AN zu erbringenden Leistungen verschieben sich in
+          angemessenem Umfang. Der AG wird die dem AN hierdurch entstehenden
+          Mehraufwendungen und/oder Kosten zu den beim AN jeweils geltenden Sätzen
+          gesondert vergüten.</p>
+          <p>4.9. Der AG sorgt dafür, dass seine Mitarbeiter und die ihm zurechenbaren Dritten die
+          von AN eingesetzten Einrichtungen und Technologien sowie die ihm allenfalls
+          überlassenen Vermögensgegenstände sorgfältig behandeln; der AG haftet dem AN
+          für jeden Schaden.</p>
+          <p>4.10. Sofern nichts anderes vereinbart wird, erfolgen Beistellungen und Mitwirkungen des
+          AG unentgeltlich.</p>
+          <p>4.11. Sofern der AN dem AG Speicherplatz zur Verfügung stellt, ist der AG verpflichtet,
+          auf diesem keine Daten abzulegen, deren Nutzung gegen geltendes Recht,
+          behördliche Anordnungen, Rechte Dritter oder Vereinbarungen mit Dritten verstößt.
+          Zudem ist der AG verpflichtet, die Daten vor der Speicherung auf diesem
+          Speicherplatz auf Viren oder sonstige schädliche Komponenten zu prüfen und hierfür
+          dem Stand der Technik entsprechende Maßnahmen (zB Virenschutzprogramme)
+          einzusetzen.</p>
+
       </section>
       <h2 className={styles.subheading}>1. Allgemeines</h2>
 
