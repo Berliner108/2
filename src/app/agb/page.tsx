@@ -13,9 +13,10 @@ const AgbPage = () => {
         <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen...</p>
       </section>
       
-      <Link href="/">
+      <Link href="/" legacyBehavior>
         <button className={styles.backButton}>Zurück zur Startseite</button>
       </Link>
+
     </div>
   );
 };
