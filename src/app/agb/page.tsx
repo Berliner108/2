@@ -357,38 +357,41 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>23. Nutzungsrechte</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Durch das Einstellen von Inhalten gewährt der Nutzer Beschichter Scout die nicht-exklusiven, übertragbaren Rechte zur Speicherung, Veröffentlichung und Bearbeitung dieser Inhalte.
+        </p>
+        <p>
+        Beschichter Scout ist berechtigt, die Inhalte für Werbezwecke oder zur Verbesserung des Services zu nutzen. Die Rechte des Nutzers an seinen Inhalten bleiben unberührt.
+        </p>
+        <p>
+          Eine Weitergabe der Inhalte an Dritte erfolgt nur in anonymisierter Form oder mit ausdrücklicher Zustimmung des Nutzers. Nutzer haben jederzeit das Recht, ihre Inhalte aus der Datenbank zu entfernen.
+        </p>
       </section>
       <h2 className={styles.subheading}>24. Rechte an der Datenbank</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Alle Urheber- und Schutzrechte an der Datenbank verbleiben bei Beschichter Scout. Eine automatisierte Abfrage oder gewerbliche Nutzung der Datenbank ist nicht gestattet.
+        </p>
+        <p>
+          Die Nutzung der Plattform darf ausschließlich im Rahmen der vorgesehenen Funktionen erfolgen. Manipulationen oder unerlaubte Zugriffsmethoden sind untersagt.
+        </p>
+        <p>
+          Verstöße gegen diese Bestimmungen können zu einer Sperrung des Zugangs oder zu rechtlichen Schritten führen. Beschichter Scout behält sich vor, technische Schutzmaßnahmen zu ergreifen.
+        </p>
       </section>
       <h2 className={styles.subheading}>25. Gewährleistung und Haftung</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        Beschichter Scout übernimmt keine Gewähr für die Richtigkeit und Vollständigkeit der von Nutzern eingestellten Inhalte sowie für die ununterbrochene Verfügbarkeit der Datenbank.
+        </p>
+        <p>
+          Es wird keine Garantie für bestimmte Ergebnisse oder Erfolge bei der Nutzung der Plattform übernommen. Technische Änderungen oder Wartungsarbeiten können zu vorübergehenden Einschränkungen führen.
+        </p>
+        <p>
+          Die Haftung von Beschichter Scout ist bei einfacher Fahrlässigkeit ausgeschlossen, es sei denn, es handelt sich um Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.
+        </p>
       </section>
       <h2 className={styles.subheading}>26. Schlussbestimmungen</h2>
 
