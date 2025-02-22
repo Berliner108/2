@@ -556,7 +556,7 @@ const AgbPage = () => {
       </section>
       {/* Zurück zur Startseite Button */}
       <div className={styles.backButtonContainer}>
-        <Link href="/">
+        <Link href>
           <button className={styles.backButton}>Zurück zur Startseite</button>
         </Link>
       </div>
