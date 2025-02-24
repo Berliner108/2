@@ -1,6 +1,6 @@
 .container {
   max-width: 80%;
-  margin: 40px auto;
+  margin: 20px auto;
   margin-bottom: -20px;
   padding: 40px;
   background-color: #ffffff;
@@ -63,11 +63,12 @@
 
 .jobLink {
   display: inline-block;
+  width: 250px;
   padding: 10px 15px;
   font-size: 1.1rem;
-  color: #40E0D0;
+  color: #1E90FF;
   text-decoration: none;
-  border: 2px solid #40E0D0;
+  border: 2px solid #1E90FF;
   border-radius: 5px;
   transition: all 0.3s ease-in-out;
 }
@@ -76,4 +77,25 @@
   background: linear-gradient(to right, #40E0D0, #1E90FF);
   color: white;
   border-color: #1E90FF;
+}
+
+.backButton {
+  display: block;
+  width: 100%;
+  max-width: 250px;
+  margin: 60px auto;
+  padding: 10px;
+  font-size: 1rem;
+  text-align: center;
+  color: white;
+  background: linear-gradient(90deg, #00cccc, #0088cc);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  background: linear-gradient(90deg, #0088cc, #00cccc);
 }

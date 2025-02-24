@@ -30,13 +30,13 @@ const KarrierePage = () => {
         </p>
       </section>
       <div className={styles.highlight}>
-  	Wir sind stets auf der Suche nach engagierten Talenten, die mit uns gemeinsam innovative Produkte entwickeln und die Zukunft aktiv gestalten.
+  	      Wir sind stets auf der Suche nach engagierten Talenten, die mit uns gemeinsam innovative Produkte entwickeln und die Zukunft aktiv gestalten.
       </div>
       <p className={styles.ceo}>Max Mustermann, CEO</p>
 
 
       <section className={styles.jobs}>
-        <h2>Offene Stellen</h2>
+        <h2>Unsere offenen Stellen</h2>
         <ul>
           {jobs.map((job) => (
             <li key={job.slug}>
@@ -47,6 +47,18 @@ const KarrierePage = () => {
           ))}
         </ul>
       </section>
+      <br></br>
+      <br></br>
+      <section className={styles.intro}>
+        <h1>Keine passende Stelle gefunden? Kein Problem! </h1>
+        <p>
+          Wir sind immer auf der Suche nach engagierten Talenten. Senden Sie uns Ihre <strong>Initiativbewerbung</strong> an: office@beschichterscout.at – vielleicht passt Ihr Profil perfekt zu einer 
+          zukünftigen Gelegenheit. Wir freuen uns auf Ihre Bewerbung!          
+        </p>        
+      </section>
+      <Link href="/" legacyBehavior>
+        <button className={styles.backButton}>Zurück zur Startseite</button>
+      </Link>
     </main>
   );
 };

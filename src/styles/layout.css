@@ -11,15 +11,14 @@ header {
     background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     color: white;
     padding: 1px;    
-  }  
+}  
 .footer {
     display: flex;
     background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
     justify-content: space-between;
     padding: 20px;    
-    color: white;
-    
-  }  
+    color: white;    
+}  
 .comment {
   font-style: italic;
   color: #b0b0b0;
@@ -32,22 +31,21 @@ header {
 }
 .column {
     width: 30%;
-  }
+}
   .column1 {
     width: 30%;
     text-align: center;
     font-size: 17px;
-  }
+}
   .column2 {
     width: 30%;
     text-align: center;
     font-size: 17px;
-  }
+}
   
   h2 {
     font-size: 18px;
-  }
-  
+}  
   ul {
     list-style-type: none;
     padding: 0;
@@ -65,23 +63,19 @@ header {
   ul li a:hover {
     text-decoration: none;
     color: #40E0D0;
-  }
-  
+  }  
   .socialLinks {
     display: flex;
     justify-content: space-between;
     margin-top: 25px;
-  }
-  
+  }  
   .socialLinks a {
     color: white;
     margin: 4px;
-  }
-  
+  }  
   .socialLinks a:hover {
     color: #00e5ff; /* Farbe, wenn die Icons hover sind */
-  }
-  
+  }  
   @media (max-width: 768px) {
     .footer {
       flex-direction: column; /* Spalten untereinander anordnen */
