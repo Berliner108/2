@@ -153,98 +153,182 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>6. Change Requests</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+          <p>6.1. Beide Vertragspartner können jederzeit Änderungen des Leistungsumfangs
+          verlangen (.Change Request.). Eine gewünschte Änderung muss jedoch eine genaue
+          Beschreibung derselben, die Gründe für die Änderung, den Einfluss auf Zeitplanung
+          und die Kosten darlegen, um dem Adressaten des Change Requests die Möglichkeit
+          einer angemessenen Bewertung zu geben. Ein Change Request wird erst durch
+          rechtsgültige Unterschrift beider Vertragspartner bindend.
+          </p>
       </section>
       <h2 className={styles.subheading}>7. Leistungsstörungen</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        7.1. Der AN verpflichtet sich zur vertragsgemäßen Erbringung der Dienstleistungen.
+        Erbringt der AN die Dienstleistungen nicht zu den vorgesehenen Zeitpunkten oder
+        nur mangelhaft, d.h. mit wesentlichen Abweichungen von den vereinbarten
+        Qualitätsstandards, ist der AN verpflichtet, mit der Mängelbeseitigung umgehend
+        zu beginnen und innerhalb angemessener Frist seine Leistungen ordnungsgemäß
+        und mangelfrei zu erbringen, indem er nach seiner Wahl die betroffenen
+        Leistungen wiederholt oder notwendige Nachbesserungsarbeiten durchführt.</p>
+        <p>7.2. Beruht die Mangelhaftigkeit auf Beistellungen oder Mitwirkungen des AG oder auf
+        einer Verletzung der Verpflichtungen des AG gemäß Punkt 3.6, ist jede
+        unentgeltliche Pflicht zur Mängelbeseitigung ausgeschlossen. In diesen Fällen
+        gelten die vom AN erbrachten Leistungen trotz möglichen Einschränkungen
+        dennoch als vertragsgemäß erbracht. Der AN wird auf Wunsch des AG eine
+        kostenpflichtige Beseitigung des Mangels unternehmen.</p>
+        <p>7.3. Der AG wird den AN bei der Mängelbeseitigung unterstützen und alle erforderlichen
+        Informationen zur Verfügung stellen. Aufgetretene Mängel sind vom AG
+        unverzüglich schriftlich oder per e-mail dem AN zu melden. Den durch eine
+        verspätete Meldung entstehenden Mehraufwand bei der Fehlerbeseitigung trägt der
+        AG.</p>
+        <p>7.4. Die Gewährleistungsfrist beträgt sechs (6) Monate. Die Rechte des AG aus der
+        Gewährleistung sowie die Ansprüche daraus verjähren jedenfalls 1 Monat nach
+        Ende der jeweiligen Gewährleistungsfrist. Die Möglichkeit der Einrede gegen die
+        Entgeltforderung iSd § 933 Abs 3 ABGB wird ausgeschlossen.</p>
+        <p>7.5. Die Aktualisierungspflicht gem § 7 VGG iVm § 1 Abs 3 VGG wird in ihrem gesamten
+        Ausmaß ausgeschlossen, soweit nicht ausdrücklich anderes vereinbart wird.
+        Hinsichtlich Aktualisierungen / Updates kommen daher nur die diesbezüglichen
+        Vereinbarungen zwischen den Vertragsparteien zu tragen.</p>
+        <p>7.6. Die Regelungen dieses Punktes gelten sinngemäß für allfällige Lieferungen von
+        Hard- oder Softwareprodukten vom AN an den AG. § 924 ABGB Vermutung der
+        Mangelhaftigkeit wird einvernehmlich ausgeschlossen. Für allfällige dem AG vom
+        AN überlassene Hard- oder Softwareprodukte Dritter gelten vorrangig vor den
+        Regelungen dieses Punktes die jeweiligen Gewährleistungsbedingungen des
+        Herstellers dieser Produkte. Bis zur vollständigen Bezahlung behält sich der AN das
+        Eigentum an allen von ihm gelieferten Hard- und Softwareprodukten vor.
+        </p>
       </section>
-      <h2 className={styles.subheading}>8. Vertragsstrafe</h2>
+      <h2 className={styles.subheading}>8. Rechte an der Datenbank</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Alle Urheber- und Schutzrechte an der Datenbank verbleiben bei Beschichter Scout. Eine automatisierte Abfrage oder gewerbliche Nutzung der Datenbank ist nicht gestattet.
+        </p>
+        <p>
+          Die Nutzung der Plattform darf ausschließlich im Rahmen der vorgesehenen Funktionen erfolgen. Manipulationen oder unerlaubte Zugriffsmethoden sind untersagt.
+        </p>
+        <p>
+          Verstöße gegen diese Bestimmungen können zu einer Sperrung des Zugangs oder zu rechtlichen Schritten führen. Beschichter Scout behält sich vor, technische Schutzmaßnahmen zu ergreifen.
+        </p>
       </section>
       <h2 className={styles.subheading}>9. Haftung</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>9.1. Der AN haftet dem AG für von ihm nachweislich verschuldete Schäden nur im Falle
+        groben Verschuldens und bei Vorsatz. Dies gilt sinngemäß auch für Schäden, die
+        auf vom AN beigezogene Dritte zurückgehen. Im Falle von verschuldeten
+        Personenschäden haftet der AN unbeschränkt.</p>
+        <p>9.2. Die Haftung für mittelbare Schäden - wie beispielsweise entgangenen Gewinn,
+        Kosten die mit einer Betriebsunterbrechung verbunden sind, Datenverluste oder
+        Ansprüche Dritter - wird ausdrücklich ausgeschlossen.</p>
+        <p>9.3. Schadenersatzansprüche verjähren nach den gesetzlichen Vorschriften, jedoch
+        spätestens mit Ablauf eines Jahres ab Kenntnis des Schadens und des Schädigers.</p>
+        <p>9.4. Sofern der AN das Werk unter Zuhilfenahme Dritter erbringt und in diesem
+        Zusammenhang Gewährleistungs- und/oder Haftungsansprüche gegenüber diesen
+        Dritten entstehen, tritt der AN diese Ansprüche an den AG ab.</p>
+        <p>9.5. Ist die Datensicherung ausdrücklich als Leistung vereinbart, so ist die Haftung für
+        den Verlust von Daten abweichend von Punkt 8.2 nicht ausgeschlossen, jedoch für
+        die Wiederherstellung der Daten begrenzt bis maximal EUR 10 % der
+        Auftragssumme je Schadensfall, maximal jedoch EUR 15.000,-. Weitergehende als
+        die in diesem Vertrag genannten Gewährleistungs- und Schadenersatzansprüche
+        des AG -gleich aus welchem Rechtsgrund- sind ausgeschlossen.</p>
+        <p>9.6. Der AN haftet nicht für Störungen der Telekommunikationsinfrastruktur
+        einschließlich der Telefonleitungen.</p>
       </section>
       <h2 className={styles.subheading}>10. Vertragsstrafe</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+          <p>Der AN ist verpflichtet, die im SLA genannten Erfüllungsgrade bzw.
+          Wiederherstellungszeiten nach Prioritäten einzuhalten. Sollte der AN für die
+          Wiederherstellung die im SLA genannten Zeitlimits überschreiten, hat der AN pro
+          angefangener Stunde der Überschreitung Pönalen bis zur tatsächlichen
+          Wiederherstellung (Erfüllung) an den AG laut SLA zu bezahlen:
+          Die obgenannten Pönalen pro Jahr sind der Höhe nach mit 20% des
+          Gesamtjahresentgeltes begrenzt. Die Geltendmachung eines
+          darüberhinausgehenden Schadenersatzanspruches, es sei denn bei Vorsatz oder
+          grober Fahrlässigkeit, ist ausgeschlossen.
+          Sollten pönalwirksame Überschreitungen eintreten, sind diese dem AN unverzüglich
+          schriftlich zur Kenntnis zu bringen.</p>
       </section>
       <h2 className={styles.subheading}>11. Vergütung</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+          <p>11.1. Die vom AG zu bezahlenden Vergütungen und Konditionen ergeben sich aus dem
+          Vertrag. Die gesetzliche Umsatzsteuer wird zusätzlich verrechnet.</p>
+          <p>11.2. Reisezeiten von Mitarbeitern des AN gelten als Arbeitszeit. Reisezeiten werden in
+          Höhe des vereinbarten Stundensatzes vergütet. Die genannten Sätze ändern sich
+          entsprechend der Preisgleitklausel in Punkt 9.5. Zusätzlich werden die Reisekosten
+          und allfällige Übernachtungskosten vom AG nach tatsächlichem Aufwand erstattet.
+          Die Erstattung der notwendigen Reise-, Nächtigungs- und Verpflegungskosten
+          erfolgt gegen Vorlage der Belege (Kopien).</p>
+          <p>11.3. Der AN ist jederzeit berechtigt, die Leistungserbringung von der Leistung von
+          Anzahlungen oder der Beibringung von sonstigen Sicherheiten durch den AG in
+          angemessener Höhe abhängig zu machen.</p>
+          <p>11.4. Soweit nicht vertraglich anders vereinbart, werden einmalige Vergütungen nach
+          der Leistungserbringung, laufende Vergütungen vierteljährlich im Voraus
+          verrechnet. Die vom AN gelegten Rechnungen inklusive Umsatzsteuer sind
+          spätestens 14 Tage ab Fakturenerhalt ohne jeden Abzug und spesenfrei zahlbar.
+          Für Teilrechnungen gelten die für den Gesamtauftrag festgelegten
+          Zahlungsbedingungen analog. Eine Zahlung gilt an dem Tag als erfolgt, an dem der
+          AN über sie verfügen kann. Kommt der AG mit seinen Zahlungen in Verzug, ist der
+          AN berechtigt, die gesetzlichen Verzugszinsen und alle zur Einbringlichmachung
+          erforderlichen Kosten zu verrechnen. Sollte der Verzug des AG 14 Tage
+          überschreiten, ist der AN berechtigt, sämtliche Leistungen einzustellen. Der AN ist
+          überdies berechtigt, das Entgelt für alle bereits erbrachten Leistungen ungeachtet
+          allfälliger Zahlungsfristen sofort fällig zu stellen.</p>
+          <p>11.5. Laufende Vergütungen beruhen auf dem Kollektivvertragsgehalt eines Angestellten
+          von Unternehmen im Bereich Dienstleistungen in der automatischen
+          Datenverarbeitung und Informationstechnik in der Erfahrungsstufe für spezielle
+          Tätigkeiten (ST2).</p>
+          <p>11.6. Die Aufrechnung ist dem AG nur mit einer vom AN anerkannten oder rechtskräftig
+          festgestellten Gegenforderung gestattet. Ein Zurückbehaltungsrecht steht dem AG
+          nicht zu.</p>
+          <p>11.7. Alle sich aus dem Vertragsverhältnis ergebenden Abgabenschuldigkeiten, wie z.B.
+          Rechtsgeschäftsgebühren oder Quellensteuern, trägt der AG.
+          Sollte der AN für solche Abgaben in Anspruch genommen werden, so wird der AG
+          den AN schad- und klaglos halten.</p>
       </section>
       <h2 className={styles.subheading}>12. Höhere Gewalt</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        Soweit und solange Verpflichtungen infolge höherer Gewalt, wie z.B. Krieg,
+        Terrorismus, Naturkatastrophen, Feuer, Streik, Aussperrung, Embargo, hoheitlicher
+        Eingriffe, Ausfall der Stromversorgung, Ausfall von Transportmitteln, Ausfall von
+        Telekommunikationsnetzen bzw. Datenleitungen, sich auf die Dienstleistungen
+        auswirkende Gesetzesänderungen nach Vertragsabschluss oder sonstiger
+        Nichtverfügbarkeit von Produkten nicht fristgerecht oder nicht ordnungsgemäß erfüllt
+        werden können, stellt dies keine Vertragsverletzung dar.
+        </p>
       </section>
       <h2 className={styles.subheading}>13. Nutzungsrechte an Softwareprodukten und Unterlagen</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>13.1. Soweit dem AG vom AN Softwareprodukte überlassen werden oder dem AG die
+          Nutzung von Softwareprodukten im Rahmen der Dienstleistungen ermöglicht wird,
+          steht dem AG das nichtausschließliche, nicht übertragbare, nicht unterlizenzierbare,
+          auf die Laufzeit des Vertrags beschränkte Recht zu, die Softwareprodukte in
+          unveränderter Form zu benutzen.</p>
+          <p>13.2. Bei Nutzung von Softwareprodukten in einem Netzwerk ist für jeden gleichzeitigen
+          Benutzer eine Lizenz erforderlich. Bei Nutzung von Softwareprodukten auf "StandAlone-PCs" ist für jeden PC eine Lizenz erforderlich.
+          13.3. Für dem AG vom AN überlassene Softwareprodukte Dritter gelten vorrangig vor den
+          Regelungen dieses Punktes die jeweiligen Lizenzbestimmungen des Herstellers dieser
+          Softwareprodukte.</p>
+          <p>13.4. Sofern keine gesonderte Vereinbarung getroffen wird, werden dem AG keine
+          weitergehenden Rechte an Softwareprodukten übertragen.
+          Die Rechte des AG nach den §§ 40d, 40e UrhG werden hierdurch nicht
+          beeinträchtigt.</p>
+          <p>13.5. Alle dem AG vom AN überlassenen Unterlagen, insbesondere die Dokumentationen
+          zu Softwareprodukten, dürfen weder vervielfältigt noch auf irgendeine Weise
+          entgeltlich oder unentgeltlich verbreitet werden.</p>
+          <p>13.6. Die für den operativen Betrieb nötige Dokumentation und dafür nötige Passwörter
+          werden vor Ort bei Systemübergabe ausgehändigt. Die System- und
+          Administratorpasswörter sowie die Systemdokumentation werden unmittelbar nach
+          vollständigem Zahlungseingang und Aufforderung durch den AG übergeben, sofern
+          hierbei nicht andere Vereinbarungen hinsichtlich Servicevertrag uund
+          Systemgewährleistung beeinträchtigt werden.</p>
       </section>
       <h2 className={styles.subheading}>14. Erfüllungsgrade und Wiederherstellungszeiten</h2>
 
@@ -406,20 +490,8 @@ const AgbPage = () => {
           Eine Weitergabe der Inhalte an Dritte erfolgt nur in anonymisierter Form oder mit ausdrücklicher Zustimmung des Nutzers. Nutzer haben jederzeit das Recht, ihre Inhalte aus der Datenbank zu entfernen.
         </p>
       </section>
-      <h2 className={styles.subheading}>24. Rechte an der Datenbank</h2>
-
-      <section className={styles.section}>
-        <p>
-          Alle Urheber- und Schutzrechte an der Datenbank verbleiben bei Beschichter Scout. Eine automatisierte Abfrage oder gewerbliche Nutzung der Datenbank ist nicht gestattet.
-        </p>
-        <p>
-          Die Nutzung der Plattform darf ausschließlich im Rahmen der vorgesehenen Funktionen erfolgen. Manipulationen oder unerlaubte Zugriffsmethoden sind untersagt.
-        </p>
-        <p>
-          Verstöße gegen diese Bestimmungen können zu einer Sperrung des Zugangs oder zu rechtlichen Schritten führen. Beschichter Scout behält sich vor, technische Schutzmaßnahmen zu ergreifen.
-        </p>
-      </section>
-      <h2 className={styles.subheading}>25. Gewährleistung und Haftung</h2>
+      
+      <h2 className={styles.subheading}>24. Gewährleistung und Haftung</h2>
 
       <section className={styles.section}>
         <p>
@@ -432,7 +504,7 @@ const AgbPage = () => {
           Die Haftung von Beschichter Scout ist bei einfacher Fahrlässigkeit ausgeschlossen, es sei denn, es handelt sich um Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.
         </p>
       </section>
-      <h2 className={styles.subheading}>26. Schlussbestimmungen</h2>
+      <h2 className={styles.subheading}>25. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
          <p>
