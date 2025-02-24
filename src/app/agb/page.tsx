@@ -249,74 +249,104 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>14. Erfüllungsgrade und Wiederherstellungszeiten</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Der AN ist verpflichtet, die im SLA genannten Erfüllungsgrade bzw.
+          Wiederherstellungszeiten nach Prioritäten einzuhalten. Sollte der AN für die
+          Wiederherstellung die im SLA genannten Zeitlimits überschreiten, hat der AN pro
+          angefangener Stunde der Überschreitung Pönalen bis zur tatsächlichen
+          Wiederherstellung (Erfüllung) an den AG laut SLA zu bezahlen:
+          Die obgenannten Pönalen pro Jahr sind der Höhe nach mit 20% des
+          Gesamtjahresentgeltes begrenzt. Die Geltendmachung eines
+          darüberhinausgehenden Schadenersatzanspruches, es sei denn bei Vorsatz oder
+          grober Fahrlässigkeit, ist ausgeschlossen.
+          Sollten pönalwirksame Überschreitungen eintreten, sind diese dem AN unverzüglich
+          schriftlich zur Kenntnis zu bringen.
+        </p>
       </section>
       <h2 className={styles.subheading}>15. Laufzeit des Vertrags</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>15.1. Der Vertrag tritt mit Unterschrift durch beide Vertragspartner in Kraft und läuft auf
+        unbestimmte Zeit. Der Vertrag kann von jedem Vertragspartner unter Einhaltung
+        einer Kündigungsfrist von 6 Monaten, frühestens aber zum Ende der im Vertrag
+        vereinbarten Mindestlaufzeit, durch eingeschriebenen Brief gekündigt werden.</p>
+        <p>15.2. Jeder Vertragspartner ist berechtigt, den Vertrag aus wichtigem Grund mit
+        eingeschriebenem Brief vorzeitig und fristlos zu kündigen. Ein wichtiger Grund liegt
+        insbesondere vor, wenn der jeweils andere Vertragspartner trotz schriftlicher
+        Abmahnung und Androhung der Kündigung wesentliche Verpflichtungen aus dem
+        Vertrag verletzt oder die Leistungen des anderen Vertragspartners infolge von
+        höherer Gewalt für einen Zeitraum von länger als sechs Monaten behindert oder
+        verhindert werden.</p>
+        <p>15.3. Bei Vertragsbeendigung hat der AG unverzüglich sämtliche ihm vom AN überlassene
+        Unterlagen und Dokumentationen an den AN zurückzustellen.</p>
+        <p>15.4. Auf Wunsch unterstützt der AN bei Vertragsende den AG zu den jeweiligen beim AN
+        geltenden Stundensätzen bei der Rückführung der Dienstleistungen auf den AG oder
+        einen vom AG benannten Dritten.
+        </p>
       </section>
       <h2 className={styles.subheading}>16. Datenschutz</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          16.1. Die Datenschutzerklärung iSd Art 13 und 14 DSGVO wird dem Auftrag beigelegt.
+        </p>
       </section>
       <h2 className={styles.subheading}>17. Geheimhaltung</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+       <p>
+        17.1. Jeder Vertragspartner sichert dem anderen zu, alle ihm vom anderen im
+        Zusammenhang mit diesem Vertrag und seiner Durchführung zur Kenntnis gebrachten
+        Betriebsgeheimnisse als solche zu behandeln und Dritten nicht zugänglich zu machen,
+        soweit diese nicht allgemein bekannt sind, oder dem Empfänger bereits vorher ohne
+        Verpflichtung zur Geheimhaltung bekannt waren, oder dem Empfänger von einem
+        Dritten ohne Geheimhaltungsverpflichtung mitgeteilt bzw. überlassen werden, oder
+        vom Empfänger nachweislich unabhängig entwickelt worden sind, oder aufgrund
+        einer rechtskräftigen behördlichen oder richterlichen Entscheidung offen zu legen
+        sind.</p>
+        <p>17.2. Die mit dem AN verbundenen Unterauftragnehmer gelten nicht als Dritte, soweit sie
+        einer inhaltlich diesem Punkt entsprechenden Geheimhaltungsverpflichtung
+        unterliegen.</p>
       </section>
       <h2 className={styles.subheading}>18. Abwerbeverbot</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        Der AG wird während der Laufzeit des Vertrages und bis zum Ablauf eines Jahres
+        nach Vertragsende vom AN zur Erbringung der Dienstleistungen eingesetzte
+        Mitarbeiter weder selbst noch über Dritte abwerben. Der AG verpflichtet sich, für
+        jeden Fall des Zuwiderhandelns an den AN eine Vertragsstrafe in der Höhe des
+        zwölffachen Bruttomonatsgehalts, das der betreffende Mitarbeiter zuletzt vom AN
+        bezogen hat, mindestens jedoch das Kollektivvertragsgehalt eines Angestellten von
+        Unternehmen im Bereich Dienstleistungen in der automatischen Datenverarbeitung
+        und Informationstechnik in der Erfahrungsstufe für spezielle Tätigkeiten (ST2).
+        </p>
       </section>
       <h2 className={styles.subheading}>19. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        19.1. Die Vertragspartner benennen im Vertrag sachkundige und kompetente Mitarbeiter,
+        die die erforderlichen Entscheidungen fällen oder veranlassen können.</p>
+        <p>19.2. Änderungen und Ergänzungen des Vertrags bedürfen der Schriftform. Das gilt auch
+        für die Aufhebung dieses Formerfordernisses.</p>
+        <p>19.3. Sollten eine oder mehrere Bestimmungen des Vertrags ganz oder teilweise
+        unwirksam oder nicht durchführbar sein oder werden, so wird die Gültigkeit der
+        übrigen Bestimmungen hierdurch nicht berührt. Die unwirksame oder
+        undurchführbare Bestimmung ist durch eine sinngemäße gültige Regelung zu
+        ersetzen, die dem wirtschaftlichen Zweck der unwirksamen oder undurchführbaren
+        Klausel am nächsten kommt.</p>
+        <p>19.4. Jede Verfügung über die aufgrund des Vertrags bestehenden Rechte oder Pflichten
+        bedarf der vorherigen schriftlichen Zustimmung des jeweils anderen
+        Vertragspartners. Der AN ist jedoch berechtigt, den Vertrag auch ohne Zustimmung
+        des AG auf ein mit dem AN konzernrechtlich verbundenes Unternehmen zu
+        übertragen.</p>
+        <p>19.5. Soweit nicht anders vereinbart, gelten die zwischen Unternehmern zur Anwendung
+        kommenden gesetzlichen Bestimmungen ausschließlich nach österreichischem Recht,
+        auch dann, wenn der Auftrag im Ausland durchgeführt wird. Für eventuelle
+        Streitigkeiten gilt ausschließlich die örtliche Zuständigkeit des sachlich zuständigen
+        Gerichtes für den Geschäftssitz des Auftragnehmers als vereinbart.
+        </p>
       </section>
       <h2 className={styles.subheading}>20. Mediationsklausel</h2>
 
