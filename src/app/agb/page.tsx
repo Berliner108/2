@@ -321,38 +321,47 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>20. Mediationsklausel</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+        Für den Fall von Streitigkeiten aus diesem Vertrag, die nicht einvernehmlich
+        geregelt werden können, vereinbaren die Vertragsparteien einvernehmlich zur
+        außergerichtlichen Beilegung des Konfliktes eingetragene Mediatoren (ZivMediatG)
+        mit dem Schwerpunkt WirtschaftsMediation aus der Liste des Justizministeriums
+        beizuziehen. Sollte über die Auswahl der WirtschaftsMediatoren oder inhaltlich kein
+        Einvernehmen hergestellt werden können, werden frühestens ein Monat ab
+        Scheitern der Verhandlungen rechtliche Schritte eingeleitet.
+        Im Falle einer nicht zustande gekommenen oder abgebrochenen Mediation, gilt in
+        einem allfällig eingeleiteten Gerichtsverfahren österreichisches Recht.
+        Sämtliche aufgrund einer vorherigen Mediation angelaufenen notwendigen
+        Aufwendungen, insbesondere auch jene für einen beigezogenen
+        Rechtsberater, können vereinbarungsgemäß in einem Gerichts- oder
+        Schiedsgerichtsverfahren als „vorprozessuale Kosten“ geltend gemacht werden.
+        </p>
       </section>
       <h2 className={styles.subheading}>21. Einstellungen von Inhalten</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Nutzer können Fahrzeuginserate in die Datenbank einstellen. Jedes Inserat bleibt für acht Wochen abrufbar. Die zulässige Anzahl gleichzeitig abrufbarer Inserate ist begrenzt.
+        </p>
+        <p>
+          Eingestellte Inhalte dürfen keine rechtswidrigen, beleidigenden, diskriminierenden oder irreführenden Informationen enthalten. Beschichter Scout behält sich das Recht vor, unzulässige Inhalte ohne Vorankündigung zu entfernen.
+        </p>
+        <p>
+          Bei wiederholten Verstößen kann das Nutzerkonto dauerhaft gesperrt werden. Rechtswidrige Inhalte können an die zuständigen Behörden gemeldet werden. Nutzer sind verpflichtet, sich über die rechtlichen Rahmenbedingungen ihrer Inserate zu informieren.
+        </p>
       </section>
       <h2 className={styles.subheading}>22. Verantwortlichkeit für Inhalte</h2>
 
       <section className={styles.section}>
-        <p>Der Auftragnehmer (AN) erbringt für den Auftraggeber (AG) Dienstleistungen in der
-          Oberflächentechnik und im Bereich des Vertriebs von Arbeitsmitteln unter Einhaltung des beiliegenden, einen integrierenden
-          Bestandteil bildenden Service Level Agreements (SLAs).
-          Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle gegenwärtigen und
-          zukünftigen Dienstleistungen, die der AN gegenüber dem AG erbringt, auch wenn
-          im Einzelfall bei Vertragsabschluss nicht ausdrücklich auf die AGB Bezug
-          genommen wird. Geschäftsbedingungen des AG gelten nur, wenn sie vom AN
-          schriftlich anerkannt wurden.</p>
+        <p>
+          Der Nutzer trägt die volle Verantwortung für die von ihm eingestellten Inhalte. Er hat sicherzustellen, dass keine Rechte Dritter verletzt oder gesetzliche Vorschriften missachtet werden.
+        </p>
+        <p>
+        Beschichter Scout übernimmt keine Verantwortung für die Inhalte der Nutzer und führt keine Überprüfung der eingestellten Inhalte durch. Verstöße gegen geltendes Recht können zur Sperrung oder Löschung des Nutzerkontos führen.
+        </p>
+        <p>
+          Der Nutzer stellt Beschichter Scout von sämtlichen Ansprüchen Dritter frei, die aufgrund seiner eingestellten Inhalte entstehen. Dies gilt insbesondere für urheberrechtlich geschützte Werke oder unwahre Angaben.
+        </p>
       </section>
       <h2 className={styles.subheading}>23. Nutzungsrechte</h2>
 
