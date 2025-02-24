@@ -312,7 +312,7 @@ const AgbPage = () => {
           auf die Laufzeit des Vertrags beschränkte Recht zu, die Softwareprodukte in
           unveränderter Form zu benutzen.</p>
           <p>13.2. Bei Nutzung von Softwareprodukten in einem Netzwerk ist für jeden gleichzeitigen
-          Benutzer eine Lizenz erforderlich. Bei Nutzung von Softwareprodukten auf "StandAlone-PCs" ist für jeden PC eine Lizenz erforderlich.
+          Benutzer eine Lizenz erforderlich. Bei Nutzung von Softwareprodukten auf .StandAlone-PCs. ist für jeden PC eine Lizenz erforderlich.
           13.3. Für dem AG vom AN überlassene Softwareprodukte Dritter gelten vorrangig vor den
           Regelungen dieses Punktes die jeweiligen Lizenzbestimmungen des Herstellers dieser
           Softwareprodukte.</p>
