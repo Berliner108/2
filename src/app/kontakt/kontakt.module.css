@@ -78,7 +78,7 @@
 /* Button */
 
 .button {  
-  background: #40E0D0;
+  background: linear-gradient(90deg, #0088cc, #00cccc);;
   border: none;
   color: white;
   padding: 12px 24px;
@@ -89,7 +89,7 @@
 }
 
 .button:hover {
-  background-color: #38c0b2; /* Etwas dunklerer Türkis für den Hover-Effekt */
+  background: linear-gradient(90deg, #00cccc, #0088cc);
 }
 
 .button:active {
