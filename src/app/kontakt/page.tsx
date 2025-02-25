@@ -100,7 +100,8 @@ const ContactPage = () => {
                 Ja, ich habe die <a href="/datenschutz">Datenschutzerklärung</a> gelesen und bin damit einverstanden.
               </label>
             </div>
-            <button type="submit" className={styles.button}>Absenden</button>
+            <br></br>
+            <button type="submit" className={styles.button}><b>Absenden</b></button>
           </form>
         </div>
       </div>

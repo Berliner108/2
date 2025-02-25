@@ -1,7 +1,7 @@
 .container {
   max-width: 800px;
-  margin: 40px auto;
-  
+  margin: 20px auto;
+  margin-bottom: -20px;
   padding: 20px;
   background-color: #fff;
   border-radius: 8px;
@@ -19,8 +19,8 @@
 }
 
 .sectionTitle {
-  color: #40E0D0; /* Türkis passend zum Design */
-  border-bottom: 2px solid #40E0D0;
+  color: #555;
+  border-bottom: 2px solid #555;
   padding-bottom: 5px;
   margin-bottom: 10px;
 }
@@ -28,4 +28,25 @@
 .text {
   color: #555;
   line-height: 1.6;
+}
+
+.backButton {
+  display: block;
+  width: 100%;
+  max-width: 250px;
+  margin: 60px auto;
+  padding: 10px;
+  font-size: 1rem;
+  text-align: center;
+  color: white;
+  background: linear-gradient(90deg, #00cccc, #0088cc);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-decoration: none;
+}
+
+.backButton:hover {
+  background: linear-gradient(90deg, #0088cc, #00cccc);
 }

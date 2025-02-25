@@ -514,9 +514,9 @@ const AgbPage = () => {
         <p>Beschichter Scout behält sich das Recht vor, diese AGB jederzeit zu ändern. Änderungen werden den Nutzern rechtzeitig mitgeteilt. 
           Bei fortgesetzter Nutzung der Plattform gelten die geänderten Bedingungen als akzeptiert.</p>
       </section>
-      
+      <br></br>
       <Link href="/" legacyBehavior>
-        <button className={styles.backButton}>Zurück zur Startseite</button>
+        <button className={styles.backButton}><b>Zurück zur Startseite</b></button>
       </Link>
 
     </div>

@@ -62,7 +62,7 @@ header {
   
   ul li a:hover {
     text-decoration: none;
-    color: #40E0D0;
+    color: #00b4d8;
   }  
   .socialLinks {
     display: flex;
@@ -74,7 +74,7 @@ header {
     margin: 4px;
   }  
   .socialLinks a:hover {
-    color: #00e5ff; /* Farbe, wenn die Icons hover sind */
+    color: #00b4d8;
   }  
   @media (max-width: 768px) {
     .footer {

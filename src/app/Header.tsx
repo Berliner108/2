@@ -70,6 +70,10 @@ const Header = () => {
       <div className="full-width-bar">
         Die Nr.1 Plattform für Oberflächentechnik
       </div>
+      <div className="navigationsleiste">
+        Angebote einholen  Kaufen
+      </div>
+      
 
       {/* Hamburger Menu für mobile Ansicht */}
       {menuOpen && (

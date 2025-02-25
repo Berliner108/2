@@ -8,7 +8,7 @@ const KarrierePage = () => {
     { title: 'Frontend Entwickler (m/w/d) 100%', slug: 'frontend-entwickler' },
     { title: 'Backend Entwickler (m/w/d) 100%', slug: 'backend-entwickler' },
     { title: 'Kundenservice (m/w/d) 50-100%', slug: 'kundenservice' },
-    { title: 'Projektmanager (m/w/d)', slug: 'projektmanager' },
+    { title: 'Projektmanager (m/w/d) 50-100%', slug: 'projektmanager' },
   ];
 
   return (
@@ -17,8 +17,8 @@ const KarrierePage = () => {
         <h1>Deine Ziele. Unsere Möglichkeiten.</h1>
         <p>
           Seit über 20 Jahren verwandeln wir vielversprechende Ideen in erfolgreiche Produkte. Der Schlüssel zu
-          unserem Erfolg? <strong>Gemeinschaft und Teamgeist.</strong> Mit Standorten in der Schweiz, Rumänien und
-          Thailand sind wir ein international agierendes Technologieunternehmen – und dennoch steht bei uns der Mensch
+          unserem Erfolg? <strong>Gemeinschaft und Teamgeist.</strong> Mit Standorten in Deutschland, Österreich und
+          der Schweiz sind wir ein international agierendes Technologieunternehmen – und dennoch steht bei uns der Mensch
           im Mittelpunkt. Unser persönlicher und wertschätzender Umgang prägt sowohl unsere Unternehmenskultur als auch
           die Beziehungen zu unseren Kunden.
         </p>
@@ -57,7 +57,7 @@ const KarrierePage = () => {
         </p>        
       </section>
       <Link href="/" legacyBehavior>
-        <button className={styles.backButton}>Zurück zur Startseite</button>
+        <button className={styles.backButton}><b>Zurück zur Startseite</b></button>
       </Link>
     </main>
   );

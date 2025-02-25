@@ -8,7 +8,7 @@ const Page = () => {
       
       <div>
         {/* Andere Inhalte der Seite */}
-        <h1>Willkommen zu meiner Seite</h1>
+        <h1>Servus</h1>
         <h1>Willkommen zu meiner Seite</h1>
         <h1>Willkommen zu meiner Seite</h1>
         <h1>Willkommen zu meiner Seite</h1>
