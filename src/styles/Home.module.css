@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+.navbar {
+    font-family: 'Oswald', sans-serif;
+    width: 100%;
+    background-color: #fff;
+    display: flex;
+    padding: 10px 20px;
+    position: relative;
+    height: 40px;
+    margin-top: 20px;
+}
+
+.navList {
+    list-style: none;
+    display: flex;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    width: 100%;
+}
+
+/* Individuelle Positionierung */
+.link1 { position: absolute; left: -1%; }
+.link2 { position: absolute; left: 12%; }
+.link3 { position: absolute; left: 20%; }
+.link4 { position: absolute; left: 38%; }
+.link5 { position: absolute; left: 50%; }
+.link6 { position: absolute; left: 58%; }
+.link7 { position: absolute; left: 75%; }
+.link8 { position: absolute; left: 88%; }
+
+/* Buttons */
+.navButton {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: 'Oswald', sans-serif;
+    white-space: nowrap;
+    padding: 10px 15px;
+    color: black; /* Standardfarbe für den Text ist schwarz */
+    transition: color 0.3s ease; /* Nur die Textfarbe ändert sich */
+}
+
+/* Hover-Effekt für Links */
+.navItem:hover .navButton {
+    color: #007BFF; /* Ändert die Textfarbe in Blau beim Hover */
+}
+
+/* Dropdown */
+.dropdown {
+    position: absolute;
+    top: 100%; /* Direkt unter dem Button */
+    left: 0;
+    background: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-radius: 4px;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    min-width: 100%;
+}
+
+/* Dropdown-Links */
+.dropdownLink {
+    padding: 10px 15px;
+    text-decoration: none;
+    color: black;
+    display: block;
+    font-family: 'Oswald', sans-serif;
+    white-space: nowrap;
+    text-align: center; /* Zentriert den Text */
+    transition: background-color 0.2s ease; /* Nur Hintergrundfarbe ändert sich */
+    cursor: pointer; /* Zeigt den Pfeil-Cursor an */
+}
+
+/* Hover-Effekt für Dropdown-Links - Hintergrundfarbe */
+.dropdownLink:hover {
+    background-color: #007BFF; /* Hintergrundfarbe wird Blau beim Hover */
+    color: white; /* Textfarbe wird weiß beim Hover */
+}
+
+/* Hover-Effekt für die Links in der Navbar */
+.navItem:hover > .navButton {
+    color: #007BFF; /* Die Textfarbe der Links ändert sich in Blau */
+}
+
+/* Dropdown sichtbar machen */
+.navItem:hover .dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Wichtige Regel, um den Hover-Effekt für die Links auf schwarz zu setzen, sobald der Mauszeiger im Dropdown ist */
+.navItem:hover .dropdown:hover ~ .navButton {
+    color: black; /* Link zurück zu schwarz, sobald der Cursor über das Dropdown-Menü geht */
+}
+
+/* Setzt den Hover-Effekt auf den Link zurück, sobald der Cursor im Dropdown ist */
+.navItem:hover .dropdown:hover .navButton {
+    color: black; /* Setzt den Link zurück auf schwarz, wenn der Cursor im Dropdown ist */
+}
+
+.fa-chevron-down {
+    font-size: 1.5rem; /* Größe der Pfeile */
+    margin-left: 5px; /* Abstand zwischen Text und Pfeil */
+    color: #333; /* Farbe des Pfeils */
+  }
+  
+  
