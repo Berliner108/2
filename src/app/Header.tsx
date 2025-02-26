@@ -17,7 +17,7 @@ const Header = () => {
         {/* Logo + Text als Home-Link */}
         <Link href="/" className="home-link">
           <div className="logo-container">
-            <svg width="118" height="80" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
+            <svg width="118" height="70" viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M10,40 Q90,60 170,40" 
                 fill="none" 

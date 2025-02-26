@@ -1,114 +1,115 @@
-/* /src/app/styles/Navbar.module.css */
-
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
+/* Haupt-Wrapper */
+.wrapper {
+  width: 100%;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Navbar */
 .navbar {
-    font-family: 'Oswald', sans-serif;
-    width: 100%;
-    background-color: white;
-    display: flex;
-    padding: 10px 20px;
-    position: relative;
-    height: 50px;
-    margin-top: 20px;
+  font-family: 'Oswald', sans-serif;
+  width: 100%;
+  background-color: white;
+  display: flex;
+  justify-content: center; /* Zentriert die Links horizontal */
+  padding: 10px 0;
+  position: relative;
+  z-index: 1000;
 }
 
-.navbarContainer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
+/* Navbar Liste */
 .navList {
-    list-style: none;
-    display: flex;
-    padding: 0;
-    margin: 0;
-    position: relative;
-    width: 100%;
-    justify-content: space-around;
+  list-style: none;
+  display: flex;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* Jedes Menü-Element */
+.navItem {
+  position: relative;
+  margin: 0 15px; /* Abstand zwischen den Links */
 }
 
 /* Buttons */
 .navButton {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    font-family: 'Oswald', sans-serif;
-    white-space: nowrap;
-    padding: 10px 15px;
-    color: black; /* Standardfarbe für den Text ist schwarz */
-    transition: color 0.3s ease;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  padding: 10px 15px;
+  color: black;
+  transition: color 0.3s ease;
 }
 
-/* Hover-Effekt für Links */
 .navItem:hover .navButton {
-    color: #007BFF; /* Ändert die Textfarbe in Blau beim Hover */
+  color: #007BFF;
 }
 
-/* Mobile Hamburger Button */
-.hamburger {
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 25px;
-    height: 20px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
+/* Dropdown-Menü */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
+  background: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: none;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 4px;
+  z-index: 10000; /* Höchste Priorität, überlagert alles */
+  min-width: 150px;
 }
 
-.hamburger .bar {
-    width: 100%;
-    height: 3px;
-    background-color: black;
-    transition: all 0.3s;
+/* Dropdown Links */
+.dropdownLink {
+  padding: 10px 15px;
+  text-decoration: none;
+  color: black;
+  display: block;
+  text-align: center;
+  transition: background-color 0.2s ease;
 }
 
-/* Mobile Navigation */
-.navList.active {
-    display: block; /* Zeige das Menü, wenn es aktiviert ist */
+.dropdownLink:hover {
+  background-color: #007BFF;
+  color: white;
 }
 
-.navList {
-    display: flex;
+/* Dropdown sichtbar machen */
+.navItem:hover .dropdown {
+  display: flex;
 }
 
+/* Mobile Ansicht */
 @media (max-width: 768px) {
-    .hamburger {
-        display: flex; /* Zeige den Hamburger-Button auf mobilen Geräten */
-    }
+  .navbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
 
-    .navbar {
-        max-width: 90% !important;
-    }
+  .navList {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 10px 0;
+  }
 
-    .navList {
-        display: none; /* Standardmäßig wird die Liste auf mobilen Geräten versteckt */
-        position: absolute;
-        top: 60px; /* Direkt unter der Navbar */
-        left: 0;
-        right: 0;
-        background-color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        flex-direction: column;
-        text-align: center;
-    }
+  .navItem {
+    margin-right: 0px;
+    margin-left: 0px;
+  }
 
-    .navList.active {
-        display: flex; /* Wenn das Menü geöffnet ist, wird die Liste angezeigt */
-    }
-
-    .navItem {
-        width: 100%; /* Die Links nehmen die gesamte Breite ein */
-    }
-
-    .navButton {
-        padding: 15px;
-        width: 100%;
-        text-align: center;
-    }
+  /* Dropdown für mobile Ansicht ausblenden */
+  .dropdown {
+    display: none !important;
+  }
 }
-
