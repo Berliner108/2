@@ -1,3 +1,4 @@
+/* globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,6 +13,11 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+/* Sanftes Scrollen hinzufügen */
+html {
+  scroll-behavior: smooth;
 }
 
 body {

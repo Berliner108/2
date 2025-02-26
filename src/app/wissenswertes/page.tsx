@@ -1,4 +1,6 @@
 import styles from "./wissenswertes.module.css";
+import "../../styles/globals.css"; // Korrekte relative Pfadangabe
+
 
 export default function HomePage() {
   return (
