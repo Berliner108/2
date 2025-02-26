@@ -12,7 +12,7 @@ export default function Home() {
             <b>Angebote einholen</b>▿
           </button>
           <div className={styles.dropdown}>
-            <a href="/wissenswertes" className={styles.dropdownLink}>Lackieren</a>
+            <a href="#" className={styles.dropdownLink}>Lackieren</a>
             <a href="#" className={styles.dropdownLink}>Pulverbeschiten</a>
             <a href="#" className={styles.dropdownLink}>Verzinken</a>
             <a href="#" className={styles.dropdownLink}>Eloxieren</a>
