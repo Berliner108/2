@@ -1,23 +1,32 @@
 import React from 'react';
-import Link from 'next/link';
-import styles from './login.module.css';
+import styles from './login.module.css'; // Importiere die CSS-Datei
 
 const Login = () => {
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Kontakt</h1>
+    <div className={styles.loginContainer}>
+      {/* Linker Container für das Bild */}
+      <div className={styles.leftContainer}>
+        <img src="/images/signup.jpg" alt="Login Image" className={styles.image} />
       </div>
-      <div className={styles.content}>
-        <h2>So erreichst du uns</h2>
-        <p>
-          Du kannst uns per E-Mail oder Telefon erreichen. Wir freuen uns auf deine Nachricht.
-        </p>
-        <Link href="/">Zurück zur Startseite</Link>
+
+      {/* Rechter Container für das Login-Formular */}
+      <div className={styles.rightContainer}>
+        <form className={styles.loginForm}>
+          <h2>Login</h2>
+
+          <div className={styles.inputContainer}>
+            <label htmlFor="email">Email</label>
+            <input type="email" id="email" placeholder="Email" />
+          </div>
+
+          <div className={styles.inputContainer}>
+            <label htmlFor="password">Password</label>
+            <input type="password" id="password" placeholder="Password" />
+          </div>
+
+          <button type="submit">Login</button>
+        </form>
       </div>
-      <footer className={styles.footer}>
-        <p>&copy; 2025 Dein Unternehmen</p>
-      </footer>
     </div>
   );
 };

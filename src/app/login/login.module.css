@@ -1,78 +1,110 @@
-/* /src/pages/kontakt.module.css */
+/* login.module.css */
 
-.container {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    padding: 20px;
-    max-width: 1200px;
-    margin-top: 00px;
+/* Container, der beide Container nebeneinander anzeigt */
+.loginContainer {
+  display: flex; /* Setzt die Container nebeneinander */
+  width: 100%; /* Vollständige Breite */
+  height: 100vh; /* Höhe des Viewports */
+  margin: 0; /* Entfernt mögliche Abstände */
+}
+
+/* Linker Container für das Bild */
+.leftContainer {
+  width: 55%; /* Der linke Container nimmt 55% der Breite ein */
+  height: 100%; /* Die Höhe des Containers ist auf 100% des Viewports gesetzt */
+  overflow: hidden; /* Verhindert das Überlaufen des Bildes */
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.image {
+  width: 100%; /* Das Bild nimmt die komplette Breite des Containers ein */
+  height: 100%; /* Das Bild nimmt die komplette Höhe des Containers ein */
+  object-fit: cover; /* Sorgt dafür, dass das Bild die Box ausfüllt, ohne die Proportionen zu verzerren */
+}
+
+/* Rechter Container für das Login-Formular */
+.rightContainer {
+  width: 45%; /* Der rechte Container nimmt 45% der Breite ein */
+  display: flex;
+  justify-content: center; /* Zentriert das Formular horizontal */
+  align-items: center; /* Zentriert das Formular vertikal */
+  height: 100%; /* Die Höhe des Containers ist auf 100% der Viewport-Höhe gesetzt */
+}
+
+.loginForm {
+  width: 80%; /* Das Formular ist 80% der Breite des Containers */
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column; /* Stapelt die Elemente vertikal */
+  align-items: center; /* Zentriert alle Elemente */
+}
+
+.loginForm h2 {
+  text-align: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Container für Eingabefelder */
+.inputContainer {
+  width: 100%; /* Sorgt dafür, dass alle Eingaben gleich breit sind */
+  margin-bottom: 15px;
+}
+
+.loginForm label {
+  display: block;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.loginForm input {
+  width: 94%; /* Eingabefelder sind gleich breit wie der Button */
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.loginForm button {
+  width: 60%; /* Button ist gleich breit wie die Eingabefelder */
+  padding: 12px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  margin-top: 10px; /* Abstand nach oben */
+}
+
+.loginForm button:hover {
+  background-color: #0056b3;
+}
+
+/* Responsives Design für mobile Geräte */
+@media (max-width: 768px) {
+  .loginContainer {
+    flex-direction: column; /* Auf mobilen Geräten werden die Container untereinander angeordnet */
   }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
+
+  .leftContainer {
+    width: 100%; /* Der linke Container nimmt auf mobilen Geräten die volle Breite ein */
+    height: 40%; /* Die Höhe des linken Containers wird verringert */
+    display: none;
   }
-  
-  .header h1 {
-    font-size: 36px;
-    color: #0070f3;
+
+  .rightContainer {
+    width: 100%; /* Der rechte Container nimmt auf mobilen Geräten die volle Breite ein */
+    height: 60%; /* Die Höhe des rechten Containers wird angepasst */
+    margin-top: 60px;
   }
-  
-  .content {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  .loginForm {
+    width: 90%; /* Größere Breite auf mobilen Geräten */
   }
-  
-  .content h2 {
-    font-size: 24px;
-    margin-top: 20px;
-    color: #0070f3;
-  }
-  
-  .content p {
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 10px 0;
-  }
-  
-  .content a {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  
-  .content a:hover {
-    text-decoration: underline;
-  }
-  
-  .footer {
-    text-align: center;
-    margin-top: 40px;
-    font-size: 14px;
-    color: #777;
-  }
-  
-  @media (max-width: 768px) {
-    .container {
-      padding: 10px;
-    }
-  
-    .header h1 {
-      font-size: 28px;
-    }
-  
-    .content h2 {
-      font-size: 20px;
-    }
-  
-    .content p {
-      font-size: 14px;
-    }
-  
-    .footer {
-      font-size: 12px;
-    }
-  }
-  
+}

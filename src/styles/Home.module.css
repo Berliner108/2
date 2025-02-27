@@ -20,11 +20,6 @@
   position: relative;
   z-index: 1000;
   scrollbar-width: none; /* Für Firefox */
-  
-}
-
-.navbar::-webkit-scrollbar {
-  display: none; /* Für Chrome, Safari und Edge */
 }
 
 /* Navbar Liste */
@@ -61,7 +56,7 @@
 /* Dropdown-Menü */
 .dropdown {
   position: absolute;
-  top: 100%;
+  top: 100%; /* Dropdown direkt unter dem Link */
   left: 50%;
   transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
   background: white;
@@ -72,6 +67,7 @@
   border-radius: 4px;
   z-index: 10000; /* Höchste Priorität, überlagert alles */
   min-width: 150px;
+  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
 }
 
 /* Dropdown Links */
@@ -91,7 +87,7 @@
 
 /* Dropdown sichtbar machen */
 .navItem:hover .dropdown {
-  display: flex;
+  display: flex; /* Macht das Dropdown sichtbar */
 }
 
 /* Mobile Ansicht */
