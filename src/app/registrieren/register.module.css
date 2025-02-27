@@ -1,44 +1,51 @@
-/* Container, der beide Container nebeneinander anzeigt */
+/* Container für die gesamte Seite */
 .registerContainer {
-  display: flex; /* Setzt die Container nebeneinander */
-  width: 100%; /* Vollständige Breite */
-  height: 100vh; /* Höhe des Viewports */
-  margin: 0; /* Entfernt mögliche Abstände */
+  display: flex;
+  width: 100%;
+  height: 120vh;
+  margin: 0;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
 }
 
 /* Linker Container für das Bild */
 .leftContainer {
-  width: 55%; /* Der linke Container nimmt 55% der Breite ein */
-  height: 100%; /* Die Höhe des Containers ist auf 100% des Viewports gesetzt */
-  overflow: hidden; /* Verhindert das Überlaufen des Bildes */
+  display: block;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
 }
 
-.image {
-  width: 100%; /* Das Bild nimmt die komplette Breite des Containers ein */
-  height: 100%; /* Das Bild nimmt die komplette Höhe des Containers ein */
-  object-fit: cover; /* Sorgt dafür, dass das Bild die Box ausfüllt, ohne die Proportionen zu verzerren */
-}
-
-/* Rechter Container für das Registrierungs-Formular */
+/* Rechter Container für das Formular */
 .rightContainer {
-  width: 45%; /* Der rechte Container nimmt 45% der Breite ein */
+  width: 50%;
   display: flex;
-  justify-content: center; /* Zentriert das Formular horizontal */
-  align-items: center; /* Zentriert das Formular vertikal */
-  height: 100%; /* Die Höhe des Containers ist auf 100% der Viewport-Höhe gesetzt */
+  justify-content: center;
+  align-items: center;
 }
 
 .registerForm {
-  width: 80%; /* Das Formular ist 80% der Breite des Containers */
+  width: 80%;
   padding: 20px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: column; /* Stapelt die Elemente vertikal */
-  align-items: center; /* Zentriert alle Elemente */
+  flex-direction: column;
+  align-items: center;
+}
+
+.registerForm h1 {
+  margin-bottom: 10px;
 }
 
 .registerForm h2 {
@@ -47,157 +54,120 @@
   margin-bottom: 20px;
 }
 
-/* Container für den Schieberegler */
+/* Slider Container */
 .inputContainer {
-  width: 100%; /* Volle Breite */
+  width: 100%;
   margin-bottom: 15px;
   text-align: center;
 }
 
-/* Stil für den Schieberegler */
-.slider {
-  -webkit-appearance: none;
+.sliderContainer {
+  position: relative;
   width: 100%;
-  height: 15px;
-  background: #ccc;
-  border-radius: 10px;
-  outline: none;
-  transition: background 0.3s;
+  height: 40px;
+  background-color: #ccc;
+  border-radius: 25px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  cursor: pointer; /* Zeigt den Cursor als Hand bei Hover */
 }
 
-/* Stil für den Schieberegler, wenn er in der linken Position ist */
-.slider:focus {
-  background: #007bff;
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #007bff;
+  border-radius: 25px;
+  transition: all 0.3s ease;
 }
 
-/* Der Kreis im Schieberegler */
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  background: #007bff;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-/* Wenn der Schieberegler verschoben wird */
-.slider::-webkit-slider-thumb:active {
-  background: #0056b3;
-}
-
-/* Der Text für die Anzeige */
-.slider-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.slider-labels span {
+.sliderLabelLeft {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
   font-size: 14px;
-  color: #333;
+  font-weight: bold;
 }
 
+.sliderLabelRight {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
 
-
-.registerForm label {
+/* Eingabefelder */
+.inputContainer label {
   display: block;
   margin-bottom: 5px;
-  text-align: left;
+  font-size: 14px;
+  color: #555;
 }
 
-.registerForm input {
-  width: 94%; /* Eingabefelder sind gleich breit wie der Button */
+.inputContainer input {
+  width: 94%;
   padding: 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
+  margin-bottom: 15px;
 }
 
 .registerForm button {
-  width: 60%; /* Button ist gleich breit wie die Eingabefelder */
+  width: 60%;
   padding: 12px;
-  background-color: #007BFF;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   font-size: 16px;
+  cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 10px; /* Abstand nach oben */
+  margin-top: 10px;
 }
 
 .registerForm button:hover {
   background-color: #0056b3;
 }
 
-/* Link zur Login-Seite */
-.backToLogin {
-  width: 100%;
-  text-align: center;
-  margin-top: 15px;
-  font-size: 14px;
-}
-
-.backToLogin a {
-  color: #007BFF;
-  text-decoration: none;
-}
-
-.backToLogin a:hover {
-  text-decoration: underline;
-}
-
 /* Responsives Design für mobile Geräte */
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   .registerContainer {
-    flex-direction: column; /* Auf mobilen Geräten werden die Container untereinander angeordnet */
+    flex-direction: column;
     height: 100%;
-  }
-
-  .leftContainer {
-    width: 100%; /* Der linke Container nimmt auf mobilen Geräten die volle Breite ein */
-    height: 40%; /* Die Höhe des linken Containers wird verringert */
-    display: none;
-  }
-
-  .rightContainer {
-    width: 100%; /* Der rechte Container nimmt auf mobilen Geräten die volle Breite ein */
-    height: 60%; /* Die Höhe des rechten Containers wird angepasst */
-    margin-top: 50px;
-    margin-bottom: 50px;
-  }
-
-  .registerForm {
-    width: 90%; /* Größere Breite auf mobilen Geräten */
-  }
-}
-
-/* Spezifisches Styling für 896x414 Pixel */
-@media (min-width: 769px) and (max-width: 950px) {
-  .registerContainer {
-    flex-direction: column; /* Container untereinander statt nebeneinander */
-    height: 100%;
-  }
-
-  .leftContainer {
-    width: 100%; /* Volle Breite */
-    height: 40%; /* Höhe anpassen */
-    display: none; /* Falls du das Bild ausblenden willst, sonst entfernen */
   }
 
   .rightContainer {
     width: 100%;
-    height: 40%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     margin-top: 20px;
     margin-bottom: 20px;
   }
 
   .registerForm {
-    width: 85%; /* Breite des Formulars anpassen */
+    width: 90%;
+  }
+
+  .sliderContainer {
+    width: 80%;
+    margin-left: 30px;
+  }
+
+  .leftContainer {
+    width: 100%;
+    height: 40%;
+    display: block;
+  }
+
+  .image {
+    width: 100%;
+    height: auto;
+    display: none;
   }
 }
