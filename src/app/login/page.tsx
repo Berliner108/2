@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import styles from './login.module.css'; // Importiere die CSS-Datei
 
 const Login = () => {
@@ -8,20 +9,26 @@ const Login = () => {
       <div className={styles.leftContainer}>
         <img src="/images/signup.jpg" alt="Login Image" className={styles.image} />
       </div>
-
+      
       {/* Rechter Container für das Login-Formular */}
       <div className={styles.rightContainer}>
         <form className={styles.loginForm}>
+          <h1>Willkommen zurück!</h1>
           <h2>Login</h2>
 
           <div className={styles.inputContainer}>
-            <label htmlFor="email">Email</label>
-            <input type="email" id="email" placeholder="Email" />
+            <label htmlFor="email">Benutzername oder E-Mail</label>
+            <input type="email" id="email" placeholder="Benutzername oder E-Mail eingeben" />
           </div>
 
           <div className={styles.inputContainer}>
-            <label htmlFor="password">Password</label>
-            <input type="password" id="password" placeholder="Password" />
+            <label htmlFor="password">Passwort</label>
+            <input type="password" id="password" placeholder="Passwort eingeben" />
+          </div>
+
+          {/* Passwort vergessen Link */}
+          <div className={styles.forgotPassword}>
+            <Link href="/reset-password">Passwort vergessen?</Link>
           </div>
 
           <button type="submit">Login</button>

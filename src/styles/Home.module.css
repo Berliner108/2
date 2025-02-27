@@ -91,7 +91,7 @@
 }
 
 /* Mobile Ansicht */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .navbar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

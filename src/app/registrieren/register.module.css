@@ -1,7 +1,5 @@
-/* login.module.css */
-
 /* Container, der beide Container nebeneinander anzeigt */
-.loginContainer {
+.registerContainer {
   display: flex; /* Setzt die Container nebeneinander */
   width: 100%; /* Vollständige Breite */
   height: 100vh; /* Höhe des Viewports */
@@ -23,7 +21,7 @@
   object-fit: cover; /* Sorgt dafür, dass das Bild die Box ausfüllt, ohne die Proportionen zu verzerren */
 }
 
-/* Rechter Container für das Login-Formular */
+/* Rechter Container für das Registrierungs-Formular */
 .rightContainer {
   width: 45%; /* Der rechte Container nimmt 45% der Breite ein */
   display: flex;
@@ -32,7 +30,7 @@
   height: 100%; /* Die Höhe des Containers ist auf 100% der Viewport-Höhe gesetzt */
 }
 
-.loginForm {
+.registerForm {
   width: 80%; /* Das Formular ist 80% der Breite des Containers */
   padding: 20px;
   background: #fff;
@@ -43,25 +41,73 @@
   align-items: center; /* Zentriert alle Elemente */
 }
 
-.loginForm h2 {
+.registerForm h2 {
   text-align: center;
   width: 100%;
   margin-bottom: 20px;
 }
 
-/* Container für Eingabefelder */
+/* Container für den Schieberegler */
 .inputContainer {
-  width: 100%; /* Sorgt dafür, dass alle Eingaben gleich breit sind */
+  width: 100%; /* Volle Breite */
   margin-bottom: 15px;
+  text-align: center;
 }
 
-.loginForm label {
+/* Stil für den Schieberegler */
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  background: #ccc;
+  border-radius: 10px;
+  outline: none;
+  transition: background 0.3s;
+}
+
+/* Stil für den Schieberegler, wenn er in der linken Position ist */
+.slider:focus {
+  background: #007bff;
+}
+
+/* Der Kreis im Schieberegler */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+/* Wenn der Schieberegler verschoben wird */
+.slider::-webkit-slider-thumb:active {
+  background: #0056b3;
+}
+
+/* Der Text für die Anzeige */
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.slider-labels span {
+  font-size: 14px;
+  color: #333;
+}
+
+
+
+.registerForm label {
   display: block;
   margin-bottom: 5px;
   text-align: left;
 }
 
-.loginForm input {
+.registerForm input {
   width: 94%; /* Eingabefelder sind gleich breit wie der Button */
   padding: 12px;
   border: 1px solid #ccc;
@@ -69,7 +115,7 @@
   font-size: 16px;
 }
 
-.loginForm button {
+.registerForm button {
   width: 60%; /* Button ist gleich breit wie die Eingabefelder */
   padding: 12px;
   background-color: #007BFF;
@@ -82,31 +128,30 @@
   margin-top: 10px; /* Abstand nach oben */
 }
 
-.loginForm button:hover {
+.registerForm button:hover {
   background-color: #0056b3;
 }
 
-.forgotPassword {
+/* Link zur Login-Seite */
+.backToLogin {
   width: 100%;
-  text-align: right;
-  margin-bottom: 10px;
-}
-
-.forgotPassword a {
-  color: #007BFF;
-  text-decoration: none;
+  text-align: center;
+  margin-top: 15px;
   font-size: 14px;
 }
 
-.forgotPassword a:hover {
+.backToLogin a {
+  color: #007BFF;
+  text-decoration: none;
+}
+
+.backToLogin a:hover {
   text-decoration: underline;
 }
 
-
-
 /* Responsives Design für mobile Geräte */
 @media (max-width: 768px) {
-  .loginContainer {
+  .registerContainer {
     flex-direction: column; /* Auf mobilen Geräten werden die Container untereinander angeordnet */
     height: 100%;
   }
@@ -119,18 +164,19 @@
 
   .rightContainer {
     width: 100%; /* Der rechte Container nimmt auf mobilen Geräten die volle Breite ein */
-    height: 30%; /* Die Höhe des rechten Containers wird angepasst */
-    margin-top: 20px;
-    margin-bottom: 20px;
+    height: 60%; /* Die Höhe des rechten Containers wird angepasst */
+    margin-top: 50px;
+    margin-bottom: 50px;
   }
 
-  .loginForm {
+  .registerForm {
     width: 90%; /* Größere Breite auf mobilen Geräten */
   }
 }
+
 /* Spezifisches Styling für 896x414 Pixel */
 @media (min-width: 769px) and (max-width: 950px) {
-  .loginContainer {
+  .registerContainer {
     flex-direction: column; /* Container untereinander statt nebeneinander */
     height: 100%;
   }
@@ -151,9 +197,7 @@
     margin-bottom: 20px;
   }
 
-  .loginForm {
+  .registerForm {
     width: 85%; /* Breite des Formulars anpassen */
   }
 }
-
-
