@@ -1,0 +1,52 @@
+.container {
+  padding: 20px;
+  text-align: center;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+.container h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.textContent {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.imageGallery {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.imageContainer {
+  width: 40%;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.backButton {
+  margin-top: 20px;
+}
+
+.backButton .button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.backButton .button:hover {
+  background-color: #0056b3;
+}
