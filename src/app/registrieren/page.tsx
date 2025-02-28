@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import ReCAPTCHA from "react-google-recaptcha";
 import styles from "./register.module.css";
 import Image from "next/image";
 
@@ -17,7 +16,7 @@ const Register = () => {
     vatNumber: "",
   });
   const [errors, setErrors] = useState({});
-  const [recaptchaValue, setRecaptchaValue] = useState(null);
+  
 
   // Eingabe-Handler für alle Felder
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,10 +36,7 @@ const Register = () => {
       if (!formData.vatNumber.trim()) newErrors.vatNumber = "Umsatzsteuer-ID ist erforderlich.";
     }
   
-    if (!recaptchaValue) newErrors.recaptcha = "Bitte bestätigen Sie, dass Sie kein Roboter sind.";
-  
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
   };
   
 
@@ -56,7 +52,7 @@ const Register = () => {
     <div className={styles.registerContainer}>
       {/* Linke Bildhälfte */}
       <div className={styles.leftContainer}>
-      <Image src="/images/anmelden.jpg" alt="Registrierung"/>
+      <Image src="/images/anmelden.jpg" alt="Registrierung" width={1000} height={1100}/>
 
       </div>
 
@@ -114,11 +110,7 @@ const Register = () => {
             </>
           )}
 
-          {/* reCAPTCHA */}
-          <div className={styles.recaptchaContainer}>
-            <ReCAPTCHA sitekey="DEIN_RECAPTCHA_SITE_KEY" onChange={setRecaptchaValue} />
-            {errors.recaptcha && <p className={styles.error}>{errors.recaptcha}</p>}
-          </div>
+          
 
           <button type="submit">Registrieren</button>
         </form>
