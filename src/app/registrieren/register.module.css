@@ -2,7 +2,7 @@
 .registerContainer {
   display: flex;
   width: 100%;
-  height: 120vh;
+  height: 160vh;
   margin: 0;
   justify-content: center;
   align-items: center;
@@ -12,7 +12,7 @@
 /* Linker Container für das Bild */
 .leftContainer {
   display: block;
-  width: 50%;
+  width: 70%;
   height: 100%;
   overflow: hidden;
 }
@@ -30,11 +30,16 @@
   width: 50%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  flex-direction: column; /* Damit sich der Container nach unten ausdehnt */
+  padding: 20px;
+  margin-left: 50px;
+  
 }
 
+/* Formular für die Registrierung */
 .registerForm {
-  width: 80%;
+  width: 90%;
   padding: 20px;
   background: #fff;
   border-radius: 8px;
@@ -44,22 +49,27 @@
   align-items: center;
 }
 
-.registerForm h1 {
-  margin-bottom: 10px;
-}
-
-.registerForm h2 {
-  text-align: center;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
 /* Slider Container */
 .inputContainer {
   width: 100%;
   margin-bottom: 15px;
   text-align: center;
 }
+/* Fehlertexte */
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+  text-align: left;
+}
+
+/* reCAPTCHA Styling */
+.recaptchaContainer {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+
 
 .sliderContainer {
   position: relative;
@@ -142,12 +152,15 @@
   .registerContainer {
     flex-direction: column;
     height: 100%;
+    
   }
 
   .rightContainer {
-    width: 100%;
+    width: 90%;
     margin-top: 20px;
     margin-bottom: 20px;
+    padding: 0;
+    margin-left: 00px;
   }
 
   .registerForm {
