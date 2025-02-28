@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import styles from "./register.module.css";
+import Image from "next/image";
+
 
 const Register = () => {
   const [isPrivatePerson, setIsPrivatePerson] = useState(false);
@@ -22,25 +24,25 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Validierungsfunktion
   const validate = () => {
-    let newErrors: { [key: string]: string } = {};
-
+    const newErrors: { [key: string]: string } = {}; // Ändere von let zu const
+  
     if (!formData.fullName.trim()) newErrors.fullName = "Name ist erforderlich.";
     if (!formData.email.includes("@")) newErrors.email = "Gültige E-Mail-Adresse erforderlich.";
     if (formData.password.length < 6) newErrors.password = "Passwort muss mind. 6 Zeichen haben.";
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwörter stimmen nicht überein.";
-
+  
     if (!isPrivatePerson) {
       if (!formData.companyName.trim()) newErrors.companyName = "Firmenname ist erforderlich.";
       if (!formData.vatNumber.trim()) newErrors.vatNumber = "Umsatzsteuer-ID ist erforderlich.";
     }
-
+  
     if (!recaptchaValue) newErrors.recaptcha = "Bitte bestätigen Sie, dass Sie kein Roboter sind.";
-
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
 
   // Formular-Handler
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,7 +56,8 @@ const Register = () => {
     <div className={styles.registerContainer}>
       {/* Linke Bildhälfte */}
       <div className={styles.leftContainer}>
-        <img src="/images/anmelden.jpg" alt="Registrierung" className={styles.image} />
+      <Image src="/images/anmelden.jpg" alt="Registrierung"/>
+
       </div>
 
       {/* Rechte Formularhälfte */}
