@@ -3,7 +3,7 @@
 /* Haupt-Wrapper */
 .wrapper {
   width: 100%;
-  overflow-x: hidden;
+  
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,6 +35,8 @@
 .navItem {
   position: relative;
   margin: 0 15px; /* Abstand zwischen den Links */
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 /* Buttons */

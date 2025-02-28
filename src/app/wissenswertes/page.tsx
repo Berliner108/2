@@ -7,7 +7,7 @@ import Link from "next/link"; // Für den Button zur Startseite
 
 const Wissenswertes = () => {
   return (
-    <div className={styles.container}>
+    <div className={styles.wrapper}>
       <nav className={styles.navbar}>
         <ul className={styles.navList}>
           {[
@@ -35,6 +35,7 @@ const Wissenswertes = () => {
           ))}
         </ul>
       </nav>
+      <div className={styles.container}>
       <h1>Über Uns</h1>
       
       <div className={styles.textContent}>
@@ -86,11 +87,13 @@ const Wissenswertes = () => {
             
         </p>
       </div>
+      
 
       <div className={styles.backButton}>
         <Link href="/">
           <button className={styles.button}>Zurück zur Startseite</button>
         </Link>
+      </div>
       </div>
     </div>
   );
