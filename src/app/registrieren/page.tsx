@@ -52,7 +52,13 @@ const Register = () => {
     <div className={styles.registerContainer}>
       {/* Linke Bildhälfte */}
       <div className={styles.leftContainer}>
-      <Image src="/images/anmelden.jpg" alt="Registrierung" width={1000} height={1100}/>
+      <Image
+        src="/images/anmelden.jpg"
+        alt="Beschreibung"
+        layout="fill"
+        objectFit="cover"
+      />
+
 
       </div>
 

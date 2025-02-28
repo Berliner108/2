@@ -1,13 +1,18 @@
 import React from 'react';
 import Link from 'next/link';
 import styles from './resetpassword.module.css'; // Importiere die CSS-Datei
+import Image from "next/image";
 
 const ResetPassword = () => {
   return (
     <div className={styles.resetPasswordContainer}>
       {/* Linker Container für das Bild */}
       <div className={styles.leftContainer}>
-        <img src="/images/solution.jpg" alt="Reset Password Image" className={styles.image} />
+      <Image
+        src="/images/solution.jpg"
+        alt="Beschreibung"
+        layout="fill"
+        objectFit="cover"/>
       </div>
 
       {/* Rechter Container für das Reset-Formular */}
