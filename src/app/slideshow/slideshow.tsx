@@ -20,7 +20,7 @@ const Slideshow = () => {
     if (!isPaused) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 3000); // Alle 3 Sekunden wechseln
+      }, 4000); // Alle 3 Sekunden wechseln
       return () => clearInterval(interval);
     }
   }, [isPaused]);
