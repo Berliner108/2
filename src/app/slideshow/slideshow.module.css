@@ -11,14 +11,14 @@
   /* Wrapper für alle Slides */
   .slidesWrapper {
     display: flex;
-    transition: transform 0.5s ease-in-out; /* Übergangseffekt */
+    transition: transform 1s ease-in-out; /* Übergangseffekt */
     width: 100%; /* Alle Bilder nebeneinander */
   }
   
   /* Jede Folie nimmt 100% der Breite des Containers ein */
   .slide {
     flex: 0 0 100%; /* Flexbox-Eigenschaft, jedes Bild nimmt 100% der Breite ein */
-    height: 100%; /* Höhe des Bildes entspricht der Höhe des Containers */
+    height: 400px; /* Höhe des Bildes entspricht der Höhe des Containers */
     background-size: cover; /* Das Bild füllt den gesamten Container aus */
     background-position: center; /* Das Bild wird zentriert */
     display: flex;
