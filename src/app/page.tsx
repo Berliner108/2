@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import styles from '../styles/Home.module.css';
+import Slideshow from "./slideshow/slideshow";  // Importiere die Slideshow-Komponente
+ 
 
 export default function Page() {
   return (
@@ -31,7 +33,7 @@ export default function Page() {
           ))}
         </ul>
       </nav>
-
+      <Slideshow />    
       <div className={styles.content}>
         <h1>Willkommen auf der Seite!</h1>
         <p>Dies ist die Homepage mit einer Navbar und Dropdown-Menüs.</p>
