@@ -49,6 +49,7 @@
     padding: 10px;
     cursor: pointer;
     font-size: 24px;
+    z-index: 10; /* Sicherstellen, dass der Pfeil immer über den Bildern ist */
   }
   
   .prev {
@@ -72,5 +73,6 @@
     cursor: pointer;
     font-size: 18px;
     border-radius: 5px;
+    z-index: 10; /* Sicherstellen, dass der Pause-Button über den Bildern ist */
   }
   
