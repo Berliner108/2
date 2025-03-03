@@ -91,8 +91,59 @@
   display: flex; /* Macht das Dropdown sichtbar */
 }
 
+
+/* Bereich für Mein Konto */
+.kontoContainer {
+  width: 100%;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.kontoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.kontoItem {
+  display: block;
+  width: 100%;
+  background: #f7f7f7;
+  padding: 20px; /* Erhöhtes Padding */
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  transition: background 0.3s ease;
+  height: 60px; /* Erhöhte Höhe */
+  line-height: 60px; /* Text vertikal zentrieren */
+}
+
+.kontoItem:hover {
+  background: #007BFF;
+  color: white;
+}
+
+
+.kontoItem:hover {
+  background: #007BFF;
+  color: white;
+}
+
 /* Mobile Ansicht */
 @media (max-width: 1024px) {
+  .kontoContainer {
+    width: 95%;
+  }
+
+  .kontoList {
+    width: 90%;
+  }
+
   .navbar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

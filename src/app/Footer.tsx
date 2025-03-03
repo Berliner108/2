@@ -1,6 +1,6 @@
 'use client'; // Client-only Hook
 import React, { useState, useEffect, useMemo } from 'react'; // useMemo importiert
-import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing } from 'react-icons/fa'; // Importiere Icons von react-icons
+import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing, FaPinterest } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 import Link from 'next/link'; // Hier importierst du Link von Next.js
 
@@ -67,18 +67,13 @@ const Footer = () => {
           <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">
             <FaLinkedin size={30} />
           </a>
-          <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">
-            <FaTiktok size={30} />
-          </a>
-          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
-            <FaYoutube size={30} />
-          </a>
+          <a href="https://www.pinterest.com" target="_blank" rel="noopener noreferrer">
+            <FaPinterest size={30} />
+          </a>          
           <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer">
             <FaTwitter size={30} />
           </a>
-          <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
-            <FaInstagram size={30} />
-          </a>
+          
           
         </div>
         <p>© Beschichter Scout I Alle Rechte vorbehalten</p> 

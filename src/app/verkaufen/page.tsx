@@ -1,40 +1,136 @@
-import Link from 'next/link';
-import styles from './verkaufen.module.css';
+"use client";
 
- 
+import { useState } from "react";
+import "./verkaufsseite.css";
+import Pager from "./navbar/pager"; // Pager importieren
 
-export default function Page() {
+export default function Verkaufsseite() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [category, setCategory] = useState("Elektronik");
+  const [condition, setCondition] = useState("Neu");
+  const [description, setDescription] = useState("");
+  const [originalPackaging, setOriginalPackaging] = useState(false);
+  const [warranty, setWarranty] = useState(false);
+  const [title, setTitle] = useState(""); // Für den Titel des Produkts
+
+  // Handle the drop event
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    setFiles(droppedFiles);
+  };
+
+  // Handle file click event
+  const handleClick = () => {
+    document.getElementById("fileInput")?.click();
+  };
+
+  // Handle file selection via input
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = event.target.files ? Array.from(event.target.files) : [];
+    setFiles(selectedFiles);
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    alert("Produkt eingestellt!");
+  };
+
+  // Button aktivieren/deaktivieren, wenn keine Dateien vorhanden sind
+  const isButtonDisabled = files.length === 0;
+
   return (
-    <div className={styles.wrapper}>
-      <nav className={styles.navbar}>
-        <ul className={styles.navList}>
-          {[
-            { title: 'Angebote einholen', href: '/angebote', links: [{ href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' },  { href: '/about/vision', text: 'Kominiert' }] },
-            { title: 'Kaufen', href: '/kaufen', links: [{ href: '/about/team', text: 'Nasslacke' }, { href: '/about/vision', text: 'Pulverlacke' }, { href: '/about/vision', text: 'Arbeitsmittel' }] },
-            { title: 'Lacke anfragen', href: '/sonderlacke', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
-            { title: 'Auftragsbörse', href: '/auftragsboerse', links: [{ href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' },  { href: '/about/vision', text: 'Kominiert' }] },
-            { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/about/team', text: 'Nasslacke' }, { href: '/about/vision', text: 'Pulverlacke' }, { href: '/about/vision', text: 'Arbeitsmittel' }] },
-            { title: 'Offene Lackanfragen', href: '/lackanfragen', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
-            { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/about/vision', text: 'Die Vision' },{ href: '/about/vision', text: 'Oberlächentechnik' }, { href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' }] },
-            { title: 'Mein Konto', href: '/konto', links: [{ href: '/support/help', text: 'Eingeholte Angebote' }, { href: '/support/contact', text: 'Meine Käufe' }, { href: '/support/contact', text: 'Offene Lackanfragen' }, { href: '/support/contact', text: 'Meine Aufträge' }, { href: '/support/contact', text: 'Aktive Artikel' }, { href: '/support/contact', text: 'Verkaufte Artikel' }, { href: '/support/contact', text: 'Angebotene Artikel' }] }
-          ].map((item, index) => (
-            <li key={index} className={styles.navItem}>
-              <Link href={item.href} className={styles.navButton}>
-                {item.title}
-              </Link>
-              <div className={styles.dropdown}>
-                {item.links.map((link, linkIndex) => (
-                  <Link key={linkIndex} href={link.href} className={styles.dropdownLink}>
-                    {link.text}
-                  </Link>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </nav>
-         
+    <>
+      <Pager /> {/* Pager-Komponente wird hier oberhalb von "container" gerendert */}
       
-    </div>
+      <div className="container">
+        <h2>Produkt verkaufen</h2>
+
+        
+
+        <label>Kategorie wählen:</label>
+        <select
+          className="select-box"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          <option>Elektronik</option>
+          <option>Kleidung</option>
+          <option>Möbel</option>
+        </select>
+
+        {/* Dropzone für das Ablegen von Dateien */}
+        <div
+          className="dropzone"
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={handleClick}
+        >
+          Datei hier ablegen oder klicken
+        </div>
+        <label>Titel des Produkts:</label>
+        <input
+          type="text"
+          className="input-title"
+          placeholder="Gib einen Titel ein"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        {/* Hidden File Input */}
+        <input
+          id="fileInput"
+          type="file"
+          multiple
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+        />
+
+        <label>
+          <input
+            type="checkbox"
+            checked={originalPackaging}
+            onChange={() => setOriginalPackaging(!originalPackaging)}
+          />{" "}
+          Originalverpackung
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={warranty}
+            onChange={() => setWarranty(!warranty)}
+          />{" "}
+          Garantie vorhanden
+        </label>
+
+        <label>Zustand:</label>
+        <select
+          className="select-box"
+          value={condition}
+          onChange={(e) => setCondition(e.target.value)}
+        >
+          <option>Neu</option>
+          <option>Gebraucht - wie neu</option>
+          <option>Gebraucht - gut</option>
+          <option>Gebraucht - akzeptabel</option>
+        </select>
+
+        <textarea
+          className="textarea"
+          placeholder="Beschreibe dein Produkt..."
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        ></textarea>
+
+        <button
+          className="button-primary"
+          onClick={handleSubmit}
+          disabled={isButtonDisabled} // Button wird deaktiviert, wenn keine Dateien vorhanden sind
+        >
+          Verkaufen
+        </button>
+      </div>
+    </>
   );
 }
