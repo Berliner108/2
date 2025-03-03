@@ -1,6 +1,6 @@
 'use client'; // Client-only Hook
 import React, { useState, useEffect, useMemo } from 'react'; // useMemo importiert
-import { FaFacebook, FaLinkedin, FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaXing, FaPinterest } from 'react-icons/fa'; // Importiere Icons von react-icons
+import { FaFacebook, FaLinkedin, FaTwitter, FaXing, FaPinterest } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 import Link from 'next/link'; // Hier importierst du Link von Next.js
 
