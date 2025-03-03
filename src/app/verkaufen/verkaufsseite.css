@@ -1,5 +1,5 @@
 .container {
-    max-width: 800px;
+    max-width: 820px;
     margin: 20px auto;
     padding: 20px;
     background-color: #fff;
@@ -7,9 +7,16 @@
     margin-bottom: -20px;
 }
 
-.textarea, .select-box, .button-primary {
+.textarea, .select-box, .button-primary, .input-title {
     width: 99%;
     margin-bottom: 15px;
+}
+
+.input-title {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
 }
 
 .textarea {
@@ -32,6 +39,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    margin-bottom: 40px;
 }
 
 .button-primary:hover {
@@ -40,7 +48,7 @@
 
 .dropzone {
     width: 99.5%;
-    height: 200px;
+    height: 300px;
     border: 2px dashed #aaa;
     display: flex;
     justify-content: center;
@@ -49,14 +57,7 @@
     color: #333;
     cursor: pointer;
     margin-bottom: 20px;
-}
-
-.dropzone:hover {
-    background-color: #e0e0e0;
-}
-
-.file-preview {
-    margin-top: 20px;
+    border-radius: 8px;
 }
 
 .file-preview ul {
@@ -85,23 +86,19 @@
     cursor: pointer;
 }
 
-.delete-button:hover {
-    background-color: darkred;
-}
-
-/* Radio-Buttons horizontal anordnen */
-.radio-group {
+.radio-group, .checkbox-group {
     display: flex;
     flex-wrap: wrap;
     gap: 15px;
 }
 
-.radio-group label {
+.radio-group label, .checkbox-group label {
     display: flex;
     align-items: center;
     cursor: pointer;
+    margin-top: 15px;
 }
 
-.radio-group input[type="radio"] {
+.radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
     margin-right: 5px;
 }
