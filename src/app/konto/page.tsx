@@ -15,18 +15,7 @@ export default function Page() {
             { title: 'Offene Lackanfragen', href: '/lackanfragen', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
             { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/about/vision', text: 'Die Vision' },{ href: '/about/vision', text: 'Oberlächentechnik' }, { href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' }] },
             { title: 'Mein Konto', href: '/konto', links: [{ href: '/support/help', text: 'Eingeholte Angebote' }, { href: '/support/contact', text: 'Meine Käufe' }, { href: '/support/contact', text: 'Offene Lackanfragen' }, { href: '/support/contact', text: 'Meine Aufträge' }, { href: '/support/contact', text: 'Aktive Artikel' }, { href: '/support/contact', text: 'Verkaufte Artikel' }, { href: '/support/contact', text: 'Angebotene Artikel' }] },
-            {
-              title: 'Mein Konto', href: '/konto', links: [
-                { href: '/konto/angebote', text: 'Eingeholte Angebote' },
-                { href: '/konto/kaeufe', text: 'Meine Käufe' },
-                { href: '/konto/lackanfragen', text: 'Offene Lackanfragen' },
-                { href: '/konto/auftraege', text: 'Meine Aufträge' },
-                { href: '/konto/aktive-artikel', text: 'Aktive Artikel' },
-                { href: '/konto/verkaufte-artikel', text: 'Verkaufte Artikel' },
-                { href: '/konto/angebotene-artikel', text: 'Angebotene Artikel' },
-                { href: '/konto/einstellungen', text: 'Kontoeinstellungen' }
-              ]
-            }
+            
           ].map((item, index) => (
             <li key={index} className={styles.navItem}>
               <Link href={item.href} className={styles.navButton}>
