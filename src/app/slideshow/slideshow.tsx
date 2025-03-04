@@ -15,12 +15,13 @@ const images = [
 const Slideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!isPaused) {
       const interval = setInterval(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 5000); // Alle 3 Sekunden wechseln
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [isPaused]);
@@ -33,6 +34,10 @@ const Slideshow = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
+  };
+
+  const handleSearch = () => {
+    alert(`Gesucht nach: ${searchQuery}`);
   };
 
   return (
@@ -64,6 +69,20 @@ const Slideshow = () => {
       <button className={styles.pause} onClick={() => setIsPaused(!isPaused)}>
         {isPaused ? "▶️ Start" : "⏸ Pause"}
       </button>
+
+      {/* Suchfeld & Button */}
+      <div className={styles.searchContainer}>
+        <input
+          type="text"
+          className={styles.searchInput}
+          placeholder="Suche..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button className={styles.searchButton} onClick={handleSearch}>
+          Finden
+        </button>
+      </div>
     </div>
   );
 };

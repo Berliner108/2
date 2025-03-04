@@ -91,6 +91,41 @@
   display: flex; /* Macht das Dropdown sichtbar */
 }
 
+/* Styling für den neuen Artikel-Container */
+.articleContainer {
+  width: 100%;
+  padding: 00px;  
+  text-align: left;
+  background-color: lightgrey; /* Optional: Hintergrundfarbe */
+  
+}
+
+.articleHeader a {
+  font-family: 'Oswald', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  text-decoration: none;
+  color: black;
+  transition: color 0.3s ease;
+  margin-left: 30px;
+}
+
+.articleHeader a:hover {
+  color: #0056b3; /* Hover-Farbe */
+}
+/* Container für das Bild */
+.imageContainer {
+  width: 110%;
+  padding: 0;
+  margin-top: 00px; /* Optional: Abstand nach oben */
+}
+
+.articleImage {
+  width: 100%;
+  height: 40%; /* Bild behält das Seitenverhältnis bei */
+  display: block;
+}
+
 /* Mobile Ansicht */
 @media (max-width: 1024px) {
   .navbar {
@@ -118,5 +153,21 @@
   /* Dropdown für mobile Ansicht ausblenden */
   .dropdown {
     display: none !important;
+  }
+  .articleContainer {
+    width: 100%;
+    padding: 00px;  
+    text-align: center;
+    background-color: lightgrey; /* Optional: Hintergrundfarbe */
+    
+  }
+  .articleHeader a {
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    text-decoration: none;
+    color: black;
+    transition: color 0.3s ease;
+    margin-left: 0px;
   }
 }

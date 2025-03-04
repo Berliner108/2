@@ -34,10 +34,45 @@ export default function Page() {
         </ul>
       </nav>
       <Slideshow />    
-      <div className={styles.content}>
-        <h1>Willkommen auf der Seite!</h1>
-        <p>Dies ist die Homepage mit einer Navbar und Dropdown-Menüs.</p>
+      
+      {/* Neuer Container mit dem Text "Unsere Artikel" */}
+      <div className={styles.articleContainer}>
+        <h2 className={styles.articleHeader}>
+          <Link href="/artikelseite">
+            Top Deals aus der Auftragsbörse
+          </Link>
+        </h2>
       </div>
+      {/* Bild unter dem Artikel Container */}
+      <div className={styles.imageContainer}>
+        <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
+      </div>
+      {/* Neuer Container mit dem Text "Unsere Artikel" */}
+      <div className={styles.articleContainer}>
+        <h2 className={styles.articleHeader}>
+          <Link href="/artikelseite">
+            Top Deals aus der Auftragsbörse
+          </Link>
+        </h2>
+      </div>
+      {/* Bild unter dem Artikel Container */}
+      <div className={styles.imageContainer}>
+        <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
+      </div>
+      {/* Neuer Container mit dem Text "Unsere Artikel" */}
+      <div className={styles.articleContainer}>
+        <h2 className={styles.articleHeader}>
+          <Link href="/artikelseite">
+            Top Deals aus der Auftragsbörse
+          </Link>
+        </h2>
+      </div>
+      {/* Bild unter dem Artikel Container */}
+      <div className={styles.imageContainer}>
+        <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
+      </div>
+      
+      
     </div>
   );
 }
