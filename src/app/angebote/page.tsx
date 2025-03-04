@@ -6,7 +6,6 @@ import Pager from "./navbar/pager";
 
 export default function Verkaufsseite() {
   const [files, setFiles] = useState<File[]>([]);
-  const [category, setCategory] = useState("Elektronik");
   const [condition, setCondition] = useState("Neu");
   const [description, setDescription] = useState("");
   const [title, setTitle] = useState(""); // Einzeiliges Textfeld für den Titel
