@@ -117,6 +117,7 @@
   gap: 16px;
   justify-content: space-between;
   margin-top: 10px;
+  text-align: center;
 }
 
 /* Einzelne Artikel */
@@ -178,6 +179,16 @@
   object-fit: cover; /* Das Bild wird so skaliert, dass es den Container ausfüllt, ohne verzerrt zu werden */
   object-position: center; /* Bild wird zentriert im Container */
   border-radius: 8px; /* Optional: Ecken des Bildes abrunden */
+}
+.articleHeader a {
+  font-family: 'Oswald', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  text-decoration: none;
+  color: black;
+  transition: color 0.3s ease;
+  margin-left: 0px;
+  width: 100%;
 }
 
 
@@ -250,8 +261,9 @@
     text-decoration: none;
     color: black;
     transition: color 0.3s ease;
-    margin-left: 0px;
+    
     width: 100%;
+    margin-left: 90px;
   }
   .imageContainer {
     width: 100%;

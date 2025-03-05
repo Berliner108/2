@@ -10,29 +10,35 @@ const category1 = [
   { id: 5, title: "Kiefer", desc: "Harziger Duft", img: "/images/baum5.jpg" },
   { id: 6, title: "Olivenbaum", desc: "Mittelmeerbaum", img: "/images/baum6.jpg" },
   { id: 7, title: "Zeder", desc: "Majestätischer Baum", img: "/images/baum7.jpg" },
+  { id: 8, title: "Zeder", desc: "Majestätischer Baum", img: "/images/baum8.jpg" },
+  { id: 9, title: "Zeder", desc: "Majestätischer Baum", img: "/images/baum9.jpg" },
+  { id: 10, title: "Zeder", desc: "Majestätischer Baum", img: "/images/baum10.jpg" },
 ];
 
 const category2 = [
-  { id: 8, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
-  { id: 9, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
-  { id: 10, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
-  { id: 11, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
-  { id: 12, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
-  { id: 13, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
-  { id: 14, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch7.jpg" },
+  { id: 11, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
+  { id: 12, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
+  { id: 13, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
+  { id: 14, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
+  { id: 15, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
+  { id: 16, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
+  { id: 17, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch7.jpg" },
+  { id: 18, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch8.jpg" },
+  { id: 19, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch9.jpg" },
+  { id: 20, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
 ];
 
 const category3 = [
-  { id: 15, title: "Golden Eye", desc: "Pulverlack, glatt tiefmatt, 10kg, Zustellung", img: "/images/blume1.jpg" },
-  { id: 16, title: "Sonnengelb", desc: "Nasslack, glatt matt", img: "/images/blume2.jpg" },
-  { id: 17, title: "Braunbeige", desc: "Pulverlack, glatt tiefmatt", img: "/images/blume3.jpg" },
-  { id: 18, title: "Olivgrün", desc: "Pulverlack, glatt glanz", img: "/images/blume4.jpg" },
-  { id: 19, title: "Taxigelb", desc: "Nasslack, feinstruktur glanz", img: "/images/blume5.jpg" },
-  { id: 20, title: "Cremegelb", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume6.jpg" },
-  { id: 21, title: "Gelbbeige", desc: "Pulverlack, glatt glanz", img: "/images/blume7.jpg" },
-  { id: 22, title: "Feuerorange", desc: "Pulverlack, glatt glanz", img: "/images/blume8.jpg" },
-  { id: 23, title: "Kunstgelb", desc: "Pulverlack, glatt glanz", img: "/images/blume9.jpg" },
-  { id: 24, title: "Ziegelrot", desc: "Pulverlack, glatt glanz", img: "/images/blume10.jpg" },
+  { id: 21, title: "Golden Eye", desc: "Pulverlack, glatt tiefmatt, 10kg, Zustellung", img: "/images/blume1.jpg" },
+  { id: 22, title: "Sonnengelb", desc: "Nasslack, glatt matt", img: "/images/blume2.jpg" },
+  { id: 23, title: "Braunbeige", desc: "Pulverlack, glatt tiefmatt", img: "/images/blume3.jpg" },
+  { id: 24, title: "Olivgrün", desc: "Pulverlack, glatt glanz", img: "/images/blume4.jpg" },
+  { id: 25, title: "Taxigelb", desc: "Nasslack, feinstruktur glanz", img: "/images/blume5.jpg" },
+  { id: 26, title: "Cremegelb", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume6.jpg" },
+  { id: 27, title: "Gelbbeige", desc: "Pulverlack, glatt glanz", img: "/images/blume7.jpg" },
+  { id: 28, title: "Feuerorange", desc: "Pulverlack, glatt glanz", img: "/images/blume8.jpg" },
+  { id: 29, title: "Kunstgelb", desc: "Pulverlack, glatt glanz", img: "/images/blume9.jpg" },
+  { id: 30, title: "Ziegelrot", desc: "Pulverlack, glatt glanz", img: "/images/blume10.jpg" },
   
 ];
 
@@ -81,6 +87,23 @@ export default function Page() {
           </Link>
         </h2>
       </div>
+      {/* Kategorie 1: Blumen */}
+      <div className={styles.categorySection}>
+        
+        <div className={styles.articleContainer}>
+          {category1.map((article) => (
+            <div key={article.id} className={styles.articleBox}>
+              <Link href={`/artikel/${article.id}`}>
+                <img src={article.img} alt={article.title} className={styles.articleImg} />
+                <div className={styles.articleText}>
+                  <h3>{article.title}</h3>
+                  <p>{article.desc}</p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
       
       
       
@@ -96,10 +119,28 @@ export default function Page() {
           </Link>
         </h2>
       </div>
+      {/* Kategorie 2: Blumen */}
+      <div className={styles.categorySection}>
+        
+        <div className={styles.articleContainer}>
+          {category2.map((article) => (
+            <div key={article.id} className={styles.articleBox}>
+              <Link href={`/artikel/${article.id}`}>
+                <img src={article.img} alt={article.title} className={styles.articleImg} />
+                <div className={styles.articleText}>
+                  <h3>{article.title}</h3>
+                  <p>{article.desc}</p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* Bild unter dem Artikel Container */}
       <div className={styles.imageContainer}>
-        <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
+        <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
+      
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
         <h2 className={styles.articleHeader}>
@@ -108,9 +149,26 @@ export default function Page() {
           </Link>
         </h2>
       </div>
+      {/* Kategorie 2: Blumen */}
+      <div className={styles.categorySection}>
+        
+        <div className={styles.articleContainer}>
+          {category2.map((article) => (
+            <div key={article.id} className={styles.articleBox}>
+              <Link href={`/artikel/${article.id}`}>
+                <img src={article.img} alt={article.title} className={styles.articleImg} />
+                <div className={styles.articleText}>
+                  <h3>{article.title}</h3>
+                  <p>{article.desc}</p>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* Bild unter dem Artikel Container */}
       <div className={styles.imageContainer}>
-        <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
+        <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
@@ -136,13 +194,7 @@ export default function Page() {
             </div>
           ))}
         </div>
-      </div>
-      
-      
-    
-      
-      
-      
+      </div>     
     </div>
   );
 }
