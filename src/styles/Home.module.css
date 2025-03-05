@@ -96,7 +96,8 @@
   width: 100%;
   padding: 00px;  
   text-align: left;
-  background-color: lightgrey; /* Optional: Hintergrundfarbe */
+  background: linear-gradient(to right, #f0f0f0, #ffffff);
+  margin-top: 20px;
   
 }
 
@@ -126,8 +127,48 @@
   display: block;
 }
 
-/* Mobile Ansicht */
+.articleWrapper {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 Artikel nebeneinander */
+  gap: 15px;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.articleBox {
+  background: #f9f9f9;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.articleImg {
+  width: 145px;  /* Fixe Breite */
+  height: 150px; /* Fixe Höhe */
+  object-fit: cover; /* Bild bleibt proportional */
+  border-radius: 8px;
+}
+
+.articleText {
+  margin-top: 8px;
+}
+
+/* Mobile Ansicht: 2 Artikel pro Reihe, horizontal scrollen */
 @media (max-width: 1024px) {
+  .articleWrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding-bottom: 10px; /* Abstand für Scroll-Leiste */
+  }
+
+  .articleBox {
+    flex: 0 0 calc(50% - 10px); /* 2 Artikel pro Reihe */
+  }
+
+
+
   .navbar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -169,5 +210,10 @@
     color: black;
     transition: color 0.3s ease;
     margin-left: 0px;
+  }
+  .imageContainer {
+    width: 100%;
+    padding: 0;
+    margin-top: 00px; /* Optional: Abstand nach oben */
   }
 }
