@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react"; 
-
+import { useState, useEffect } from "react";
 import styles from "./wissenswertes.module.css";
-
 import Link from "next/link"; // Für den Button zur Startseite
 
 const TypingText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
-  const [setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);  // Zustand für Bildschirmgröße
   const speed = 45; // Geschwindigkeit des Tippens (in ms)
 
   useEffect(() => {
