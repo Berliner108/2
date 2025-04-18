@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./slideshow.module.css";
+import Image from 'next/image'; // Importiere Image von Next.js
 
 const images = [
   { 
@@ -105,7 +106,13 @@ const Slideshow = () => {
             )}
 
             <div className={styles.imageContainer}>
-              <img src={image.src} alt={`${image.text1} - ${image.text2}`} />
+              <Image 
+                src={image.src} 
+                alt={`${image.text1} - ${image.text2}`} 
+                width={500} // Breite des Bildes (kannst du anpassen)
+                height={300} // Höhe des Bildes (kannst du anpassen)
+                layout="intrinsic" // Option für flexibles Layout
+              />
             </div>
 
             {image.isFullScreen && (
