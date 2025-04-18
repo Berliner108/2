@@ -4,26 +4,14 @@ import Slideshow from "./slideshow/slideshow";  // Importiere die Slideshow-Komp
 
  
 
-const articles = [
-  { id: 1, title: "Produkt 1", price: "19,99€", img: "https://via.placeholder.com/150" },
-  { id: 2, title: "Produkt 2", price: "24,99€", img: "https://via.placeholder.com/150" },
-  { id: 3, title: "Produkt 3", price: "15,99€", img: "https://via.placeholder.com/150" },
-  { id: 4, title: "Produkt 4", price: "29,99€", img: "https://via.placeholder.com/150" },
-  { id: 5, title: "Produkt 5", price: "9,99€", img: "https://via.placeholder.com/150" },
-  { id: 6, title: "Produkt 6", price: "34,99€", img: "https://via.placeholder.com/150" },
-  { id: 7, title: "Produkt 7", price: "14,99€", img: "https://via.placeholder.com/150" },
-  { id: 8, title: "Produkt 8", price: "27,99€", img: "https://via.placeholder.com/150" }
-];
+
 const category1 = [
   { id: 1, title: "Pulverlackieren", desc: "RAL 9005 glatt matt Werkstoff: Aluminium", img: "/images/baum1.jpg" },
   { id: 2, title: "Eloxieren", desc: "Schöner Herbstbaum", img: "/images/baum2.jpg" },
   { id: 3, title: "Pulverlackieren", desc: "Weißer Stamm", img: "/images/baum3.jpg" },
   { id: 4, title: "Strahlen, Verzinken & Nasslackieren", desc: "Immergrün", img: "/images/baum4.jpg" },
   { id: 5, title: "Entlacken & Nasslackieren", desc: "Harziger Duft", img: "/images/baum5.jpg" },
-  { id: 6, title: "Einlagern & Pulverlackieren", desc: "Mittelmeerbaum", img: "/images/baum6.jpg" },
-  
-  
-  
+  { id: 6, title: "Einlagern & Pulverlackieren", desc: "Mittelmeerbaum", img: "/images/baum6.jpg" }, 
 ];
 
 const category2 = [
