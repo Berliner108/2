@@ -28,6 +28,9 @@ const TypingText = ({ text }: { text: string }) => {
   }, []);
 
   useEffect(() => {
+    // Setze den angezeigten Text zurück, wenn sich der Prop 'text' ändert
+    setDisplayedText("");
+
     let i = 0;
 
     if (isDesktop) { // Nur auf Desktop wird der Text getippt
