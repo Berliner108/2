@@ -6,15 +6,31 @@ import Link from "next/link"; // Für den Button zur Startseite
 
 const TypingText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
-  const [isDesktop, setIsDesktop] = useState(false);  // Zustand für Bildschirmgröße
+  const [isDesktop, setIsDesktop] = useState(false); // Zustand für Bildschirmgröße
   const speed = 45; // Geschwindigkeit des Tippens (in ms)
 
   useEffect(() => {
-    // Prüfe die Bildschirmgröße beim Laden der Seite
-    setIsDesktop(window.innerWidth >= 1024);
+    // Funktion, um die Bildschirmgröße zu überprüfen
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
 
+    // Initiale Bildschirmgröße überprüfen
+    checkIsDesktop();
+
+    // Event Listener für Bildschirmgrößenänderung hinzufügen
+    window.addEventListener("resize", checkIsDesktop);
+
+    // Bereinige den Event Listener bei der Unmount
+    return () => {
+      window.removeEventListener("resize", checkIsDesktop);
+    };
+  }, []);
+
+  useEffect(() => {
     let i = 0;
-    if (window.innerWidth >= 1024) { // Nur auf Desktop
+
+    if (isDesktop) { // Nur auf Desktop wird der Text getippt
       const interval = setInterval(() => {
         if (i < text.length) {
           setDisplayedText((prev) => prev + text.charAt(i));
@@ -28,7 +44,7 @@ const TypingText = ({ text }: { text: string }) => {
       // Falls mobile, direkt den ganzen Text anzeigen
       setDisplayedText(text);
     }
-  }, [text]);
+  }, [text, isDesktop]); // `isDesktop` als Abhängigkeit hinzufügen
 
   return <p className={styles.typing}>{displayedText}</p>;
 };
