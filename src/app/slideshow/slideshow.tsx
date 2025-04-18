@@ -33,7 +33,7 @@ const images = [
     text1: "Lassen Sie Ihr Material einlagern", 
     text2: "Und auf Abruf beschichten", 
     link: "#",
-    isFullScreen: true // Neue Eigenschaft zur Erkennung der Vollbild-Slide
+    isFullScreen: true
   },
   { 
     src: "/images/slide6.jpg", 
@@ -43,27 +43,19 @@ const images = [
   },
 ];
 
-// Endlos-Slideshow mit geklonten Bildern
 const extendedImages = [images[images.length - 1], ...images, images[0]];
 
 const Slideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [currentIndex]);
-
   const nextSlide = () => {
     setIsTransitioning(true);
     setCurrentIndex((prevIndex) => prevIndex + 1);
 
     setTimeout(() => {
+      setIsTransitioning(false);
       if (currentIndex === images.length) {
-        setIsTransitioning(false);
         setCurrentIndex(1);
       }
     }, 500);
@@ -74,12 +66,19 @@ const Slideshow = () => {
     setCurrentIndex((prevIndex) => prevIndex - 1);
 
     setTimeout(() => {
+      setIsTransitioning(false);
       if (currentIndex === 0) {
-        setIsTransitioning(false);
         setCurrentIndex(images.length);
       }
     }, 500);
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
 
   return (
     <div className={styles.slideshowContainer}>
@@ -97,7 +96,6 @@ const Slideshow = () => {
             key={index} 
             className={`${styles.slide} ${image.isFullScreen ? styles.fullImageSlide : ""}`}
           >
-            {/* Normaler Text für Standard-Slides */}
             {!image.isFullScreen && (
               <div className={styles.textContainer}>
                 <p className={styles.text1}>{image.text1}</p>
@@ -106,12 +104,10 @@ const Slideshow = () => {
               </div>
             )}
 
-            {/* Bild */}
             <div className={styles.imageContainer}>
               <img src={image.src} alt={`${image.text1} - ${image.text2}`} />
             </div>
 
-            {/* Overlay-Text für Vollbild-Slide */}
             {image.isFullScreen && (
               <div className={styles.overlayTextContainer}>
                 <p className={styles.overlayText1}>{image.text1}</p>
