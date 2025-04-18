@@ -8,7 +8,7 @@ import Link from "next/link"; // Für den Button zur Startseite
 
 const TypingText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [setIsDesktop] = useState(false);
   const speed = 45; // Geschwindigkeit des Tippens (in ms)
 
   useEffect(() => {
