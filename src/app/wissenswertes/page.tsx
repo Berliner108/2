@@ -122,7 +122,7 @@ const Wissenswertes = () => {
         </div>
      </div>
     <div id="Sofunktionierts" className={styles["sogehts"]}>
-          <p>So funktioniert's</p>
+          <p>So funktionierts</p>
     </div>
     <br></br>
     <div id="Beschichtungstechnik" className={styles["werwirsind1"]}>
