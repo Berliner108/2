@@ -56,6 +56,7 @@ const Angebote = () => {
       "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Eloxieren", "Isolierstegverpressen"],
       "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Anodisieren", "Isolierstegverpressen"],
     },
+    
     dropdown2: {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
       "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
@@ -84,8 +85,7 @@ const Angebote = () => {
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Isolierstegverpressen"],
-      "Folieren": ["Isolierstegverpressen"],
-      
+      "Folieren": ["Isolierstegverpressen"],      
       "Isolierstegverpressen": ["Folieren"],
       "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
@@ -98,6 +98,20 @@ const Angebote = () => {
       "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Eloxieren", "Isolierstegverpressen"],
       "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Anodisieren", "Isolierstegverpressen"],
     }
+  };
+   // Typenhilfe für Dropdown-Zugriffe
+  type DropdownKey = keyof typeof config.dropdown1;
+
+  // Option anzeigen basierend auf der ersten Auswahl
+  const getDropdown2Options = () => {
+    if (!dropdown1 || !(dropdown1 in config.dropdown1)) return [];
+    return config.dropdown1[dropdown1 as DropdownKey] || [];
+  };
+
+  // Option anzeigen basierend auf der zweiten Auswahl
+  const getDropdown3Options = () => {
+    if (!dropdown2 || !(dropdown2 in config.dropdown2)) return [];
+    return config.dropdown2[dropdown2 as keyof typeof config.dropdown2] || [];
   };
 
   // Funktion für Drag & Drop Dateien
@@ -120,17 +134,9 @@ const Angebote = () => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Option anzeigen basierend auf der ersten Auswahl
-  const getDropdown2Options = () => {
-    if (!dropdown1) return [];
-    return config.dropdown1[dropdown1] || [];
-  };
+ 
 
-  // Option anzeigen basierend auf der zweiten Auswahl
-  const getDropdown3Options = () => {
-    if (!dropdown2) return [];
-    return config.dropdown2[dropdown2] || [];
-  };
+  
 
   // Module anzeigen
   const renderModule = (id: string) => (
