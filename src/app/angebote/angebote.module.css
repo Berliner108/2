@@ -1,0 +1,168 @@
+.angebot-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+  color: #222;
+}
+
+/* 💧 Dropzone Wrapper */
+.dropzone-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+/* 📦 Dropzone */
+.dropzone {
+  z-index: 1;
+  border: 3px dashed #0070f3;
+  border-radius: 12px;
+  background: #f5faff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  font-size: 1.1rem;
+  color: #0070f3;
+  text-align: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dropzone:hover {
+  background-color: #e8f3ff;
+  border-color: #005ac1;
+}
+
+.dropzone label {
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+/* 🔥 Hinweis */
+.limit-hinweis {
+  color: #c62828;
+  font-weight: 600;
+  margin-top: 0.8rem;
+}
+
+/* 🖼️ Vorschau */
+.preview-container {
+  margin-top: 1rem;
+}
+
+.preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.preview-item {
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+  border-radius: 10px;
+  background-color: #fefefe;
+  width: 120px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+
+.preview-item:hover {
+  transform: translateY(-3px);
+}
+
+.preview-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+}
+
+/* ⬇️ Dropdowns */
+.dropdowns {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.dropdowns label {
+  font-weight: 600;
+  color: #444;
+}
+
+.dropdowns select {
+  padding: 0.6rem;
+  margin-top: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.dropdowns select:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+/* 📦 Module Darstellung */
+.module-container {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.modul {
+  background: #f9f9f9;
+  border-left: 5px solid #0070f3;
+  padding: 1.2rem 1.5rem;
+  border-radius: 8px;
+  animation: fadeIn 0.4s ease;
+}
+
+/* ✨ Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ✅ Button */
+.submit-button {
+  margin-top: 2.5rem;
+  padding: 0.9rem 2rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #005ac1;
+  transform: translateY(-2px);
+}

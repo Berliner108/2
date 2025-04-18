@@ -1,13 +1,43 @@
 "use client";
 
-import React from "react";
+import { useState, useEffect } from "react"; 
+
 import styles from "./wissenswertes.module.css";
-import Image from "next/image";
+
 import Link from "next/link"; // Für den Button zur Startseite
+
+const TypingText = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isDesktop, setIsDesktop] = useState(false);
+  const speed = 45; // Geschwindigkeit des Tippens (in ms)
+
+  useEffect(() => {
+    // Prüfe die Bildschirmgröße beim Laden der Seite
+    setIsDesktop(window.innerWidth >= 1024);
+
+    let i = 0;
+    if (window.innerWidth >= 1024) { // Nur auf Desktop
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          setDisplayedText((prev) => prev + text.charAt(i));
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, speed);
+      return () => clearInterval(interval);
+    } else {
+      // Falls mobile, direkt den ganzen Text anzeigen
+      setDisplayedText(text);
+    }
+  }, [text]);
+
+  return <p className={styles.typing}>{displayedText}</p>;
+};
 
 const Wissenswertes = () => {
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.container}>
       <nav className={styles.navbar}>
         <ul className={styles.navList}>
           {[
@@ -17,7 +47,7 @@ const Wissenswertes = () => {
             { title: 'Auftragsbörse', href: '/auftragsboerse', links: [{ href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' },  { href: '/about/vision', text: 'Kombiniert' }] },
             { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/about/team', text: 'Nasslacke' }, { href: '/about/vision', text: 'Pulverlacke' }, { href: '/about/vision', text: 'Arbeitsmittel' }] },
             { title: 'Offene Lackanfragen', href: '/lackanfragen', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
-            { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/about/vision', text: 'Die Vision' },{ href: '/about/vision', text: 'Oberlächentechnik' }, { href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' }] },
+            { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/wissenswertes', text: 'Vision und Mission' },{ href: '/wissenswertes#UeberUns', text: 'Über Uns' }, { href: '/wissenswertes#Sofunktionierts', text: 'So funktionierts' }, { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' }, { href: '/wissenswertes#Pulverbeschichten', text: 'Pulverbeschichten' }, { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' }, { href: '/wissenswertes#Entlacken', text: 'Entlacken' },{ href: '/wissenswertes#Verzinken', text: 'Verzinken' }, { href: '/wissenswertes#Eloxieren', text: 'Eloxieren' }, { href: '/wissenswertes#Strahlen', text: 'Strahlen' }, { href: '/wissenswertes#Folieren', text: 'Folieren' }, { href: '/wissenswertes#Isolierstegverpressung', text: 'Isolierstegverpressung' }] },
             { title: 'Mein Konto', href: '/konto', links: [{ href: '/support/help', text: 'Eingeholte Angebote' }, { href: '/support/contact', text: 'Meine Käufe' }, { href: '/support/contact', text: 'Offene Lackanfragen' }, { href: '/support/contact', text: 'Meine Aufträge' }, { href: '/support/contact', text: 'Aktive Artikel' }, { href: '/support/contact', text: 'Verkaufte Artikel' }, { href: '/support/contact', text: 'Angebotene Artikel' }, { href: '/support/contact', text: 'Kontoeinstellungen' }] }
           ].map((item, index) => (
             <li key={index} className={styles.navItem}>
@@ -36,293 +66,443 @@ const Wissenswertes = () => {
         </ul>
       </nav>
       <div className={styles.container}>
-      <h1>Über Uns</h1>
+      {/* 1. Container (Linker Container mit Text) */}
+      <div className={styles["container-left"]}>
+        <div className={styles["text-container"]}>
+          <h2 className={styles["h2-vision"]}>Unsere Vision</h2>
+          <TypingText text='
+            "Wir sehen eine Welt, in der die Beschichtungstechnik einfacher, nachhaltiger und für alle zugänglich ist. 
+            Unser Ziel ist es, Innovation mit Verantwortung zu verbinden, um eine bessere Zukunft für alle Akteure in der 
+            Beschichtungstechnik zu schaffen. Mit Leidenschaft, Kreativität und Technologie wollen wir neue Maßstäbe setzen 
+            und die Art und Weise, wie die Prozesse in der Beschichtungstechnik funktionieren, revolutionieren."
+          ' />
+        </div>
+      </div>
+
+      {/* 2. Container (Rechter Container mit Bild) */}
+      <div className={styles["container-right"]}>
+        <div className={styles["image-container"]}>
+          <img src="/images/vision.jpg" alt="Vision" className={styles["image"]} />
+        </div>
+      </div>
+
+      {/* 3. Container (Linker Container mit Bild) */}
+      <div className={styles["container-left"]}>
+        <div className={styles["image-container"]}>
+          <img src="/images/mission.jpg" alt="Mission" className={styles["image"]} />
+        </div>
+      </div>
+
+      {/* 4. Container (Rechter Container mit Text) */}
+      <div className={styles["container-right"]}>
+        <div className={styles["text-container"]}>
+          <h2 className={styles["h2-mission"]}>Unsere Mission</h2>
+          <TypingText text='
+            "Unsere Mission ist es, die Prozesse so zu gestalten, dass sie nicht nur neu gedacht und innovativ, sondern 
+            auch nachhaltig und nutzerfreundlich sind. Wir glauben daran, den Status Quo in der Beschichtungstechnik 
+            herauszufordern. Wir glauben daran, dass wir anders denken. Wir machen das, indem wir auf Nachhaltigkeit, 
+            Nutzerfreundlichkeit und Wirtschaftlichkeit setzen. Wir freuen uns, besondere Lösungen anzubieten. Wollen 
+            Sie auch Teil davon sein?"
+          ' />
+        </div>
+      </div>
       
-      <div className={styles.textContent}>
-        
-        <p>
-          Wir sind die erste Plattform für reine Oberflächentechnik. Eine Plattform:</p>
-          <p>Die es Kunden ermöglicht innerhalb kürzester Zeit ihren passenden Oberflächentechniker zu finden</p>
-          <p>Die es Oberflächentechnikern ermöglicht ihren Absatz zu steigern</p>
-          <p>Die es Kunden durch eigenständige Materialbeschaffung ermöglicht, bares Geld zu sparen</p>          
-          <p>Die es Oberflächentechnikern ermöglicht den passendsten Lieferanten für ihre Verbrauchsartikel zu finden</p>
-          <p>Die es Kunden durch eigenständige Materialbeschaffung ermöglicht, bares Geld zu sparen</p><br></br>
-          <p>Alles, was wir machen, machen wir mit dem Glauben, den Status Quo in der Oberflächentechnik herauszufordern.
-          Wir glauben daran, dass wir anders denken. Wir machen das, indem wir auf Nachhaltigkeit, Nutzerfreundlichkeit und Wirtschaftlichkeit setzen.
-          Wir freuen uns, besondere Lösungen anzubieten. Wollen Sie auch Teil davon sein?
-        </p>
-      </div>
-      <h1>So funktionierts</h1>
-
-      <div className={styles.imageGallery}>
-        
-        
-        <div className={styles.imageContainer}>
-          <Image
-            src="/images/sofunktionierts.jpg" // Ersetze mit deinem Bildpfad
-            alt="Bild 3"
-            width={400}
-            height={300}
-            className={styles.image}
-          />
-        </div>
-      </div>
-      <h1>Die Oberflächentechnik</h1>
-      <div className={styles.textContent}>
-        
-        <p>
-        Oberflächentechnik ist ein Bereich der Materialwissenschaften, der sich mit der Veränderung und Verbesserung der Eigenschaften von Oberflächen befasst.
-          Ziel ist es, die Funktionalität, Haltbarkeit, Ästhetik und andere spezifische Eigenschaften von Werkstoffen oder Bauteilen zu optimieren.
-          
-          Die Anwendungen der Oberflächentechnik reichen von der Verhinderung von Korrosion und Verschleiß bis hin zur Verbesserung von chemischen, elektrischen und 
-            mechanischen Eigenschaften sowie der optischen Gestaltung. In der Oberflächentechnik wird die Oberfläche eines Materials behandelt, 
-            ohne das gesamte Material zu verändern. Dies ermöglicht eine gezielte Anpassung an die Bedürfnisse des jeweiligen Einsatzes. Diese Verfahren sind 
-            in vielen Industrien von großer Bedeutung, z. B. in der Automobilindustrie, Luft- und Raumfahrt, Maschinenbau, Medizintechnik und Elektronik.
-            <br></br><br></br>Zu den wichtigsten Zielen der Oberflächentechnik zählen:</p>
-            <p>• Schutz: Die Oberfläche wird so behandelt, dass sie gegenüber Umwelteinflüssen wie Korrosion, Abrieb, Kratzern oder UV-Strahlung widerstandsfähiger wird.</p>
-            <p>• Funktionalität: Die Oberfläche wird mit spezifischen Eigenschaften ausgestattet, etwa durch Verbesserung der Haftung, Gleitfähigkeit, elektrischen Leitfähigkeit oder Wärmeleitfähigkeit.</p>
-            <p>• Optik: Oberflächenbehandlungen wie Lackierungen oder Beschichtungen verändern das Aussehen des Materials, etwa durch Farbgebung, Glanz oder Textur.</p>
-            <p>• Hygiene und Reinheit: Die Oberflächenbehandlung kann die Reinigung erleichtern und Schmutzanhaftungen reduzieren, was besonders in der Medizintechnik oder Lebensmittelindustrie wichtig ist.
-            
-        </p>
-        <p>        
-            <br></br><br></br>Die Hauptverfahren der Oberflächentechnik sind vielfältig und reichen von mechanischen über chemische bis hin zu galvanischen und thermischen Verfahren:</p>
-            <p>• Mechanische Verfahren: Hierzu zählen Techniken wie Schleifen, Polieren, Bürsten oder Strahlen, bei denen die Oberfläche durch mechanische Einwirkung geglättet oder strukturiert wird. Ein Beispiel ist das Sandstrahlen, bei dem eine abrasive Strahlung verwendet wird, um die Oberfläche zu reinigen oder eine bestimmte Rauheit zu erzeugen. Auch Nasslackieren, Folieren, verrollen mittels Isoliersteg und das mechanische Entlacken zählen zu den mechanischen Verfahren in der Oberflächentechnik.</p>
-            <p>• Chemische Verfahren: Diese Verfahren beinhalten Behandlungen mit Chemikalien, die die Oberflächenstruktur oder -beschaffenheit verändern. Zu den bekanntesten chemischen Prozessen zählen das Beizen, bei dem unerwünschte Oxidschichten entfernt werden, und das Passivieren, bei dem eine Schutzschicht gebildet wird, um das Material vor Korrosion zu schützen. Ein weiteres Verfahren ist das Anodisieren, bei dem eine stabile Oxidschicht auf verschiedenen Metalloberflächen erzeugt wird.</p>
-            <p>• Galvanische Verfahren: Diese Verfahren basieren auf Elektrolyseprozessen, bei denen Metallionen aus einer Lösung auf die Oberfläche eines Werkstücks abgeschieden werden. Ein bekanntes Beispiel ist das Verchromen, bei dem eine dünne Chromschicht auf ein Werkstück aufgebracht wird, um die Korrosionsbeständigkeit zu erhöhen. Weitere Verfahren sind Vernickeln oder Verzinken.</p>
-            <p>• Thermische Verfahren: Bei diesen Verfahren wird das Material erhitzt, um eine Beschichtung zu erzeugen. Beispiele sind das Flammspritzen, bei dem geschmolzene Metalle auf die Oberfläche eines Bauteils aufgebracht werden, oder das Pulverbeschichten, bei dem ein Pulver durch Erhitzen zu einer dauerhaften Schicht verschmilzt.
-            Oberflächentechniken verlängern die Lebensdauer von Produkten steigern deren Leistungsfähigkeit und sind gleichzeitig eine kostengünstige Lösung für die Optimierung von Bauteilen.
-            
-        </p>
-      </div>
-      <h1>Die Prozesse</h1>
-      <div className={styles.textContent}>
-        
-        <p>
-        <b>Pulverbeschichtung:</b> Die Pulverbeschichtung (oder Thermolackierung bzw. Pulverlackierung) ist ein Beschichtungsverfahren, bei dem ein elektrisch leitfähiges 
-        Substrat mit Pulverlack beschichtet wird. Meistens sind diese Substrate aus Aluminium, Stahl, verzinktem Stahl, Edelstahl oder Messing, es können aber auch 
-        andere Materialien pulverbeschichtet werden. Damit eine Beschichtung ihre Anforderungen erfüllen kann, ist vor der Applikation des Lacks eine Vorbehandlung 
-        nötig. Diese besteht oft aus einer Entfettung, Beize und Passivierung. Je nach Substrat unterscheiden sich die eingesetzten Mittel zur Vorbehandlung. 
-        Anschließend werden die Werkstücke getrocknet und beschichtet. Im Einbrennofen vernetzt sich das auf dem Substrat applizierte Pulver bei 110 – 250 °C und 
-        bildet anschließend eine dekorative Schutzschicht. Werkstücke mit Abmessungen bis zu (HxBxT) 10x5x3 m, in Sonderfällen auch größer, können mit Pulverlack 
-        beschichtet werden. Typische Schichtdicken bei einer einfachen Pulverbeschichtung sind 60 – 120 µm, je nach Anwendung sind aber auch dünnere oder dickere 
-        Schichtdicken produzierbar. Normen: Es existieren mehrere Normen. DIN 55633 bezieht sich auf den Korrosionsschutz und die Bewertung von beschichteten 
-        Stahlbauten. Für dünnwandige (Materialdicken ≤ 3 mm) legt Teil 1 der DIN 55634 „Beschichtungsstoffe und Überzüge – Korrosionsschutz von tragenden 
-        dünnwandigen Bauteilen aus Stahl“ auch für Pulverbeschichtungen die Anforderungen und Prüfverfahren fest. EN 15773 bezieht sich auf die Pulverbeschichtung 
-        von feuerverzinkten und sherardisierten Gegenständen aus Stahl. Pulverlacke: Pulverlacke sind in sehr vielen verschiedenen Variationen kommerziell erhältlich. 
-        Die meisten Pulverlacke haben Polyamid, Polyesterharz oder Epoxidharz als Basis. Pulverlacke unterscheiden sich je nach Zusammensetzung in Farben & Erscheinung, 
-        Glanzgraden, Oberflächenstrukturen, Verarbeitung, Einsatzzwecken und Eigenschaften gegenüber äußeren Einflüssen. Es sind kratzresistente, elektrisch 
-        ableitfähige, hochwetterfeste, anti-Graffiti, fluoreszierende, metallic, anti-Quietsch, anti-Rutsch, anti-Ausgasung und weitere Variationen erhältlich, 
-        je nach geforderter Anwendung. Pulverlacke sind auf Kundenwunsch auch nach Vorlage oder individuellen Bedürfnissen produzierbar.          
-        </p>
-        <p>
-        <b>Nasslackieren:</b> Nasslackieren ist ein Verfahren zur Beschichtung von Oberflächen mit flüssigem Lack Es wird verwendet um Bauteile sowohl optisch aufzuwerten 
-        als auch vor äußeren Einflüssen wie Korrosion chemischen Belastungen oder UV-Strahlung zu schützen Dabei entsteht eine geschlossene und haftfeste Lackschicht 
-        die sowohl funktionale als auch dekorative Eigenschaften haben kann Der Lack beim Nasslackieren besteht aus einer Mischung von Bindemitteln Pigmenten Additiven
-         und Lösungsmitteln Nach dem Auftragen verdunsten die Lösungsmittel sodass die Lackschicht aushärtet und eine dauerhafte Beschichtung bildet Je nach Anforderung
-          können Lacke mit unterschiedlichen Eigenschaften verwendet werden zum Beispiel hitzebeständige kratzfeste oder besonders chemikalienresistente Varianten Das
-           Verfahren wird in vielen Branchen angewendet darunter Automobilbau Maschinenbau Möbelindustrie und Elektronik Es eignet sich für eine Vielzahl von 
-           Materialien wie Metall Kunststoff Holz oder Glas und erlaubt durch die große Auswahl an Farben und Glanzgraden eine hohe Gestaltungsfreiheit Beim
-            Nasslackieren wird die Oberfläche zunächst gereinigt entfettet und gegebenenfalls aufgeraut oder grundiert um eine optimale Haftung zu gewährleisten 
-            Der Lack wird anschließend mit Spritzpistolen Bürsten oder Walzen in dünnen Schichten aufgetragen Jede Schicht muss in der Regel zwischen den 
-            Arbeitsschritten trocknen um ein gleichmäßiges und hochwertiges Ergebnis zu erzielen Es gibt verschiedene Techniken beim Nasslackieren darunter 
-            Airless-Spritzen elektrostatisches Spritzen oder Spritzlackieren mit Druckluft Jede Technik hat spezifische Vor- und Nachteile und wird je nach 
-            Bauteilgröße Geometrie oder Anwendungsbereich eingesetzt Vorteile des Nasslackierens sind die hohe Flexibilität die Möglichkeit komplexe Geometrien 
-            zu beschichten und die große Auswahl an Oberflächeneffekten Allerdings ist das Verfahren oft arbeitsintensiver als andere Beschichtungsmethoden und 
-            erfordert eine kontrollierte Umgebung beispielsweise für die Trocknung und das Ablüften der Lösungsmittel.         
-        </p>
-        <p>
-        <b>Entlacken:</b> Beim Entlacken werden alte Lackschichten entfernt. Je nachdem welcher Werkstoff und welche Beschichtung eingesetzt wurden, stehen 
-        verschiedene Verfahren und Mittel zur Verfügung. Entscheidend für den Kunden oder Dienstleister ist, wie die gewünschte Qualität am günstigsten 
-        erreicht werden kann. Mittlerweile gibt es auch für Entlacker ein Gütesiegel (Qualistrip) welches sicherstellt, dass die zertifizierten Betriebe 
-        vorgegebene Standards einhalten. Ziel beim Entlacken ist es, wieder eine beschichtungsfähige Oberfläche zu erhalten. Entlackungsmethoden lassen sich 
-        unterteilen in chemische, thermische und mechanische Entlackung. Es sind jeweils unterschiedliche Varianten im Einsatz mit unterschiedlichem Ergebnis.         
-        </p>
-      </div>
-      <div className={styles.imageGallery}>
-        
-        
-        <div className={styles.imageContainer}>
-          <Image
-            src="/images/entlacken.jpg" // Ersetze mit deinem Bildpfad
-            alt="Bild 3"
-            width={400}
-            height={300}
-            className={styles.image}
-          />
-        </div>
-      </div>
-
-      <div className={styles.textContent}>
-        
-        <p>
-        <b>Schmelztauchen:</b> Beim Schmelztauchen wird ein Werkstück aus Metall in ein Bad aus einem verflüssigten anderen Metall getaucht. Das Werkstück muss 
-        dafür einen bedeutend höheren Schmelzpunkt haben als das flüssige Metall im Bad, damit das Werkstück sich nicht verflüssigt. Ebenso muss das 
-        flüssige Metall auch haften bleiben, damit das Werkstück benetzt wird. Nach dem Herausheben des Werkstücks aus dem Bad, bildet sich nach dem 
-        Aushärten so eine feste Schutzschicht. Häufig passiert dies um den Werkstücken besseren Korrosionsschutz, höhere Lebensmittelverträglichkeit, 
-        veränderte elektrische Leitfähigkeit oder bessere Lötbarkeit zu geben. Die am häufigsten verbreiteten Verfahren sind das Feuerverzinken, das 
-        Feuerverzinnen, das Feuerverbleien und das Feueraluminieren. Gegenüber galvanischen Verfahren erhält man beim Schmelztauchen eine viel bessere 
-        Haftfestigkeit von Überzug zu Werkstück. Ebenso erhält man beim Schmelztauchen höhere Schichtdicken, wodurch der Korrosionsschutz erhöht wird. 
-        Darüber hinaus sind Duplex Beschichtungen möglich, wobei eine weitere Schicht Lack auf die Zinkschicht aufgetragen wird. Dies kann zu dekorativen 
-        oder zu Zwecken des Korrosionsschutzes erfolgen. Das Verfahren ist nachhaltig, da Zink recycelbar ist.         
-        </p>
-        <p>
-        <b>Verzinken & Entzinken:</b> Beim Verzinken wird meistens Stahl mit einer dünnen Schicht Zink überzogen, um ihn vor Korrosion zu schützen. Dafür gibt es 
-        verschiedene Verfahren mit unterschiedlichen Parametern.       
-        </p>
-        <p>
-        <b>Feuerverzinken:</b> Beim Feuerverzinken werden die zu verzinkenden Werkstücke in ein Bad aus flüssigem Zink getaucht. Zuvor müssen die Werkstücke 
-        gründlich gereinigt werden um Öl, Fett, Rost oder andere Verunreinigungen zu entfernen. Die Reinigungsschritte umfassen Entfetten, Beizen 
-        (zur Entfernung von Oxidschichten mit Säure) und Flussmittelauftrag, um die Oberfläche für die Zinkbeschichtung vorzubereiten. Anschließend 
-        werden die vorbehandelten Werkstücke in das ca. 450°C heiße Zinkbad getaucht, wobei das geschmolzene Zink mit dem Eisen oder Stahl eine feste 
-        gebundene Zinkschicht bildet. Zuletzt werden die Werkstücke langsam abgekühlt und man erhält eine gleichmäßige Schutzschicht. Je nach Umgebung 
-        werden die Werkstücke so mehrere Jahrzehnte (ca. 50 Jahre) vor Rostbildung geschützt.        
-        </p>
-      </div>
-      <div className={styles.textContent}>
-        
-        <p>
-        <b>Spritzverzinken:</b> Anders als beim Feuerverzinken erfolgt die Beschichtung durch Aufspritzen von geschmolzenem Zink auf die Oberfläche. Die Reinigung 
-        erfolgt dabei mechanisch (z.B. durch Sandstrahlen oder Kugelstrahlen), um Rost, Schmutz und Oxidschichten zu entfernen. Danach wird Zink in einem 
-        Brenner oder Lichtbogen erhitzt und geschmolzen. Das flüssige Zink wird durch Druckluft zerstäubt und in feinster Form auf die vorbereitete Oberfläche 
-        gespritzt. Abschließend kühlen die Zinkpartikel beim Kontakt mit der Oberfläche ab und bilden eine haftende Schutzschicht. Das Verfahren ist mobil einsetzbar, 
-        wodurch es für große und komplexe Strukturen geeignet ist. Ebenso ist es schonend für die Werkstücke selbst, da die Werkstücke keiner großen Hitzeeinwirkung 
-        ausgesetzt sind (wichtig für temperaturempfindliche Bauteile). Schichtdicken sind variabel produzierbar, je nach Auftrag. Ebenso lassen sich Fehlstellen durch 
-        dieses Verfahren gut ausbessern. Nachteile dieses Verfahrens sind die geringere Widerstandsfähigkeit gegen mechanische Belastungen und die kürzere Lebensdauer 
-        im Vergleich zu metallurgisch gebundenen Zinkschichten.         
-        </p>
-        <p>
-        <b>Diffusionsverzinken bzw. Sherardisieren:</b> Bei diesem Verfahren wird Zink in fester Phase auf die Oberfläche von Stahl oder Eisen übertragen. Es entsteht eine 
-        Legierung, die durch Diffusion fest mit dem Grundwerkstoff verbunden ist. Dafür müssen die Werkstücke vorab gereinigt werden, um Fett, Schmutz und Oxidreste 
-        zu entfernen. Anschließend wird das Werkstück zusammen mit Zinkpulver oder einer Zinkpulver-Mischung in einen rotierenden, geschlossenen Behälter gegeben. 
-        Die Mischung enthält oft zusätzlich Stoffe wie Quarzsand, um eine gleichmäßige Verteilung zu gewährleisten. Der Behälter wird auf Temperaturen zwischen 
-        300-400°C erhitzt. Das Zink diffundiert in die Stahloberfläche und bildet eine Zink-Eisen-Legierung. Nach dem Prozess wird das Werkstück abgekühlt und 
-        die Oberfläche von überschüssigem Zinkpulver gereinigt. Vorteilhaft bei diesem Verfahren ist extrem hohe Widerstandsfähigkeit gegenüber mechanischer
-        Beanspruchung, gleichmäßige Beschichtung auch von komplexen Geometrien, hohe Haftfestigkeit und sehr guter Korrosionsschutz, auch in aggressiven Umgebungen. 
-        Nachteile sind die höheren Kosten auf Grund der Komplexität des Verfahrens und die Limitierungen in der Größe der Bauteile.       
-        </p>
-        <p>
-        <b>Galvanisches Verzinken:</b> Das galvanische Verzinken wird vor allem dann eingesetzt, wenn Optik und Präzision wichtig sind und die Korrosionsschutzanforderungen 
-        moderat sind, z. B. in Innenbereichen oder weniger aggressiven Umgebungen. Es ergänzt andere Verzinkungsverfahren wie Feuerverzinken oder Spritzverzinken 
-        je nach den spezifischen Anforderungen des Bauteils. Im Gegensatz zum Feuerverzinken, das bei hohen Temperaturen erfolgt, wird beim galvanischen Verzinken 
-        die Zinkschicht durch einen elektrischen Strom in einem elektrolytischen Bad abgeschieden. Die Vorbereitung erfolgt wie bei anderen Verzinkungsverfahren. 
-        Anschließend taucht man die Werkstücke in eine Zinklösung, wobei das Werkstück als Kathode fungiert und eine Anode aus Zink Zinkionen in die Lösung abgibt.
-         Durch Anlegen eines Gleichstroms wandern die Zinkionen zur Oberfläche des Werkstücks. Anschließend ist eine Lackierung oder Pulverbeschichtung möglich. 
-         Die Zinkschichten sind dünner als beim Feuerverzinken (5-30µm), somit auch geringerer Korrosionsschutz. Jedoch ist die Oberfläche ästhetischer und glatter.
-         Das Verfahren ist für Bauteile mit komplexen Geometrien, Kleinteile und Teile mit geringen Korrosionsschutzanforderungen und mechanischen Belastungen geeignet.       
-        </p>
-        <p>
-        <b>Lamellen Verzinken:</b> Lamellenverzinken ist ein spezielles Verfahren zum Korrosionsschutz bei dem eine schützende Zinklamellenschicht in mehreren Schritten 
-        auf das Werkstück aufgebracht wird Das Verfahren eignet sich besonders für kleine komplexe oder filigrane Bauteile wie Schrauben Muttern oder 
-        Verbindungselemente Zunächst wird die Oberfläche durch Strahlen oder chemische Reinigung vorbereitet Danach trägt man eine Suspension aus feinen Zink- 
-        und Aluminiumplättchen in einem Bindemittel auf das Werkstück auf Dies geschieht meist durch Tauchschleudern oder Sprühen Die Beschichtung wird bei etwa 
-        200 bis 300 Grad Celsius in einem Ofen gehärtet Für erhöhten Schutz werden oft mehrere Schichten aufgetragen und gehärtet Die Zink- und Aluminiumlamellen 
-        bilden eine chemisch widerstandsfähige Schutzbarriere Die Schicht ist dünn etwa 8 bis 20 Mikrometer haftet sehr gut und eignet sich ideal für Gewindeteile 
-        Das Verfahren bietet exzellenten Korrosionsschutz auch in aggressiven Umgebungen und ist umweltfreundlich da es ohne Chrom VI auskommt Es verursacht keine 
-        Wasserstoffversprödung und ist temperaturbeständig bis zu 300 Grad Celsius Allerdings ist es etwas teurer und die mechanische Belastbarkeit der Schicht ist 
-        begrenzt Lamellenverzinken wird vor allem in der Automobilindustrie dem Maschinenbau und bei Befestigungselementen für Außenbereiche eingesetzt da es hohen 
-        Schutz bei engen Toleranzen gewährleistet      
-        </p>
-        <p>
-        <b>Mechanisches Verzinken:</b> Mechanisches Verzinken ist ein Verfahren, bei dem eine Zinkschicht durch mechanische Energie auf Stahl- oder Eisenoberflächen 
-        aufgebracht wird Es wird vor allem für kleinere Teile wie Schrauben Muttern oder Nägel eingesetzt und bietet einen wirksamen Korrosionsschutz ohne die 
-        Gefahr von Wasserstoffversprödung Beim Prozess werden die Bauteile in einem rotierenden Behälter zusammen mit Zinkpulver Glasperlen und einem speziellen 
-        Haftmittel vermischt Durch die mechanische Bewegung haften die Zinkpartikel an der Oberfläche der Bauteile und bilden eine gleichmäßige Schicht. 
-        Die Schichtdicke ist kontrollierbar und liegt typischerweise zwischen 10 und 50 Mikrometern Das mechanische Verzinken ist besonders umweltfreundlich 
-        da keine chemischen Prozesse wie bei galvanischem Verzinken notwendig sind Es eignet sich für hochfeste Bauteile und gewährt durch die gleichmäßige 
-        Beschichtung guten Korrosionsschutz Es ist jedoch weniger für große oder komplexe Bauteile geeignet da das Verfahren hauptsächlich für kleinere und 
-        einfach geformte Werkstücke entwickelt wurde.       
-        </p>
-        <p>
-        <b>Eloxieren:</b> Ist das Anodisieren von Aluminium. Beim Eloxieren wird durch elektrolytische Oxidation von Aluminiumbauteilen eine oxidische äußere 
-        Schutzschicht erzeugt, welche innere Schichten des Werkstücks vor Korrosion schützt. Beim Verfahren selbst, wird die oberste Schicht des Werkstücks 
-        in ein Oxid bzw. Hydroxid umgewandelt. Die Eloxalschicht hat eine Dicke von 5 – 25 µm (auch dickere Schichten sind realisierbar) und muss für ihre 
-        Funktionalität frei von Rissen oder Lücken sein. Weitere positive Effekte des Eloxierens sind die erhöhte Härte der Oberfläche (Standardverfahren: 
-        200 – 350 HV; Im Harteloxalverfahren bis zu 600 HV), die elektrische Isolation des Werkstücks sowie geringere Reibungswerte beim Kontakt mit verschiedenen 
-        Materialien. Auch komplexe Geometrien erhalten so eine nahezu gleichmäßig dicke Aluminiumoxidschicht, welche nach der Erzeugung Mikroporen enthält. Diese 
-        werden durch anschließendes Verdichten bzw. Versiegeln verschlossen. Je reiner das Material ist, desto besser sind die Eloxalergebnisse. Bei manchen 
-        Anwendungen ist jedoch eine Legierung notwendig, welche zu Fehlstellen in der Oxidschicht führen. Es ist wichtig, die Legierung genau auf die Anforderungen 
-        abzustimmen und die Legierungsempfehlungen des Eloxalbetriebs zu beachten. Vor dem Eloxieren werden die Werkstücke wie beim Pulverbeschichten zunächst 
-        entfettet und anschließend gebeizt. Es kommen je nach Verfahren unterschiedliche Mittel zum Einsatz. Anschließend erfolgt das Eloxieren. Danach ist es 
-        möglich die eloxierten Werkstücke je nach Verfahren in verschiedenen Farben zu färben. Es ist ebenso möglich, Eloxalschichten mit verschiedenen Verfahren 
-        zu entfernen. Darüber hinaus ist auch partielles Eloxieren möglich.       
-        </p>
-        <p>
-        <b>Anodisieren:</b> Das Anodisieren ist der Überbegriff für das elektrochemische Oxidieren von Metallen. Dabei bildet sich stets eine Oxidschicht zur 
-        Veredelung und zum Schutz des Werkstücks. Nicht alle Metalle können anodisiert werden. Neben Aluminium und Aluminiumlegierungen können Titan, 
-        Magnesium, Zink, Niob und Tantal anodisiert werden. Wie beim Eloxieren werden die Werkstücke zunächst gereinigt, entfettet und ggf. gebeizt, 
-        um reine Oberflächen zu erhalten. Dies ist unabdingbar für ein gutes Ergebnis. Anschließend werden die Werkstücke elektrochemisch behandelt, 
-        wodurch sie eine Oxidschicht bilden. Die Dicke der Oxidschicht wird u.A. durch die angelegte Spannung und die Verweilzeit bestimmt. Optional 
-        können die Werkstücke auch gefärbt werden. Die so erhaltene poröse Oxidschicht wird anschließend versiegelt, um sie noch widerstandsfähiger 
-        zu machen. Das Anodisieren erhöht den Korrosionsschutz, die Abriebfestigkeit ggü. Mechanischer Beanspruchung, ermöglicht dekorative Oberflächen 
-        in verschiedenen Farben und ist zudem umweltfreundlich, da keine giftigen Metallschichten wie bei galvanischen Beschichtungen entstehen.       
-        </p>
-        <p>
-        <b>Strahlen:</b> Beim Strahlen wird das Strahlmittel mit hoher Geschwindigkeit (bis zu 160 m/s) auf das Werkstück gelenkt. Zum einen lässt sich so ein Materialabtrag 
-        (z.B. oberflächliche Rostschichten) bewerkstelligen, zum anderen können auch flüssige oder viskose Verunreinigungen (Fettschichten, Ölfilme) entfernt werden, 
-        ohne dass festes Material abgelöst wird. Gestrahlt wird häufig zum:
-
-        • Abtragen
-        • Aufrauen zur Haftungsverbesserung beim Lackieren
-        • Entgraten oder Verrunden von Schnittgrat
-        • Entschichten (Entlacken, Entfetten, Reinigen von Kokillen)
-        • Entzundern
-        • Glätten / Polieren zum Entfernen von Bearbeitungsspuren
-        • Mattieren als Vorbehandlung für metallische Überzüge, z.B. Vernickelung
-        • Putzen zum Entfernen von Rückständen und Formsand nach dem Gießen
-        • Umformen, um Wölbungen von Kuppelteilen zu fertigen
-
-        Strahlmittel: Je nach Ziel der Bearbeitung werden unterschiedliche Strahlmittel eingesetzt. Unterschiedliche Strahlmittel können unterschiedliche 
-        Anlagentypen erfordern. Kriterien für die Auswahl des Strahlmittels sind der Preis, Zweck (z.B. Rostentfernung, Graffitientfernung auf Wänden, 
-        Restaurierung von Möbeln, uvm.), Ausgangsmaterial, Materialstärke und die geforderte Rautiefe. Häufig verwendete Strahlmittel sind:   
-        • Stahlkies, Stahlkugeln, Drahtkorn, Bronzekies
-        • Granatsand, Korund, Schmirgel, Hochofenschlacke, Kalk
-        • Glasperlen, Glasbruch
-        • Keramikpartikel
-        • Trockeneis
-        • Kunststoffe, Nussschalen
-
-        Verfahrensvarianten:
-
-        • Druckluftstrahlen (z.B. Sandstrahlen; für gröbere Behandlungen von Oberflächen)
-        • Niedrigdruckstrahlen (geringerer Abtrag als beim Druckluftstrahlen)
-        • Hochdruckwasserstrahlen (zur Entfernung weicher Materialien; werkstückschonende Methode)
-        • Verdichtungsstrahlen
-        • Vakuum-Saugstrahlen    
-        </p>
-        <p>
-        <b>Industrielles Folieren:</b> ist ein automatisierter Prozess, bei dem Folie auf Materialien wie Metall, Kunststoff, Holz oder Glas aufgebracht wird, 
-        um diese zu schützen, dekorieren oder ihre Funktionalität zu verbessern. Es wird in großem Maßstab in Produktionsanlagen durchgeführt und ist in 
-        zahlreichen Branchen verbreitet, z. B. Bau, Automobil, Verpackung und Möbelherstellung. Zum Schutz empfindlicher Oberflächen wie Glas, Edelstahl 
-        oder lackierter Bleche werden Schutzfolien verwendet, die Kratzer, Schmutz und Korrosion verhindern. Dekorative Folien kommen bei Möbeln, Türen 
-        oder Paneelen zum Einsatz, um optische Aufwertungen wie Holzimitationen oder Metalloptiken zu erreichen. Funktionale Folien können Eigenschaften 
-        wie Hitzebeständigkeit, elektrische Isolation oder Chemikalienresistenz bieten, etwa in der Elektroindustrie. Verpackungsfolien schützen Produkte 
-        beim Transport oder steigern die Haltbarkeit, beispielsweise bei Lebensmitteln. In der Automobilindustrie wird das Verfahren für den Schutz oder 
-        die Gestaltung von Fahrzeugteilen genutzt, z. B. Carbon-Look-Folien. Die Oberflächen werden vor dem Folieren gereinigt und vorbereitet, bevor die 
-        Folie mithilfe von Maschinen aufgebracht wird. Wärme, Druck oder Klebstoffe fixieren die Folie dauerhaft. Industrielle Anlagen wie Kaschieranlagen 
-        oder Vakuumpressen sorgen für gleichmäßige Ergebnisse. Das Verfahren ist effizient, vielseitig und kostengünstig. Es schützt Oberflächen und ermöglicht 
-        kreative Designmöglichkeiten bei einer Vielzahl von Materialien.       
-        </p>
-        <p>
-        <b>Isoliersteg Verpressung:</b> Der Prozess, bei dem zwei Profile (meist aus Aluminium) über einen Kunststoffsteg miteinander verbunden und verpresst werden, 
-        wird als Isoliersteg-Verpressung, Isolierverbund oder Thermische Trennung bezeichnet. Dieser Prozess wird vor allem in der Fenster-, Türen- und 
-        Fassadenbauindustrie eingesetzt, um Aluminiumprofile thermisch zu trennen. Das Ziel ist, eine Wärmedämmung zu schaffen und den Wärmefluss zwischen 
-        der Innen- und Außenseite eines Profils zu minimieren. Ein speziell geformter Isoliersteg (aus wärmedämmendem Kunststoff wie Polyamid) wird in die 
-        dafür vorgesehenen Kammern der beiden Aluminiumprofile eingelegt. Die Profile und der Isoliersteg werden in einer speziellen Verpressmaschine unter 
-        hohem Druck zusammengedrückt. Dabei verformt sich das Aluminium leicht und umschließt den Kunststoffsteg, wodurch eine mechanische Verbindung entsteht. 
-        Nach der Verpressung ist die Verbindung stabil und sorgt dafür, dass die Profile thermisch voneinander getrennt bleiben, während die mechanische Stabilität 
-        erhalten bleibt. Vorteile dieses Prozesses sind die Wärmedämmung, Stabilitäterhaltung und die Vielseitigkeit (verschiedene Profildesigns und Farben 
-        sind möglich).       
-        </p>
-      </div>
-
-      <div className={styles.backButton}>
-        <Link href="/">
-          <button className={styles.button}>Zurück zur Startseite</button>
-        </Link>
-      </div>
-      </div>
     </div>
+    <br></br>
+    <div id="UeberUns" className={styles["werwirsind"]}>
+          <p>Über uns</p>      
+        <div className={styles["ober"]}>
+          <p>Wir sind die erste für Beschichtungstechnik zugeschnittene Plattform. Eine Plattform:</p>
+          <p>Die es Metallverarbeitern ermöglicht innerhalb kürzester Zeit Angebote für ihren Auftrag zu erhalten und den passenden Beschichter dafür zu finden</p>
+          <p>Die es Metallverarbeitern durch eigenständige Lackbeschaffung ermöglicht, bares Geld zu sparen</p>
+          <p>Die Metallverarbeiter bei Reklamationen nicht im Regen stehen lässt</p>                             
+          <p>Die alle Arbeitsmittel für Beschichter aus einer Hand bietet</p>
+          <p>Die es Beschichtern ermöglicht ihren Absatz zu steigern</p> 
+          <br></br>
+        </div>
+     </div>
+    <div id="Sofunktionierts" className={styles["sogehts"]}>
+          <p>So funktioniert's</p>
+    </div>
+    <br></br>
+    <div id="Beschichtungstechnik" className={styles["werwirsind1"]}>
+          <p>Beschichtungstechnik</p>      
+        <div className={styles["ober1"]}>
+          <p>Die Beschichtungstechnik (bzw. Oberflächentechnik) ist ein Teilbereich der Materialwissenschaften, der sich mit der gezielten Modifikation von 
+            Oberflächen beschäftigt, um deren Eigenschaften zu verbessern. Ziel ist es, Materialien oder Bauteile funktionaler, langlebiger und ästhetisch 
+            ansprechender zu gestalten. Die Anwendungen reichen von Korrosions- und Verschleißschutz bis hin zur Optimierung chemischer, elektrischer und 
+            mechanischer Eigenschaften sowie der visuellen Gestaltung. Dabei wird ausschließlich die Oberfläche behandelt, während das Grundmaterial unverändert 
+            bleibt. Diese Technologie spielt eine essenzielle Rolle in zahlreichen Industrien, darunter die Automobilbranche, Luft- und Raumfahrt, der Maschinenbau, 
+            die Medizintechnik und die Elektronik.</p> 
+          <br></br>
+        </div>
+        <div id="ziele" className={styles["werwirsind1"]}>
+        <p>Die wichtigsten Ziele sind</p>
+        </div>
+        <div className={styles["ober2"]}>
+          <p><u>Dekoration:</u> Lackieren oder Pulverbeschichten mit verschiedenen Lacken verändern Farbe, Glanz und Textur der Oberfläche<br></br>
+                <u>Schutz:</u> Geringere Umwelteinflüsse durch Korrosion, Abrieb, Kratzer oder UV-Strahlung<br></br>
+                <u>Funktionalität:</u> Die Oberfläche wird mit spezifischen Eigenschaften ausgestattet, etwa durch Verbesserung der Haftung, Gleitfähigkeit, elektrischen Leitfähigkeit oder Wärmeleitfähigkeit<br></br>
+                <u>Hygiene und Reinheit:</u> Spezielle Beschichtungen können Schmutzanhaftungen reduzieren und die Reinigung erleichtern. Dies ist besonders in der Lebensmittelindustrie und der Medizintechnik von großem Nutzen<br></br>
+          </p>
+            
+        </div>
+        <div className={styles["ober1"]}>
+          <p>Die Verfahren in der Beschichtungstechnik sind vielfältig und können in vier verschiedene Verfahrenstypen eingeteilt werden.</p> 
+          <br></br>
+        </div>
+        <div className={styles["ober2"]}>
+          <p><u>Thermische Verfahren:</u> Durch Hitzezufuhr wird auf dem Werkstück eine Beschichtung erzeugt. Verzinken durch Flammspritzen oder Lackieren durch Pulverbeschichten, sind häufig eingesetzte Techniken. <br></br>
+                <u>Chemische Verfahren:</u> Durch Chemikalien werden Oberflächenstruktur und -beschaffenheit verändert. Zu den bekanntesten Prozessen zählen das Beizen (entfernen von Oxidschichten / Rost), das Passivieren (Überziehen einer Schutzschicht) und das Anodisieren (Eloxieren), also das Bilden einer stabilen Oxidschicht.<br></br>
+                <u>Galvanische oder elektrolytische Verfahren:</u> In einer Lösung mit Metallionen (meist Zink, Chrom oder Nickel) welche auf die Oberfläche eines Werkstücks abgeschieden werden, bildet sich eine Korrosionsschutzschicht, welche die Lebensdauer des Werkstücks gegen Korrosion erhöht.<br></br>
+                <u>Mechanische Verfahren:</u> Nasslackieren, Schleifen, Polieren, Bürsten, mechanisches Entlacken oder Strahlen zählen zu den Verfahren, bei denen die Oberfläche durch mechanische Einwirkung strukturiert wird. <br></br>
+          </p>            
+        </div>
+        <div id="Pulverbeschichten" className={styles["werwirsind1"]}>
+          <p>Die Prozesse im Detail</p>        
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", color: "#333" }}>Pulverbeschichten</span> auch bekannt als Thermo- oder Pulverlackierung, 
+          ist ein Verfahren zur Oberflächenbeschichtung, das auf elektrisch leitfähigen Materialien angewendet wird. Typischerweise kommen dabei Metalle wie 
+          Aluminium, Stahl, verzinkter Stahl, Edelstahl oder Messing zum Einsatz, doch auch andere Werkstoffe lassen sich auf diese Weise beschichten.
+          Damit die Beschichtung optimal haftet und ihren Zweck erfüllt, ist eine sorgfältige Vorbehandlung erforderlich. Diese umfasst in der Regel eine Entfettung, 
+          Beizung sowie eine Passivierung – je nach Grundmaterial können dabei unterschiedliche Verfahren und Chemikalien zum Einsatz kommen. Nach der Vorbehandlung 
+          werden die Werkstücke getrocknet und anschließend mit Pulverlack besprüht.
+          Im nächsten Schritt erfolgt das Einbrennen des Pulvers im Ofen bei Temperaturen zwischen 110 und 250 °C. Dabei vernetzt sich das Pulver und bildet eine 
+          widerstandsfähige, optisch ansprechende Schutzschicht. Die Pulverbeschichtung ist auch für großformatige Bauteile geeignet – Werkstücke mit einer Größe von 
+          bis zu 10 x 5 x 3 Metern (HxBxT) lassen sich problemlos bearbeiten, in Sonderfällen sogar noch größere.
+          Die Dicke der Beschichtung variiert je nach Anwendungsbereich und liegt in der Regel zwischen 60 und 120 µm, wobei sowohl dünnere als auch dickere Schichten 
+          realisierbar sind.
+          Für Pulverbeschichtungen existieren verschiedene Normen. Die DIN 55633 definiert Anforderungen an den Korrosionsschutz sowie Prüfverfahren für beschichtete 
+          Stahlkonstruktionen. Besonders für dünnwandige Bauteile (Materialstärke ≤ 3 mm) sind in der DIN 55634-1 spezifische Vorgaben festgelegt. Zudem regelt 
+          die EN 15773 die Pulverbeschichtung von feuerverzinkten und sherardisierten Stahlteilen. Darüber hinaus existieren Standards für das Pulverbeschichten 
+          von Aluminium- und Stahlbauteilen, welche über GSB oder Qualicoat Siegel zertifiziert werden.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Pulverlacke</span> sind in sehr vielen verschiedenen Variationen 
+          kommerziell erhältlich. Die meisten Pulverlacke haben Polyamid, Polyesterharz oder Epoxidharz als Basis. Pulverlacke unterscheiden sich je nach 
+          Zusammensetzung in Farben & Erscheinung, Glanzgraden, Oberflächenstrukturen, Verarbeitung, Einsatzzwecken und Eigenschaften gegenüber äußeren Einflüssen. 
+          Es sind kratzresistente, elektrisch ableitfähige, hochwetterfeste, anti-Graffiti, fluoreszierende, metallic, anti-Quietsch, anti-Rutsch, anti-Ausgasung und 
+          weitere Variationen erhältlich, je nach geforderter Anwendung. Pulverlacke sind auf Kundenwunsch auch nach Vorlage oder individuellen Bedürfnissen 
+          produzierbar. Ebenso gibt es GSB und Qualicoat zertifizierte Pulverlacke welche bestimmte Mindeststandards jedenfalls erfüllen müssen.
+          </p><br></br>                     
+        </div>
+        <div id="Nasslackieren" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Das Nasslackieren</span> ist eine Technik zur Oberflächenbeschichtung mit flüssigem Lack. Dieses Verfahren dient nicht nur der optischen Aufwertung von Bauteilen, sondern schützt sie auch vor äußeren Einflüssen wie Korrosion, chemischen Belastungen oder UV-Strahlung. Dabei entsteht eine geschlossene und haftfeste Lackschicht, die sowohl funktionale als auch dekorative Eigenschaften besitzen kann.
+          Der verwendete Lack setzt sich aus Bindemitteln, Pigmenten, Additiven und Lösungsmitteln zusammen. Nach dem Auftragen verdunsten die Lösungsmittel, 
+          wodurch die Schicht aushärtet, und eine widerstandsfähige Oberfläche entsteht. Je nach Anforderungen kommen unterschiedliche Lacke zum Einsatz – 
+          beispielsweise hitzebeständige, besonders kratzfeste oder chemikalienresistente Varianten.
+          Das Nasslackieren findet in zahlreichen Branchen Anwendung, darunter der Automobil- und Maschinenbau, die Möbelindustrie und die Elektronik. Es eignet sich 
+          für eine Vielzahl von Materialien wie Metall, Kunststoff, Holz oder Glas und bietet durch die große Auswahl an Farben und Glanzgraden eine hohe gestalterische 
+          Vielfalt.
+          Damit der Lack optimal haftet, wird die Oberfläche vorab gereinigt, entfettet und gegebenenfalls aufgeraut oder grundiert. Anschließend erfolgt das Auftragen 
+          in dünnen Schichten – je nach Verfahren mit Spritzpistolen, Bürsten oder Walzen. Zwischen den einzelnen Lackschichten muss in der Regel eine Trockenzeit 
+          eingehalten werden, um ein gleichmäßiges und hochwertiges Ergebnis zu erzielen.
+          Es gibt verschiedene Methoden des Nasslackierens, darunter das Airless-Spritzen, elektrostatische Spritzen oder das klassische Spritzlackieren mit Druckluft. 
+          Jede Technik hat ihre spezifischen Vorteile und wird je nach Bauteilgröße, Form und Anwendungsbereich gewählt.
+          Zu den Stärken des Nasslackierens zählen seine Flexibilität, die Möglichkeit, selbst komplexe Geometrien zu beschichten, und die breite Palette an 
+          Oberflächeneffekten. Allerdings ist dieses Verfahren oft arbeitsintensiver als andere Beschichtungsmethoden und erfordert eine kontrollierte Umgebung, 
+          insbesondere für die Trocknung und das Ablüften der Lösungsmittel.
+
+          </p><br></br>                     
+        </div>
+        <div id="Entlacken" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Das Entlacken </span> ist ein Verfahren zum Entfernen von alten 
+          Lackschichten. Je nachdem, welcher Werkstoff und welche Beschichtung eingesetzt wurden, stehen verschiedene Verfahren und Mittel zur Verfügung. Entscheidend 
+          für den Kunden oder Dienstleister ist, wie die gewünschte Qualität am günstigsten erreicht werden kann. Mittlerweile gibt es auch für Entlacker ein Gütesiegel 
+          (Qualistrip) welches sicherstellt, dass die zertifizierten Betriebe vorgegebene Standards einhalten. Ziel beim Entlacken ist es, wieder eine 
+          beschichtungsfähige Oberfläche zu erhalten. Entlackungsmethoden lassen sich unterteilen in chemische, thermische und mechanische Entlackung. Es sind 
+          jeweils unterschiedliche Varianten im Einsatz mit unterschiedlichem Ergebnis.
+          </p><br></br>                     
+        </div>
+        <div id="Verzinken" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Beim Schmelztauchen  </span> wird ein Metallwerkstück in ein 
+          Bad mit geschmolzenem Metall eingetaucht. Damit das Werkstück dabei nicht schmilzt, muss sein Schmelzpunkt deutlich höher liegen als der des flüssigen 
+          Metalls. Zudem muss das geschmolzene Metall gut an der Oberfläche haften, damit eine gleichmäßige Beschichtung entsteht. Nach dem Herausziehen aus dem 
+          Bad kühlt die Metallüberzugs-Schicht ab und bildet eine feste Schutzschicht.
+          Dieses Verfahren wird hauptsächlich eingesetzt, um Werkstücke widerstandsfähiger gegen Korrosion zu machen, ihre Lebensmittelverträglichkeit zu verbessern, die 
+          elektrische Leitfähigkeit anzupassen oder die Lötbarkeit zu optimieren. Zu den gängigsten Schmelztauchverfahren zählen das 
+          <span style={{ fontSize: "22px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> Feuerverzinken,  </span> 
+          <span style={{ fontSize: "22px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> Feuerverzinnen,  </span> 
+          <span style={{ fontSize: "22px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> Feuerverbleien  </span> und 
+          <span style={{ fontSize: "22px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> Feueraluminieren</span>.
+          Im Vergleich zu galvanischen Beschichtungsmethoden bietet das Schmelztauchen eine wesentlich stärkere Haftung zwischen Metallüberzug und Werkstück. 
+          Zudem sind die erzielbaren Schichtdicken deutlich höher, was den Korrosionsschutz zusätzlich verbessert. Eine weitere Möglichkeit ist die sogenannte 
+          Duplex-Beschichtung, bei der eine Lackschicht auf die Zinkbeschichtung aufgetragen wird – entweder aus dekorativen Gründen oder zur zusätzlichen 
+          Schutzverstärkung.
+          Ein weiterer Vorteil des Verfahrens ist seine Nachhaltigkeit, da beispielsweise Zink recycelt werden kann.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Verzinken & Entzinken: </span> Beim Verzinken wird meistens 
+          Stahl mit einer dünnen Schicht Zink überzogen, um ihn vor Korrosion zu schützen. Dafür gibt es verschiedene Verfahren mit unterschiedlichen Parametern.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Beim Feuerverzinken </span> werden Metallwerkstücke 
+          in ein Bad mit geschmolzenem Zink getaucht. Damit die Beschichtung optimal haftet, müssen die Werkstücke zuvor gründlich gereinigt werden. Dabei 
+          werden Öl-, Fett- und Rostrückstände sowie andere Verunreinigungen entfernt. Der Reinigungsprozess umfasst mehrere Schritte: Entfetten, Beizen – 
+          bei dem Oxidschichten mithilfe von Säure beseitigt werden – sowie das Auftragen eines Flussmittels, das die Oberfläche auf die Zinkbeschichtung vorbereitet.
+          Nach der Vorbehandlung erfolgt das Eintauchen der Werkstücke in das etwa 450°C heiße Zinkbad. Dabei reagiert das flüssige Zink mit dem Eisen oder
+           Stahl und bildet eine fest verbundene Schutzschicht. Anschließend kühlt das verzinkte Bauteil langsam ab, wodurch eine gleichmäßige und widerstandsfähige 
+           Beschichtung entsteht.
+          Je nach Umgebung und Belastung schützt die Zinkschicht das Werkstück über mehrere Jahrzehnte hinweg – oft bis zu 50 Jahre – vor Korrosion.
+
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Beim Feuerverzinken </span> werden Metallwerkstücke 
+          in ein Bad mit geschmolzenem Zink getaucht. Damit die Beschichtung optimal haftet, müssen die Werkstücke zuvor gründlich gereinigt werden. Dabei 
+          werden Öl-, Fett- und Rostrückstände sowie andere Verunreinigungen entfernt. Der Reinigungsprozess umfasst mehrere Schritte: Entfetten, Beizen – 
+          bei dem Oxidschichten mithilfe von Säure beseitigt werden – sowie das Auftragen eines Flussmittels, das die Oberfläche auf die Zinkbeschichtung vorbereitet.
+          Nach der Vorbehandlung erfolgt das Eintauchen der Werkstücke in das etwa 450°C heiße Zinkbad. Dabei reagiert das flüssige Zink mit dem Eisen oder
+           Stahl und bildet eine fest verbundene Schutzschicht. Anschließend kühlt das verzinkte Bauteil langsam ab, wodurch eine gleichmäßige und widerstandsfähige 
+           Beschichtung entsteht.
+          Je nach Umgebung und Belastung schützt die Zinkschicht das Werkstück über mehrere Jahrzehnte hinweg – oft bis zu 50 Jahre – vor Korrosion.
+
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Beim Spritzverzinken  </span> wird die Schutzschicht nicht 
+          durch Eintauchen in geschmolzenes Zink aufgebracht, sondern durch das Aufspritzen des Materials. Vor der Beschichtung erfolgt eine mechanische Reinigung 
+          der Oberfläche – beispielsweise durch Sand- oder Kugelstrahlen –, um Rost, Schmutz und Oxidschichten zu entfernen.
+          Das Zink wird anschließend in einem Brenner oder Lichtbogen erhitzt, bis es schmilzt. Mithilfe von Druckluft wird das flüssige Zink in feine Tröpfchen 
+          zerstäubt und gleichmäßig auf die vorbereitete Oberfläche gespritzt. Beim Kontakt mit dem Werkstück kühlen die Zinkpartikel sofort ab und haften an der 
+          Oberfläche, wodurch eine schützende Beschichtung entsteht.
+          Ein großer Vorteil dieses Verfahrens ist seine Mobilität, da es direkt vor Ort eingesetzt werden kann – ideal für große oder komplex geformte Strukturen. 
+          Zudem ist es besonders materialschonend, da die Werkstücke keiner starken Hitze ausgesetzt werden, was es auch für temperaturempfindliche Bauteile geeignet 
+          macht.
+          Die Schichtdicke kann je nach Anforderung individuell angepasst werden, und beschädigte Bereiche lassen sich gezielt nachbessern. Allerdings ist die 
+          mechanische Widerstandsfähigkeit der Beschichtung geringer als bei metallurgisch gebundenen Zinkschichten, und die Haltbarkeit ist im Vergleich zum 
+          Feuerverzinken kürzer.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Das Diffusionsverzinken (Sherardisieren) </span> ist ein Verfahren,
+           bei dem Zink in fester Form auf die Oberfläche von Stahl oder Eisen übertragen wird. Dabei entsteht durch Diffusion eine fest verbundene Zink-Eisen-Legierung.
+          Vor der Beschichtung müssen die Werkstücke gründlich gereinigt werden, um Fett, Schmutz und Oxidrückstände zu entfernen. Anschließend werden sie zusammen mit 
+          Zinkpulver oder einer speziellen Zinkpulver-Mischung in einen geschlossenen, rotierenden Behälter gegeben. Oft enthält die Mischung zusätzliche Stoffe wie 
+          Quarzsand, um eine gleichmäßige Verteilung zu gewährleisten. Der Behälter wird dann auf Temperaturen zwischen 300 und 400°C erhitzt, wodurch das Zink in 
+          die Oberfläche des Stahls diffundiert, und eine widerstandsfähige Legierung bildet. Nach Abschluss des Prozesses werden die Werkstücke abgekühlt und von 
+          überschüssigem Zinkpulver befreit.
+          Dieses Verfahren bietet zahlreiche Vorteile: Es sorgt für eine äußerst widerstandsfähige Beschichtung, die mechanischen Belastungen sehr gut standhält. 
+          Zudem ermöglicht es eine gleichmäßige Beschichtung auch bei komplexen Geometrien und bietet einen hervorragenden Korrosionsschutz – selbst in aggressiven 
+          Umgebungen.
+          Allerdings sind mit diesem Verfahren auch höhere Kosten verbunden, da es technisch aufwendiger ist. Zudem gibt es Einschränkungen hinsichtlich der maximalen 
+          Größe der zu beschichtenden Bauteile.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Das galvanische Verzinken </span> wird bevorzugt eingesetzt, 
+          wenn neben einem gewissen Korrosionsschutz auch eine ansprechende Optik und hohe Maßgenauigkeit gefragt sind – beispielsweise bei Bauteilen für Innenbereiche
+           oder weniger aggressive Umgebungen. Je nach Anforderungen kann es eine Ergänzung zu anderen Verzinkungsverfahren wie dem Feuer- oder Spritzverzinken 
+           darstellen.
+            Im Gegensatz zum Feuerverzinken, das bei hohen Temperaturen abläuft, basiert das galvanische Verzinken auf einem elektrochemischen Prozess. Dabei wird 
+            das Werkstück in ein elektrolytisches Zinkbad getaucht, in dem es als Kathode dient. Eine Zinkanode gibt dabei Zinkionen in die Lösung ab. Durch Anlegen 
+            eines Gleichstroms wandern diese Ionen zur Werkstückoberfläche, wo sie sich als dünne Zinkschicht abscheiden.
+            Nach dem Verzinkungsprozess kann die Oberfläche zusätzlich durch Lackierung oder Pulverbeschichtung veredelt werden. Die aufgebrachten Schichten sind mit 
+            5 bis 30 µm deutlich dünner als beim Feuerverzinken, wodurch der Korrosionsschutz begrenzter ist. Dafür bietet dieses Verfahren eine besonders glatte, 
+            optisch ansprechende Oberfläche.
+            Galvanisches Verzinken eignet sich besonders für Bauteile mit komplexen Geometrien, kleinere Werkstücke oder Anwendungen, bei denen keine extrem hohe 
+            Korrosionsbeständigkeit erforderlich ist. Es bietet zudem eine hohe Präzision und eine gleichmäßige Beschichtung, ist jedoch nicht so widerstandsfähig 
+            gegenüber mechanischer Belastung wie andere Verzinkungsverfahren.
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Das Lamellenverzinken  </span> ist ein spezielles 
+          Korrosionsschutzverfahren, bei dem eine schützende Zinklamellenschicht in mehreren Schritten auf ein Werkstück aufgebracht wird. Besonders 
+          geeignet ist es für kleine, filigrane oder komplex geformte Bauteile wie Schrauben, Muttern und Verbindungselemente.
+          Der Prozess beginnt mit einer gründlichen Oberflächenvorbereitung, die durch Strahlen oder chemische Reinigung erfolgt. Anschließend wird eine Suspension 
+          aus feinen Zink- und Aluminiumplättchen, eingebettet in ein Bindemittel, auf das Bauteil aufgetragen – meist durch Sprühen oder Tauchschleudern. Danach härtet 
+          die Beschichtung bei Temperaturen zwischen 200 und 300 °C im Ofen aus. Um einen besonders hohen Korrosionsschutz zu erzielen, werden oft mehrere Schichten 
+          aufgetragen und jeweils einzeln ausgehärtet.
+          Durch die Kombination aus Zink- und Aluminiumlamellen entsteht eine äußerst widerstandsfähige Schutzbarriere. Die aufgebrachte Schicht ist mit einer Dicke von 
+          etwa 8 bis 20 Mikrometern sehr dünn, haftet jedoch hervorragend – besonders an Bauteilen mit Gewinden. Das Verfahren zeichnet sich durch eine hohe Beständigkeit 
+          gegenüber Korrosion aus, selbst in aggressiven Umgebungen. Zudem ist es umweltfreundlich, da es ohne den Einsatz von Chrom VI auskommt.
+          Ein weiterer Vorteil des Lamellenverzinkens ist, dass es keine Wasserstoffversprödung verursacht, was es besonders für hochfeste Stähle attraktiv macht. Zudem 
+          hält die Beschichtung Temperaturen von bis zu 300 °C stand. Allerdings sind die mechanische Belastbarkeit der Schicht und die Stoßfestigkeit etwas begrenzt, und die 
+          Kosten sind im Vergleich zu anderen Verzinkungsverfahren etwas höher.
+          Eingesetzt wird das Lamellenverzinken vor allem in der Automobilindustrie, im Maschinenbau sowie bei Befestigungselementen für den Außenbereich – überall dort, 
+          wo ein hoher Korrosionsschutz bei gleichzeitig engen Toleranzen gefordert ist.
+
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Das mechanische Verzinken  </span> ist ein Verfahren, bei 
+          dem eine Zinkschicht durch mechanische Energie auf Stahl- oder Eisenoberflächen aufgetragen wird. Besonders häufig wird es für kleinere Bauteile wie 
+          Schrauben, Muttern oder Nägel verwendet, da es zuverlässigen Korrosionsschutz bietet, ohne das Risiko einer Wasserstoffversprödung einzugehen.
+          Der Prozess erfolgt in einem rotierenden Behälter, in den die Werkstücke zusammen mit Zinkpulver, Glasperlen und einem speziellen Haftmittel gegeben werden. 
+          Durch die ständige Bewegung schlagen die Glasperlen die Zinkpartikel auf die Oberfläche der Bauteile, wodurch eine gleichmäßige Schutzschicht entsteht. Die Dicke 
+          der Beschichtung lässt sich präzise steuern und liegt in der Regel zwischen 10 und 50 Mikrometern.
+          Ein wesentlicher Vorteil dieses Verfahrens ist seine Umweltfreundlichkeit, da keine chemischen Reaktionen erforderlich sind, wie es beispielsweise beim galvanischen 
+          Verzinken der Fall ist. Zudem eignet sich das mechanische Verzinken besonders für hochfeste Bauteile, da es deren Materialeigenschaften nicht beeinträchtigt. Allerdings
+          ist es für große oder stark strukturierte Werkstücke weniger geeignet, da das Verfahren primär für kleinere und einfach geformte Bauteile entwickelt wurde.
+          </p><br></br>                     
+        </div>
+        <div id="Eloxieren" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Das Anodisieren</span> ist ein elektrochemisches Verfahren zur 
+          gezielten Oxidation von Metallen, das eine schützende und veredelnde Oxidschicht auf der Materialoberfläche erzeugt. Allerdings eignet sich nicht jedes 
+          Metall für diesen Prozess. Neben Aluminium und seinen Legierungen können auch Titan, Magnesium, Zink, Niob und Tantal anodisiert werden.
+          Ähnlich wie beim Eloxieren erfolgt zunächst eine gründliche Vorbehandlung, bei der die Werkstücke gereinigt, entfettet und gegebenenfalls gebeizt werden. Diese 
+          Schritte sind entscheidend für eine gleichmäßige und hochwertige Oxidschicht. Anschließend werden die Bauteile elektrochemisch behandelt, wodurch sich die gewünschte 
+          Schutzschicht bildet. Die Schichtdicke hängt unter anderem von der angelegten Spannung und der Dauer des Prozesses ab.
+          Zusätzlich besteht die Möglichkeit, die Oberfläche in verschiedenen Farben zu färben, bevor die poröse Oxidschicht in einem abschließenden Schritt versiegelt wird. 
+          Dies erhöht die Widerstandsfähigkeit und sorgt für eine lange Haltbarkeit. Das Anodisieren verbessert nicht nur den Korrosionsschutz und die Abriebfestigkeit gegenüber 
+          mechanischer Beanspruchung, sondern bietet auch vielfältige gestalterische Möglichkeiten. Zudem ist das Verfahren umweltfreundlich, da es – im Gegensatz zu galvanischen 
+          Beschichtungen – ohne den Einsatz schädlicher Metalle auskommt.
+
+
+          </p><br></br>                     
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Das Eloxieren  </span> ist ein Verfahren zur elektrolytischen 
+          Oxidation von Aluminium, bei dem eine schützende Oxidschicht auf der Oberfläche gebildet wird. Diese Schicht bewahrt das Material vor Korrosion und 
+          verbessert seine Widerstandsfähigkeit. Dabei wird die oberste Metallschicht gezielt in Aluminiumoxid bzw. Hydroxid umgewandelt, wodurch eine widerstandsfähige 
+          und gleichmäßige Schutzschicht entsteht.
+            Die Dicke der Eloxalschicht beträgt in der Regel zwischen 5 und 25 Mikrometern, kann jedoch für spezielle Anwendungen auch dicker ausgeführt werden. Eine 
+            fehlerfreie, geschlossene Struktur ist essenziell, um die Schutzfunktion vollständig zu gewährleisten. Neben der Korrosionsbeständigkeit bietet das 
+            Verfahren weitere Vorteile: Die Oberfläche wird deutlich härter (Standard: 200–350 HV, Harteloxal: bis zu 600 HV), das Material erhält eine elektrische 
+            Isolierung und die Reibungseigenschaften werden verbessert.
+            Ein besonderer Vorteil des Eloxierens ist die gleichmäßige Beschichtung selbst bei komplexen Geometrien. Die entstehende Oxidschicht besitzt zunächst 
+            Mikroporen, die durch ein abschließendes Verdichten oder Versiegeln verschlossen werden. Die Qualität der Schicht hängt stark von der Reinheit des 
+            Aluminiums ab – während reines Aluminium ideale Ergebnisse liefert, können bestimmte Legierungen zu Unregelmäßigkeiten führen. Daher sollte die 
+            Materialzusammensetzung sorgfältig auf die Anforderungen abgestimmt und die Empfehlungen des Eloxalbetriebs berücksichtigt werden.
+            Der Prozess beginnt mit einer gründlichen Vorbehandlung, bei der die Werkstücke entfettet und gebeizt werden. Anschließend erfolgt die elektrolytische 
+            Oxidation. Danach kann das eloxierte Material in verschiedenen Farben eingefärbt oder mit speziellen Verfahren partiell behandelt werden. Zudem lassen 
+            sich Eloxalschichten bei Bedarf auch wieder entfernen.
+          </p><br></br>                     
+        </div>
+        <div id="Strahlen" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Beim Strahlen </span> wird ein Strahlmittel mit hoher 
+          Geschwindigkeit (bis zu 160 m/s) auf die Oberfläche eines Werkstücks gelenkt. Je nach Ziel des Verfahrens kann dies entweder zu einem Materialabtrag 
+          führen – beispielsweise zum Entfernen von Rost oder Lackschichten – oder zur schonenden Reinigung von Fett- und Ölfilmen, ohne dabei das Grundmaterial 
+          zu beschädigen.
+          </p>                    
+        </div>
+        <div className={styles["werwirsind"]}>
+          <p><span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Typische Anwendungsbereiche des Strahlens </span></p>      
+        <div className={styles["ober"]}>
+          <p>Glätten und Polieren: Reduzierung von Bearbeitungsspuren für eine homogenere Oberfläche</p>          
+          <p>Putzen: Reinigung von Gussteilen zur Entfernung von Formsand oder anderen Rückständen</p>
+          <p>Aufrauen: Verbesserung der Haftung für nachfolgende Lackierungen oder Beschichtungen</p>
+          <p>Entgraten und Verrunden: Beseitigung von scharfen Schnittgraten nach der Bearbeitung</p>
+          <p>Umformen: Anpassung von Metallstrukturen, etwa zur Herstellung gewölbter Bauteile</p>
+          <p>Entzundern: Beseitigung von Oxidschichten nach dem Schmieden oder Schweißen</p>
+          <p>Reinigung: Entfetten, Entfernen von Formrückständen oder Kokillenreinigung</p> 
+          <p>Mattieren: Vorbereitung für galvanische oder andere metallische Überzüge</p> 
+          <p>Materialabtrag: Entfernen von Rost, Lack oder anderen Beschichtungen</p>       
+          <br></br>
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          Das passende Strahlmittel hängt von verschiedenen Faktoren ab, darunter das zu behandelnde Material, die gewünschte Oberflächenrauheit, der 
+          Verwendungszweck sowie wirtschaftliche Überlegungen. Unterschiedliche Strahlmittel erfordern auch spezifische Strahlanlagen. Häufig eingesetzte 
+          Strahlmittel sind:
+          </p>                    
+        </div>
+        <div className={styles["ober"]}>
+          <p>Organische Strahlmittel: Kunststoffgranulat, zermahlene Nussschalen (z. B. für sensible Oberflächen)</p>          
+          
+          
+          
+          <p>Mineralische Strahlmittel: Granatsand, Korund, Schmirgel, Hochofenschlacke, Kalk</p>
+          <p>Metallische Strahlmittel: Stahlkies, Stahlkugeln, Drahtkorn, Bronzekies</p>
+          <p>Glasbasierte Strahlmittel: Glasperlen, Glasbruch</p> 
+          <p>Trockeneis (schonende Reinigung ohne Rückstände)</p>
+          <p>Keramische Strahlmittel</p>      
+          <br></br>
+        </div>
+        <div className={styles["ober2"]}>
+          
+          <p>
+          Je nach Anforderung gibt es verschiedene Strahltechniken<br></br>
+          Druckluftstrahlen: Hoher Materialabtrag, ideal für das Sandstrahlen grober Oberflächen<br></br>
+          Niedrigdruckstrahlen: Schonender als das klassische Druckluftstrahlen, für empfindliche Oberflächen<br></br>
+          Hochdruckwasserstrahlen: Besonders materialschonende Methode zur Entfernung weicher Beläge<br></br>
+          Verdichtungsstrahlen: Zur gezielten Oberflächenverfestigung und Verbesserung mechanischer Eigenschaften<br></br>
+          Vakuum-Saugstrahlen: Staubfreies Verfahren, häufig für die Reinigung von empfindlichen Oberflächen eingesetzt<br></br>
+          Durch die Wahl des richtigen Strahlverfahrens und des passenden Strahlmittels lassen sich unterschiedlichste Anforderungen an die Oberflächenbearbeitung 
+          effizient erfüllen.
+          </p>                    
+        </div>
+        <div id="Folieren" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Industrielles Folieren </span> ist ein automatisierter Prozess, 
+          bei dem Folien auf verschiedene Materialien wie Metall, Kunststoff, Holz oder Glas aufgebracht werden. Ziel ist es, diese zu schützen, zu dekorieren oder 
+          ihre funktionalen Eigenschaften zu verbessern. Dieser Prozess wird großflächig in Fertigungsanlagen durchgeführt und kommt in vielen Branchen zum Einsatz, 
+          darunter Bauwesen, Automobilindustrie, Verpackungsbranche und Möbelproduktion.
+          Zum Schutz empfindlicher Oberflächen wie Glas, Edelstahl oder lackierter Metalle werden spezielle Schutzfolien verwendet. Diese verhindern Kratzer, 
+          Schmutzablagerungen und Korrosion. Dekorative Folien finden Anwendung bei Möbeln, Türen oder Paneelen, um optische Effekte wie Holzimitationen oder 
+          Metalloberflächen zu erzielen. In funktionalen Bereichen können die Folien Eigenschaften wie Hitzebeständigkeit, elektrische Isolierung oder 
+          Chemikalienbeständigkeit bieten, was besonders in der Elektroindustrie von Bedeutung ist.
+          Verpackungsfolien wiederum schützen Produkte während des Transports oder verlängern deren Haltbarkeit, wie es beispielsweise bei Lebensmitteln der Fall ist. 
+          In der Automobilindustrie wird Folieren genutzt, um Fahrzeugteile zu schützen oder zu gestalten, etwa durch Carbon-Look-Folien.
+          Vor dem Aufbringen der Folie wird die Oberfläche gründlich gereinigt und vorbereitet. Anschließend wird die Folie durch Maschinen mit Hilfe von Wärme, 
+          Druck oder speziellen Klebstoffen dauerhaft fixiert. Industriegerechte Anlagen, wie Kaschieranlagen oder Vakuumpressen, sorgen dabei für eine gleichmäßige 
+          und präzise Anwendung.
+          Das industrielle Folieren ist ein effizientes, flexibles und kostengünstiges Verfahren, das nicht nur die Oberfläche schützt, sondern auch vielfältige 
+          Gestaltungsmöglichkeiten bietet. Es ermöglicht die Veredelung verschiedenster Materialien und wird in zahlreichen Bereichen erfolgreich eingesetzt.
+          </p><br></br>                     
+        </div>
+        <div id="Isolierstegverpressung" className={styles["ober2"]}>
+          
+          <p>
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}>Die Isoliersteg-Verpressung</span>, auch bekannt als  
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> Isolierverbund </span>oder
+          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "00px", color: "#333" }}> thermische Trennung</span>
+          , ist ein Verfahren, bei dem zwei Aluminiumprofile über einen Kunststoffsteg miteinander verbunden und unter Druck verpresst werden. Dieser Prozess findet 
+          vor allem Anwendung im Fenster-, Türen- und Fassadenbau, um Aluminiumprofile thermisch zu trennen. Ziel ist es, die Wärmedämmung zu verbessern und den 
+          Wärmefluss zwischen der Innen- und Außenseite des Profils zu verringern.
+          In diesem Verfahren wird ein speziell geformter Isoliersteg aus einem wärmedämmenden Kunststoff, meist Polyamid, in die vorgesehenen Kammern der beiden 
+          Aluminiumprofile eingelegt. Anschließend werden die Profile und der Isoliersteg in einer Verpressmaschine unter hohem Druck zusammengepresst. Dabei verformt 
+          sich das Aluminium leicht und umschließt den Kunststoffsteg, was eine stabile mechanische Verbindung erzeugt.
+          Nach dem Verpressen bleibt die Verbindung stabil, und die Profile bleiben thermisch voneinander getrennt, ohne die mechanische Stabilität zu beeinträchtigen. 
+          Zu den Vorteilen dieses Verfahrens zählen eine verbesserte Wärmedämmung, die Aufrechterhaltung der Stabilität und die Vielseitigkeit des Verfahrens, da 
+          unterschiedliche Profildesigns und Farben realisiert werden können.
+
+          </p><br></br>                     
+        </div>
+     </div>
+
+        
+     </div>
+    
+    </div>
+    
   );
 };
 

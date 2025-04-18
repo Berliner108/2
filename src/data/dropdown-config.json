@@ -1,0 +1,22 @@
+{
+  "Bildbearbeitung": {
+    "next": ["Texterstellung", "Übersetzung"],
+    "final": ["Finalisierung"]
+  },
+  "Texterstellung": {
+    "next": ["SEO-Optimierung", "Korrekturlesen"],
+    "final": ["Abschluss"]
+  },
+  "Marketing": {
+    "next": ["Strategie", "Social Media"],
+    "final": ["Reporting"]
+  },
+  "Entwicklung": {
+    "next": ["App Testing", "UX-Review"],
+    "final": ["Deployment"]
+  },
+  "Design": {
+    "next": ["Layout Design", "Logodesign"],
+    "final": ["Druckvorbereitung"]
+  }
+}

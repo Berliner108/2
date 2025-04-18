@@ -1,39 +1,141 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
+/* Container für den gesamten Inhalt */
 .container {
-  padding: 20px;
-  text-align: center;
-  background-color: #f9f9f9;
-  min-height: 100vh;
-}
-
-.container h1 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-}
-
-.textContent {
-  font-size: 1.1rem;
-  margin-bottom: 30px;
-}
-
-.imageGallery {
   display: flex;
+  flex-wrap: wrap;  /* Ermöglicht das Umfließen der Container */
+  width: 100%;
+}
+/* Jeder Container nimmt 50% der Breite ein und hat max-height */
+.container-left, .container-right {
+  width: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
+  max-height: 350px; /* Begrenze die Höhe der Container */
+  overflow: hidden; /* Verhindert, dass der Inhalt über die maximale Höhe hinausgeht */
 }
-
-.imageContainer {
-  width: 40%;
+.werwirsind {
+  width: 100%;  
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;  
 }
-
+.ober {
+  width: 100%;  
+  text-align: center;  
+  font-size: 1.09rem;
+}
+.sogehts {
+  width: 100%;  
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;  
+}
+.werwirsind1 {
+  width: 100%;  
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333; 
+}
+.ober1 {
+  width: 90%;    
+  display: flex;  
+  font-size: 1.09rem;
+  justify-content: center;  /* Horizontal zentrieren */  
+  margin-left: 5%;
+  line-height: 38px;  /* Feste Zeilenhöhe */  
+}
+.ober2 {
+  width: 93%;    
+  display: flex;  
+  font-size: 1.09rem;
+  text-align: left;  
+  margin-left: 5%;
+  line-height: 38px;  /* Feste Zeilenhöhe */  
+}
+/* Bild Container */
+.image-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+/* Bild */
 .image {
   width: 100%;
-  height: auto;
-  border-radius: 8px;
+  height: 100%;
   object-fit: cover;
 }
+/* Text Container */
+.text-container {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-style: italic;
+  padding: 40px;
+  margin-bottom: 20px;
+  font-size: 1.09rem;
+  line-height: 1.9;  
+}
+/* Stil für h2-Überschrift */
+.h2-vision, .h2-mission {
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-style: normal;
+}
+/* Mobile Ansicht: Container untereinander */
+@media (max-width: 1025px) {
+  .container-left, .container-right {
+    width: 100%;  /* Beide Container nehmen 100% Breite auf mobilen Geräten */
+  }
+
+  .container-left:nth-of-type(2) {
+    order: 2;
+  }
+  .container-right:nth-of-type(2) {
+    order: 1;
+  }
+  .werwirsind {
+    width: 100%;  
+    text-align: center;
+    font-size: 2.1rem;
+    font-weight: bold;
+    color: #333;  
+    
+  }
+  .ober {
+    width: 95%;  
+    justify-content: center;
+    font-weight: normal;  
+  }
+  /* Text Container */
+.text-container {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+  margin-bottom: 00px;
+  margin-top: -10px;
+  font-size: 0.9rem;
+  line-height: 1.9;  
+}
+/* Stil für h2-Überschrift */
+.h2-vision, .h2-mission {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-style: normal;
+}
+}
+
 
 .backButton {
   margin-top: 20px;
@@ -42,7 +144,7 @@
 .backButton .button {
   padding: 10px 20px;
   font-size: 1rem;
-  background-color: #007bff;
+  background-color: #00b4d8;
   color: white;
   border: none;
   border-radius: 5px;
@@ -51,19 +153,9 @@
 }
 
 .backButton .button:hover {
-  background-color: #0056b3;
+  background-color: #00b4d8;
 }
 
-
-
-
-/* Haupt-Wrapper */
-.wrapper {
-  width: 100%;  
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 /* Navbar */
 .navbar {
@@ -77,24 +169,21 @@
   z-index: 1000;
   scrollbar-width: none; /* Für Firefox */
 }
-
 /* Navbar Liste */
 .navList {
   list-style: none;
   display: flex;
   padding: 0;
   margin: 0;
-  position: relative;
+  
 }
-
 /* Jedes Menü-Element */
 .navItem {
   position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 0 22px; /* Abstand zwischen den Links */
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
-
 /* Buttons */
 .navButton {
   background: none;
@@ -106,11 +195,9 @@
   color: black;
   transition: color 0.3s ease;
 }
-
 .navItem:hover .navButton {
-  color: #007BFF;
+  color: #00b4d8;
 }
-
 /* Dropdown-Menü */
 .dropdown {
   position: absolute;
@@ -139,10 +226,9 @@
 }
 
 .dropdownLink:hover {
-  background-color: #007BFF;
+  background-color: #00b4d8;
   color: white;
 }
-
 /* Dropdown sichtbar machen */
 .navItem:hover .dropdown {
   display: flex; /* Macht das Dropdown sichtbar */

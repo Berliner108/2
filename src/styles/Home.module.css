@@ -7,7 +7,6 @@
   flex-direction: column;
   align-items: center;
 }
-
 /* Navbar */
 .navbar {
   font-family: 'Oswald', sans-serif;
@@ -20,24 +19,21 @@
   z-index: 1000;
   scrollbar-width: none; /* Für Firefox */
 }
-
 /* Navbar Liste */
 .navList {
   list-style: none;
   display: flex;
   padding: 0;
   margin: 0;
-  position: relative;
+  
 }
-
 /* Jedes Menü-Element */
 .navItem {
   position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 0 22px; /* Abstand zwischen den Links */
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
-
 /* Buttons */
 .navButton {
   background: none;
@@ -49,11 +45,9 @@
   color: black;
   transition: color 0.3s ease;
 }
-
 .navItem:hover .navButton {
-  color: #007BFF;
+  color: #00b4d8;
 }
-
 /* Dropdown-Menü */
 .dropdown {
   position: absolute;
@@ -82,17 +76,13 @@
 }
 
 .dropdownLink:hover {
-  background-color: #007BFF;
+  background-color: #00b4d8;
   color: white;
 }
-
 /* Dropdown sichtbar machen */
 .navItem:hover .dropdown {
   display: flex; /* Macht das Dropdown sichtbar */
 }
-
-
-
 /* Stile für jede Kategorie */
 .categorySection {
   margin-bottom: 40px;
@@ -100,16 +90,19 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: white;
-  max-width: 98%;
+  max-width: 100%;
+  text-decoration: none !important;
 }
-
 .categoryTitle {
   text-align: center;
   font-size: 1.8rem;
   margin-bottom: 20px;
   color: #333;
 }
-
+.article.title {
+  text-decoration: none;
+  color: black;
+}
 /* Container für die Artikel */
 .articleContainer {
   display: flex;
@@ -118,55 +111,53 @@
   justify-content: space-between;
   margin-top: 10px;
   text-align: center;
+  text-decoration: none;
+  color: black;
 }
-
 /* Einzelne Artikel */
 .articleBox {
   flex: 0 0 calc(100% / 7 - 16px);
-  min-width: 200px;
+  min-width: 12.285%;
   background: #f7f7f7;
   border-radius: 8px;
   padding: 10px;
   text-align: center;
   box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
+  text-decoration: none !important;
+  color: black;
 }
-
 .articleBox:hover {
   transform: scale(1.05);
+  text-decoration: none;
 }
-
 /* Bilder in den Artikeln */
 .articleImg {
   width: 100%;
-  height: 200px;
+  height: 280px;
   object-fit: flex;
   border-radius: 8px;
+  text-decoration: none;
 }
-
 /* Text unter dem Bild */
 .articleText {
   margin-top: 10px;
+  color: inherit; /* Beibehaltung der Standardfarbe */
+  color: black;
+  text-decoration: none !important;
+  text-decoration-line: none;
 }
 
 .articleText h3 {
   font-size: 1rem;
   margin: 5px 0;
+  text-decoration: none;
 }
 
 .articleText p {
   font-size: 0.875rem;
-  color: #555;
-}
-
-/* Kategorie-Trennbilder */
-.categoryImage {
-  width: 100%;
-  height: 100px;
-  margin-top: 20px;
-  background: url("/images/category-placeholder.jpg") center/cover no-repeat;
-  border-radius: 8px;
-  
+  color: black;
+  text-decoration: none;
 }
 
 .imageContainer {
@@ -175,7 +166,7 @@
 
 .articleImage {
   width: 100%; /* Bild nimmt die volle Breite des Containers ein */
-  height: 300px; /* Höhe des Bildes auf 200px gesetzt */
+  height: 450px; /* Höhe des Bildes auf 200px gesetzt */
   object-fit: cover; /* Das Bild wird so skaliert, dass es den Container ausfüllt, ohne verzerrt zu werden */
   object-position: center; /* Bild wird zentriert im Container */
   border-radius: 8px; /* Optional: Ecken des Bildes abrunden */
@@ -189,7 +180,9 @@
   transition: color 0.3s ease;
   margin-left: 0px;
   width: 100%;
+  text-decoration: none;
 }
+
 
 
 /* Mobile Ansicht - Horizontal Scrollbar */
@@ -200,24 +193,18 @@
     padding-bottom: 10px;
     width: 100px;
   }
-
   .articleBox {
     flex: 0 0 200px; /* 200px für jedes Element, auch in der mobilen Ansicht */
     min-width: 200px;
   }
-
   .articleContainer::-webkit-scrollbar {
     height: 8px;
   }
-
   .articleContainer::-webkit-scrollbar-thumb {
     background-color: white;
     border-radius: 10px;
   }
 }
-
-
-
 /* Responsive Anpassung für kleine Bildschirme */
 @media (max-width: 1024px) {
   

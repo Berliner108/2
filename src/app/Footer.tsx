@@ -79,7 +79,7 @@ const Footer = () => {
         <p>© Beschichter Scout I Alle Rechte vorbehalten</p> 
       </div>
 
-      <div className="column1">
+      <div className="column3">
         <h2>Unsere Zahlungsmöglichkeiten</h2>
         {/* Hier kannst du zusätzliche Inhalte hinzufügen */}
       </div>

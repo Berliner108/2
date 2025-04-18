@@ -1,667 +1,259 @@
 "use client";
-
-import { useState } from "react";
-import "./angebote.css";
+import React, { useState } from "react";
+import styles from "./angebote.module.css";
 import Pager from "./navbar/pager";
 
-export default function Verkaufsseite() {
+const Angebote = () => {
   const [files, setFiles] = useState<File[]>([]);
-  const [condition, setCondition] = useState("Neu");
-  const [description, setDescription] = useState("");
-  const [title, setTitle] = useState(""); // Einzeiliges Textfeld für den Titel
-  const [selectedOption, setSelectedOption] = useState<string>("");
+  const [dropdown1, setDropdown1] = useState("");
+  const [dropdown2, setDropdown2] = useState("");
+  const [dropdown3, setDropdown3] = useState("");
+  const maxFiles = 8;
 
-  const [checkboxOptions, setCheckboxOptions] = useState({
-    optionA: false,
-    optionB: false,
-    optionC: false,
-    optionD: false,
-    optionE: false,
-    optionF: false,
-    optionG: false,
-    optionH: false,
-    optionI: false,
-  });
-
-  const options = [
-    "Selbstanlieferung", "Abholung gewünscht", "Mein Auftrag ist kein Einzelauftrag", 
+  // 19 Auswahlmöglichkeiten
+  const allOptions = [
+    "Nasslackieren",
+    "Pulverbeschichten",
+    "Verzinken",
+    "Eloxieren",
+    "Entlacken",
+    "Strahlen",
+    "Folieren",
+    "Einlagern",
+    "Isolierstegverpressen",
+    "Entzinken",
+    "Entzinnen",
+    "Entbleien",
+    "Entaluminieren",
+    "Anodisieren",
+    "Verzinnen",
+    "Verbleien",
+    "Aluminieren",
+    "Entanodisieren",
+    "Enteloxieren"
   ];
 
-  
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    setFiles((prevFiles) => [...prevFiles, ...droppedFiles]);
+  // Konfiguration der Auswahlmöglichkeiten direkt im Code
+  const config = {
+    dropdown1: {
+      "Nasslackieren": ["Folieren", "Isolierstegverpressen", "Einlagern"],
+      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen", "Einlagern"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Folieren": ["Isolierstegverpressen", "Einlagern"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Strahlen", "Isolierstegverpressen"],
+      "Isolierstegverpressen": ["Folieren", "Einlagern"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Eloxieren", "Isolierstegverpressen"],
+      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Anodisieren", "Isolierstegverpressen"],
+    },
+    dropdown2: {
+      "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Isolierstegverpressen"],
+      "Folieren": ["Isolierstegverpressen"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Strahlen", "Isolierstegverpressen"],
+      "Isolierstegverpressen": ["Folieren"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Eloxieren", "Isolierstegverpressen"],
+      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Anodisieren", "Isolierstegverpressen"],
+    },
+    dropdown3: {
+      "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Isolierstegverpressen"],
+      "Folieren": ["Isolierstegverpressen"],
+      
+      "Isolierstegverpressen": ["Folieren"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
+      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Eloxieren", "Isolierstegverpressen"],
+      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Anodisieren", "Isolierstegverpressen"],
+    }
   };
 
-  const handleClick = () => {
-    document.getElementById("fileInput")?.click();
+  // Funktion für Drag & Drop Dateien
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const dropped = Array.from(e.dataTransfer.files);
+    if (files.length + dropped.length > maxFiles) return;
+    setFiles((prev) => [...prev, ...dropped].slice(0, maxFiles));
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = event.target.files ? Array.from(event.target.files) : [];
-    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+  // Funktion zum Hinzufügen von Dateien
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    if (files.length + selected.length > maxFiles) return;
+    setFiles((prev) => [...prev, ...selected].slice(0, maxFiles));
   };
 
-  const handleDeleteFile = (index: number) => {
-    const newFiles = files.filter((_, i) => i !== index);
-    setFiles(newFiles);
+  // Funktion zum Entfernen von Dateien
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    alert("Produkt eingestellt!");
+  // Option anzeigen basierend auf der ersten Auswahl
+  const getDropdown2Options = () => {
+    if (!dropdown1) return [];
+    return config.dropdown1[dropdown1] || [];
   };
 
-  const isButtonDisabled = files.length === 0;
+  // Option anzeigen basierend auf der zweiten Auswahl
+  const getDropdown3Options = () => {
+    if (!dropdown2) return [];
+    return config.dropdown2[dropdown2] || [];
+  };
+
+  // Module anzeigen
+  const renderModule = (id: string) => (
+    <div key={id} className={styles["modul"]}>
+      <h4>Modul für: {id}</h4>
+      <p>Details zu dieser Auswahl folgen hier.</p>
+    </div>
+  );
 
   return (
-    <>
+    <div>
       <Pager />
+      <div className={styles["angebot-container"]}>
+        <h2>Dateien hochladen (max. {maxFiles})</h2>
 
-      <div className="container">
-      <h1>Erhalte in Minuten Top Angebote für deinen Auftrag</h1>
-        <div className="dropzone" onDrop={handleDrop} onDragOver={(e) => e.preventDefault()} onClick={handleClick}>
-          Dateien & Fotos zum Auftrag hier reinziehen oder klicken
-        </div>
-        <label>Welche Arbeiten sollen durchgeführt werden</label>
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionA}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionA: !checkboxOptions.optionA })}
-            />
-            Lackieren
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Pulverbeschichten
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Verzinken
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionD}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionD: !checkboxOptions.optionD })}
-            />
-            Eloxieren
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionE}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionE: !checkboxOptions.optionE })}
-            />
-            Strahlen
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionF}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionF: !checkboxOptions.optionF })}
-            />
-            Entlacken
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionG}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionG: !checkboxOptions.optionG })}
-            />
-            Einlagern
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionH}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionH: !checkboxOptions.optionH })}
-            />
-            Isolierstegverpressen
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionI}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionI: !checkboxOptions.optionI })}
-            />
-            Folieren
-          </label>                
-        </div>
-        <label><br></br>Logistik für die Warenausgabe:</label>
-        <div className="radio-group">
-          {options.map((option, index) => (
-            <label key={index}>
-              <input
-                type="radio"
-                name="radioOptions"
-                value={option}
-                checked={selectedOption === option}
-                onChange={() => setSelectedOption(option)}
-              />
-              {option}
+        <div
+          className={styles["dropzone-wrapper"]}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          <input
+            type="file"
+            id="fileInput"
+            multiple
+            onChange={handleFileChange}
+            className={styles["file-input"]}
+          />
+          <div className={styles["dropzone"]}>
+            <label htmlFor="fileInput">
+              <strong>Dateien hierher ziehen</strong> <br />
+              oder klicken zum Hochladen
             </label>
-          ))}
+          </div>
         </div>
-        
-        
 
-        <label><br></br>Datum:</label>
-        <input
-          type="text"
-          className="input-title"
-          placeholder="Titel eingeben..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label><br></br>Logistik für die Warenannahme:</label>
-        <div className="radio-group">
-          {options.map((option, index) => (
-            <label key={index}>
-              <input
-                type="radio"
-                name="radioOptions"
-                value={option}
-                checked={selectedOption === option}
-                onChange={() => setSelectedOption(option)}
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-        <label><br></br>Datum:</label>
-        <input
-          type="text"
-          className="input-title"
-          placeholder="Titel eingeben..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label>Weitere Optionen (Mehrfachauswahl möglich):</label>
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionA}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionA: !checkboxOptions.optionA })}
-            />
-            Lack wird dem Material beigestellt
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Duplexbeschichtung (mit Grundierung) gewünscht
-          </label>     
-        </div>       
-        <label><br></br>Genaue Farbtonbezeichnung:</label>
-        <input
-          type="text"
-          className="input-title"
-          placeholder="Farbton oder Artikelnummer des Herstellers eingeben..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionA}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionA: !checkboxOptions.optionA })}
-            />
-            RAL
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            NCS
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Candy
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Neon
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Pantone
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Sikkens
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            HKS
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Nach Vorlage
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Klarlack
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Sonderfarbe
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            RAL D2-Design
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            RAL E4-Effekt
-          </label>     
-        </div><br></br> 
-        <label>Oberfläche:</label>
-        <select className="select-box" value={condition} onChange={(e) => setCondition(e.target.value)}>
-          <option>Glatt</option>
-          <option>Feinstruktur</option>
-          <option>Grobstruktur</option>          
-        </select>
+        {files.length >= maxFiles && (
+          <p className={styles["limit-hinweis"]}>
+            Maximal {maxFiles} Dateien erlaubt.
+          </p>
+        )}
 
-        <input id="fileInput" type="file" multiple style={{ display: "none" }} onChange={handleFileSelect} />
-
-        <div className="file-preview">
-          {files.length > 0 && (
-            <ul>
+        {files.length > 0 && (
+          <div className={styles["preview-container"]}>
+            <h4>Ausgewählte Dateien:</h4>
+            <div className={styles["preview-list"]}>
               {files.map((file, index) => (
-                <li key={index} className="file-item">
-                  <span>{file.name}</span>
-                  {file.type.startsWith("image/") && (
-                    <img src={URL.createObjectURL(file)} alt={file.name} width={100} height={100} />
-                  )}
-                  <button className="delete-button" onClick={() => handleDeleteFile(index)}>Entfernen</button>
-                </li>
+                <div key={index} className={styles["preview-item"]}>
+                  <p>{file.name}</p>
+                  <button onClick={() => removeFile(index)}>Entfernen</button>
+                </div>
               ))}
-            </ul>
+            </div>
+          </div>
+        )}
+
+        <div className={styles["dropdowns"]}>
+          <label>
+            Auswahl 1:
+            <select
+              value={dropdown1}
+              onChange={(e) => {
+                setDropdown1(e.target.value);
+                setDropdown2(""); // reset
+                setDropdown3(""); // reset
+              }}
+            >
+              <option value="">Bitte wählen</option>
+              {allOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {dropdown1 && (
+            <label>
+              Auswahl 2:
+              <select
+                value={dropdown2}
+                onChange={(e) => {
+                  setDropdown2(e.target.value);
+                  setDropdown3(""); // reset
+                }}
+              >
+                <option value="">Bitte wählen</option>
+                {getDropdown2Options().map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          {dropdown2 && (
+            <label>
+              Auswahl 3:
+              <select
+                value={dropdown3}
+                onChange={(e) => setDropdown3(e.target.value)}
+              >
+                <option value="">Bitte wählen</option>
+                {getDropdown3Options().map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
         </div>
 
-        
+        <div className={styles["module-container"]}>
+          {[dropdown1, dropdown2, dropdown3]
+            .filter(Boolean)
+            .map((value) => renderModule(value))}
+        </div>
 
-        
-        
-        
-        
-        <label>Glanzgrad:</label>
-        <select className="select-box" value={condition} onChange={(e) => setCondition(e.target.value)}>
-          <option>Hochglanz</option>          
-          <option>Seidenglanz</option>
-          <option>Glanz</option>
-          <option>Matt</option> 
-          <option>Seidenmatt</option> 
-          <option>Stumpfmatt</option>                   
-        </select>
-        <label>Effekt:</label>
-        <select className="select-box" value={condition} onChange={(e) => setCondition(e.target.value)}>
-          <option>Ohne Sondereffekt</option> 
-          <option>Metallic</option>          
-          <option>Fluoreszierend</option>                            
-        </select>
-        <label>Qualität:</label>
-        <select className="select-box" value={condition} onChange={(e) => setCondition(e.target.value)}>
-          <option>Polyester</option> 
-          <option>Epoxy-Polyester</option>          
-          <option>Polyester für Feuerverzinkung</option>                            
-        </select>
-        
-        <label>Weitere Optionen (Mehrfachauswahl möglich):</label>
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionA}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionA: !checkboxOptions.optionA })}
-            />
-            GSB Zulassung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Qualicoat Zulassung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Innenqualität
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Aussenqualität
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Industrie
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            DB-Zulassung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Hochwetterfest
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Ultra-Hochwetterfest
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Niedrigtemperaturpulver
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Hochtemperaturpulver
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Anti-Ausgasung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Kratzresistent
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Elektrisch ableitfähig
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Anti-Rutsch
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Anti-Quietsch
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Anti-Grafitti
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Chemiebeständig
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Solar
-          </label>
-        </div>
-        <br></br>
-        <label>Gesamte m2 für den Auftrag:</label>
-        <input
-          type="text"
-          className="input-title"
-          placeholder="Auf Lager oder Menge eingeben..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <label>Zwingende Qualitätsanforderungen an den Beschichter:</label>
-        <div className="checkbox-group">
-          
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            GSB Zertifizierung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Qualicoat Zertifizierung
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            ISO:9001 Zertifizierung
-          </label>
-        </div>
-        <br></br>
-        <label>Materialgüte der Werkstücke:</label>
-        <div className="checkbox-group">
-          
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Aluminium
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Aluguss
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Eloxal
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Stahl
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Edelstahl
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Kupfer
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Andere
-          </label>
-          
-        </div>
-        
-        
-        
-        <br></br><h2>Detaillierte Verfahrensanweisungen:</h2>
-
-        <textarea className="textarea" placeholder="Beschreibe dein Produkt..." rows={4} value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
-
-        
-        <label>Angebot bewerben und erfolgreicher verkaufen</label>
-        <div className="checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionA}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionA: !checkboxOptions.optionA })}
-            />
-            Anzeige hochschieben [2,49€]
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionB}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionB: !checkboxOptions.optionB })}
-            />
-            Anzeige färben [3,95€]
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionC}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionC: !checkboxOptions.optionC })}
-            />
-            Wiederholtes Hochschieben [16,95€]
-          </label>  
-          <label>
-            <input
-              type="checkbox"
-              checked={checkboxOptions.optionD}
-              onChange={() => setCheckboxOptions({ ...checkboxOptions, optionD: !checkboxOptions.optionD })}
-            />
-            Top Anzeige [34,95€]
-          </label>            
-        </div>
-        
-        
-        <br></br>
-        <button className="button-primary" onClick={handleSubmit} disabled={isButtonDisabled}>
-          Angebote einholen
-        </button>
+        <button className={styles["submit-button"]}>Artikel einstellen</button>
       </div>
-    </>
+    </div>
   );
-}
+};
+
+export default Angebote;

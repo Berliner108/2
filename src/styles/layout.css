@@ -8,19 +8,17 @@ body {
   overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
 }  
 header {
-    background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
-    color: white;
-    padding: 1px; 
-    height: 90px;
-    
-      
+  background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
+  color: white;
+  padding: 1px; 
+  height: 90px;      
 }  
 .footer {
-    display: flex;
-    background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
-    justify-content: space-between;
-    padding: 20px;    
-    color: white;    
+  display: flex;
+  background: linear-gradient(90deg, #000000, #4a4a4a); /* Farbgradient von links nach rechts */
+  justify-content: space-between;
+  padding: 20px;    
+  color: white !important;   
 }  
 .comment {
   font-style: italic;
@@ -35,10 +33,11 @@ header {
 .column {
     width: 30%;
 }
-  .column1 {
+  .column3 {
     width: 30%;
     text-align: center;
     font-size: 17px;
+    color: white;
 }
   .column2 {
     width: 30%;
@@ -87,7 +86,7 @@ header {
       text-decoration: none;
     }
   
-    .column, .column1 {
+    .column, .column3 {
       width: 100%; /* Jede Spalte nimmt die volle Breite ein */
       padding: 00px 0;
       margin-top: 10px;

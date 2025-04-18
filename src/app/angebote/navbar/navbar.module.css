@@ -27,15 +27,15 @@
   display: flex;
   padding: 0;
   margin: 0;
-  position: relative;
+  
 }
 
 /* Jedes Menü-Element */
 .navItem {
   position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin: 0 22px; /* Abstand zwischen den Links */
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 /* Buttons */
@@ -51,7 +51,7 @@
 }
 
 .navItem:hover .navButton {
-  color: #007BFF;
+  color: #00b4d8;
 }
 
 /* Dropdown-Menü */
@@ -82,7 +82,7 @@
 }
 
 .dropdownLink:hover {
-  background-color: #007BFF;
+  background-color: #00b4d8;
   color: white;
 }
 
@@ -118,6 +118,7 @@
   /* Dropdown für mobile Ansicht ausblenden */
   .dropdown {
     display: none !important;
+  
   }
 }
 

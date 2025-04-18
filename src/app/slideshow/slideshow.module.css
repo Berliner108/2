@@ -1,171 +1,325 @@
-/* Container für die Slideshow */
+/* 🔹 Slideshow Container */
 .slideshowContainer {
   position: relative;
   width: 100%;
-  height: 400px; /* Höhe der Slideshow */
-  margin: auto;
-  overflow: hidden; /* Verhindert, dass überflüssige Bilder sichtbar sind */
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f5f5f5;
 }
 
-/* Wrapper für alle Slides */
+/* 🔹 Wrapper für alle Slides */
 .slidesWrapper {
   display: flex;
-  transition: transform 1s ease-in-out; /* Übergangseffekt */
-  width: 100%; /* Alle Bilder nebeneinander */
+  width: 100%;
+  transition: transform 0.5s ease-in-out;
 }
 
-/* Jede Folie nimmt 100% der Breite des Containers ein */
+/* 🔹 Einzelne Slide */
 .slide {
-  flex: 0 0 100%; /* Flexbox-Eigenschaft, jedes Bild nimmt 100% der Breite ein */
-  height: 400px; /* Höhe des Bildes entspricht der Höhe des Containers */
-  background-size: cover; /* Das Bild füllt den gesamten Container aus */
-  background-position: center; /* Das Bild wird zentriert */
   display: flex;
-  justify-content: center;
+  min-width: 100%;
   align-items: center;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 0px;
+  overflow: hidden;
+  background: #F5F5F5;
+  gap: 20px;
 }
 
-/* Text auf den Bildern */
-.text {
-  background: rgba(0, 0, 0, 0.5);
+/* 🔹 Linke Hälfte (Text) */
+.textContainer {
+  flex: 1;
+  padding: 40px;
+  color: #333;
+}
+
+/* 🔹 Hauptüberschrift */
+.text1 {
+  font-size: 26px;
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 5px;
+  margin-left: 50px;
+}
+
+/* 🔹 Untertitel */
+.text2 {
+  font-size: 18px;
+  font-weight: normal;
+  color: #666;
+  margin-left: 50px;
+}
+
+/* 🔹 Link */
+.textLink {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 50px;
+}
+
+.textLink:hover {
+  text-decoration: underline;
+}
+
+/* 🔹 Rechte Hälfte (Bild) */
+.imageContainer {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 350px;
+}
+
+.imageContainer img {
+  width: 100%;
+  max-height: 350px;
+  min-height: 350px;
+  object-fit: cover;
+  border-radius: 0px;
+}
+/* 🔹 Text über dem Bild in der Vollbild-Slide */
+.overlayTextContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.6); /* Dunkler Hintergrund für besseren Kontrast */
+  padding: 20px 30px;
+  border-radius: 10px;
+  z-index: 2; /* Stellt sicher, dass der Text über dem Bild liegt */
+  width: 30%;
+}
+
+.overlayText1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.overlayText2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.overlayLink {
+  display: inline-block;
+  margin-top: 10px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.3);
   padding: 10px 20px;
   border-radius: 5px;
+  transition: background 0.3s ease-in-out;
 }
 
-/* Vorheriger und nächster Pfeil */
-.prev,
-.next {
+.overlayLink:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 🔹 Styling für den 5. Slide, wenn das Bild die ganze Slide einnimmt */
+.fullImageSlide {
+  position: relative;
+}
+
+.fullImageSlide .imageContainer {
+  flex: 1; /* Das Bild nimmt die gesamte Breite der Slide ein */
+}
+
+.fullImageSlide .textContainer {
+  display: none; /* Der Text wird auf diesem Slide versteckt */
+}
+
+.fullImageSlide .imageContainer img {
+  width: 100%;
+  max-height: 400px;
+  min-height: 400px;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+
+/* 🔹 Styling für den 3. Slide (Bild nimmt ganze Slide ein) */
+.fullImageSlide .imageContainer {
+  flex: 1;
+}
+
+.fullImageSlide .textContainer {
+  display: none;
+}
+
+.fullImageSlide .imageContainer img {
+  width: 100%;
+  max-height: 350px;
+  min-height: 350px;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* 🔹 Buttons */
+.prev, .next {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
+  background: none;
+  color: #000;
   border: none;
-  padding: 10px;
+  font-size: 30px;
   cursor: pointer;
-  font-size: 24px;
-  z-index: 10; /* Sicherstellen, dass der Pfeil immer über den Bildern ist */
+  z-index: 10;
+  transition: transform 0.2s ease-in-out;
 }
 
 .prev {
-  left: 81%;
-  top: 90%;
-  background-color: gray;
+  left: 20px;
 }
 
 .next {
-  right: 4%;
-  top: 90%;
-  background-color: gray;
+  right: 20px;
 }
 
-/* Pause Button */
-.pause {
-  position: absolute;
-  bottom: 5%;
-  left: 88.5%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  padding: 10px;
-  cursor: pointer;
-  font-size: 18px;
-  border-radius: 5px;
-  z-index: 10; /* Sicherstellen, dass der Pause-Button über den Bildern ist */
-  background-color: gray;
+.prev:hover, .next:hover {
+  transform: translateY(-50%) scale(1.2);
 }
 
-/*  🔹 Suchfeld und Button */
-.searchContainer {
-  position: absolute;
-  bottom: 20px;
-  min-width: 40%;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.searchInput {
-  padding: 8px;
-  font-size: 16px;
-  min-width: 78%;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  outline: none;
-}
-
-.searchButton {
-  padding: 8px 16px;
-  font-size: 16px;
-  color: white;
-  background: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.searchButton:hover {
-  background: #0056b3;
-}
-
-/* 🔹 MOBILE VERSION */
-@media (max-width: 1024px) {
-  .slideshowContainer {
-      height: 250px; /* Kleinere Höhe für Mobilgeräte */
-  }
-
+/* 🔹 Mobile Ansicht */
+@media (max-width: 768px) {
   .slide {
-      height: 250px;
-      font-size: 18px;
+    flex-direction: column-reverse;
+    width: 100%;
   }
 
-  .text {
-      font-size: 14px;
-      padding: 6px 12px;
+  .textContainer {
+    text-align: center;
+    font-size: 18px;
+    padding: 20px;
   }
 
-  .prev,
-  .next {
-      font-size: 18px;
-      padding: 8px;
-      display: none;
+  .imageContainer {
+    width: 100%;
+    margin-bottom: -70px;
+    margin-top: -105px;
   }
 
-  .pause {
-      bottom: 50px;
-      font-size: 14px;
-      padding: 6px 12px;
-      display: none;
+  .prev, .next {
+    font-size: 24px;
   }
+  /* 🔹 Hauptüberschrift */
+.text1 {
+  font-size: 20px;
+  font-weight: bold;
+  color: #222;
+  margin-top: -20px;
+  margin-left: 00px;
+  
+}
 
-  .searchContainer {
-      flex-direction: block; /* Stapelt die Eingabe und den Button untereinander */
-      gap: 5px;
-      width: 85%;
-      padding: 6px 10px;
-  }
+/* 🔹 Untertitel */
+.text2 {
+  font-size: 14px;
+  font-weight: normal;
+  color: #666;
+  margin-left: 00px;
+}
 
-  .searchInput {
-      width: 75%; /* Volle Breite auf kleinen Geräten */
-      font-size: 14px;
-      padding: 6px;
-  }
+/* 🔹 Link */
+.textLink {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 00px;
+}
+/* 🔹 Rechte Hälfte (Bild) */
+.imageContainer {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 350px;
+}
 
-  .searchButton {
-      width: 20%;
-      font-size: 14px;
-      padding: 6px;
-  }
+.imageContainer img {
+  width: 100%;
+  max-height: 180px;
+  min-height: 180px;
+  object-fit: cover;
+  border-radius: 0px;
+}
+/* 🔹 Einzelne Slide */
+.slide {
+  display: flex;
+  min-width: 100%;
+  align-items: center;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 0px;
+  overflow: hidden;
+  background: #F5F5F5;
+  gap: 0px;
+}
+/* 🔹 Wrapper für alle Slides */
+.slidesWrapper {
+  display: flex;
+  width: 100%;
+  transition: transform 0.5s ease-in-out;
+  margin-bottom: -20px;
+}
+/* 🔹 Linke Hälfte (Text) */
+.textContainer {
+  flex: 1;
+  padding: 40px;
+  color: #333;
+  margin-bottom: -22px;
+}
+/* 🔹 Text über dem Bild in der Vollbild-Slide */
+.overlayTextContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.6); /* Dunkler Hintergrund für besseren Kontrast */
+  padding: 20px 30px;
+  border-radius: 10px;
+  z-index: 2; /* Stellt sicher, dass der Text über dem Bild liegt */
+  width: 60%;
+}
+
+.overlayText1 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.overlayText2 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.overlayLink {
+  display: inline-block;
+  margin-top: 10px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background 0.3s ease-in-out;
+}
 }

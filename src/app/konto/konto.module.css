@@ -51,7 +51,7 @@
 }
 
 .navItem:hover .navButton {
-  color: #007BFF;
+  color: #00b4d8;
 }
 
 /* Dropdown-Menü */
@@ -82,7 +82,7 @@
 }
 
 .dropdownLink:hover {
-  background-color: #007BFF;
+  background-color: #00b4d8;
   color: white;
 }
 
