@@ -4,15 +4,11 @@ import styles from './angebote.module.css';
 import Pager from './navbar/pager';
 
 export default function AngebotEinstellen() {
-  const [dateien, setDateien] = useState<File[]>([]);
-  const [titel, setTitel] = useState('');
-  const [beschreibung, setBeschreibung] = useState('');
-  const [preis, setPreis] = useState('');
-  const [kategorie, setKategorie] = useState('');
-
+  const [dateien, setDateien] = useState<File[]>([]); // Zustand für hochgeladene Dateien
   const MAX_FILES = 8;
-  const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE_MB = 20;
 
+  // Funktion für das Drag-and-Drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
@@ -24,6 +20,7 @@ export default function AngebotEinstellen() {
     addFiles(files);
   };
 
+  // Dateien hinzufügen
   const addFiles = (files: File[]) => {
     const validFiles = files.filter(file => {
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
@@ -38,29 +35,33 @@ export default function AngebotEinstellen() {
       return;
     }
 
-    setDateien((prev) => [...prev, ...validFiles]);
+    setDateien(prev => [...prev, ...validFiles]);
   };
 
+  // Dateien entfernen
   const handleRemove = (index: number) => {
     setDateien(dateien.filter((_, i) => i !== index));
   };
 
-  const preventDefault = (e: React.DragEvent) => e.preventDefault();
-
+  // Vorschau des Dateityps
   const getPreviewIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return URL.createObjectURL(file);
+    if (file.type.startsWith('image/')) {
+      return URL.createObjectURL(file); // Für Bilder: Vorschau direkt über die URL
+    }
     if (file.type === 'application/pdf') {
-      return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZTI0MTQxIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik02LjUgMThoMTEuNXYyaC0xMS41em0wLTEwaDExLjV2MmgtMTEuNXptMCA0aDExLjV2MmgtMTEuNXoiLz48L3N2Zz4=";
+      return "/pdf-icon.png"; // Pfad zu einem PDF-Icon (muss vorhanden sein)
     }
     if (file.name.endsWith('.zip')) {
-      return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA0Y2Y0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xOCAyNGgtMTJjLTEuMSAwLTItLjktMi0ydi0yMGMwLTEuMS45LTIgMi0yaDEwYzEuMSAwIDIgLjkgMiAydjIwYzAgMS4xLS45IDItMiAyem0tMTItMjBoMXYxaC0xem0xIDJ2MWgxdjF6bTAgMnYxaDF2MXptMCAydjFoMXoiLz48cGF0aCBkPSJtNiAxNmgzdi0xaC0zem0wLTRoM3YtMWgtM3ptMC00aDN2LTFoLTN6Ii8+PC9zdmc+";
+      return "/zip-icon.png"; // Pfad zu einem ZIP-Icon (muss vorhanden sein)
     }
-    return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjY2NjIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0yMCAyaC0xMWMtMS4xIDAtMiAuOS0yIDJ2MTZjMCAxLjEuOSAyIDIgMmgxMWMxLjEgMCAyLS45IDItMnYtMTZjMC0xLjEtLjktMi0yLTJ6bTAgMThoLTExdi0xNmgxMXYxNnoiLz48cGF0aCBkPSJtNiAxNmgzdi0xaC0zem0wLTRoM3YtMWgtM3ptMC00aDN2LTFoLTN6Ii8+PC9zdmc+";
+    return "/file-icon.png"; // Standard-Icon für alle anderen Dateitypen
   };
 
+  // Submit-Funktion (beispielsweise für API-Aufruf)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ titel, beschreibung, preis, kategorie, dateien });
+    console.log('Formular gesendet');
+    // Hier könntest du eine API-Anfrage oder ein anderes Submit-Verfahren hinzufügen
   };
 
   return (
@@ -68,30 +69,34 @@ export default function AngebotEinstellen() {
       <Pager />
 
       <div className={styles.wrapper}>
-        <h1 className={styles.heading}>Artikel Einstellen</h1> {/* Überschrift hinzugefügt */}
+        <h1 className={styles.heading}>Artikel Einstellen</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div
             className={styles.dropzone}
             onDrop={handleDrop}
-            onDragOver={preventDefault}
-            onDragEnter={preventDefault}
+            onDragOver={(e) => e.preventDefault()}
+            onDragEnter={(e) => e.preventDefault()}
           >
-            <p>Dateien hierher ziehen oder klicken</p>
+            <label htmlFor="file-upload" className={styles.dropzoneLabel}>
+              Dateien hierher ziehen oder klicken
+            </label>
             <input
               type="file"
+              id="file-upload"
               multiple
               className={styles.input}
               onChange={handleUploadClick}
             />
           </div>
 
+          {/* Vorschau der hochgeladenen Dateien */}
           {dateien.length > 0 && (
             <div className={styles.preview}>
               {dateien.map((file, index) => (
                 <div className={styles.fileCard} key={index}>
                   <img
-                    src={getPreviewIcon(file)}
+                    src={getPreviewIcon(file)} // Verwenden des richtigen Icons
                     alt="preview"
                     className={styles.fileIcon}
                   />
@@ -107,12 +112,6 @@ export default function AngebotEinstellen() {
               ))}
             </div>
           )}
-
-          <div className={styles.additionalContent}>
-            {/* Hier kannst du neue Inhalte hinzufügen */}
-            <h2>Weitere Inhalte hier</h2>
-            <p>Gib hier deine neuen Inhalte ein, z. B. einen Text oder Bilder!</p>
-          </div>
         </form>
       </div>
     </>
