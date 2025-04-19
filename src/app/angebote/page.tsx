@@ -1,265 +1,120 @@
-"use client";
-import React, { useState } from "react";
-import styles from "./angebote.module.css";
-import Pager from "./navbar/pager";
+'use client';
+import React, { useState } from 'react';
+import styles from './angebote.module.css';
+import Pager from './navbar/pager';
 
-const Angebote = () => {
-  const [files, setFiles] = useState<File[]>([]);
-  const [dropdown1, setDropdown1] = useState("");
-  const [dropdown2, setDropdown2] = useState("");
-  const [dropdown3, setDropdown3] = useState("");
-  const maxFiles = 8;
+export default function AngebotEinstellen() {
+  const [dateien, setDateien] = useState<File[]>([]);
+  const [titel, setTitel] = useState('');
+  const [beschreibung, setBeschreibung] = useState('');
+  const [preis, setPreis] = useState('');
+  const [kategorie, setKategorie] = useState('');
 
-  // 19 Auswahlmöglichkeiten
-  const allOptions = [
-    "Nasslackieren",
-    "Pulverbeschichten",
-    "Verzinken",
-    "Eloxieren",
-    "Entlacken",
-    "Strahlen",
-    "Folieren",
-    "Einlagern",
-    "Isolierstegverpressen",
-    "Entzinken",
-    "Entzinnen",
-    "Entbleien",
-    "Entaluminieren",
-    "Anodisieren",
-    "Verzinnen",
-    "Verbleien",
-    "Aluminieren",
-    "Entanodisieren",
-    "Enteloxieren"
-  ];
+  const MAX_FILES = 8;
+  const MAX_FILE_SIZE_MB = 5;
 
-  // Konfiguration der Auswahlmöglichkeiten direkt im Code
-  const config = {
-    dropdown1: {
-      "Nasslackieren": ["Folieren", "Isolierstegverpressen", "Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen", "Einlagern"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Folieren": ["Isolierstegverpressen", "Einlagern"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Strahlen", "Isolierstegverpressen"],
-      "Isolierstegverpressen": ["Folieren", "Einlagern"],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Eloxieren", "Isolierstegverpressen"],
-      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Anodisieren", "Isolierstegverpressen"],
-    },
-    
-    dropdown2: {
-      "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Isolierstegverpressen"],
-      "Folieren": ["Isolierstegverpressen"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Strahlen", "Isolierstegverpressen"],
-      "Isolierstegverpressen": ["Folieren"],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Eloxieren", "Isolierstegverpressen"],
-      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Anodisieren", "Isolierstegverpressen"],
-    },
-    dropdown3: {
-      "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entzinken", "Entzinnen", "Entbleien", "Entaluminieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entlacken", "Folieren", "Isolierstegverpressen"],
-      "Folieren": ["Isolierstegverpressen"],      
-      "Isolierstegverpressen": ["Folieren"],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Eloxieren", "Isolierstegverpressen"],
-      "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Anodisieren", "Isolierstegverpressen"],
-    }
-  };
-   // Typenhilfe für Dropdown-Zugriffe
-  type DropdownKey = keyof typeof config.dropdown1;
-
-  // Option anzeigen basierend auf der ersten Auswahl
-  const getDropdown2Options = () => {
-    if (!dropdown1 || !(dropdown1 in config.dropdown1)) return [];
-    return config.dropdown1[dropdown1 as DropdownKey] || [];
-  };
-
-  // Option anzeigen basierend auf der zweiten Auswahl
-  const getDropdown3Options = () => {
-    if (!dropdown2 || !(dropdown2 in config.dropdown2)) return [];
-    return config.dropdown2[dropdown2 as keyof typeof config.dropdown2] || [];
-  };
-
-  // Funktion für Drag & Drop Dateien
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const dropped = Array.from(e.dataTransfer.files);
-    if (files.length + dropped.length > maxFiles) return;
-    setFiles((prev) => [...prev, ...dropped].slice(0, maxFiles));
+    const files = Array.from(e.dataTransfer.files);
+    addFiles(files);
   };
 
-  // Funktion zum Hinzufügen von Dateien
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files || []);
-    if (files.length + selected.length > maxFiles) return;
-    setFiles((prev) => [...prev, ...selected].slice(0, maxFiles));
+  const handleUploadClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    addFiles(files);
   };
 
-  // Funktion zum Entfernen von Dateien
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+  const addFiles = (files: File[]) => {
+    const validFiles = files.filter(file => {
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        alert(`"${file.name}" ist größer als ${MAX_FILE_SIZE_MB} MB und wird ignoriert.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (dateien.length + validFiles.length > MAX_FILES) {
+      alert(`Maximal ${MAX_FILES} Dateien erlaubt.`);
+      return;
+    }
+
+    setDateien((prev) => [...prev, ...validFiles]);
   };
 
- 
+  const handleRemove = (index: number) => {
+    setDateien(dateien.filter((_, i) => i !== index));
+  };
 
-  
+  const preventDefault = (e: React.DragEvent) => e.preventDefault();
 
-  // Module anzeigen
-  const renderModule = (id: string) => (
-    <div key={id} className={styles["modul"]}>
-      <h4>Modul für: {id}</h4>
-      <p>Details zu dieser Auswahl folgen hier.</p>
-    </div>
-  );
+  const getPreviewIcon = (file: File) => {
+    if (file.type.startsWith('image/')) return URL.createObjectURL(file);
+    if (file.type === 'application/pdf') {
+      return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZTI0MTQxIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik02LjUgMThoMTEuNXYyaC0xMS41em0wLTEwaDExLjV2MmgtMTEuNXptMCA0aDExLjV2MmgtMTEuNXoiLz48L3N2Zz4=";
+    }
+    if (file.name.endsWith('.zip')) {
+      return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA0Y2Y0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xOCAyNGgtMTJjLTEuMSAwLTItLjktMi0ydi0yMGMwLTEuMS45LTIgMi0yaDEwYzEuMSAwIDIgLjkgMiAydjIwYzAgMS4xLS45IDItMiAyem0tMTItMjBoMXYxaC0xem0xIDJ2MWgxdjF6bTAgMnYxaDF2MXptMCAydjFoMXoiLz48cGF0aCBkPSJtNiAxNmgzdi0xaC0zem0wLTRoM3YtMWgtM3ptMC00aDN2LTFoLTN6Ii8+PC9zdmc+";
+    }
+    return "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjY2NjIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0yMCAyaC0xMWMtMS4xIDAtMiAuOS0yIDJ2MTZjMCAxLjEuOSAyIDIgMmgxMWMxLjEgMCAyLS45IDItMnYtMTZjMC0xLjEtLjktMi0yLTJ6bTAgMThoLTExdi0xNmgxMXYxNnoiLz48cGF0aCBkPSJtNiAxNmgzdi0xaC0zem0wLTRoM3YtMWgtM3ptMC00aDN2LTFoLTN6Ii8+PC9zdmc+";
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log({ titel, beschreibung, preis, kategorie, dateien });
+  };
 
   return (
-    <div>
+    <>
       <Pager />
-      <div className={styles["angebot-container"]}>
-        <h2>Dateien hochladen (max. {maxFiles})</h2>
 
-        <div
-          className={styles["dropzone-wrapper"]}
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-        >
-          <input
-            type="file"
-            id="fileInput"
-            multiple
-            onChange={handleFileChange}
-            className={styles["file-input"]}
-          />
-          <div className={styles["dropzone"]}>
-            <label htmlFor="fileInput">
-              <strong>Dateien hierher ziehen</strong> <br />
-              oder klicken zum Hochladen
-            </label>
+      <div className={styles.wrapper}>
+        <h1 className={styles.heading}>Artikel Einstellen</h1> {/* Überschrift hinzugefügt */}
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div
+            className={styles.dropzone}
+            onDrop={handleDrop}
+            onDragOver={preventDefault}
+            onDragEnter={preventDefault}
+          >
+            <p>Dateien hierher ziehen oder klicken</p>
+            <input
+              type="file"
+              multiple
+              className={styles.input}
+              onChange={handleUploadClick}
+            />
           </div>
-        </div>
 
-        {files.length >= maxFiles && (
-          <p className={styles["limit-hinweis"]}>
-            Maximal {maxFiles} Dateien erlaubt.
-          </p>
-        )}
-
-        {files.length > 0 && (
-          <div className={styles["preview-container"]}>
-            <h4>Ausgewählte Dateien:</h4>
-            <div className={styles["preview-list"]}>
-              {files.map((file, index) => (
-                <div key={index} className={styles["preview-item"]}>
-                  <p>{file.name}</p>
-                  <button onClick={() => removeFile(index)}>Entfernen</button>
+          {dateien.length > 0 && (
+            <div className={styles.preview}>
+              {dateien.map((file, index) => (
+                <div className={styles.fileCard} key={index}>
+                  <img
+                    src={getPreviewIcon(file)}
+                    alt="preview"
+                    className={styles.fileIcon}
+                  />
+                  <p className={styles.fileName}>{file.name}</p>
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(index)}
+                    className={styles.removeButton}
+                  >
+                    ✖
+                  </button>
                 </div>
               ))}
             </div>
+          )}
+
+          <div className={styles.additionalContent}>
+            {/* Hier kannst du neue Inhalte hinzufügen */}
+            <h2>Weitere Inhalte hier</h2>
+            <p>Gib hier deine neuen Inhalte ein, z. B. einen Text oder Bilder!</p>
           </div>
-        )}
-
-        <div className={styles["dropdowns"]}>
-          <label>
-            Auswahl 1:
-            <select
-              value={dropdown1}
-              onChange={(e) => {
-                setDropdown1(e.target.value);
-                setDropdown2(""); // reset
-                setDropdown3(""); // reset
-              }}
-            >
-              <option value="">Bitte wählen</option>
-              {allOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {dropdown1 && (
-            <label>
-              Auswahl 2:
-              <select
-                value={dropdown2}
-                onChange={(e) => {
-                  setDropdown2(e.target.value);
-                  setDropdown3(""); // reset
-                }}
-              >
-                <option value="">Bitte wählen</option>
-                {getDropdown2Options().map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-
-          {dropdown2 && (
-            <label>
-              Auswahl 3:
-              <select
-                value={dropdown3}
-                onChange={(e) => setDropdown3(e.target.value)}
-              >
-                <option value="">Bitte wählen</option>
-                {getDropdown3Options().map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-        </div>
-
-        <div className={styles["module-container"]}>
-          {[dropdown1, dropdown2, dropdown3]
-            .filter(Boolean)
-            .map((value) => renderModule(value))}
-        </div>
-
-        <button className={styles["submit-button"]}>Artikel einstellen</button>
+        </form>
       </div>
-    </div>
+    </>
   );
-};
-
-export default Angebote;
+}
