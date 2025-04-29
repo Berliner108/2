@@ -1,5 +1,4 @@
-import React from "react";
-import { forwardRef } from "react";
+import React, { forwardRef } from "react";
 import datepickerStyles from "./CustomDateInput.module.css";
 
 type Props = {
@@ -18,3 +17,5 @@ export const CustomDateInput = forwardRef<HTMLButtonElement, Props>(
     </button>
   )
 );
+
+CustomDateInput.displayName = "CustomDateInput";
