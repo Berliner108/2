@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './angebote.module.css';
 import Pager from './navbar/pager';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { CustomDateInput } from "./CustomDateInput"; // Importiere die CustomDateInput-Komponente
@@ -24,8 +25,12 @@ export default function AngebotEinstellen() {
   const [thirdSelection, setThirdSelection] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
+  const param = searchParams.get("someParam");
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  <Suspense fallback={<div>Loading...</div>}>
+      <AngebotEinstellen />
+    </Suspense>
 
   useEffect(() => {
     const urlFirst = searchParams.get('first');
@@ -267,6 +272,7 @@ export default function AngebotEinstellen() {
     if (!firstSelection || !validSecondOptions[firstSelection]) return [];
     return validSecondOptions[firstSelection];
   };
+  
 
   const getThirdDropdownOptions = () => {
     if (
