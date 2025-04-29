@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import styles from './angebote.module.css';
 import Pager from './navbar/pager';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { CustomDateInput } from "./CustomDateInput"; // Importiere die CustomDateInput-Komponente
