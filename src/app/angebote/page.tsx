@@ -7,7 +7,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { CustomDateInput } from "./CustomDateInput"; // Importiere die CustomDateInput-Komponente
 import { registerLocale } from "react-datepicker";
-import de from "date-fns/locale/de";
+import { de } from "date-fns/locale/de";
 registerLocale("de", de);
 import "react-datepicker/dist/react-datepicker.css";
 import "./DatePickerOverrides.css";
