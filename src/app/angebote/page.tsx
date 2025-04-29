@@ -25,12 +25,10 @@ export default function AngebotEinstellen() {
   const [thirdSelection, setThirdSelection] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
-  const param = searchParams.get("someParam");
+  
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  <Suspense fallback={<div>Loading...</div>}>
-      <AngebotEinstellen />
-    </Suspense>
+  
 
   useEffect(() => {
     const urlFirst = searchParams.get('first');
@@ -331,6 +329,7 @@ export default function AngebotEinstellen() {
 
   return (
     <>
+    
       <Pager />
       <div className={styles.wrapper}>
         <div className={styles.infoBox}>
@@ -460,14 +459,16 @@ export default function AngebotEinstellen() {
                 <>
                   <div className="datePickerWrapper">
                   <label className="dateLabel">Datum der Selbstanlieferung / Abholung:</label>
+                  
                   <DatePicker
-  selected={selectedDate}
-  onChange={(date) => setSelectedDate(date)}
-  dateFormat="dd.MM.yyyy"
-  minDate={new Date()}
-  locale="de"
-  customInput={<CustomDateInput />}
-/>
+                  
+                    selected={selectedDate}
+                    onChange={(date) => setSelectedDate(date)}
+                    dateFormat="dd.MM.yyyy"
+                    minDate={new Date()}
+                    locale="de"
+                    customInput={<CustomDateInput />}
+                  />
                 </div>
                 
 
