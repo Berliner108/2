@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+.datePickerWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dateLabel {
+  font-weight: bold;
+  font-family: 'Oswald', sans-serif;
+}
+
+.customDateButton {
+    padding: 8px 12px;
+    background: linear-gradient(to right, #00b4d8, #00e5ff);
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .customDateButton:hover {
+    background: linear-gradient(to left, #00b4d8, #00e5ff);
+  }
+  
+
+.customDateButton:focus {
+  outline: none;
+  box-shadow: 0 0 5px #00b4d8;
+}

@@ -281,20 +281,7 @@ const Wissenswertes = () => {
 
           </p><br></br>                     
         </div>
-        <div className={styles["ober2"]}>
-          
-          <p>
-          <span style={{ fontSize: "28px", fontWeight: "bold", marginLeft: "60px", color: "#333" }}>Beim Feuerverzinken </span> werden Metallwerkstücke 
-          in ein Bad mit geschmolzenem Zink getaucht. Damit die Beschichtung optimal haftet, müssen die Werkstücke zuvor gründlich gereinigt werden. Dabei 
-          werden Öl-, Fett- und Rostrückstände sowie andere Verunreinigungen entfernt. Der Reinigungsprozess umfasst mehrere Schritte: Entfetten, Beizen – 
-          bei dem Oxidschichten mithilfe von Säure beseitigt werden – sowie das Auftragen eines Flussmittels, das die Oberfläche auf die Zinkbeschichtung vorbereitet.
-          Nach der Vorbehandlung erfolgt das Eintauchen der Werkstücke in das etwa 450°C heiße Zinkbad. Dabei reagiert das flüssige Zink mit dem Eisen oder
-           Stahl und bildet eine fest verbundene Schutzschicht. Anschließend kühlt das verzinkte Bauteil langsam ab, wodurch eine gleichmäßige und widerstandsfähige 
-           Beschichtung entsteht.
-          Je nach Umgebung und Belastung schützt die Zinkschicht das Werkstück über mehrere Jahrzehnte hinweg – oft bis zu 50 Jahre – vor Korrosion.
-
-          </p><br></br>                     
-        </div>
+        
         <div className={styles["ober2"]}>
           
           <p>
