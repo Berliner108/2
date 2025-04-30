@@ -29,7 +29,7 @@ const formatDisplayDate = (date: Date): string => {
 };
 
 export const CustomDateInput = forwardRef<HTMLButtonElement, Props>(
-  ({ value, onClick }, ref) => {
+  ({onClick }, ref) => {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Initialisiere mit dem aktuellen Datum
 
     const handleArrow = (offset: number) => {
