@@ -23,32 +23,12 @@ export default function AngebotEinstellen() {
 
   const searchParams = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);    
-  const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
-  };  
+    
   const [zeigeUnterOptionen, setZeigeUnterOptionen] = useState(false);
   const [text, setText] = useState("");
 
 
-  // Navigation durch Pfeile
-  const handleArrowClick = (direction: string) => {
-    const currentDate = new Date();  // Heute
-    const newDate = new Date(selectedDate as Date);  // Aktuelles ausgewähltes Datum
-
-    if (direction === "next") {
-      // Erhöhe das Datum um einen Tag, aber nur wenn es nicht über das heutige Datum hinausgeht
-      if (newDate.getDate() < currentDate.getDate()) {
-        newDate.setDate(newDate.getDate() + 1);  // Einen Tag weiter
-      }
-    } else if (direction === "prev") {
-      // Verringere das Datum um einen Tag, aber nicht unter das heutige Datum
-      if (newDate.getDate() > currentDate.getDate()) {
-        newDate.setDate(newDate.getDate() - 1);  // Einen Tag zurück
-      }
-    }
-    
-    setSelectedDate(newDate);
-  };
+  
   useEffect(() => {
     const urlFirst = searchParams.get('first');
     if (urlFirst) {
