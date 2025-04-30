@@ -12,7 +12,6 @@ registerLocale("de", de);
 import "react-datepicker/dist/react-datepicker.css";
 import "./DatePickerOverrides.css";
 
-
 export default function AngebotEinstellen() {
   const [dateien, setDateien] = useState<File[]>([]);
   const MAX_FILES = 8;
@@ -23,8 +22,33 @@ export default function AngebotEinstellen() {
   const [thirdSelection, setThirdSelection] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);  
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);    
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };  
+  const [zeigeUnterOptionen, setZeigeUnterOptionen] = useState(false);
+  const [text, setText] = useState("");
 
+
+  // Navigation durch Pfeile
+  const handleArrowClick = (direction: string) => {
+    const currentDate = new Date();  // Heute
+    const newDate = new Date(selectedDate as Date);  // Aktuelles ausgewähltes Datum
+
+    if (direction === "next") {
+      // Erhöhe das Datum um einen Tag, aber nur wenn es nicht über das heutige Datum hinausgeht
+      if (newDate.getDate() < currentDate.getDate()) {
+        newDate.setDate(newDate.getDate() + 1);  // Einen Tag weiter
+      }
+    } else if (direction === "prev") {
+      // Verringere das Datum um einen Tag, aber nicht unter das heutige Datum
+      if (newDate.getDate() > currentDate.getDate()) {
+        newDate.setDate(newDate.getDate() - 1);  // Einen Tag zurück
+      }
+    }
+    
+    setSelectedDate(newDate);
+  };
   useEffect(() => {
     const urlFirst = searchParams.get('first');
     if (urlFirst) {
@@ -33,6 +57,19 @@ export default function AngebotEinstellen() {
       setThirdSelection(null);
     }
   }, [searchParams]);
+  useEffect(() => {
+    const listener = (e: Event) => {
+      const detail = (e as CustomEvent).detail as number;
+      setSelectedDate(prev => {
+        if (!prev) return new Date(); // Falls vorher null
+        const newDate = new Date(prev);
+        newDate.setDate(prev.getDate() + detail);
+        return newDate;
+      });
+    };
+    document.addEventListener("navigateDate", listener);
+    return () => document.removeEventListener("navigateDate", listener);
+  }, []);  
   const allOptions = [
     "Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entlacken", "Strahlen",
     "Folieren", "Isolierstegverpressen", "Einlagern", "Entzinken", "Entzinnen", "Entnickeln",
@@ -61,7 +98,6 @@ export default function AngebotEinstellen() {
     "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Anodisieren"],
     "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Eloxieren"],
   };
-
   const validThirdOptions: { [key: string]: { [key: string]: string[] } } = {
     "Nasslackieren": {
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
@@ -260,12 +296,10 @@ export default function AngebotEinstellen() {
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     },
   };
-
   const getSecondDropdownOptions = () => {
     if (!firstSelection || !validSecondOptions[firstSelection]) return [];
     return validSecondOptions[firstSelection];
   };
-  
 
   const getThirdDropdownOptions = () => {
     if (
@@ -277,18 +311,15 @@ export default function AngebotEinstellen() {
       return [];
     return validThirdOptions[firstSelection][secondSelection];
   };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
     addFiles(files);
   };
-
   const handleUploadClick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
     addFiles(files);
   };
-
   const addFiles = (files: File[]) => {
     const validFiles = files.filter(file => {
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
@@ -321,10 +352,8 @@ export default function AngebotEinstellen() {
     e.preventDefault();
     console.log('Formular gesendet');
   };
-
   return (
-    <>
-    
+    <>   
       <Pager />
       <div className={styles.wrapper}>
         <div className={styles.infoBox}>
@@ -383,7 +412,7 @@ export default function AngebotEinstellen() {
           )}
 
           {/* Dropdowns */}
-<div className={styles.dropdownContainer}>
+        <div className={styles.dropdownContainer}>
   {/* Erster Dropdown */}
   <p className={styles.dropdownText}>Wähle den ersten Arbeitsschritt</p>
   <select
@@ -453,23 +482,141 @@ export default function AngebotEinstellen() {
               {firstSelection === "Pulverbeschichten" && (
                 <>
                   <div className="datePickerWrapper">
-                  <label className="dateLabel">Datum der Selbstanlieferung / Abholung:</label>
-                  
+                    <p>Logistik:</p>
+                  <label><input type="radio" name="auswahl2" value="Abholung" /> Abholung an meinem Standort</label>
+                  <label><input type="radio" name="auswahl2" value="Selbstanlieferung" /> Selbstanlieferung</label>
+                    
+                  <label className="dateLabel">Datum der Abholung / Selbstanlieferung:</label>                  
                   <DatePicker
-                  
-                    selected={selectedDate}
-                    onChange={(date) => setSelectedDate(date)}
-                    dateFormat="dd.MM.yyyy"
-                    minDate={new Date()}
-                    locale="de"
-                    customInput={<CustomDateInput />}
-                  />
-                </div>
-                
+                        selected={selectedDate}
+                        onChange={(date) => setSelectedDate(date)}
+                        dateFormat="dd.MM.yyyy"
+                        locale="de"
+                        customInput={<CustomDateInput />}
+                        minDate={new Date()}
+                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
+                    />
+                    <br></br><br></br>
+                    <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label> 
+                    <DatePicker
+                        selected={selectedDate}
+                        onChange={(date) => setSelectedDate(date)}
+                        dateFormat="dd.MM.yyyy"
+                        locale="de"
+                        customInput={<CustomDateInput />}
+                        minDate={new Date()}
+                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
+                    />
+                    </div>
+                    {firstSelection === "Pulverbeschichten" && (
+                            <>
+                                <label>
+                                <input
+                                    type="checkbox"
+                                    name="autowaescheErweitert"
+                                    onChange={(e) => setZeigeUnterOptionen(e.target.checked)}
+                                />
+                                Ich habe einen Serienauftrag
+                                </label>
+                                
 
-                  <label><input type="checkbox" /> Zusatzfunktion A</label>
-                  <p>Farbe</p>
-                  <label><input type="checkbox" /> Zusatzfunktion B</label>
+                                {zeigeUnterOptionen && (
+                                <div className={styles.optionRow}>
+                                <span className={styles.optionLabel}>Zusatzoptionen:</span>
+                                <label className={styles.checkboxLabel}>
+                                  <input type="checkbox" /> Option 1
+                                </label>
+                                <label className={styles.checkboxLabel}>
+                                  <input type="checkbox" /> Option 2
+                                </label>
+                              </div>
+                              
+                                )}
+                            </>
+                            )}
+                  <label htmlFor="waschplatzName">Gesamte m² für meinen Auftrag:</label>
+                    <input
+                    type="text"
+                    id="waschplatzName"
+                    name="waschplatzName"
+                    className={styles.customTextInput}
+                    />
+                    <p>Materialgüte (äußerste Schicht):</p>
+                  <label><input type="radio" name="auswahl1" value="Aluminium" /> Aluminium</label>
+                  <label><input type="radio" name="auswahl1" value="Aluguss" /> Aluguss</label>
+                  <label><input type="radio" name="auswahl1" value="Eloxal" /> Eloxal</label>
+                  <label><input type="radio" name="auswahl1" value="Anodisiert" /> Anodisiert</label>
+                  <label><input type="radio" name="auswahl1" value="Stahl" /> Stahl</label>
+                  <label><input type="radio" name="auswahl1" value="Edelstahl" /> Edelstahl</label>
+                  <label><input type="radio" name="auswahl1" value="Kupfer" /> Kupfer</label>
+                  <label><input type="radio" name="auswahl1" value="Zink" /> Zink</label>
+                  <label><input type="radio" name="auswahl1" value="Zinn" /> Zinn</label>
+                  <label><input type="radio" name="auswahl1" value="Nickel" /> Nickel</label>
+                  <label><input type="radio" name="auswahl1" value="Blei" /> Blei</label>
+                  <label><input type="radio" name="auswahl1" value="Chrom" /> Chrom</label>
+                  <label><input type="radio" name="auswahl1" value="Andere" /> Andere</label>
+
+                  <label htmlFor="waschplatzName">Farbton oder Artikelnummer des Herstellers:</label>
+                    <input
+                    type="text"
+                    id="waschplatzName"
+                    name="waschplatzName"
+                    className={styles.customTextInput}
+                    />
+                    <p>Farbpalette:</p>
+                  <label><input type="radio" name="auswahl1" value="RAL" /> RAL</label>
+                  <label><input type="radio" name="auswahl1" value="NCS" /> NCS</label>
+                  <label><input type="radio" name="auswahl1" value="MCS" /> MCS</label>
+                  <label><input type="radio" name="auswahl1" value="DB" /> DB</label>
+                  <label><input type="radio" name="auswahl1" value="BS" /> BS</label>
+                  <label><input type="radio" name="auswahl1" value="Munsell" /> Munsell</label>
+                  <label><input type="radio" name="auswahl1" value="Candy" /> Candy</label>
+                  <label><input type="radio" name="auswahl1" value="Neon" /> Neon</label>
+                  <label><input type="radio" name="auswahl1" value="Pantone" /> Pantone</label>
+                  <label><input type="radio" name="auswahl1" value="Sikkens" /> Sikkens</label>
+                  <label><input type="radio" name="auswahl1" value="HKS" /> HKS</label>
+                  <label><input type="radio" name="auswahl1" value="Nach Vorlage" /> Nach Vorlage</label>
+                  <label><input type="radio" name="auswahl1" value="Klarlack" /> Klarlack</label>
+                  <label><input type="radio" name="auswahl1" value="Sonderfarbe" /> Sonderfarbe</label>
+                  <label><input type="radio" name="auswahl1" value="RAL D2-Design" /> RAL D2-Design</label>
+                  <label><input type="radio" name="auswahl1" value="RAL E4-Effekt" /> RAL E4-Effekt</label>
+                  <br></br>
+                  <label><input type="checkbox" /> Ich brauche eine Duplexbeschichtung für erhöhten Korrosionsschutz (Grundierung & 2. Lackschicht)</label>                  
+                  <label><input type="checkbox" /> Ich stelle den Lack für meinen Auftrag in ausreichender Menge und Qualität bei</label>
+
+                  <p>Oberfläche:</p>
+                  <label><input type="radio" name="auswahl1" value="Glatt" /> Glatt</label>
+                  <label><input type="radio" name="auswahl1" value="Feinstruktur" /> Feinstruktur</label>
+                  <label><input type="radio" name="auswahl1" value="Grobstruktur" /> Grobstruktur</label>
+
+                  <p>Glanzgrad:</p>
+                  <label><input type="radio" name="auswahl1" value="Hochglanz" /> Hochglanz</label>
+                  <label><input type="radio" name="auswahl1" value="Seidenglanz" /> Seidenglanz</label>
+                  <label><input type="radio" name="auswahl1" value="Glanz" /> Glanz</label>
+                  <label><input type="radio" name="auswahl1" value="Matt" /> Matt</label>
+                  <label><input type="radio" name="auswahl1" value="Seidenmatt" /> Seidenmatt</label>
+                  <label><input type="radio" name="auswahl1" value="Stumpfmatt" /> Stumpfmatt</label>
+
+                  <p>Effekt:</p>
+                  
+                  <label><input type="checkbox" /> Metallic</label>
+                  <label><input type="checkbox" /> Fluoreszierend</label>
+
+                  <p>Qualität:</p>
+                  <label><input type="radio" name="auswahl1" value="Polyester" /> Polyester</label>
+                  <label><input type="radio" name="auswahl1" value="Epoxy-Polyester" /> Epoxy-Polyester</label>
+                  <label><input type="radio" name="auswahl1" value="Polyester für Feuerverzinkung" /> Polyester für Feuerverzinkung</label>
+                  <label><input type="radio" name="auswahl1" value="Thermoplast" /> Thermoplast</label>
+
+
+                  <p>Zwingende Qualitätsanforderungen an den Beschichter:</p>
+                  <label><input type="checkbox" /> GSB Zertifizierung (alle Stufen)</label>
+                  <label><input type="checkbox" /> Qualicoat Zertifizierung (alle Stufen)</label>
+                  <label><input type="checkbox" /> Qualisteelcoat Zertifizierung</label>
+                  <label><input type="checkbox" /> DIN 55634-2</label>
+                  <label><input type="checkbox" /> DIN EN 1090-2</label>
+                  <label><input type="checkbox" /> DBS 918 340</label>
+                  <label><input type="checkbox" /> ISO:9001 Zertifizierung</label>
                 </>
               )}
               
@@ -510,26 +657,51 @@ export default function AngebotEinstellen() {
                   <input type="number" placeholder="Höhe (cm)" />
                 </>
               )}
-              {thirdSelection === "Nasslackieren" && (
+              {thirdSelection === "Nasslackieren" && (                
                 <>
-                  <label><input type="radio" name="auswahl13" value="Standard" /> Standard</label>
-                  <label><input type="radio" name="auswahl13" value="Premium" /> Premium</label>
-                </>
-              )}
+                <label>
+                  <input type="radio" name="auswahl13" value="Standard" /> Standard
+                </label>
+                <label>
+                  <input type="radio" name="auswahl13" value="Premium" /> Premium
+                </label>
+                <input
+                    type="text"
+                    placeholder="Weitere Angaben"
+                    className="customTextInput"
+                />
+              </>
+            )}
               {thirdSelection === "Verzinken" && (
                 <>
                   <p>Welches Verfahren soll für das Verzinken angewendet werden?</p>
-                  <label><input type="radio" name="auswahl13" value="Standard" /> Feuerverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Premium" /> Galvanisches Verzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Optimum" /> Mechanisches Verzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Superb" /> Diffusionsverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Gigantisch" /> Spritzverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Mega" /> Lamellenverzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Feuerverzinken" /> Feuerverzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Galvanisches Verzinken" /> Galvanisches Verzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Mechanisches Verzinken" /> Mechanisches Verzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Diffusionsverzinken" /> Diffusionsverzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Spritzverzinken" /> Spritzverzinken</label>
+                  <label><input type="radio" name="auswahl13" value="Lamellenverzinken" /> Lamellenverzinken</label>
                 </>
               )}
             </div>
           )}
         </form>
+        <div className={styles.textfeldContainer}>
+  <p className={styles.textfeldTitel}>Beschreibung</p>
+  <textarea
+    id="beschreibung"
+    className={styles.oswaldTextarea}
+    value={text}
+    onChange={(e) => {
+      if (e.target.value.length <= 300) {
+        setText(e.target.value);
+      }
+    }}
+    placeholder="Beschreibe dein Angebot..."
+    rows={5}
+  />
+  <div className={styles.charCount}>{text.length}/300 Zeichen</div>
+</div>
         <button type="submit" className={styles.submitButton}>
         Kostenlos Angebote einholen
         </button>

@@ -17,10 +17,12 @@
 .infoLink:hover {
   color: #0c4a6e;
 }
+
 .infoBox strong {
   font-weight: 600;
   font-size: 0.95rem;
 }
+
 .heading {
   font-size: 20px;
   font-weight: bold;
@@ -82,6 +84,68 @@
   opacity: 0;
   cursor: pointer;
 }
+.customTextInput {
+  width: 42%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  font-family: 'Oswald';
+}
+.label {
+  display: block;
+  font-weight: 500;
+  margin-top: 10px;
+}
+.optionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.optionLabel {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.oswaldTextarea {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.textfeldTitel {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+
+.charCount {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.textfeldContainer {
+  margin-top: 20px;
+}
+
 .counter {
   position: absolute;
   top: 8px;
