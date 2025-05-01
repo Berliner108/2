@@ -464,7 +464,13 @@ export default function AngebotEinstellen() {
                   <div className="datePickerWrapper">
                     <p>Logistik:</p>
                   <label><input type="radio" name="auswahl2" value="Abholung" /> Abholung an meinem Standort</label>
-                  <label><input type="radio" name="auswahl2" value="Selbstanlieferung" /> Selbstanlieferung</label>
+                  <label className={styles.radioLabel}>
+  <input type="radio" name="auswahl2" value="Selbstanlieferung" />
+  Selbstanlieferung
+  <a href="/infos" className={styles.link}>Mehr Infos</a>
+</label>
+
+
                     
                   <label className="dateLabel">Datum der Abholung / Selbstanlieferung:</label>                  
                   <DatePicker
@@ -522,6 +528,7 @@ export default function AngebotEinstellen() {
                     className={styles.customTextInput}
                     />
                     <p>Materialgüte (äußerste Schicht):</p>
+                    <div className={styles.radioContainer}>
                   <label><input type="radio" name="auswahl1" value="Aluminium" /> Aluminium</label>
                   <label><input type="radio" name="auswahl1" value="Aluguss" /> Aluguss</label>
                   <label><input type="radio" name="auswahl1" value="Eloxal" /> Eloxal</label>
@@ -535,6 +542,7 @@ export default function AngebotEinstellen() {
                   <label><input type="radio" name="auswahl1" value="Blei" /> Blei</label>
                   <label><input type="radio" name="auswahl1" value="Chrom" /> Chrom</label>
                   <label><input type="radio" name="auswahl1" value="Andere" /> Andere</label>
+                  </div>
 
                   <label htmlFor="waschplatzName">Farbton oder Artikelnummer des Herstellers:</label>
                     <input

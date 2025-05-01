@@ -133,6 +133,21 @@
   margin-bottom: 0.5rem;
   color: #333;
 }
+.radioContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 0.35rem;
+  flex-wrap: wrap; /* optional, falls sie bei kleiner Breite umbrechen sollen */
+}
+
+/* angebote.module.css */
+.link {
+  color: inherit;           /* übernimmt die umgebende Textfarbe */
+  text-decoration: none;    /* entfernt die Unterstreichung */
+  margin-left: 4px;         /* etwas Abstand zum Radiobutton-Text */
+}
+
+
 
 
 .charCount {
