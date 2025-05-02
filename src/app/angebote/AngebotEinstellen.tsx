@@ -27,6 +27,10 @@ export default function AngebotEinstellen() {
   const [zeigeUnterOptionen, setZeigeUnterOptionen] = useState(false);
   const [text, setText] = useState("");
 
+  const [selectedOption1, setSelectedOption1] = useState<string | null>(null);
+const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
+
+
 
   
   useEffect(() => {
@@ -344,7 +348,7 @@ export default function AngebotEinstellen() {
         <br />
         <h1 className={styles.subheading}>Angebote für Ihren Auftrag einholen</h1><br />
 
-        <h2 className={styles.heading}>Dateien für deinen Auftrag hochladen</h2>
+        <h2 className={styles.heading}>1. Dateien für deinen Auftrag hochladen</h2>
         <p className={styles.description}>
           Sie können bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle gängigen Dateitypen). Beschichter möchten alle Details kennen um alle Anforderungen 
           an den Auftrag erfüllen zu können. Dies gibt Ihnen und dem Beschichter die benötigte Sicherheit für die Produktion Ihres Auftrags.
@@ -359,7 +363,9 @@ export default function AngebotEinstellen() {
             onClick={() => document.getElementById("file-upload")?.click()}
           >
             <div className={styles.counter}>{dateien.length} / {MAX_FILES} Dateien hochgeladen</div>
-            <p>Dateien hierher ziehen oder klicken</p>
+            <p className={styles.dropText}>
+                Dateien hierher ziehen oder <span className={styles.clickHighlight}>klicken</span>
+                </p>
             <input
               type="file"
               id="file-upload"
@@ -390,11 +396,13 @@ export default function AngebotEinstellen() {
               ))}
             </div>
           )}
+          <div className={styles.lineContainer}></div>
 
           {/* Dropdowns */}
         <div className={styles.dropdownContainer}>
   {/* Erster Dropdown */}
-  <p className={styles.dropdownText}>Wähle den ersten Arbeitsschritt</p>
+  
+  <p className={styles.dropdownText}>2. Wähle den ersten Arbeitsschritt</p>
   <select
     value={firstSelection || ""}
     onChange={(e) => {
@@ -415,7 +423,7 @@ export default function AngebotEinstellen() {
   {/* Zweiter Dropdown */}
   {firstSelection && getSecondDropdownOptions().length > 0 && (
     <>
-      <p className={styles.dropdownText}>Triff eine Auswahl für den zweiten Arbeitsschritt</p>
+      <p className={styles.dropdownText}>Triff eine Auswahl für den zweiten Arbeitsschritt (optional)</p>
       <select
         value={secondSelection || ""}
         onChange={(e) => {
@@ -437,7 +445,7 @@ export default function AngebotEinstellen() {
   {/* Dritter Dropdown */}
   {firstSelection && secondSelection && getThirdDropdownOptions().length > 0 && (
     <>
-      <p className={styles.dropdownText}>Triff eine Auswahl für den dritten Arbeitsschritt</p>
+      <p className={styles.dropdownText}>Triff eine Auswahl für den dritten Arbeitsschritt (optional)</p>
       <select
         value={thirdSelection || ""}
         onChange={(e) => {
@@ -455,6 +463,8 @@ export default function AngebotEinstellen() {
     </>
   )}
 </div>
+<div className={styles.lineContainer}></div>
+<p></p>
           {/* Dynamische Module */}
           {firstSelection && (
             <div className={styles.dynamicModule}>
@@ -462,27 +472,102 @@ export default function AngebotEinstellen() {
               {firstSelection === "Pulverbeschichten" && (
                 <>
                   <div className="datePickerWrapper">
-                    <p>Logistik:</p>
-                  <label><input type="radio" name="auswahl2" value="Abholung" /> Abholung an meinem Standort</label>
-                  <label className={styles.radioLabel}>
-  <input type="radio" name="auswahl2" value="Selbstanlieferung" />
-  Selbstanlieferung
-  <a href="/infos" className={styles.link}>Mehr Infos</a>
-</label>
-
-
-                    
-                  <label className="dateLabel">Datum der Abholung / Selbstanlieferung:</label>                  
-                  <DatePicker
-                        selected={selectedDate}
-                        onChange={(date) => setSelectedDate(date)}
-                        dateFormat="dd.MM.yyyy"
-                        locale="de"
-                        customInput={<CustomDateInput />}
-                        minDate={new Date()}
-                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
+                    <p>Logistik:</p>   
+                    <div className={styles.radioSection}>
+                    <h3>Das Material wird dem Beschichter überstellt per:</h3>               
+                    {/* Gruppe 1 */}
+                <div className={styles.radioGroup}>
+                <label>
+                <input
+                    type="radio"
+                    name="lieferung1"
+                    value="selbst"
+                    onChange={() => setSelectedOption1("selbst")}
+                />
+                Selbstanlieferung
+                <a href="/Logistikersuche" className={styles.link1}> (Transporteur finden)</a>
+                </label>
+                <label>
+                    <input
+                    type="radio"
+                    name="lieferung1"
+                    value="selbst"
+                    onChange={() => setSelectedOption1("selbst")}
                     />
-                    <br></br><br></br>
+                    Abholung an meinem Firmenstandort
+                </label>
+                <label>
+                    <input
+                    type="radio"
+                    name="lieferung1"
+                    value="lieferung"
+                    onChange={() => setSelectedOption1("lieferung")}
+                    />
+                    Abholung an anderem Standort
+                </label>
+                {selectedOption1 === "lieferung" && (
+                    <div className={styles.addressInput}>
+                    <p>Adresse:</p>
+                    <input type="text" placeholder="Straße, Hausnummer" />
+                    <input type="text" placeholder="PLZ, Ort" />
+                    </div>
+                    
+                )}
+                <label className="dateLabel">Datum:</label>                  
+                                <DatePicker
+                                        selected={selectedDate}
+                                        onChange={(date) => setSelectedDate(date)}
+                                        dateFormat="dd.MM.yyyy"
+                                        locale="de"
+                                        customInput={<CustomDateInput />}
+                                        minDate={new Date()}
+                                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
+                                    />
+                </div>
+                </div>
+                <br></br>
+                                    
+                                    <div className={styles.radioSection}>
+                                    <h3>Das Material wird dem Auftraggeber überstellt per:</h3>                        
+                                    {/* Gruppe 2 */}
+                <div className={styles.radioGroup}>
+                <label>
+                    <input
+                    type="radio"
+                    name="lieferung2"
+                    value="selbst"
+                    onChange={() => setSelectedOption2("selbst")}
+                    />
+                    Selbstabholung
+                <a href="/Logistikersuche" className={styles.link1}> (Transporteur finden)</a>
+                </label>
+                <label>
+                    <input
+                    type="radio"
+                    name="lieferung2"
+                    value="selbst"
+                    onChange={() => setSelectedOption2("selbst")}
+                    />
+                    Zustellung an meinem Firmenstandort
+                </label>
+                <label>
+                    <input
+                    type="radio"
+                    name="lieferung2"
+                    value="lieferung"
+                    onChange={() => setSelectedOption2("lieferung")}
+                    />
+                    Zustellung an anderem Standort
+                </label>
+                {selectedOption2 === "lieferung" && (
+                    <div className={styles.addressInput}>
+                    <p>Adresse:</p>
+                    <input type="text" placeholder="Straße, Hausnummer" />
+                    <input type="text" placeholder="PLZ, Ort" />
+                    </div>
+                )}
+                </div>
+                    <br></br> 
                     <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label> 
                     <DatePicker
                         selected={selectedDate}
@@ -494,6 +579,8 @@ export default function AngebotEinstellen() {
                         popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
                     />
                     </div>
+                    </div>
+                    
                     {firstSelection === "Pulverbeschichten" && (
                             <>
                                 <label>
@@ -552,59 +639,65 @@ export default function AngebotEinstellen() {
                     className={styles.customTextInput}
                     />
                     <p>Farbpalette:</p>
-                  <label><input type="radio" name="auswahl1" value="RAL" /> RAL</label>
-                  <label><input type="radio" name="auswahl1" value="NCS" /> NCS</label>
-                  <label><input type="radio" name="auswahl1" value="MCS" /> MCS</label>
-                  <label><input type="radio" name="auswahl1" value="DB" /> DB</label>
-                  <label><input type="radio" name="auswahl1" value="BS" /> BS</label>
-                  <label><input type="radio" name="auswahl1" value="Munsell" /> Munsell</label>
-                  <label><input type="radio" name="auswahl1" value="Candy" /> Candy</label>
-                  <label><input type="radio" name="auswahl1" value="Neon" /> Neon</label>
-                  <label><input type="radio" name="auswahl1" value="Pantone" /> Pantone</label>
-                  <label><input type="radio" name="auswahl1" value="Sikkens" /> Sikkens</label>
-                  <label><input type="radio" name="auswahl1" value="HKS" /> HKS</label>
-                  <label><input type="radio" name="auswahl1" value="Nach Vorlage" /> Nach Vorlage</label>
-                  <label><input type="radio" name="auswahl1" value="Klarlack" /> Klarlack</label>
-                  <label><input type="radio" name="auswahl1" value="Sonderfarbe" /> Sonderfarbe</label>
-                  <label><input type="radio" name="auswahl1" value="RAL D2-Design" /> RAL D2-Design</label>
-                  <label><input type="radio" name="auswahl1" value="RAL E4-Effekt" /> RAL E4-Effekt</label>
+                    <div className={styles.radioContainer}>
+                    
+                  <label><input type="radio" name="auswahl2" value="RAL" /> RAL</label>
+                  <label><input type="radio" name="auswahl2" value="NCS" /> NCS</label>
+                  <label><input type="radio" name="auswahl2" value="MCS" /> MCS</label>
+                  <label><input type="radio" name="auswahl2" value="DB" /> DB</label>
+                  <label><input type="radio" name="auswahl2" value="BS" /> BS</label>
+                  <label><input type="radio" name="auswahl2" value="Munsell" /> Munsell</label>
+                  <label><input type="radio" name="auswahl2" value="Candy" /> Candy</label>
+                  <label><input type="radio" name="auswahl2" value="Neon" /> Neon</label>
+                  <label><input type="radio" name="auswahl2" value="Pantone" /> Pantone</label>
+                  <label><input type="radio" name="auswahl2" value="Sikkens" /> Sikkens</label>
+                  <label><input type="radio" name="auswahl2" value="HKS" /> HKS</label>
+                  <label><input type="radio" name="auswahl2" value="Nach Vorlage" /> Nach Vorlage</label>
+                  <label><input type="radio" name="auswahl2" value="Klarlack" /> Klarlack</label>
+                  <label><input type="radio" name="auswahl2" value="Sonderfarbe" /> Sonderfarbe</label>
+                  <label><input type="radio" name="auswahl2" value="RAL D2-Design" /> RAL D2-Design</label>
+                  <label><input type="radio" name="auswahl2" value="RAL E4-Effekt" /> RAL E4-Effekt</label></div>
                   <br></br>
                   <label><input type="checkbox" /> Ich brauche eine Duplexbeschichtung für erhöhten Korrosionsschutz (Grundierung & 2. Lackschicht)</label>                  
                   <label><input type="checkbox" /> Ich stelle den Lack für meinen Auftrag in ausreichender Menge und Qualität bei</label>
 
                   <p>Oberfläche:</p>
-                  <label><input type="radio" name="auswahl1" value="Glatt" /> Glatt</label>
-                  <label><input type="radio" name="auswahl1" value="Feinstruktur" /> Feinstruktur</label>
-                  <label><input type="radio" name="auswahl1" value="Grobstruktur" /> Grobstruktur</label>
+                  <div className={styles.radioContainer}>
+                  <label><input type="radio" name="auswahl3" value="Glatt" /> Glatt</label>
+                  <label><input type="radio" name="auswahl3" value="Feinstruktur" /> Feinstruktur</label>
+                  <label><input type="radio" name="auswahl3" value="Grobstruktur" /> Grobstruktur</label></div>
 
                   <p>Glanzgrad:</p>
-                  <label><input type="radio" name="auswahl1" value="Hochglanz" /> Hochglanz</label>
-                  <label><input type="radio" name="auswahl1" value="Seidenglanz" /> Seidenglanz</label>
-                  <label><input type="radio" name="auswahl1" value="Glanz" /> Glanz</label>
-                  <label><input type="radio" name="auswahl1" value="Matt" /> Matt</label>
-                  <label><input type="radio" name="auswahl1" value="Seidenmatt" /> Seidenmatt</label>
-                  <label><input type="radio" name="auswahl1" value="Stumpfmatt" /> Stumpfmatt</label>
+                  <div className={styles.radioContainer}>
+                  <label><input type="radio" name="auswahl4" value="Hochglanz" /> Hochglanz</label>
+                  <label><input type="radio" name="auswahl4" value="Seidenglanz" /> Seidenglanz</label>
+                  <label><input type="radio" name="auswahl4" value="Glanz" /> Glanz</label>
+                  <label><input type="radio" name="auswahl4" value="Matt" /> Matt</label>
+                  <label><input type="radio" name="auswahl4" value="Seidenmatt" /> Seidenmatt</label>
+                  <label><input type="radio" name="auswahl4" value="Stumpfmatt" /> Stumpfmatt</label></div>
 
                   <p>Effekt:</p>
-                  
+                  <div className={styles.radioContainer}>
                   <label><input type="checkbox" /> Metallic</label>
-                  <label><input type="checkbox" /> Fluoreszierend</label>
+                  <label><input type="checkbox" /> Fluoreszierend</label></div>
 
                   <p>Qualität:</p>
-                  <label><input type="radio" name="auswahl1" value="Polyester" /> Polyester</label>
-                  <label><input type="radio" name="auswahl1" value="Epoxy-Polyester" /> Epoxy-Polyester</label>
-                  <label><input type="radio" name="auswahl1" value="Polyester für Feuerverzinkung" /> Polyester für Feuerverzinkung</label>
-                  <label><input type="radio" name="auswahl1" value="Thermoplast" /> Thermoplast</label>
+                  <div className={styles.radioContainer}>
+                  <label><input type="radio" name="auswahl5" value="Polyester" /> Polyester</label>
+                  <label><input type="radio" name="auswahl5" value="Epoxy-Polyester" /> Epoxy-Polyester</label>
+                  <label><input type="radio" name="auswahl5" value="Polyester für Feuerverzinkung" /> Polyester für Feuerverzinkung</label>
+                  <label><input type="radio" name="auswahl5" value="Thermoplast" /> Thermoplast</label></div>
 
 
                   <p>Zwingende Qualitätsanforderungen an den Beschichter:</p>
+                  <div className={styles.radioContainer}>
                   <label><input type="checkbox" /> GSB Zertifizierung (alle Stufen)</label>
                   <label><input type="checkbox" /> Qualicoat Zertifizierung (alle Stufen)</label>
                   <label><input type="checkbox" /> Qualisteelcoat Zertifizierung</label>
                   <label><input type="checkbox" /> DIN 55634-2</label>
                   <label><input type="checkbox" /> DIN EN 1090-2</label>
                   <label><input type="checkbox" /> DBS 918 340</label>
-                  <label><input type="checkbox" /> ISO:9001 Zertifizierung</label>
+                  <label><input type="checkbox" /> ISO:9001 Zertifizierung</label></div>
                 </>
               )}
               
@@ -620,7 +713,7 @@ export default function AngebotEinstellen() {
 
           {secondSelection && (
             <div className={styles.dynamicModule}>
-              <h3>Modul für Auswahl 2</h3>
+              <h3>Optional können Sie spezifische Angaben zum 2. Arbeitsschritt machen</h3>
               {secondSelection === "Option 5" && (
                 <label>Benutzerdefinierter Text:
                   <input type="text" placeholder="Ihre Eingabe..." />
@@ -675,6 +768,7 @@ export default function AngebotEinstellen() {
           )}
         </form>
         <div className={styles.textfeldContainer}>
+        <div className={styles.lineContainer}></div>
   <p className={styles.textfeldTitel}>Beschreibung</p>
   <textarea
     id="beschreibung"
@@ -688,7 +782,9 @@ export default function AngebotEinstellen() {
     placeholder="Beschreibe dein Angebot..."
     rows={5}
   />
+  
   <div className={styles.charCount}>{text.length}/300 Zeichen</div>
+  
 </div>
         <button type="submit" className={styles.submitButton}>
         Kostenlos Angebote einholen
