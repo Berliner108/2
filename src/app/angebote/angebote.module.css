@@ -132,6 +132,7 @@
   border: 1px solid #ccc;
   resize: vertical;
   box-sizing: border-box;
+  min-height: 300px;
 }
 
 .textfeldTitel {
@@ -145,6 +146,18 @@
   flex-direction: row;
   gap: 0.35rem;
   flex-wrap: wrap; /* optional, falls sie bei kleiner Breite umbrechen sollen */
+  
+}
+
+.neuercontainer {
+  display: flex;
+  flex-direction: row;
+  gap: 0.35rem;
+  flex-wrap: wrap; /* optional, falls sie bei kleiner Breite umbrechen sollen */
+  border: 1px solid #ccc; /* 1px dick, grau, durchgezogen */
+  padding: 16px;          /* Innenabstand */
+  border-radius: 8px;     /* Abgerundete Ecken, optional */
+  
 }
 
 /* angebote.module.css */
@@ -197,7 +210,7 @@
 }
 
 .radioSection {
-  border: 1px solid #ccc;
+  
   padding: 1rem;
   margin-bottom: 2rem;
   border-radius: 8px;
@@ -427,6 +440,7 @@
   margin-bottom: 20px;
   text-align: left;
   color: #333;
+  
 }
 
 .select {

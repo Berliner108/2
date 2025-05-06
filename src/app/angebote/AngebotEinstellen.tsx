@@ -397,12 +397,12 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
             </div>
           )}
           <div className={styles.lineContainer}></div>
-
+          <p className={styles.dropdownText}>2. Wähle den ersten Arbeitsschritt</p>
           {/* Dropdowns */}
         <div className={styles.dropdownContainer}>
   {/* Erster Dropdown */}
   
-  <p className={styles.dropdownText}>2. Wähle den ersten Arbeitsschritt</p>
+  <p className={styles.dropdownText}>Triff eine Auswahl für den ersten Arbeitsschritt</p>
   <select
     value={firstSelection || ""}
     onChange={(e) => {
@@ -464,15 +464,9 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
   )}
 </div>
 <div className={styles.lineContainer}></div>
-<p></p>
-          {/* Dynamische Module */}
-          {firstSelection && (
-            <div className={styles.dynamicModule}>
-              <h3>Optional können Sie spezifische Angaben zum 1. Arbeitsschritt machen</h3>
-              {firstSelection === "Pulverbeschichten" && (
-                <>
-                  <div className="datePickerWrapper">
-                    <p>Logistik:</p>   
+<p className={styles.dropdownText}>3. Logistik für den gesamten Auftrag</p>  
+<div className={styles.dropdownContainer}>   
+<p className={styles.dropdownText}></p>  
                     <div className={styles.radioSection}>
                     <h3>Das Material wird dem Beschichter überstellt per:</h3>               
                     {/* Gruppe 1 */}
@@ -510,26 +504,23 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
                     <p>Adresse:</p>
                     <input type="text" placeholder="Straße, Hausnummer" />
                     <input type="text" placeholder="PLZ, Ort" />
-                    </div>
-                    
+                    </div>                    
                 )}
-                <label className="dateLabel">Datum:</label>                  
-                                <DatePicker
-                                        selected={selectedDate}
-                                        onChange={(date) => setSelectedDate(date)}
-                                        dateFormat="dd.MM.yyyy"
-                                        locale="de"
-                                        customInput={<CustomDateInput />}
-                                        minDate={new Date()}
-                                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
-                                    />
+                <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label>                
+                    <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => setSelectedDate(date)}
+                    dateFormat="dd.MM.yyyy"
+                    locale="de"
+                    customInput={<CustomDateInput />}
+                    minDate={new Date()}
+                    popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
+                    />
                 </div>
                 </div>
-                <br></br>
-                                    
-                                    <div className={styles.radioSection}>
-                                    <h3>Das Material wird dem Auftraggeber überstellt per:</h3>                        
-                                    {/* Gruppe 2 */}
+                <div className={styles.radioSection}>
+                    <h3>Das Material wird dem Auftraggeber überstellt per:</h3>                        
+                    {/* Gruppe 2 */}
                 <div className={styles.radioGroup}>
                 <label>
                     <input
@@ -568,7 +559,7 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
                 )}
                 </div>
                     <br></br> 
-                    <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label> 
+                    <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label> <br></br>
                     <DatePicker
                         selected={selectedDate}
                         onChange={(date) => setSelectedDate(date)}
@@ -579,11 +570,11 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
                         popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
                     />
                     </div>
-                    </div>
                     
-                    {firstSelection === "Pulverbeschichten" && (
-                            <>
-                                <label>
+                    
+                    
+                            
+                            <label>
                                 <input
                                     type="checkbox"
                                     name="autowaescheErweitert"
@@ -605,8 +596,7 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
                               </div>
                               
                                 )}
-                            </>
-                            )}
+                                <br></br>
                   <label htmlFor="waschplatzName">Gesamte m² für meinen Auftrag:</label>
                     <input
                     type="text"
@@ -630,6 +620,15 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
                   <label><input type="radio" name="auswahl1" value="Chrom" /> Chrom</label>
                   <label><input type="radio" name="auswahl1" value="Andere" /> Andere</label>
                   </div>
+                  </div>
+                  
+          {/* Dynamische Module */}
+          {firstSelection && (
+            <div className={styles.dynamicModule}>
+              <h3>Optional können Sie spezifische Angaben zum ersten Arbeitsschritt machen</h3>
+              {firstSelection === "Pulverbeschichten" && (
+                <>
+                  
 
                   <label htmlFor="waschplatzName">Farbton oder Artikelnummer des Herstellers:</label>
                     <input
@@ -769,7 +768,7 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
         </form>
         <div className={styles.textfeldContainer}>
         <div className={styles.lineContainer}></div>
-  <p className={styles.textfeldTitel}>Beschreibung</p>
+        <p className={styles.dropdownText}>4. Beschreibung</p>
   <textarea
     id="beschreibung"
     className={styles.oswaldTextarea}

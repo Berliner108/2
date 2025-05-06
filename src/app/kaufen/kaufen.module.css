@@ -1,123 +1,124 @@
-
-
-  /* Haupt-Wrapper */
+/* Container-Layout */
 .wrapper {
-  width: 100%;  
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding: 1rem;
+  gap: 1rem;
 }
 
-/* Navbar */
-.navbar {
-  font-family: 'Oswald', sans-serif;
+/* Sidebar links */
+.sidebar {
+  width: 16rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid #d1d5db;
+}
+
+/* Filterfelder */
+.input,
+.range {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.375rem;
+  width: 90%;
+  max-width: 14rem;
+}
+
+.select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.375rem;
   width: 100%;
-  background-color: white;
+}
+
+.checkboxContainer {
   display: flex;
-  justify-content: center; /* Zentriert die Links horizontal */
-  padding: 10px 0;
-  position: relative;
-  z-index: 1000;
-  scrollbar-width: none; /* Für Firefox */
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Navbar Liste */
-.navList {
-  list-style: none;
+.checkboxGroup {
   display: flex;
-  padding: 0;
-  margin: 0;
-  position: relative;
-}
-
-/* Jedes Menü-Element */
-.navItem {
-  position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-/* Buttons */
-.navButton {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  font-family: 'Oswald', sans-serif;
-  padding: 10px 15px;
-  color: black;
-  transition: color 0.3s ease;
-}
-
-.navItem:hover .navButton {
-  color: #00b4d8;
-}
-
-/* Dropdown-Menü */
-.dropdown {
-  position: absolute;
-  top: 100%; /* Dropdown direkt unter dem Link */
-  left: 50%;
-  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
-  background: white;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
   flex-direction: column;
-  padding: 0;
-  border-radius: 4px;
-  z-index: 10000; /* Höchste Priorität, überlagert alles */
-  min-width: 165px;
-  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
+  gap: 0.5rem;
 }
 
-/* Dropdown Links */
-.dropdownLink {
-  padding: 10px 15px;
-  text-decoration: none;
-  color: black;
-  display: block;
-  text-align: center;
-  transition: background-color 0.2s ease;
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
-.dropdownLink:hover {
-  background-color: #00b4d8;
-  color: white;
+/* Hauptinhalt rechts */
+.main {
+  flex: 1;
+  padding: 0 1rem;
 }
 
-/* Dropdown sichtbar machen */
-.navItem:hover .dropdown {
-  display: flex; /* Macht das Dropdown sichtbar */
+.sortRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
 }
 
-/* Mobile Ansicht */
-@media (max-width: 1024px) {
-  .navbar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    display: flex;
-    justify-content: flex-start; /* Links beginnen ganz links */
-    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
-  }
-
-  .navList {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding: 10px 0;
-    margin: 0;
-    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
-  }
-
-  .navItem {
-    margin: 0 10px; /* Falls nötig, Abstand anpassen */
-  }
-
-  /* Dropdown für mobile Ansicht ausblenden */
-  .dropdown {
-    display: none !important;
-  }
+.sortSelect {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.375rem;
 }
 
+/* Artikelliste */
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* Einzelner Artikel */
+.card {
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.5rem;
+}
+
+.cardTitle {
+  font-weight: 600;
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.cardText {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.available {
+  color: green;
+}
+
+.unavailable {
+  color: red;
+}
+
+/* Lazy Loader-Platzhalter */
+.loader {
+  height: 2rem;
+}
