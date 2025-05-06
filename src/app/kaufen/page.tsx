@@ -310,7 +310,25 @@ export default function KaufenSeite() {
   </label>
   
 </div>
-
+<div className={styles.checkboxGroup}>
+  <strong>Zustand</strong>
+  {zustandFilter.map((z) => (
+    <label key={z} className={styles.checkboxLabel}>
+      <input
+        type="checkbox"
+        checked={zustand.includes(z)}
+        onChange={() =>
+          setZustand((prev) =>
+            prev.includes(z)
+              ? prev.filter((item) => item !== z)
+              : [...prev, z]
+          )
+        }
+      />
+      {z}
+    </label>
+  ))}
+</div>
 
           <div className={styles.checkboxGroup}>
             <strong>Hersteller</strong>
