@@ -21,7 +21,7 @@ interface Props {
 }
 
 const KaufenSeiten: React.FC<Props> = ({ artikelDaten }) => {
-  const [suchbegriff, setSuchbegriff] = useState('');
+  
 
   return (
     <div>

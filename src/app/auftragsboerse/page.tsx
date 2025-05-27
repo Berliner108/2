@@ -1,4 +1,4 @@
-import Link from 'next/link';
+
 import styles from './auftragsboerse.module.css';
 import Pager from './navbar/pager';
 

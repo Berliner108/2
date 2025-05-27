@@ -7,10 +7,8 @@ import { useState } from 'react';
 import styles from './ArtikelDetail.module.css';
 import Pager from './navbar/pager';
 import { FaFilePdf } from 'react-icons/fa';
-
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
-
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 

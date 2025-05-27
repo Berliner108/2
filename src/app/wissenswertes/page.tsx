@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./wissenswertes.module.css";
-import Link from "next/link"; // Für den Button zur Startseite
+
 import Pager from './navbar/pager';
 
 const TypingText = ({ text }: { text: string }) => {
