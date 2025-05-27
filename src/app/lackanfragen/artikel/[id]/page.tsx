@@ -226,17 +226,19 @@ export default function ArtikelDetailPage() {
 
       {/* Lightbox */}
       {lightboxOpen && (
-        <Lightbox
-        open={lightboxOpen}
-        close={() => setLightboxOpen(false)}
-        slides={slides}
-        plugins={[Thumbnails]}
-        thumbnails={{ vignette: true }}
-        index={photoIndex}
-        onIndexChange={(index: number) => setPhotoIndex(index)}
+  <Lightbox
+    open={lightboxOpen}
+    close={() => setLightboxOpen(false)}
+    slides={slides}
+    index={photoIndex}
+    plugins={[Thumbnails]}
+    thumbnails={{ vignette: true }}
+    on={{
+      view: ({ index }) => setPhotoIndex(index),
+    }}
+  />
+)}
 
-      />
-      )}
     </>
   );
 }
