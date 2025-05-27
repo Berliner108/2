@@ -1,5 +1,5 @@
 // app/components/KaufenSeite.tsx
-import { useState } from 'react';
+
 import Link from 'next/link';
 
 interface Artikel {
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const KaufenSeite: React.FC<Props> = ({ artikelDaten }) => {
-  const [suchbegriff, setSuchbegriff] = useState('');
+  
 
   return (
     <div>
