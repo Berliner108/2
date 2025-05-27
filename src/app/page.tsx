@@ -15,50 +15,35 @@ const category1 = [
 ];
 
 const category2 = [
-  { id: 11, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
-  { id: 12, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
-  { id: 13, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
-  { id: 14, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
-  { id: 15, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
-  { id: 16, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
-  { id: 17, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch7.jpg" },
-  { id: 18, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch8.jpg" },
-  { id: 19, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch9.jpg" },
-  { id: 20, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
-  { id: 21, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
-  { id: 22, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
+  { id: 7, title: "Sonnengelb", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
+  { id: 8, title: "Cremebeige", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
+  { id: 9, title: "Braungrau", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
+  { id: 10, title: "Ockergelb", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
+  { id: 11, title: "Sonnengold", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
+  { id: 12, title: "Rotorange", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
+  
   
 ];
 
 const category3 = [
-  { id: 21, title: "Stretch Folie", desc: "Perforiert, 15 cm breit, 10 Meter, 12 Stück / Karton 32,99€", img: "/images/stretch.jpg" },
-  { id: 22, title: "Sonnengelb", desc: "Nasslack, glatt matt", img: "/images/folie lang.jpg" },
-  { id: 23, title: "Braunbeige", desc: "Pulverlack, glatt tiefmatt", img: "/images/atemschutz.jpg" },
-  { id: 24, title: "Olivgrün", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
-  { id: 25, title: "Taxigelb", desc: "Nasslack, feinstruktur glanz", img: "/images/blume5.jpg" },
-  { id: 26, title: "Cremegelb", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume6.jpg" },
-  { id: 27, title: "Gelbbeige", desc: "Pulverlack, glatt glanz", img: "/images/blume7.jpg" },
-  { id: 28, title: "Feuerorange", desc: "Pulverlack, glatt glanz", img: "/images/blume8.jpg" },
-  { id: 29, title: "Kunstgelb", desc: "Pulverlack, glatt glanz", img: "/images/blume9.jpg" },
-  { id: 30, title: "Ziegelrot", desc: "Pulverlack, glatt glanz", img: "/images/blume10.jpg" },
-  { id: 31, title: "Ziegelrot", desc: "Pulverlack, glatt glanz", img: "/images/blume10.jpg" },
-  { id: 32, title: "Ziegelrot", desc: "Pulverlack, glatt glanz", img: "/images/blume10.jpg" },
+  { id: 13, title: "Stretch Folie", desc: "Perforiert, 15 cm breit, 10 Meter, 12 Stück / Karton 32,99€", img: "/images/stretch.jpg" },
+  { id: 14, title: "Sonnengelb", desc: "Nasslack, glatt matt", img: "/images/folie lang.jpg" },
+  { id: 15, title: "Braunbeige", desc: "Pulverlack, glatt tiefmatt", img: "/images/atemschutz.jpg" },
+  { id: 16, title: "Olivgrün", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
+  { id: 17, title: "Taxigelb", desc: "Nasslack, feinstruktur glanz", img: "/images/blume5.jpg" },
+  { id: 18, title: "Cremegelb", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume6.jpg" },
+  
   
   
 ];
   const category4 = [
-    { id: 11, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
-    { id: 12, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
-    { id: 13, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
-    { id: 14, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
-    { id: 15, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
-    { id: 16, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
-    { id: 17, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch7.jpg" },
-    { id: 18, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch8.jpg" },
-    { id: 19, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch9.jpg" },
-    { id: 20, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
-    { id: 21, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
-    { id: 22, title: "Liguster", desc: "Schnittverträglich", img: "/images/strauch10.jpg" },
+    { id: 19, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
+    { id: 20, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
+    { id: 21, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
+    { id: 22, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
+    { id: 23, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
+    { id: 24, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
+    
     
   ];
 export default function Page() {
@@ -73,9 +58,9 @@ export default function Page() {
             { title: 'Lacke anfragen', href: '/sonderlacke', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
             { title: 'Auftragsbörse', href: '/auftragsboerse', links: [{ href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' },  { href: '/about/vision', text: 'Kombiniert' }] },
             { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/about/team', text: 'Nasslacke' }, { href: '/about/vision', text: 'Pulverlacke' }, { href: '/about/vision', text: 'Arbeitsmittel' }] },
-            { title: 'Offene Lackanfragen', href: '/lackanfragen', links: [{ href: '/services/webdesign', text: 'Sonderfarbe Nasslack' }, { href: '/services/seo', text: 'Sonderfarbe Pulverlack' }] },
+            { title: 'Offene Lackanfragen', href: '/lackanfragen', links: [{ href: '/lackanfragen?kategorie=Nasslack', text: 'Sonderfarbe Nasslack' }, { href: '/lackanfragen?kategorie=Pulverlack', text: 'Sonderfarbe Pulverlack' }] },
             { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/wissenswertes', text: 'Vision und Mission' },{ href: '/wissenswertes#UeberUns', text: 'Über Uns' }, { href: '/wissenswertes#Sofunktionierts', text: 'So funktionierts' }, { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' }, { href: '/wissenswertes#Pulverbeschichten', text: 'Pulverbeschichten' }, { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' }, { href: '/wissenswertes#Entlacken', text: 'Entlacken' },{ href: '/wissenswertes#Verzinken', text: 'Verzinken' }, { href: '/wissenswertes#Eloxieren', text: 'Eloxieren' }, { href: '/wissenswertes#Strahlen', text: 'Strahlen' }, { href: '/wissenswertes#Folieren', text: 'Folieren' }, { href: '/wissenswertes#Isolierstegverpressung', text: 'Isolierstegverpressung' }] },
-            { title: 'Mein Konto', href: '/konto', links: [{ href: '/support/help', text: 'Eingeholte Angebote' }, { href: '/support/contact', text: 'Meine Käufe' }, { href: '/support/contact', text: 'Offene Lackanfragen' }, { href: '/support/contact', text: 'Meine Aufträge' }, { href: '/support/contact', text: 'Aktive Artikel' }, { href: '/support/contact', text: 'Verkaufte Artikel' }, { href: '/support/contact', text: 'Angebotene Artikel' }, { href: '/support/contact', text: 'Kontoeinstellungen' }] }
+            { title: 'Mein Konto', href: '/konto', links: [{ href: '/support/help', text: 'Eingeholte Angebote' }, { href: '/support/contact', text: 'Meine Aufträge' },{ href: '/support/help', text: 'Versendete Angebote' },{ href: '/support/contact', text: 'Meine Käufe' }, { href: '/support/contact', text: 'Offene Lackanfragen' }, { href: '/support/contact', text: 'Angebotene Lacke' },  { href: '/support/contact', text: 'Aktive Artikel' }, { href: '/support/contact', text: 'Verkaufte Artikel' },  { href: '/support/contact', text: 'Kontoeinstellungen' }, { href: '/support/contact', text: 'Nachrichten' }] }
           ].map((item, index) => (
             <li key={index} className={styles.navItem}>
               <Link href={item.href} className={styles.navButton}>
@@ -97,7 +82,7 @@ export default function Page() {
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
         <h2 className={styles.articleHeader}>
-          <Link href="/artikelseite">
+          <Link href="/auftragsboerse">
             Top Deals aus der Auftragsbörse
           </Link>
         </h2>
@@ -115,10 +100,7 @@ export default function Page() {
             </Link>
           ))}
         </div>
-      </div>
-      
-      
-      
+      </div>     
       {/* Bild unter dem Artikel Container */}
       <div className={styles.imageContainer}>
         <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
@@ -126,7 +108,7 @@ export default function Page() {
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
         <h2 className={styles.articleHeader}>
-          <Link href="/artikelseite">
+          <Link href="/kaufen">
             Top Deals aus der Lackbörse
           </Link>
         </h2>

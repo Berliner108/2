@@ -1,0 +1,535 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+.container {
+  width: 100%;  
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff;
+  font-family: 'Oswald', sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden; /* schützt etwas vor horizontalem Scroll */
+}
+.grid {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.rightColumn {
+  flex: 2;
+}
+.thumbnails {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.image {
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .thumbnail {
+    width: 60px;
+    margin: 5px;
+    border: 2px solid transparent;
+    cursor: pointer;
+  }
+  
+  .thumbnail:hover {
+    border-color: #0070f3;
+  }
+  
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.title {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #333;
+  margin: 5px;
+  margin-bottom: -30px;
+}
+.label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+.value {
+  color: #222;
+}
+.badges {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  background-color: #eee;
+  color: #555;
+}
+.badge.gewerblich {
+  background-color: #28a745;
+  color: white;
+}
+.badge.privat {
+  background-color: #007acc;
+  color: white;
+}
+.badge.gesponsert {
+  position: relative;
+  top: 10px;
+  right: 10px;
+  background: #f0f0f0;
+  color: #888888;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: none;
+  pointer-events: none;
+}
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 2rem;
+}
+.leftColumn {
+  display: flex;
+  justify-content: center;
+}
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.image {
+  min-width: 500px;
+  max-width: 500px;
+  max-height: 500px;
+  min-height: 500px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.metaItem {
+  flex: 1 1 200px;
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
+.priceSection {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.inputGroup {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.2rem;
+  font-weight: bolder;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+.preisLabel {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+}
+.preisInput {
+  width: 200px;
+  margin-left: 5px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+}
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.checkboxLabel {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: 'Oswald', sans-serif;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+.extraTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.offerBox {
+  border: 2px solid black;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 2rem;
+  background-color: #fff;
+  text-align: left;
+}
+
+.priceField,
+.altPriceField {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 180px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+}
+
+.submitOfferButton {
+  padding: 0.75rem 2rem;
+  min-width: 100%;
+  font-size: 1rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald', sans-serif;
+  text-align: center;
+}
+
+.submitOfferButton:hover {
+  background-color: #0099c5;
+}
+
+.offerNote {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  color: #333;
+}
+
+.buyButton {
+  padding: 0.75rem 1.5rem;
+  font-weight: 800;
+  font-size: 15px;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald', sans-serif;
+}
+
+.buyButton:hover {
+  background-color: #005fa3;
+}
+
+.beschreibung {
+  margin-top: 0.1rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  background-color: #f7f7f7;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.downloadList {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.downloadList li {
+  margin-bottom: 0.4rem;
+}
+
+.downloadLink {
+  color: #0070f3;
+  text-decoration: underline;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+.downloadItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.farbcodeHintButton {
+    margin-left: 0rem;
+    background: none;
+    border: none;
+    color: #007acc;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    padding: 0;
+  }
+  
+  .farbcodeHintBox {
+    margin-top: 0.5rem;
+    background-color: #f0f8ff;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #333;
+    max-width: 400px;
+  }
+  
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .grid,
+  .detailGrid {
+    flex-direction: column;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .image {
+    max-width: 100%;
+    min-width: unset;
+    height: auto;
+    max-height: unset;
+  }
+
+  .thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+
+  .titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .badges {
+    flex-wrap: wrap;
+  }
+
+  .meta {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .metaItem {
+    width: 100%;
+  }
+
+  .inputGroup,
+  .inputRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .preisInput,
+  .extraPreisInput,
+  .priceField,
+  .altPriceField {
+    width: 100%;
+  }
+
+  .checkboxLabel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .submitOfferButton,
+  .buyButton {
+    width: 100%;
+    font-size: 1.1rem;
+  }
+
+  .beschreibung {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .downloadItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .offerBox {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .leftColumn {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .rightColumn {
+    width: 100%;
+    padding-top: 1rem;
+  }
+
+  .image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-width: unset;
+    min-height: unset;
+    max-height: 300px;
+  }
+
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+  }
+
+  .titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .meta {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .metaItem {
+    flex: 1 1 100%; /* ganze Breite nehmen */
+    max-width: 100%; /* sicherheitshalber */
+    box-sizing: border-box; /* damit Padding mitrechnet */
+  }
+
+  .beschreibung {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+
+  .inputGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .preisInput,
+  .priceField,
+  .altPriceField {
+    width: 95%;
+    font-size: 1rem;
+  }
+
+  .submitOfferButton {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+
+  .offerBox {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .downloadItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .downloadLink {
+    font-size: 0.95rem;
+  }
+
+  .badges {
+    flex-wrap: wrap;
+  }
+  .image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    /* min-width raus, max-height optional */
+  }
+}

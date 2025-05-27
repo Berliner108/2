@@ -12,13 +12,14 @@
 .navbar {
   font-family: 'Oswald', sans-serif;
   width: 100%;
-  background-color: white;
+  background-color: #e0e0e0;
   display: flex;
   justify-content: center; /* Zentriert die Links horizontal */
   padding: 10px 0;
   position: relative;
   z-index: 1000;
   scrollbar-width: none; /* Für Firefox */
+  
 }
 
 /* Navbar Liste */

@@ -121,7 +121,7 @@ header {
   main {
     
     min-height: 100vh; /* Stellt sicher, dass der Hauptinhalt den gesamten Bildschirm ausfüllt */
-    background-color: #f5f5f5;
+    background-color: white;
     margin-top: -20px;
   }
   

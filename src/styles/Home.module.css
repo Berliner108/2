@@ -8,24 +8,25 @@
   align-items: center;
 }
 /* Navbar */
+/* Navbar */
 .navbar {
   font-family: 'Oswald', sans-serif;
   width: 100%;
-  background-color: white;
+  background-color: #e0e0e0;
   display: flex;
   justify-content: center; /* Zentriert die Links horizontal */
   padding: 10px 0;
   position: relative;
   z-index: 1000;
   scrollbar-width: none; /* Für Firefox */
+  
 }
 /* Navbar Liste */
 .navList {
   list-style: none;
   display: flex;
   padding: 0;
-  margin: 0;
-  
+  margin: 0;  
 }
 /* Jedes Menü-Element */
 .navItem {
@@ -64,7 +65,6 @@
   min-width: 165px;
   overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
 }
-
 /* Dropdown Links */
 .dropdownLink {
   padding: 10px 15px;
@@ -74,7 +74,6 @@
   text-align: center;
   transition: background-color 0.2s ease;
 }
-
 .dropdownLink:hover {
   background-color: #00b4d8;
   color: white;
@@ -147,23 +146,19 @@
   text-decoration: none !important;
   text-decoration-line: none;
 }
-
 .articleText h3 {
   font-size: 1rem;
   margin: 5px 0;
   text-decoration: none;
 }
-
 .articleText p {
   font-size: 0.875rem;
   color: black;
   text-decoration: none;
 }
-
 .imageContainer {
   width: 100%; 
 }
-
 .articleImage {
   width: 100%; /* Bild nimmt die volle Breite des Containers ein */
   height: 450px; /* Höhe des Bildes auf 200px gesetzt */
@@ -182,9 +177,6 @@
   width: 100%;
   text-decoration: none;
 }
-
-
-
 /* Mobile Ansicht - Horizontal Scrollbar */
 @media (max-width: 1024px) {
   .articleContainer {
@@ -216,7 +208,6 @@
     justify-content: flex-start; /* Links beginnen ganz links */
     min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
   }
-
   .navList {
     display: flex;
     flex-wrap: nowrap;
@@ -225,7 +216,6 @@
     margin: 0;
     min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
   }
-
   .navItem {
     margin: 0 10px; /* Falls nötig, Abstand anpassen */
   }
@@ -238,8 +228,7 @@
     width: 100%;
     padding: 00px;  
     text-align: center;
-    background-color: white; /* Optional: Hintergrundfarbe */
-    
+    background-color: white; /* Optional: Hintergrundfarbe */    
   }
   .articleHeader a {
     font-family: 'Oswald', sans-serif;
@@ -247,8 +236,7 @@
     font-weight: 600;
     text-decoration: none;
     color: black;
-    transition: color 0.3s ease;
-    
+    transition: color 0.3s ease;    
     width: 100%;
     margin-left: 90px;
   }

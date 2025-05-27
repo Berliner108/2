@@ -1,43 +1,86 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Fuse from 'fuse.js';
 import Image from 'next/image';
 import styles from './auftragsboerse.module.css';
 import Pager from './navbar/pager';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 const kategorien = ['Nasslack', 'Pulverlack'];
-const zustandFilter = ['Neu und ungeöffnet', 'Angebraucht und einwandfrei'];
-const herstellerFilter = ['IGP', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel', 'Tiger', 'Sherwin Williams', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag'];
-
-
+const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
+const herstellerFilter = [
+  'Alle',
+  'IGP',
+  'Axalta',
+  'Frei Lacke',
+  'Grimm Pulverlacke',
+  'Akzo Nobel',
+  'Tiger',
+  'Sherwin Williams',
+  'Teknos',
+  'Pulver Kimya',
+  'Kabe',
+  'Wörwag',
+  'Kansai',
+  'Helios',  
+  'Pulverkönig',
+  'Bentatec',  
+  'Pulmatech',
+  'Colortech',
+  'VAL',
+  'E-Pulverit',  
+  'Braunsteiner',
+  'Ganzlin',
+  'Colors-Manufaktur',
+  'Aalbert',
+  'Motec-pulverlack.de',
+  'Pulvertech.de',
+  'Pulverlacke24.de',
+  'Pulverlacke.de',
+  'Pulverlack-pro.de',
+  'Pulverlackshop.de',
+];
+// Berechnet das Lieferdatum basierend auf Werktagen
+function berechneLieferdatum(werktage: number) {
+  const date = new Date();
+  let addedDays = 0;
+  while (addedDays < werktage) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) {
+      addedDays++;
+    }
+  }
+  return date;
+}
 const artikelDaten = [
   {
-    id: 1,
-    titel: 'Vaillant Weiss glatt matt',
-    preis: 4.55,
-    versand: 6.5 ,
-    lieferzeit: 3,
+    id: '1',
+    titel: 'QUARTZ 2 Feinstruktur Matt',
+    menge: 25,
+    lieferdatum: berechneLieferdatum(3),
     hersteller: 'IGP',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Pulverlack',
-    bewertet: '4.8',
-    anbieterTyp: 'Gewerblich',
+    bewertet: '25',
+    ort: '6330 Kufstein',
     bild: '/images/artikel1.jpg',
     gesponsert: true,
     gewerblich: false,  
-    privat: false,
-    
+    privat: true,    
   },
   {
     id: 2,
-    titel: '68/80043 glatt seidenglanz',
-    preis: 8.77,
-    lieferzeit: 4,
+    titel: 'GREEN Feinstruktur Matt',  
+    menge: 75,  
+    lieferdatum: berechneLieferdatum(10),
     hersteller: 'Tiger',
-    zustand: 'Angebraucht und einwandfrei',
+    zustand: 'Geöffnet und einwandfrei',
     kategorie: 'Pulverlack',
-    bewertet: '4.5',
-    versand: 6.1 ,
+    bewertet: '75',
+    ort: '87645 Schwangau',
     bild: '/images/artikel2.jpg',
     gesponsert: false,
     gewerblich: false,
@@ -45,179 +88,261 @@ const artikelDaten = [
   },
   {
     id: 3,
-    titel: 'RAL 7038 glatt matt',
-    preis: 7.41,
-    lieferzeit: 2,
-    versand: 8.5 ,
+    titel: 'Marmorgrau glatt matt',        
+    lieferdatum: berechneLieferdatum(15),
     hersteller: 'IGP',
-    zustand: 'Angebraucht und einwandfrei',
+    zustand: 'Geöffnet und einwandfrei',
+    ort: '83435 Bad Reichenhall',
     kategorie: 'Pulverlack',
-    bewertet: '4.9',
-    verkaeufer: 'Powdermarket',
-    bild: '/images/artikel3.jpg',
+    menge: 710,  
+    bewertet: '710',
+    user: 'Powdermarket',
+    bild: '/images/sonderlack1.jpg',
     gesponsert: true,
     gewerblich: true,
     privat: false,
   },
   {
     id: 4,
-    titel: 'DB 702 feinstruktur seidenmatt',
-    preis: 12.54,
-    lieferzeit: 4,
-    versand: 5.7 ,
+    titel: 'Messing glatt seidenglanz metallic',    
+    lieferdatum: berechneLieferdatum(12),
     hersteller: 'IGP',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Pulverlack',
-    bewertet: '4.9',
-    verkaeufer: 'Coatingmaster',
-    bild: '/images/artikel4.jpg',
+    ort: '83646 Bad Tölz',
+    menge: 20,  
+    bewertet: '20',
+    user: 'Coatingmaster',
+    bild: '/images/sonderlack3.jpg',
     gesponsert: false,
     gewerblich: true,
     privat: false,
+    
   },
   {
     id: 5,
-    titel: 'Perlgold glatt hochglanz',
-    preis: 6.56,
-    lieferzeit: 3,
-    versand: 5.5 ,
+    titel: 'Sonnengold glatt seidenglanz metallic',    
+    lieferdatum: berechneLieferdatum(6),
     hersteller: 'Axalta',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Pulverlack',
-    bewertet: '4.9',
-    verkaeufer: 'Lackmeister',
+    menge: 980,  
+    bewertet: '980',
+    user: 'Lackmeister',
     bild: '/images/artikel5.jpg',
     gesponsert: false,
     gewerblich: false,
     privat: true,
+    ort: '38855 Wernigerode',
   },
   {
     id: 6,
-    titel: 'RAL 7033 grobstruktur tiefmatt',
-    preis: 8.01,
-    lieferzeit: 3,
-    versand: 5.2 ,
+    titel: 'PealyHaze glatt matt metallic',    
+    lieferdatum: berechneLieferdatum(2),
     hersteller: 'Axalta',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Nasslack',
-    bewertet: '4.9',
-    verkaeufer: 'AM Coatings',
-    bild: '/images/artikel6.jpg',
+    menge: 22,
+    bewertet: '22',
+    user: 'AM Coatings',
+    bild: '/images/sonderlack4.jpg',
     gesponsert: false,
     gewerblich: false,
     privat: true,
+    ort: '91550 Dinkelsbühl',
   },
   {
     id: 7,
-    titel: 'DB 703 glatt seidenmatt',
-    preis: 8.89,
-    lieferzeit: 3,
-    versand: 4.9 ,
-    hersteller: 'Frei Lacke',
-    zustand: 'Angebraucht und einwandfrei',
+    titel: 'Eloxalsilber glatt matt metallic',    
+    lieferdatum: berechneLieferdatum(2),
+    hersteller: 'Alle',
+    zustand: 'Geöffnet und einwandfrei',
     kategorie: 'Pulverlack',
-    bewertet: '4.9',
-    verkaeufer: 'Frei Lacke',
+    menge: 25,
+    bewertet: '25',
+    user: 'Frei Lacke',
     bild: '/images/artikel7.jpg',
     gesponsert: true,
     gewerblich: true,
     privat: false,
+    ort: '82481 Mittenwald',
   },
   {
     id: 8,
-    titel: 'RAL 9005 glatt stumpfmatt',
-    preis: 6.8,
-    lieferzeit: 5,
-    versand: 5.3 ,
+    titel: 'GoldenHoney Glatt Matt Metallic',    
+    lieferdatum: berechneLieferdatum(4),   
     hersteller: 'Frei Lacke',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Pulverlack',
-    bewertet: '4.9',
-    verkaeufer: 'Arden17',
+    menge: 48,
+    bewertet: '48',
+    user: 'Arden17',
     bild: '/images/artikel8.jpg',
     gesponsert: false,
     gewerblich: true,
     privat: false,
+    ort: '4820 Bad Ischl',
   },
   {
     id: 9,
-    titel: 'RAL 9016 glatt stumpfmatt',
-    preis: 3.21,
-    lieferzeit: 5,
-    versand: 4.5 ,
+    titel: 'Liebherr Grau Glatt Seidenmatt Uni',       
+    lieferdatum: berechneLieferdatum(1),
     hersteller: 'Frei Lacke',
     zustand: 'Neu und ungeöffnet',
     kategorie: 'Nasslack',
-    bewertet: '4.9',
-    verkaeufer: 'AM Lacke',
+    menge: 0.5,
+    bewertet: '0.5',
+    user: 'AM Lacke',
     bild: '/images/artikel9.jpg',
     gesponsert: true,
     gewerblich: true,
     privat: false,
+    ort: '4830 Hallstatt',
   },
   {
     id: 10,
-    titel: 'RAL 7016 feinstruktur matt',
-    preis: 4.67,
-    lieferzeit: 3,
-    versand: 8.5 ,
+    titel: 'ELVES BENCH Feinstruktur Matt Metallic',    
+    lieferdatum: berechneLieferdatum(3),
     hersteller: 'IGP',
-    zustand: 'Angebraucht und einwandfrei',
+    zustand: 'Geöffnet und einwandfrei',
     kategorie: 'Pulverlack',
-    bewertet: '5.0',
-    verkaeufer: 'Premium Powder',
+    menge: 85,
+    bewertet: '85',
+    user: 'Premium Powder',
     bild: '/images/artikel10.jpg',
     gesponsert: true,
     gewerblich: true,
     privat: false,
+    ort: '6240 Rattenberg',
   },
-  
+  {
+    id: 11,
+    titel: 'AMETHYST1 Feinstruktur Matt',    
+    lieferdatum: berechneLieferdatum(10),
+    hersteller: 'Pulver Kimya',
+    zustand: 'Geöffnet und einwandfrei',
+    kategorie: 'Pulverlack',
+    menge: 205,
+    bewertet: '205',
+    user: 'Premium Powder',
+    bild: '/images/artikel10.jpg',
+    gesponsert: true,
+    gewerblich: true,
+    privat: false,
+    ort: '87629 Füssen',
+  },  
+  {
+    id: 12,
+    titel: 'Anodic Champagne Glatt Matt',    
+    lieferdatum: berechneLieferdatum(9),
+    hersteller: 'IGP',
+    zustand: 'Geöffnet und einwandfrei',
+    kategorie: 'Pulverlack',
+    menge: 850,
+    bewertet: '850',
+    user: 'Premium Powder',
+    bild: '/images/artikel10.jpg',
+    gesponsert: true,
+    gewerblich: true,
+    privat: false,
+    ort: '88709 Meersburg',
+  },  
+  {
+    id: 13,
+    titel: 'BLACK2 Glatt Seidenmatt',    
+    lieferdatum: berechneLieferdatum(7),
+    hersteller: 'IGP',
+    zustand: 'Geöffnet und einwandfrei',
+    kategorie: 'Pulverlack',
+    menge: 450,
+    bewertet: '450',
+    user: 'Premium Powder',
+    bild: '/images/artikel10.jpg',
+    gesponsert: true,
+    gewerblich: true,
+    privat: false,
+    ort: '06484 Quedlinburg',
+  },  
+  {
+    id: 14,
+    titel: 'EDGE PRIMER - Grundierung Glatt Tiefmatt Uni',    
+    lieferdatum: berechneLieferdatum(12),
+    hersteller: 'IGP',
+    zustand: 'Geöffnet und einwandfrei',
+    kategorie: 'Pulverlack',
+    menge: 98,
+    bewertet: '98',
+    user: 'Premium Powder',
+    bild: '/images/artikel10.jpg',
+    gesponsert: true,
+    gewerblich: true,
+    privat: false,
+    ort: '02826 Görlitz',
+  },  
+  {
+    id: 15,
+    titel: 'Precious Sand  Feinstruktur Matt HWFMetallic',    
+    lieferdatum: berechneLieferdatum(3),
+    hersteller: 'IGP',
+    zustand: 'Geöffnet und einwandfrei',
+    kategorie: 'Pulverlack',
+    menge: 57,
+    bewertet: '57',
+    user: 'Premium Powder',
+    bild: '/images/artikel10.jpg',
+    gesponsert: true,
+    gewerblich: true,
+    privat: false,
+    ort: '96047 Bamberg',
+  },    
   // ... weitere Artikel nach dem gleichen Muster
 ];
 
 export default function KaufenSeite() {
   const [suchbegriff, setSuchbegriff] = useState('');
-  const [preis, setPreis] = useState(100);
+  const [bewertet, setBewertet] = useState(1000);
   const [kategorie, setKategorie] = useState('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
   const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(10);
+  const [gewerblich, setGewerblich] = useState(false);
+  const [privat, setPrivat] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleScroll = () => {
-    if (
-      window.innerHeight + window.scrollY >=
-      document.body.offsetHeight - 100
-    ) {
-      setAnzahlAnzeigen((prev) => Math.min(prev + 10, gefilterteArtikel.length));
-    }
-  };
-
+  const searchParams = useSearchParams();
+  const kategorieQuery = searchParams.get('kategorie');
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (kategorieQuery && (kategorieQuery === 'Nasslack' || kategorieQuery === 'Pulverlack')) {
+      setKategorie(kategorieQuery);
+    }
+  }, [kategorieQuery]);
+
+  const fuse = new Fuse(artikelDaten, {
+    keys: ['titel'],
+    threshold: 0.3,
   });
 
-  const gefilterteArtikel = artikelDaten
-    .filter((a) => a.titel.toLowerCase().includes(suchbegriff.toLowerCase()))
+  const vorSuchFilter = artikelDaten
     .filter((a) => !kategorie || a.kategorie === kategorie)
-    .filter((a) => a.preis <= preis)
     .filter((a) => zustand.length === 0 || zustand.includes(a.zustand))
-    .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller));
+    .filter((a) => (!gewerblich && !privat) || (gewerblich && a.gewerblich) || (privat && a.privat))
+    .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller))
+    .filter((a) => parseFloat(a.bewertet) <= bewertet);
 
-  const sortierteArtikel = [...gefilterteArtikel].sort((a, b) => {
+  const suchErgebnis = suchbegriff
+    ? fuse.search(suchbegriff).map((r) => r.item).filter((item) => vorSuchFilter.includes(item))
+    : vorSuchFilter;
+
+  const sortierteArtikel = [...suchErgebnis].sort((a, b) => {
     if (a.gesponsert && !b.gesponsert) return -1;
     if (!a.gesponsert && b.gesponsert) return 1;
 
     switch (sortierung) {
-      case 'preis-auf':
-        return a.preis - b.preis;
-      case 'preis-ab':
-        return b.preis - a.preis;
-      case 'lieferzeit-auf':
-        return a.lieferzeit - b.lieferzeit;
-      case 'lieferzeit-ab':
-        return b.lieferzeit - a.lieferzeit;
+      case 'lieferdatum-auf':
+        return new Date(a.lieferdatum).getTime() - new Date(b.lieferdatum).getTime();
+      case 'lieferdatum-ab':
+        return new Date(b.lieferdatum).getTime() - new Date(a.lieferdatum).getTime();
       case 'titel-az':
         return a.titel.localeCompare(b.titel);
       case 'titel-za':
@@ -230,92 +355,153 @@ export default function KaufenSeite() {
         return 0;
     }
   });
+  const groupedArticles = [];
+for (let i = 0; i < sortierteArtikel.length; i += 4) {
+  groupedArticles.push(sortierteArtikel.slice(i, i + 4));
+}
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setAnzahlAnzeigen((prev) => Math.min(prev + 10, sortierteArtikel.length));
+        }
+      },
+      { rootMargin: '100px' }
+    );
+
+    if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current);
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [sortierteArtikel]);
+
+  useEffect(() => {
+    setAnzahlAnzeigen(10);
+  }, [suchbegriff, bewertet, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
 
   return (
     <>
       <Pager />
+      <button
+  className={styles.hamburger}
+  onClick={() => setSidebarOpen(!sidebarOpen)}
+  aria-label="Sidebar öffnen"
+>
+  <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
+  <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
+  <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
+</button>
+
+{sidebarOpen && (
+  <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
+)}
+
       <div className={styles.wrapper}>
-        <div className={styles.sidebar}>
+        
+      <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+
           <input
             className={styles.input}
             type="text"
-            placeholder="Suche..."
+            placeholder="Lackanfrage finden..."
             value={suchbegriff}
             onChange={(e) => setSuchbegriff(e.target.value)}
           />
 
-<select
-  className={styles.sortSelect}
-  value={sortierung}
-  onChange={(e) => setSortierung(e.target.value)}
->
-  <option value="">Sortieren</option>
-  <option value="preis-auf">Preis ↑</option>
-  <option value="preis-ab">Preis ↓</option>
-  <option value="lieferzeit-auf">Lieferzeit ↑</option>
-  <option value="lieferzeit-ab">Lieferzeit ↓</option>
-  <option value="titel-az">Titel A–Z</option>
-  <option value="titel-za">Titel Z–A</option>
-  <option value="bewertung-auf">Bewertung ↑</option>
-  <option value="bewertung-ab">Bewertung ↓</option>
-</select>
-
+          <select
+            className={styles.sortSelect}
+            value={sortierung}
+            onChange={(e) => setSortierung(e.target.value)}
+          >
+            
+            <option value="">Sortieren</option>
+            <option value="lieferdatum-auf">Lieferdatum aufsteigend</option>
+            <option value="lieferdatum-ab">Lieferdatum absteigend</option>
+            <option value="titel-az">Titel A–Z</option>
+            <option value="titel-za">Titel Z–A</option>
+            <option value="bewertung-auf">Menge aufsteigend</option>
+            <option value="bewertung-ab">Menge absteigend</option>
+          </select>
 
           <input
-            className={styles.range}
-            type="range"
-            min="0"
-            max="100"
-            step="0.01"
-            value={preis}
-            onChange={(e) => setPreis(Number(e.target.value))}
-          />
-          <div>Max. Preis: {preis} €</div>
+  className={styles.range}
+  type="range"
+  min="0"
+  max="1000"
+  step="0.1"
+  value={bewertet}
+  onChange={(e) => setBewertet(Number(e.target.value))}
+/>
+<div className={styles.bewertetText}>Max. Menge: {bewertet} kg</div>
 
           <div className={styles.checkboxGroup}>
-  <strong>Kategorie</strong>
-  {kategorien.map((k) => (
-    <label key={k} className={styles.checkboxLabel}>
-      <input
-        type="radio"
-        name="kategorie"
-        checked={kategorie === k}
-        onChange={() => setKategorie(k)}
-      />
-      {k}
-    </label>
-  ))}
-  <label className={styles.checkboxLabel}>
-    <input
-      type="radio"
-      name="kategorie"
-      checked={kategorie === ''}
-      onChange={() => setKategorie('')}
-    />
-    Alle
-  </label>
-  
-</div>
-<div className={styles.checkboxGroup}>
-  <strong>Zustand</strong>
-  {zustandFilter.map((z) => (
-    <label key={z} className={styles.checkboxLabel}>
-      <input
-        type="checkbox"
-        checked={zustand.includes(z)}
-        onChange={() =>
-          setZustand((prev) =>
-            prev.includes(z)
-              ? prev.filter((item) => item !== z)
-              : [...prev, z]
-          )
-        }
-      />
-      {z}
-    </label>
-  ))}
-</div>
+            <div className={styles.Kategorie}><strong>Kategorie</strong></div>
+            {kategorien.map((k) => (
+              <label key={k} className={styles.checkboxLabel}>
+                <input
+                  type="radio"
+                  name="kategorie"
+                  checked={kategorie === k}
+                  onChange={() => setKategorie(k)}
+                />
+                {k}
+              </label>
+            ))}
+            <label className={styles.checkboxLabel}>
+              <input
+                type="radio"
+                name="kategorie"
+                checked={kategorie === ''}
+                onChange={() => setKategorie('')}
+              />
+              Alle
+            </label>
+          </div>
 
+          <div className={styles.checkboxGroup}>
+            <strong>Zustand</strong>
+            {zustandFilter.map((z) => (
+              <label key={z} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={zustand.includes(z)}
+                  onChange={() =>
+                    setZustand((prev) =>
+                      prev.includes(z) ? prev.filter((item) => item !== z) : [...prev, z]
+                    )
+                  }
+                />
+                {z}
+              </label>
+            ))}
+          </div>
+
+          <div className={styles.checkboxGroup}>
+            <strong>Verkaufstyp</strong>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={gewerblich}
+                onChange={() => setGewerblich((prev) => !prev)}
+              />
+              Gewerblich
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={privat}
+                onChange={() => setPrivat((prev) => !prev)}
+              />
+              Privat
+            </label>
+          </div>
 
           <div className={styles.checkboxGroup}>
             <strong>Hersteller</strong>
@@ -326,9 +512,7 @@ export default function KaufenSeite() {
                   checked={hersteller.includes(h)}
                   onChange={() =>
                     setHersteller((prev) =>
-                      prev.includes(h)
-                        ? prev.filter((item) => item !== h)
-                        : [...prev, h]
+                      prev.includes(h) ? prev.filter((item) => item !== h) : [...prev, h]
                     )
                   }
                 />
@@ -338,58 +522,78 @@ export default function KaufenSeite() {
           </div>
         </div>
 
-        <div className={styles.main}>
-          <div className={styles.sortRow}>
-            <select
-              className={styles.sortSelect}
-              value={sortierung}
-              onChange={(e) => setSortierung(e.target.value)}
-            >
-              <option value="">Sortieren</option>
-              <option value="preis-auf">Preis ↑</option>
-              <option value="preis-ab">Preis ↓</option>
-              <option value="lieferzeit-auf">Lieferzeit ↑</option>
-              <option value="lieferzeit-ab">Lieferzeit ↓</option>
-            </select>
+        <div className={styles.content}>
+  <h3>
+    {sortierteArtikel.length} {sortierteArtikel.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}
+  </h3>
+
+  <div className={styles.grid}>
+    {sortierteArtikel.slice(0, anzahlAnzeigen).map((a, index) => (
+      <React.Fragment key={a.id}>
+        <div
+          className={`${styles.card} ${a.gesponsert ? styles.gesponsert : ''}`}
+        >
+          <div className={styles.cardBildWrapper}>
+            <Image
+              className={styles.cardBild}
+              src={a.bild}
+              alt={a.titel}
+              fill
+              priority
+            />
           </div>
 
-          <div className={styles.grid}>
-            {sortierteArtikel.slice(0, anzahlAnzeigen).map((a) => (
-              <div key={a.id} className={styles.card}>
-                <Image
-                  src={a.bild}
-                  width={250}
-                  height={250}
-                  alt={a.titel}
-                />
-                <div className={styles.cardTitle}>{a.titel}</div>                
-                <div className={styles.cardText}>Preis: {a.preis} € </div>
-                <div className={styles.cardText}>Versand: {a.versand} €</div> 
-                <div className={styles.cardText}>Kategorie: {a.kategorie}</div>              
-                <div className={styles.cardText}>Lieferzeit: {a.lieferzeit} Werktage</div>
-                <div className={styles.cardText}>Hersteller: {a.hersteller}</div>
-                <div className={styles.cardText}>Zustand: {a.zustand}</div>
-                <div className={styles.cardText}>Bewertung: {a.bewertet} ⭐</div>                
-                {a.gesponsert && (
-                  <div className={styles.cardText} style={{ color: 'gray' }}>
-                    *Gesponsert*
-                  </div>
-                )}
-                {a.gewerblich && (
-                  <div className={styles.cardText} style={{ color: 'green' }}>
-                    gewerblich
-                  </div>
-                )}
-                {a.privat && (
-                  <div className={styles.cardText} style={{ color: 'blue' }}>
-                    privat
-                  </div>
-                )}
-                
-              </div>
-            ))}
+          {a.gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
+
+          <div className={styles.cardText1}>{a.titel}</div>
+          <div className={styles.cardText2}>Menge: {a.menge} kg</div>
+          <div className={styles.cardText3}>
+            Lieferdatum: {a.lieferdatum.toLocaleDateString('de-DE')}
+          </div>
+          <div className={styles.cardText4}>Hersteller: {a.hersteller}</div>
+          <div className={styles.cardText5}>Zustand: {a.zustand}</div>
+          <div className={styles.cardText6}>Kategorie: {a.kategorie}</div>
+          <div className={styles.cardText6}>Ort: {a.ort}</div>
+
+          {a.gewerblich && (
+            <div className={styles.cardText7} style={{ color: 'green' }}>
+              gewerblich
+            </div>
+          )}
+          {a.privat && (
+            <div className={styles.cardText7} style={{ color: 'blue' }}>
+              privat
+            </div>
+          )}
+
+          <div className={styles.cardButtonWrapper}>
+            <Link href={`/lackanfragen/artikel/${a.id}`}>
+              <button className={styles.cardButton}>Lack anbieten</button>
+            </Link>
           </div>
         </div>
+
+        {/* Banner nach dem 8. Artikel einfügen */}
+{index === 7 && (
+  <div className={styles.fullWidthBanner} key="banner">
+    <div className={styles.bannerWrapper}>
+      <Image
+        src="/images/werbung.jpg"
+        alt="Banner"
+        fill
+        style={{ objectFit: 'cover' }}
+        className={styles.bannerImage}
+        priority
+      />
+      <div className={styles.gradientOverlay} />
+    </div>
+  </div>
+        )}
+      </React.Fragment>
+    ))}
+  </div>
+  <div ref={loadMoreRef} />
+</div>
       </div>
     </>
   );
