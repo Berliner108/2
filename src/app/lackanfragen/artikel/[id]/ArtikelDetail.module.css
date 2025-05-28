@@ -45,7 +45,17 @@
   .thumbnail:hover {
     border-color: #0070f3;
   }
+  .kontaktLink {
+    display: inline-block;
+    margin-top: 4px;
+    color: #0070f3;
+    text-decoration: underline;
+    cursor: pointer;
+  }
   
+  .kontaktLink:hover {
+    color: #0051a3;
+  }  
 .titleRow {
   display: flex;
   align-items: center;

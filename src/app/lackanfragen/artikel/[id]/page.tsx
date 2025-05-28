@@ -137,12 +137,20 @@ export default function ArtikelDetailPage() {
                 </div>
               )}
 
-              {artikel.user && (
-                <div className={styles.metaItem}>
-                  <span className={styles.label}>User:</span>
-                  <span className={styles.value}>{artikel.user}</span>
-                </div>
-              )}
+{artikel.user && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>User:</span>
+    <span className={styles.value}>{artikel.user}</span>
+    <div>
+      <a
+        href={`/nachricht?empfaenger=${encodeURIComponent(artikel.user)}`}
+        className={styles.kontaktLink}
+      >
+        User kontaktieren
+      </a>
+    </div>
+  </div>
+)}
 
               {artikel.effekt && (
                 <div className={styles.metaItem}>

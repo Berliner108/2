@@ -7,42 +7,42 @@ import Slideshow from "./slideshow/slideshow";  // Importiere die Slideshow-Komp
 
 const category1 = [
   { id: 1, title: "Pulverlackieren", desc: "RAL 9005 glatt matt Werkstoff: Aluminium", img: "/images/baum1.jpg" },
-  { id: 2, title: "Eloxieren", desc: "Schöner Herbstbaum", img: "/images/baum2.jpg" },
-  { id: 3, title: "Pulverlackieren", desc: "Weißer Stamm", img: "/images/baum3.jpg" },
-  { id: 4, title: "Strahlen, Verzinken & Nasslackieren", desc: "Immergrün", img: "/images/baum4.jpg" },
-  { id: 5, title: "Entlacken & Nasslackieren", desc: "Harziger Duft", img: "/images/baum5.jpg" },
-  { id: 6, title: "Einlagern & Pulverlackieren", desc: "Mittelmeerbaum", img: "/images/baum6.jpg" }, 
+  { id: 2, title: "Eloxieren", desc: "E5", img: "/images/baum2.jpg" },
+  { id: 3, title: "Pulverlackieren", desc: "RAL 6005 Moosgrün", img: "/images/baum3.jpg" },
+  { id: 4, title: "Strahlen, Verzinken & Nasslackieren", desc: "Sandstrahlen, Feuerverzinken und RAL 9001", img: "/images/baum4.jpg" },
+  { id: 5, title: "Entlacken & Nasslackieren", desc: "Nach Qualistrip und RAL 3003 glatt seidenglanz", img: "/images/baum5.jpg" },
+  { id: 6, title: "Einlagern & Pulverlackieren", desc: "NCS S-8500 glatt glanz", img: "/images/baum6.jpg" }, 
 ];
 
 const category2 = [
-  { id: 7, title: "Sonnengelb", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
-  { id: 8, title: "Cremebeige", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
-  { id: 9, title: "Braungrau", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
-  { id: 10, title: "Ockergelb", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
-  { id: 11, title: "Sonnengold", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
-  { id: 12, title: "Rotorange", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
+  { id: 7, title: "RAL 5020 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch1.jpg" },
+  { id: 8, title: "RAL 6012 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch2.jpg" },
+  { id: 9, title: "NCS S 3050-B20G Glatt Seidenmatt ", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch3.jpg" },
+  { id: 10, title: "Sikkens C4.55.30 Feinstruktur Seidenmatt", desc: "Pulverlack GSB und Qualicoat zertifiziert", img: "/images/strauch4.jpg" },
+  { id: 11, title: "DB702 Glatt Seidenglanz Metallic", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch5.jpg" },
+  { id: 12, title: "Eloxal E6/C35 Orange", desc: "Pulverlack Qualicoat zertifiziert", img: "/images/strauch6.jpg" },
   
   
 ];
 
 const category3 = [
   { id: 13, title: "Stretch Folie", desc: "Perforiert, 15 cm breit, 10 Meter, 12 Stück / Karton 32,99€", img: "/images/stretch.jpg" },
-  { id: 14, title: "Sonnengelb", desc: "Nasslack, glatt matt", img: "/images/folie lang.jpg" },
-  { id: 15, title: "Braunbeige", desc: "Pulverlack, glatt tiefmatt", img: "/images/atemschutz.jpg" },
-  { id: 16, title: "Olivgrün", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
-  { id: 17, title: "Taxigelb", desc: "Nasslack, feinstruktur glanz", img: "/images/blume5.jpg" },
-  { id: 18, title: "Cremegelb", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume6.jpg" },
+  { id: 14, title: "Stretchfolie breit Industrieanwendung", desc: "Perforiert", img: "/images/folie lang.jpg" },
+  { id: 15, title: "3 M Schutzmaske FFP3", desc: "Für Lackierer und Pulverbeschichter", img: "/images/atemschutz.jpg" },
+  { id: 16, title: "Atemschutzmaske mit Filter", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
+  { id: 17, title: "Arbeitshandschuhe", desc: "Langlebig und passgenau", img: "/images/blume5.jpg" },
+  { id: 18, title: "Stahlhaken", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume18.png" },
   
   
   
 ];
   const category4 = [
-    { id: 19, title: "Rosenstrauch", desc: "Blühende Pracht", img: "/images/strauch1.jpg" },
-    { id: 20, title: "Flieder", desc: "Duftend & lila", img: "/images/strauch2.jpg" },
-    { id: 21, title: "Johannisbeerstrauch", desc: "Essbare Früchte", img: "/images/strauch3.jpg" },
-    { id: 22, title: "Buchsbaum", desc: "Immergrün & dicht", img: "/images/strauch4.jpg" },
-    { id: 23, title: "Rhododendron", desc: "Farbenfrohe Blüten", img: "/images/strauch5.jpg" },
-    { id: 24, title: "Hortensie", desc: "Große Blütenbälle", img: "/images/strauch6.jpg" },
+    { id: 19, title: "IKEANr.4 GLATT Glanz", desc: "Pulverlack GSB und Qualicoat zertifiziert, 50 kg", img: "/images/strauch1.jpg" },
+    { id: 20, title: "GS Premium Design Gamma Feinstruktur Matt", desc: "Profile werden anschließend zugeschnitten", img: "/images/strauch2.jpg" },
+    { id: 21, title: "C31 Anodized Glatt Matt HWF Metallic", desc: "Nasslack, Hersteller Axalta, 21 kg", img: "/images/strauch3.jpg" },
+    { id: 22, title: "Deore 619 Glatt Matt HWF Metallic", desc: "Pulverlack, Hersteller IGP, 33 kg", img: "/images/strauch4.jpg" },
+    { id: 23, title: "CHAMPAGNE 611 Glatt Matt Metallic", desc: "Nasslack, 15 kg, neu & ungeöffnet, GSB Zertifizierung erforderlich", img: "/images/strauch5.jpg" },
+    { id: 24, title: "GS Premium Design Gamma Feinstruktur Matt Hochwetterfest", desc: "Nasslack, 20 kg, GSB zertifizierung erforderlich", img: "/images/strauch6.jpg" },
     
     
   ];

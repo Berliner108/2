@@ -33,7 +33,7 @@ const images = [
     src: "/images/slide5.jpg", 
     text1: "Lassen Sie Ihr Material einlagern", 
     text2: "Und auf Abruf beschichten", 
-    link: "#",
+    link: "/angebote",
     isFullScreen: true
   },
   { 
