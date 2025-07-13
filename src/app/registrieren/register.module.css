@@ -1,22 +1,43 @@
-/* Container für die gesamte Seite */
 .registerContainer {
   display: flex;
   width: 100%;
-  height: 140vh;
-  margin: 0;
-  
-  
+  min-height: 100vh;
   background-color: #f5f5f5;
 }
 
-/* Linker Container für das Bild */
 .leftContainer {
-  display: block;
-  width: 70%;
-  height: 100%;
-  overflow: hidden;
-  position: relative; /* Wichtig für layout="fill" */
+  width: 55%;
+  position: relative;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  display: flex;
+  flex-direction: column;
 }
+
+.inputRow {
+  display: flex;
+  gap: 2rem;
+  width: 90%;
+  flex-wrap: nowrap;
+  justify-content: left; /* linksbündig */
+  align-items: flex-start;     /* vertikal bündig */
+}
+
+.inputContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.smallInput {
+  flex: 0 0 120px;
+  max-width: 120px;
+  width: 100%;
+}
+
 
 .image {
   width: 100%;
@@ -26,23 +47,32 @@
   border-bottom-right-radius: 10px;
 }
 
-/* Rechter Container für das Formular */
 .rightContainer {
-  width: 50%;
+  width: 45%;
   display: flex;
-  
   align-items: flex-start;
-  flex-direction: column; /* Damit sich der Container nach unten ausdehnt */
+  flex-direction: column;
   padding: 20px;
-  margin-left: 50px;
-  
+  margin-left: 20px;
 }
 
-/* Formular für die Registrierung */
+.leftContainer,
+.rightContainer {
+  box-sizing: border-box;
+}
+
+.leftContainer {
+  flex-grow: 1;
+}
+
+.rightContainer {
+  flex-grow: 1;
+}
+
 .registerForm {
   width: 90%;
   padding: 20px;
-  background: #fff;
+  background: #e0e0e0;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -50,13 +80,6 @@
   align-items: center;
 }
 
-/* Slider Container */
-.inputContainer {
-  width: 100%;
-  margin-bottom: 15px;
-  text-align: center;
-}
-/* Fehlertexte */
 .error {
   color: red;
   font-size: 14px;
@@ -64,13 +87,26 @@
   text-align: left;
 }
 
-/* reCAPTCHA Styling */
 .recaptchaContainer {
   margin: 15px 0;
   display: flex;
   justify-content: center;
 }
 
+.confirmBox {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f0f4f8;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.confirmBox a {
+  color: #00b5d8;
+  text-decoration: underline;
+}
 
 .sliderContainer {
   position: relative;
@@ -80,7 +116,7 @@
   border-radius: 25px;
   overflow: hidden;
   margin-bottom: 20px;
-  cursor: pointer; /* Zeigt den Cursor als Hand bei Hover */
+  cursor: pointer;
 }
 
 .slider {
@@ -89,7 +125,7 @@
   left: 0;
   width: 50%;
   height: 100%;
-  background-color: #007bff;
+  background-color: #00b5d8;
   border-radius: 25px;
   transition: all 0.3s ease;
 }
@@ -114,27 +150,27 @@
   font-weight: bold;
 }
 
-/* Eingabefelder */
 .inputContainer label {
   display: block;
   margin-bottom: 5px;
   font-size: 14px;
-  color: #555;
+  color: black;
 }
 
 .inputContainer input {
-  width: 94%;
-  padding: 12px;
+  width: 100%;
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
+  font-family: 'Oswald';
 }
 
 .registerForm button {
   width: 60%;
   padding: 12px;
-  background-color: #007bff;
+  background-color: #00b5d8;
   color: white;
   border: none;
   border-radius: 4px;
@@ -142,26 +178,39 @@
   cursor: pointer;
   transition: background-color 0.3s;
   margin-top: 10px;
+  font-family: 'Oswald';
 }
 
 .registerForm button:hover {
-  background-color: #0056b3;
+  background-color: #00e5ff;
+}
+.spinner {
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #00b5d8;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
 }
 
-/* Responsives Design für mobile Geräte */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (max-width: 1100px) {
   .registerContainer {
     flex-direction: column;
     height: 100%;
-    
   }
 
   .rightContainer {
     width: 90%;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin: 20px auto;
     padding: 0;
-    margin-left: 00px;
   }
 
   .registerForm {
@@ -170,7 +219,7 @@
 
   .sliderContainer {
     width: 80%;
-    margin-left: 30px;
+    
   }
 
   .leftContainer {
@@ -183,5 +232,58 @@
     width: 100%;
     height: auto;
     display: none;
+  }
+
+  .inputRow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  
+  .smallInput {
+    flex: none;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-bottom: -20px;
+  }
+
+
+  .inputRow {
+  display: flex;
+  
+  width: 100%;
+  flex-wrap: nowrap;
+  justify-content: left; /* linksbündig */
+  align-items: flex-start;     /* vertikal bündig */
+}
+
+.inputContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  
+  text-align: left;
+}
+.inputContainer label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: black;
+}
+
+.inputContainer input {
+  width: 90%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 5px;
+  font-family: 'Oswald';
+}
+.registerForm h1 {
+    font-size: 22px;
+    margin-bottom: 28px;
+    text-align: center;
   }
 }

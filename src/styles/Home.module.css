@@ -103,20 +103,43 @@
   color: black;
 }
 /* Container für die Artikel */
+/* Container für die Aufträge */
 .articleContainer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Stellt sicher, dass die Aufträge nicht umgebrochen werden */
   gap: 16px;
-  justify-content: space-between;
+  justify-content: flex-start; /* Beginnt die Aufträge am linken Rand */
   margin-top: 10px;
   text-align: center;
   text-decoration: none;
   color: black;
+  overflow-x: auto; /* Aktiviert das horizontale Scrollen */
+  overflow-y: hidden; /* Deaktiviert das vertikale Scrollen */
+  padding-bottom: 10px; /* Optional: Verhindert, dass der Scrollbalken den Inhalt verdeckt */
+  max-width: 100%; /* Stellt sicher, dass der Container den gesamten Bildschirm ausfüllt */
 }
-/* Einzelne Artikel */
+
+
+
+.scrollContainer {
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden; /* Verhindert, dass der Inhalt den Container überschreitet */
+  width: 100%;
+}
+
+.scrollContent {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px; /* Abstand zwischen den Artikeln */
+  padding-bottom: 10px; /* Verhindert, dass der Scrollbalken den Inhalt verdeckt */
+  scroll-behavior: smooth; /* Sanftes Scrollen */
+}
+
 .articleBox {
-  flex: 0 0 calc(100% / 7 - 16px);
-  min-width: 12.285%;
+  flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
+  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
   background: #f7f7f7;
   border-radius: 8px;
   padding: 10px;
@@ -125,7 +148,60 @@
   transition: transform 0.2s ease-in-out;
   text-decoration: none !important;
   color: black;
+  min-height: 600px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  
 }
+
+.arrowLeft,
+.arrowRight {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #f1f1f1;  /* Helles Grau als Hintergrund */
+  color: #333;               /* Dunkler Pfeil für guten Kontrast */
+  border: none;
+  font-size: 24px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 50%;  /* Runde Form */
+  display: flex;
+  justify-content: center;  /* Zentriert den Inhalt horizontal */
+  align-items: center;      /* Zentriert den Inhalt vertikal */
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.arrowLeft:hover,
+.arrowRight:hover {
+  background-color: #e0e0e0; /* Dunkleres Grau bei Hover */
+  transform: translateY(-50%) scale(1.1);
+}
+
+
+
+.arrowLeft {
+  left: 10px;
+}
+
+.arrowRight {
+  right: 10px;
+}
+
+.scrollContent::-webkit-scrollbar {
+  display: none; /* Entfernt die Standard-Scrollbar */
+}
+
+/* Verstecke die Pfeile auf mobilen Geräten */
+@media (max-width: 1024px) {
+  .arrowLeft, .arrowRight {
+    display: none; /* Pfeile werden auf mobilen Geräten ausgeblendet */
+  }
+}
+
+
 .articleBox:hover {
   transform: scale(1.05);
   text-decoration: none;
@@ -137,6 +213,7 @@
   object-fit: flex;
   border-radius: 8px;
   text-decoration: none;
+  object-fit: cover; /* Verhindert Verzerrungen und sorgt dafür, dass das Bild den Container ausfüllt */
 }
 /* Text unter dem Bild */
 .articleText {

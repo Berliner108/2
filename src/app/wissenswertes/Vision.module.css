@@ -1,0 +1,63 @@
+/* Container für den gesamten Inhalt */
+.container {
+  display: flex;
+  flex-wrap: wrap;  /* Ermöglicht das Umfließen der Container */
+  width: 100%;
+}
+/* Jeder Container nimmt 50% der Breite ein und hat max-height */
+.container-left, .container-right {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 350px; /* Begrenze die Höhe der Container */
+  overflow: hidden; /* Verhindert, dass der Inhalt über die maximale Höhe hinausgeht */
+}
+
+/* Text Container */
+.text-container {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-style: italic;
+  padding: 40px;
+  margin-bottom: 20px;
+  font-size: 1.09rem;
+  line-height: 1.9;  
+}
+
+/* Bild Container */
+.image-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Stil für h2-Überschrift */
+.h2-vision, .h2-mission {
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-style: normal;
+}
+
+/* Mobile Ansicht: Container untereinander */
+@media (max-width: 1025px) {
+  .container-left, .container-right {
+    width: 100%;  /* Beide Container nehmen 100% Breite auf mobilen Geräten */
+    max-height: 450px;
+  }
+
+  .container-left:nth-of-type(2) {
+    order: 2;
+  }
+  .container-right:nth-of-type(2) {
+    order: 1;
+  }
+}

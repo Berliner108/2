@@ -1,39 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
 
 .wrapper {
   padding: 20px;
-  max-width: 900px;
+  max-width: 85%;
   margin: 20px auto;
   background-color: white; /* Weißer Hintergrund für den Container */
-  border-radius: 10px; /* Ecken abrunden für ein moderneres Aussehen */  
-}
-.infoLink {
-  margin-left: 0px;
-  color: #0369a1;
-  font-weight: 500;
-  text-decoration: underline;
-  transition: color 0.2s ease;
-}
-.infoLink:hover {
-  color: #0c4a6e;
-}
-
-.infoBox strong {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.heading {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: left;
-  color: #333;
+  border-radius: 10px; /* Ecken abrunden für ein moderneres Aussehen */ 
+  box-sizing: border-box;
+  overflow-x: hidden; /* schützt gegen zu breite Inhalte */
 }
 .infoBox {
   background: linear-gradient(to right, #00e5ff, #00b4d8);
   border: 1px solid #bae6fd;
-  color: #0369a1;
+  color: #0369a1;  
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 1.0rem;
@@ -42,314 +21,657 @@
   align-items: center;
   gap: 4px;
 }
-.lineContainer {
-  width: 100%;
-  height: 1px;
-  background-color: #d3d3d3; /* dezente graue Linie */
-  margin: 1.5rem 0; /* Abstand oben/unten */
+.infoLink {
+  margin-left: 0px;
+  color: #0369a1;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s ease;  
 }
-
-.subheading {
-  font-size: 26px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #1e293b;
+.infoLink:hover {
+  color: #0c4a6e;
+}
+.stepsAnimation {
+  margin: 2rem 0;
   text-align: center;
 }
-.description {
-  font-size: 0.9rem;
-  color: #64748b;
-  margin-top: -10px;
-  margin-bottom: 20px;
+.stepsAnimation h3 {
+  font-size: 1.6rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 1.1rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 800;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
+.stepBox:hover {
+  background-color: #f0f9ff;
+}
+.stepIcon {
+  margin-bottom: 0.3rem;
+  color: #00b4d8;
+}
+.stepBox:hover .stepIcon {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+.stepsBoxContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  overflow-x: visible; /* kein Scrollen */
+}
+.stepBox {
+  width: 280px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.stepBox p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+.toggleButton {
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin: 20px 0;
+  font-size: 0.95rem;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald';
+  margin-left: 15px;
+  align-items: center;
+  min-width: 60px;
+  max-width: 60px;  
+}
+.toggleButton:hover {
+  background-color: #009ac1;
+}
+.sectionDivider {
+  border: none;
+  border-top: 5px solid #ccc;
+  border-radius: 8px;
+  margin-top: 50px;
+  width: 100%;
 }
 .dropzone {
-  border: 2px dashed #00b4d8; /* Blaue Umrandung statt grauer */
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* Vertikal zentriert */
+  align-items: center;       /* Horizontal zentriert */
   text-align: center;
+  border: 2px dashed #00b4d8;
+  padding: 40px;
   cursor: pointer;
   border-radius: 10px;
   transition: border-color 0.3s ease;
   background-color: #f9fafb;
   position: relative;
-  min-height: 250px;
+  min-height: 300px;
 }
-.dropzone:hover {
-  border-color: #00b4d8; /* Dunkleres Blau beim Hover */
+.dropText {
+  margin-top: 0.5rem;
+  color: #666;
+  font-weight: bold;
 }
-.dropzoneLabel {
-  font-size: 18px;
-  color: #555;
+.highlight {
+  color: #00b4d8;
+  font-weight: 600;
+}
+.circleText {
+  display: inline-block;
+  background-color: #00b4d8;
+  color: white;
+  border-radius: 9999px; /* voll rund */
+  padding: 10px 10px;
+  font-weight: bold;
+  font-size: 1.0 rem;
+  line-height: 1;
+  transition: background-color 0.3s ease;
+}
+.fileIcon {
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+}
+.clearAllButton {
+  margin-top: 1.5rem;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+.clearAllButton:hover {
+  background-color: #dc2626;
+}
+.circleText:hover {
+  background-color: #007ea7;
 }
 .input {
   display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
 }
-.customTextInput {
-  width: 42%;
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-top: 5px;
-  margin-bottom: 15px;
-  font-family: 'Oswald';
-}
-.label {
-  display: block;
-  font-weight: 500;
-  margin-top: 10px;
-}
-.optionRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.optionLabel {
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.oswaldTextarea {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1rem;
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  resize: vertical;
-  box-sizing: border-box;
-  min-height: 300px;
-}
-
-.textfeldTitel {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+.counter {
+  font-size: 0.9rem;
   color: #333;
 }
-.radioContainer {
-  display: flex;
-  flex-direction: row;
-  gap: 0.35rem;
-  flex-wrap: wrap; /* optional, falls sie bei kleiner Breite umbrechen sollen */
-  
-}
-
-.neuercontainer {
-  display: flex;
-  flex-direction: row;
-  gap: 0.35rem;
-  flex-wrap: wrap; /* optional, falls sie bei kleiner Breite umbrechen sollen */
-  border: 1px solid #ccc; /* 1px dick, grau, durchgezogen */
-  padding: 16px;          /* Innenabstand */
-  border-radius: 8px;     /* Abgerundete Ecken, optional */
-  
-}
-
-/* angebote.module.css */
-.link {
-  color: inherit;           /* übernimmt die umgebende Textfarbe */
-  text-decoration: none;    /* entfernt die Unterstreichung */
-  margin-left: 4px;         /* etwas Abstand zum Radiobutton-Text */
-}
-.radioGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.radioLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.addressInput {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.addressInput p {
-  margin: 0;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.addressInput input[type="text"] {
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.addressInput input[type="text"]:focus {
-  border-color: #0070f3;
-  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-  outline: none;
-}
-
-.radioSection {
-  
-  padding: 1rem;
-  margin-bottom: 2rem;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
-.dropText {
-  font-size: 1.15rem; /* größere Schrift */
-  
-  margin: 1rem 0;
-  margin-top: 105px;
-}
-
-.clickHighlight {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border: 2px solid #00b4d8;
-  border-radius: 9999px; /* pillenförmig */
-  background-color: #f0f8ff;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.clickHighlight:hover {
-  background-color: #e0f0ff;
-}
-
-.radioSection h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.radioGroup label {
-  margin-right: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.link {
-  font-size: 0.9rem;
-  color: #0070f3;
-  text-decoration: none;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
-.link1 {
-  margin-left: px;
-  font-size: 0.95rem;
-  color: #0070f3;
-  text-decoration: none;  
-  padding: 2px 6px;
-}
-.link1:hover {
-  background-color: white;
-}
-
-.addressInput {
-  margin-top: 10px;
-  display: block;
-}
-
-
-
-
-.charCount {
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 4px;
-  text-align: right;
-}
-
-.textfeldContainer {
-  margin-top: 20px;
-}
-
-.counter {
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #0f172a;
-  background: #e0f2fe;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
 .preview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 1rem;
 }
 .fileCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0.75rem;
-  text-align: center;
-  position: relative;
-  transition: transform 0.3s ease;
-}
-.fileCard:hover {
-  transform: scale(1.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 120px;
 }
 .fileIcon {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
   margin-bottom: 0.5rem;
 }
 .fileName {
-  font-size: 0.75rem;
-  color: #333;
+  font-size: 0.85rem;
+  text-align: center;
   word-break: break-word;
-  margin-bottom: 0.5rem;
 }
 .removeButton {
   background: none;
   border: none;
-  color: #ef4444;
-  font-size: 14px;
+  color: red;
   cursor: pointer;
-  position: absolute;
-  top: 5px;
-  right: 5px;
+  margin-top: 0.25rem;
 }
-.removeButton:hover {
-  color: #dc2626;
+.progressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #eee;
+  padding: 0;
+  z-index: 999;
+  height: 24px;
+}
+.progressBarWrapper {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+  border-top: 1px solid #ccc;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  transition: width 0.3s ease;
+  font-size: 14px;  
+}
+.stepNumber {
+  width: 36px;
+  height: 36px;
+  background-color: #00b4d8;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.progressValue {
+  white-space: nowrap;
+}
+.progressText {
+  font-size: 0.9rem;
+  color: #444;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.previewSection {
+  margin-top: 2rem;
+  background: #f7f7f7;
+  padding: 1rem;
+  border-radius: 8px;
+}
+.previewSection ul {
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+.previewSection h2 {
+  margin-bottom: 0.5rem;
+}
+.headingSection {
+  font-size: 1.3rem;
+  color: #0f172a;
+  
+  font-weight: 800;
+  margin-top: 40px;
+  text-align: center;
+  margin-bottom: 40px;
+}
+.iconTooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+  color: #666;
+  cursor: pointer;
+}
+.tooltipText {
+  visibility: hidden;
+  width: 240px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  font-size: 0.85rem;
+  transition: opacity 0.3s ease;
+}
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+.specsBox {
+  margin-top: 1rem;  
+  background: white;  
+}
+.specTitle {
+  font-size: 1.125rem; /* ca. 18px */
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1e1e1e; /* dunkles Grau oder passend zu deinem Design */
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.25rem;
+}
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-width: 100%;
+  accent-color: #006d75;
+}
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.2rem 0 0.6rem;
+}
+.tooltipContainer {
+  position: relative;
+  display: flex;
+  color: rgb(95, 93, 93);
+  cursor: help;
+}
+.tooltipText {
+  visibility: hidden;
+  background-color: #333;
+  color: #fff;
+  font-size: 0.9rem; /* größere Schrift */
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 260px;
+  white-space: normal; /* erlaubt Zeilenumbruch */
+  text-align: center;  /* horizontal zentriert */
+  display: flex;
+  align-items: center; /* vertikal zentriert */
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.tooltipContainer:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+.tooltipText::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+.inputRow {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;  
+}
+.radioLabel {
+  font-weight: 600;
+  margin-bottom: 0.25rem;  
+}
+.radioInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;  
+}
+.radioItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  background: #f4f7fb;
+  border: 1px solid #ccc;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  accent-color: #006d75;
+}
+.dropdownSection {
+   margin-top: 2rem;
+  padding: 1.25rem;
+  background-color: white;
+  border: 2px solid #cbd5e1; /* dezente graublaue Umrandung */
+  border-radius: 10px;
+}
+.schrittBox {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background-color: white;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
 }
 .inputField {
-  padding: 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 1rem;
-  width: 100%;
-  margin-bottom: 1rem;
+  margin-top: 0.3rem;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 0.3rem;
+  max-width: 30%;
+  font-family: 'Oswald';
 }
+.dropdown {
+  padding: 0.5rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: #f8fafc;
+  color: #0f172a;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 20 20' fill='none' stroke='%230f172a' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8l4 4 4-4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.3s;
+  font-family: 'Oswald';
+  margin-left: 10px;
+  margin-top: 10px;
+   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: -1px;
+  transition: all 0.3s ease;  
+}
+.dropdown:focus {
+  border-color: #0ea5e9;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+}
+.dropdownError {
+  border: 2px solid #ff4d4d; /* Rot */
+  animation: shake 0.3s ease;
+}
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+.materialBox {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background-color: white;
+  border: 2.5px solid #cbd5e1; /* dezente graublaue Umrandung */
+  border-radius: 12px;
+}
+.materialBoxÜB {  
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;  
+  margin-bottom: 0.25rem;
+  margin-top: 1.25rem;
+  font-family: 'Oswald', sans-serif;
+}
+.labelSmall { 
+  display: block; /* Überschrift Arbeitsschritt 1, 2, 3 */
+  font-size: 1.2rem;
+  font-weight: bold;  
+  margin-bottom: 0.25rem;
+  margin-top: 1.25rem;
+  font-family: 'Oswald', sans-serif;
+}
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+.half {
+  flex: 1 1 100%;
+}
+.rowGroup {
+  display: flex;
+  flex-wrap: wrap;
+  
+}
+.labeledInput {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+.inputWithUnit {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 300px;
+}
+.inputWithUnit input {
+  width: 100px;
+  padding: 0.5rem;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+.inputTriple input,
+.singleInput {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Oswald', sans-serif;
+}
+.radioGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+.radioMaterial {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: none;
+  transition: background 0.2s, border 0.2s;
+}
+.radioMaterial:hover {
+  background: #00b4d8;
+  border-color: #60a5fa;
+}
+.radioMaterial input[type='radio'] {
+  accent-color: #006d75;
+  font-family: 'Oswald';
+}
+.customInputBox {
+  margin-top: 1rem;
+  font-family: 'Oswald';
+}
+.customInputBox input {
+  width: 30%;
+  padding: 0.5rem;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Oswald';
+}
+.textfeldContainer {
+  margin-top: 2rem;
+  border-color: rebeccapurple;
+}
+.lineContainer {
+  border-top: 2px solid #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+.dropdownText {
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.borderedContainer {
+  border: 3px solid #00b4d8;;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #fff; /* Optional */
+  margin-top: 50px;  
+}
+.agbContainer {
+  margin-top: 2rem;
+}
+.agbText a {
+  color: #007baf;
+  text-decoration: underline;
+}
+.agbLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  color: #333;
+}
+.agbError {
+  color: #d93025; /* Google-rot */
+  font-weight: 500;
+}
+.agbLabel input:invalid,
+.agbError ~ .agbLabel input {
+  outline: 2px solid #d93025;
+  outline-offset: 2px;
+}
+.agbLink {
+  color: black;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.agbLink:hover {
+  color: black;
+}
+
+.errorText {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+.inputError {
+  border: 2px solid #ff4d4d !important;
+  animation: shake 0.3s ease;
+}
+
+.radioError {
+  outline: 2px solid #ff4d4d;
+  outline-offset: 3px;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+.oswaldTextarea {
+  width: 98%;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 1px solid ;
+  border-color: grey;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fff;
+  min-height: 300px;
+}
+.charCount {
+  text-align: right;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  transition: color 0.3s ease;
+}
+/* Submit Button */
 .submitButton {
   background: linear-gradient(to right, #00e5ff, #00b4d8);
   color: white;
@@ -362,102 +684,140 @@
   width: 100%;
   transition: background 0.3s ease;
   font-family: 'Oswald';
+  margin-top: 50px;
 }
+
 .submitButton:hover {
   background: linear-gradient(to right, #00b4d8, #00e5ff);
 }
-.pager {
-  display: flex;
-  justify-content: space-between;
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-.submitButton {
-  margin-top: 2rem;
-  padding: 0.8rem 1.2rem;
-  background-color: #0070f3;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.submitButton:hover {
-  background-color: #005bb5;
-}
-
-.dynamicModule {
-  border: 1px solid #ccc;
-  padding: 16px;
-  margin-top: 16px;
-  background-color: #f9f9f9;
+.successMessage {
+  margin-top: 1rem;
+  background-color: #d1fae5;
+  color: #065f46;
+  padding: 0.75rem;
   border-radius: 6px;
-}
-.select {
-  display: block;
-  width: 100%;
-  max-width: 400px;
-  padding: 10px 12px;
-  margin: 12px 0;
-  font-size: 16px;
-  font-family: inherit;
-  color: #333;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url('/icons/arrow-down.svg');
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 12px;
-  cursor: pointer;
-  transition: border-color 0.2s ease-in-out;
-}
-.select:focus {
-  border-color: #0070f3;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
-}
-.dropdownContainer {
-  margin-top: 0px;
+  font-weight: 500;
+  text-align: center;
   display: flex;
-  flex-direction: column;
-  gap: 0px;
-  border: 1px solid #ccc; /* 1px dick, grau, durchgezogen */
-  padding: 16px;          /* Innenabstand */
-  border-radius: 8px;     /* Abgerundete Ecken, optional */
-}
-.dynamicModule label {
-  display: block;
-  margin: 8px 0;
-}
-.dropdownText {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  text-align: left;
-  color: #333;
-  
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: fadeIn 0.4s ease-in-out;
 }
 
-.select {
-  margin-bottom: 20px;
-  padding: 10px;
-  font-size: 16px;
-  width: 100%;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  height: auto; /* Entfernt die feste Höhe */
-  max-height: 300px; /* Wenn du eine maximale Höhe möchtest */
-}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+} /* ✅ schließende Klammer ergänzt */
+
 
 @media (max-width: 1024px) {
+  .oswaldTextarea {
+  width: 92%;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid ;
+  border-color: grey;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fff;
+  min-height: 300px;
+}
+
+
+
   .infoBox {
-    font-size: 0.875rem;
-    padding: 10px 12px;
+    display: block;
+    text-align: center;
+    padding: 16px;
   }
+
+  .infoLink {
+    display: block;
+    margin-top: 8px;
+  }
+  .wrapper {
+  padding: 0px;
+  max-width: 93%;
+  margin: 20px auto;
+  background-color: white; /* Weißer Hintergrund für den Container */
+  border-radius: 10px; /* Ecken abrunden für ein moderneres Aussehen */ 
+  box-sizing: border-box;
+  overflow-x: hidden; /* schützt gegen zu breite Inhalte */
+}
+.stepsBoxContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  overflow-x: visible; /* kein Scrollen */
+}
+  .stepBox {
+  width: 180px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;  
+  gap: 0.5rem;
+}
+.toggleButton {
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;              /* exakt gleiche Breite */
+  height: 36px;             /* wie Höhe → ergibt Kreis */
+  padding: 0;               /* kein zusätzliches Innenpadding */
+  cursor: pointer;
+  margin: 10px 0 10px 15px;
+  font-size: 0.95rem;
+  font-family: 'Oswald';
+  line-height: 1;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.stepBox p {
+  display: none;
+}
+
+.stepsAnimation {
+  margin: 2rem 0;
+  text-align: center;
+}
+.stepsAnimation h3 {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 0.6rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 600;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
+.half {
+    flex: 1 1 50%;
+  }  
 }

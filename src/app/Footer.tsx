@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react'; // useMemo importie
 import { FaFacebook, FaLinkedin, FaTwitter, FaXing, FaPinterest } from 'react-icons/fa'; // Importiere Icons von react-icons
 import '../styles/layout.css'; // Importiere die bestehende layout.css-Datei
 import Link from 'next/link'; // Hier importierst du Link von Next.js
+import Image from 'next/image';
+
 
 const Footer = () => {
   // Verwende useMemo, um das 'comments' Array nur einmal zu erstellen
@@ -80,9 +82,31 @@ const Footer = () => {
       </div>
 
       <div className="column3">
-        <h2>Unsere Zahlungsmöglichkeiten</h2>
-        {/* Hier kannst du zusätzliche Inhalte hinzufügen */}
-      </div>
+  <h2>Unsere Zahlungsmöglichkeiten</h2>
+  <Image
+    src="/images/zahlungsm.png" // Pfad relativ zu /public
+    alt="Zahlungsmöglichkeiten"
+    width={280}
+    height={90}
+  />
+  <h2>Unsere Partner</h2>
+  <Image
+    src="/images/Startup.png" // Pfad relativ zu /public
+    alt="Zahlungsmöglichkeiten"
+    width={160}
+    height={50}
+  />
+  
+  <Image
+    src="/images/Logoweiss.png" // Pfad relativ zu /public
+    alt="Zahlungsmöglichkeiten"
+    width={150}
+    height={55}
+    style={{ marginLeft: '20px', marginTop: '10px' }}
+    
+  />
+</div>
+
       
     </footer>
   );

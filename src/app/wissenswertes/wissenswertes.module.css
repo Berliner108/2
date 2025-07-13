@@ -1,265 +1,220 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
-/* Container für den gesamten Inhalt */
+.pageContainer {
+  
+  display: flex;
+  flex-direction: column; /* Container übereinander anordnen */
+  max-width: 100%;
+}
+
 .container {
-  display: flex;
-  flex-wrap: wrap;  /* Ermöglicht das Umfließen der Container */
+  margin: 0; /* Keine zusätzliche Lücke zwischen den Containern */
   width: 100%;
 }
-/* Jeder Container nimmt 50% der Breite ein und hat max-height */
-.container-left, .container-right {
-  width: 50%;
+
+/* Header Design */
+.header {
+  
+  background-color: #f8f9fa; /* Sanftes Grau für den Hintergrund */
+  border-radius: 8px; /* Abgerundete Ecken für ein modernes Aussehen */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sanfter Schatten, der wie eine Border wirkt */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; /* Hinzufügen eines Transformationsübergangs */
   display: flex;
+  justify-content: space-between; /* Verhindert, dass der Pfeil zusammen mit dem Text erscheint */
   align-items: center;
-  justify-content: center;
-  max-height: 350px; /* Begrenze die Höhe der Container */
-  overflow: hidden; /* Verhindert, dass der Inhalt über die maximale Höhe hinausgeht */
 }
-.werwirsind {
-  width: 100%;  
-  text-align: center;
-  font-size: 2.1rem;
+
+/* Header Text */
+.headerText {
+  font-size: 20px;
+  text-align: center; /* Text mittig */
+  flex-grow: 1; /* Sorgt dafür, dass der Text den Platz einnimmt */
   font-weight: bold;
-  color: #333;  
-}
-.ober {
-  width: 100%;  
-  text-align: center;  
-  font-size: 1.09rem;
-}
-.sogehts {
-  width: 100%;  
-  text-align: center;
-  font-size: 2.1rem;
-  font-weight: bold;
-  color: #333;  
-}
-.werwirsind1 {
-  width: 100%;  
-  text-align: center;
-  font-size: 2.1rem;
-  font-weight: bold;
-  color: #333; 
-}
-.ober1 {
-  width: 90%;    
-  display: flex;  
-  font-size: 1.09rem;
-  justify-content: center;  /* Horizontal zentrieren */  
-  margin-left: 5%;
-  line-height: 38px;  /* Feste Zeilenhöhe */  
-}
-.ober2 {
-  width: 93%;    
-  display: flex;  
-  font-size: 1.09rem;
-  text-align: left;  
-  margin-left: 5%;
-  line-height: 38px;  /* Feste Zeilenhöhe */  
-}
-/* Bild Container */
-.image-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-/* Bild */
-.image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-/* Text Container */
-.text-container {
-  width: 100%;
-  color: black;
-  text-align: center;
-  font-style: italic;
-  padding: 40px;
-  margin-bottom: 20px;
-  font-size: 1.09rem;
-  line-height: 1.9;  
-}
-/* Stil für h2-Überschrift */
-.h2-vision, .h2-mission {
-  font-size: 2.1rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 15px;
-  font-style: normal;
-}
-/* Mobile Ansicht: Container untereinander */
-@media (max-width: 1025px) {
-  .container-left, .container-right {
-    width: 100%;  /* Beide Container nehmen 100% Breite auf mobilen Geräten */
-  }
-
-  .container-left:nth-of-type(2) {
-    order: 2;
-  }
-  .container-right:nth-of-type(2) {
-    order: 1;
-  }
-  .werwirsind {
-    width: 100%;  
-    text-align: center;
-    font-size: 2.1rem;
-    font-weight: bold;
-    color: #333;  
-    
-  }
-  .ober {
-    width: 95%;  
-    justify-content: center;
-    font-weight: normal;  
-  }
-  /* Text Container */
-.text-container {
-  width: 100%;
-  color: black;
-  text-align: center;
-  font-style: italic;
-  padding: 20px;
-  margin-bottom: 00px;
-  margin-top: -10px;
-  font-size: 0.9rem;
-  line-height: 1.9;  
-}
-/* Stil für h2-Überschrift */
-.h2-vision, .h2-mission {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 15px;
-  font-style: normal;
-}
 }
 
-
-.backButton {
-  margin-top: 20px;
+/* Pfeil */
+.arrow {
+  font-size: 20px;
+  margin-left: 10px; /* Abstand zwischen Text und Pfeil */
+  color: #00b4d8; /* Setzt den Pfeil in Blau */
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.backButton .button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #00b4d8;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+/* Header Hover-Effekt */
+.header:hover {
+  background-color: #e9ecef; /* Helleres Grau bei Hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Intensivierter Schatten beim Hover */
+  transform: translateY(-5px); /* Ein leichter Schwebeneffekt */
 }
 
-.backButton .button:hover {
-  background-color: #00b4d8;
+/* Hover Pfeil-Effekt */
+.header:hover .arrow {
+  color: #00b4d8; /* Dunkleres Blau beim Hover */
+  transform: rotate(180deg); /* Pfeil dreht sich beim Hover */
 }
 
-
-/* Navbar */
-.navbar {
-  font-family: 'Oswald', sans-serif;
-  width: 100%;
-  background-color: white;
+.headerTextContainer {
   display: flex;
-  justify-content: center; /* Zentriert die Links horizontal */
-  padding: 10px 0;
-  position: relative;
+  justify-content: space-between; /* Text links, Pfeil rechts */
+  align-items: center;
+  width: 100%; /* Überschrift über die gesamte Breite */
+}
+
+.headerText {
+  font-size: 20px;
+  text-align: center; /* Text mittig */
+  flex-grow: 1; /* Sorgt dafür, dass der Text den Platz einnimmt */
+}
+
+.arrow {
+  font-size: 20px;
+  margin-left: 10px; /* Abstand zwischen Text und Pfeil */
+}
+
+.content {
+  overflow: hidden;
+  max-height: 0; /* Keine Höhe im zugeklappten Zustand */
+  opacity: 0; /* Unsichtbar im zugeklappten Zustand */
+  transition: max-height 0.8s ease-out, opacity 0.8s ease-out; /* Sanfte Übergänge für max-height und opacity */
+  padding: 0 20px; /* Kein zusätzlicher Platz für Text im zugeklappten Zustand */
+  background-color: #f9f9f9;
+  border-left: 1px solid #ccc;
+}
+
+.content.open {
+  opacity: 1; /* Sichtbar im geöffneten Zustand */
+}
+
+.content p {
+  margin-bottom: 10px;
+}
+
+.scrollProgressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background-color: #f0f0f0;
   z-index: 1000;
-  scrollbar-width: none; /* Für Firefox */
 }
-/* Navbar Liste */
-.navList {
-  list-style: none;
-  display: flex;
-  padding: 0;
-  margin: 0;
+
+.scrollProgressBar {
+  height: 100%;
+  background-color: #00b4d8; /* Farbe des Fortschrittbalkens */
+  transition: width 0.2s ease;
+}
+
+.active {
+  border-color: #00e5ff;
+  background-color: #e6f0ff;
+}
+
+/* Über Uns Container */
+.aboutUsContainer {
+  background-color: #f7f7f7;  /* Sanftes Beige für einen eleganten Look */
+  padding: 4rem 2rem;
+  text-align: center;
+  border-radius: 1.5rem;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1); /* Subtiler Schatten */
+  max-width: 1200px;
+  margin: 3rem auto;
+  color: #333; /* Dunkelgrauer Text für elegante Lesbarkeit */
+  font-family: 'Oswald', sans-serif;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Hinzufügen von Übergängen */
+}
+
+/* Hover-Effekt für den Container */
+.aboutUsContainer:hover {
+  transform: translateY(-10px); /* Container bewegt sich nach oben */
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2); /* Intensivierter Schatten beim Hover */
+}
+
+.aboutUsTitle {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: black; /* Dunkles Blau für den Titel */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.aboutUsContent {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-weight: 600;
+  text-align: center;
   
 }
-/* Jedes Menü-Element */
-.navItem {
-  position: relative;
-  margin: 0 22px; /* Abstand zwischen den Links */
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-/* Buttons */
-.navButton {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  font-family: 'Oswald', sans-serif;
-  padding: 10px 15px;
-  color: black;
-  transition: color 0.3s ease;
-}
-.navItem:hover .navButton {
-  color: #00b4d8;
-}
-/* Dropdown-Menü */
-.dropdown {
-  position: absolute;
-  top: 100%; /* Dropdown direkt unter dem Link */
-  left: 50%;
-  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
-  background: white;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
-  flex-direction: column;
-  padding: 0;
-  border-radius: 4px;
-  z-index: 10000; /* Höchste Priorität, überlagert alles */
-  min-width: 165px;
-  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
+
+.aboutUsContent p {
+  margin-bottom: 1.5rem;
 }
 
-/* Dropdown Links */
-.dropdownLink {
-  padding: 10px 15px;
+.aboutUsContent strong {
+  color: #2c3e50; /* Dunkelgraue Akzentfarbe für wichtige Begriffe */
+}
+
+.contactLink {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #3498db; /* Sanftes Blau für den CTA-Button */
   text-decoration: none;
-  color: black;
-  display: block;
-  text-align: center;
-  transition: background-color 0.2s ease;
+  border: 2px solid #3498db;
+  padding: 10px 20px;
+  border-radius: 30px;
+  margin-top: 2rem;
+  display: inline-block;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dropdownLink:hover {
-  background-color: #00b4d8;
+.contactLink:hover {
+  background-color: #3498db;
   color: white;
-}
-/* Dropdown sichtbar machen */
-.navItem:hover .dropdown {
-  display: flex; /* Macht das Dropdown sichtbar */
 }
 
 /* Mobile Ansicht */
-@media (max-width: 1024px) {
-  .navbar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    display: flex;
-    justify-content: flex-start; /* Links beginnen ganz links */
-    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
+@media (max-width: 768px) {
+  .aboutUsContainer {
+    padding: 2.5rem 1.5rem;
   }
 
-  .navList {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding: 10px 0;
-    margin: 0;
-    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
+  .aboutUsTitle {
+    font-size: 2rem;
   }
 
-  .navItem {
-    margin: 0 10px; /* Falls nötig, Abstand anpassen */
+  .aboutUsContent {
+    font-size: 1rem;
+  }
+  .pageContainer {
+    min-width: 100%; /* Container nimmt 100% der Breite ein */
+    max-width: 100%;
+    
   }
 
-  /* Dropdown für mobile Ansicht ausblenden */
-  .dropdown {
-    display: none !important;
+  .container {
+    width: 99.6%; /* Container nimmt 100% der Breite ein */
+  }
+
+  .header {
+    padding: 00px; /* Kleinere Abstände für mobile Geräte */
+  }
+
+  .content {
+    padding: 0 0px; /* Kleinere Innenabstände */
+  }
+  .header:hover {
+    transform: none; /* Keine Transformation beim Hover auf mobilen Geräten */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Schatten bleibt beim Hover gleich */
+  }
+
+  .headerText {
+    font-size: 18px; /* Kleinere Schrift auf mobilen Geräten */
+  }
+
+  .arrow {
+    font-size: 18px; /* Etwas kleinere Pfeile */
   }
 }

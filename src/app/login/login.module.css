@@ -1,47 +1,47 @@
 /* login.module.css */
 
-/* Container, der beide Container nebeneinander anzeigt */
 .loginContainer {
-  display: flex; /* Setzt die Container nebeneinander */
-  width: 100%; /* Vollständige Breite */
-  height: 100vh; /* Höhe des Viewports */
-  margin: 0; /* Entfernt mögliche Abstände */
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  margin: 0;    
+  overflow: hidden; /* alles Überstehende abschneiden */
 }
 
-/* Linker Container für das Bild */
 .leftContainer {
-  width: 55%; /* Der linke Container nimmt 55% der Breite ein */
-  height: 100%; /* Die Höhe des Containers ist auf 100% des Viewports gesetzt */
-  overflow: hidden; /* Verhindert das Überlaufen des Bildes */
+  width: 55%;
+  height: 100%;
+  overflow: hidden;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
-  position: relative; /* Wichtig für layout="fill" */
+  position: relative;
 }
 
 .image {
-  width: 100%; /* Das Bild nimmt die komplette Breite des Containers ein */
-  height: 100%; /* Das Bild nimmt die komplette Höhe des Containers ein */
-  object-fit: cover; /* Sorgt dafür, dass das Bild die Box ausfüllt, ohne die Proportionen zu verzerren */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* Rechter Container für das Login-Formular */
 .rightContainer {
-  width: 45%; /* Der rechte Container nimmt 45% der Breite ein */
+  width: 45%;
   display: flex;
-  justify-content: center; /* Zentriert das Formular horizontal */
-  align-items: center; /* Zentriert das Formular vertikal */
-  height: 100%; /* Die Höhe des Containers ist auf 100% der Viewport-Höhe gesetzt */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow-y: auto; 
 }
 
 .loginForm {
-  width: 80%; /* Das Formular ist 80% der Breite des Containers */
+  width: 80%;
   padding: 20px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: column; /* Stapelt die Elemente vertikal */
-  align-items: center; /* Zentriert alle Elemente */
+  flex-direction: column;
+  align-items: center;
+  background-color: 	#e0e0e0;
 }
 
 .loginForm h2 {
@@ -50,9 +50,8 @@
   margin-bottom: 20px;
 }
 
-/* Container für Eingabefelder */
 .inputContainer {
-  width: 100%; /* Sorgt dafür, dass alle Eingaben gleich breit sind */
+  width: 100%;
   margin-bottom: 15px;
 }
 
@@ -63,38 +62,132 @@
 }
 
 .loginForm input {
-  width: 94%; /* Eingabefelder sind gleich breit wie der Button */
+  width: 100%;
   padding: 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
+  font-family: 'Oswald';
+  box-sizing: border-box; /* wichtig für gleiches Verhalten */
 }
 
+
+/* Passwortfeld mit Icon */
+.passwordField {
+  position: relative;
+  width: 100%;
+}
+
+.passwordField input {
+  padding-right: 36px;
+}
+
+
+/* Das Auge-Icon dezent und „im Feld wirkend“ */
+.eyeIcon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: #aaa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.eyeIcon:hover {
+  color: #555;
+}
+.errorMessage {
+  color: red;
+  margin-bottom: 12px;
+  font-size: 15px;
+  text-align: center;
+  width: 100%;
+}
+.spinner {
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #00b5d8;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.togglePassword {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+}
+
+/* Angemeldet bleiben */
+.rememberMe {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  margin: 8px 0 20px 0;
+  font-size: 16px;
+  color: #333;
+  width: 100%;
+}
+
+.rememberMe input {
+  width: 16px;
+  height: 16px;
+  accent-color: #00b5d8;
+}
+
+/* Login-Button */
 .loginForm button {
-  width: 60%; /* Button ist gleich breit wie die Eingabefelder */
+  width: 60%;
   padding: 12px;
-  background-color: #007BFF;
+  background-color: #00b5d8;
   color: white;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   font-size: 16px;
+  cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 10px; /* Abstand nach oben */
+  margin-top: 10px;
+  font-family: 'Oswald';
 }
 
 .loginForm button:hover {
-  background-color: #0056b3;
+  background-color: #00e5ff;
 }
 
+
+/* Links */
 .forgotPassword {
   width: 100%;
   text-align: right;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .forgotPassword a {
-  color: #007BFF;
+  color: #00b5d8;
   text-decoration: none;
   font-size: 14px;
 }
@@ -103,58 +196,87 @@
   text-decoration: underline;
 }
 
+.forgotPassword1 {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+}
 
+.forgotPassword1 a {
+  color: #00b5d8;
+  text-decoration: none;
+  font-size: 14px;
+}
 
-/* Responsives Design für mobile Geräte */
+.forgotPassword1 a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .loginContainer {
-    flex-direction: column; /* Auf mobilen Geräten werden die Container untereinander angeordnet */
+  min-height: 60dvh;
+  height: auto;
+  flex-direction: column;
+  overflow: hidden;
+  width: 90%;
+  margin: 0 auto; /* zentriert horizontal */
+}
+  .leftContainer {
+    width: 100%;
     height: 100%;
+    display: none;
+    
+  }
+  .rightContainer {
+  width: 100%;
+  height: auto;      /* ← Höhe richtet sich nach Inhalt */
+  padding: 20px 0;   /* optionaler Abstand oben/unten */
+}
+
+  .loginForm {
+    width: 90%;   
+  }
+
+  .rememberMe {
+    font-size: 16px;
+  }
+  .loginForm h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .loginContainer {
+    flex-direction: column;
+    height: auto;
+    height: auto;
+    
+    overflow: hidden; /* alles Überstehende abschneiden */
+    
+    
+  }
+  .loginForm {
+    width: 80%;
   }
 
   .leftContainer {
-    width: 100%; /* Der linke Container nimmt auf mobilen Geräten die volle Breite ein */
-    height: 40%; /* Die Höhe des linken Containers wird verringert */
+    width: 100%;
+    height: 80%;
     display: none;
   }
 
   .rightContainer {
-    width: 100%; /* Der rechte Container nimmt auf mobilen Geräten die volle Breite ein */
-    height: 30%; /* Die Höhe des rechten Containers wird angepasst */
-    margin-top: 20px;
-    margin-bottom: 20px;
-  }
-
-  .loginForm {
-    width: 90%; /* Größere Breite auf mobilen Geräten */
-  }
-}
-/* Spezifisches Styling für 896x414 Pixel */
-@media (min-width: 769px) and (max-width: 950px) {
-  .loginContainer {
-    flex-direction: column; /* Container untereinander statt nebeneinander */
-    height: 100%;
-  }
-
-  .leftContainer {
-    width: 100%; /* Volle Breite */
-    height: 40%; /* Höhe anpassen */
-    display: none; /* Falls du das Bild ausblenden willst, sonst entfernen */
-  }
-
-  .rightContainer {
     width: 100%;
-    height: 40%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin: 40px 0;
   }
 
   .loginForm {
-    width: 85%; /* Breite des Formulars anpassen */
+    width: 85%;
   }
+  
 }
-
-

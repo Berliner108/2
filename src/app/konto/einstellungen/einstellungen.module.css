@@ -1,0 +1,364 @@
+/* /src/app/konto/einstellungen/einstellungen.module.css */
+
+/* Wrapper für das Layout */
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+/* Titel der Seite */
+.title {
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Container für die Kontoinformationen */
+.kontoContainer {
+  max-width: 800px;
+  width: 100%;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Beschreibung der Seite */
+.description {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+/* /src/app/konto/einstellungen/einstellungen.module.css */
+
+/* Abschnitt für Konto löschen */
+.subSectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* Bestätigungs-Checkbox */
+.deleteConfirmationText {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Lösch-Button */
+.deleteButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #e53e3e;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.deleteButton:hover {
+  background-color: #c53030;
+}
+
+.deleteButton:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Separator zwischen den Abschnitten */
+.separator {
+  border-top: 1px solid #e0e0e0;
+  margin: 30px 0;
+}
+/* /src/app/konto/einstellungen/einstellungen.module.css */
+
+/* Benutzername nur zur Anzeige, nicht bearbeitbar */
+.inputReadonly {
+  width: 100%;
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  color: #333;
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Abschnitt für Konto löschen */
+.subSectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* Bestätigungs-Checkbox */
+.deleteConfirmationText {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Lösch-Button */
+.deleteButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #e53e3e;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.deleteButton:hover {
+  background-color: #c53030;
+}
+
+.deleteButton:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Separator zwischen den Abschnitten */
+.separator {
+  border-top: 1px solid #e0e0e0;
+  margin: 30px 0;
+}
+/* /src/app/konto/einstellungen/einstellungen.module.css */
+
+/* Abschnitt für Bewertungen */
+.reviews {
+  margin-top: 20px;
+}
+
+.reviewItem {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reviewItem h4 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.reviewItem p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Profilbild Vorschau */
+.imagePreview {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+.previewImage {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+}
+/* /src/app/konto/einstellungen/einstellungen.module.css */
+
+/* Abschnitt für Bewertungen */
+.reviews {
+  margin-top: 20px;
+}
+
+.reviewItem {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reviewItem h4 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.reviewItem p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Profilbild Vorschau */
+.imagePreview {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+.previewImage {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+}
+
+/* Separator zwischen den Abschnitten */
+.separator {
+  border-top: 1px solid #e0e0e0;
+  margin: 30px 0;
+}
+
+/* Abschnitt für Konto löschen */
+.subSectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* Bestätigungs-Checkbox */
+.deleteConfirmationText {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* Lösch-Button */
+.deleteButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #e53e3e;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.deleteButton:hover {
+  background-color: #c53030;
+}
+
+.deleteButton:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Fehler- und Erfolgsnachrichten */
+.error {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.success {
+  color: green;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+/* Formular */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Eingabefelder */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.inputGroup label {
+  font-size: 1rem;
+  color: #333;
+}
+
+.input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  color: #333;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #00b4d8;
+}
+
+/* Speichern-Button */
+.saveButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #00b4d8;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background-color: #0094b6;
+}
+
+/* Separator zwischen den Abschnitten */
+.separator {
+  border-top: 1px solid #e0e0e0;
+  margin: 30px 0;
+}
+
+/* Abschnittstitel für Zahlungsdetails und Anschrift */
+.subSectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .kontoContainer {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .input {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .saveButton {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}

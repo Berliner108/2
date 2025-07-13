@@ -13,8 +13,8 @@ const CookiePage = () => {
       <section className={styles.section}>
         <h2 className={styles.subheading}>Informationen über unsere Verwendung von Cookies:</h2>
         <p>
-        Unsere Website und Apps (unsere „Seite“) werden von Beschichter Scout betrieben, einem in Österreich registrierten Unternehmen mit Sitz in Kärntner Straße 1, 
-        A-1010 Wien („Beschichter Scout“, „wir“, „uns“ oder „unser“). Die Seite verwendet Cookies, 
+        Unsere Website und Apps (unsere „Seite“) werden von Beschichter Scout betrieben, einem in Österreich registrierten Unternehmen mit Sitz in Seestraße 1, 
+        A-6900 Bregenz („Beschichter Scout“, „wir“, „uns“ oder „unser“). Die Seite verwendet Cookies, 
         um Sie von anderen Nutzern zu unterscheiden. Dies hilft uns, Ihnen eine bessere Erfahrung beim Besuch unserer Seite zu bieten und unsere Website zu verbessern.
         Wenn Sie Cookies, die von unserer Seite auf Ihrem Gerät gespeichert wurden, entfernen oder zukünftige Speicherung von Cookies durch unsere Seite verhindern 
         möchten, können Sie dies jederzeit tun (siehe unten für weitere Informationen).
@@ -84,7 +84,7 @@ const CookiePage = () => {
         Aktualisierungen zu informieren, etwa durch ein Update unseres Cookie-Banners oder Pop-ups.
         </p>
         <p>
-         Diese Richtlinie wurde zuletzt überprüft und aktualisiert: März 2025.
+         Diese Richtlinie wurde zuletzt überprüft und aktualisiert: Juni 2025.
         </p>
       </section>
 

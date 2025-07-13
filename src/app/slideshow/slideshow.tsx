@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import styles from "./slideshow.module.css";
-import Image from 'next/image'; // Importiere Image von Next.js
+import Image from 'next/image';
 
 const images = [
   { 
@@ -50,6 +50,8 @@ const Slideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
 
+  const transitionDuration = 1000; // in ms
+
   const nextSlide = () => {
     setIsTransitioning(true);
     setCurrentIndex((prevIndex) => prevIndex + 1);
@@ -59,7 +61,7 @@ const Slideshow = () => {
       if (currentIndex === images.length) {
         setCurrentIndex(1);
       }
-    }, 500);
+    }, transitionDuration);
   };
 
   const prevSlide = () => {
@@ -71,13 +73,13 @@ const Slideshow = () => {
       if (currentIndex === 0) {
         setCurrentIndex(images.length);
       }
-    }, 500);
+    }, transitionDuration);
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
       nextSlide();
-    }, 5000);
+    }, 6000); // 7 Sekunden statt 5
     return () => clearInterval(interval);
   }, [currentIndex]);
 
@@ -89,7 +91,7 @@ const Slideshow = () => {
         className={styles.slidesWrapper}
         style={{
           transform: `translateX(-${currentIndex * 100}%)`,
-          transition: isTransitioning ? "transform 0.5s ease-in-out" : "none",
+          transition: isTransitioning ? `transform ${transitionDuration}ms ease-in-out` : "none",
         }}
       >
         {extendedImages.map((image, index) => (
@@ -109,9 +111,9 @@ const Slideshow = () => {
               <Image 
                 src={image.src} 
                 alt={`${image.text1} - ${image.text2}`} 
-                width={500} // Breite des Bildes (kannst du anpassen)
-                height={300} // Höhe des Bildes (kannst du anpassen)
-                layout="intrinsic" // Option für flexibles Layout
+                width={500}
+                height={300}
+                layout="intrinsic"
               />
             </div>
 

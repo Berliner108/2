@@ -1,0 +1,73 @@
+/* /src/app/konto/verkaufte-artikel/verkaufte-artikel.module.css */
+
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.kontoContainer {
+  width: 80%;
+  max-width: 1200px;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.articleList {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.articleItem {
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.articleItem h4 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.articleItem p {
+  font-size: 1rem;
+  color: #666;
+}
+
+.viewDetailsButton {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #00b4d8;
+  color: white;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.viewDetailsButton:hover {
+  background-color: #0077b6;
+}
+
+@media (max-width: 1024px) {
+  .articleList {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .articleList {
+    grid-template-columns: 1fr;
+  }
+}

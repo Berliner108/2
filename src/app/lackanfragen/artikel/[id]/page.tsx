@@ -11,6 +11,7 @@ import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
+import Link from 'next/link';  // ganz oben in der Datei
 
 export default function ArtikelDetailPage() {
   const params = useParams();
@@ -122,6 +123,14 @@ export default function ArtikelDetailPage() {
                 <span className={styles.label}>Ausführung:</span>
                 <span className={styles.value}>{artikel.ausführung}</span>
               </div>
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Oberfläche:</span>
+                <span className={styles.value}>{artikel.oberfläche}</span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Sondereigenschaft:</span>
+                <span className={styles.value}>{artikel.sondereigenschaft}</span>
+              </div>
 
               {artikel.menge && (
                 <div className={styles.metaItem}>
@@ -142,12 +151,9 @@ export default function ArtikelDetailPage() {
     <span className={styles.label}>User:</span>
     <span className={styles.value}>{artikel.user}</span>
     <div>
-      <a
-        href={`/nachricht?empfaenger=${encodeURIComponent(artikel.user)}`}
-        className={styles.kontaktLink}
-      >
-        User kontaktieren
-      </a>
+    <Link href={`/messages?empfaenger=${encodeURIComponent(artikel.user)}`} className={styles.kontaktLink}>
+  User kontaktieren
+</Link>
     </div>
   </div>
 )}

@@ -44,7 +44,7 @@
   font-size: 1rem;
   font-weight: bold;
   color: #ffffff;
-  background: linear-gradient(90deg, #00cccc, #0088cc);
+  background: linear-gradient(90deg, #00e5ff, #00b4d8);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -53,7 +53,7 @@
 }
 
 .backButton:hover {
-  background: linear-gradient(90deg, #0088cc, #00cccc);
+  background: linear-gradient(90deg, #00b4d8, #00e5ff);
 }
 
 @media (max-width: 600px) {

@@ -1,40 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap");
+
 .container {
-    max-width: 800px;
-    margin: 00px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  font-family: "Oswald", sans-serif;
+  color: #1f2937;
 }
 
 .title {
-    font-size: 28px;
-    margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #111827;
 }
 
 .subtitle {
-    font-size: 22px;
-    margin-top: 20px;
+  font-size: 24px;
+  font-weight: 500;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  color: #1f2937;
+}
+
+.section {
+  margin-top: 32px;
 }
 
 .list {
-    list-style-type: disc;
-    padding-left: 20px;
+  list-style-type: disc;
+  padding-left: 24px;
+  line-height: 1.6;
 }
 
 .applyButton {
-    background: linear-gradient(135deg, #40E0D0, #1E90FF);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s;
-    margin-top: 20px;
+  display: inline-block;
+  margin-top: 32px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .applyButton:hover {
-    background: linear-gradient(135deg, #1E90FF, #40E0D0);
-    transform: scale(1.05);
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+}
+
+.error {
+  color: #b91c1c;
+  background-color: #fef2f2;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  max-width: 600px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 20px;
+  }
+
+  .applyButton {
+    width: 100%;
+    text-align: center;
+    padding: 12px 20px;
+    font-size: 15px;
+  }
 }

@@ -1,0 +1,361 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+/* Container für den gesamten Inhalt */
+.container {
+  display: flex;
+  flex-wrap: wrap;  /* Ermöglicht das Umfließen der Container */
+  width: 100%;
+}
+/* Jeder Container nimmt 50% der Breite ein und hat max-height */
+.container-left, .container-right {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 350px; /* Begrenze die Höhe der Container */
+  overflow: hidden; /* Verhindert, dass der Inhalt über die maximale Höhe hinausgeht */
+}
+.werwirsind {
+  width: 100%;  
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;  
+}
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.scrollProgressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background-color: #f0f0f0;
+  z-index: 1000;
+}
+
+.scrollProgressBar {
+  height: 100%;
+  background-color: #00b4d8; /* Farbe des Fortschrittbalkens */
+  transition: width 0.2s ease;
+}
+
+.active {
+  border-color: #00e5ff;
+  background-color: #e6f0ff;
+}
+.sogehts {
+  padding: 4rem 2rem;
+  background-color: #f7f7f7;
+  text-align: center;
+  width: 100%; 
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+  margin: 3rem auto;
+  max-width: 1100px;  
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;
+  
+}
+
+    
+
+
+.carouselTitle {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.step:hover {
+  transform: translateY(-5px);
+}
+
+.active {
+  border: 2px solid #00b4d8;
+}
+.soFunktioniertTitle {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+.circle {
+  background-color: #00e5ff;
+  color: white;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  line-height: 40px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+}
+
+.step h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.step p {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+
+.active .circle {
+  background-color: #00e5ff;
+}
+
+.ober {
+  width: 100%;  
+  text-align: center;  
+  font-size: 1.09rem;
+}
+
+.werwirsind1 {
+  width: 100%;  
+  text-align: center;
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333; 
+}
+.ober1 {
+  width: 90%;    
+  display: flex;  
+  font-size: 1.09rem;
+  justify-content: center;  /* Horizontal zentrieren */  
+  margin-left: 5%;
+  line-height: 38px;  /* Feste Zeilenhöhe */  
+}
+.ober2 {
+  width: 93%;    
+  display: flex;  
+  font-size: 1.09rem;
+  text-align: left;  
+  margin-left: 5%;
+  line-height: 38px;  /* Feste Zeilenhöhe */  
+}
+/* Bild Container */
+.image-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+/* Bild */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Text Container */
+.text-container {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-style: italic;
+  padding: 40px;
+  margin-bottom: 20px;
+  font-size: 1.09rem;
+  line-height: 1.9;  
+}
+/* Stil für h2-Überschrift */
+.h2-vision, .h2-mission {
+  font-size: 2.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-style: normal;
+}
+/* Mobile Ansicht: Container untereinander */
+@media (max-width: 1025px) {
+  .container-left, .container-right {
+    width: 100%;  /* Beide Container nehmen 100% Breite auf mobilen Geräten */
+  }
+
+  .container-left:nth-of-type(2) {
+    order: 2;
+  }
+  .container-right:nth-of-type(2) {
+    order: 1;
+  }
+  .werwirsind {
+    width: 100%;  
+    text-align: center;
+    font-size: 2.1rem;
+    font-weight: bold;
+    color: #333;  
+    
+  }
+  .ober {
+    width: 95%;  
+    justify-content: center;
+    font-weight: normal;  
+  }
+  /* Text Container */
+.text-container {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-style: italic;
+  padding: 20px;
+  margin-bottom: 00px;
+  margin-top: -10px;
+  font-size: 0.9rem;
+  line-height: 1.9;  
+}
+/* Stil für h2-Überschrift */
+.h2-vision, .h2-mission {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  font-style: normal;
+}
+
+}
+
+@media (max-width: 768px) {
+  .sogehts {
+    max-width: 90%;
+    padding: 1rem 0rem;    
+    text-align: center;
+  }
+}
+
+.backButton {
+  margin-top: 20px;
+}
+
+.backButton .button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.backButton .button:hover {
+  background-color: #00b4d8;
+}
+
+
+/* Navbar */
+.navbar {
+  font-family: 'Oswald', sans-serif;
+  width: 100%;
+  background-color: white;
+  display: flex;
+  justify-content: center; /* Zentriert die Links horizontal */
+  padding: 10px 0;
+  position: relative;
+  z-index: 1000;
+  scrollbar-width: none; /* Für Firefox */
+}
+/* Navbar Liste */
+.navList {
+  list-style: none;
+  display: flex;
+  padding: 0;
+  margin: 0;
+  
+}
+/* Jedes Menü-Element */
+.navItem {
+  position: relative;
+  margin: 0 22px; /* Abstand zwischen den Links */
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+/* Buttons */
+.navButton {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  padding: 10px 15px;
+  color: black;
+  transition: color 0.3s ease;
+}
+.navItem:hover .navButton {
+  color: #00b4d8;
+}
+/* Dropdown-Menü */
+.dropdown {
+  position: absolute;
+  top: 100%; /* Dropdown direkt unter dem Link */
+  left: 50%;
+  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
+  background: white;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  display: none;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 4px;
+  z-index: 10000; /* Höchste Priorität, überlagert alles */
+  min-width: 165px;
+  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
+}
+
+/* Dropdown Links */
+.dropdownLink {
+  padding: 10px 15px;
+  text-decoration: none;
+  color: black;
+  display: block;
+  text-align: center;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownLink:hover {
+  background-color: #00b4d8;
+  color: white;
+}
+/* Dropdown sichtbar machen */
+.navItem:hover .dropdown {
+  display: flex; /* Macht das Dropdown sichtbar */
+}
+
+/* Mobile Ansicht */
+@media (max-width: 1024px) {
+  .navbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-start; /* Links beginnen ganz links */
+    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
+  }
+
+  .navList {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 10px 0;
+    margin: 0;
+    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
+  }
+
+  .navItem {
+    margin: 0 10px; /* Falls nötig, Abstand anpassen */
+  }
+
+  /* Dropdown für mobile Ansicht ausblenden */
+  .dropdown {
+    display: none !important;
+  }
+  
+}
+

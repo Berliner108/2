@@ -13,10 +13,10 @@ const DatenschutzPage = () => {
       <section className={styles.section}>
         <h2 className={styles.subheading}>Verantwortlicher für die Datenverarbeitung ist:</h2>
         <p>
-          Datenschutzexperten GmbH</p> 
-          <p>Kärntner Straße 1</p>
-          <p>A-1010 Wien</p>
-          <p>info@datenschutzexperten.at</p>
+          BeschichterScout GmbH</p> 
+          <p>Seestraße 1</p>
+          <p>A-6900 Bregenz</p>
+          <p>info@beschichterscout.at</p>
           <p>Wir freuen uns über Ihr Interesse an unserem Online-Portal. Der Schutz Ihrer Privatsphäre ist für uns sehr wichtig. 
               Wir behandeln Ihre personenbezogenen Daten
               vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.Nachstehend informieren wir Sie ausführlich über den Umgang mit Ihren Daten. 
@@ -120,11 +120,11 @@ const DatenschutzPage = () => {
           Einwilligung oder Widerspruch gegen eine bestimmte Datenverwendung wenden Sie sich bitte direkt an uns über die Kontaktdaten in unserem Impressum.</p>
 
           <p>Datenschutzbeauftragter:</p>
-          <p>Max Mustermann</p>
-          <p>Musterstraße 2</p>
-          <p>12345 Musterstadt</p>
+          <p>Martin Zajac</p>
+          <p>Seestraße 1</p>
+          <p>6900 Bregenz</p>
 
-          <p>max@mustermann.de
+          <p>martin@beschichterscout.at
         </p>
       </section>
 

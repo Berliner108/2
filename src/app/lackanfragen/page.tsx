@@ -5,7 +5,7 @@ import Fuse from 'fuse.js';
 import Image from 'next/image';
 import styles from './auftragsboerse.module.css';
 import Pager from './navbar/pager';
-
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 const kategorien = ['Nasslack', 'Pulverlack'];
@@ -80,6 +80,7 @@ const artikelDaten = [
     zustand: 'Geöffnet und einwandfrei',
     kategorie: 'Pulverlack',
     bewertet: '75',
+    user: 'Powdermarket',
     ort: '87645 Schwangau',
     bild: '/images/artikel2.jpg',
     gesponsert: false,
@@ -310,8 +311,13 @@ export default function KaufenSeite() {
   const [privat, setPrivat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  
-  
+  const searchParams = useSearchParams();
+  const kategorieQuery = searchParams.get('kategorie');
+  useEffect(() => {
+    if (kategorieQuery && (kategorieQuery === 'Nasslack' || kategorieQuery === 'Pulverlack')) {
+      setKategorie(kategorieQuery);
+    }
+  }, [kategorieQuery]);
 
   const fuse = new Fuse(artikelDaten, {
     keys: ['titel'],

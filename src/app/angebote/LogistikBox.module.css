@@ -1,0 +1,135 @@
+.logistikBox {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  
+  transition: all 0.4s ease;
+}
+
+.logistikBox h4 {
+  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Container für 2 Spalten */
+.gridLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Bei kleinen Bildschirmen 1 Spalte */
+@media (max-width: 768px) {
+  .gridLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.formGroup input[type="date"].inputError,
+.formGroup select.inputError {
+   width: 90%; /* z. B. kürzer als 100% */
+  max-width: 420px;  
+  padding: 0.6rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Oswald';
+}
+
+.dropdown {
+     width: 95%; /* z. B. kürzer als 100% */
+  
+  padding: 0.6rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Oswald';
+  accent-color: #006d75;
+}
+
+
+.dropdown:focus {
+  border-color: #0ea5e9;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+
+.checkboxGroup input[type="checkbox"] {
+  
+  accent-color: #006d75;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .formGroup input[type="date"],
+.formGroup select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Oswald';
+  box-sizing: border-box;
+}
+
+/* Optional: Gleichmäßiger Look auf iOS */
+.formGroup input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+}
+
+.inputBase {
+  width: 95%;
+  min-width: 95%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-family: 'Oswald';
+  margin-top: 0.3rem;
+  box-sizing: border-box;
+  transition: border 0.2s ease;
+}
+
+.inputError {
+  border: 2px solid #ff4d4d !important;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+
+

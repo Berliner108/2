@@ -508,7 +508,7 @@ const AgbPage = () => {
 
       <section className={styles.section}>
          <p>
-          Es gilt das Recht der Republik Österreich. Gerichtsstand ist Wien, soweit der Nutzer Kaufmann oder eine juristische Person ist.</p>
+          Es gilt das Recht der Republik Österreich. Gerichtsstand ist Feldkirch, soweit der Nutzer Kaufmann oder eine juristische Person ist.</p>
         <p>Sollte eine Bestimmung dieser AGB unwirksam sein, bleiben die übrigen Bestimmungen davon unberührt. Die unwirksame Regelung 
           wird durch eine rechtswirksame ersetzt, die dem wirtschaftlichen Zweck der ursprünglichen möglichst nahekommt.</p>
         <p>Beschichter Scout behält sich das Recht vor, diese AGB jederzeit zu ändern. Änderungen werden den Nutzern rechtzeitig mitgeteilt. 

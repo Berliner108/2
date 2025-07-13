@@ -3,6 +3,14 @@ import '../styles/layout.css'; // CSS-Datei für Layout importieren
 import Header from './Header'; // Header importieren
 import React from 'react';
 import Footer from './Footer'; // Den Footer importieren
+import { Oswald } from 'next/font/google';
+
+
+const oswald = Oswald({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+});
+
 
 // Definiere metadata ohne "use client"
 export const metadata = {
@@ -11,6 +19,7 @@ export const metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
+    
     <html lang="de">
       <head>
         {/* Favicon für alle Browser */}
@@ -29,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="192x192" href="/web-app-manifest-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
       </head>
-      <body>
+      <body className={oswald.className}>
         <Header />
         <main>{children}</main>
         <Footer /> {/* Footer hier einfügen */}

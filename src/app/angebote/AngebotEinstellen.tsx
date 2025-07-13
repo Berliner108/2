@@ -1,85 +1,1015 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import styles from './angebote.module.css';
-import Pager from './navbar/pager';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, CheckCircle, HelpCircle, Upload, Settings, FileImage, FileText, FileArchive, File } from 'lucide-react';
+import Pager from "./navbar/pager";
 import { useSearchParams } from 'next/navigation';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { CustomDateInput } from "./CustomDateInput"; // Importiere die CustomDateInput-Komponente
-import { registerLocale } from "react-datepicker";
-import { de } from "date-fns/locale/de";
-registerLocale("de", de);
-import "react-datepicker/dist/react-datepicker.css";
-import "./DatePickerOverrides.css";
+import { Oswald } from 'next/font/google';
+import LogistikBox from './LogistikBox'; // Pfad ggf. anpassen
+
+
+
+
+
+type Specification =
+  | { type: 'checkbox'; label: string }
+  | { type: 'text'; label: string }
+  | { type: 'radio'; label: string; options: string[] }
+  | { type: 'group'; label: string; options: { type: 'checkbox'; label: string }[] }
+  | { type: 'title'; label: string }; // <-- NEU
+
+  type SpecBlockProps = {
+  title: string;
+  specs: Specification[]; // ✅ nutzt deinen bestehenden Typ
+  specSelections: Record<string, string | string[]>;
+  setSpecSelections: React.Dispatch<React.SetStateAction<Record<string, string | string[]>>>;
+};
+
+
+const SpecBlock = ({ title, specs, specSelections, setSpecSelections }: SpecBlockProps) => (
+  <div className={styles.specsBox}>
+    <h4 className={styles.specTitle}>Spezifikationen zum {title}:</h4>
+
+    {specs.map((spec, index) => {
+      if (spec.type === 'checkbox') {
+        const checked = Array.isArray(specSelections[spec.label])
+          ? (specSelections[spec.label] as string[]).includes('✔')
+          : false;
+
+        return (
+          <label key={index} className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={(e) => {
+                setSpecSelections((prev) => ({
+                  ...prev,
+                  [spec.label]: e.target.checked ? ['✔'] : [],
+                }));
+              }}
+            />
+            <>
+  {spec.label}
+  {spec.label === 'ISO 9001' && (
+    <span className={styles.tooltipContainer}>
+      <HelpCircle size={16} />
+      <span className={styles.tooltipText}>
+        Qualitätsmanagementsystem – Anforderungen
+      </span>
+    </span>
+  )}
+  {spec.label === 'ISO 14001' && (
+    <span className={styles.tooltipContainer}>
+      <HelpCircle size={16} />
+      <span className={styles.tooltipText}>
+        Umweltmanagementsystem – Anforderungen
+      </span>
+    </span>
+  )}
+  {spec.label === 'RoHS-Konformität' && (
+    <span className={styles.tooltipContainer}>
+      <HelpCircle size={16} />
+      <span className={styles.tooltipText}>
+        Beschränkung gefährlicher Stoffe in Industrieprozessen
+      </span>
+    </span>
+  )}
+</>
+          </label>
+        );
+      }
+      if (spec.type === 'group') {
+  const selectedVerfahren = specSelections['Verfahren wählen']?.toString() || '';
+  const isZink = title === 'Verzinken';
+  const isAlu = title === 'Aluminieren';
+  const isEntal = title === 'Entaluminieren';
+  const isEntelox = title === 'Enteloxieren';
+  const isEntnickel = title === 'Entnickeln';
+  const isEntzinken = title === 'Entzinken';
+  const isNickel = title === 'Vernickeln';
+  const isZinn = title === 'Verzinnen';
+  
+
+  const hide =
+  // Verzinken
+  (isZink && spec.label.includes('Feuerverzinken') && selectedVerfahren !== 'Feuerverzinken') ||
+  (isZink && spec.label.includes('Galvanisch') && selectedVerfahren !== 'Galvanisches Verzinken') ||
+  (isZink && spec.label.includes('Diffusions') && !selectedVerfahren.includes('Diffusions')) ||
+  (isZink && spec.label.includes('Lamellen') && !selectedVerfahren.includes('Lamellen')) ||
+  (isZink && spec.label.includes('Mechanisch') && selectedVerfahren !== 'Mechanisches Verzinken') ||
+
+  // Aluminieren
+  (isAlu && spec.label.includes('Feueraluminieren') && selectedVerfahren !== 'Feueraluminieren') ||
+  (isAlu && spec.label.includes('Thermisches Spritzen') && selectedVerfahren !== 'Thermisches Spritzen') ||
+  (isAlu && spec.label.includes('Packaluminieren') && selectedVerfahren !== 'Packaluminieren') ||
+
+  // Entaluminieren
+  (isEntal && spec.label.includes('Standards für Chemisches Entaluminieren') && selectedVerfahren !== 'Chemisch') ||
+  (isEntal && spec.label.includes('Standards für Elektrochemisches Entaluminieren') && selectedVerfahren !== 'Elektrochemisch') ||
+  (isEntal && spec.label.includes('Standards für Mechanisches Entaluminieren') && selectedVerfahren !== 'Mechanisch') ||
+
+   // Entnickeln
+  (isEntnickel && spec.label.includes('Standards für Chemisches Entnickeln') && selectedVerfahren !== 'Chemisch') ||
+  (isEntnickel && spec.label.includes('Standards für Elektrochemisches Entnickeln') && selectedVerfahren !== 'Elektrochemisch') ||
+
+  // Enteloxieren
+  (isEntelox && spec.label.includes('Standards für Chemisches Enteloxieren') && selectedVerfahren !== 'Chemisch') ||
+  (isEntelox && spec.label.includes('Standards für Elektrochemisches Enteloxieren') && selectedVerfahren !== 'Elektrochemisch') ||
+
+  // Entzinken
+  (isEntzinken && spec.label.includes('Standards für Chemisches Entzinken') && selectedVerfahren !== 'Chemisch') ||
+  (isEntzinken && spec.label.includes('Standards für Elektrochemisches Entzinken') && selectedVerfahren !== 'Elektrochemisch') ||
+
+  // Verzinnen
+(isZinn && spec.label.includes('Chemisches Verzinnen') && selectedVerfahren !== 'Chemisch') ||
+(isZinn && spec.label.includes('Galvanisches Verzinnen') && selectedVerfahren !== 'Galvanisch') ||
+
+    // Vernickeln
+  (isNickel && spec.label.includes('Chemisches Vernickeln') && selectedVerfahren !== 'Chemisch') ||
+  (isNickel && spec.label.includes('Galvanisches Vernickeln') && selectedVerfahren !== 'Galvanisch');
+
+  if (hide) return null;
+}
+
+if (spec.type === 'title') {
+  return (
+    <h5 key={index} className={styles.sectionTitle}>
+      {spec.label}
+    </h5>
+  );
+}
+
+      if (spec.type === 'radio') {
+  const isDropdown = spec.label === 'Farbpalette';
+
+  return (
+    <div key={index} className={styles.radioGroup}>
+      <div className={styles.radioLabel}>{spec.label}:</div>
+
+      {isDropdown ? (
+        <select
+          className={styles.inputField}
+          value={specSelections[spec.label] || ''}
+          onChange={(e) =>
+            setSpecSelections((prev) => ({
+              ...prev,
+              [spec.label]: e.target.value,
+            }))
+          }
+        >
+          <option value="">Bitte wählen</option>
+          {spec.options.map((opt, i) => (
+            <option key={i} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div className={styles.radioInline}>
+          {spec.options.map((opt, i) => (
+            <label key={i} className={styles.radioItem}>
+              <input
+                type="radio"
+                name={`${title}-${spec.label}`}
+                value={opt}
+                checked={specSelections[spec.label] === opt}
+                onChange={() =>
+                  setSpecSelections((prev) => ({
+                    ...prev,
+                    [spec.label]: opt,
+                  }))
+                }
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+      if (spec.type === 'group') {
+        const selectedValues = Array.isArray(specSelections[spec.label])
+          ? (specSelections[spec.label] as string[])
+          : [];
+
+        return (
+          <div key={index} className={styles.checkboxGroup}>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{spec.label}</p>
+            {spec.options.map((opt, i) => {
+              const isChecked = selectedValues.includes(opt.label);
+              return (
+                <label key={i} className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => {
+                      setSpecSelections((prev) => {
+                        const current = Array.isArray(prev[spec.label])
+                          ? [...(prev[spec.label] as string[])]
+                          : [];
+                        const updated = e.target.checked
+                          ? [...current, opt.label]
+                          : current.filter((val) => val !== opt.label);
+                        return {
+                          ...prev,
+                          [spec.label]: updated,
+                        };
+                      });
+                    }}
+                  />
+                  {opt.label}
+                </label>
+              );
+            })}
+          </div>
+        );
+      }
+
+      if (spec.type === 'text') {
+        return (
+          <div key={index} className={styles.inputRow}>
+            <label>{spec.label}</label>
+            <input
+              type="text"
+              className={styles.inputField}
+              value={specSelections[spec.label] || ''}
+              onChange={(e) =>
+                setSpecSelections((prev) => ({
+                  ...prev,
+                  [spec.label]: e.target.value,
+                }))
+              }
+            />
+          </div>
+        );
+      }
+
+      console.warn('Unbekannter Typ:', spec);
+      return null;
+    })}
+  </div>
+);
+
+const oswald = Oswald({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+});
 
 export default function AngebotEinstellen() {
-  const [dateien, setDateien] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const MAX_FILES = 8;
-  const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE_MB = 5;  
 
-  const [firstSelection, setFirstSelection] = useState<string | null>(null);
-  const [secondSelection, setSecondSelection] = useState<string | null>(null);
-  const [thirdSelection, setThirdSelection] = useState<string | null>(null);
-
-  const searchParams = useSearchParams();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);    
-    
-  const [zeigeUnterOptionen, setZeigeUnterOptionen] = useState(false);
-  const [text, setText] = useState("");
-
-  const [selectedOption1, setSelectedOption1] = useState<string | null>(null);
-const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
-
-
+  const [showTransportOption] = useState(false);
+const [transportArt] = useState('');
+const [bemerkung, setBemerkung] = useState('');
 
   
-  useEffect(() => {
-    const urlFirst = searchParams.get('first');
-    if (urlFirst) {
-      setFirstSelection(urlFirst);
-      setSecondSelection(null);
-      setThirdSelection(null);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    addFiles(droppedFiles);
+  };
+  const stepIcons = [<Upload size={40} />, <Settings size={40} />, <FileText size={40} />];
+
+  const handleUploadClick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : [];
+    addFiles(selectedFiles);
+  };
+  const [activeStep, setActiveStep] = useState(0);
+
+  const [materialGuete, setMaterialGuete] = useState('');
+const [customMaterial, setCustomMaterial] = useState('');
+const [materialGueteError, setMaterialGueteError] = useState(false);
+
+const [laenge, setLaenge] = useState('');
+const [breite, setBreite] = useState('');
+const [hoehe, setHoehe] = useState('');
+const [masse, setMasse] = useState('');
+const [abmessungError, setAbmessungError] = useState(false);
+
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setActiveStep((prev) => (prev + 1) % 3);
+  }, 5000); // alle 5 Sekunden
+
+return () => clearInterval(interval);
+}, []);
+
+const searchParams = useSearchParams();
+const firstFromUrl = searchParams.get('first') || '';
+const [selectedOption1, setSelectedOption1] = useState(firstFromUrl);
+const [selectedOption2, setSelectedOption2] = useState('');
+const [selectedOption3, setSelectedOption3] = useState('');
+
+const [specSelections, setSpecSelections] = useState<Record<string, string | string[]>>({});
+useEffect(() => {
+  if (
+    selectedOption1 === 'Eloxieren' ||
+    selectedOption2 === 'Eloxieren' ||
+    selectedOption3 === 'Eloxieren'
+  ) {
+    setMaterialGuete('Aluminium');
+  }
+}, [selectedOption1, selectedOption2, selectedOption3]);
+
+
+
+useEffect(() => {
+  const currentFirst = searchParams.get('first') || '';
+  setSelectedOption1(currentFirst);
+}, [searchParams]);
+
+useEffect(() => {
+  if (selectedOption1 && specificationsMap[selectedOption1]) {
+    const initialSelections: Record<string, string | string[]> = {};
+
+    specificationsMap[selectedOption1].forEach(spec => {
+      if (spec.type === 'checkbox') initialSelections[spec.label] = [];
+      if (spec.type === 'radio') initialSelections[spec.label] = '';
+      if (spec.type === 'text') initialSelections[spec.label] = '';
+      if (spec.type === 'group') initialSelections[spec.label] = [];
+    });
+
+    setSpecSelections(initialSelections);
+  }
+}, [selectedOption1]);
+
+useEffect(() => {
+  const selectedVerfahren =
+    specSelections['Verfahren wählen']?.toString() || '';
+
+ const allNormLabels = [
+  // Verzinken
+  'Normen & Standards (nur bei Feuerverzinken)',
+  'Normen & Standards (nur bei Galvanischem Verzinken)',
+  'Normen & Standards (nur bei Diffusionsverzinken)',
+  'Normen & Standards (nur bei Lamellenverzinken)',
+  'Normen & Standards (nur bei Mechanischem Verzinken)',
+  // Aluminieren
+  'Standards für Feueraluminieren',
+  'Standards für Thermisches Spritzen',
+  'Standards für Packaluminieren',
+  // Entaluminieren
+  'Standards für Chemisches Entaluminieren',
+  'Standards für Elektrochemisches Entaluminieren',
+  'Standards für Mechanisches Entaluminieren',
+   // Entnickeln
+  'Standards für Chemisches Entnickeln',
+  'Standards für Elektrochemisches Entnickeln',
+  // Entzinken
+  'Standards für Chemisches Entzinken',
+  'Standards für Elektrochemisches Entzinken',
+  // Enteloxieren
+  
+  'Standards für Chemisches Enteloxieren',
+  'Standards für Elektrochemisches Enteloxieren',
+
+  // Verzinnen
+'Standards für Chemisches Verzinnen',
+'Standards für Galvanisches Verzinnen',
+
+
+    // Vernickeln
+  'Standards für Chemisches Vernickeln',
+  'Standards für Galvanisches Vernickeln'
+
+];
+
+
+  setSpecSelections((prev) => {
+  const updated = { ...prev };
+
+  allNormLabels.forEach((label) => {
+    const isRelevant = (
+  // Verzinken
+  (label.includes('Feuerverzinken') && selectedVerfahren === 'Feuerverzinken') ||
+  (label.includes('Galvanisch') && selectedVerfahren === 'Galvanisches Verzinken') ||
+  (label.includes('Diffusions') && selectedVerfahren === 'Diffusionsverzinken (Sherardisieren)') ||
+  (label.includes('Lamellen') && selectedVerfahren === 'Lamellenverzinken') ||
+  (label.includes('Mechanisch') && selectedVerfahren === 'Mechanisches Verzinken') ||
+  // Aluminieren
+  (label.includes('Feueraluminieren') && selectedVerfahren === 'Feueraluminieren') ||
+  (label.includes('Thermisches Spritzen') && selectedVerfahren === 'Thermisches Spritzen') ||
+  (label.includes('Packaluminieren') && selectedVerfahren === 'Packaluminieren') ||
+  // Entaluminieren
+  (label.includes('Standards für Chemisches Entaluminieren') && selectedVerfahren === 'Chemisch') ||
+  (label.includes('Standards für Elektrochemisches Entaluminieren') && selectedVerfahren === 'Elektrochemisch') ||
+  (label.includes('Standards für Mechanisches Entaluminieren') && selectedVerfahren === 'Mechanisch') ||
+  // Entzinken
+      (label.includes('Chemisches Entzinken') && selectedVerfahren === 'Chemisch') ||
+      (label.includes('Elektrochemisches Entzinken') && selectedVerfahren === 'Elektrochemisch') ||    
+
+        // Vernickeln
+  (label.includes('Chemisches Vernickeln') && selectedVerfahren === 'Chemisch') ||
+  (label.includes('Galvanisches Vernickeln') && selectedVerfahren === 'Galvanisch') ||
+
+  // Verzinnen
+(label.includes('Chemisches Verzinnen') && selectedVerfahren === 'Chemisch') ||
+(label.includes('Galvanisches Verzinnen') && selectedVerfahren === 'Galvanisch') ||
+
+
+  // Enteloxieren
+  (label.includes('Standards für Chemisches Enteloxieren') && selectedVerfahren === 'Chemisch') ||
+  (label.includes('Standards für Elektrochemisches Enteloxieren') && selectedVerfahren === 'Elektrochemisch')
+);
+
+
+    if (!isRelevant) {
+      updated[label] = [];
     }
-  }, [searchParams]);
-  useEffect(() => {
-    const listener = (e: Event) => {
-      const detail = (e as CustomEvent).detail as number;
-      setSelectedDate(prev => {
-        if (!prev) return new Date(); // Falls vorher null
-        const newDate = new Date(prev);
-        newDate.setDate(prev.getDate() + detail);
-        return newDate;
-      });
-    };
-    document.addEventListener("navigateDate", listener);
-    return () => document.removeEventListener("navigateDate", listener);
-  }, []);  
-  const allOptions = [
-    "Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Entlacken", "Strahlen",
-    "Folieren", "Isolierstegverpressen", "Einlagern", "Entzinken", "Entzinnen", "Entnickeln",
-    "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Vernickeln",
-    "Aluminieren", "Entanodisieren", "Enteloxieren"
-  ];
-  const validSecondOptions: { [key: string]: string[] } = {
+  });
+
+  return updated;
+});
+
+}, [specSelections['Verfahren wählen']]);
+
+const [text, setText] = useState("");
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [submitSuccess, setSubmitSuccess] = useState(false);
+
+const [agbAccepted, setAgbAccepted] = useState(false);
+const [agbError, setAgbError] = useState(false);
+const [showDropdownError, setShowDropdownError] = useState(false);
+
+const calculateProgress = () => {
+  let progress = 0;
+  if (files.length > 0) progress += 20;
+  if (selectedOption1) progress += 20;
+  if (selectedOption2) progress += 20;
+  if (selectedOption3) progress += 20;
+  if (agbAccepted) progress += 20;
+  return progress;
+};
+
+const allOptions = [
+  "Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren",
+  "Verzinnen", "Entlacken", "Aluminieren", "Strahlen", "Folieren",
+  "Isolierstegverpressen", "Einlagern", "Entzinken", "Entzinnen", "Entnickeln",
+  "Vernickeln", "Entanodisieren", ,"Entaluminieren", "Enteloxieren"
+];
+const specificationsMap: Record<string, Specification[]> = {
+
+  Verzinnen: [
+  { type: 'title', label: 'Zertifizierungen' },
+  { type: 'checkbox', label: 'ISO 9001' },
+  { type: 'checkbox', label: 'ISO 14001' },
+  { type: 'checkbox', label: 'RoHS / REACH' },
+
+  { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch', 'Galvanisch'] },
+
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Verzinnen',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 21874' },
+      { type: 'checkbox', label: 'DIN EN ISO 2093' }
+    ]
+  },
+  {
+    type: 'group',
+    label: 'Standards für Galvanisches Verzinnen',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 2093' },
+      { type: 'checkbox', label: 'DIN EN ISO 2080' }
+    ]
+  }
+],
+  Nasslackieren: [
+    { type: 'text', label: 'Lackhersteller' },
+    { type: 'text', label: 'Farbbezeichnung' },
+    {
+    type: 'radio',
+    label: 'Farbpalette',
+    options: ['RAL', 'NCS', 'MCS', 'DB', 'BS', 'Munsell', 'Candy', 'Neon', 'Pantone', 'Sikkens', 'HKS', 'Klarlack', 'Sonderfarbe / Nach Vorlage', 'RAL D2-Design', 'RAL E4-Effekt']
+  },
+  {
+    type: 'radio',
+    label: 'Oberfläche',
+    options: ['Glatt', 'Feinstruktur', 'Grobstruktur']
+  },
+   {
+    type: 'radio',
+    label: 'Glanzgrad',
+    options: ['Hochglanz', 'Seidenglanz', 'Glanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+  },
+  {
+    type: 'radio',
+    label: 'Qualität',
+    options: ['Polyester', 'Epoxy-Polyester', 'Polyester für Feuerverzinkung', 'Thermoplast']
+  },
+  {
+    type: 'group',
+    label: 'Effekte',
+    options: [
+      { type: 'checkbox', label: 'Metallic' },
+      { type: 'checkbox', label: 'Fluoreszierend' }
+    ]},
+  {
+    type: 'group',
+    label: 'Zusatz',
+    options: [
+      { type: 'checkbox', label: 'Ich brauche eine Duplexbeschichtung für erhöhten Korrosionsschutz (Grundierung & 2. Lackschicht)' },
+      { type: 'checkbox', label: 'Ich möchte eine zweifärbige Beschichtung (Zweitfarbe bitte in der Beschreibung angeben)' },
+      { type: 'checkbox', label: ' Ich stelle den Lack für meinen Auftrag in ausreichender Menge und Qualität bei' }]},      
+    {
+    type: 'group',
+    label: 'Zertifizierungsanforderungen an den Beschichter:',
+    options: [
+      { type: 'checkbox', label: 'GSB (alle Stufen)' },
+      { type: 'checkbox', label: 'Qualicoat (alle Stufen)' },
+      { type: 'checkbox', label: 'Qualisteelcoat Zertifizierung' },
+      { type: 'checkbox', label: 'ISO:9001 Zertifizierung' },
+      { type: 'checkbox', label: 'DIN 55634-2' },
+      { type: 'checkbox', label: 'DBS 918 340' },
+      { type: 'checkbox', label: 'DIN EN 1090-2' },
+    ]}, 
+],
+  Verzinken: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Feuerverzinken' ,'Diffusionsverzinken (Sherardisieren)', 'Galvanisches Verzinken', 'Lamellenverzinken', 'Mechanisches Verzinken'] },
+    // Zusatzoptionen
+  {
+    type: 'group',
+    label: 'Normen & Standards (nur bei Feuerverzinken)',
+    options: [
+      { type: 'checkbox', label: 'RAL-GZ 639 – Anforderungen an Verfahren' },
+      { type: 'checkbox', label: 'DIN EN ISO 1461 – Anforderungen an Zinküberzüge' },      
+    ]},
+  {
+    type: 'group',
+    label: 'Normen & Standards (nur bei Galvanischem Verzinken)',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 2081 – Galvanische Überzüge aus Zink' },
+      { type: 'checkbox', label: 'Korrosionsschutzklasse gemäß ISO 9227 (Salzsprühnebeltest)' },
+      { type: 'checkbox', label: 'DIN EN ISO 198598 für Zink-Nickel-Schichten, Korrosionsschutzklasse C4-C5' }
+    ]
+  },
+  {
+    type: 'group',
+    label: 'Normen & Standards (nur bei Diffusionsverzinken)',
+    options: [
+      { type: 'checkbox', label: 'DIN 50942 – Sherardisieren' },
+      { type: 'checkbox', label: 'DIN EN ISO 14713-3 – Zinkdiffusionsüberzüge' }
+    ]
+  },
+    {
+    type: 'group',
+    label: 'Normen & Standards (nur bei Lamellenverzinken)',
+    options: [
+      { type: 'checkbox', label: 'Schichtsysteme gemäß ISO 10683 (z. B. Zinklamellen)' },
+      { type: 'checkbox', label: 'Reibungsbeiwert-Anforderungen (z. B. für Schrauben)' }
+    ]
+  },
+  {
+    type: 'group',
+    label: 'Normen & Standards (nur bei Mechanischem Verzinken)',
+    options: [
+      { type: 'checkbox', label: 'ASTM B695 – Mechanisches Zinkbeschichten' },
+      { type: 'checkbox', label: 'DIN EN ISO 14713-3 – Mechanisch aufgebrachte Zinküberzüge' }
+    ]
+  },
+],
+Aluminieren: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },
+    { type: 'checkbox', label: 'ISO 45001' },
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Feueraluminieren' ,'Thermisches Spritzen', 'Packaluminieren'] },
+    // Zusatzoptionen
+   // Nur für Thermisches Aluminieren
+   // Nur für Feueraluminieren
+  {
+    type: 'group',
+    label: 'Standards für Feueraluminieren',
+    options: [
+      { type: 'checkbox', label: 'ASTM A1059' },
+      { type: 'checkbox', label: 'DIN EN 22063' }
+    ]
+  },// Nur für Thermisches Spritzen
+  {
+    type: 'group',
+    label: 'Standards für Thermisches Spritzen',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 14918' },
+      { type: 'checkbox', label: 'DIN EN ISO 2063' }
+    ]},
+  // Nur für Packaluminieren
+  {
+    type: 'group',
+    label: 'Standards für Packaluminieren',
+    options: [
+      { type: 'checkbox', label: 'AMS 2415' },
+      { type: 'checkbox', label: 'MIL-C-83488' }
+    ]}],
+
+    Vernickeln: [    
+  { type: 'title', label: 'Zertifizierungen' },
+  { type: 'checkbox', label: 'ISO 9001' },
+  { type: 'checkbox', label: 'ISO 14001' },
+  { type: 'checkbox', label: 'ISO 45001' },
+  { type: 'checkbox', label: 'RoHS-Konformität' },
+
+  { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch', 'Galvanisch'] },
+
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Vernickeln',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 4526' },
+      { type: 'checkbox', label: 'DIN EN ISO 9227' }
+    ]
+  },
+  {
+    type: 'group',
+    label: 'Standards für Galvanisches Vernickeln',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 1456' },
+      { type: 'checkbox', label: 'DIN EN ISO 2080' },
+      { type: 'checkbox', label: 'DIN EN ISO 9227' }
+    ]
+  }
+],
+
+
+
+
+
+    Entaluminieren: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch' ,'Elektrochemisch', 'Mechanisch'] },
+    
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Entaluminieren',
+    options: [
+      { type: 'checkbox', label: 'ASTM B600' },
+      { type: 'checkbox', label: 'DIN EN ISO 2812' }
+    ]
+  },
+  
+  {
+    type: 'group',
+    label: 'Standards für Elektrochemisches Entaluminieren',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 15730' },      
+    ]},
+    {
+    type: 'group',
+    label: 'Standards für Mechanisches Entaluminieren',
+    options: [
+    { type: 'checkbox', label: 'DIN EN ISO 8501-1 – Oberflächenvorbereitung durch Strahlen' },
+    { type: 'checkbox', label: 'DIN EN ISO 11127 – Prüfmethoden für Strahlmittel' },
+    { type: 'checkbox', label: 'DIN EN ISO 12944 – Korrosionsschutz von Stahlbauten durch Beschichtungssysteme' },
+    
+  ]}],
+
+  Entzinken: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'RoHS / REACH-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch' ,'Elektrochemisch'] },
+    
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Entzinken',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 1111x' },      
+    ]
+  }, 
+  {
+    type: 'group',
+    label: 'Standards für Elektrochemisches Entzinken',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 15730' },      
+    ]},
+    ],
+
+
+
+  Entzinnen: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch' ,'Elektrochemisch'] },  
+  
+  
+    ],
+
+    Entnickeln: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch' ,'Elektrochemisch'] },
+    
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Entnickeln',
+    options: [
+      { type: 'checkbox', label: 'DIN EN 12472 ' },
+      
+    ]
+  },  
+  {
+    type: 'group',
+    label: 'Standards für Elektrochemisches Entnickeln',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 15730' },      
+    ]},
+    ],
+
+
+
+  Enteloxieren: [    
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'RoHS-Konformität' },
+    { type: 'radio', label: 'Verfahren wählen', options: ['Chemisch' ,'Elektrochemisch'] },
+    
+  {
+    type: 'group',
+    label: 'Standards für Chemisches Enteloxieren',
+    options: [
+      { type: 'checkbox', label: 'Qualanod' },
+      { type: 'checkbox', label: 'ISO 2819' },
+      { type: 'checkbox', label: 'DIN EN ISO 7599' },
+      { type: 'checkbox', label: 'DIN 50939' }
+    ]
+  },  
+  {
+    type: 'group',
+    label: 'Standards für Elektrochemisches Enteloxieren',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 7599' },      
+    ]},
+    ],
+
+    Eloxieren: [
+    
+  
+  {
+    type: 'group',
+    label: 'Zertifizierungen',
+    options: [
+      { type: 'checkbox', label: 'ISO 9001' },
+      { type: 'checkbox', label: 'ISO 14001' },
+      { type: 'checkbox', label: 'RoHS / REACH' },
+      { type: 'checkbox', label: 'Qualanod' },
+      { type: 'checkbox', label: 'GSB International' },
+      { type: 'checkbox', label: 'DIN EN 1090-2' }
+    ]},
+     {
+    type: 'group',
+    label: 'Standards',
+    options: [
+      { type: 'checkbox', label: 'DIN EN ISO 7599' },
+      { type: 'checkbox', label: 'DIN EN ISO 2360' },
+      { type: 'checkbox', label: 'DIN EN ISO 8993' },
+      { type: 'checkbox', label: 'DIN 50939' },
+      
+    ]},
+   
+],
+
+Anodisieren: [
+    
+  
+  {
+    type: 'group',
+    label: 'Zertifizierungen',
+    options: [
+      { type: 'checkbox', label: 'ISO 9001' },
+      { type: 'checkbox', label: 'ISO 14001' },
+      { type: 'checkbox', label: 'RoHS / REACH' }
+    ]},
+     {
+    type: 'group',
+    label: 'Standards',
+    options: [
+      { type: 'checkbox', label: 'ISO 8080 – Anodisieren von Magnesium und Magnesiumlegierungen' },
+      { type: 'checkbox', label: 'ISO 8077 – Anodisieren von Titan' },
+      
+      
+    ]},
+   
+],
+
+
+  Pulverbeschichten: [
+    { type: 'text', label: 'Lackhersteller' },
+    { type: 'text', label: 'Farbbezeichnung' },
+    {
+    type: 'radio',
+    label: 'Farbpalette',
+    options: ['RAL', 'NCS', 'MCS', 'DB', 'BS', 'Munsell', 'Candy', 'Neon', 'Pantone', 'Sikkens', 'HKS', 'Klarlack', 'Sonderfarbe / Nach Vorlage', 'RAL D2-Design', 'RAL E4-Effekt']
+  },
+  {
+    type: 'radio',
+    label: 'Oberfläche',
+    options: ['Glatt', 'Feinstruktur', 'Grobstruktur']
+  },
+   {
+    type: 'radio',
+    label: 'Glanzgrad',
+    options: ['Hochglanz', 'Seidenglanz', 'Glanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+  },
+  {
+    type: 'radio',
+    label: 'Qualität',
+    options: ['Polyester', 'Epoxy-Polyester', 'Polyester für Feuerverzinkung', 'Thermoplast']
+  },
+  {
+    type: 'group',
+    label: 'Effekte',
+    options: [
+      { type: 'checkbox', label: 'Metallic' },
+      { type: 'checkbox', label: 'Fluoreszierend' }
+    ]},
+  {
+    type: 'group',
+    label: 'Zusatz',
+    options: [
+      { type: 'checkbox', label: 'Ich brauche eine Duplexbeschichtung für erhöhten Korrosionsschutz (Grundierung & 2. Lackschicht)' },
+      { type: 'checkbox', label: 'Ich möchte eine zweifärbige Beschichtung (Zweitfarbe bitte in der Beschreibung angeben)' },
+      { type: 'checkbox', label: ' Ich stelle den Lack für meinen Auftrag in ausreichender Menge und Qualität bei' }]},      
+    {
+    type: 'group',
+    label: 'Zertifizierungsanforderungen an den Beschichter:',
+    options: [
+      { type: 'checkbox', label: 'GSB (alle Stufen)' },
+      { type: 'checkbox', label: 'Qualicoat (alle Stufen)' },
+      { type: 'checkbox', label: 'Qualisteelcoat Zertifizierung' },
+      { type: 'checkbox', label: 'ISO 9001 Zertifizierung' },
+      { type: 'checkbox', label: 'ISO 14001' },
+      { type: 'checkbox', label: 'DIN 55634-2' },
+      { type: 'checkbox', label: 'DBS 918 340' },
+      { type: 'checkbox', label: 'DIN EN 1090-2' },
+    ]}, 
+],
+
+Entanodisieren: [
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },    
+    { type: 'checkbox', label: 'REACH & RoHS' },  
+  ],
+  Folieren: [
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },
+    { type: 'checkbox', label: 'DIN EN 13523' },
+    { type: 'checkbox', label: 'RAL-GZ 716' },
+    { type: 'checkbox', label: 'DIN EN ISO 4892-2' },
+    { type: 'checkbox', label: 'REACH & RoHS' },
+    { type: 'checkbox', label: 'DIN EN 13501-1' },
+    {
+    type: 'radio',
+    label: 'Anwendung',
+    options: ['Innen ', 'Außen']
+  },
+  { type: 'text', label: 'Folienhersteller' },
+  {
+    type: 'radio',
+    label: 'Verfahren',
+    options: ['Thermisches Kaschieren ', 'Kaltlaminieren', 'Nassverkleben']
+  },
+  ],
+  Isolierstegverpressen: [
+    { type: 'title', label: 'Zertifizierungen' }, // <-- Überschrift
+    { type: 'checkbox', label: 'ISO 9001' },
+    { type: 'checkbox', label: 'ISO 14001' },
+    { type: 'checkbox', label: 'DIN EN 14024' },
+    { type: 'checkbox', label: 'DIN EN ISO 10077-2' },
+    { type: 'checkbox', label: 'RAL-GZ 607/3' },
+    { type: 'checkbox', label: 'DIN EN ISO 4892-2' },
+    { type: 'checkbox', label: 'REACH & RoHS' },
+    
+  ],
+  Einlagern: [
+    
+    { type: 'checkbox', label: 'Bitte im Trockenen lagern' },
+  ],
+  // Weitere Schritte ergänzen...
+};
+
+const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+const [lieferDatum, setLieferDatum] = useState('');
+const [abholDatum, setAbholDatum] = useState('');
+const [lieferArt, setLieferArt] = useState('');
+const [abholArt, setAbholArt] = useState('');
+const [logistikError, setLogistikError] = useState(false);
+
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  let hasError = false;
+
+  // AGB prüfen
+  if (!agbAccepted) {
+    setAgbError(true);
+    hasError = true;
+  } else {
+    setAgbError(false);
+  }
+
+  // Dropdown prüfen
+  if (!selectedOption1) {
+    setShowDropdownError(true);
+    hasError = true;
+  } else {
+    setShowDropdownError(false);
+  }
+
+  // Logistik prüfen
+  const today = new Date().toISOString().split('T')[0];
+  const isLieferDatumValid = !!lieferDatum && new Date(lieferDatum) >= new Date(today);
+  const isAbholDatumValid = !!abholDatum && new Date(abholDatum) >= new Date(lieferDatum);
+
+  if (
+    !lieferDatum ||
+    !abholDatum ||
+    !lieferArt ||
+    !abholArt ||
+    !isLieferDatumValid ||
+    !isAbholDatumValid
+  ) {
+    setLogistikError(true);
+    hasError = true;
+  } else {
+    setLogistikError(false);
+  }
+  // Materialgüte prüfen
+if (!materialGuete || (materialGuete === 'Andere' && !customMaterial.trim())) {
+  setMaterialGueteError(true);
+  hasError = true;
+} else {
+  setMaterialGueteError(false);
+}
+
+// Abmessungen prüfen
+if (!laenge || !breite || !hoehe || !masse) {
+  setAbmessungError(true);
+  hasError = true;
+} else {
+  setAbmessungError(false);
+}
+
+
+  // Wenn Fehler: abbrechen
+  if (hasError) return;
+
+  // Wenn alles OK
+  setIsSubmitting(true);
+  setSubmitSuccess(false);
+
+  setTimeout(() => {
+    setIsSubmitting(false);
+    setSubmitSuccess(true);
+
+    setTimeout(() => {
+      setSubmitSuccess(false);
+    }, 3000);
+  }, 2000);
+};
+
+
+const validSecondOptions: { [key: string]: string[] } = {
     "Nasslackieren": ["Folieren", "Isolierstegverpressen", "Einlagern"],
     "Pulverbeschichten": ["Folieren", "Isolierstegverpressen", "Einlagern"],
     "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-    "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Strahlen","Folieren","Einlagern","Isolierstegverpressen","Entzinken", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
-    "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Vernickeln", "Entnickeln", "Entlacken","Folieren","Einlagern","Isolierstegverpressen","Entzinken", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
+    "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Strahlen","Folieren","Einlagern","Isolierstegverpressen","Entzinken", "Anodisieren", "Verzinnen",  "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
+    "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Vernickeln", "Entnickeln", "Entlacken","Folieren","Einlagern","Isolierstegverpressen","Entzinken",  "Anodisieren", "Verzinnen",  "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
     "Folieren": ["Isolierstegverpressen", "Einlagern"],
     "Isolierstegverpressen": ["Einlagern"],
-    "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Strahlen", "Entlacken","Folieren","Einlagern","Vernickeln", "Entnickeln","Isolierstegverpressen","Entzinken", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
-    "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Vernickeln", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-    "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Vernickeln", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-    "Entbleien": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Vernickeln", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-    "Entnickeln": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Vernickeln", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+    "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Strahlen", "Entlacken","Folieren","Einlagern","Vernickeln", "Entnickeln","Isolierstegverpressen","Entzinken", "Anodisieren", "Verzinnen",  "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
+    "Entzinken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Vernickeln", "Einlagern", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
+    "Entzinnen": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Vernickeln", "Einlagern", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
+    "Entnickeln": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Vernickeln", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
     "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-    "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-    "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+    "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],    
     "Vernickeln": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Anodisieren"],
+    "Entaluminieren": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Vernickeln", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
     "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Eloxieren"],
   };
   const validThirdOptions: { [key: string]: { [key: string]: string[] } } = {
@@ -112,13 +1042,24 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
     "Entnickeln": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
       "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
+      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
       "Isolierstegverpressen": ["Einlagern"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],      
+      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
+      "Vernickeln": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
+    },
+    "Entaluminieren": {
+      "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
+      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
+      "Folieren": ["Isolierstegverpressen", "Einlagern"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",  "Aluminieren"],
+      "Isolierstegverpressen": ["Einlagern"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],      
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
       "Vernickeln": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
     },
@@ -135,35 +1076,32 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
       "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
-      "Strahlen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren"],
+      "Strahlen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Anodisieren", "Verzinnen",   "Aluminieren", "Entanodisieren", "Enteloxieren"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
       "Isolierstegverpressen": ["Einlagern"],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Aluminieren"],      
       "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],      
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Anodisieren"],
       "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Eloxieren"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Aluminieren"],
     },
     "Strahlen": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
-      "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren"],
+      "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", 
+      "Anodisieren", "Verzinnen", "Aluminieren", "Entanodisieren", "Enteloxieren"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
       "Isolierstegverpressen": ["Einlagern"],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],      
       "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],      
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Anodisieren"],
       "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen", "Eloxieren"],      
@@ -180,15 +1118,13 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
       "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Isolierstegverpressen", "Strahlen"],
-      "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Entbleien", "Anodisieren", "Verzinnen", "Verbleien", "Aluminieren", "Entanodisieren", "Enteloxieren"],
+      "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Anodisieren", "Verzinnen",   "Aluminieren", "Entanodisieren", "Enteloxieren"],
       "Folieren": ["Isolierstegverpressen"],
       "Isolierstegverpressen": [],
-      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Entbleien": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Entzinken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],
+      "Entzinnen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],
       "Anodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen"],
       "Entanodisieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen", "Anodisieren"],
       "Enteloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Isolierstegverpressen", "Eloxieren"],      
@@ -196,39 +1132,25 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
     "Entzinken": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
       "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
+      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],
       "Isolierstegverpressen": ["Einlagern"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],      
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
     },
     "Entzinnen": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
       "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
+      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
+      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen",   "Aluminieren"],
       "Isolierstegverpressen": ["Einlagern"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
+      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],      
       "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-    },
-    "Entbleien": {
-      "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Folieren": ["Isolierstegverpressen", "Einlagern"],
-      "Einlagern": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Strahlen", "Folieren", "Isolierstegverpressen", "Verzinnen", "Verbleien", "Aluminieren"],
-      "Isolierstegverpressen": ["Einlagern"],
-      "Verzinnen": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-      "Verbleien": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-      "Aluminieren": ["Nasslackieren", "Pulverbeschichten", "Einlagern", "Folieren", "Isolierstegverpressen"],
-    },
+    },    
     "Anodisieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
@@ -245,7 +1167,7 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
       "Einlagern": [],
       "Isolierstegverpressen": ["Einlagern"],
     },
-    "Verbleien": {
+    " ": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
@@ -280,515 +1202,558 @@ const [selectedOption2, setSelectedOption2] = useState<string | null>(null);
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     },
   };
-  const getSecondDropdownOptions = () => {
-    if (!firstSelection || !validSecondOptions[firstSelection]) return [];
-    return validSecondOptions[firstSelection];
-  };
-
-  const getThirdDropdownOptions = () => {
-    if (
-      !firstSelection ||
-      !secondSelection ||
-      !validThirdOptions[firstSelection] ||
-      !validThirdOptions[firstSelection][secondSelection]
-    )
-      return [];
-    return validThirdOptions[firstSelection][secondSelection];
-  };
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    addFiles(files);
-  };
-  const handleUploadClick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
-    addFiles(files);
-  };
-  const addFiles = (files: File[]) => {
-    const validFiles = files.filter(file => {
+  const addFiles = (newFiles: File[]) => {
+    const validFiles = newFiles.filter(file => {
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        alert(`"${file.name}" ist größer als ${MAX_FILE_SIZE_MB} MB und wird ignoriert.`);
+        alert(`"${file.name}" ist größer als ${MAX_FILE_SIZE_MB} MB.`);
         return false;
       }
       return true;
     });
 
-    if (dateien.length + validFiles.length > MAX_FILES) {
+    if (files.length + validFiles.length > MAX_FILES) {
       alert(`Maximal ${MAX_FILES} Dateien erlaubt.`);
       return;
     }
 
-    setDateien(prev => [...prev, ...validFiles]);
+    setFiles(prev => [...prev, ...validFiles]);
   };
 
-  const handleRemove = (index: number) => {
-    setDateien(dateien.filter((_, i) => i !== index));
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index));
   };
 
-  const getPreviewIcon = (file: File) => {
-    if (file.type.startsWith('image/')) return URL.createObjectURL(file);
-    if (file.type === 'application/pdf') return "/pdf-icon.png";
-    if (file.name.endsWith('.zip')) return "/zip-icon.png";
-    return "/file-icon.png";
-  };
+ const getPreviewIconComponent = (file: File) => {
+  if (file.type.startsWith('image/')) return <FileImage size={40} color="#0f172a" />;
+  if (file.type === 'application/pdf') return <FileText size={40} color="#dc2626" />;
+  if (file.name.endsWith('.zip')) return <FileArchive size={40} color="#78350f" />;
+  return <File size={40} color="#475569" />;
+};
+  const [showSteps, setShowSteps] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Formular gesendet');
+  const fadeIn = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3 }
   };
-  return (
-    <>   
-      <Pager />
-      <div className={styles.wrapper}>
-        <div className={styles.infoBox}>
-          💡 Ab sofort ist das Einholen von Angeboten <strong>kostenlos</strong>!
+  return (    
+    <div className={oswald.className}>        
+    <><Pager />            
+   <form onSubmit={handleSubmit} className={styles.wrapper}>
+      <motion.div {...fadeIn} className={styles.infoBox}>
+        💡 Ab sofort ist das Einholen von Angeboten <strong>kostenlos</strong>!
           <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
+      </motion.div>
+
+      <motion.div {...fadeIn} className={styles.stepsAnimation}>
+        <h3>Sag uns in 3 einfachen Schritten, was du <span className={styles.highlight}>erledigt</span> haben möchtest.
+        <button
+  type="button"
+  onClick={() => setShowSteps(!showSteps)}
+  className={styles.toggleButton}
+>
+  {showSteps ? '' : ''}{' '}
+  {showSteps ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+</button></h3>
+  <AnimatePresence initial={false}>
+  {showSteps && (
+    <motion.div
+      className={styles.stepsBoxContainer}
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    >
+      {[1, 2, 3].map((step, index) => (
+        <motion.div
+          key={step}
+          className={styles.stepBox}
+          animate={{
+            borderColor: index === activeStep ? '#00b4d8' : '#00e5ff',
+            boxShadow:
+              index === activeStep
+                ? '0 0 6px 2px rgba(0, 229, 255, 0.8)'
+                : '0 0 0 0 rgba(0,0,0,0)',
+            scale: index === activeStep ? 1.03 : 1.02,
+          }}
+          transition={{ duration: 0.7, ease: 'easeInOut' }}
+        >
+          <div className={styles.stepNumber}>{step}</div>
+          <strong>
+            {['Dateien hochladen', 'Verfahren & Logistik wählen', 'Beschreibung hinzufügen'][index]}
+          </strong>
+          <div className={styles.stepIcon}>{stepIcons[index]}</div>
+          <p>
+            {[
+              'Laden Sie Skizzen, Zeichnungen oder Fotos Ihrer Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer Ihre Daten, desto präziser das Angebot.',
+              'Wählen Sie die gewünschten Bearbeitungsverfahren und geben Sie an, ob ihr Material abgeholt & geliefert werden soll, oder Sie es selbst bringen möchten.',
+              'Teilen Sie mit, was Ihnen wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen – Ihr Beschichtungswunsch wird erfüllt, dafür stehen wir.'
+            ][index]}
+          </p>
+        </motion.div>
+      ))}
+    </motion.div>
+  )}
+</AnimatePresence>
+</motion.div>
+
+      <motion.div {...fadeIn}>
+        
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '2.5rem', marginBottom: '2.5rem' }}>
+  <div className={styles.stepNumber}>1</div>
+  <h2 className={styles.headingSection} style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
+    Lade Fotos & Dateien zu deinem Auftrag hoch
+    <span className={styles.iconTooltip}>
+      <HelpCircle size={18} />
+      <span className={styles.tooltipText}>
+        Sie können bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle gängigen Dateitypen).
+        Beschichter möchten alle Details kennen, um alle Anforderungen an den Auftrag erfüllen zu können.
+        Dies gibt Ihnen und dem Beschichter die nötige Sicherheit für die Produktion Ihres Auftrags.
+      </span>
+    </span>
+  </h2>
+</div>
+<div
+          className={styles.dropzone}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onDragEnter={(e) => e.preventDefault()}
+          onClick={() => document.getElementById('file-upload')?.click()}
+        >
+          <div className={styles.counter}>{files.length} / {MAX_FILES} Dateien hochgeladen</div>
+          <p className={styles.dropText}>
+            Dateien hierher ziehen oder <span className={styles.circleText}>klicken</span>
+          </p>
+          <input
+            type="file"
+            id="file-upload"
+            multiple
+            className={styles.input}
+            onChange={handleUploadClick}
+          />
         </div>
 
-        <br />
-        <h1 className={styles.subheading}>Angebote für Ihren Auftrag einholen</h1><br />
-
-        <h2 className={styles.heading}>1. Dateien für deinen Auftrag hochladen</h2>
-        <p className={styles.description}>
-          Sie können bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle gängigen Dateitypen). Beschichter möchten alle Details kennen um alle Anforderungen 
-          an den Auftrag erfüllen zu können. Dies gibt Ihnen und dem Beschichter die benötigte Sicherheit für die Produktion Ihres Auftrags.
-        </p>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div
-            className={styles.dropzone}
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onDragEnter={(e) => e.preventDefault()}
-            onClick={() => document.getElementById("file-upload")?.click()}
-          >
-            <div className={styles.counter}>{dateien.length} / {MAX_FILES} Dateien hochgeladen</div>
-            <p className={styles.dropText}>
-                Dateien hierher ziehen oder <span className={styles.clickHighlight}>klicken</span>
-                </p>
-            <input
-              type="file"
-              id="file-upload"
-              multiple
-              className={styles.input}
-              onChange={handleUploadClick}
-            />
+        {files.length > 0 && (
+  <>
+    <div className={styles.preview}>
+      {files.map((file, index) => (
+        <div className={styles.fileCard} key={index}>
+          <div className={styles.fileIcon}>
+            {getPreviewIconComponent(file)}
           </div>
-
-          {dateien.length > 0 && (
-            <div className={styles.preview}>
-              {dateien.map((file, index) => (
-                <div className={styles.fileCard} key={index}>
-                  <img
-                    src={getPreviewIcon(file)}
-                    alt="preview"
-                    className={styles.fileIcon}
-                  />
-                  <p className={styles.fileName}>{file.name}</p>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(index)}
-                    className={styles.removeButton}
-                  >
-                    ✖
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <div className={styles.lineContainer}></div>
-          <p className={styles.dropdownText}>2. Wähle den ersten Arbeitsschritt</p>
-          {/* Dropdowns */}
-        <div className={styles.dropdownContainer}>
-  {/* Erster Dropdown */}
-  
-  <p className={styles.dropdownText}>Triff eine Auswahl für den ersten Arbeitsschritt</p>
-  <select
-    value={firstSelection || ""}
-    onChange={(e) => {
-      const value = e.target.value || null;
-      setFirstSelection(value);
-      setSecondSelection(null);
-      setThirdSelection(null);
-    }}
-    className={styles.select}
-  >
-    <option value="" disabled hidden>Wähle den ersten Arbeitsschritt</option>
-    <option value="">-- Auswahl zurücksetzen --</option>
-    {allOptions.map((option, index) => (
-      <option key={index} value={option}>{option}</option>
-    ))}
-  </select>
-
-  {/* Zweiter Dropdown */}
-  {firstSelection && getSecondDropdownOptions().length > 0 && (
-    <>
-      <p className={styles.dropdownText}>Triff eine Auswahl für den zweiten Arbeitsschritt (optional)</p>
-      <select
-        value={secondSelection || ""}
-        onChange={(e) => {
-          const value = e.target.value || null;
-          setSecondSelection(value);
-          setThirdSelection(null);
-        }}
-        className={styles.select}
-      >
-        <option value="" disabled hidden>Triff eine Auswahl</option>
-        <option value="">-- Auswahl zurücksetzen --</option>
-        {getSecondDropdownOptions().map((option, index) => (
-          <option key={index} value={option}>{option}</option>
-        ))}
-      </select>
-    </>
-  )}
-
-  {/* Dritter Dropdown */}
-  {firstSelection && secondSelection && getThirdDropdownOptions().length > 0 && (
-    <>
-      <p className={styles.dropdownText}>Triff eine Auswahl für den dritten Arbeitsschritt (optional)</p>
-      <select
-        value={thirdSelection || ""}
-        onChange={(e) => {
-          const value = e.target.value || null;
-          setThirdSelection(value);
-        }}
-        className={styles.select}
-      >
-        <option value="" disabled hidden>Triff eine Auswahl</option>
-        <option value="">-- Auswahl zurücksetzen --</option>
-        {getThirdDropdownOptions().map((option, index) => (
-          <option key={index} value={option}>{option}</option>
-        ))}
-      </select>
-    </>
-  )}
+          <p className={styles.fileName}>{file.name}</p>
+          <button
+            type="button"
+            onClick={() => removeFile(index)}
+            className={styles.removeButton}
+          >
+            ✖
+          </button>
+        </div>
+      ))}
+    </div>
+    <button
+      type="button"
+      onClick={() => setFiles([])}
+      className={styles.clearAllButton}
+    >
+      Alles entfernen
+    </button>
+  </>
+)}
+      </motion.div>
+      <div className={styles.borderedContainer}>
+      
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '2.5rem', marginBottom: '2.5rem' }}>
+  <div className={styles.stepNumber}>2</div>
+  <h2 className={styles.headingSection} style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
+    Arbeitsschritte und Logistik wählen
+    <span className={styles.iconTooltip}>
+      <HelpCircle size={18} />
+      <span className={styles.tooltipText}>
+        Hier können Sie genaue Angaben zum gewünschten Verfahren machen.
+      </span>
+    </span>
+  </h2>
 </div>
-<div className={styles.lineContainer}></div>
-<p className={styles.dropdownText}>3. Logistik für den gesamten Auftrag</p>  
-<div className={styles.dropdownContainer}>   
-<p className={styles.dropdownText}></p>  
-                    <div className={styles.radioSection}>
-                    <h3>Das Material wird dem Beschichter überstellt per:</h3>               
-                    {/* Gruppe 1 */}
-                <div className={styles.radioGroup}>
-                <label>
-                <input
-                    type="radio"
-                    name="lieferung1"
-                    value="selbst"
-                    onChange={() => setSelectedOption1("selbst")}
-                />
-                Selbstanlieferung
-                <a href="/Logistikersuche" className={styles.link1}> (Transporteur finden)</a>
-                </label>
-                <label>
-                    <input
-                    type="radio"
-                    name="lieferung1"
-                    value="selbst"
-                    onChange={() => setSelectedOption1("selbst")}
-                    />
-                    Abholung an meinem Firmenstandort
-                </label>
-                <label>
-                    <input
-                    type="radio"
-                    name="lieferung1"
-                    value="lieferung"
-                    onChange={() => setSelectedOption1("lieferung")}
-                    />
-                    Abholung an anderem Standort
-                </label>
-                {selectedOption1 === "lieferung" && (
-                    <div className={styles.addressInput}>
-                    <p>Adresse:</p>
-                    <input type="text" placeholder="Straße, Hausnummer" />
-                    <input type="text" placeholder="PLZ, Ort" />
-                    </div>                    
-                )}
-                <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label>                
-                    <DatePicker
-                    selected={selectedDate}
-                    onChange={(date) => setSelectedDate(date)}
-                    dateFormat="dd.MM.yyyy"
-                    locale="de"
-                    customInput={<CustomDateInput />}
-                    minDate={new Date()}
-                    popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
-                    />
-                </div>
-                </div>
-                <div className={styles.radioSection}>
-                    <h3>Das Material wird dem Auftraggeber überstellt per:</h3>                        
-                    {/* Gruppe 2 */}
-                <div className={styles.radioGroup}>
-                <label>
-                    <input
-                    type="radio"
-                    name="lieferung2"
-                    value="selbst"
-                    onChange={() => setSelectedOption2("selbst")}
-                    />
-                    Selbstabholung
-                <a href="/Logistikersuche" className={styles.link1}> (Transporteur finden)</a>
-                </label>
-                <label>
-                    <input
-                    type="radio"
-                    name="lieferung2"
-                    value="selbst"
-                    onChange={() => setSelectedOption2("selbst")}
-                    />
-                    Zustellung an meinem Firmenstandort
-                </label>
-                <label>
-                    <input
-                    type="radio"
-                    name="lieferung2"
-                    value="lieferung"
-                    onChange={() => setSelectedOption2("lieferung")}
-                    />
-                    Zustellung an anderem Standort
-                </label>
-                {selectedOption2 === "lieferung" && (
-                    <div className={styles.addressInput}>
-                    <p>Adresse:</p>
-                    <input type="text" placeholder="Straße, Hausnummer" />
-                    <input type="text" placeholder="PLZ, Ort" />
-                    </div>
-                )}
-                </div>
-                    <br></br> 
-                    <label className="dateLabel">Datum der Zustellung / Selbstabholung:</label> <br></br>
-                    <DatePicker
-                        selected={selectedDate}
-                        onChange={(date) => setSelectedDate(date)}
-                        dateFormat="dd.MM.yyyy"
-                        locale="de"
-                        customInput={<CustomDateInput />}
-                        minDate={new Date()}
-                        popperPlacement="bottom-start" // Kalender erscheint nun linksbündig
-                    />
-                    </div>
-                    
-                    
-                    
-                            
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    name="autowaescheErweitert"
-                                    onChange={(e) => setZeigeUnterOptionen(e.target.checked)}
-                                />
-                                Ich habe einen Serienauftrag
-                                </label>
-                                
+<div className={styles.dropdownSection}>
+  <label htmlFor="step1" className={styles.labelSmall}>Arbeitsschritt 1:</label>
+ <select
+  id="step1"
+  className={`${styles.dropdown} ${showDropdownError ? styles.dropdownError : ''}`}
+  value={selectedOption1}
+  onChange={(e) => {
+    const selected = e.target.value;
+    setSelectedOption1(selected);
+    setSelectedOption2('');
+    setSelectedOption3('');
+    setShowDropdownError(false); // Fehler zurücksetzen beim Ändern
+  }}
+>
+  <option value="">Bitte wählen</option>
+  {allOptions.map(option => (
+    <option key={option} value={option}>{option}</option>
+  ))}
+</select>
+ <AnimatePresence mode="wait">
+  {selectedOption1 && specificationsMap[selectedOption1] && (
+    <motion.div
+      key={`spec-1-${selectedOption1}`}
+      className={styles.specsBox}
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.4, ease: 'easeInOut' }}
+    >
+      <SpecBlock
+        title={selectedOption1}
+        specs={specificationsMap[selectedOption1]}
+        specSelections={specSelections}
+        setSpecSelections={setSpecSelections}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
 
-                                {zeigeUnterOptionen && (
-                                <div className={styles.optionRow}>
-                                <span className={styles.optionLabel}>Zusatzoptionen:</span>
-                                <label className={styles.checkboxLabel}>
-                                  <input type="checkbox" /> Option 1
-                                </label>
-                                <label className={styles.checkboxLabel}>
-                                  <input type="checkbox" /> Option 2
-                                </label>
-                              </div>
-                              
-                                )}
-                                <br></br>
-                  <label htmlFor="waschplatzName">Gesamte m² für meinen Auftrag:</label>
-                    <input
-                    type="text"
-                    id="waschplatzName"
-                    name="waschplatzName"
-                    className={styles.customTextInput}
-                    />
-                    <p>Materialgüte (äußerste Schicht):</p>
-                    <div className={styles.radioContainer}>
-                  <label><input type="radio" name="auswahl1" value="Aluminium" /> Aluminium</label>
-                  <label><input type="radio" name="auswahl1" value="Aluguss" /> Aluguss</label>
-                  <label><input type="radio" name="auswahl1" value="Eloxal" /> Eloxal</label>
-                  <label><input type="radio" name="auswahl1" value="Anodisiert" /> Anodisiert</label>
-                  <label><input type="radio" name="auswahl1" value="Stahl" /> Stahl</label>
-                  <label><input type="radio" name="auswahl1" value="Edelstahl" /> Edelstahl</label>
-                  <label><input type="radio" name="auswahl1" value="Kupfer" /> Kupfer</label>
-                  <label><input type="radio" name="auswahl1" value="Zink" /> Zink</label>
-                  <label><input type="radio" name="auswahl1" value="Zinn" /> Zinn</label>
-                  <label><input type="radio" name="auswahl1" value="Nickel" /> Nickel</label>
-                  <label><input type="radio" name="auswahl1" value="Blei" /> Blei</label>
-                  <label><input type="radio" name="auswahl1" value="Chrom" /> Chrom</label>
-                  <label><input type="radio" name="auswahl1" value="Andere" /> Andere</label>
-                  </div>
-                  </div>
-                  
-          {/* Dynamische Module */}
-          {firstSelection && (
-            <div className={styles.dynamicModule}>
-              <h3>Optional können Sie spezifische Angaben zum ersten Arbeitsschritt machen</h3>
-              {firstSelection === "Pulverbeschichten" && (
-                <>
-                  
-
-                  <label htmlFor="waschplatzName">Farbton oder Artikelnummer des Herstellers:</label>
-                    <input
-                    type="text"
-                    id="waschplatzName"
-                    name="waschplatzName"
-                    className={styles.customTextInput}
-                    />
-                    <p>Farbpalette:</p>
-                    <div className={styles.radioContainer}>
-                    
-                  <label><input type="radio" name="auswahl2" value="RAL" /> RAL</label>
-                  <label><input type="radio" name="auswahl2" value="NCS" /> NCS</label>
-                  <label><input type="radio" name="auswahl2" value="MCS" /> MCS</label>
-                  <label><input type="radio" name="auswahl2" value="DB" /> DB</label>
-                  <label><input type="radio" name="auswahl2" value="BS" /> BS</label>
-                  <label><input type="radio" name="auswahl2" value="Munsell" /> Munsell</label>
-                  <label><input type="radio" name="auswahl2" value="Candy" /> Candy</label>
-                  <label><input type="radio" name="auswahl2" value="Neon" /> Neon</label>
-                  <label><input type="radio" name="auswahl2" value="Pantone" /> Pantone</label>
-                  <label><input type="radio" name="auswahl2" value="Sikkens" /> Sikkens</label>
-                  <label><input type="radio" name="auswahl2" value="HKS" /> HKS</label>
-                  <label><input type="radio" name="auswahl2" value="Nach Vorlage" /> Nach Vorlage</label>
-                  <label><input type="radio" name="auswahl2" value="Klarlack" /> Klarlack</label>
-                  <label><input type="radio" name="auswahl2" value="Sonderfarbe" /> Sonderfarbe</label>
-                  <label><input type="radio" name="auswahl2" value="RAL D2-Design" /> RAL D2-Design</label>
-                  <label><input type="radio" name="auswahl2" value="RAL E4-Effekt" /> RAL E4-Effekt</label></div>
-                  <br></br>
-                  <label><input type="checkbox" /> Ich brauche eine Duplexbeschichtung für erhöhten Korrosionsschutz (Grundierung & 2. Lackschicht)</label>                  
-                  <label><input type="checkbox" /> Ich stelle den Lack für meinen Auftrag in ausreichender Menge und Qualität bei</label>
-
-                  <p>Oberfläche:</p>
-                  <div className={styles.radioContainer}>
-                  <label><input type="radio" name="auswahl3" value="Glatt" /> Glatt</label>
-                  <label><input type="radio" name="auswahl3" value="Feinstruktur" /> Feinstruktur</label>
-                  <label><input type="radio" name="auswahl3" value="Grobstruktur" /> Grobstruktur</label></div>
-
-                  <p>Glanzgrad:</p>
-                  <div className={styles.radioContainer}>
-                  <label><input type="radio" name="auswahl4" value="Hochglanz" /> Hochglanz</label>
-                  <label><input type="radio" name="auswahl4" value="Seidenglanz" /> Seidenglanz</label>
-                  <label><input type="radio" name="auswahl4" value="Glanz" /> Glanz</label>
-                  <label><input type="radio" name="auswahl4" value="Matt" /> Matt</label>
-                  <label><input type="radio" name="auswahl4" value="Seidenmatt" /> Seidenmatt</label>
-                  <label><input type="radio" name="auswahl4" value="Stumpfmatt" /> Stumpfmatt</label></div>
-
-                  <p>Effekt:</p>
-                  <div className={styles.radioContainer}>
-                  <label><input type="checkbox" /> Metallic</label>
-                  <label><input type="checkbox" /> Fluoreszierend</label></div>
-
-                  <p>Qualität:</p>
-                  <div className={styles.radioContainer}>
-                  <label><input type="radio" name="auswahl5" value="Polyester" /> Polyester</label>
-                  <label><input type="radio" name="auswahl5" value="Epoxy-Polyester" /> Epoxy-Polyester</label>
-                  <label><input type="radio" name="auswahl5" value="Polyester für Feuerverzinkung" /> Polyester für Feuerverzinkung</label>
-                  <label><input type="radio" name="auswahl5" value="Thermoplast" /> Thermoplast</label></div>
+</div>
 
 
-                  <p>Zwingende Qualitätsanforderungen an den Beschichter:</p>
-                  <div className={styles.radioContainer}>
-                  <label><input type="checkbox" /> GSB Zertifizierung (alle Stufen)</label>
-                  <label><input type="checkbox" /> Qualicoat Zertifizierung (alle Stufen)</label>
-                  <label><input type="checkbox" /> Qualisteelcoat Zertifizierung</label>
-                  <label><input type="checkbox" /> DIN 55634-2</label>
-                  <label><input type="checkbox" /> DIN EN 1090-2</label>
-                  <label><input type="checkbox" /> DBS 918 340</label>
-                  <label><input type="checkbox" /> ISO:9001 Zertifizierung</label></div>
-                </>
-              )}
-              
-              {firstSelection === "Option 4" && (
-                <>
-                  <p>Wähle eine Farbe:</p>
-                  <label><input type="radio" name="farbe1" value="rot" /> Rot</label>
-                  <label><input type="radio" name="farbe1" value="blau" /> Blau</label>
-                </>
-              )}
-            </div>
-          )}
 
-          {secondSelection && (
-            <div className={styles.dynamicModule}>
-              <h3>Optional können Sie spezifische Angaben zum 2. Arbeitsschritt machen</h3>
-              {secondSelection === "Option 5" && (
-                <label>Benutzerdefinierter Text:
-                  <input type="text" placeholder="Ihre Eingabe..." />
-                </label>
-              )}
-              {secondSelection === "Option 8" && (
-                <>
-                  <label><input type="checkbox" /> Erweiterung 1</label>
-                  <label><input type="checkbox" /> Erweiterung 2</label>
-                </>
-              )}
-            </div>
-          )}
 
-          {thirdSelection && (
-            <div className={styles.dynamicModule}>
-              <h3>Optional können Sie spezifische Angaben zum 3. Arbeitsschritt machen</h3>
-              {thirdSelection === "Pulverbeschichten" && (
-                <>
-                  <p>Bitte geben Sie Ihre Maße ein:</p>
-                  <input type="number" placeholder="Breite (cm)" />
-                  <input type="number" placeholder="Höhe (cm)" />
-                </>
-              )}
-              {thirdSelection === "Nasslackieren" && (                
-                <>
-                <label>
-                  <input type="radio" name="auswahl13" value="Standard" /> Standard
-                </label>
-                <label>
-                  <input type="radio" name="auswahl13" value="Premium" /> Premium
-                </label>
-                <input
-                    type="text"
-                    placeholder="Weitere Angaben"
-                    className="customTextInput"
-                />
-              </>
-            )}
-              {thirdSelection === "Verzinken" && (
-                <>
-                  <p>Welches Verfahren soll für das Verzinken angewendet werden?</p>
-                  <label><input type="radio" name="auswahl13" value="Feuerverzinken" /> Feuerverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Galvanisches Verzinken" /> Galvanisches Verzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Mechanisches Verzinken" /> Mechanisches Verzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Diffusionsverzinken" /> Diffusionsverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Spritzverzinken" /> Spritzverzinken</label>
-                  <label><input type="radio" name="auswahl13" value="Lamellenverzinken" /> Lamellenverzinken</label>
-                </>
-              )}
-            </div>
-          )}
-        </form>
-        <div className={styles.textfeldContainer}>
-        <div className={styles.lineContainer}></div>
-        <p className={styles.dropdownText}>4. Beschreibung</p>
+{selectedOption1 && (
+  <div className={styles.dropdownSection}>
+    <label htmlFor="step2" className={styles.labelSmall}>Arbeitsschritt 2 (optional):</label>
+    <select
+      id="step2"
+      className={styles.dropdown}
+      value={selectedOption2}
+      onChange={(e) => {
+        setSelectedOption2(e.target.value);
+        setSelectedOption3('');
+      }}
+    >
+      <option value="">Bitte wählen</option>
+      {(validSecondOptions[selectedOption1] || []).map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+    </select>
+
+    <AnimatePresence mode="wait">
+      {selectedOption2 && specificationsMap[selectedOption2] && (
+        <motion.div
+          key={`spec-2-${selectedOption2}`}
+          className={styles.specsBox}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
+          <SpecBlock
+            title={selectedOption2}
+            specs={specificationsMap[selectedOption2]}
+            specSelections={specSelections}
+            setSpecSelections={setSpecSelections}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+)}
+
+
+
+{/* 3. Arbeitsschritt */}
+{selectedOption1 && selectedOption2 && (
+  <div className={styles.dropdownSection}>
+    <label htmlFor="step3" className={styles.labelSmall}>Arbeitsschritt 3 (optional):</label>
+    <select
+      id="step3"
+      className={styles.dropdown}
+      value={selectedOption3}
+      onChange={(e) => setSelectedOption3(e.target.value)}
+    >
+      <option value="">Bitte wählen</option>
+      {(validThirdOptions[selectedOption1]?.[selectedOption2] || []).map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+    </select>
+
+    <AnimatePresence mode="wait">
+      {selectedOption3 && specificationsMap[selectedOption3] && (
+        <motion.div
+          key={`spec-3-${selectedOption3}`}
+          className={styles.specsBox}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+        >
+          <SpecBlock
+            title={selectedOption3}
+            specs={specificationsMap[selectedOption3]}
+            specSelections={specSelections}
+            setSpecSelections={setSpecSelections}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+)}
+
+
+<div className={styles.materialBox}>
+  <div className={styles.materialBoxÜB}><p>Materialgüte wählen:</p></div>
+  <div className={styles.radioGrid}>
+    {[
+      'Aluminium', 'Aluguss', 'Eloxiert', 'Anodisiert', 'Stahl',
+      'Edelstahl', 'Kupfer', 'Zink', 'Zinn', 'Nickel',
+       'Chrom', 'Andere'
+    ].map(material => (
+      <label
+  key={material}
+  className={`${styles.radioMaterial} ${
+    materialGueteError && !materialGuete ? styles.radioError : ''
+  }`}
+>
+
+        <input
+          type="radio"
+          name="materialGuete"
+          value={material}
+          checked={materialGuete === material}
+          onChange={(e) => setMaterialGuete(e.target.value)}
+          disabled={
+            (selectedOption1 === 'Eloxieren' ||
+             selectedOption2 === 'Eloxieren' ||
+             selectedOption3 === 'Eloxieren') && material !== 'Aluminium'
+          }
+        />
+        {material}
+      </label>
+    ))}
+  </div>
+  
+
+  <AnimatePresence initial={false} mode="wait">
+    {materialGuete === 'Andere' && (
+      <motion.div
+        key="custom-input"
+        className={styles.customInputBox}
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <input
+  type="text"
+  placeholder="Bitte Material angeben"
+  value={customMaterial}
+  onChange={(e) => setCustomMaterial(e.target.value)}
+  className={materialGueteError && materialGuete === 'Andere' && !customMaterial ? styles.inputError : ''}
+/>
+
+      </motion.div>
+    )}
+    <div className={styles.container}>
+  {/* Linke Hälfte */}
+  <div className={styles.half}>
+    <h2>Abmessungen größtes Werkstück (mm):</h2>
+    <div className={styles.rowGroup}>
+      <div className={styles.labeledInput}>
+        <label>Länge</label>
+        <div className={styles.inputWithUnit}>
+          <input
+  type="number"
+  value={laenge}
+  onChange={(e) => setLaenge(e.target.value.replace(/\D/g, '').slice(0, 6))}
+  className={`${styles.inputField} ${abmessungError && !laenge ? styles.inputError : ''}`}
+  inputMode="numeric"
+/>
+
+
+          <span>mm</span>
+        </div>
+      </div>
+      <div className={styles.labeledInput}>
+        <label>Breite</label>
+        <div className={styles.inputWithUnit}>
+          <input
+  type="number"
+  value={breite}
+  onChange={(e) => setBreite(e.target.value.replace(/\D/g, '').slice(0, 6))}
+  className={`${styles.inputField} ${abmessungError && !breite ? styles.inputError : ''}`}
+  inputMode="numeric"
+/>
+
+
+          <span>mm</span>
+        </div>
+      </div>
+      <div className={styles.labeledInput}>
+        <label>Höhe</label>
+        <div className={styles.inputWithUnit}>
+          <input
+  type="number"
+  value={hoehe}
+  onChange={(e) => setHoehe(e.target.value.replace(/\D/g, '').slice(0, 6))}
+  className={`${styles.inputField} ${abmessungError && !hoehe ? styles.inputError : ''}`}
+  inputMode="numeric"
+/>
+
+
+          <span>mm</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Rechte Hälfte */}
+  <div className={styles.half}>
+    <h2>Masse schwerstes Werkstück (kg):</h2>
+    <div className={styles.labeledInput}>
+      
+      <div className={styles.inputWithUnit}>
+        <input
+  type="number"
+  value={masse}
+  onChange={(e) => setMasse(e.target.value.replace(/\D/g, '').slice(0, 4))} // optional 4 statt 6 Stellen
+  className={`${styles.inputField} ${abmessungError && !masse ? styles.inputError : ''}`}
+  inputMode="numeric"
+/>
+
+
+        <span>kg</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </AnimatePresence> 
+</div>
+{selectedOption1 && (
+<LogistikBox
+  lieferDatum={lieferDatum}
+  setLieferDatumAction={setLieferDatum}
+  lieferArt={lieferArt}
+  setLieferArtAction={setLieferArt}
+  abholDatum={abholDatum}
+  setAbholDatumAction={setAbholDatum}
+  abholArt={abholArt}
+  setAbholArtAction={setAbholArt}
+  showErrors={logistikError}
+/>)}
+</div>
+<div className={styles.borderedContainer}>
+<div className={styles.textfeldContainer}>  
+<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '2.5rem', marginBottom: '2.5rem' }}>
+  <div className={styles.stepNumber}>3</div>
+  <h2 className={styles.headingSection} style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
+    Beschreibung
+    <span className={styles.iconTooltip}>
+      <HelpCircle size={18} />
+      <span className={styles.tooltipText}>
+        Hier können Sie genaue Angaben zum gewünschten Verfahren machen.
+      </span>
+    </span>
+  </h2>
+</div>
   <textarea
     id="beschreibung"
     className={styles.oswaldTextarea}
     value={text}
     onChange={(e) => {
-      if (e.target.value.length <= 300) {
+      if (e.target.value.length <= 400) {
         setText(e.target.value);
       }
     }}
-    placeholder="Beschreibe dein Angebot..."
+    placeholder={`Um einen reibungslosen Ablauf zu gewährleisten, stellen Sie bitte sicher, dass Ihr Material:
+
+- Den Angaben entspricht (keine qualitativen / quantitativen Abweichungen)
+- Frei von Fremdstoffen ist (Rost, Zunder, Kleber, Fette, Öle, Lacke, Schmutz, Silikon, etc.)
+- Bei thermischen Verfahren der Hitzeeinwirkung standhält
+- Kontaktstellen zum Aufhängen / Einspannen verfügt; kennzeichnen Sie ggf. genau, an welcher Stelle ihr Material für die Beschichtung kontaktiert werden kann
+- Dass die Verpackung Transportsicherheit und allg. Sicherheit gewährleistet`}
     rows={5}
   />
-  
-  <div className={styles.charCount}>{text.length}/300 Zeichen</div>
-  
+  <div
+    className={styles.charCount}
+    style={{ color: text.length > 370 ? '#dc2626' : '#64748b' }}
+  >
+    {text.length}/400 Zeichen
+  </div>
 </div>
-        <button type="submit" className={styles.submitButton}>
-        Kostenlos Angebote einholen
-        </button>
-      </div>
-    </>
+</div>
+      <motion.div {...fadeIn} className={styles.progressContainer}>
+    <div className={styles.progressBarWrapper}>
+  <div
+    className={styles.progressBar}
+    style={{ width: `${calculateProgress()}%` }}
+
+  >
+    <span className={styles.progressValue}>
+      {calculateProgress()}%
+    </span>
+  </div>
+</div>
+  </motion.div>
+  <motion.div {...fadeIn} className={styles.previewSection}>
+    <h2>Live-Vorschau</h2>
+    <ul>
+  <li>Fotos & Dateien: {files.map(f => f.name).join(', ') || 'Keine'}</li>
+  <li>Verfahren: {selectedOption1 || '–'}</li>
+  {selectedOption2 && <li>2. Schritt: {selectedOption2}</li>}
+  {selectedOption3 && <li>3. Schritt: {selectedOption3}</li>}
+  <li>Materialgüte: {materialGuete === 'Andere' ? customMaterial || '–' : materialGuete || '–'}</li>
+  <li>Max. Abmessungen: {laenge || '–'} × {breite || '–'} × {hoehe || '–'} mm</li>
+  <li>Max. Masse: {masse || '–'} kg</li>
+  <li>Lieferdatum: {lieferDatum || '–'}</li>
+  <li>Anlieferart: {lieferArt || '–'}</li>
+  <li>Abholdatum: {abholDatum || '–'}</li>
+  <li>Abholart: {abholArt || '–'}</li>
+  <li>Beschreibung: {text.trim() || '–'}</li>
+
+  
+</ul>
+
+  </motion.div>
+  <div className={styles.agbContainer}>
+  <motion.label
+  className={`${styles.agbLabel} ${agbError ? styles.agbError : ''}`}
+  animate={agbError ? { x: [0, -4, 4, -4, 0] } : {}}
+  transition={{ duration: 0.3 }}
+>
+ <input
+  type="checkbox"
+  checked={agbAccepted}
+  onChange={(e) => {
+    setAgbAccepted(e.target.checked);
+    setAgbError(false);
+  }}
+  />
+  <label htmlFor="agbCheckbox">
+  Ich habe die{' '}
+  <a href="/agb" className={styles.agbLink}>
+    AGB
+  </a>{' '}
+  gelesen und bin damit einverstanden.
+</label>
+
+
+</motion.label>  
+</div>
+  <button type="submit" className={styles.submitButton}>
+    Kostenlos Angebote einholen
+  </button>
+{submitSuccess && (
+  <div className={styles.successMessage}>
+    <CheckCircle size={20} style={{ marginRight: '0.5rem' }} />
+    Ihre Anfrage wurde erfolgreich übermittelt.
+  </div>
+
+  
+)}
+
+</form>
+</></div>
   );
 }

@@ -1,9 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
-
-
 /* src/styles/layout.css */
-body {
-  font-family: 'Oswald', sans-serif;
+body {  
   margin: 0;  
   overflow-x: hidden;      /* Verhindert horizontales Scrollen auf der gesamten Seite */
 }  
@@ -78,12 +74,31 @@ header {
   .socialLinks a:hover {
     color: #00b4d8;
   }  
-  @media (max-width: 768px) {
+  .responsiveLogo {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+/* Für Mobilgeräte */
+@media (max-width: 600px) {
+  .responsiveLogo {
+    margin-left: 8px;
+    width: 120px;
+    height: auto;
+  }
+}
+
+  @media (max-width: 1025px) {
+
+    
     .footer {
       flex-direction: column; /* Spalten untereinander anordnen */
       align-items: center; /* Zentrierte Ausrichtung */
       text-align: center;
       text-decoration: none;
+      padding: 60px; 
+      
+      
     }
   
     .column, .column3 {
@@ -118,10 +133,11 @@ header {
        gap: 10px;
     }
   }  
-  main {
-    
-    min-height: 100vh; /* Stellt sicher, dass der Hauptinhalt den gesamten Bildschirm ausfüllt */
+  main {    
+    min-height: unset !important;
     background-color: white;
     margin-top: -20px;
   }
-  
+  main, .wrapper, .stepBox, p, h2, h3, strong {
+  font-family: 'Oswald';
+}

@@ -1,174 +1,104 @@
-
-
-  /* Haupt-Wrapper */
+/* Haupt-Wrapper */
 .wrapper {
-  width: 100%;  
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-/* Navbar */
-.navbar {
-  font-family: 'Oswald', sans-serif;
-  width: 100%;
-  background-color: white;
-  display: flex;
-  justify-content: center; /* Zentriert die Links horizontal */
-  padding: 10px 0;
-  position: relative;
-  z-index: 1000;
-  scrollbar-width: none; /* Für Firefox */
-}
-
-/* Navbar Liste */
-.navList {
-  list-style: none;
-  display: flex;
-  padding: 0;
-  margin: 0;
-  position: relative;
-}
-
-/* Jedes Menü-Element */
-.navItem {
-  position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-/* Buttons */
-.navButton {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  font-family: 'Oswald', sans-serif;
-  padding: 10px 15px;
-  color: black;
-  transition: color 0.3s ease;
-}
-
-.navItem:hover .navButton {
-  color: #00b4d8;
-}
-
-/* Dropdown-Menü */
-.dropdown {
-  position: absolute;
-  top: 100%; /* Dropdown direkt unter dem Link */
-  left: 50%;
-  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
-  background: white;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
-  flex-direction: column;
-  padding: 0;
-  border-radius: 4px;
-  z-index: 10000; /* Höchste Priorität, überlagert alles */
-  min-width: 165px;
-  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
-}
-
-/* Dropdown Links */
-.dropdownLink {
-  padding: 10px 15px;
-  text-decoration: none;
-  color: black;
-  display: block;
-  text-align: center;
-  transition: background-color 0.2s ease;
-}
-
-.dropdownLink:hover {
-  background-color: #00b4d8;
-  color: white;
-}
-
-/* Dropdown sichtbar machen */
-.navItem:hover .dropdown {
-  display: flex; /* Macht das Dropdown sichtbar */
-}
-
-
-/* Bereich für Mein Konto */
-.kontoContainer {
-  width: 100%;
-  margin: 40px auto;
-  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
 
 .kontoList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
 }
 
 .kontoItem {
   display: block;
-  width: 100%;
-  background: #f7f7f7;
-  padding: 20px; /* Erhöhtes Padding */
-  border-radius: 5px;
+  text-decoration: none; /* Entfernt die Standard-Unterstreichung */
+}
+
+.kontoBox {
+  position: relative;
+  padding: 30px;
+  background-color: #f0f0f0;
+  border-radius: 12px;
   text-align: center;
-  text-decoration: none;
-  color: black;
-  font-weight: bold;
-  font-size: 18px;
-  transition: background 0.3s ease;
-  height: 60px; /* Erhöhte Höhe */
-  line-height: 60px; /* Text vertikal zentrieren */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  width: 300px;
+  color: #333; /* Hier wird die Textfarbe in den Boxen festgelegt */
 }
 
-.kontoItem:hover {
-  background: #007BFF;
-  color: white;
+.kontoBox:hover {
+  transform: translateY(-5px); /* Leichter Hover-Effekt */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* Verstärkter Hover-Schlagschatten */
 }
 
+.kontoIcon {
+  width: 38px;
+  height: 38px;
+  stroke: currentColor;
+  fill: currentColor;
+}
 
-.kontoItem:hover {
-  background: #007BFF;
-  color: white;
+.kontoBox:hover .kontoIcon {
+  color: #00b4d8; /* Farbe beim Hover */
 }
 
 /* Mobile Ansicht */
 @media (max-width: 1024px) {
   .kontoContainer {
-    width: 95%;
+    width: 100%;
   }
 
   .kontoList {
-    width: 90%;
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .navbar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    display: flex;
-    justify-content: flex-start; /* Links beginnen ganz links */
-    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
+  .kontoBox:hover {
+    transform: none; /* Deaktiviert den Hover-Effekt */
+    box-shadow: none; /* Entfernt den Hover-Schlagschatten */
   }
 
-  .navList {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding: 10px 0;
-    margin: 0;
-    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
+  .kontoBox a:hover {
+    color: #00b4d8; /* Deaktiviert den Hover-Link-Farbwechsel */
   }
 
-  .navItem {
-    margin: 0 10px; /* Falls nötig, Abstand anpassen */
-  }
-
-  /* Dropdown für mobile Ansicht ausblenden */
-  .dropdown {
-    display: none !important;
+  /* Weitere Hover-Änderungen auf mobilen Geräten */
+  .kontoIcon:hover {
+    color: inherit; /* Entfernt die Hover-Farbe für Icons */
   }
 }
 
+@media (max-width: 768px) {
+  .kontoList {
+    grid-template-columns: 1fr;
+    justify-items: center; /* Zentriert die Grid-Elemente horizontal */
+  }
+
+  .kontoContainer {
+    width: 100%;
+  }
+
+  .kontoBox:hover {
+    transform: none; /* Deaktiviert den Hover-Effekt */
+    box-shadow: none; /* Entfernt den Hover-Schlagschatten */
+  }
+
+  .kontoBox a:hover {
+    color: #00b4d8; /* Deaktiviert den Hover-Link-Farbwechsel */
+  }
+
+  /* Weitere Hover-Änderungen auf mobilen Geräten */
+  .kontoIcon:hover {
+    color: inherit; /* Entfernt die Hover-Farbe für Icons */
+  }
+}

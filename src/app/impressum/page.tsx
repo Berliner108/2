@@ -13,32 +13,32 @@ const ImpressumPage = () => {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Angaben gemäß § 5 TMG</h2>
         <p className={styles.text}>
-          Mein Unternehmen GmbH<br />
-          Musterstraße 1<br />
-          12345 Musterstadt<br />
-          Deutschland
+          BeschichterScout GmbH<br />
+          Seestrasse 1<br />
+          6900 Bregenz<br />
+          Österreich
         </p>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Vertreten durch</h2>
         <p className={styles.text}>
-          Max Mustermann (Geschäftsführer)
+          Martin Zajac (Geschäftsführer)
         </p>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Kontakt</h2>
         <p className={styles.text}>
-          Telefon: +49 123 456789<br />
-          E-Mail: kontakt@mein-unternehmen.de
+          Telefon: +43 660 3740467<br />
+          E-Mail: kontakt@beschichterscout.at
         </p>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Umsatzsteuer-ID</h2>
         <p className={styles.text}>
-          Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: DE123456789
+          Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: AT123456789
         </p>
       </section>
 

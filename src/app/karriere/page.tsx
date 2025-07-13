@@ -32,7 +32,7 @@ const KarrierePage = () => {
       <div className={styles.highlight}>
   	      Wir sind stets auf der Suche nach engagierten Talenten, die mit uns gemeinsam innovative Produkte entwickeln und die Zukunft aktiv gestalten.
       </div>
-      <p className={styles.ceo}>Max Mustermann, CEO</p>
+      <p className={styles.ceo}>Martin Zajac, CEO</p>
 
 
       <section className={styles.jobs}>
