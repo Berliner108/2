@@ -25,7 +25,7 @@ const images = [
   },
   { 
     src: "/images/slide4.webp", 
-    text1: "Alle Arbeitsmittel aus einer Hand", 
+    text1: "Alle Arbeitsmittel für Beschichter aus einer Hand", 
     text2: "Nasslacke, Pulverlacke, Arbeitskleidung & Arbeitsutensilien, uvm.", 
     link: "/kaufen" 
   },
@@ -96,9 +96,12 @@ const Slideshow = () => {
       >
         {extendedImages.map((image, index) => (
           <div 
-            key={index} 
-            className={`${styles.slide} ${image.isFullScreen ? styles.fullImageSlide : ""}`}
-          >
+  key={index} 
+  className={`${styles.slide} 
+    ${image.isFullScreen ? styles.fullImageSlide : ""} 
+    ${image.src.includes("slide5") ? styles.slide5 : ""}`}
+>
+
             {!image.isFullScreen && (
               <div className={styles.textContainer}>
                 <p className={styles.text1}>{image.text1}</p>
