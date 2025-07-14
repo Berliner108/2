@@ -1,9 +1,17 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiKey = process.env.RESEND_API_KEY;
+const resend = apiKey ? new Resend(apiKey) : null;
 
 export async function POST(req: Request) {
   const { email, name, token } = await req.json();
+
+  if (!resend) {
+    return Response.json(
+      { error: 'E-Mail-Service ist aktuell deaktiviert (kein API-Key)' },
+      { status: 503 }
+    );
+  }
 
   try {
     const result = await resend.emails.send({
@@ -17,6 +25,9 @@ export async function POST(req: Request) {
 
     return Response.json({ success: true });
   } catch (error) {
-    return Response.json({ error: 'E-Mail konnte nicht gesendet werden' }, { status: 500 });
+    return Response.json(
+      { error: 'E-Mail konnte nicht gesendet werden' },
+      { status: 500 }
+    );
   }
 }
