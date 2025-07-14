@@ -64,14 +64,14 @@ const Wissenswertes = () => {
         {/* 2. Container (Rechter Container mit Bild) */}
         <div className={styles["container-right"]}>
           <div className={styles["image-container"]}>
-            <img src="/images/vision.jpg" alt="Vision" className={styles["image"]} />
+            <img src="/images/vision.webp" alt="Vision" className={styles["image"]} />
           </div>
         </div>
 
         {/* 3. Container (Linker Container mit Bild) */}
         <div className={styles["container-left"]}>
           <div className={styles["image-container"]}>
-            <img src="/images/mission.jpg" alt="Mission" className={styles["image"]} />
+            <img src="/images/mission.webp" alt="Mission" className={styles["image"]} />
           </div>
         </div>
 
