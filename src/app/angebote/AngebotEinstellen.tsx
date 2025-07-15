@@ -1278,10 +1278,20 @@ const validSecondOptions: { [key: string]: string[] } = {
           }}
           transition={{ duration: 0.7, ease: 'easeInOut' }}
         >
-          <div className={styles.stepNumber}>{step}</div>
-          <strong>
+          <div
+            className={`${styles.stepNumber} ${step === 2 ? styles.stepNumberMobileMargin : ''}`}
+          >
+            {step}
+          </div>
+          <strong
+            className={`${styles.stepTitle} ${
+              index === 0 || index === 2 ? styles.mbMobile : ''
+            }`}
+          >
             {['Dateien hochladen', 'Verfahren & Logistik wählen', 'Beschreibung hinzufügen'][index]}
           </strong>
+
+
           <div className={styles.stepIcon}>{stepIcons[index]}</div>
           <p>
             {[

@@ -715,8 +715,51 @@
   to { opacity: 1; transform: translateY(0); }
 } /* ✅ schließende Klammer ergänzt */
 
+@media (min-width: 600px) and (max-width: 1170px) {
+  .stepBox {
+  width: 280px;
+  max-width: 800px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;  
+  gap: 0.5rem;
+}
+.stepBox p {
+  display: none;
+}
+.stepTitle {
+  font-weight: 16px;
+}
+.stepsAnimation {
+  margin: 2rem 0;
+  text-align: center;
+}
+.stepsAnimation h3 {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 0.6rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 600;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
 
-@media (max-width: 1024px) {
+}
+@media (max-width: 599px) {
   .oswaldTextarea {
   width: 92%;
   font-family: 'Oswald', sans-serif;
@@ -730,19 +773,21 @@
   background: #fff;
   min-height: 300px;
 }
-
-
-
   .infoBox {
     display: block;
     text-align: center;
-    padding: 16px;
+    font-size: 15px;
+    padding: 8px;
+    
   }
 
   .infoLink {
-    display: block;
-    margin-top: 8px;
+    display: inline;
+    margin-left: 5px;
+    
+    
   }
+ 
   .wrapper {
   padding: 0px;
   max-width: 93%;
@@ -758,9 +803,11 @@
   gap: 1rem;
   flex-wrap: nowrap;
   overflow-x: visible; /* kein Scrollen */
+   padding: 0 0.5rem; /* ⬅ Abstand links und rechts */
 }
   .stepBox {
-  width: 180px;
+  width: 280px;
+  max-width: 80px;
   min-height: 160px;
   padding: 1rem;
   border: 3px solid #00b4d8;
@@ -773,6 +820,7 @@
   display: flex;  
   gap: 0.5rem;
 }
+
 .toggleButton {
   background-color: #00b4d8;
   color: white;
@@ -819,5 +867,9 @@
 }
 .half {
     flex: 1 1 50%;
-  }  
+  } 
+  .stepNumberMobileMargin {
+    margin-top: 0.8rem;}
+
+ 
 }
