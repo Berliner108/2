@@ -60,9 +60,12 @@ const ImpressumPage = () => {
           des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
         </p>
       </section>
-      <Link href="/" legacyBehavior>
-        <button className={styles.backButton}><b>Zurück zur Startseite</b></button>
-      </Link>
+      <div className={styles.buttonWrapper}>
+  <Link href="/" className={styles.backButton}>
+    <b>Zurück zur Startseite</b>
+  </Link>
+</div>
+
     </main>
   );
 };

@@ -85,14 +85,15 @@ export default function Page() {
         </ul>
       </nav>
       <Slideshow />    
-      
+      <div className={styles.articleLinkContainer}>
+        <Link href="/auftragsboerse" className={styles.articleLink}>
+          Top Deals aus der <span className={styles.colored}>Auftragsbörse</span>
+        </Link>
+      </div>
+
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        <h2 className={styles.articleHeader}>
-          <Link href="/auftragsboerse">
-            Top Deals aus der Auftragsbörse
-          </Link>
-        </h2>
+        
       </div>
       {/* Kategorie 2 mit scrollbarem Container */}
       <div className={styles.scrollContainer}>
@@ -129,13 +130,14 @@ export default function Page() {
       <div className={styles.imageContainer}>
         <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
+       <div className={styles.articleLinkContainer}>
+        <Link href="/kaufen" className={styles.articleLink}>
+          Top Deals aus der <span className={styles.colored}>Lackbörse</span>
+        </Link>
+      </div>
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        <h2 className={styles.articleHeader}>
-          <Link href="/kaufen">
-            Top Deals aus der Lackbörse
-          </Link>
-        </h2>
+        
       </div>
       {/* Kategorie 2: Blumen */}
       <div className={styles.categorySection}>
@@ -145,14 +147,14 @@ export default function Page() {
       <div className={styles.imageContainer}>
         <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-      
+       <div className={styles.articleLinkContainer}>
+        <Link href="/kaufen" className={styles.articleLink}>
+          Top Deals aus der <span className={styles.colored}>Arbeitsmittelbörse</span>
+        </Link>
+      </div>
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        <h2 className={styles.articleHeader}>
-          <Link href="/artikelseite">
-            Arbeitsmittelbörse
-          </Link>
-        </h2>
+        
       </div>
       {/* Kategorie 2: Blumen */}
       {/* Kategorie 2: Blumen */}
@@ -173,13 +175,14 @@ export default function Page() {
       <div className={styles.imageContainer}>
         <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
+       <div className={styles.articleLinkContainer}>
+        <Link href="/lackanfragen" className={styles.articleLink}>
+          Top Deals aus der <span className={styles.colored}>Lackanfragen-Börse</span>
+        </Link>
+      </div>
       {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        <h2 className={styles.articleHeader}>
-          <Link href="/artikelseite">
-            Offene Sonderlackanfragen
-          </Link>
-        </h2>
+        
       </div>
       {/* Kategorie 2: Blumen */}
       <div className={styles.categorySection}>

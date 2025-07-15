@@ -35,11 +35,14 @@
 .buttonContainer {
   display: flex;
   justify-content: center;
+  align-items: center;
+  width: 100%; /* optional, aber klarer */
   
 }
 
 .backButton {
-  width: 120%;
+  min-width: 400px; /* feste Mindestbreite */
+  max-width: 100%;  /* nicht überlaufen */
   padding: 12px;
   background-color: #00b5d8;
   color: white;
@@ -51,6 +54,7 @@
   margin-top: 20px;
   margin-bottom: 20px;
   font-family: 'Oswald';
+  font-weight: bold;
 }
 
 .backButton:hover {

@@ -515,9 +515,12 @@ const AgbPage = () => {
           Bei fortgesetzter Nutzung der Plattform gelten die geänderten Bedingungen als akzeptiert.</p>
       </section>
       <br></br>
-      <Link href="/" legacyBehavior>
-        <button className={styles.backButton}><b>Zurück zur Startseite</b></button>
-      </Link>
+      <div className={styles.buttonWrapper}>
+  <Link href="/" className={styles.backButton}>
+    <b>Zurück zur Startseite</b>
+  </Link>
+</div>
+
 
     </div>
   );
