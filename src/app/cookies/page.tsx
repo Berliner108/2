@@ -73,9 +73,8 @@ const CookiePage = () => {
       <section className={styles.section}>
         <h2 className={styles.subheading}>Weitere Informationen</h2>
         <p>
-          Falls Sie Fragen oder Anmerkungen zu unserer Cookie-Richtlinie oder deren Nutzung haben, können Sie unseren Datenschutzbeauftragten per E-Mail kontaktieren: 
-          cookies@beschichterscout.at.
-        </p>
+          Falls Sie Fragen oder Anmerkungen zu unserer Cookie-Richtlinie oder deren Nutzung haben, können Sie unseren Datenschutzbeauftragten per E-Mail kontaktieren:  
+         <a href="mailto:cookies@beschichterscout.com" className={styles.mailLink}> cookies@beschichterscout.com.</a></p>
       </section>
       <section className={styles.section}>
         <h2 className={styles.subheading}>Änderungen an dieser Cookie-Richtlinie</h2>

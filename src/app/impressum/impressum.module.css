@@ -32,21 +32,22 @@
 
 .backButton {
   display: block;
-  width: 100%;
+  width: 60%;
   max-width: 250px;
   margin: 60px auto;
-  padding: 10px;
-  font-size: 1rem;
+  padding: 12px;
+  font-size: 16px;
   text-align: center;
   color: white;
-  background: linear-gradient(90deg, #00b4d8, #00e5ff);
+  background-color: #00b5d8;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background-color 0.3s;
   text-decoration: none;
+  font-family: 'Oswald';
 }
 
 .backButton:hover {
-  background: linear-gradient(90deg, #00e5ff, #00b4d8);
+  background-color: #00e5ff;
 }

@@ -31,7 +31,7 @@ const ImpressumPage = () => {
         <h2 className={styles.sectionTitle}>Kontakt</h2>
         <p className={styles.text}>
           Telefon: +43 660 3740467<br />
-          E-Mail: kontakt@beschichterscout.at
+          E-Mail: kontakt@beschichterscout.com
         </p>
       </section>
 
@@ -55,7 +55,7 @@ const ImpressumPage = () => {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Urheberrecht</h2>
         <p className={styles.text}>
-          Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen 
+          Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem österreichischen 
           Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen 
           des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
         </p>

@@ -35,26 +35,32 @@
   padding-left: 24px;
   line-height: 1.6;
 }
-
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 2rem; /* optional */
+  text-align: center;
+}
 .applyButton {
-  display: inline-block;
-  margin-top: 32px;
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #0ea5e9, #0284c7);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 600;
+  width: 40%;
+  padding: 12px;
+  background-color: #00b5d8;
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  transition: background-color 0.3s;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-family: 'Oswald';
+  text-decoration: none;
 }
 
 .applyButton:hover {
-  background: linear-gradient(135deg, #0284c7, #0ea5e9);
-  transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+  background-color: #00e5ff;
+  text-decoration: none;
 }
 
 .error {
