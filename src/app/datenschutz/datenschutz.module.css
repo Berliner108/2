@@ -31,29 +31,36 @@
   text-align: left;
 }
 
-/* Container für Button-Zentrierung */
+
+
 .buttonContainer {
   display: flex;
   justify-content: center;
+  align-items: center; /* optional, falls vertikal auch nötig */
+  width: 100%;
+  text-decoration: none;
+  text-align: center;
 }
 
 .backButton {
-  padding: 10px 20px;
-  margin-top: 40px;
-  margin-bottom: 40px;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #ffffff;
-  background: linear-gradient(90deg, #00e5ff, #00b4d8);
+  width: 60%;
+  padding: 12px;
+  background-color: #00b5d8;
+  color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
+  font-size: 16px;
   cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-family: 'Oswald';
   text-decoration: none;
-  transition: background 0.3s ease;
 }
 
 .backButton:hover {
-  background: linear-gradient(90deg, #00b4d8, #00e5ff);
+  background-color: #00e5ff;
+  text-decoration: none;
 }
 
 @media (max-width: 600px) {
