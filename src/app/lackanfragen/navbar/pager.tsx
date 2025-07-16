@@ -36,8 +36,8 @@ export default function Pager() {
               title: 'Lacke anfragen',
               href: '/sonderlacke',
               links: [
-                { href: '/services/webdesign', text: 'Nasslack' },
-                { href: '/services/seo', text: 'Pulverlack' }
+                { href: '/sonderlacke?kategorie=nasslack', text: 'Nasslack' },
+                { href: '/sonderlacke?kategorie=pulverlack', text: 'Pulverlack' }
               ]
             },
             {
@@ -99,7 +99,7 @@ export default function Pager() {
               href: '/konto',
               links: [
                 { href: '/konto/angebote', text: 'Angebote' },
-                { href: '/konto/auftraege', text: 'Auftraege' },
+                { href: '/konto/auftraege', text: 'Aufträge' },
                 { href: '/konto/bestellungen', text: 'Bestellungen' },
                 { href: '/konto/lackanfragen', text: 'Lackanfragen' },
                 { href: '/konto/verkaufen', text: 'Verkaufen' },

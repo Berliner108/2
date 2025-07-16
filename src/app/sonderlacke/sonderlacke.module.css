@@ -1,123 +1,198 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
 
+.heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
 
-  /* Haupt-Wrapper */
-.wrapper {
-  width: 100%;  
+.description {
+  color: #555;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.2s ease;
+}
+.dynamicFields {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dropzone:hover {
+  background-color: #f9f9f9;
+}
+
+.dropzoneFotos {
+  border-color: #3b82f6;
+  background-color: #f0f6ff;
+}
+
+.dropzoneDateien {
+  border-color: #888;
+  background-color: #f5f5f5;
+}
+
+.dropzoneFehler {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+
+.hidden {
+  display: none;
+}
+
+.validierungsfehler {
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.vorschau {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.thumbnailGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.previewItem {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Navbar */
-.navbar {
-  font-family: 'Oswald', sans-serif;
-  width: 100%;
-  background-color: white;
-  display: flex;
-  justify-content: center; /* Zentriert die Links horizontal */
-  padding: 10px 0;
-  position: relative;
-  z-index: 1000;
-  scrollbar-width: none; /* Für Firefox */
-}
-
-/* Navbar Liste */
-.navList {
-  list-style: none;
-  display: flex;
-  padding: 0;
-  margin: 0;
-  position: relative;
-}
-
-/* Jedes Menü-Element */
-.navItem {
-  position: relative;
-  margin: 0 15px; /* Abstand zwischen den Links */
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-/* Buttons */
-.navButton {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  font-family: 'Oswald', sans-serif;
-  padding: 10px 15px;
-  color: black;
-  transition: color 0.3s ease;
-}
-
-.navItem:hover .navButton {
-  color: #007BFF;
-}
-
-/* Dropdown-Menü */
-.dropdown {
-  position: absolute;
-  top: 100%; /* Dropdown direkt unter dem Link */
-  left: 50%;
-  transform: translateX(-50%); /* Zentriert das Dropdown unter dem Button */
-  background: white;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  display: none;
-  flex-direction: column;
-  padding: 0;
-  border-radius: 4px;
-  z-index: 10000; /* Höchste Priorität, überlagert alles */
-  min-width: 165px;
-  overflow: visible; /* Verhindert, dass das Dropdown in einem Container gescrollt wird */
-}
-
-/* Dropdown Links */
-.dropdownLink {
-  padding: 10px 15px;
-  text-decoration: none;
-  color: black;
-  display: block;
-  text-align: center;
-  transition: background-color 0.2s ease;
-}
-
-.dropdownLink:hover {
-  background-color: #007BFF;
+.removeBtn {
+  margin-top: 6px;
+  background-color: #e3342f;
   color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
 }
 
-/* Dropdown sichtbar machen */
-.navItem:hover .dropdown {
-  display: flex; /* Macht das Dropdown sichtbar */
+.removeBtn:hover {
+  background-color: #cc1f1a;
 }
 
-/* Mobile Ansicht */
-@media (max-width: 1024px) {
-  .navbar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
-    display: flex;
-    justify-content: flex-start; /* Links beginnen ganz links */
-    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
-  }
+.submitBtn {
+  margin-top: 2rem;
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
-  .navList {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    padding: 10px 0;
-    margin: 0;
-    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
-  }
+.submitBtn:hover {
+  background-color: #1e40af;
+}
 
-  .navItem {
-    margin: 0 10px; /* Falls nötig, Abstand anpassen */
-  }
+/* Kategorie-Icons */
 
-  /* Dropdown für mobile Ansicht ausblenden */
-  .dropdown {
-    display: none !important;
-  }
+.kategorieContainer {
+  margin-bottom: 2rem;
+}
+
+.iconRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.iconBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.iconBox span {
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+.iconBox:hover {
+  background-color: #eef6ff;
+  border-color: #3b82f6;
+}
+
+.activeIcon {
+  border-color: #2563eb;
+  background-color: #ebf4ff;
+}
+
+/* Dynamische Felder */
+
+.dynamicFields {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid black;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+
+.dynamicFields label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+}
+
+.dynamicFields input,
+.dynamicFields select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  margin-top: 0.3rem;
+  font-family: 'Oswald';
 }
 
