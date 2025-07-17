@@ -35,6 +35,12 @@
 .dropzone:hover {
   background-color: #f9f9f9;
 }
+.counter {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.2rem;
+}
 
 .dropzoneFotos {
   border-color: #3b82f6;
@@ -53,6 +59,52 @@
 
 .hidden {
   display: none;
+}
+.customSelect {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  width: 100%;
+  margin-top: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  font-size: 0.95rem;
+}
+
+.selectedValue {
+  padding: 0.5rem 0.75rem;
+  user-select: none;
+}
+
+.optionList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid black;
+  z-index: 100;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-top: 1px;
+}
+
+.optionItem {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.optionItem:hover {
+  background-color: #00b4d8;
+}
+
+.activeOption {
+  background-color: #ccf5f1;
+  font-weight: 500;
 }
 
 .validierungsfehler {
@@ -109,17 +161,20 @@
 
 .submitBtn {
   margin-top: 2rem;
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #2563eb;
+  padding: 12px;
+  font-size: 1.1rem;
+  background-color: #00b4d8;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-family: 'oswald';
+  width: 100%;
+  font-weight: bold;
 }
 
 .submitBtn:hover {
-  background-color: #1e40af;
+  background-color: #00e5ff;
 }
 
 /* Kategorie-Icons */
@@ -185,7 +240,9 @@
   flex-direction: column;
   font-weight: 500;
 }
-
+.label {
+  position: relative;
+}
 .dynamicFields input,
 .dynamicFields select {
   padding: 0.5rem;
@@ -194,5 +251,43 @@
   font-size: 1rem;
   margin-top: 0.3rem;
   font-family: 'Oswald';
+}
+
+.radioOptionsHorizontal {
+  display: flex;
+  gap: 2rem;
+  padding-left: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.kategorieFehler {
+  border: 2px dashed #dc2626;
+  background-color: #fef2f2;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+.radioLegend {
+  font-weight: bold;
+  color: #000; /* Oder deine Wunschfarbe */
+  margin-bottom: -20px;
+}
+.radioGroup {
+  border: 1px solid #ccc;   /* <- Standardgrau */
+  border-radius: 8px;
+  padding: 1rem;
+  
+}
+
+
+.dragActive {
+  border: 2px dashed #00b5d8;
+  background-color: #f0f8ff;
+  transition: background-color 0.2s ease;
 }
 
