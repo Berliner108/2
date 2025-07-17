@@ -206,13 +206,23 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
     alert('Serverfehler');
   }
 };
-
+const fadeIn = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3 }
+  };
 
   return (
     <>
       <Pager />
+      
       <form onSubmit={handleSubmit} className={styles.container}>
-        <h1 className={styles.heading}>Artikel einstellen</h1>
+        <motion.div {...fadeIn} className={styles.infoBox}>
+                💡 Ab sofort ist das Einholen von Lack-Angeboten <strong>kostenlos</strong>!
+                  <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
+              </motion.div>
+        
+        <h1 className={styles.heading}>Passenden Lack nicht gefunden? Kein Problem! </h1>
         <p className={styles.description}>
           Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch.
         </p>
@@ -336,7 +346,7 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
   />
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
-<label className={styles.label}>
+<label className={styles.label1}>
   Hersteller (optional):
   <div ref={herstellerRef} className={styles.customSelect} onClick={() => setHerstellerDropdownOffen(!herstellerDropdownOffen)}>
     <div className={styles.selectedValue}>{hersteller || 'Alle'}</div>
