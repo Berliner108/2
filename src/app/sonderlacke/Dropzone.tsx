@@ -39,56 +39,68 @@ const Dropzone: React.FC<DropzoneProps> = ({
 
     const dropped = Array.from(e.dataTransfer.files);
     const zuGross = dropped.filter(istZuGross);
-
     if (zuGross.length > 0) {
       setWarnung(`Einige Dateien überschreiten ${maxDateigroesseMB} MB.`);
       return;
     }
 
-    const ungeeignet = dropped.filter(file => !file.type.startsWith('image/'));
+    const ungeeignet = dropped.filter(file => {
+      if (type === 'bilder') return !file.type.startsWith('image/');
+      return istGueltig && !istGueltig(file);
+    });
     if (ungeeignet.length > 0) {
-      setWarnung('Nur Bilddateien erlaubt.');
+      setWarnung(type === 'bilder' ? 'Nur Bilddateien erlaubt.' : 'Einige Dateien sind nicht erlaubt.');
       return;
     }
 
     const gefiltert = istGueltig ? dropped.filter(istGueltig) : dropped;
-    const neueDateien = [...files, ...gefiltert];
+    if (gefiltert.length === 0) {
+      setWarnung(type === 'bilder' ? 'Bitte lade mindestens ein Bild hoch.' : 'Bitte lade mindestens eine gültige Datei hoch.');
+      return;
+    }
 
+    const neueDateien = [...files, ...gefiltert];
     if (neueDateien.length > maxFiles) {
       setWarnung(`Maximal ${maxFiles} Dateien erlaubt.`);
       return;
     }
 
-    setWarnung('');
     setFiles(neueDateien);
+    setWarnung('');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const auswahl = Array.from(e.target.files);
       const zuGross = auswahl.filter(istZuGross);
-
       if (zuGross.length > 0) {
         setWarnung(`Einige Dateien überschreiten ${maxDateigroesseMB} MB.`);
         return;
       }
 
-      const ungeeignet = auswahl.filter(file => !file.type.startsWith('image/'));
+      const ungeeignet = auswahl.filter(file => {
+        if (type === 'bilder') return !file.type.startsWith('image/');
+        return istGueltig && !istGueltig(file);
+      });
       if (ungeeignet.length > 0) {
-        setWarnung('Nur Bilddateien erlaubt.');
+        setWarnung(type === 'bilder' ? 'Nur Bilddateien erlaubt.' : 'Einige Dateien sind nicht erlaubt.');
         return;
       }
 
       const gefiltert = istGueltig ? auswahl.filter(istGueltig) : auswahl;
-      const neueDateien = [...files, ...gefiltert];
+      if (gefiltert.length === 0) {
+        setWarnung(type === 'bilder' ? 'Bitte lade mindestens ein Bild hoch.' : 'Bitte lade mindestens eine gültige Datei hoch.');
+        return;
+      }
 
+      const neueDateien = [...files, ...gefiltert];
       if (neueDateien.length > maxFiles) {
         setWarnung(`Maximal ${maxFiles} Dateien erlaubt.`);
         return;
       }
 
-      setWarnung('');
       setFiles(neueDateien);
+      setWarnung('');
     }
   };
 

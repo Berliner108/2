@@ -11,7 +11,6 @@ import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 
 
-
 function istGueltigeDatei(file: File): boolean {
   const erlaubteMimeTypen = [
     'application/pdf',
@@ -26,7 +25,31 @@ function istGueltigeDatei(file: File): boolean {
     'model/step',
     'model/stl',
   ];
-  return erlaubteMimeTypen.includes(file.type);}
+
+  const erlaubteEndungen = [
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv', '.dwg', '.dxf', '.step', '.stp'
+  ];
+
+  const dateiname = file.name.toLowerCase();
+
+  const hatErlaubteEndung = erlaubteEndungen.some(ext => dateiname.endsWith(ext));
+  const istErlaubterTyp = erlaubteMimeTypen.includes(file.type);
+  
+
+  return istErlaubterTyp || hatErlaubteEndung;
+}
+const heute = new Date().toISOString().split('T')[0];
+
+
+  const glanzgradListe = [
+  { name: 'Stumpfmatt', value: 'Stumpfmatt' },
+  { name: 'Seidenmatt', value: 'Seidenmatt' },
+  { name: 'Matt', value: 'Matt' },
+  { name: 'Glanz', value: 'Glanz' },
+  { name: 'Seidenglanz', value: 'Seidenglanz' },
+  { name: 'Hochglanz', value: 'Hochglanz' },
+];
+
 
 export default function ArtikelEinstellen() {
   const searchParams = useSearchParams(); // <-- HIER
@@ -36,8 +59,38 @@ export default function ArtikelEinstellen() {
   const herstellerRef = useRef<HTMLDivElement>(null);
   const [zustand, setZustand] = useState('');
   const [warnungKategorie, setWarnungKategorie] = useState('');
+  const [warnungBilder, setWarnungBilder] = useState('');
+  const [warnungTitel, setWarnungTitel] = useState('');
+  const [warnungPalette, setWarnungPalette] = useState('');
+  const [warnungZustand, setWarnungZustand] = useState('');
+  const [anwendung, setAnwendung] = useState('');
+  const [farbcode, setFarbcode] = useState('');
+  const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
+const glanzgradRef = useRef<HTMLDivElement>(null);
+const [sondereffekte, setSondereffekte] = useState<string[]>([]);
+const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
+const [qualitaet, setQualitaet] = useState('');
+const [qualitaetOffen, setQualitaetOffen] = useState(false);
+const [lieferdatum, setLieferdatum] = useState('');
+const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
+const [firma, setFirma] = useState('');
+const [vorname, setVorname] = useState('');
+const [nachname, setNachname] = useState('');
+const [strasse, setStrasse] = useState('');
+const [hausnummer, setHausnummer] = useState('');
+const [plz, setPlz] = useState('');
+const [ort, setOrt] = useState('');
+const [land, setLand] = useState('');
 
 
+
+
+  const [aufladung, setAufladung] = useState<string[]>([]);
+  const [oberflaeche, setOberflaeche] = useState('');
+
+const [warnungAufladung, setWarnungAufladung] = useState('');
+  const [beschreibung, setBeschreibung] = useState('');
+const [warnungBeschreibung, setWarnungBeschreibung] = useState('');
 
 
 useEffect(() => {
@@ -48,10 +101,7 @@ useEffect(() => {
   };
   document.addEventListener('mousedown', handleClickOutside);
   return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
-
-
-  
+}, []);  
 
 
   useEffect(() => {
@@ -70,6 +120,8 @@ useEffect(() => {
   const [farbton, setFarbton] = useState('');
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
+  const [effekt, setEffekt] = useState<string[]>([]);
+
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
     const herstellerListe = [
@@ -100,15 +152,25 @@ useEffect(() => {
 
 const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState(false);
 const farbpaletteRef = useRef<HTMLDivElement>(null);
-  
+
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (glanzgradRef.current && !glanzgradRef.current.contains(event.target as Node)) {
+      setGlanzgradDropdownOffen(false);
+    }
+  };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   
 
-
-
-  
-
- 
+  const fadeIn = {
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.3 },
+};
 
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
@@ -130,40 +192,74 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
+  let fehler = false;
+
   // Kategorie prüfen
   if (!kategorie) {
     setWarnungKategorie('Bitte wähle eine Kategorie aus.');
+    fehler = true;
   } else {
     setWarnungKategorie('');
   }
 
   // Bilder prüfen
   if (bilder.length === 0) {
-    setWarnung('Bitte lade mindestens ein Bild hoch.');
+    setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
+    fehler = true;
   } else {
-    setWarnung('');
+    setWarnungBilder('');
   }
 
   // Pflichtfelder bei Pulverlack prüfen
   if (kategorie === 'pulverlack') {
     if (!titel.trim()) {
-      setWarnung('Bitte gib einen Titel an.');
-    } else if (!farbpaletteWert) {
-      setWarnung('Bitte wähle eine Farbpalette aus.');
-    } else if (!zustand) {
-      setWarnung('Bitte wähle den Zustand aus.');
+      setWarnungTitel('Bitte gib einen Titel an.');
+      fehler = true;
     } else {
-      setWarnung('');
+      setWarnungTitel('');
     }
-  }
 
-  // Wenn irgendeine Warnung aktiv ist: abbrechen
-  if (!kategorie || bilder.length === 0 || (kategorie === 'pulverlack' && (!titel.trim() || !farbpaletteWert || !zustand))) {
-    return;
-  }
+    if (!farbpaletteWert) {
+      setWarnungPalette('Bitte wähle eine Farbpalette aus.');
+      fehler = true;
+    } else {
+      setWarnungPalette('');
+    }
+    if (!oberflaeche) {
+  fehler = true;
+}
+
+    if (!anwendung) {
+  fehler = true;
+}
+
+
+    if (!zustand) {
+      setWarnungZustand('Bitte wähle den Zustand aus.');
+      fehler = true;
+    } else {
+      setWarnungZustand('');
+    }
+    if (aufladung.length === 0) {
+  setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
+  fehler = true;
+} else {
+  setWarnungAufladung('');
+}
+
+
+    if (!beschreibung.trim()) {
+  setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+  fehler = true;
+} else {
+  setWarnungBeschreibung('');
+}
+  }  
+
+  if (fehler) return;
 
   const formData = new FormData();
-  formData.append('kategorie', kategorie);
+  formData.append('kategorie', kategorie!);
 
   if (kategorie === 'pulverlack') {
     formData.append('titel', titel);
@@ -172,6 +268,17 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
     formData.append('hersteller', hersteller);
     formData.append('zustand', zustand);
     formData.append('farbpalette', farbpaletteWert);
+    formData.append('beschreibung', beschreibung);
+    formData.append('aufladung', aufladung.join(', '));
+    formData.append('anwendung', anwendung);
+    formData.append('oberflaeche', oberflaeche);
+    formData.append('farbcode', farbcode);
+    formData.append('effekt', effekt.join(', '));
+    formData.append('sondereffekte', sondereffekte.join(', '));
+    formData.append('qualitaet', qualitaet);
+
+
+
   }
 
   if (kategorie === 'nasslack') {
@@ -194,6 +301,9 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
       setDateien([]);
       setWarnung('');
       setWarnungKategorie('');
+      setWarnungBilder('');
+      setWarnungPalette('');
+      setWarnungZustand('');
       setModell('');
       setBaujahr('');
       setFarbton('');
@@ -206,25 +316,32 @@ const farbpaletteRef = useRef<HTMLDivElement>(null);
     alert('Serverfehler');
   }
 };
-const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3 }
-  };
+const toggleAufladung = (wert: string) => {
+  setAufladung(prev =>
+    prev.includes(wert)
+      ? prev.filter(w => w !== wert)
+      : [...prev, wert]
+  );
+};
 
   return (
     <>
       <Pager />
       
       <form onSubmit={handleSubmit} className={styles.container}>
-        <motion.div {...fadeIn} className={styles.infoBox}>
-                💡 Ab sofort ist das Einholen von Lack-Angeboten <strong>kostenlos</strong>!
-                  <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
-              </motion.div>
+        <motion.div
+  {...fadeIn}
+  className={styles.infoBox}
+  viewport={{ once: true }}
+>
+  💡 Ab sofort ist das Einholen von Lack-Angeboten <strong>kostenlos</strong>!
+  <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
+</motion.div>
+
         
         <h1 className={styles.heading}>Passenden Lack nicht gefunden? Kein Problem! </h1>
         <p className={styles.description}>
-          Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch.
+          Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.
         </p>
 
         <Dropzone
@@ -234,14 +351,16 @@ const fadeIn = {
   maxFiles={8}
   files={bilder}
   setFiles={setBilder}
-  setWarnung={setWarnung}
+  setWarnung={setWarnungBilder} // <-- das ist korrekt
   id="fotoUpload"
 />
+{warnungBilder && (
+  <p className={styles.validierungsfehler}>{warnungBilder}</p>
+)}
 
 
-        {bilder.length === 0 && warnung && (
-          <p className={styles.validierungsfehler}>{warnung}</p>
-        )}
+
+        
 
                 {/* Vorschau Bilder */}
                 <DateiVorschau
@@ -252,17 +371,17 @@ const fadeIn = {
         />
 
 
-        <Dropzone
-  type="dateien"
-  label="Dateien hierher ziehen oder klicken (max. 8)"
-  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
-  maxFiles={8}
-  files={dateien}
-  setFiles={setDateien}
-  istGueltig={istGueltigeDatei}
-  setWarnung={setWarnung}
-  id="dateiUpload"
-/>
+          <Dropzone
+          type="dateien"
+          label="Dateien hierher ziehen oder klicken (max. 8)"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
+          maxFiles={8}
+          files={dateien}
+          setFiles={setDateien}
+          istGueltig={istGueltigeDatei}
+          setWarnung={setWarnung}
+          id="dateiUpload"
+        />
 
 
         {/* Vorschau Dateien */}
@@ -275,7 +394,9 @@ const fadeIn = {
 
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
-            <h2>Artikelkategorie wählen:</h2>
+            <h2 className={styles.centeredHeading}>Ich suche einen</h2>
+
+
             <div className={`${styles.iconRow} ${!kategorie && warnung.includes('Kategorie') ? styles.kategorieFehler : ''}`}>
 
                 <div
@@ -333,7 +454,7 @@ const fadeIn = {
   <>
   <label>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-    Titel: <span style={{ color: 'red' }}>*</span>
+    Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
   </span>
 
   <input
@@ -436,6 +557,7 @@ const fadeIn = {
   </div>
 </label>
 
+
     {/* Dropdown: Farbton */}
 <label>
   Farbton (optional):
@@ -449,6 +571,108 @@ const fadeIn = {
   />
   <div className={styles.counter}>{farbton.length} / 20 Zeichen</div>
 </label>
+<label className={styles.labelFarbcode}>
+  Farbcode (optional):
+  <input
+    type="text"
+    className={styles.inputFarbcode}
+    maxLength={20}
+    value={farbcode}
+    onChange={(e) => setFarbcode(e.target.value)}
+    placeholder="z. B. #00e5ff"
+  />
+  <div className={styles.counter}>{farbcode.length} / 20 Zeichen</div>
+</label>
+<label className={styles.label}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Glanzgrad: <span style={{ color: 'red' }}>*</span>
+  </span>
+
+  {/* Unsichtbares echtes Select für Validierung */}
+  <select
+    value={glanzgrad}
+    required
+    onChange={() => {}}
+    style={{
+      position: 'absolute',
+      opacity: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: -1,
+    }}
+  >
+    <option value="">Bitte wählen</option>
+    {glanzgradListe.map(g => (
+      <option key={g.value} value={g.value}>{g.name}</option>
+    ))}
+  </select>
+
+  {/* Benutzerdefiniertes Dropdown */}
+  <div
+    ref={glanzgradRef}
+    className={styles.customSelect}
+    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+  >
+    <div className={styles.selectedValue}>
+      {glanzgradListe.find(g => g.value === glanzgrad)?.name || 'Bitte wählen'}
+    </div>
+    {glanzgradDropdownOffen && (
+      <div className={styles.optionList}>
+        {glanzgradListe.map(g => (
+          <div
+            key={g.value}
+            className={`${styles.optionItem} ${glanzgrad === g.value ? styles.activeOption : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setGlanzgrad(g.value);
+              setGlanzgradDropdownOffen(false);
+            }}
+          >
+            {g.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</label>
+<label className={styles.label}>
+  Qualität (optional)
+  <div
+    className={styles.customSelect}
+    onClick={() => setQualitaetOffen(!qualitaetOffen)}
+    tabIndex={0}
+    onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
+  >
+    <div className={styles.selectedValue}>
+      {qualitaet || 'Bitte wählen'}
+    </div>
+    {qualitaetOffen && (
+      <div className={styles.optionList}>
+        {[
+          'Standard',
+          'Polyester',
+          'Polyester für Feuerverzinkung',
+          'Epoxy-Polyester',
+          'Thermoplast',
+        ].map((q) => (
+          <div
+            key={q}
+            className={styles.optionItem}
+            onClick={() => {
+              setQualitaet(q);
+              setQualitaetOffen(false);
+            }}
+          >
+            {q}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</label>
+
+
 {/* Radio: Zustand */}
 {/* Radio: Zustand */}
 <fieldset className={styles.radioGroup}>
@@ -464,7 +688,7 @@ const fadeIn = {
     checked={zustand === 'neu'}
     onChange={() => setZustand('neu')}
   />
-  <span>Neu und ungeöffnet</span>
+  <span>Neu & Ungeöffnet</span>
 </label>
 
     <label className={styles.radioLabel}>
@@ -476,16 +700,380 @@ const fadeIn = {
         onChange={() => setZustand('geöffnet')}
         required
       />
-      <span>Geöffnet, aber einwandfrei</span>
+      <span>Geöffnet & Einwandfrei</span>
     </label>
   </div>
 </fieldset>   
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Oberfläche: <span style={{ color: 'red' }}>*</span>
+  </legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="oberflaeche"
+        value="glatt"
+        checked={oberflaeche === 'glatt'}
+        onChange={() => setOberflaeche('glatt')}
+        required
+      />
+      <span>Glatt</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="oberflaeche"
+        value="feinstruktur"
+        checked={oberflaeche === 'feinstruktur'}
+        onChange={() => setOberflaeche('feinstruktur')}
+        required
+      />
+      <span>Feinstruktur</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="oberflaeche"
+        value="grobstruktur"
+        checked={oberflaeche === 'grobstruktur'}
+        onChange={() => setOberflaeche('grobstruktur')}
+        required
+      />
+      <span>Grobstruktur</span>
+    </label>
+  </div>
+</fieldset>
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Anwendung: <span style={{ color: 'red' }}>*</span>
+  </legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="anwendung"
+        value="universal"
+        checked={anwendung === 'universal'}
+        onChange={() => setAnwendung('universal')}
+        required
+      />
+      <span>Universal</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="anwendung"
+        value="innen"
+        checked={anwendung === 'innen'}
+        onChange={() => setAnwendung('innen')}
+        required
+      />
+      <span>Innen</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="anwendung"
+        value="außen"
+        checked={anwendung === 'außen'}
+        onChange={() => setAnwendung('außen')}
+        required
+      />
+      <span>Außen</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="anwendung"
+        value="industrie"
+        checked={anwendung === 'industrie'}
+        onChange={() => setAnwendung('industrie')}
+        required
+      />
+      <span>Industrie</span>
+    </label>
+  </div>
+</fieldset>
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>Effekt (optional):</legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="effekt"
+        value="Metallic"
+        checked={effekt.includes('Metallic')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setEffekt((prev) =>
+            checked ? [...prev, 'Metallic'] : prev.filter((v) => v !== 'Metallic')
+          );
+        }}
+      />
+      <span>Metallic</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="effekt"
+        value="Fluoreszierend"
+        checked={effekt.includes('Fluoreszierend')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setEffekt((prev) =>
+            checked ? [...prev, 'Fluoreszierend'] : prev.filter((v) => v !== 'Fluoreszierend')
+          );
+        }}
+      />
+      <span>Fluoreszierend</span>
+    </label>
+  </div>
+</fieldset>
+<fieldset className={styles.radioGroup}>
+  <legend
+    className={styles.toggleLegend}
+    onClick={() => setSondereffekteOffen(!sondereffekteOffen)}
+    style={{ cursor: 'pointer' }}
+  >
+    Sondereffekte (optional) {sondereffekteOffen ? '▲' : '▼'}
+  </legend>
+
+  <AnimatePresence initial={false}>
+    {sondereffekteOffen && (
+      <motion.div
+        className={styles.checkboxGrid}
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {[
+          'Hochwetterfest', 'Ultra Hochwetterfest', 'Transparent',
+          'Niedrigtemperaturpulver', 'Hochtemperaturpulver',
+          'Anti-Ausgasung', 'Kratzresistent', 'Elektrisch Ableitfähig',
+          'Solar geeignet', 'Soft-Touch', 'Hammerschlag', 'Eisenglimmer',
+          'Perlglimmer', 'Selbstreinigend', 'Anti-Bakteriell',
+          'Anti-Grafitti', 'Anti-Quietsch', 'Anti-Rutsch'
+        ].map((effekt) => (
+          <label key={effekt} className={styles.radioLabel}>
+            <input
+              type="checkbox"
+              name="sondereffekte"
+              value={effekt}
+              checked={sondereffekte.includes(effekt)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSondereffekte((prev) =>
+                  checked ? [...prev, effekt] : prev.filter((v) => v !== effekt)
+                );
+              }}
+            />
+            <span>{effekt}</span>
+          </label>
+        ))}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</fieldset>
+
+
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Aufladung: <span style={{ color: 'red' }}>*</span>
+  </legend>
+
+  {/* Natives Pflichtfeld nur aktivieren wenn nichts ausgewählt */}
+  {aufladung.length === 0 && (
+    <input
+      type="checkbox"
+      required
+      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+      tabIndex={-1}
+      onChange={() => {}}
+    />
+  )}
+  
+
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="aufladung"
+        value="Corona"
+        checked={aufladung.includes('Corona')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setAufladung((prev) =>
+            checked ? [...prev, 'Corona'] : prev.filter((v) => v !== 'Corona')
+          );
+        }}
+      />
+      <span>Corona</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="aufladung"
+        value="Tribo"
+        checked={aufladung.includes('Tribo')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setAufladung((prev) =>
+            checked ? [...prev, 'Tribo'] : prev.filter((v) => v !== 'Tribo')
+          );
+        }}
+      />
+      <span>Tribo</span>
+    </label>
+  </div>
+</fieldset>
+<label className={styles.label}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+  Beschreibung: <span style={{ color: 'red' }}>*</span>
+</span>
+  <textarea
+    className={styles.textarea}
+    maxLength={600}
+    rows={6}
+    value={beschreibung}
+    onChange={(e) => setBeschreibung(e.target.value)}
+    placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
+  />
+  <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
+</label>
+{warnungBeschreibung && (
+  <p className={styles.validierungsfehler}>{warnungBeschreibung}</p>
+)}
   </>
 ) }
-
-    </motion.div>
+    </motion.div>    
   </AnimatePresence>
-)}        <button type="submit" className={styles.submitBtn}>Angebote einholen</button>
+)} 
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Lieferdetails: <span style={{ color: 'red' }}>*</span>
+  </legend>
+
+  <div className={styles.lieferContainer}>
+    <label className={styles.label}>
+      Lieferdatum:
+      <input
+  type="date"
+  value={lieferdatum}
+  onChange={(e) => setLieferdatum(e.target.value)}
+  className={styles.dateInput}
+  required
+  min={heute}
+/>
+
+    </label>
+
+    <fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Lieferadresse wählen: <span style={{ color: 'red' }}>*</span>
+  </legend>
+
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="lieferadresse"
+        value="profil"
+        checked={lieferadresseOption === 'profil'}
+        onChange={() => setLieferadresseOption('profil')}
+        required
+      />
+      <span>Meine Firmenanschrift verwenden</span>
+    </label>
+
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="lieferadresse"
+        value="manuell"
+        checked={lieferadresseOption === 'manuell'}
+        onChange={() => setLieferadresseOption('manuell')}
+      />
+      <span>Lieferadresse manuell eingeben</span>
+    </label>
+  </div>
+</fieldset>
+
+{lieferadresseOption === 'manuell' && (
+  <div className={styles.dynamicFields}>
+    <label className={styles.label}>
+      Firma
+      <input
+        type="text"
+        value={firma}
+        onChange={(e) => setFirma(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Vorname
+      <input
+        type="text"
+        value={vorname}
+        onChange={(e) => setVorname(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Nachname
+      <input
+        type="text"
+        value={nachname}
+        onChange={(e) => setNachname(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Straße
+      <input
+        type="text"
+        value={strasse}
+        onChange={(e) => setStrasse(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Hausnummer
+      <input
+        type="text"
+        value={hausnummer}
+        onChange={(e) => setHausnummer(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      PLZ
+      <input
+        type="text"
+        value={plz}
+        onChange={(e) => setPlz(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Ort
+      <input
+        type="text"
+        value={ort}
+        onChange={(e) => setOrt(e.target.value)}
+      />
+    </label>
+    <label className={styles.label}>
+      Land
+      <input
+        type="text"
+        value={land}
+        onChange={(e) => setLand(e.target.value)}
+      />
+    </label>
+  </div>
+)}
+
+    
+  </div>
+</fieldset>
+
+    <button type="submit" className={styles.submitBtn}>Angebote einholen</button>
       </form>
     </>
   );
