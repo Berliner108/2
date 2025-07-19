@@ -94,6 +94,52 @@
     color: white;
     
   }  
+  .logout-btn {  
+  font-size: 16px;
+  line-height: 1;
+  padding: 8px; /* Gleichmäßiger als 0.5em */
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  border: 1.5px solid white;
+  border-radius: 5px;
+  font-weight: bold;
+  font-family: 'Oswald', sans-serif;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.logout-btn:hover {
+  background: white;
+    color: #00b4d8;
+}
+.welcome-text {
+  font-weight: bold;
+  color: #00b5d8;
+  font-size: 1.1rem;
+  margin-right: 10px;
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+
+@media (max-width: 768px) {
+  .welcome-text {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    text-align: center;
+  }
+}
+
   /* Hamburger Menu Styles (Mobile) */
   @media (max-width: 768px) {
     .menu-button {

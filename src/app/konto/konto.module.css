@@ -7,7 +7,12 @@
   margin-top: 40px;
   margin-bottom: 40px;
 }
-
+.headline {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 2rem;
+  font-weight: bold;
+}
 .kontoList {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -51,6 +56,18 @@
 .kontoBox:hover .kontoIcon {
   color: #00b4d8; /* Farbe beim Hover */
 }
+.kontoTitle {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #1f2937; /* dunkelgrau */
+}
+
+.kontoSub {
+  font-size: 0.85rem;
+  color: #6b7280; /* helleres Grau */
+  margin-top: 1.35rem;
+}
+
 
 /* Mobile Ansicht */
 @media (max-width: 1024px) {

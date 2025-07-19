@@ -157,6 +157,7 @@
   width: 16px;
   height: 16px;
   accent-color: #00b5d8;
+  vertical-align: middle; /* NEU */
 }
 
 /* Login-Button */

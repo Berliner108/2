@@ -1162,7 +1162,7 @@ const toggleBewerbung = (wert: string) => {
       onChange={() => toggleBewerbung('suche')}
       checked={bewerbungOptionen.includes('suche')}
     />
-    <Search size={18} color="#0070f3" /> Anzeige in Suche priorisieren (19,99€)
+    <Search size={18} color="#0070f3" /> Anzeige in Suche priorisieren (17,99€)
   </label>
 
   
@@ -1190,18 +1190,41 @@ const toggleBewerbung = (wert: string) => {
 {vorschauAktiv && (
   <div className={styles.vorschauBox}>
     <h3>📝 Vorschau deiner Angaben</h3>
-    <p><strong>Kategorie:</strong> {kategorie}</p>
-    <p><strong>Titel:</strong> {titel}</p>
-    <p><strong>Farbton:</strong> {farbton}</p>
-    <p><strong>Glanzgrad:</strong> {glanzgrad}</p>
-    <p><strong>Hersteller:</strong> {hersteller}</p>
-    <p><strong>Zustand:</strong> {zustand}</p>
-    <p><strong>Beschreibung:</strong> {beschreibung}</p>
+
+    <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
+
+    {kategorie === 'pulverlack' && (
+      <>
+        <p><strong>Titel:</strong> {titel}</p>
+        <p><strong>Farbton:</strong> {farbton}</p>
+        <p><strong>Farbcode:</strong> {farbcode}</p>
+        <p><strong>Glanzgrad:</strong> {glanzgrad}</p>
+        <p><strong>Farbpalette:</strong> {farbpaletteWert}</p>
+        <p><strong>Hersteller:</strong> {hersteller}</p>
+        <p><strong>Oberfläche:</strong> {oberflaeche}</p>
+        <p><strong>Anwendung:</strong> {anwendung}</p>
+        <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
+        <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
+        <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
+        <p><strong>Zustand:</strong> {zustand}</p>
+        <p><strong>Beschreibung:</strong> {beschreibung}</p>
+        <p><strong>Qualität:</strong> {qualitaet}</p>
+      </>
+    )}
+
+    {kategorie === 'nasslack' && (
+      <>
+        <p><strong>Modell:</strong> {modell}</p>
+        <p><strong>Baujahr:</strong> {baujahr}</p>
+      </>
+    )}
+
     <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
-    <p><strong>Bilder:</strong> {bilder.length} Datei(en) ausgewählt</p>
-    {/* Du kannst noch mehr Felder einfügen */}
+    <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
+    <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
   </div>
 )}
+
 
 
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>

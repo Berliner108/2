@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import '../styles/header.css';
 
@@ -10,6 +10,34 @@ const Header = () => {
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+
+  const [user, setUser] = useState<{ name: string } | null>(null);
+const [firstName, setFirstName] = useState<string | null>(null);
+
+useEffect(() => {
+  const stored = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      setUser(parsed);
+
+      // Vorname extrahieren
+      const first = parsed.name?.split(' ')[0];
+      setFirstName(first);
+    } catch {
+      setUser(null);
+      setFirstName(null);
+    }
+  }
+}, []);
+const handleLogout = () => {
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('user');
+  setUser(null);
+  setFirstName(null);
+  window.location.href = '/';
+};
+
 
   return (
     <header>
@@ -46,17 +74,28 @@ const Header = () => {
           </div>
         </Link>
 
-        {/* Desktop Nav Links */}
-        <div className="nav-links desktop">
-          <ul>
-            <li>
-              <Link href="/login">Login</Link>
-            </li>
-            <li>
-              <Link href="/registrieren">Registrieren</Link>
-            </li>
-          </ul>
-        </div>
+       <div className="nav-links desktop">
+  <ul>
+    {firstName ? (
+      <>
+        <li className="welcome-text">
+  Willkommen, <span className="name-highlight">{firstName}</span>
+</li>
+
+
+        <li>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
+        </li>
+      </>
+    ) : (
+      <>
+        <li><Link href="/login">Login</Link></li>
+        <li><Link href="/registrieren">Registrieren</Link></li>
+      </>
+    )}
+  </ul>
+</div>
+
 
         {/* Hamburger Menu Button */}
         <button className="menu-button" onClick={toggleMenu}>
@@ -74,20 +113,28 @@ const Header = () => {
       
 
       {/* Hamburger Menu für mobile Ansicht */}
-      {menuOpen && (
-        <div className="nav-links mobile">
-          <ul>
-            <li>
-              <Link href="/login">Login</Link>
-            </li>
-            <li>
-              <Link href="/registrieren">Registrieren</Link>
-            </li>
-          </ul>
-        </div>
-        
-        
+      
+ {menuOpen && (
+  <div className="nav-links mobile">
+    <ul>
+      {firstName ? (
+        <>
+          <li>Willkommen, {firstName}</li>
+          <li>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
+          </li>
+        </>
+      ) : (
+        <>
+          <li><Link href="/login">Login</Link></li>
+          <li><Link href="/registrieren">Registrieren</Link></li>
+        </>
       )}
+    </ul>
+  </div>
+)}
+
+
     </header>
   );
 };

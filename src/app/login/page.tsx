@@ -11,30 +11,38 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim();
-  const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
+    const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim();
+    const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
 
-  setTimeout(() => {
-    setLoading(false);
-    if ((email === 'test' || email === 'test@example.com') && password === '1234') {
-      router.push('/');
-    } else {
-      setError('Benutzername oder Passwort ist falsch.');
-    }
-  }, 1000); // simulierte Serververzögerung
-};
+    setTimeout(() => {
+      setLoading(false);
+      if ((email === 'test' || email === 'test@example.com') && password === '1234') {
+        const user = {
+          name: 'Martin Zajac', // Simulierter vollständiger Name
+          email: email,
+        };
 
+        if (rememberMe) {
+          localStorage.setItem('user', JSON.stringify(user));
+        } else {
+          sessionStorage.setItem('user', JSON.stringify(user));
+        }
 
-  
+        window.location.href = '/';
+
+      } else {
+        setError('Benutzername oder Passwort ist falsch.');
+      }
+    }, 1000); // simulierte Serververzögerung
+  };
 
   return (
     <div className={styles.loginContainer}>
@@ -44,7 +52,7 @@ const Login = () => {
           alt="Login Bild"
           layout="fill"
           objectFit="cover"
-          objectPosition="top center" // ← Bild nach oben verschieben
+          objectPosition="top center"
           priority
         />
       </div>
@@ -99,18 +107,15 @@ const Login = () => {
           </div>
 
           <button type="submit" className={styles.loginButton} disabled={loading}>
-  {loading ? (
-    <>
-      Einloggen
-      <span className={styles.spinner}></span>
-    </>
-  ) : (
-    'Einloggen'
-  )}
-</button>
-
-
-
+            {loading ? (
+              <>
+                Einloggen
+                <span className={styles.spinner}></span>
+              </>
+            ) : (
+              'Einloggen'
+            )}
+          </button>
 
           <div className={styles.forgotPassword}>
             <Link href="/reset-password">Passwort vergessen?</Link>
