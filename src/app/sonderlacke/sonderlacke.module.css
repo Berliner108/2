@@ -1,5 +1,5 @@
 .container {
-  max-width: 800px;
+  max-width: 80%;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -231,6 +231,26 @@
   font-size: 1rem;
   font-family: 'Oswald';
 }
+.inputLabel {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+}
+
+.input {
+  margin-top: 0.3rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: 'Oswald';
+}
+
+.grid3spaltig {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
 
 .iconBox {
   display: flex;
@@ -254,11 +274,11 @@
 
 .iconBox:hover {
   background-color: #eef6ff;
-  border-color: #3b82f6;
+  border-color: #00b4d8;
 }
 
 .activeIcon {
-  border-color: #2563eb;
+  border-color: #00b4d8;
   background-color: #ebf4ff;
 }
 
@@ -404,6 +424,118 @@
   align-items: center;
   gap: 0.5rem;
 }
+.progressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #eee;
+  padding: 0;
+  z-index: 999;
+  height: 24px;
+}
+.progressBarWrapper {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+  border-top: 1px solid #ccc;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  transition: width 0.3s ease;
+  font-size: 14px;  
+}
+.progressValue {
+  white-space: nowrap;
+}
+.progressText {
+  font-size: 0.9rem;
+  color: #444;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.spinner {
+  margin-left: 10px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+.bewerbungContainer {
+  margin-top: 2rem;
+  padding: 1rem;
+  
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.bewerbungOption {
+  flex: 1 1 200px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.bewerbungOption input {
+  width: 14px;
+  height: 14px;
+  accent-color: #00b4d8;
+}
+.bewerbungOption svg {
+  margin-right: 0.3rem;
+}
+.hinweisText {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.hinweisText a {
+  color: #0070f3;
+  text-decoration: underline;
+}
+.buttonRechts {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.zuruecksetzenButton {
+  padding: 0.6rem 1.2rem;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+  font-family: 'Oswald';
+}
+
+.zuruecksetzenButton:hover {
+  background-color: #ddd;
+}
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 
 @media (max-width: 599px) {
  .container {

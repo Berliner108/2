@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import styles from './sonderlacke.module.css';
-import { FaCloud } from 'react-icons/fa'; 
-import { FaSprayCan } from 'react-icons/fa';
+import { FaSprayCan, FaCloud } from 'react-icons/fa';
 import Pager from './navbar/pager';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
+import { Star, Search, Mail, Crown } from 'lucide-react';
+
 
 
 function istGueltigeDatei(file: File): boolean {
@@ -51,7 +52,7 @@ const heute = new Date().toISOString().split('T')[0];
 ];
 
 
-export default function ArtikelEinstellen() {
+function ArtikelEinstellen() {
   const searchParams = useSearchParams(); // <-- HIER
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | null>(null);
   const [titel, setTitel] = useState('');
@@ -81,6 +82,64 @@ const [hausnummer, setHausnummer] = useState('');
 const [plz, setPlz] = useState('');
 const [ort, setOrt] = useState('');
 const [land, setLand] = useState('');
+const [ladeStatus, setLadeStatus] = useState(false);
+const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
+
+const berechneFortschritt = () => {
+  let total = 0;
+  let filled = 0;
+
+  if (kategorie) filled++;
+  total++;
+
+  if (bilder.length > 0) filled++;
+  total++;
+
+  if (kategorie === 'pulverlack') {
+    total += 6;
+    if (titel.trim()) filled++;
+    if (farbpaletteWert) filled++;
+    if (glanzgrad) filled++;
+    if (zustand) filled++;
+    if (oberflaeche) filled++;
+    if (anwendung) filled++;
+  }
+
+  if (lieferdatum) filled++;
+  total++;
+
+  return Math.round((filled / total) * 100);
+};
+
+
+const formularZuruecksetzen = () => {
+  setKategorie(null);
+  setTitel('');
+  setFarbton('');
+  setGlanzgrad('');
+  setFarbcode('');
+  setHersteller('');
+  setBeschreibung('');
+  setZustand('');
+  setBaujahr('');
+  setModell('');
+  setOberflaeche('');
+  setAnwendung('');
+  setEffekt([]);
+  setSondereffekte([]);
+  setQualitaet('');
+  setBewerbungOptionen([]);
+  setBilder([]);
+  setDateien([]);
+  setFarbpaletteWert('');
+  setAufladung([]);
+  setWarnung('');
+  setWarnungKategorie('');
+  setWarnungBilder('');
+  setWarnungPalette('');
+  setWarnungZustand('');
+  setWarnungBeschreibung('');
+};
 
 
 
@@ -189,12 +248,13 @@ useEffect(() => {
   }, [bilder]);
   
 
- const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+  setLadeStatus(true);
 
   let fehler = false;
 
-  // Kategorie prüfen
+  // Pflichtfelder prüfen
   if (!kategorie) {
     setWarnungKategorie('Bitte wähle eine Kategorie aus.');
     fehler = true;
@@ -202,7 +262,6 @@ useEffect(() => {
     setWarnungKategorie('');
   }
 
-  // Bilder prüfen
   if (bilder.length === 0) {
     setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
     fehler = true;
@@ -210,7 +269,6 @@ useEffect(() => {
     setWarnungBilder('');
   }
 
-  // Pflichtfelder bei Pulverlack prüfen
   if (kategorie === 'pulverlack') {
     if (!titel.trim()) {
       setWarnungTitel('Bitte gib einen Titel an.');
@@ -225,14 +283,9 @@ useEffect(() => {
     } else {
       setWarnungPalette('');
     }
-    if (!oberflaeche) {
-  fehler = true;
-}
 
-    if (!anwendung) {
-  fehler = true;
-}
-
+    if (!oberflaeche) fehler = true;
+    if (!anwendung) fehler = true;
 
     if (!zustand) {
       setWarnungZustand('Bitte wähle den Zustand aus.');
@@ -240,23 +293,26 @@ useEffect(() => {
     } else {
       setWarnungZustand('');
     }
-    if (aufladung.length === 0) {
-  setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
-  fehler = true;
-} else {
-  setWarnungAufladung('');
-}
 
+    if (aufladung.length === 0) {
+      setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
+      fehler = true;
+    } else {
+      setWarnungAufladung('');
+    }
 
     if (!beschreibung.trim()) {
-  setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
-  fehler = true;
-} else {
-  setWarnungBeschreibung('');
-}
-  }  
+      setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+      fehler = true;
+    } else {
+      setWarnungBeschreibung('');
+    }
+  }
 
-  if (fehler) return;
+  if (fehler) {
+    setLadeStatus(false);
+    return;
+  }
 
   const formData = new FormData();
   formData.append('kategorie', kategorie!);
@@ -276,21 +332,22 @@ useEffect(() => {
     formData.append('effekt', effekt.join(', '));
     formData.append('sondereffekte', sondereffekte.join(', '));
     formData.append('qualitaet', qualitaet);
-
-
+    formData.append('bewerbung', bewerbungOptionen.join(','));
 
   }
 
   if (kategorie === 'nasslack') {
     formData.append('modell', modell);
     formData.append('baujahr', baujahr);
+    formData.append('bewerbung', bewerbungOptionen.join(','));
+
   }
 
   bilder.forEach((file) => formData.append('bilder', file));
   dateien.forEach((file) => formData.append('dateien', file));
 
   try {
-    const res = await fetch('/api/artikel-einstellen', {
+    const res = await fetch('/api/angebot-einstellen', {
       method: 'POST',
       body: formData,
     });
@@ -312,12 +369,15 @@ useEffect(() => {
     } else {
       alert('Fehler beim Hochladen');
     }
-  } catch {
+  } catch (error) {
+    console.error(error);
     alert('Serverfehler');
+  } finally {
+    setLadeStatus(false);
   }
 };
-const toggleAufladung = (wert: string) => {
-  setAufladung(prev =>
+const toggleBewerbung = (wert: string) => {
+  setBewerbungOptionen(prev =>
     prev.includes(wert)
       ? prev.filter(w => w !== wert)
       : [...prev, wert]
@@ -394,7 +454,7 @@ const toggleAufladung = (wert: string) => {
 
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
-            <h2 className={styles.centeredHeading}>Ich suche einen</h2>
+            <h2 className={styles.centeredHeading}>Ich möchte Angebote für einen</h2>
 
 
             <div className={`${styles.iconRow} ${!kategorie && warnung.includes('Kategorie') ? styles.kategorieFehler : ''}`}>
@@ -1001,70 +1061,82 @@ const toggleAufladung = (wert: string) => {
 </fieldset>
 
 {lieferadresseOption === 'manuell' && (
-  <div className={styles.dynamicFields}>
-    <label className={styles.label}>
-      Firma
-      <input
-        type="text"
-        value={firma}
-        onChange={(e) => setFirma(e.target.value)}
-      />
-    </label>
-    <label className={styles.label}>
+  <div className={styles.grid3spaltig}>
+  <label className={styles.inputLabel}>
+    Vorname
+    <input type="text" className={styles.input} value={vorname} onChange={(e) => setVorname(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Nachname
+    <input type="text" className={styles.input} value={nachname} onChange={(e) => setNachname(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Firma
+    <input type="text" className={styles.input} value={firma} onChange={(e) => setFirma(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Straße
+    <input type="text" className={styles.input} value={strasse} onChange={(e) => setStrasse(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Hausnummer
+    <input type="text" className={styles.input} value={hausnummer} onChange={(e) => setHausnummer(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    PLZ
+    <input type="text" className={styles.input} value={plz} onChange={(e) => setPlz(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Ort
+    <input type="text" className={styles.input} value={ort} onChange={(e) => setOrt(e.target.value)} />
+  </label>
+
+  <label className={styles.inputLabel}>
+    Land
+    <input type="text" className={styles.input} value={land} onChange={(e) => setLand(e.target.value)} />
+  </label>
+</div>
+
+)}
+{lieferadresseOption === 'profil' && (
+  <div className={styles.grid3spaltig}>
+    <label className={styles.inputLabel}>
       Vorname
-      <input
-        type="text"
-        value={vorname}
-        onChange={(e) => setVorname(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="Max" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
       Nachname
-      <input
-        type="text"
-        value={nachname}
-        onChange={(e) => setNachname(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="Muster" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
+      Firma
+      <input type="text" className={styles.input} value="Muster GmbH" disabled />
+    </label>
+    <label className={styles.inputLabel}>
       Straße
-      <input
-        type="text"
-        value={strasse}
-        onChange={(e) => setStrasse(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="Musterstraße" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
       Hausnummer
-      <input
-        type="text"
-        value={hausnummer}
-        onChange={(e) => setHausnummer(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="12" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
       PLZ
-      <input
-        type="text"
-        value={plz}
-        onChange={(e) => setPlz(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="12345" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
       Ort
-      <input
-        type="text"
-        value={ort}
-        onChange={(e) => setOrt(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="Musterstadt" disabled />
     </label>
-    <label className={styles.label}>
+    <label className={styles.inputLabel}>
       Land
-      <input
-        type="text"
-        value={land}
-        onChange={(e) => setLand(e.target.value)}
-      />
+      <input type="text" className={styles.input} value="Österreich" disabled />
     </label>
   </div>
 )}
@@ -1072,9 +1144,81 @@ const toggleAufladung = (wert: string) => {
     
   </div>
 </fieldset>
+<div className={styles.bewerbungContainer}>
+  <label className={styles.bewerbungOption}>
+    <input
+      type="checkbox"
+      onChange={() => toggleBewerbung('startseite')}
+      checked={bewerbungOptionen.includes('startseite')}
+    />
+    <Star size={18} color="#f5b400" /> Anzeige auf Startseite hervorheben (39,99€)
+  </label>
 
-    <button type="submit" className={styles.submitBtn}>Angebote einholen</button>
+  <label className={styles.bewerbungOption}>
+    <input
+      type="checkbox"
+      onChange={() => toggleBewerbung('suche')}
+      checked={bewerbungOptionen.includes('suche')}
+    />
+    <Search size={18} color="#0070f3" /> Anzeige in Suche priorisieren (19,99€)
+  </label>
+
+  
+
+  <label className={styles.bewerbungOption}>
+    <input
+      type="checkbox"
+      onChange={() => toggleBewerbung('premium')}
+      checked={bewerbungOptionen.includes('premium')}
+    />
+    <Crown size={18} color="#9b59b6" /> Premium-Anzeige aktivieren (19,99€)
+  </label>
+  <br></br><p>Preise inkl. MwSt.</p>
+</div>
+<div className={styles.hinweisText}>
+  Es gelten unsere <a href="/nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>. Informationen zur Verarbeitung deiner Daten findest du in unserer <a href="/datenschutz" target="_blank">Datenschutzerklärung</a>.
+</div>
+
+    <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
+  {ladeStatus ? (
+    <>
+      Anzeige wird veröffentlicht
+      <span className={styles.spinner}></span>
+    </>
+  ) : (
+    'Anzeige veröffentlichen'
+  )}
+</button>
+<div className={styles.buttonRechts}>
+  <button
+    type="button"
+    onClick={formularZuruecksetzen}
+    className={styles.zuruecksetzenButton}
+  >
+    Alle Eingaben zurücksetzen
+  </button>
+</div>
+
+
+
+
+
+
+
+    <div className={styles.progressContainer}>
+  <div className={styles.progressBarWrapper}>
+    <div
+      className={styles.progressBar}
+      style={{ width: `${berechneFortschritt()}%` }}
+    >
+      <span className={styles.progressValue}>{berechneFortschritt()}%</span>
+    </div>
+  </div>
+</div>
+
+
       </form>
     </>
   );
 }
+export default ArtikelEinstellen;
