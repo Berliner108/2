@@ -84,6 +84,8 @@ const [ort, setOrt] = useState('');
 const [land, setLand] = useState('');
 const [ladeStatus, setLadeStatus] = useState(false);
 const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
+const [vorschauAktiv, setVorschauAktiv] = useState(false);
+
 
 const berechneFortschritt = () => {
   let total = 0;
@@ -1178,6 +1180,29 @@ const toggleBewerbung = (wert: string) => {
 <div className={styles.hinweisText}>
   Es gelten unsere <a href="/nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>. Informationen zur Verarbeitung deiner Daten findest du in unserer <a href="/datenschutz" target="_blank">Datenschutzerklärung</a>.
 </div>
+<button
+  type="button"
+  onClick={() => setVorschauAktiv(prev => !prev)}
+  className={styles.vorschauToggle}
+>
+  {vorschauAktiv ? 'Vorschau ausblenden' : 'Vorschau anzeigen'}
+</button>
+{vorschauAktiv && (
+  <div className={styles.vorschauBox}>
+    <h3>📝 Vorschau deiner Angaben</h3>
+    <p><strong>Kategorie:</strong> {kategorie}</p>
+    <p><strong>Titel:</strong> {titel}</p>
+    <p><strong>Farbton:</strong> {farbton}</p>
+    <p><strong>Glanzgrad:</strong> {glanzgrad}</p>
+    <p><strong>Hersteller:</strong> {hersteller}</p>
+    <p><strong>Zustand:</strong> {zustand}</p>
+    <p><strong>Beschreibung:</strong> {beschreibung}</p>
+    <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
+    <p><strong>Bilder:</strong> {bilder.length} Datei(en) ausgewählt</p>
+    {/* Du kannst noch mehr Felder einfügen */}
+  </div>
+)}
+
 
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
   {ladeStatus ? (

@@ -529,6 +529,29 @@
 .zuruecksetzenButton:hover {
   background-color: #ddd;
 }
+.vorschauBox {
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.vorschauToggle {
+  margin: 1rem 0;
+  padding: 0.6rem 1.2rem;
+  background-color: #f0f0f0;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+}
+
+.vorschauToggle:hover {
+  background-color: #e0e0e0;
+}
 
 
 @keyframes spin {
