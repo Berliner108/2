@@ -23,22 +23,50 @@
   justify-content: space-between; /* Verhindert, dass der Pfeil zusammen mit dem Text erscheint */
   align-items: center;
 }
-
-/* Header Text */
-.headerText {
-  font-size: 20px;
-  text-align: center; /* Text mittig */
-  flex-grow: 1; /* Sorgt dafür, dass der Text den Platz einnimmt */
-  font-weight: bold;
+.header {
+  border-left-style: solid;
+  border-left-color: #00b4d8;
 }
 
-/* Pfeil */
-.arrow {
-  font-size: 20px;
-  margin-left: 10px; /* Abstand zwischen Text und Pfeil */
-  color: #00b4d8; /* Setzt den Pfeil in Blau */
-  transition: transform 0.3s ease, color 0.3s ease;
+/* Progressiver Einzug */
+.header:nth-of-type(1) {
+  border-left-width: 14px;
 }
+.header:nth-of-type(2) {
+  border-left-width: 8px;
+}
+.header:nth-of-type(3) {
+  border-left-width: 12px;
+}
+.header:nth-of-type(4) {
+  border-left-width: 16px;
+}
+.header:nth-of-type(5) {
+  border-left-width: 20px;
+}
+.header:nth-of-type(6) {
+  border-left-width: 24px;
+}
+/* usw. */
+.container:nth-of-type(1) .header  { border-left: 14px solid #00b4d8; }
+.container:nth-of-type(2) .header  { border-left: 14px solid #00a5c3; }
+.container:nth-of-type(3) .header  { border-left: 14px solid #0097af; }
+.container:nth-of-type(4) .header  { border-left: 14px solid #00889a; }
+.container:nth-of-type(5) .header  { border-left: 14px solid #007a86; }
+.container:nth-of-type(6) .header  { border-left: 14px solid #006b71; }
+.container:nth-of-type(7) .header  { border-left: 14px solid #005d5d; }
+.container:nth-of-type(8) .header  { border-left: 14px solid #004e48; }
+.container:nth-of-type(9) .header  { border-left: 14px solid #004034; }
+.container:nth-of-type(10) .header { border-left: 14px solid #00311f; }
+.container:nth-of-type(11) .header { border-left: 14px solid #00230b; }
+.container:nth-of-type(12) .header { border-left: 14px solid #001400; }
+.container:nth-of-type(13) .header { border-left: 14px solid #000800; }
+
+
+
+
+
+
 
 /* Header Hover-Effekt */
 .header:hover {
@@ -61,16 +89,18 @@
 }
 
 .headerText {
-  font-size: 20px;
+  font-size: 22px; /*Überschriften Beschichtugnstechnik, Verfahren etc. */
   text-align: center; /* Text mittig */
   flex-grow: 1; /* Sorgt dafür, dass der Text den Platz einnimmt */
+  font-weight: bold;
 }
-
+/* Pfeil */
 .arrow {
   font-size: 20px;
   margin-left: 10px; /* Abstand zwischen Text und Pfeil */
+  color: #00b4d8; /* Setzt den Pfeil in Blau */
+  transition: transform 0.3s ease, color 0.3s ease;
 }
-
 .content {
   overflow: hidden;
   max-height: 0; /* Keine Höhe im zugeklappten Zustand */
@@ -195,6 +225,34 @@
   margin-top: 4px;
 }
 
+.content p {
+  line-height: 1.6;
+  font-size: 18px;
+  color: #333;
+  white-space: normal;
+}
+
+.content p br {
+  display: block;
+  content: "";
+  margin-bottom: 0.7em;
+}
+.content strong {
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.content em {
+  font-style: italic;
+  color: #555;
+}
+
+.content .highlight {
+  background-color: #e8f8f1;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  font-weight: 500;
+}
 
 /* Mobile Ansicht */
 @media (max-width: 768px) {
@@ -204,6 +262,7 @@
 
   .aboutUsTitle {
     font-size: 2rem;
+    margin-top: -10px;
   }
 
   .aboutUsContent {
@@ -220,7 +279,7 @@
   }
 
   .header {
-    padding: 00px; /* Kleinere Abstände für mobile Geräte */
+    padding: 0px; /* Kleinere Abstände für mobile Geräte */
   }
 
   .content {
@@ -238,4 +297,19 @@
   .arrow {
     font-size: 18px; /* Etwas kleinere Pfeile */
   }
+  .content {
+  overflow: hidden;
+  max-height: 0; /* Keine Höhe im zugeklappten Zustand */
+  opacity: 0; /* Unsichtbar im zugeklappten Zustand */
+  transition: max-height 0.8s ease-out, opacity 0.8s ease-out; /* Sanfte Übergänge für max-height und opacity */
+  padding: 0 20px; /* Kein zusätzlicher Platz für Text im zugeklappten Zustand */
+  background-color: #f9f9f9;
+  border-left: 1px solid #ccc;
+}
+.content p {
+  font-size: 16px; /* z. B. kleiner für Smartphones */
+}
+
+
+
 }

@@ -18,7 +18,7 @@ const highlights = [
   },
   {
     title: 'Alles aus einer Hand',
-    text: 'Arbeitsmittel, Tools & Zubehör direkt über die Plattform beziehen.',
+    text: 'Arbeitsmittel, Tools & Zubehör aus einer Hand über Beschichter Scout beziehen.',
   },
   {
     title: 'Mehr Kunden gewinnen',
