@@ -5,6 +5,7 @@ import styles from "./wissenswertes.module.css";
 import Pager from "./navbar/pager";
 import { motion } from "framer-motion";
 import Vision from "./Vision";  // Importiere die Komponente
+import USPHighlights from './USPHighlights'; // ← Pfad anpassen!
 
 
 
@@ -221,24 +222,25 @@ useEffect(() => {
       <Pager />
       <Vision />
       <ScrollProgress />
-      <div className={styles.aboutUsContainer} id="UeberUns">
-  <h2 className={styles.aboutUsTitle}>Über uns</h2>
-  <div className={styles.aboutUsContent}>
-    <p>
-     Wir sind die erste für Beschichtungstechnik zugeschnittene Plattform. Eine Plattform:<br></br><br></br>
+      
+  <section className={styles.aboutUsContainer} id="UeberUns">
+  <motion.h2
+  className={styles.aboutUsTitle}
+  initial={{ opacity: 0, y: 30 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.7 }}
+  viewport={{ once: true }}
+>
+  Über uns
+</motion.h2>
 
-      Die es Metallverarbeitern ermöglicht innerhalb kürzester Zeit Angebote für ihren Auftrag zu erhalten und den passenden Beschichter dafür zu finden<br></br><br></br>
 
-      Die es Metallverarbeitern durch eigenständige Lackbeschaffung ermöglicht, bares Geld zu sparen<br></br><br></br>
 
-      Die Metallverarbeiter bei Reklamationen nicht im Regen stehen lässt<br></br><br></br>
+  <USPHighlights />
+  </section>
 
-      Die alle Arbeitsmittel für Beschichter aus einer Hand bietet<br></br><br></br>
 
-      Die es Beschichtern ermöglicht ihren Absatz zu steigern
-    </p>
-  </div>
-</div>
+
 
       <div className={styles.pageContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
