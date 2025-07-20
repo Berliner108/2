@@ -115,37 +115,41 @@ const handleLogout = () => {
       
 
       {/* Hamburger Menu für mobile Ansicht */}
-      
- {menuOpen && <div className="mobile-overlay" onClick={toggleMenu}></div>}
+      {menuOpen && (
+  <div className="mobile-overlay" onClick={() => setMenuOpen(false)}></div>
+)}
+<div className={`nav-links mobile ${menuOpen ? 'open' : ''}`}>
 
-  <div className={`nav-links mobile ${menuOpen ? 'open' : ''}`}>
+
   <ul>
     {firstName ? (
       <>
-        <li className="welcome-text">Willkommen, {firstName}</li>
+        <li className="welcome-text">Hallo, {firstName}</li>
         <li>
-  <button
-    onClick={() => {
-      handleLogout();
-      setMenuOpen(false);
-    }}
-    className="logout-btn"
-  >
-    Logout
-  </button>
-</li>
-
+          <button
+            onClick={() => {
+              setMenuOpen(false);
+              setTimeout(handleLogout, 100);
+            }}
+            className="logout-btn"
+          >
+            Logout
+          </button>
+        </li>
       </>
     ) : (
       <>
-        <li><Link href="/login">Login</Link></li>
-        <li><Link href="/registrieren">Registrieren</Link></li>
+        <li><Link href="/login" onClick={() => setMenuOpen(false)}>Login</Link></li>
+        <li><Link href="/registrieren" onClick={() => setMenuOpen(false)}>Registrieren</Link></li>
       </>
     )}
   </ul>
 </div>
 
-)
+
+
+
+
 
 
     </header>

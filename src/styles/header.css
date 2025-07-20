@@ -5,6 +5,7 @@
     align-items: center;
     padding: 0px;
     background-color: transparent; /* Kein Hintergrund */
+    
 }
 .home-link {
     display: flex;
@@ -138,10 +139,7 @@
     font-size: 1.1rem;
     text-align: center;
   }
-}
 
-  /* Hamburger Menu Styles (Mobile) */
-  @media (max-width: 768px) {
     .menu-button {
         background: none;
         border: none;
@@ -175,23 +173,29 @@
         transform: translateX(-50%); /* Verschiebt das Element um die Hälfte seiner eigenen Breite zurück */
         top: 00px; /* Falls nötig, um es vertikal zu positionieren */
     } 
-    .nav-links.mobile {
-  position: fixed; /* ← überlagert alles */
+.nav-links.mobile {
+  position: fixed;
   top: 0;
   right: 0;
   width: 250px;
   height: 100vh;
   background-color: white;
-  transform: translateX(100%); /* versteckt außerhalb */
-  transition: transform 0.3s ease-in-out;
-  z-index: 1000;
+  transform: translateX(100%); /* Aus dem Bildschirm schieben */
+  transition: transform 0.3s ease-in-out; /* Weiches Sliden */
+  z-index: 500000;
   padding: 20px;
-  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  
 }
 
+
 .nav-links.mobile.open {
-  transform: translateX(0); /* sichtbar – schiebt rein */
+  transform: translateX(0);
 }
+
+
 
     
     .nav-links.mobile ul {
@@ -213,7 +217,7 @@
   width: 100vw;
   height: 100vh;
   background-color: transparent; /* oder einfach entfernen */
-  z-index: 9998;
+  z-index: 19998;
 }
 
   }  
@@ -225,5 +229,30 @@
     .full-width-bar {
         display: none; 
     }    
+    
   }
+  .nav-links.mobile a {
+  display: inline-block;
+  padding: 0.5em 1em;
+  margin-bottom: 10px;
+  border: 1.5px solid #00b4d8;
+  border-radius: 5px;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+  transition: background 0.3s, color 0.3s;
   
+}
+
+.nav-links.mobile a:hover {
+  background: white;
+  color: #00b4d8;
+}
+.nav-links.mobile ul {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

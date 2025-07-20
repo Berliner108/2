@@ -307,6 +307,7 @@
     display: flex;
     justify-content: flex-start; /* Links beginnen ganz links */
     min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
+    
   }
   .navList {
     display: flex;
