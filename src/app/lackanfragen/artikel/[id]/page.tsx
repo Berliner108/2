@@ -1,7 +1,7 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-import { artikelDaten } from '@/data/artikelDaten';
+import { artikelDaten } from '@/data/ArtikelDatenLackanfragen';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import styles from './ArtikelDetail.module.css';
@@ -13,10 +13,19 @@ import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';  // ganz oben in der Datei
 
-export default function ArtikelDetailPage() {
-  const params = useParams();
-  const id = params?.id;
-  const artikel = artikelDaten.find((a) => a.id.toString() === id);
+// ✅ HIER EINSETZEN
+type PageProps = {
+  params: {
+    id: string;
+  };
+};
+
+export default function ArtikelDetailPage({ params }: PageProps) {
+  const artikel = artikelDaten.find((a) => a.id === params.id);
+  
+  if (!artikel) return notFound();
+
+  
   
 
   const [preis, setPreis] = useState('');
@@ -73,7 +82,10 @@ export default function ArtikelDetailPage() {
             <div className={styles.meta}>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Lieferdatum bis:</span>
-                <span className={styles.value}>{artikel.lieferdatum}</span>
+                <span className={styles.value}>
+                  {new Date(artikel.lieferdatum).toLocaleDateString('de-DE')}
+                </span>
+
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Zustand:</span>
@@ -134,7 +146,7 @@ export default function ArtikelDetailPage() {
 
               {artikel.menge && (
                 <div className={styles.metaItem}>
-                  <span className={styles.label}>Menge:</span>
+                  <span className={styles.label}>Menge (kg):</span>
                   <span className={styles.value}>{artikel.menge}</span>
                 </div>
               )}

@@ -1,14 +1,45 @@
-// src/data/artikelDaten.ts
 
-function berechneLieferdatum(tage: number): string {
-    const datum = new Date();
-    datum.setDate(datum.getDate() + tage);
-    return datum.toISOString().split('T')[0]; // z. B. "2025-05-16"
+export type Artikel = {
+  id: string;
+  titel: string;
+  bilder: string[];
+  lieferdatum: Date;
+  zustand: string;
+  hersteller: string;
+  menge: number;
+  ort: string;
+  kategorie: string;
+  user: string;
+  farbcode: string;
+  effekt?: string;
+  anwendung?: string;
+  oberfläche?: string;
+  ausführung?: string;
+  sondereigenschaft?: string;
+  beschreibung?: string;
+  gesponsert?: boolean;
+  gewerblich?: boolean;
+  privat?: boolean;
+  dateien?: { name: string; url: string }[];
+};
+
+
+// Berechnet das Lieferdatum basierend auf Werktagen
+function berechneLieferdatum(werktage: number) {
+  const date = new Date();
+  let addedDays = 0;
+  while (addedDays < werktage) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) {
+      addedDays++;
+    }
   }
-  
-  export const artikelDaten = [
-    {
-        id: 1,
+  return date;
+}
+const artikelDaten = [
+  {
+        id: '1',
         titel: 'QUARTZ 2 Feinstruktur Matt',
         bilder: [
           '/images/artikel1.jpg',
@@ -20,7 +51,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(3),
         zustand: 'Neu und ungeöffnet',
         hersteller: 'IGP',        
-        menge: '25 kg',
+        menge: 25,
         ort: '6330 Kufstein',
         kategorie: 'Pulverlack',
         user: 'PulverShop24 (4.5)',
@@ -40,7 +71,7 @@ function berechneLieferdatum(tage: number): string {
           ],
       },
       {
-        id: 2,
+        id: '2',
         titel: 'GREEN Feinstruktur Matt',
         bilder: [
           '/images/artikel2.jpg',
@@ -52,7 +83,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(10),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Tiger',        
-        menge: '75 kg',
+        menge: 75,
         ort: '87645 Schwangau',
         kategorie: 'Pulverlack',
         user: 'PulverShop24 (4.5)',
@@ -85,7 +116,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(15),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'IGP',        
-        menge: '710 kg',
+        menge: 710,
         ort: '83435 Bad Reichenhall',
         kategorie: 'Pulverlack',
         user: 'Powdermarket (4.6)',
@@ -116,7 +147,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(12),
         zustand: 'Neu und ungeöffnet',
         hersteller: 'IGP',        
-        menge: '20 kg',
+        menge: 20,
         ort: '83646 Bad Tölz',
         kategorie: 'Pulverlack',
         user: 'Coatingmaster (4.8)',
@@ -147,7 +178,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(6),
         zustand: 'Neu und ungeöffnet',
         hersteller: 'Axalta',        
-        menge: '980 kg',
+        menge: 980,
          ort: '38855 Wernigerode',
         kategorie: 'Pulverlack',
         user: 'Lackmeister (4.8)',
@@ -179,8 +210,8 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(2),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Axalta',        
-        menge: '22 kg',
-        Ort: '91550 Dinkelsbühl',
+        menge: 22,
+        ort: '91550 Dinkelsbühl',
         kategorie: 'Nasslack',
         user: 'Axalta Coatings (4.5)',
         farbcode: 'Vom Verkäufer zu ermitteln',
@@ -210,7 +241,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(2),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Alle',        
-        menge: '25 kg',
+        menge: 25,
         ort: '82481 Mittenwald',
         kategorie: 'Pulverlack',
         user: 'Frei Lacke (4.5)',
@@ -241,7 +272,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(4),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Tiger',        
-        menge: '75 kg',
+        menge: 75,
         ort: '4820 Bad Ischl',
         kategorie: 'Pulverlack',
         user: 'Arden 17 (4.5)',
@@ -272,7 +303,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(1),
         zustand: 'Neu und ungeöffnet',
         hersteller: 'Frei Lacke',        
-        menge: '0.5 kg',
+        menge: 0.5,
         ort: '4830 Hallstatt',
         kategorie: 'Nasslack',
         user: 'AM Lacke (4.7)',
@@ -303,7 +334,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(3),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'IGP',        
-        menge: '85 kg',
+        menge: 85,
         ort: '6240 Rattenberg',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -334,7 +365,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(10),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Pulver Kimya',        
-        menge: '205 kg',
+        menge: 205 ,
         ort: '87629 Füssen',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -365,7 +396,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(9),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'Tiger',        
-        menge: '850 kg',
+        menge: 850,
         ort: '88709 Meersburg',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -396,7 +427,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(10),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'IGP',        
-        menge: '450 kg',
+        menge: 450,
         ort: '06484 Quedlinburg',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -427,7 +458,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(12),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'IGP',        
-        menge: '98 kg',
+        menge: 98,
         ort: '02826 Görlitz',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -458,7 +489,7 @@ function berechneLieferdatum(tage: number): string {
         lieferdatum: berechneLieferdatum(3),
         zustand: 'Geöffnet und einwandfrei',
         hersteller: 'IGP',        
-        menge: '57 kg',
+        menge: 57,
         ort: '96047 Bamberg',
         kategorie: 'Pulverlack',
         user: 'Premium Powder (4.7)',
@@ -479,4 +510,4 @@ function berechneLieferdatum(tage: number): string {
       },
     
   ];
-  
+  export { artikelDaten };

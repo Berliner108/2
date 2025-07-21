@@ -78,7 +78,7 @@ export default function Pager() {
               href: '/wissenswertes',
               links: [
                 { href: '/wissenswertes', text: 'Vision und Mission' },
-                { href: '/wissenswertes#UeberUns', text: 'Über Uns' },                
+                { href: '/wissenswertes#Sofunktioniert’s', text: 'So funktioniert’s' },        
                 { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' },
                 { href: '/wissenswertes#Verfahren', text: 'Verfahren' },                
                 { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' },

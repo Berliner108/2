@@ -143,8 +143,8 @@ useEffect(() => {
       const hash = window.location.hash;
 
       // Überprüfen des URL-Fragmentes (Hash-Wertes) und öffne den entsprechenden Container
-      if (hash === "#UeberUns") {
-        document.getElementById("UeberUns")?.scrollIntoView({ behavior: "smooth" });
+      if (hash === "#Sofunktioniert’s") {
+        document.getElementById("Sofunktioniert’s")?.scrollIntoView({ behavior: "smooth" });
       }
     }
   }, [isClient]);
@@ -228,7 +228,7 @@ useEffect(() => {
       <Vision />
       <ScrollProgress />
       
-  <section className={styles.aboutUsContainer} id="UeberUns">
+  <section className={styles.aboutUsContainer} id="Sofunktioniert’s">
   <motion.h2
   className={styles.aboutUsTitle}
   initial={{ opacity: 0, y: 30 }}

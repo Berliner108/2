@@ -79,7 +79,7 @@ const Wissenswertes = () => {
         <div className={styles["container-right"]}>
           <div className={styles["text-container"]}>
             <h2 className={styles["h2-mission"]}>Unsere Mission</h2>
-            <TypingText text='"Unsere Mission ist es, die Prozesse so zu gestalten, dass sie nicht nur neu gedacht und innovativ, sondern auch nachhaltig und nutzerfreundlich sind. Wir glauben daran, den Status Quo in der Beschichtungstechnik herauszufordern. Wir glauben daran, dass wir anders denken. Wir machen das, indem wir auf Nachhaltigkeit, Nutzerfreundlichkeit und Wirtschaftlichkeit setzen. Wir freuen uns, besondere Lösungen anzubieten. Wollen Sie auch Teil davon sein?' />
+            <TypingText text='„Wir sind überzeugt: Die Beschichtungstechnik braucht neue Denkweisen. Deshalb setzen wir auf nachhaltige, nutzerfreundliche und wirtschaftliche Lösungen – und hinterfragen den Status quo jeden Tag aufs Neue. Unsere Mission: Besonderes schaffen. Wir entwickeln Prozesse, die Umwelt und Ressourcen schonen, ohne Kompromisse bei Qualität oder Effizienz. Wir denken nicht nur an heute, sondern an morgen – für alle. Bist du dabei?“' />
           </div>
         </div>
       </div>

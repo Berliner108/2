@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column; /* Container übereinander anordnen */
   max-width: 100%;
+  perspective: 1000px; /* 3D-Tiefe */
 }
 
 .container {
