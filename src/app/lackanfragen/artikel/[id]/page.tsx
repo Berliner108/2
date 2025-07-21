@@ -20,8 +20,11 @@ type PageProps = {
   };
 };
 
-export default function ArtikelDetailPage({ params }: PageProps) {
-  const artikel = artikelDaten.find((a) => a.id === params.id);
+// ✅ richtig
+export default function ArtikelDetailPage() {
+  const params = useParams();
+  const artikel = artikelDaten.find((a) => a.id.toString() === params.id);
+
   
   if (!artikel) return notFound();
 
