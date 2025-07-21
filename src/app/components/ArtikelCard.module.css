@@ -1,34 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
-.wrapper {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  font-size: 18px;
-  font-family: 'Oswald', sans-serif;
-  background: #f9f9f9;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-.bar {
-  display: block;
-  width: 24px;
-  height: 3px;
-  background-color: #333;
-  border-radius: 3px;
-  transition: all 0.3s ease;
-}
-.sidebar {
-  flex: 0 0 280px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
-  height: fit-content;
-  position: sticky;
-  top: 20px;
-  overflow-y: auto;
-}
 .cardOrt {
   display: flex;
   align-items: center;
@@ -54,101 +25,6 @@
   box-sizing: border-box;
 }
 
-
-.range {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  
-  outline: none;
-  margin-bottom: 15px;
-  margin-top: 25px;
-}
-
-/* WebKit (Chrome, Edge, Safari) – Griff */
-.range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #00b4d8;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  margin-top: -5px;
-}
-
-/* WebKit – Balken */
-.range::-webkit-slider-runnable-track {
-  background: #00b4d8;
-  height: 8px;
-  border-radius: 3px;
-}
-
-/* Firefox – Griff */
-.range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  background: #00b4d8;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-/* Firefox – Balken */
-.range::-moz-range-track {
-  background: #00b4d8;
-  height: 6px;
-  border-radius: 3px;
-}
-
-
-
-.bewertetText {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.checkboxGroup {
-  margin-bottom: 20px;
-  font-size: 17px;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 15px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkboxLabel input[type="checkbox"],
-.checkboxLabel input[type="radio"] {
-  margin-right: 8px;
-  cursor: pointer;
-}
-
-.content {
-  flex: 1;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-.heading {
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-}
 
 .card {
   display: flex;
@@ -254,45 +130,6 @@
   box-shadow: none;
   pointer-events: none;
 }
-
-
-.sidebarToggle {
-  display: none;
-  background-color: #eee;
-  padding: 10px 15px;
-  border: none;
-  font-size: 1rem;
-  margin: 10px;
-  cursor: pointer;
-}
-
-.hamburger {
-  display: none;  
-}
-.cardTextRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.cardTextLeft {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cardTextRight {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  min-width: 120px;
-}
-
-
 /* Label für gewerblich / privat */
 .verkaufsTypLabel {
   position: absolute;
@@ -318,84 +155,57 @@
 }
 
 @media (max-width: 599px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
+ 
 
   .card {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row; /* Bild links, Text rechts */
+    align-items: flex-start;
     padding: 15px;
+    min-width: 100%;
   }
+  
+
+
+.card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
 
   .cardBildWrapper {
-    width: 250px;
-    height: 250px;
+    width: 130px;
+    height: 130px;
     margin: 0 auto;
+    margin-top: 18px;
+    
   }
 
   .cardTextBlock {
     padding-left: 0;
     padding-top: 15px;
+    
+    
   }
+  .cardTextBlock {
+  display: flex;
+  flex-direction: column;
+  padding-left: 10px;
+  flex: 1;
+}
 
-  .hamburger {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 40px;
-    height: 40px;
-    background-color: #f2f2f2;
-    border-radius: 8px;
-    align-items: center;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
-    transition: background 0.3s;
-    margin-top: 20px;
-    margin-left: 20px;
-  }
+.cardText1 {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
 
-  .hamburger:hover {
-    background-color: #e0e0e0;
-  }
-
-  .bar {
-    display: block;
-    width: 24px;
-    height: 3px;
-    background-color: #333;
-    border-radius: 3px;
-    transition: all 0.3s ease;
-  }
-
-  .sidebarToggle {
-    display: block;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: #fff;
-    width: 80%;
-    max-width: 300px;
-    height: 100%;
-    padding: 20px;
-    z-index: 1000;
-    overflow-y: auto;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .sidebarOpen {
-    transform: translateX(0);
-  }
-
-  .sidebarClosed {
-    transform: translateX(-100%);
-  }
-
-  .overlay {
+.cardText2,
+.cardText3,
+.cardText4,
+.cardText5,
+.cardText6 {
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: black;
+}  .overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -405,38 +215,15 @@
     z-index: 999;
   }
   .cardButton {
-   width: 40%;
-  }
-  
-  
+   min-width: 90%;
+   font-size: 15px;
+   font-weight: 500;
+   padding: 10px;
+  }  
 }
-
-
 /* Für alle kleineren und mittleren Geräte */
-@media (min-width: 665px) and (max-width: 1023px) 
-  {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 280px;
-    background-color: #fff;
-    overflow-y: auto;
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-  }
-
-  .sidebarOpen {
-    transform: translateX(0);
-  }
-
-  .sidebarClosed {
-    transform: translateX(-100%);
-  }
-  .overlay {
+@media (min-width: 665px) and (max-width: 1023px){  
+    .overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -445,30 +232,6 @@
     height: 100%;
     z-index: 999;
   }
- 
-  .hamburger {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 40px;
-    height: 40px;
-    background-color: #f2f2f2;
-    border-radius: 8px;
-    align-items: center;
-    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
-    transition: background 0.3s;
-    margin-top: 20px;
-    margin-left: 20px;
-    
-  }
-
-  .hamburger:hover {
-    background-color: #e0e0e0;
-  }
-  
-
-
 }
 
   

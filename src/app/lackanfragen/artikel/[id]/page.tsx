@@ -135,8 +135,8 @@ export default function ArtikelDetailPage() {
                 <span className={styles.value}>{artikel.anwendung}</span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.label}>Ausführung:</span>
-                <span className={styles.value}>{artikel.ausführung}</span>
+                <span className={styles.label}>Glanzgrad:</span>
+                <span className={styles.value}>{artikel.glanzgrad}</span>
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Oberfläche:</span>

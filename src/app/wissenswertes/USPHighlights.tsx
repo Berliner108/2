@@ -4,13 +4,17 @@ import { motion } from 'framer-motion';
 import styles from './uspHighlights.module.css';
 
 const highlights = [
-  {
-    title: 'Angebote in Minuten',
-    text: 'Sofort passende Beschichtungsangebote erhalten – ohne langes Warten.',
+   {
+    title: 'Risikoarm für alle User',
+    text: 'Kein Deal - Keine Kosten. Erst bei erfolgtem Abschluss erfolgt einer Provisionsverrechnung.',
   },
   {
-    title: 'Kosten senken',
-    text: 'Mit eigener Lackbeschaffung bares Geld sparen und flexibel bleiben.',
+    title: 'Angebote in Minuten',
+    text: 'Schreibe unter Angebote einholen deinen Auftrag aus und erhalte sofort passende Beschichtungsangebote – ohne langes Warten.',
+  },
+  {
+    title: 'Diversifizierte Lackbeschaffung',
+    text: 'Mit Beschichter Scout ist die Lackbeschaffung für alle einfach zugänglich. Beschaffe deine Lacke selbst und spare dabei bares Geld.',
   },
   {
     title: 'Sichere Abwicklung',
