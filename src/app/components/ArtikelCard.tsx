@@ -37,12 +37,14 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
   <div className={styles.cardBildWrapper}>
     {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
     <Image
-      className={styles.cardBild}
-      src={bilder[0] || '/images/platzhalter.jpg'}
-      alt={titel}
-      fill
-      priority
-    />
+  className={styles.cardBild}
+  src={bilder[0] || '/images/platzhalter.jpg'}
+  alt={titel}
+  fill
+  priority={false}
+  loading="lazy"
+/>
+
   </div>
 
   {/* Nur auf Desktop sichtbar */}

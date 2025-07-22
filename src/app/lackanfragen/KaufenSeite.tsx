@@ -2,97 +2,69 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Fuse from 'fuse.js';
-import Image from 'next/image';
 import styles from './auftragsboerse.module.css';
 import Pager from './navbar/pager';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
 import { artikelDaten } from '../../data/ArtikelDatenLackanfragen';
-import ArtikelCard from '../components/ArtikelCard'; // anpassen je nach Pfad
-
-
-
-
-
+import ArtikelCard from '../components/ArtikelCard';
 
 const kategorien = ['Nasslack', 'Pulverlack'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 const herstellerFilter = [
-  'Alle',
-  'IGP',
-  'Tiger',
-  'Axalta',
-  'Frei Lacke',
-  'Grimm Pulverlacke',
-  'Akzo Nobel',  
-  'Sherwin Williams',
-  'Teknos',
-  'Pulver Kimya',
-  'Kabe',
-  'Wörwag',
-  'Kansai',
-  'Helios',  
-  'Pulverkönig',
-  'Bentatec',  
-  'Pulmatech',
-  'Colortech',
-  'VAL',    
-  'E-Pulverit',  
-  'Braunsteiner',
-  'Ganzlin',
-  'Colors-Manufaktur',
-  'Aalbert',
-  'Motec-Pulverlack',
-  'DuPont',
-  'Jotun',
-  'Pulvertech.de',
-  'Pulverlacke24.de',
-  'Pulverlacke.de',
-  'Pulverlack-pro.de',
-  'Pulverlackshop.de',
+  'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
+  'Sherwin Williams', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
+  'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
+  'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
+  'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
+  'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de',
 ];
 
-
 export default function KaufenSeite() {
-const [suchbegriff, setSuchbegriff] = useState('');
+  const [suchbegriff, setSuchbegriff] = useState('');
   const [maxMenge, setMaxMenge] = useState(1000);
   const [kategorie, setKategorie] = useState('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
-  const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(10);
   const [gewerblich, setGewerblich] = useState(false);
   const [privat, setPrivat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
+  const router = useRouter();
+
 
   const searchParams = useSearchParams();
-  
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const seitenGroesse = 50;
+  const startIndex = (page - 1) * seitenGroesse;
+  const endIndex = page * seitenGroesse;
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const kategorieQuery = searchParams.get('kategorie');
   useEffect(() => {
     if (kategorieQuery && (kategorieQuery === 'Nasslack' || kategorieQuery === 'Pulverlack')) {
       setKategorie(kategorieQuery);
     }
   }, [kategorieQuery]);
-  const vorSuchFilter = artikelDaten
+
+  const gefilterteArtikel = artikelDaten
     .filter((a) => !kategorie || a.kategorie === kategorie)
     .filter((a) => zustand.length === 0 || zustand.includes(a.zustand))
     .filter((a) => (!gewerblich && !privat) || (gewerblich && a.gewerblich) || (privat && a.privat))
     .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller))
-    .filter((a) => a.menge !== undefined && a.menge <= maxMenge)
+    .filter((a) => a.menge !== undefined && a.menge <= maxMenge);
 
-
-const fuse = new Fuse(vorSuchFilter, {
-  keys: ['titel', 'hersteller', 'zustand', 'kategorie'],
-  threshold: 0.35, // Toleranz – je kleiner, desto strenger
-});
-
-
-  
+  const fuse = new Fuse(gefilterteArtikel, {
+    keys: ['titel', 'hersteller', 'zustand', 'kategorie'],
+    threshold: 0.35,
+  });
 
   const suchErgebnis = suchbegriff
-    ? fuse.search(suchbegriff).map((r) => r.item).filter((item) => vorSuchFilter.includes(item))
-    : vorSuchFilter;
+    ? fuse.search(suchbegriff).map((r) => r.item)
+    : gefilterteArtikel;
 
   const sortierteArtikel = [...suchErgebnis].sort((a, b) => {
     if (a.gesponsert && !b.gesponsert) return -1;
@@ -108,20 +80,17 @@ const fuse = new Fuse(vorSuchFilter, {
       case 'titel-za':
         return b.titel.localeCompare(a.titel);
       case 'bewertung-auf':
-      return (a.menge ?? 0) - (b.menge ?? 0);
+        return (a.menge ?? 0) - (b.menge ?? 0);
       case 'bewertung-ab':
-      return (b.menge ?? 0) - (a.menge ?? 0);
-
+        return (b.menge ?? 0) - (a.menge ?? 0);
       default:
         return 0;
     }
   });
- 
-
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (page !== 1) return;
+
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver(
@@ -138,49 +107,36 @@ const fuse = new Fuse(vorSuchFilter, {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [sortierteArtikel]);
+  }, [sortierteArtikel, page]);
 
   useEffect(() => {
-    setAnzahlAnzeigen(10);
-  }, [suchbegriff, maxMenge, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
+  if (page !== 1) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('page'); // nur page entfernen
+    router.replace(`${location.pathname}?${params.toString()}`);
+  }
+}, [suchbegriff, maxMenge, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
 
+
+
+  const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
 
   return (
     <>
       <Pager />
-      <button
-        className={styles.hamburger}
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        aria-label="Sidebar öffnen"
-      >
+      <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Sidebar öffnen">
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
       </button>
 
-
-{sidebarOpen && (
-  <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
-)}
+      {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
       <div className={styles.wrapper}>
-        
-      <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
-
-          <input
-            className={styles.input}
-            type="text"
-            placeholder="Lackanfrage finden..."
-            value={suchbegriff}
-            onChange={(e) => setSuchbegriff(e.target.value)}
-          />
-
-          <select
-            className={styles.sortSelect}
-            value={sortierung}
-            onChange={(e) => setSortierung(e.target.value)}
-          >
-            
+        {/* SIDEBAR */}
+        <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+          <input className={styles.input} type="text" placeholder="Lackanfrage finden..." value={suchbegriff} onChange={(e) => setSuchbegriff(e.target.value)} />
+          <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
             <option value="">Sortieren</option>
             <option value="lieferdatum-auf">Lieferdatum aufsteigend</option>
             <option value="lieferdatum-ab">Lieferdatum absteigend</option>
@@ -190,38 +146,19 @@ const fuse = new Fuse(vorSuchFilter, {
             <option value="bewertung-ab">Menge absteigend</option>
           </select>
 
-          <input
-  className={styles.range}
-  type="range"
-  min="0"
-  max="1000"
-  step="0.1"
-  value={maxMenge}
-  onChange={(e) => setMaxMenge(Number(e.target.value))}
-/>
-<div className={styles.bewertetText}>Max. Menge: {maxMenge} kg</div>
-
+          <input className={styles.range} type="range" min="0" max="1000" step="0.1" value={maxMenge} onChange={(e) => setMaxMenge(Number(e.target.value))} />
+          <div className={styles.bewertetText}>Max. Menge: {maxMenge} kg</div>
 
           <div className={styles.checkboxGroup}>
-            <div className={styles.Kategorie}><strong>Kategorie</strong></div>
+            <strong>Kategorie</strong>
             {kategorien.map((k) => (
               <label key={k} className={styles.checkboxLabel}>
-                <input
-                  type="radio"
-                  name="kategorie"
-                  checked={kategorie === k}
-                  onChange={() => setKategorie(k)}
-                />
+                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => setKategorie(k)} />
                 {k}
               </label>
             ))}
             <label className={styles.checkboxLabel}>
-              <input
-                type="radio"
-                name="kategorie"
-                checked={kategorie === ''}
-                onChange={() => setKategorie('')}
-              />
+              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => setKategorie('')} />
               Alle
             </label>
           </div>
@@ -230,15 +167,9 @@ const fuse = new Fuse(vorSuchFilter, {
             <strong>Zustand</strong>
             {zustandFilter.map((z) => (
               <label key={z} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={zustand.includes(z)}
-                  onChange={() =>
-                    setZustand((prev) =>
-                      prev.includes(z) ? prev.filter((item) => item !== z) : [...prev, z]
-                    )
-                  }
-                />
+                <input type="checkbox" checked={zustand.includes(z)} onChange={() =>
+                  setZustand((prev) => prev.includes(z) ? prev.filter((item) => item !== z) : [...prev, z])
+                } />
                 {z}
               </label>
             ))}
@@ -247,19 +178,11 @@ const fuse = new Fuse(vorSuchFilter, {
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={gewerblich}
-                onChange={() => setGewerblich((prev) => !prev)}
-              />
+              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich(!gewerblich)} />
               Gewerblich
             </label>
             <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={privat}
-                onChange={() => setPrivat((prev) => !prev)}
-              />
+              <input type="checkbox" checked={privat} onChange={() => setPrivat(!privat)} />
               Privat
             </label>
           </div>
@@ -268,36 +191,46 @@ const fuse = new Fuse(vorSuchFilter, {
             <strong>Hersteller</strong>
             {herstellerFilter.map((h) => (
               <label key={h} className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={hersteller.includes(h)}
-                  onChange={() =>
-                    setHersteller((prev) =>
-                      prev.includes(h) ? prev.filter((item) => item !== h) : [...prev, h]
-                    )
-                  }
-                />
+                <input type="checkbox" checked={hersteller.includes(h)} onChange={() =>
+                  setHersteller((prev) => prev.includes(h) ? prev.filter((item) => item !== h) : [...prev, h])
+                } />
                 {h}
               </label>
             ))}
           </div>
         </div>
 
+        {/* CONTENT */}
         <div className={styles.content}>
-  <h3 className={styles.anfrageUeberschrift}>
+          <h3 className={styles.anfrageUeberschrift}>
+            {sortierteArtikel.length} {sortierteArtikel.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}
+          </h3>
 
-    {sortierteArtikel.length} {sortierteArtikel.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}
-  </h3>
+          <div className={styles.grid}>
+            {(page === 1 ? sortierteArtikel.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => (
+              <ArtikelCard key={a.id} artikel={a} />
+            ))}
+            {page === 1 && <div ref={loadMoreRef} />}
+          </div>
 
-  <div className={styles.grid}>
-  {sortierteArtikel.slice(0, anzahlAnzeigen).map((a) => (
-    <ArtikelCard key={a.id} artikel={a} />
-  ))}
-  <div ref={loadMoreRef} />
+          <div className={styles.pagination}>
+  {Array.from({ length: Math.ceil(sortierteArtikel.length / seitenGroesse) }, (_, i) => {
+    const pageNum = i + 1;
+    const href = pageNum === 1 ? location.pathname : `?page=${pageNum}`;
+    return (
+      <Link
+        key={i}
+        href={href}
+        className={`${styles.pageLink} ${page === pageNum ? styles.activePage : ''}`}
+      >
+        {pageNum}
+      </Link>
+    );
+  })}
 </div>
 
-</div> {/* schließt .content */}
-      </div> {/* schließt .wrapper */}
+        </div>
+      </div>
     </>
   );
 }
