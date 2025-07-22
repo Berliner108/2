@@ -112,10 +112,13 @@ export default function KaufenSeite() {
   useEffect(() => {
   if (page !== 1) {
     const params = new URLSearchParams(searchParams.toString());
-    params.delete('page'); // nur page entfernen
-    router.replace(`${location.pathname}?${params.toString()}`);
+    params.delete('page');
+    const query = params.toString();
+    const neueUrl = query ? `${location.pathname}?${query}` : location.pathname;
+    router.replace(neueUrl);
   }
 }, [suchbegriff, maxMenge, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
+
 
 
 
@@ -212,14 +215,23 @@ export default function KaufenSeite() {
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
           </div>
+          <div className={styles.seitenInfo}>
+  Seite {page} von {Math.ceil(sortierteArtikel.length / seitenGroesse)}
+</div>
 
-          <div className={styles.pagination}>
+<div className={styles.pagination}>
+  {page > 1 && (
+    <Link href={page - 1 === 1 ? location.pathname : `?page=${page - 1}`} className={styles.pageArrow}>
+      ←
+    </Link>
+  )}
+
   {Array.from({ length: Math.ceil(sortierteArtikel.length / seitenGroesse) }, (_, i) => {
     const pageNum = i + 1;
     const href = pageNum === 1 ? location.pathname : `?page=${pageNum}`;
     return (
       <Link
-        key={i}
+        key={pageNum}
         href={href}
         className={`${styles.pageLink} ${page === pageNum ? styles.activePage : ''}`}
       >
@@ -227,7 +239,14 @@ export default function KaufenSeite() {
       </Link>
     );
   })}
+
+  {page < Math.ceil(sortierteArtikel.length / seitenGroesse) && (
+    <Link href={`?page=${page + 1}`} className={styles.pageArrow}>
+      →
+    </Link>
+  )}
 </div>
+
 
         </div>
       </div>

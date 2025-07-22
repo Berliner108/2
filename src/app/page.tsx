@@ -1,34 +1,55 @@
-'use client'
+'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import styles from '../styles/Home.module.css';
-import Slideshow from "./slideshow/slideshow";  // Importiere die Slideshow-Komponente
-import CookieBanner from "./components/CookieBanner"; // ✅ korrekt
-import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
-import { useRef } from 'react';  // Importiere useRef
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import Slideshow from './slideshow/slideshow';
+import CookieBanner from './components/CookieBanner';
+import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
+import styles from '../styles/Home.module.css';
+import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLackanfragen';
 
 
-
-const gesponserteAuftraege = dummyAuftraege.filter(auftrag => auftrag.isSponsored).slice(0, 12);
-
-const handleScroll = (direction: number) => {
-  const scrollContainer = document.querySelector(`.${styles.scrollContent}`) as HTMLElement;
-  const scrollAmount = 200; // Scroll-Menge (passe dies nach Bedarf an)
-  scrollContainer.scrollLeft += direction * scrollAmount;
+type Auftrag = {
+  id: string | number;
+  bilder: string[];
+  verfahren: string[];
+  material: string;
+  length: number;
+  width: number;
+  height: number;
+  masse: string;
+  standort: string;
+  lieferDatum: Date;
+  abholDatum: Date;
+  abholArt: string;
+  benutzername?: string;
+  bewertung?: number;
+};
+type Lackanfrage = {
+  id: string | number;
+  titel: string;
+  bilder: string[];
+  menge: number;
+  lieferdatum: Date;
+  hersteller: string;
+  zustand: string;  
+  kategorie: string;
+  ort: string;
 };
 
+const formatDate = (date: Date) => {
+  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('de-AT');
+};
 
 
 const category2 = [
   { id: 7, title: "RAL 5020 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch1.jpg" },
   { id: 8, title: "RAL 6012 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch2.jpg" },
-  { id: 9, title: "NCS S 3050-B20G Glatt Seidenmatt ", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch3.jpg" },
+  { id: 9, title: "NCS S 3050-B20G Glatt Seidenmatt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch3.jpg" },
   { id: 10, title: "Sikkens C4.55.30 Feinstruktur Seidenmatt", desc: "Pulverlack GSB und Qualicoat zertifiziert", img: "/images/strauch4.jpg" },
   { id: 11, title: "DB702 Glatt Seidenglanz Metallic", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch5.jpg" },
   { id: 12, title: "Eloxal E6/C35 Orange", desc: "Pulverlack Qualicoat zertifiziert", img: "/images/strauch6.jpg" },
-  
-  
 ];
 
 const category3 = [
@@ -38,24 +59,69 @@ const category3 = [
   { id: 16, title: "Atemschutzmaske mit Filter", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
   { id: 17, title: "Arbeitshandschuhe", desc: "Langlebig und passgenau", img: "/images/blume5.jpg" },
   { id: 18, title: "Stahlhaken", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume18.png" },
-  
-  
-  
 ];
-  const category4 = [
-    { id: 1, title: "IKEANr.4 GLATT Glanz", desc: "Pulverlack GSB und Qualicoat zertifiziert, 50 kg", img: "/images/strauch1.jpg" },
-    { id: 2, title: "GS Premium Design Gamma Feinstruktur Matt", desc: "Profile werden anschließend zugeschnitten", img: "/images/strauch2.jpg" },
-    { id: 3, title: "C31 Anodized Glatt Matt HWF Metallic", desc: "Nasslack, Hersteller Axalta, 21 kg", img: "/images/strauch3.jpg" },
-    { id: 4, title: "Deore 619 Glatt Matt HWF Metallic", desc: "Pulverlack, Hersteller IGP, 33 kg", img: "/images/strauch4.jpg" },
-    { id: 5, title: "CHAMPAGNE 611 Glatt Matt Metallic", desc: "Nasslack, 15 kg, neu & ungeöffnet, GSB Zertifizierung erforderlich", img: "/images/strauch5.jpg" },
-    { id: 6, title: "GS Premium Design Gamma Feinstruktur Matt Hochwetterfest", desc: "Nasslack, 20 kg, GSB zertifizierung erforderlich", img: "/images/strauch6.jpg" },
-    
-    
-  ];
+
+
+
 export default function Page() {
-  
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [auftraege, setAuftraege] = useState<Auftrag[]>(
+    dummyAuftraege.filter((a) => a.isSponsored).slice(0, 12)
+  );
+
+  const handleScroll = (direction: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft += direction * 200;
+    }
+  };
+
+  useEffect(() => {
+    const fetchAuftraege = async () => {
+      try {
+        const res = await fetch('/api/auftraege?sponsored=true&limit=12');
+        if (!res.ok) throw new Error('Fehler beim Laden');
+        const data: Auftrag[] = await res.json();
+        setAuftraege(data);
+      } catch {
+        // fallback = dummy
+      }
+    };
+
+    fetchAuftraege();
+  }, []);
+  const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>(
+  artikelDatenLackanfragen
+    .filter((a) => a.gesponsert)
+    .slice(0, 12)
+    .map((a) => ({
+      ...a,
+      lieferdatum: new Date(a.lieferdatum),
+    }))
+);
+
+
+useEffect(() => {
+  const fetchLackanfragen = async () => {
+    try {
+      const res = await fetch('/api/lackanfragen?limit=12');
+      if (!res.ok) throw new Error('Fehler beim Laden');
+      const data = await res.json();
+      setLackanfragen(
+        data.map((a: any) => ({
+          ...a,
+          lieferdatum: new Date(a.lieferdatum),
+        }))
+      );
+    } catch {
+      // Dummy bleibt
+    }
+  };
+  fetchLackanfragen();
+}, []);
+
+
+
   return (
-    
     <div className={styles.wrapper}>
       <nav className={styles.navbar}>
         <ul className={styles.navList}>
@@ -84,122 +150,124 @@ export default function Page() {
           ))}
         </ul>
       </nav>
-      <Slideshow />    
+      <Slideshow />
+
+      {/* Auftragsbörse */}
       <div className={styles.articleLinkContainer}>
         <Link href="/auftragsboerse" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Auftragsbörse</span>
         </Link>
       </div>
-
-      {/* Neuer Container mit dem Text "Unsere Artikel" */}
-      <div className={styles.articleContainer}>
-        
-      </div>
-      {/* Kategorie 2 mit scrollbarem Container */}
       <div className={styles.scrollContainer}>
-        
-        <div className={styles.scrollContent}>
-          {gesponserteAuftraege.map((auftrag) => (
+        <div className={styles.scrollContent} ref={scrollRef}>
+          {auftraege.map((auftrag) => (
             <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.articleBox}>
               <img src={auftrag.bilder[0]} alt={auftrag.verfahren.join(' & ')} className={styles.articleImg} />
               <div className={styles.articleText}>
-                <h3>{auftrag.verfahren.length > 0 ? auftrag.verfahren.join(' & ') : 'Verfahren unbekannt'}</h3>
+                <h3>{auftrag.verfahren.join(' & ') || 'Verfahren unbekannt'}</h3>
                 <p><strong>Material:</strong> {auftrag.material}</p>
                 <p><strong>Maße:</strong> {auftrag.length} x {auftrag.width} x {auftrag.height} mm</p>
                 <p><strong>Masse:</strong> {auftrag.masse}</p>
                 <p><strong>Standort:</strong> {auftrag.standort}</p>
-                <p><strong>Lieferdatum:</strong> {new Date(auftrag.lieferDatum).toLocaleDateString('de-AT')}</p>
-                <p><strong>Abholdatum:</strong> {new Date(auftrag.abholDatum).toLocaleDateString('de-AT')}</p>
+                <p><strong>Lieferdatum:</strong> {formatDate(new Date(auftrag.lieferDatum))}</p>
+                <p><strong>Abholdatum:</strong> {formatDate(new Date(auftrag.abholDatum))}</p>
+
                 <p><strong>Abholart:</strong> {auftrag.abholArt}</p>
-                <p><strong>Auftraggeber:</strong> {auftrag.benutzername}</p>
-                <p><strong>Bewertung:</strong> ⭐ {auftrag.bewertung}</p>
               </div>
             </Link>
           ))}
         </div>
-        {/* Pfeil nach rechts - ChevronRightIcon */}
         <button className={styles.arrowLeft} onClick={() => handleScroll(-1)}>
-  <ChevronLeftIcon className="h-6 w-6 text-black" />
-</button>
-<button className={styles.arrowRight} onClick={() => handleScroll(1)}>
-  <ChevronRightIcon className="h-6 w-6 text-black" />
-</button>
-</div>
-
-      {/* Bild unter dem Artikel Container */}
+          <ChevronLeftIcon className="h-6 w-6 text-black" />
+        </button>
+        <button className={styles.arrowRight} onClick={() => handleScroll(1)}>
+          <ChevronRightIcon className="h-6 w-6 text-black" />
+        </button>
+      </div>
       <div className={styles.imageContainer}>
         <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-       <div className={styles.articleLinkContainer}>
+
+      {/* Lackbörse */}
+      <div className={styles.articleLinkContainer}>
         <Link href="/kaufen" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Lackbörse</span>
         </Link>
       </div>
-      {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        
+        {category2.map((article) => (
+          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
+            <img src={article.img} alt={article.title} className={styles.articleImg} />
+            <div className={styles.articleText}>
+              <h3>{article.title}</h3>
+              <p>{article.desc}</p>
+            </div>
+          </Link>
+        ))}
       </div>
-      {/* Kategorie 2: Blumen */}
-      <div className={styles.categorySection}>
-    
-  </div>
-      {/* Bild unter dem Artikel Container */}
       <div className={styles.imageContainer}>
         <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-       <div className={styles.articleLinkContainer}>
+
+      {/* Arbeitsmittelbörse */}
+      <div className={styles.articleLinkContainer}>
         <Link href="/kaufen" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Arbeitsmittelbörse</span>
         </Link>
       </div>
-      {/* Neuer Container mit dem Text "Unsere Artikel" */}
       <div className={styles.articleContainer}>
-        
+        {category3.map((article) => (
+          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
+            <img src={article.img} alt={article.title} className={styles.articleImg} />
+            <div className={styles.articleText}>
+              <h3>{article.title}</h3>
+              <p>{article.desc}</p>
+            </div>
+          </Link>
+        ))}
       </div>
-      {/* Kategorie 2: Blumen */}
-      {/* Kategorie 2: Blumen */}
-      <div className={styles.categorySection}>
-        <div className={styles.articleContainer}>
-          {category3.map((article) => (
-            <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
-              <img src={article.img} alt={article.title} className={styles.articleImg} />
-              <div className={styles.articleText}>
-                <h3>{article.title}</h3>
-                <p>{article.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-      {/* Bild unter dem Artikel Container */}
       <div className={styles.imageContainer}>
         <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-       <div className={styles.articleLinkContainer}>
+
+      {/* Lackanfragen-Börse */}
+      <div className={styles.articleLinkContainer}>
         <Link href="/lackanfragen" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Lackanfragen-Börse</span>
         </Link>
       </div>
-      {/* Neuer Container mit dem Text "Unsere Artikel" */}
-      <div className={styles.articleContainer}>
-        
-      </div>
-      {/* Kategorie 2: Blumen */}
-      <div className={styles.categorySection}>
-        <div className={styles.articleContainer}>
-          {category4.map((article) => (
-            <Link key={article.id} href={`lackanfragen/artikel/${article.id}`} className={styles.articleBox}>
-              <img src={article.img} alt={article.title} className={styles.articleImg} />
-              <div className={styles.articleText}>
-                <h3>{article.title}</h3>
-                <p>{article.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-      <CookieBanner /> {/* Cookie-Banner außerhalb vom Layout-Wrapper */}
+
+<div className={styles.articleContainer}>
+  {lackanfragen.map((anfrage) => (
+    <Link
+      key={anfrage.id}
+      href={`/lackanfragen/artikel/${anfrage.id}`}
+      className={styles.articleBox}
+    >
+      <img
+        src={anfrage.bilder?.[0] ?? '/images/placeholder.jpg'}
+        alt="Lackanfrage-Bild"
+        className={styles.articleImg}
+      />
+      <div className={styles.articleText}>
+  <h3>{anfrage.titel}</h3>
+  <p><strong>Menge:</strong> {anfrage.menge} kg</p>
+  <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
+  <p><strong>Hersteller:</strong> {anfrage.hersteller}</p>
+  <p><strong>Zustand:</strong> {anfrage.zustand}</p>
+  <p><strong>Kategorie:</strong> {anfrage.kategorie}</p>
+  <p><strong>Ort:</strong> {anfrage.ort}</p>
+</div>
+
+    </Link>
+  ))}
+</div>
+
+
+
+
+      <CookieBanner />
     </div>
-    
   );
 }
+
