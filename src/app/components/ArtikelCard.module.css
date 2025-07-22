@@ -3,16 +3,14 @@
 .cardOrt {
   display: flex;
   align-items: center;
-  gap: 6px;
+  
   margin-top: 4px;
   color: #444;
   font-size: 14px;
 }
-
 .ortIcon {
   color: #888;
 }
-
 .sortSelect,
 .input {
   width: 100%;
@@ -24,8 +22,6 @@
   font-family: 'Oswald';
   box-sizing: border-box;
 }
-
-
 .card {
   display: flex;
   flex-direction: row;
@@ -39,12 +35,9 @@
   transition: box-shadow 0.3s ease;
   position: relative; /* wichtig für Label-Position */
 }
-
-
 .card:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
-
 .cardBildWrapper {
   width: 220px;
   height: 220px;
@@ -53,27 +46,23 @@
   overflow: hidden;
   position: relative;
 }
-
 .cardBild {
   object-fit: cover;
   width: 100%;
   height: 100%;
   border-radius: 8px;
 }
-
 .cardTextBlock {
   display: flex;
   flex-direction: column;
   padding-left: 20px;
   flex: 1;
 }
-
 .cardText1 {
   font-weight: 700;
   font-size: 20px;
   margin-bottom: 15px;
 }
-
 .cardText2,
 .cardText3,
 .cardText4,
@@ -83,18 +72,15 @@
   margin-bottom: 4px;
   color: #555;
 }
-
 .cardText7 {
   font-weight: 600;
   font-size: 14px;
   margin-top: 8px;
 }
-
 .cardButtonWrapper {
   margin-top: 12px;
   text-align: center;
 }
-
 .cardButton {
   background: linear-gradient(to right, #00e5ff, #00b4d8);
   border: none;
@@ -153,16 +139,53 @@
   background-color: #e2e3e5;
   color: #41464b;
 }
+.cardBildContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+/* Sichtbarkeit steuern */
+.desktopOnly {
+  display: block;
+}
+.mobileOnly {
+  display: none;
+}
 
 @media (max-width: 599px) {
+  .desktopOnly {
+    display: none;
+  }
+  .mobileOnly {
+    display: block;
+    position: static;
+    margin-top: 8px;
+    text-align: left;
+  }
+
+
+
+  .gewerblichLabel {
+    background-color: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .privatLabel {
+    background-color: #e2e3e5;
+    color: #41464b;
+  }
+
  
 
   .card {
-    flex-direction: row; /* Bild links, Text rechts */
-    align-items: flex-start;
-    padding: 15px;
-    min-width: 100%;
-  }
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 15px 0; /* oben/unten 15px, seitlich 0 */
+  width: 100vw;
+  border-radius: 0; /* optional für randloses Design */
+  margin-left: -17px;
+}
+
   
 
 
@@ -171,16 +194,16 @@
 }
 
   .cardBildWrapper {
-    width: 130px;
-    height: 130px;
-    margin: 0 auto;
-    margin-top: 18px;
-    
+    max-width: 145px;
+    min-width: 145px;
+    min-height: 145px;
+    max-height: 145px;
+    margin: 0 auto;    
   }
 
   .cardTextBlock {
     padding-left: 0;
-    padding-top: 15px;
+    
     
     
   }
@@ -205,7 +228,8 @@
   font-size: 14px;
   margin-bottom: 4px;
   color: black;
-}  .overlay {
+}  
+.overlay {
     position: fixed;
     top: 0;
     left: 0;

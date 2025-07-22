@@ -32,26 +32,34 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
   return (
     <div className={styles.card}>
-      <div className={styles.cardBildWrapper}>
-        {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
+      <div className={styles.cardBildContainer}>
+  <div className={styles.cardBildWrapper}>
+    {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
+    <Image
+      className={styles.cardBild}
+      src={bilder[0] || '/images/platzhalter.jpg'}
+      alt={titel}
+      fill
+      priority
+    />
+  </div>
 
-        <Image
-            className={styles.cardBild}
-            src={bilder[0] || '/images/platzhalter.jpg'}
-            alt={titel}
-            fill
-            priority
-            />
+  {/* Nur auf Desktop sichtbar */}
+{(gewerblich || privat) && (
+  <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.desktopOnly}`}>
+    {gewerblich ? 'Gewerblich' : 'Privat'}
+  </div>
+)}
 
+{/* Nur auf Mobile sichtbar */}
+{(gewerblich || privat) && (
+  <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.mobileOnly}`}>
+    {gewerblich ? 'Gewerblich' : 'Privat'}
+  </div>
+)}
 
-      </div>
+</div>
 
-      {gewerblich && (
-        <div className={`${styles.verkaufsTypLabel} ${styles.gewerblichLabel}`}>Gewerblich</div>
-      )}
-      {privat && !gewerblich && (
-        <div className={`${styles.verkaufsTypLabel} ${styles.privatLabel}`}>Privat</div>
-      )}
 
       <div className={styles.cardTextBlock}>
         <div className={styles.cardText1}>{titel}</div>
