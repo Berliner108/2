@@ -6,7 +6,7 @@
   
   margin-top: 4px;
   color: #444;
-  font-size: 14px;
+  font-size: 15px;
 }
 .ortIcon {
   color: #888;
@@ -68,44 +68,23 @@
 .cardText4,
 .cardText5,
 .cardText6 {
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 4px;
   color: #555;
 }
-.cardText7 {
-  font-weight: 600;
-  font-size: 14px;
-  margin-top: 8px;
-}
-.cardButtonWrapper {
-  margin-top: 12px;
-  text-align: center;
-}
-.cardButton {
-  background: linear-gradient(to right, #00e5ff, #00b4d8);
-  border: none;
-  padding: 12px 16px;
-  border-radius: 6px;
-  color: white;
-  font-weight: 800;
-  font-size: 15px;
-  cursor: pointer;
-  width: 50%;
-  font-family: 'Oswald';
-  transition: transform 0.2s ease, background-position 0.4s ease;
-  background-size: 100% auto;
-  background-position: left center;
+
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
-.cardButton:hover {
-  transform: scale(1.03);
-  background-position: right center;
-}
 
 .gesponsertLabel {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 1px;
+  right: 1px;
   background: #f0f0f0;
   color: #888888;
   padding: 2px 6px;
@@ -183,7 +162,7 @@
   padding: 15px 0; /* oben/unten 15px, seitlich 0 */
   width: 100vw;
   border-radius: 0; /* optional für randloses Design */
-  margin-left: -17px;
+  
 }
 
   
@@ -194,11 +173,12 @@
 }
 
   .cardBildWrapper {
-    max-width: 145px;
-    min-width: 145px;
-    min-height: 145px;
-    max-height: 145px;
-    margin: 0 auto;    
+    max-width: 155px;
+    min-width: 155px;
+    min-height: 155px;
+    max-height: 155px;
+    margin: 0 auto;   
+    margin-left: 2px; 
   }
 
   .cardTextBlock {
@@ -243,6 +223,7 @@
    font-size: 15px;
    font-weight: 500;
    padding: 10px;
+   display: none;
   }  
 }
 /* Für alle kleineren und mittleren Geräte */

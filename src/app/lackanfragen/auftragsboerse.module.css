@@ -320,25 +320,27 @@
 @media (max-width: 599px) {
   .grid {
     grid-template-columns: 1fr;
-  }
+  } 
+  .wrapper {
+  display: flex;
+  
+  padding: 0px;
+  font-size: 18px;
+  font-family: 'Oswald', sans-serif;
+  background: transparent;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 15px;
-    
-  }
+ .anfrageUeberschrift {
+  font-size: 24px;
+  font-weight: 600;  
+  color: black;
+  font-family: 'Oswald', sans-serif;
+  text-align: center;
+}
 
-  .cardBildWrapper {
-    width: 250px;
-    height: 250px;
-    margin: 0 auto;
-  }
 
-  .cardTextBlock {
-    padding-left: 0;
-    padding-top: 15px;
-  }
 
   .hamburger {
     display: flex;

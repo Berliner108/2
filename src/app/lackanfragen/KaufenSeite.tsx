@@ -284,7 +284,8 @@ const fuse = new Fuse(vorSuchFilter, {
         </div>
 
         <div className={styles.content}>
-  <h3>
+  <h3 className={styles.anfrageUeberschrift}>
+
     {sortierteArtikel.length} {sortierteArtikel.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}
   </h3>
 

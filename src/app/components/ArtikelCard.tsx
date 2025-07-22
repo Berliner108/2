@@ -31,6 +31,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
   } = artikel;
 
   return (
+    <Link href={`/lackanfragen/artikel/${id}`} className={styles.cardLink}>
     <div className={styles.card}>
       <div className={styles.cardBildContainer}>
   <div className={styles.cardBildWrapper}>
@@ -73,12 +74,9 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <span>{ort}</span>
         </div>
 
-        <div className={styles.cardButtonWrapper}>
-          <Link href={`/lackanfragen/artikel/${id}`}>
-            <button className={styles.cardButton}>Lack anbieten</button>
-          </Link>
-        </div>
+        
       </div>
     </div>
+    </Link>
   );
 }
