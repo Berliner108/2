@@ -24,6 +24,7 @@ type Auftrag = {
   lieferDatum: Date;
   abholDatum: Date;
   abholArt: string;
+  lieferArt: string;
   isSponsored?: boolean; // ← das fehlt!
 };
 type Lackanfrage = {
@@ -71,7 +72,10 @@ const sponsoredAuftraege: Auftrag[] = dummyAuftraege
   }));
 
 export default function Page() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRefAuftraege = useRef<HTMLDivElement>(null);
+const scrollRefLack = useRef<HTMLDivElement>(null);
+const scrollRefLackanfragen = useRef<HTMLDivElement>(null);
+
   const [auftraege, setAuftraege] = useState<Auftrag[]>(sponsoredAuftraege);
 
   
@@ -79,26 +83,34 @@ export default function Page() {
 
 
 
-  const handleScroll = (direction: number) => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollLeft += direction * 200;
-    }
-  };
+  const handleScroll = (ref: React.RefObject<HTMLDivElement>, direction: number) => {
+  if (ref.current) {
+    ref.current.scrollLeft += direction * 200;
+  }
+};
+
 
   useEffect(() => {
-    const fetchAuftraege = async () => {
-      try {
-        const res = await fetch('/api/auftraege?sponsored=true&limit=12');
-        if (!res.ok) throw new Error('Fehler beim Laden');
-        const data: Auftrag[] = await res.json();
-        setAuftraege(data);
-      } catch {
-        // fallback = dummy
-      }
-    };
+  const fetchAuftraege = async () => {
+    try {
+      const res = await fetch('/api/auftraege?sponsored=true&limit=12');
+      if (!res.ok) throw new Error('Fehler beim Laden');
+      const data = await res.json();
+      setAuftraege(
+        data.map((a: any) => ({
+          ...a,
+          lieferDatum: new Date(a.lieferDatum),
+          abholDatum: new Date(a.abholDatum),
+        }))
+      );
+    } catch {
+      // Dummy nur im Fehlerfall
+      setAuftraege(sponsoredAuftraege);
+    }
+  };
+  fetchAuftraege();
+}, []);
 
-    fetchAuftraege();
-  }, []);
   const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>(
   artikelDatenLackanfragen
     .filter((a) => a.gesponsert)
@@ -169,7 +181,7 @@ useEffect(() => {
         </Link>
       </div>
       <div className={styles.scrollContainer}>
-        <div className={styles.scrollContent} ref={scrollRef}>
+        <div className={styles.scrollContent} ref={scrollRefAuftraege}> 
           {auftraege.map((auftrag) => (
             <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.articleBox}>
               <img src={auftrag.bilder[0]} alt={auftrag.verfahren.join(' & ')} className={styles.articleImg} />
@@ -177,35 +189,37 @@ useEffect(() => {
                 <h3>{auftrag.verfahren.join(' & ') || 'Verfahren unbekannt'}</h3>
                 <p><strong>Material:</strong> {auftrag.material}</p>
                 <p><strong>Maße:</strong> {auftrag.length} x {auftrag.width} x {auftrag.height} mm</p>
-                <p><strong>Masse:</strong> {auftrag.masse}</p>
-                
-                <p><strong>Lieferdatum:</strong> {formatDate(new Date(auftrag.lieferDatum))}</p>
-                <p><strong>Abholdatum:</strong> {formatDate(new Date(auftrag.abholDatum))}</p>
-
+                <p><strong>Masse:</strong> {auftrag.masse}</p>                
+                <p><strong>Lieferdatum:</strong> {formatDate(auftrag.lieferDatum)}</p>
+                <p><strong>Abholdatum:</strong> {formatDate(auftrag.abholDatum)}</p>
                 <p><strong>Abholart:</strong> {auftrag.abholArt}</p>
                 <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{auftrag.standort}</p>
               </div>
             </Link>
           ))}
         </div>
-        <button className={styles.arrowLeft} onClick={() => handleScroll(-1)}>
+        <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefAuftraege, -1)}>
+
+
           <ChevronLeftIcon className="h-6 w-6 text-black" />
         </button>
-        <button className={styles.arrowRight} onClick={() => handleScroll(1)}>
+        <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefAuftraege, 1)}>
+
           <ChevronRightIcon className="h-6 w-6 text-black" />
         </button>
       </div>
       <div className={styles.imageContainer}>
         <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-
+      
       {/* Lackbörse */}
       <div className={styles.articleLinkContainer}>
         <Link href="/kaufen" className={styles.articleLink}>
-          Top Deals aus der <span className={styles.colored}>Lackbörse</span>
+          Top Deals aus der <span className={styles.colored}>Lack- und Arbeitsmittelbörse</span>
         </Link>
       </div>
-      <div className={styles.articleContainer}>
+      <div className={styles.scrollContainer}>        
+          <div className={styles.scrollContent} ref={scrollRefLack}> 
         {category2.map((article) => (
           <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
             <img src={article.img} alt={article.title} className={styles.articleImg} />
@@ -216,27 +230,17 @@ useEffect(() => {
           </Link>
         ))}
       </div>
-      <div className={styles.imageContainer}>
-        <img src="/images/arbeitsmittelbild3.jpg" alt="Artikelbild" className={styles.articleImage} />
+        <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLack, -1)}>
+          <ChevronLeftIcon className="h-6 w-6 text-black" />
+        </button>
+        <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefLack, 1)}>
+          <ChevronRightIcon className="h-6 w-6 text-black" />
+        </button>
       </div>
 
-      {/* Arbeitsmittelbörse */}
-      <div className={styles.articleLinkContainer}>
-        <Link href="/kaufen" className={styles.articleLink}>
-          Top Deals aus der <span className={styles.colored}>Arbeitsmittelbörse</span>
-        </Link>
-      </div>
-      <div className={styles.articleContainer}>
-        {category3.map((article) => (
-          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
-            <img src={article.img} alt={article.title} className={styles.articleImg} />
-            <div className={styles.articleText}>
-              <h3>{article.title}</h3>
-              <p>{article.desc}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      
+      
+      
       <div className={styles.imageContainer}>
         <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
@@ -248,31 +252,45 @@ useEffect(() => {
         </Link>
       </div>
 
-<div className={styles.articleContainer}>
-  {lackanfragen.map((anfrage) => (
-    <Link
-      key={anfrage.id}
-      href={`/lackanfragen/artikel/${anfrage.id}`}
-      className={styles.articleBox}
-    >
-      <img
-        src={anfrage.bilder?.[0] ?? '/images/placeholder.jpg'}
-        alt="Lackanfrage-Bild"
-        className={styles.articleImg}
-      />
-      <div className={styles.articleText}>
-  <h3>{anfrage.titel}</h3>
-  <p><strong>Menge:</strong> {anfrage.menge} kg</p>
-  <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
-  <p><strong>Hersteller:</strong> {anfrage.hersteller}</p>
-  <p><strong>Zustand:</strong> {anfrage.zustand}</p>
-  <p><strong>Kategorie:</strong> {anfrage.kategorie}</p>
-  <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{anfrage.ort}</p>
+      <div className={styles.scrollContainer}>        
+          <div className={styles.scrollContent} ref={scrollRefLackanfragen}> 
+        {lackanfragen.map((anfrage) => (
+          <Link
+            key={anfrage.id}
+            href={`/lackanfragen/artikel/${anfrage.id}`}
+            className={styles.articleBox}
+          >
+            <img
+              src={anfrage.bilder?.[0] ?? '/images/placeholder.jpg'}
+              alt="Lackanfrage-Bild"
+              className={styles.articleImg}
+            />
+            <div className={styles.articleText}>
+        <h3>{anfrage.titel}</h3>
+        <p><strong>Menge:</strong> {anfrage.menge} kg</p>
+        <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
+        <p><strong>Hersteller:</strong> {anfrage.hersteller}</p>
+        <p><strong>Zustand:</strong> {anfrage.zustand}</p>
+        <p><strong>Kategorie:</strong> {anfrage.kategorie}</p>
+        <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{anfrage.ort}</p>
 
-</div>
+      </div>
+      
 
     </Link>
+    
   ))}
+  
+</div>
+<button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLackanfragen, -1)}>
+
+
+          <ChevronLeftIcon className="h-6 w-6 text-black" />
+        </button>
+        <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefLackanfragen, 1)}>
+          <ChevronRightIcon className="h-6 w-6 text-black" />
+        </button>
+
 </div>
 
 

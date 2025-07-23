@@ -193,8 +193,7 @@
 }
 .articleLinkContainer {
   text-align: center;
-  margin-top: 20px;
-  margin-bottom: -10px;
+  margin: 20px;
 }
 
 .articleLink {
@@ -279,6 +278,10 @@
 }
 /* Mobile Ansicht - Horizontal Scrollbar */
 @media (max-width: 1024px) {
+  .articleLink {
+    font-size: 18px;
+  }
+  
   .articleContainer {
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -347,6 +350,7 @@
     max-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
     object-fit: cover; /* Damit das Bild gut in den Container passt */
     border-radius: 8px;
+    margin-bottom: 20px;
   }
   .articleImage {
     width: 100%;
