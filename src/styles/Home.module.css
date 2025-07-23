@@ -283,7 +283,7 @@
   }
   .articleLinkContainer {
   text-align: center;
-  margin-top: 20px;
+  
 }
   
   .articleContainer {
@@ -354,7 +354,7 @@
     max-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
     object-fit: cover; /* Damit das Bild gut in den Container passt */
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
   }
   .articleImage {
     width: 100%;
