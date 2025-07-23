@@ -175,6 +175,7 @@ useEffect(() => {
       <Slideshow />
 
       {/* Auftragsbörse */}
+      <section className={styles.sectionWrapper}>
       <div className={styles.articleLinkContainer}>
         <Link href="/auftragsboerse" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Auftragsbörse</span>
@@ -211,8 +212,9 @@ useEffect(() => {
       <div className={styles.imageContainer}>
         <img src="/images/snake79.jpg" alt="Artikelbild" className={styles.articleImage} />
       </div>
-      
+      </section>
       {/* Lackbörse */}
+      <section className={styles.sectionWrapper}>
       <div className={styles.articleLinkContainer}>
         <Link href="/kaufen" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Lack- und Arbeitsmittelbörse</span>
@@ -238,7 +240,7 @@ useEffect(() => {
         </button>
       </div>
 
-      
+      </section>
       
       
       <div className={styles.imageContainer}>
@@ -246,6 +248,7 @@ useEffect(() => {
       </div>
 
       {/* Lackanfragen-Börse */}
+      <section className={styles.sectionWrapper}>
       <div className={styles.articleLinkContainer}>
         <Link href="/lackanfragen" className={styles.articleLink}>
           Top Deals aus der <span className={styles.colored}>Lackanfragen-Börse</span>
@@ -292,7 +295,7 @@ useEffect(() => {
         </button>
 
 </div>
-
+</section>
 
 
 

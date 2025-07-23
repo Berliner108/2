@@ -196,9 +196,34 @@
   text-decoration: underline;
   color: #00e5ff;
 }
+/* 🔹 Mobile Ansicht */
+@media (min-width:769px) and (max-width: 1024px) {
+  /* 🔹 Slideshow Container */
+.slideshowContainer {
+  max-height: 350px;
+  
+}
+.textContainer {
+    text-align: left;
+    font-size: 8px;
+    
+    min-width: 35%;
+  }
+  .text1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #222;
+  
+  
+  
+}
+ 
+}
 
 /* 🔹 Mobile Ansicht */
 @media (max-width: 768px) {
+  /* 🔹 Slideshow Container */
+
 
   
   .slide {

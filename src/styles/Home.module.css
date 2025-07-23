@@ -221,6 +221,11 @@
   }
 }
 
+.sectionWrapper {
+  width: 100%;  
+  box-sizing: border-box;
+  background: white;
+}
 
 .articleBox:hover {
   transform: scale(1.05);
@@ -336,7 +341,8 @@
     width: 100%;
     padding: 00px;  
     text-align: center;
-    background-color: white; /* Optional: Hintergrundfarbe */    
+    background-color: white; /* Optional: Hintergrundfarbe */   
+     
   }
   .articleHeader a {
     font-family: 'Oswald', sans-serif;
@@ -350,11 +356,11 @@
   }
   .imageContainer {
     width: 100%;
-    height: 200px;
+    min-height: 350px;
     max-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
     object-fit: cover; /* Damit das Bild gut in den Container passt */
     border-radius: 8px;
-    margin-bottom: 50px;
+    
   }
   .articleImage {
     width: 100%;
