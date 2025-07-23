@@ -8,7 +8,6 @@
   align-items: center;
 }
 /* Navbar */
-/* Navbar */
 .navbar {
   font-family: 'Oswald', sans-serif;
   width: 100%;
@@ -18,8 +17,7 @@
   padding: 10px 0;
   position: relative;
   z-index: 1;
-  scrollbar-width: none; /* Für Firefox */
-  
+  scrollbar-width: none; /* Für Firefox */  
 }
 /* Navbar Liste */
 .navList {
@@ -94,7 +92,7 @@
 }
 .categoryTitle {
   text-align: center;
-  font-size: 1.8rem;
+  font-size: 2.8rem;
   margin-bottom: 20px;
   color: #333;
 }
@@ -103,7 +101,6 @@
   color: black;
 }
 /* Container für die Artikel */
-/* Container für die Aufträge */
 .articleContainer {
   display: flex;
   flex-wrap: nowrap; /* Stellt sicher, dass die Aufträge nicht umgebrochen werden */
@@ -126,7 +123,6 @@
   overflow: hidden; /* Verhindert, dass der Inhalt den Container überschreitet */
   width: 100%;
 }
-
 .scrollContent {
   display: flex;
   overflow-x: auto;
@@ -134,7 +130,6 @@
   padding-bottom: 10px; /* Verhindert, dass der Scrollbalken den Inhalt verdeckt */
   scroll-behavior: smooth; /* Sanftes Scrollen */
 }
-
 .articleBox {
   flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
   min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
@@ -148,10 +143,37 @@
   color: black;
   min-height: 600px;
   margin-top: 18px;
-  margin-bottom: 18px;
-  
+  margin-bottom: 18px;  
 }
-
+.articleBox2 {
+  flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
+  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  text-decoration: none !important;
+  color: black;
+  margin-top: 18px;
+  margin-bottom: 18px;  
+}
+.articleBox3 {
+  flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
+  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
+  background: #f7f7f7;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+  text-decoration: none !important;
+  color: black;
+  min-height: 500px;
+  margin-top: 18px;
+  margin-bottom: 18px;  
+}
 .arrowLeft,
 .arrowRight {
   position: absolute;
@@ -171,31 +193,24 @@
   align-items: center;      /* Zentriert den Inhalt vertikal */
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
 .arrowLeft:hover,
 .arrowRight:hover {
   background-color: #e0e0e0; /* Dunkleres Grau bei Hover */
   transform: translateY(-50%) scale(1.1);
 }
-
-
-
 .arrowLeft {
   left: 10px;
 }
-
 .arrowRight {
   right: 10px;
 }
-
 .scrollContent::-webkit-scrollbar {
   display: none; /* Entfernt die Standard-Scrollbar */
 }
 .articleLinkContainer {
   text-align: center;
-  margin: 20px;
+  margin-top: 20px; 
 }
-
 .articleLink {
   font-size: 24px;
   font-weight: bold;
@@ -204,29 +219,24 @@
   font-family: 'Oswald';
   transition: color 0.3s ease;
 }
-
 .colored {
   color: #00b5d8;
   font-weight: bold;
 }
-
 .articleLink:hover .colored {
   color: none;
 }
-
 /* Verstecke die Pfeile auf mobilen Geräten */
 @media (max-width: 1024px) {
   .arrowLeft, .arrowRight {
     display: none; /* Pfeile werden auf mobilen Geräten ausgeblendet */
   }
 }
-
 .sectionWrapper {
   width: 100%;  
   box-sizing: border-box;
   background: white;
 }
-
 .articleBox:hover {
   transform: scale(1.05);
   text-decoration: none;
@@ -268,19 +278,7 @@
   object-position: center; /* Bild wird zentriert im Container */
   border-radius: 8px; /* Optional: Ecken des Bildes abrunden */
 }
-.articleHeader a {
-  font-family: 'Oswald', sans-serif;
-  font-size: 24px;  
-  text-decoration: none;
-  color: black;
-  transition: color 0.3s ease;
-  margin-left: 0px;
-  width: 100%;
-  text-decoration: none;
-  text-align: center;
-  margin-top: 10px;
-  
-}
+
 /* Mobile Ansicht - Horizontal Scrollbar */
 @media (max-width: 1024px) {
   .articleLink {
@@ -288,9 +286,7 @@
   }
   .articleLinkContainer {
   text-align: center;
-  
-}
-  
+  }  
   .articleContainer {
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -309,17 +305,14 @@
     border-radius: 10px;
   }
 }
-/* Responsive Anpassung für kleine Bildschirme */
-@media (max-width: 1024px) {
-  
-  .navbar {
+@media (max-width: 600px) {
+.navbar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
     display: flex;
     justify-content: flex-start; /* Links beginnen ganz links */
-    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */
-    
+    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */    
   }
   .navList {
     display: flex;
@@ -344,28 +337,65 @@
     background-color: white; /* Optional: Hintergrundfarbe */   
      
   }
-  .articleHeader a {
-    font-family: 'Oswald', sans-serif;
-    font-size: 18px;
-    font-weight: 600;
-    text-decoration: none;
-    color: black;
-    transition: color 0.3s ease;    
-    width: 100%;
-    margin-left: 90px;
-  }
   .imageContainer {
     width: 100%;
-    min-height: 350px;
+    min-height: 250px;
     max-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
     object-fit: cover; /* Damit das Bild gut in den Container passt */
-    border-radius: 8px;
-    
+    border-radius: 8px;    
   }
   .articleImage {
     width: 100%;
-    height: auto;
+    max-height: 250px;
+    min-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
+    object-fit: cover; /* Damit das Bild gut in den Container passt */
+    border-radius: 0px;
+  }
+}
+/* Responsive Anpassung für kleine Bildschirme */
+@media (min-width: 601px) and (max-width: 1024px) {
+  
+  .navbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-start; /* Links beginnen ganz links */
+    min-width: 100vw; /* Stellt sicher, dass die Navbar mindestens so breit ist wie der Bildschirm */    
+  }
+  .navList {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 10px 0;
+    margin: 0;
+    min-width: max-content; /* Verhindert, dass die Links abgeschnitten werden */
+  }
+  .navItem {
+    margin: 0 10px; /* Falls nötig, Abstand anpassen */
+  }
+  /* Dropdown für mobile Ansicht ausblenden */
+  .dropdown {
+    display: none !important;
+  }
+  .articleContainer {
+    width: 100%;
+    padding: 00px;  
+    text-align: center;
+    background-color: white; /* Optional: Hintergrundfarbe */      
+  }
+  
+  .imageContainer {
+    width: 100%;
+    min-height: 250px;
     max-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
+    object-fit: cover; /* Damit das Bild gut in den Container passt */
+    border-radius: 8px;    
+  }
+  .articleImage {
+    width: 100%;
+    max-height: 250px;
+    min-width: 100%;  /* Sichert ab, dass das Bild nie breiter als der Bildschirm wird */
     object-fit: cover; /* Damit das Bild gut in den Container passt */
     border-radius: 0px;
   }

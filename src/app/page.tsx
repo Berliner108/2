@@ -223,7 +223,7 @@ useEffect(() => {
       <div className={styles.scrollContainer}>        
           <div className={styles.scrollContent} ref={scrollRefLack}> 
         {category2.map((article) => (
-          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox}>
+          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox2}>
             <img src={article.img} alt={article.title} className={styles.articleImg} />
             <div className={styles.articleText}>
               <h3>{article.title}</h3>
@@ -261,7 +261,7 @@ useEffect(() => {
           <Link
             key={anfrage.id}
             href={`/lackanfragen/artikel/${anfrage.id}`}
-            className={styles.articleBox}
+            className={styles.articleBox3}
           >
             <img
               src={anfrage.bilder?.[0] ?? '/images/placeholder.jpg'}
