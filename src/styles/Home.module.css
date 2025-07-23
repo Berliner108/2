@@ -279,8 +279,12 @@
 /* Mobile Ansicht - Horizontal Scrollbar */
 @media (max-width: 1024px) {
   .articleLink {
-    font-size: 18px;
+    font-size: 22px;
   }
+  .articleLinkContainer {
+  text-align: center;
+  margin-top: 20px;
+}
   
   .articleContainer {
     overflow-x: auto;
