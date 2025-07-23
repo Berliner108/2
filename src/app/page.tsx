@@ -8,6 +8,7 @@ import CookieBanner from './components/CookieBanner';
 import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLackanfragen';
+import { MapPin } from 'lucide-react';
 
 
 type Auftrag = {
@@ -23,8 +24,7 @@ type Auftrag = {
   lieferDatum: Date;
   abholDatum: Date;
   abholArt: string;
-  benutzername?: string;
-  bewertung?: number;
+  isSponsored?: boolean; // ← das fehlt!
 };
 type Lackanfrage = {
   id: string | number;
@@ -61,13 +61,23 @@ const category3 = [
   { id: 18, title: "Stahlhaken", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume18.png" },
 ];
 
-
+const sponsoredAuftraege: Auftrag[] = dummyAuftraege
+  .filter((a) => a.isSponsored)
+  .slice(0, 12)
+  .map((a) => ({
+    ...a,
+    lieferDatum: new Date(a.lieferDatum),
+    abholDatum: new Date(a.abholDatum),
+  }));
 
 export default function Page() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [auftraege, setAuftraege] = useState<Auftrag[]>(
-    dummyAuftraege.filter((a) => a.isSponsored).slice(0, 12)
-  );
+  const [auftraege, setAuftraege] = useState<Auftrag[]>(sponsoredAuftraege);
+
+  
+
+
+
 
   const handleScroll = (direction: number) => {
     if (scrollRef.current) {
@@ -168,11 +178,12 @@ useEffect(() => {
                 <p><strong>Material:</strong> {auftrag.material}</p>
                 <p><strong>Maße:</strong> {auftrag.length} x {auftrag.width} x {auftrag.height} mm</p>
                 <p><strong>Masse:</strong> {auftrag.masse}</p>
-                <p><strong>Standort:</strong> {auftrag.standort}</p>
+                
                 <p><strong>Lieferdatum:</strong> {formatDate(new Date(auftrag.lieferDatum))}</p>
                 <p><strong>Abholdatum:</strong> {formatDate(new Date(auftrag.abholDatum))}</p>
 
                 <p><strong>Abholart:</strong> {auftrag.abholArt}</p>
+                <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{auftrag.standort}</p>
               </div>
             </Link>
           ))}
@@ -256,7 +267,8 @@ useEffect(() => {
   <p><strong>Hersteller:</strong> {anfrage.hersteller}</p>
   <p><strong>Zustand:</strong> {anfrage.zustand}</p>
   <p><strong>Kategorie:</strong> {anfrage.kategorie}</p>
-  <p><strong>Ort:</strong> {anfrage.ort}</p>
+  <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{anfrage.ort}</p>
+
 </div>
 
     </Link>
