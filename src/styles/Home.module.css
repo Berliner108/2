@@ -297,6 +297,14 @@
     flex: 0 0 200px; /* 200px für jedes Element, auch in der mobilen Ansicht */
     min-width: 200px;
   }
+  .articleBox2 {
+    flex: 0 0 200px; /* 200px für jedes Element, auch in der mobilen Ansicht */
+    min-width: 200px;
+  }
+  .articleBox3 {
+    flex: 0 0 200px; /* 200px für jedes Element, auch in der mobilen Ansicht */
+    min-width: 200px;
+  }
   .articleContainer::-webkit-scrollbar {
     height: 8px;
   }
