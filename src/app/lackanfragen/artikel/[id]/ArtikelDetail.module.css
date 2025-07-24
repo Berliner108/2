@@ -71,10 +71,15 @@
 }
 .label {
   font-weight: bold;
-  display: block;
+    display: inline-block; /* ✅ ersetzt block */
   margin-bottom: 0.3rem;
   color: #555;
 }
+.label::after {
+  content: ' ';
+  margin-left: 0.2rem;
+}
+
 .value {
   color: #222;
 }

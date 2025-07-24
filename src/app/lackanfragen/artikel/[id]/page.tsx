@@ -160,6 +160,50 @@ export default function ArtikelDetailPage() {
                   <span className={styles.value}>{artikel.kategorie}</span>
                 </div>
               )}
+              {artikel.farbpalette && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbpalette:</span>
+    <span className={styles.value}>{artikel.farbpalette}</span>
+  </div>
+)}
+
+{artikel.farbton && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbton:</span>
+    <span className={styles.value}>{artikel.farbton}</span>
+  </div>
+)}
+
+{artikel.qualität && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Qualität:</span>
+    <span className={styles.value}>{artikel.qualität}</span>
+  </div>
+)}
+
+{artikel.zertifizierung && artikel.zertifizierung.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Zertifizierung:</span>
+    <span className={styles.value}>
+      {artikel.zertifizierung.join(', ')}
+    </span>
+  </div>
+)}
+
+
+{artikel.aufladung && artikel.aufladung.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Aufladung:</span>
+    <span className={styles.value}>
+      {artikel.aufladung.join(', ')}
+    </span>
+  </div>
+)}
+
+
+
+
+
 
 {artikel.user && (
   <div className={styles.metaItem}>

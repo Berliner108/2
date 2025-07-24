@@ -326,7 +326,7 @@
 }
 
 .pageLink, .pageArrow {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.95rem;
   border: 2px solid #ccc;
   border-radius: 6px;
   text-decoration: none;
@@ -450,7 +450,9 @@
   .cardButton {
    width: 40%;
   }
-  
+  .pagination {
+  margin-bottom: 1rem;  
+}
   
 }
 
