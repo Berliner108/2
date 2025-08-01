@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense} from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
@@ -12,7 +12,6 @@ import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLac
 // ▶ für Shop-Artikel
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
-import { Suspense } from 'react';
 
 
 type Auftrag = {
