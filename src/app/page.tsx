@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense} from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import Slideshow from './slideshow/slideshow';
@@ -9,10 +8,10 @@ import CookieBanner from './components/CookieBanner';
 import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLackanfragen';
-// ▶ für Shop-Artikel
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
 import SearchBox from './components/SearchBox';
+
 
 
 type Auftrag = {
@@ -55,17 +54,9 @@ const sponsoredAuftraege: Auftrag[] = dummyAuftraege
   }));
 
 export default function Page() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  
 
-  // 1) State initialisieren aus URL (?search=…)
-  const [suchbegriff, setSuchbegriff] = useState(
-    () => searchParams.get('search') ?? ''
-  );
-  // 2) Bei URL‑Änderung das Input‑Feld nachziehen
-  useEffect(() => {
-    setSuchbegriff(searchParams.get('search') ?? '');
-  }, [searchParams]);
+
 
   // scroll‑Refs
   const scrollRefAuftraege = useRef<HTMLDivElement>(null);
