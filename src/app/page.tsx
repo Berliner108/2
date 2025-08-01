@@ -12,6 +12,7 @@ import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLac
 // ▶ für Shop-Artikel
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
+import SearchBox from './components/SearchBox';
 
 
 type Auftrag = {
@@ -175,25 +176,9 @@ export default function Page() {
         </ul>      
       </nav>
       {/* Suchformular */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const q = suchbegriff.trim();
-          if (q) router.push(`/kaufen?search=${encodeURIComponent(q)}`);
-        }}
-        className={styles.shopSearchForm}
-      >
-        <input
-          type="search"
-          placeholder="Shop durchsuchen…"
-          value={suchbegriff}
-          onChange={(e) => setSuchbegriff(e.target.value)}
-          className={styles.shopSearchInput}
-        />
-        <button type="submit" className={styles.shopSearchButton}>
-          Finden
-        </button>
-      </form>
+      <Suspense fallback={<div>Suchfeld lädt...</div>}>
+        <SearchBox />
+      </Suspense>
       <Slideshow />
       {/* Auftragsbörse */}
       <section className={styles.sectionWrapper}>
