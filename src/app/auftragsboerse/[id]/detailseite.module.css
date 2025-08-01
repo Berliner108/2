@@ -1,0 +1,318 @@
+/* detailseite.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+.container {
+  width: 100%;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: #fff;
+  font-family: 'Oswald', sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.grid {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.rightColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* detailseite.module.css */
+
+/* Wrapper passt sich der Bild-Höhe an */
+.imageWrapper {
+  width: 100%;
+  max-width: 500px;        /* optional, Grenze nach rechts */
+  min-width: 500px;
+  /* height: weg – Höhe kommt vom Bild */
+  /* aspect-ratio: weg */
+  overflow: hidden;        /* für abgerundete Ecken */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background-color: #fff;
+  max-height: 500px;
+}
+
+/* Bild skaliert proportional auf 100% Breite */
+.image {
+  display: block;          /* kein Inline-White‑Space */
+  width: 100%;             /* füllt Wrapper-Breite */
+  height: auto;            /* Höhe wird proportional berechnet */
+  /* object-fit nicht nötig */
+  cursor: pointer;
+}
+
+.label {
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 0.3rem;
+  color: #555;
+  /* optional: falls du statt Pseudo-Element lieber einen Abstand hier setzen willst: */
+  /* margin-right: 0.25rem; */
+}
+
+.label::after {
+  content: ' ';      /* sorgt für genau ein Leer­zeichen nach dem Label */
+  margin-right: 0.25rem; /* optional: etwas mehr Platz */
+}
+
+/* in detailseite.module.css */
+.kontaktLink {
+  display: block;        /* macht den Link zum Block */
+  margin-top: 0.5rem;    /* Abstand nach oben */
+  color: #0070f3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kontaktLink:hover {
+  color: #0051a3;
+}
+/* icon neben dem Dateinamen */
+.fileIcon {
+  margin-right: 0.5rem;
+  color: #d32f2f;      /* klassisches PDF‑Rot */
+  font-size: 1.2rem;   /* etwas größer als Text */
+  vertical-align: middle;
+}
+
+/* bestehender Link-Style sorgt für flexibles Layout */
+.downloadLink {
+  display: flex;
+  align-items: center;
+  text-decoration: underline;
+  color: #0070f3;
+  font-weight: 500;
+}
+
+
+
+/* Thumbnails wie auf Amazon: heller Rahmen, active etwas dunkler */
+.thumbnails {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.thumbnail:hover {
+  border-color: #888;
+}
+.thumbnailActive {
+  border-color: #555;
+}
+
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+
+.title {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+/* Grid für die Verfahrens‑Felder: 2 Spalten */
+.verfahrenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Optional: bei kleineren Bildschirmen nur 1 Spalte */
+@media (max-width: 600px) {
+  .verfahrenGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Block für jedes Verfahren */
+.verfahrenBlock {
+  margin-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+/* Verfahrenstitel über dem Block */
+.verfahrenTitel {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+
+/* Basis‑Badge: Padding, Border‑Radius, Font */
+.badge {
+  display: inline-block;       /* sorgt für konsistente Höhe */
+  padding: 0.4rem 0.8rem;      
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;            /* etwas kräftiger als Standard */
+  line-height: 1;              /* vertikale Zentrierung */
+  text-align: center;
+}
+
+/* Gewerblich (grün) */
+.badge.gewerblich {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Privat (blau) */
+.badge.privat {
+  background-color: #007acc;
+  color: #fff;
+}
+
+/* Gesponsert – jetzt gleiche Form, nur andere Farbe */
+.badge.gesponsert {
+  background-color: #f0f0f0;   /* helle Grundfarbe */
+  color: #888;                 /* dunklere Schrift */
+  /* Die folgenden Eigenschaften stellen sicher, dass „Gesponsert“
+     genauso viel Platz und dieselbe Ausrichtung hat wie die anderen Badges */
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metaItem {
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
+
+.label {
+  font-weight: bold;
+  display: inline-block;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.value {
+  color: #222;
+}
+
+.downloadList {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.downloadItem {
+  margin-bottom: 0.4rem;
+}
+
+.downloadLink {
+  color: #0070f3;
+  text-decoration: underline;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+.beschreibung {
+  margin-top: 0.1rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  background-color: #f7f7f7;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.buyButton {
+  padding: 0.75rem 1.5rem;
+  font-weight: 800;
+  font-size: 1rem;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald', sans-serif;
+  text-align: center;
+  margin-top: 0; /* Button direkt unter Beschreibung */
+}
+
+.buyButton:hover {
+  background-color: #005fa3;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    width: 100%;
+  }
+
+  .imageWrapper {
+    max-width: 100%;
+  }
+
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .buyButton {
+    width: 100%;
+  }
+}

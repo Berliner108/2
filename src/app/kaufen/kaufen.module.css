@@ -1,124 +1,521 @@
-/* Container-Layout */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
 .wrapper {
   display: flex;
-  padding: 1rem;
-  gap: 1rem;
+  gap: 20px;
+  padding: 20px;
+  font-size: 18px;
+  font-family: 'Oswald', sans-serif;
+  background: transparent;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
-
-/* Sidebar links */
+.bar {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background-color: #333;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
 .sidebar {
-  width: 16rem;
-  padding: 1rem;
-  background-color: #f3f4f6;
-  border-radius: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border: 1px solid #d1d5db;
+  flex: 0 0 280px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+  height: fit-content;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  align-self: flex-start; /* nur nötig bei flex-Layouts */
 }
-
-/* Filterfelder */
-.input,
-.range {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.375rem;
-  width: 90%;
-  max-width: 14rem;
-}
-
-.select {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.375rem;
-  width: 100%;
-}
-
-.checkboxContainer {
+.cardOrt {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px;
+  margin-top: 4px;
+  color: #444;
+  font-size: 14px;
+}
+
+.ortIcon {
+  color: #888;
+}
+
+.sortSelect,
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  font-family: 'Oswald';
+  box-sizing: border-box;
+}
+
+
+.range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  
+  outline: none;
+  margin-bottom: 15px;
+  margin-top: 25px;
+}
+
+/* WebKit (Chrome, Edge, Safari) – Griff */
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #00b4d8;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -5px;
+}
+
+/* WebKit – Balken */
+.range::-webkit-slider-runnable-track {
+  background: #00b4d8;
+  height: 8px;
+  border-radius: 3px;
+}
+
+/* Firefox – Griff */
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #00b4d8;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Firefox – Balken */
+.range::-moz-range-track {
+  background: #00b4d8;
+  height: 6px;
+  border-radius: 3px;
+}
+
+
+
+.mengeText {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
 }
 
 .checkboxGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 20px;
+  font-size: 17px;
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  margin-bottom: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  user-select: none;
 }
 
-/* Hauptinhalt rechts */
-.main {
+.checkboxLabel input[type="checkbox"],
+.checkboxLabel input[type="radio"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.content {
   flex: 1;
-  padding: 0 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-.sortRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+.heading {
+  margin-bottom: 15px;
+  font-weight: 600;
 }
 
-.sortSelect {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.375rem;
-}
-
-/* Artikelliste */
 .grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
 }
 
-/* Einzelner Artikel */
 .card {
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 1rem;
-  background: #fff;
-  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20px;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease;
+  position: relative; /* wichtig für Label-Position */
 }
+
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-.card img {
-  width: 100%;
-  height: 250px;
+.cardBildWrapper {
+  width: 220px;
+  height: 220px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.cardBild {
   object-fit: cover;
-  aspect-ratio: 1 / 1;
-  border-radius: 0.5rem;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
 }
 
-.cardTitle {
+.cardTextBlock {
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+  flex: 1;
+}
+
+.cardText1 {
+  font-weight: 700;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.cardText2,
+.cardText3,
+.cardText4,
+.cardText5,
+.cardText6 {
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.cardText7 {
   font-weight: 600;
-  margin-top: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
-.cardText {
-  margin-top: 0.25rem;
-  font-size: 0.9rem;
+.cardButtonWrapper {
+  margin-top: 12px;
+  text-align: center;
 }
 
-.available {
-  color: green;
+.cardButton {
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  width: 50%;
+  font-family: 'Oswald';
+  transition: transform 0.2s ease, background-position 0.4s ease;
+  background-size: 100% auto;
+  background-position: left center;
 }
 
-.unavailable {
-  color: red;
+.cardButton:hover {
+  transform: scale(1.03);
+  background-position: right center;
 }
 
-/* Lazy Loader-Platzhalter */
-.loader {
-  height: 2rem;
+.gesponsertLabel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f0f0f0;
+  color: #888888;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: none;
+  pointer-events: none;
 }
+
+
+.sidebarToggle {
+  display: none;
+  background-color: #eee;
+  padding: 10px 15px;
+  border: none;
+  font-size: 1rem;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.hamburger {
+  display: none;  
+}
+.cardTextRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cardTextLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardTextRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 120px;
+}
+
+
+/* Label für gewerblich / privat */
+.verkaufsTypLabel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 16px;
+  background-color: #eee;
+  color: #444;
+  z-index: 2;
+}
+
+.gewerblichLabel {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.privatLabel {
+  background-color: #e2e3e5;
+  color: #41464b;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pageLink, .pageArrow {
+  padding: 0.5rem 0.95rem;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  background-color: #f9f9f9;
+  transition: all 0.2s ease;
+}
+
+.pageLink:hover, .pageArrow:hover {
+  background-color: #eaeaea;
+}
+
+.activePage {
+  background-color: #00b4d8;
+  color: white;
+  border-color: #444;
+}
+
+.seitenInfo {
+  text-align: center;
+  margin: 1rem 0;
+  font-weight: bold;
+  color: #444;
+}
+
+@media (max-width: 599px) {
+  .grid {
+    grid-template-columns: 1fr;
+  } 
+  .wrapper {
+  display: flex;
+  
+  padding: 0px;
+  font-size: 18px;
+  font-family: 'Oswald', sans-serif;
+  background: transparent;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+ .anfrageUeberschrift {
+  font-size: 24px;
+  font-weight: 600;  
+  color: black;
+  font-family: 'Oswald', sans-serif;
+  text-align: center;
+}
+
+
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    align-items: center;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s;
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-bottom: -20px;
+    border: none; /* ← das fehlt */
+  }
+
+  .hamburger:hover {
+    background-color: #e0e0e0;
+  }
+
+  .bar {
+    display: block;
+    width: 24px;
+    height: 3px;
+    background-color: #333;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+  }
+
+  .sidebarToggle {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 20;
+    background: #fff;
+    width: 80%;
+    max-width: 300px;
+    height: 100%;
+    padding: 20px;
+    z-index: 1000;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .sidebarClosed {
+    transform: translateX(-100%);
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.3);
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+  .cardButton {
+   width: 40%;
+  }
+  .pagination {
+  margin-bottom: 1rem;  
+}
+  
+}
+
+
+/* Für alle kleineren und mittleren Geräte */
+@media (min-width: 665px) and (max-width: 1023px) 
+  {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    background-color: #fff;
+    overflow-y: auto;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .sidebarClosed {
+    transform: translateX(-100%);
+  }
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.3);
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+ 
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    align-items: center;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s;
+    margin-top: 20px;
+    margin-left: 20px;
+    border: none; /* ← das fehlt */
+    
+  }
+
+  .hamburger:hover {
+    background-color: #e0e0e0;
+  }
+  
+
+
+}
+
+  
+

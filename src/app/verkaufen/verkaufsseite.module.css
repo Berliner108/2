@@ -1,0 +1,693 @@
+.container {
+  max-width: 88%;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.description {
+  color: #555;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+.infoBox {
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  border: 1px solid #bae6fd;
+  color: #0369a1;  
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 1.0rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.infoLink {
+  margin-left: 0px;
+  color: #0369a1;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s ease;  
+}
+.infoLink:hover {
+  color: #0c4a6e;
+}
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.2s ease;
+}
+.dynamicFields {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dropzone:hover {
+  background-color: #f9f9f9;
+}
+.counter {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+.dropzoneFotos {
+  border-color: #00b4d8;
+  background-color: #f0f6ff;
+}
+
+.dropzoneDateien {
+  border-color: #888;
+  background-color: #f5f5f5;
+}
+
+.dropzoneFehler {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+/* Grundgeruest.module.css */
+.bewerbungGruppe {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.bewerbungOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.bewerbungOption input {
+  margin-right: 0.25rem;
+}
+
+.steuerHinweis {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+.hidden {
+  display: none;
+}
+.customSelect {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  width: 100%;
+  margin-top: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  font-size: 0.95rem;
+}
+
+.selectedValue {
+  padding: 0.5rem 0.75rem;
+  user-select: none;
+}
+
+.optionList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid black;
+  z-index: 100;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-top: 1px;
+}
+
+.optionItem {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.optionItem:hover {
+  background-color: #00b4d8;
+}
+
+.activeOption {
+  background-color: #ccf5f1;
+  font-weight: 500;
+}
+
+.validierungsfehler {
+  color: #b91c1c;
+  background-color: #fee2e2;
+  border: 1px solid #fca5a5;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.vorschau {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.thumbnailGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 0.5rem;
+}
+
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.previewItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.removeBtn {
+  margin-top: 6px;
+  background-color: #e3342f;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.removeBtn:hover {
+  background-color: #cc1f1a;
+}
+
+.submitBtn {
+  margin-top: 2rem;
+  padding: 12px;
+  font-size: 1.1rem;
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'oswald';
+  width: 100%;
+  font-weight: bold;
+}
+
+.submitBtn:hover {
+  background-color: #00e5ff;
+}
+
+/* Kategorie-Icons */
+
+.kategorieContainer {
+  margin-bottom: 2rem;
+  
+}
+.centeredHeading {
+  text-align: center;
+  font-size: 24px;
+  margin-top: 50px;
+}
+
+.iconRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+.lieferContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dateInput {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Oswald';
+}
+.inputLabel {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+}
+
+.input {
+  margin-top: 0.3rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: 'Oswald';
+}
+
+.grid3spaltig {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.iconBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  padding: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+}
+
+.iconBox span {
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+.iconBox:hover {
+  background-color: #eef6ff;
+  border-color: #00b4d8;
+}
+
+.activeIcon {
+  border-color: #00b4d8;
+  background-color: #ebf4ff;
+}
+
+/* Dynamische Felder */
+
+.dynamicFields {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid black;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+
+.dynamicFields label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+}
+.label {
+  position: relative;
+}
+
+.label1 {
+  margin-top: -20px;
+}
+.dynamicFields input,
+.dynamicFields select {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  margin-top: 0.3rem;
+  font-family: 'Oswald';
+}
+.labelFarbcode {
+  margin-top: -1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.inputFarbcode {
+  
+  
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  margin-top: -10px;
+  
+}
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  font-size: 0.9rem; /* Schriftgröße nur für diesen Container */
+  line-height: 1.2;
+  font-weight: 200px;
+}
+
+
+.toggleLegend {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.radioOptionsHorizontal {
+  display: flex;
+  gap: 2rem;
+  padding-left: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+.kategorieFehler {
+  border: 2px dashed #dc2626;
+  background-color: #fef2f2;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+.radioLegend {
+  font-weight: bold;
+  color: #000; /* Oder deine Wunschfarbe */
+  margin-bottom: -10px;
+}
+.radioGroup {
+  border: 1px solid #ccc;   /* <- Standardgrau */
+  border-radius: 8px;
+  padding: 1rem;
+  
+}
+
+.dragActive {
+  border: 2px dashed #00b5d8;
+  background-color: #f0f8ff;
+  transition: background-color 0.2s ease;
+}
+.textarea {
+  
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: 'Oswald';
+  height: 300px;
+}
+
+.counter {
+  font-size: 0.85rem;
+  text-align: right;
+  color: #666;
+  margin-top: 4px;
+}
+.checkboxGroup {
+  margin-top: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.checkboxOptions {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.progressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #eee;
+  padding: 0;
+  z-index: 999;
+  height: 24px;
+}
+.progressBarWrapper {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+  border-top: 1px solid #ccc;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  transition: width 0.3s ease;
+  font-size: 14px;  
+}
+.progressValue {
+  white-space: nowrap;
+}
+.progressText {
+  font-size: 0.9rem;
+  color: #444;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+.spinner {
+  margin-left: 10px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+.bewerbungContainer {
+  margin-top: 2rem;
+  padding: 1rem;
+  
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.bewerbungOption {
+  flex: 1 1 200px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.bewerbungOption input {
+  width: 14px;
+  height: 14px;
+  accent-color: #00b4d8;
+}
+.bewerbungOption svg {
+  margin-right: 0.3rem;
+}
+.hinweisText {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.hinweisText a {
+  color: #0070f3;
+  text-decoration: underline;
+}
+.buttonRechts {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.zuruecksetzenButton {
+  padding: 0.6rem 1.2rem;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+  font-family: 'Oswald';
+}
+
+.zuruecksetzenButton:hover {
+  background-color: #ddd;
+}
+.vorschauBox {
+  background-color: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.vorschauToggle {
+  margin: 1rem 0;
+  padding: 0.6rem 1.2rem;
+  background-color: #f0f0f0;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+}
+
+.vorschauToggle:hover {
+  background-color: #e0e0e0;
+}
+/* Verkaufsseite.module.css */
+
+/* Container für die Menge-Section */
+.mengeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+/* Überschrift (Legend) */
+.mengeLegend {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Radio-Option-Label */
+.mengeOption {
+  display: column;
+  align-items: center;
+  margin-right: 1.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.mengeOption input[type="radio"] {
+  margin-right: 0.4rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Label + Input für die Zahl */
+.mengeNumberLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+/* Styling für das Number-Input */
+.mengeNumberInput {
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: border-color 0.2s ease;
+}
+.mengeNumberInput:focus {
+  outline: none;
+  border-color: #888;
+}
+
+/* Warn-Text unter dem Feld */
+.mengeWarning {
+  color: #c00;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+/* Flex-Wrapper für die beiden Radio-Buttons */
+.mengeRadioGroup {
+  display: flex !important;
+  flex-direction: row;
+  gap: 1.5rem;        /* Abstand zwischen den Buttons */
+  align-items: center; /* vertikal zentrieren */
+}
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+@media (max-width: 599px) {
+ .container {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 2rem;
+}
+.radioLegend {
+  font-weight: bold;
+  font-size: 16px;
+  color: #000; /* Oder deine Wunschfarbe */
+  margin-bottom: -10px;
+}
+.radioGroup {
+  border: 1px solid #ccc;   /* <- Standardgrau */
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 13.72px;
+  
+  
+}
+.infoBox {
+    display: block;
+    text-align: center;
+    font-size: 15px;
+    padding: 8px;
+    
+  }
+
+  .infoLink {
+    display: inline;
+    margin-left: 5px;
+    
+    
+  }
+
+
+}

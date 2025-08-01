@@ -4,6 +4,7 @@
   justify-content: flex-start; /* Stellt sicher, dass die Kinder links beginnen */
   gap: 20px;
   margin-bottom: 40px;
+  min-height: 100vw;
 }
 .cardGrid {
   display: grid;

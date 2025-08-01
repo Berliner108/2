@@ -8,9 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
-import { Star, Search, Mail, Crown } from 'lucide-react';
-
-
+import { Star, Search, Crown } from 'lucide-react';
 
 function istGueltigeDatei(file: File): boolean {
   const erlaubteMimeTypen = [
@@ -67,48 +65,87 @@ function ArtikelEinstellen() {
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
-const glanzgradRef = useRef<HTMLDivElement>(null);
-const [sondereffekte, setSondereffekte] = useState<string[]>([]);
-const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
-const [qualitaet, setQualitaet] = useState('');
-const [qualitaetOffen, setQualitaetOffen] = useState(false);
-const [lieferdatum, setLieferdatum] = useState('');
-const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
-const [firma, setFirma] = useState('');
-const [vorname, setVorname] = useState('');
-const [nachname, setNachname] = useState('');
-const [strasse, setStrasse] = useState('');
-const [hausnummer, setHausnummer] = useState('');
-const [plz, setPlz] = useState('');
-const [ort, setOrt] = useState('');
-const [land, setLand] = useState('');
-const [ladeStatus, setLadeStatus] = useState(false);
-const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
-const [vorschauAktiv, setVorschauAktiv] = useState(false);
+  const glanzgradRef = useRef<HTMLDivElement>(null);
+  const [sondereffekte, setSondereffekte] = useState<string[]>([]);
+  const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
+  const [qualitaet, setQualitaet] = useState('');
+  const [qualitaetOffen, setQualitaetOffen] = useState(false);
+  const [lieferdatum, setLieferdatum] = useState('');
+  const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
+  const [firma, setFirma] = useState('');
+  const [vorname, setVorname] = useState('');
+  const [nachname, setNachname] = useState('');
+  const [strasse, setStrasse] = useState('');
+  const [hausnummer, setHausnummer] = useState('');
+  const [plz, setPlz] = useState('');
+  const [ort, setOrt] = useState('');
+  const [land, setLand] = useState('');
+  const [ladeStatus, setLadeStatus] = useState(false);
+  const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([])
+  const [vorschauAktiv, setVorschauAktiv] = useState(false);
+  const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
+  const [menge, setMenge] = useState<number>(0);
+
+
+
 
 
 const berechneFortschritt = () => {
-  let total = 0;
-  let filled = 0;
+  let total = 0, filled = 0;
 
+  // 1. Kategorie
+  total++;
   if (kategorie) filled++;
-  total++;
 
+  // 2. Bilder
+  total++;
   if (bilder.length > 0) filled++;
+
+  // 3. Menge
   total++;
+  if (menge > 0) filled++;
 
-  if (kategorie === 'pulverlack') {
-    total += 6;
-    if (titel.trim()) filled++;
-    if (farbpaletteWert) filled++;
-    if (glanzgrad) filled++;
-    if (zustand) filled++;
-    if (oberflaeche) filled++;
-    if (anwendung) filled++;
-  }
+  // 4. Titel
+  total++;
+  if (titel.trim() !== '') filled++;
 
+  // 5. Farbpalette
+  total++;
+  if (farbpaletteWert) filled++;
+
+  // 6. Glanzgrad
+  total++;
+  if (glanzgrad) filled++;
+
+  // 7. Zustand
+  total++;
+  if (zustand) filled++;
+
+  // 8. Oberfläche
+  total++;
+  if (oberflaeche) filled++;
+
+  // 9. Anwendung
+  total++;
+  if (anwendung) filled++;
+
+  // 10. Beschreibung
+  total++;
+  if (beschreibung.trim() !== '') filled++;
+
+  // 11. Lieferdatum
+  total++;
   if (lieferdatum) filled++;
+
+  // 12. Lieferadresse-Auswahl
   total++;
+  if (lieferadresseOption) filled++;
+
+  // Pulverlack-spezifisch: Aufladung
+  if (kategorie === 'pulverlack') {
+    total++;
+    if (aufladung.length > 0) filled++;
+  }
 
   return Math.round((filled / total) * 100);
 };
@@ -122,9 +159,8 @@ const formularZuruecksetzen = () => {
   setFarbcode('');
   setHersteller('');
   setBeschreibung('');
+  setMenge(0);
   setZustand('');
-  setBaujahr('');
-  setModell('');
   setOberflaeche('');
   setAnwendung('');
   setEffekt([]);
@@ -143,9 +179,6 @@ const formularZuruecksetzen = () => {
   setWarnungBeschreibung('');
 };
 
-
-
-
   const [aufladung, setAufladung] = useState<string[]>([]);
   const [oberflaeche, setOberflaeche] = useState('');
 
@@ -153,7 +186,24 @@ const [warnungAufladung, setWarnungAufladung] = useState('');
   const [beschreibung, setBeschreibung] = useState('');
 const [warnungBeschreibung, setWarnungBeschreibung] = useState('');
 
-
+const resetFieldsExceptCategory = () => {
+  setTitel('');
+  setHersteller('');
+  setMenge(0);  
+  setFarbpaletteWert('');
+  setFarbton('');
+  setFarbcode('');
+  setGlanzgrad('');
+  setQualitaet('');
+  setZustand('');
+  setOberflaeche('');
+  setAnwendung('');
+  setZertifizierungen([]);
+  setEffekt([]);  
+  setSondereffekte([]);
+  setBeschreibung('');
+  setAufladung([]);
+};
 useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     if (herstellerRef.current && !herstellerRef.current.contains(event.target as Node)) {
@@ -175,9 +225,6 @@ useEffect(() => {
   const [dateien, setDateien] = useState<File[]>([]);
   const [bildPreviews, setBildPreviews] = useState<string[]>([]);
   const [warnung, setWarnung] = useState('');
-  
-  const [modell, setModell] = useState('');
-  const [baujahr, setBaujahr] = useState('');
   const [farbton, setFarbton] = useState('');
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
@@ -185,7 +232,7 @@ useEffect(() => {
 
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
-    const herstellerListe = [
+    const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
     'Sherwin Williams', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
     'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
@@ -193,6 +240,32 @@ useEffect(() => {
     'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
     'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
     ];
+    const herstellerListeNass = [
+  'Sherwin‑Williams',
+  'PPG Industries',
+  'Akzo Nobel',
+  'Nippon Paint',
+  'RPM International',
+  'Axalta',
+  'BASF',
+  'Kansai',
+  'Asian Paints',
+  'Jotun',
+  'Hempel',
+  'Adler Lacke',
+  'Berger',
+  'Nerolac',
+  'Benjamin Moore'
+];
+
+// 2. In deinem JSX-Dropdown wählst du die Liste dynamisch aus:
+const aktuelleHerstellerListe =
+  kategorie === 'nasslack'
+    ? herstellerListeNass
+    : kategorie === 'pulverlack'
+    ? herstellerListePulver
+    : [];
+
     const farbpalette = [
   { name: 'Nach Vorlage ', value: 'Nach Vorlage' },
   { name: 'RAL ', value: 'RAL' },
@@ -224,7 +297,15 @@ useEffect(() => {
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, []);
 
-  
+  function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const val = e.target.value;
+  if (val === '') {
+    setMenge(0);
+  } else if (/^\d{0,7}(\.\d{0,1})?$/.test(val)) {
+    setMenge(parseFloat(val));
+  }
+}
+
 
   const fadeIn = {
   initial: { opacity: 0, y: -10 },
@@ -271,13 +352,13 @@ useEffect(() => {
     setWarnungBilder('');
   }
 
-  if (kategorie === 'pulverlack') {
+  
     if (!titel.trim()) {
       setWarnungTitel('Bitte gib einen Titel an.');
       fehler = true;
     } else {
-      setWarnungTitel('');
-    }
+      setWarnungTitel('');}
+    
 
     if (!farbpaletteWert) {
       setWarnungPalette('Bitte wähle eine Farbpalette aus.');
@@ -286,8 +367,8 @@ useEffect(() => {
       setWarnungPalette('');
     }
 
-    if (!oberflaeche) fehler = true;
-    if (!anwendung) fehler = true;
+    if (!oberflaeche) {fehler = true;}
+    if (!anwendung) {fehler = true;}
 
     if (!zustand) {
       setWarnungZustand('Bitte wähle den Zustand aus.');
@@ -295,13 +376,13 @@ useEffect(() => {
     } else {
       setWarnungZustand('');
     }
-
+    if (kategorie === 'pulverlack') {
     if (aufladung.length === 0) {
       setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
       fehler = true;
     } else {
       setWarnungAufladung('');
-    }
+    }}
 
     if (!beschreibung.trim()) {
       setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
@@ -309,7 +390,7 @@ useEffect(() => {
     } else {
       setWarnungBeschreibung('');
     }
-  }
+  
 
   if (fehler) {
     setLadeStatus(false);
@@ -318,16 +399,14 @@ useEffect(() => {
 
   const formData = new FormData();
   formData.append('kategorie', kategorie!);
-
-  if (kategorie === 'pulverlack') {
-    formData.append('titel', titel);
+  formData.append('zertifizierungen', zertifizierungen.join(', '));
+  formData.append('titel', titel);
     formData.append('farbton', farbton);
     formData.append('glanzgrad', glanzgrad);
     formData.append('hersteller', hersteller);
     formData.append('zustand', zustand);
     formData.append('farbpalette', farbpaletteWert);
-    formData.append('beschreibung', beschreibung);
-    formData.append('aufladung', aufladung.join(', '));
+    formData.append('beschreibung', beschreibung);    
     formData.append('anwendung', anwendung);
     formData.append('oberflaeche', oberflaeche);
     formData.append('farbcode', farbcode);
@@ -335,14 +414,10 @@ useEffect(() => {
     formData.append('sondereffekte', sondereffekte.join(', '));
     formData.append('qualitaet', qualitaet);
     formData.append('bewerbung', bewerbungOptionen.join(','));
+    formData.append('menge', menge.toString());
 
-  }
-
-  if (kategorie === 'nasslack') {
-    formData.append('modell', modell);
-    formData.append('baujahr', baujahr);
-    formData.append('bewerbung', bewerbungOptionen.join(','));
-
+  if (kategorie === 'pulverlack') {
+    formData.append('aufladung', aufladung.join(', '));
   }
 
   bilder.forEach((file) => formData.append('bilder', file));
@@ -363,8 +438,6 @@ useEffect(() => {
       setWarnungBilder('');
       setWarnungPalette('');
       setWarnungZustand('');
-      setModell('');
-      setBaujahr('');
       setFarbton('');
       setGlanzgrad('');
       setKategorie(null);
@@ -378,14 +451,13 @@ useEffect(() => {
     setLadeStatus(false);
   }
 };
-const toggleBewerbung = (wert: string) => {
+const toggleBewerbung = (option: string) => {
   setBewerbungOptionen(prev =>
-    prev.includes(wert)
-      ? prev.filter(w => w !== wert)
-      : [...prev, wert]
-  );
-};
-
+    prev.includes(option)
+      ? prev.filter(o => o !== option)
+      : [...prev, option]
+  )
+}
   return (
     <>
       <Pager />
@@ -398,14 +470,11 @@ const toggleBewerbung = (wert: string) => {
 >
   💡 Ab sofort ist das Einholen von Lack-Angeboten <strong>kostenlos</strong>!
   <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
-</motion.div>
-
-        
+</motion.div>        
         <h1 className={styles.heading}>Passenden Lack nicht gefunden? Kein Problem! </h1>
         <p className={styles.description}>
           Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.
         </p>
-
         <Dropzone
   type="bilder"
   label="Fotos hierher ziehen oder klicken (max. 8)"
@@ -418,11 +487,7 @@ const toggleBewerbung = (wert: string) => {
 />
 {warnungBilder && (
   <p className={styles.validierungsfehler}>{warnungBilder}</p>
-)}
-
-
-
-        
+)}       
 
                 {/* Vorschau Bilder */}
                 <DateiVorschau
@@ -431,8 +496,6 @@ const toggleBewerbung = (wert: string) => {
           previews={bildPreviews}
           onRemove={(idx) => setBilder(prev => prev.filter((_, i) => i !== idx))}
         />
-
-
           <Dropzone
           type="dateien"
           label="Dateien hierher ziehen oder klicken (max. 8)"
@@ -445,51 +508,44 @@ const toggleBewerbung = (wert: string) => {
           id="dateiUpload"
         />
 
-
         {/* Vorschau Dateien */}
         <DateiVorschau
           files={dateien}
           onRemove={(idx) => setDateien(prev => prev.filter((_, i) => i !== idx))}
-        />
-
-        
+        />       
 
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
             <h2 className={styles.centeredHeading}>Ich möchte Angebote für einen</h2>
-
-
             <div className={`${styles.iconRow} ${!kategorie && warnung.includes('Kategorie') ? styles.kategorieFehler : ''}`}>
-
                 <div
                 className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''}`}
-                onClick={() => setKategorie('nasslack')}
+                     onClick={() => {
+                  resetFieldsExceptCategory();
+                  setKategorie('nasslack');
+                }}
                 >
-                <FaSprayCan size={32} />
-                <span>Nasslack</span>
-                </div>
+              <FaSprayCan size={32} />
+              <span>Nasslack</span>
+            </div>
                 <div
                     className={`${styles.iconBox} ${kategorie === 'pulverlack' ? styles.activeIcon : ''}`}
-                    onClick={() => setKategorie('pulverlack')}
+                         onClick={() => {
+                      resetFieldsExceptCategory();
+                      setKategorie('pulverlack');
+                    }}
                     >
                     <FaCloud size={32} />
 
                     <span>Pulverlack</span>
                     </div>
-                    
-
-            </div>
-            
+              </div>            
             </div>
             {!kategorie && warnungKategorie && (
-                        <p className={styles.validierungsfehler}>{warnungKategorie}</p>
-                        )}
-            
-
-
-
-        {/* Dynamische Felder animiert */}
-        {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+                        <p className={styles.validierungsfehler}>{warnungKategorie}</p>)}
+                        
+          {/* Dynamische Felder animiert */}
+        {kategorie && (
           <AnimatePresence mode="wait">
             <motion.div
               key={kategorie}
@@ -499,20 +555,9 @@ const toggleBewerbung = (wert: string) => {
               transition={{ duration: 0.3 }}
               className={styles.dynamicFields}
             >
-            {kategorie === 'nasslack' && (
-              <>
-                <label>
-                  Modell:
-                  <input type="text" className={styles.input} value={modell} onChange={(e) => setModell(e.target.value)} />
-                </label>
-                <label>
-                  Baujahr:
-                  <input type="number" className={styles.input} value={baujahr} onChange={(e) => setBaujahr(e.target.value)} />
-                </label>
-              </>
-            )}
+            
 
-      { kategorie === 'pulverlack' && (
+      { (kategorie === 'pulverlack' || kategorie === 'nasslack') && (
   <>
   <label>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -529,15 +574,20 @@ const toggleBewerbung = (wert: string) => {
   />
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
+
 <label className={styles.label1}>
   Hersteller (optional):
-  <div ref={herstellerRef} className={styles.customSelect} onClick={() => setHerstellerDropdownOffen(!herstellerDropdownOffen)}>
+  <div
+    ref={herstellerRef}
+    className={styles.customSelect}
+    onClick={() => setHerstellerDropdownOffen(prev => !prev)}
+  >
     <div className={styles.selectedValue}>{hersteller || 'Alle'}</div>
     {herstellerDropdownOffen && (
       <div className={styles.optionList}>
         <div
           className={styles.optionItem}
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             setHersteller('');
             setHerstellerDropdownOffen(false);
@@ -545,11 +595,11 @@ const toggleBewerbung = (wert: string) => {
         >
           Alle
         </div>
-        {herstellerListe.map((option) => (
+        {aktuelleHerstellerListe.map(option => (
           <div
             key={option}
             className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               setHersteller(option);
               setHerstellerDropdownOffen(false);
@@ -562,8 +612,26 @@ const toggleBewerbung = (wert: string) => {
     )}
   </div>
 </label>
-<label className={styles.label}>
+<label className={styles.labelmenge}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Menge (kg): <span style={{ color: 'red' }}>*</span>
+  </span>
+ <input
+  type="number"
+  step="0.1"
+  min="0.1"
+  max="99999.9"
+  className={styles.input}
+  value={menge === 0 ? '' : menge}
+  onChange={handleMengeChange}
+  placeholder="z. B. 5.5"
+  required
+/>
+</label>
+
+
+<label className={styles.label}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.0rem' }}>
     Farbpalette: <span style={{ color: 'red' }}>*</span>
   </span>
 
@@ -698,6 +766,7 @@ const toggleBewerbung = (wert: string) => {
     )}
   </div>
 </label>
+{ kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
   <div
@@ -733,7 +802,42 @@ const toggleBewerbung = (wert: string) => {
     )}
   </div>
 </label>
-
+)}
+{ kategorie === 'nasslack' && (
+<label className={styles.label}>
+  Qualität (optional)
+  <div
+    className={styles.customSelect}
+    onClick={() => setQualitaetOffen(!qualitaetOffen)}
+    tabIndex={0}
+    onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
+  >
+    <div className={styles.selectedValue}>
+      {qualitaet || 'Bitte wählen'}
+    </div>
+    {qualitaetOffen && (
+      <div className={styles.optionList}>
+        {[
+          '1K‑Lack',
+          '2K‑Lack',
+          'UV‑härtender Lack',
+        ].map((q) => (
+          <div
+            key={q}
+            className={styles.optionItem}
+            onClick={() => {
+              setQualitaet(q);
+              setQualitaetOffen(false);
+            }}
+          >
+            {q}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</label>
+)}
 
 {/* Radio: Zustand */}
 {/* Radio: Zustand */}
@@ -857,6 +961,95 @@ const toggleBewerbung = (wert: string) => {
     </label>
   </div>
 </fieldset>
+{kategorie === 'pulverlack' && (
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>Zertifizierungen (optional):</legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="zertifizierungen"
+        value="GSB"
+        checked={zertifizierungen.includes('GSB')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setZertifizierungen(prev =>
+            checked ? [...prev, 'GSB'] : prev.filter(v => v !== 'GSB')
+          );
+        }}
+      />
+      <span>GSB</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="zertifizierungen"
+        value="Qualicoat"
+        checked={zertifizierungen.includes('Qualicoat')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setZertifizierungen(prev =>
+            checked ? [...prev, 'Qualicoat'] : prev.filter(v => v !== 'Qualicoat')
+          );
+        }}
+      />
+      <span>Qualicoat</span>
+    </label>
+  </div>
+</fieldset>
+)}
+{kategorie === 'nasslack' && (
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>Zertifizierungen (optional):</legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="zertifizierungen"
+        value="GEB EMICODE"
+        checked={zertifizierungen.includes('GEB EMICODE')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setZertifizierungen(prev =>
+            checked ? [...prev, 'GEB EMICODE'] : prev.filter(v => v !== 'GEB EMICODE')
+          );
+        }}
+      />
+      <span>GEB EMICODE</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="zertifizierungen"
+        value="Blauer Engel"
+        checked={zertifizierungen.includes('Blauer Engel')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setZertifizierungen(prev =>
+            checked ? [...prev, 'Blauer Engel'] : prev.filter(v => v !== 'Blauer Engel')
+          );
+        }}
+      />
+      <span>Blauer Engel</span>
+    </label>
+    <label className={styles.radioLabel}>
+      <input
+        type="checkbox"
+        name="zertifizierungen"
+        value="EU Ecolabel"
+        checked={zertifizierungen.includes('EU Ecolabel')}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          setZertifizierungen(prev =>
+            checked ? [...prev, 'EU Ecolabel'] : prev.filter(v => v !== 'EU Ecolabel')
+          );
+        }}
+      />
+      <span>EU Ecolabel</span>
+    </label>
+  </div>
+</fieldset>
+)}
 <fieldset className={styles.radioGroup}>
   <legend className={styles.radioLegend}>Effekt (optional):</legend>
   <div className={styles.radioOptionsHorizontal}>
@@ -892,54 +1085,103 @@ const toggleBewerbung = (wert: string) => {
     </label>
   </div>
 </fieldset>
-<fieldset className={styles.radioGroup}>
-  <legend
-    className={styles.toggleLegend}
-    onClick={() => setSondereffekteOffen(!sondereffekteOffen)}
-    style={{ cursor: 'pointer' }}
-  >
-    Sondereffekte (optional) {sondereffekteOffen ? '▲' : '▼'}
-  </legend>
+{/* Pulverlack‐Sondereffekte */}
+{kategorie === 'pulverlack' && (
+  <fieldset className={styles.radioGroup}>
+    <legend className={styles.toggleLegend} onClick={() => setSondereffekteOffen(!sondereffekteOffen)} style={{ cursor: 'pointer' }}>
+      Sondereffekte (Pulverlack) {sondereffekteOffen ? '▲' : '▼'}
+    </legend>
+    <AnimatePresence initial={false}>
+      {sondereffekteOffen && (
+        <motion.div className={styles.checkboxGrid} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
+          {[
+            'Hochwetterfest',
+            'Ultra Hochwetterfest',
+            'Transparent',
+            'Niedrigtemperaturpulver',
+            'Hochtemperaturpulver',
+            'Anti-Ausgasung',
+            'Kratzresistent',
+            'Elektrisch Ableitfähig',
+            'Solar geeignet',
+            'Soft-Touch',
+            'Hammerschlag',
+            'Eisenglimmer',
+            'Perlglimmer',
+            'Selbstreinigend',
+            'Anti-Bakteriell',
+            'Anti-Grafitti',
+            'Anti-Quietsch',
+            'Anti-Rutsch',
+          ].map((eff) => (
+            <label key={eff} className={styles.radioLabel}>
+              <input
+                type="checkbox"
+                name="sondereffekte"
+                value={eff}
+                checked={sondereffekte.includes(eff)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSondereffekte((prev) => (checked ? [...prev, eff] : prev.filter((v) => v !== eff)));
+                }}
+              />
+              <span>{eff}</span>
+            </label>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </fieldset>
+)}
 
-  <AnimatePresence initial={false}>
-    {sondereffekteOffen && (
-      <motion.div
-        className={styles.checkboxGrid}
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: 'auto' }}
-        exit={{ opacity: 0, height: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        {[
-          'Hochwetterfest', 'Ultra Hochwetterfest', 'Transparent',
-          'Niedrigtemperaturpulver', 'Hochtemperaturpulver',
-          'Anti-Ausgasung', 'Kratzresistent', 'Elektrisch Ableitfähig',
-          'Solar geeignet', 'Soft-Touch', 'Hammerschlag', 'Eisenglimmer',
-          'Perlglimmer', 'Selbstreinigend', 'Anti-Bakteriell',
-          'Anti-Grafitti', 'Anti-Quietsch', 'Anti-Rutsch'
-        ].map((effekt) => (
-          <label key={effekt} className={styles.radioLabel}>
-            <input
-              type="checkbox"
-              name="sondereffekte"
-              value={effekt}
-              checked={sondereffekte.includes(effekt)}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setSondereffekte((prev) =>
-                  checked ? [...prev, effekt] : prev.filter((v) => v !== effekt)
-                );
-              }}
-            />
-            <span>{effekt}</span>
-          </label>
-        ))}
-      </motion.div>
-    )}
-  </AnimatePresence>
-</fieldset>
+{/* Nasslack‐Sondereffekte */}
+{kategorie === 'nasslack' && (
+  <fieldset className={styles.radioGroup}>
+    <legend className={styles.toggleLegend} onClick={() => setSondereffekteOffen(!sondereffekteOffen)} style={{ cursor: 'pointer' }}>
+      Sondereffekte (Nasslack) {sondereffekteOffen ? '▲' : '▼'}
+    </legend>
+    <AnimatePresence initial={false}>
+      {sondereffekteOffen && (
+        <motion.div className={styles.checkboxGrid} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
+          {[
+            'Hochwetterfest',
+            'Ultra Hochwetterfest',
+            'Transparent',
+            'Kratzresistent',
+            'Elektrisch Ableitfähig',
+            'Solar geeignet',
+            'Soft-Touch',
+            'Hammerschlag',
+            'Eisenglimmer',
+            'Perlglimmer',
+            'Selbstreinigend',
+            'Anti-Bakteriell',
+            'Anti-Grafitti',
+            'Anti-Quietsch',
+            'Anti-Rutsch',
+          ].map((eff) => (
+            <label key={eff} className={styles.radioLabel}>
+              <input
+                type="checkbox"
+                name="sondereffekte"
+                value={eff}
+                checked={sondereffekte.includes(eff)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSondereffekte((prev) => (checked ? [...prev, eff] : prev.filter((v) => v !== eff)));
+                }}
+              />
+              <span>{eff}</span>
+            </label>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </fieldset>
+)}
 
 
+{kategorie === 'pulverlack' && (
 <fieldset className={styles.radioGroup}>
   <legend className={styles.radioLegend}>
     Aufladung: <span style={{ color: 'red' }}>*</span>
@@ -955,8 +1197,6 @@ const toggleBewerbung = (wert: string) => {
       onChange={() => {}}
     />
   )}
-  
-
   <div className={styles.radioOptionsHorizontal}>
     <label className={styles.radioLabel}>
       <input
@@ -990,6 +1230,7 @@ const toggleBewerbung = (wert: string) => {
     </label>
   </div>
 </fieldset>
+)}
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
   Beschreibung: <span style={{ color: 'red' }}>*</span>
@@ -1146,14 +1387,15 @@ const toggleBewerbung = (wert: string) => {
     
   </div>
 </fieldset>
-<div className={styles.bewerbungContainer}>
+<div className={styles.bewerbungGruppe}>
   <label className={styles.bewerbungOption}>
     <input
       type="checkbox"
       onChange={() => toggleBewerbung('startseite')}
       checked={bewerbungOptionen.includes('startseite')}
     />
-    <Star size={18} color="#f5b400" /> Anzeige auf Startseite hervorheben (39,99€)
+    <Star size={18} color="#f5b400" />
+    Anzeige auf Startseite hervorheben (39,99 €)
   </label>
 
   <label className={styles.bewerbungOption}>
@@ -1162,10 +1404,9 @@ const toggleBewerbung = (wert: string) => {
       onChange={() => toggleBewerbung('suche')}
       checked={bewerbungOptionen.includes('suche')}
     />
-    <Search size={18} color="#0070f3" /> Anzeige in Suche priorisieren (17,99€)
+    <Search size={18} color="#0070f3" />
+    Anzeige in Suche priorisieren (17,99 €)
   </label>
-
-  
 
   <label className={styles.bewerbungOption}>
     <input
@@ -1173,9 +1414,11 @@ const toggleBewerbung = (wert: string) => {
       onChange={() => toggleBewerbung('premium')}
       checked={bewerbungOptionen.includes('premium')}
     />
-    <Crown size={18} color="#9b59b6" /> Premium-Anzeige aktivieren (19,99€)
+    <Crown size={18} color="#9b59b6" />
+    Premium-Anzeige aktivieren (19,99 €)
   </label>
-  <br></br><p>Preise inkl. MwSt.</p>
+
+  <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
 </div>
 <div className={styles.hinweisText}>
   Es gelten unsere <a href="/nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>. Informationen zur Verarbeitung deiner Daten findest du in unserer <a href="/datenschutz" target="_blank">Datenschutzerklärung</a>.
@@ -1192,31 +1435,23 @@ const toggleBewerbung = (wert: string) => {
     <h3>📝 Vorschau deiner Angaben</h3>
 
     <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
+    <p><strong>Titel:</strong> {titel || '–'}</p>
+    <p><strong>Farbton:</strong> {farbton || '–'}</p>
+    <p><strong>Menge (kg):</strong> {menge || '–'}</p>
+    <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
+    <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
+    <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
+    <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+    <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
+    <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
+    <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
+    <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
+    <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
+    <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
 
+    {/* Nur für Pulverlack */}
     {kategorie === 'pulverlack' && (
-      <>
-        <p><strong>Titel:</strong> {titel}</p>
-        <p><strong>Farbton:</strong> {farbton}</p>
-        <p><strong>Farbcode:</strong> {farbcode}</p>
-        <p><strong>Glanzgrad:</strong> {glanzgrad}</p>
-        <p><strong>Farbpalette:</strong> {farbpaletteWert}</p>
-        <p><strong>Hersteller:</strong> {hersteller}</p>
-        <p><strong>Oberfläche:</strong> {oberflaeche}</p>
-        <p><strong>Anwendung:</strong> {anwendung}</p>
-        <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
-        <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
-        <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
-        <p><strong>Zustand:</strong> {zustand}</p>
-        <p><strong>Beschreibung:</strong> {beschreibung}</p>
-        <p><strong>Qualität:</strong> {qualitaet}</p>
-      </>
-    )}
-
-    {kategorie === 'nasslack' && (
-      <>
-        <p><strong>Modell:</strong> {modell}</p>
-        <p><strong>Baujahr:</strong> {baujahr}</p>
-      </>
+      <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
     )}
 
     <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
@@ -1224,8 +1459,6 @@ const toggleBewerbung = (wert: string) => {
     <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
   </div>
 )}
-
-
 
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
   {ladeStatus ? (
@@ -1246,13 +1479,6 @@ const toggleBewerbung = (wert: string) => {
     Alle Eingaben zurücksetzen
   </button>
 </div>
-
-
-
-
-
-
-
     <div className={styles.progressContainer}>
   <div className={styles.progressBarWrapper}>
     <div
@@ -1263,8 +1489,6 @@ const toggleBewerbung = (wert: string) => {
     </div>
   </div>
 </div>
-
-
       </form>
     </>
   );

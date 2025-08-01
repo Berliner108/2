@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import AngebotEinstellen from './AngebotEinstellen';
+import Grundgerüst from './Grundgerüst';
 
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <AngebotEinstellen />
+      <Grundgerüst />
     </Suspense>
   );
 }

@@ -23,13 +23,8 @@ type PageProps = {
 // ✅ richtig
 export default function ArtikelDetailPage() {
   const params = useParams();
-  const artikel = artikelDaten.find((a) => a.id.toString() === params.id);
-
-  
-  if (!artikel) return notFound();
-
-  
-  
+  const artikel = artikelDaten.find((a) => a.id.toString() === params.id);  
+  if (!artikel) return notFound(); 
 
   const [preis, setPreis] = useState('');
   const [extraPreisVisible, setExtraPreisVisible] = useState(false);
@@ -189,8 +184,6 @@ export default function ArtikelDetailPage() {
     </span>
   </div>
 )}
-
-
 {artikel.aufladung && artikel.aufladung.length > 0 && (
   <div className={styles.metaItem}>
     <span className={styles.label}>Aufladung:</span>
@@ -199,12 +192,6 @@ export default function ArtikelDetailPage() {
     </span>
   </div>
 )}
-
-
-
-
-
-
 {artikel.user && (
   <div className={styles.metaItem}>
     <span className={styles.label}>User:</span>
@@ -216,7 +203,6 @@ export default function ArtikelDetailPage() {
     </div>
   </div>
 )}
-
               {artikel.effekt && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>Effekt:</span>
@@ -311,7 +297,6 @@ export default function ArtikelDetailPage() {
     }}
   />
 )}
-
     </>
   );
 }

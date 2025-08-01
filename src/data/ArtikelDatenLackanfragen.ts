@@ -24,8 +24,8 @@ export type Artikel = {
   farbpalette?: string;
   farbton?: string;
   qualität?: string;
-  zertifizierung?: string;
-  aufladung?: string;
+  zertifizierung?: string[];      // geändert: jetzt Array
+  aufladung?: string[];
 };
 
 

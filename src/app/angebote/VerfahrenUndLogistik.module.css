@@ -1,0 +1,452 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-family: 'Oswald';
+}
+
+.sectionTitle {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.dropdownContainer label {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 400px;
+}
+
+.checkboxGroup {
+  margin-bottom: 1rem;
+  /* gruppiert die Checkboxen vertikal */
+}
+
+.checkboxGroup p.groupLabel {
+  font-weight: 600;
+  margin-bottom: 0.5rem; /* mehr Abstand nach unten */
+}
+.specsBox {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-top: 1rem; /* Abstand nach oben */
+  margin-bottom: 1rem;
+}
+/* Container für alle Checkbox-Labels */
+.checkboxContainer {
+  display: flex;
+  flex-wrap: wrap;  /* bei vielen Checkboxen umbrechen */
+  gap: 1.5rem;      /* Abstand zwischen Checkboxen */
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.selectScroll {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* Checkbox Label inline mit kleinem Abstand */
+.checkboxContainer label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Checkbox selbst kleiner */
+.checkboxContainer input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Aktuell (Checkboxen nebeneinander) */
+.checkboxGroup label.checkboxRow {
+  display: inline-flex;       /* nebeneinander */
+  align-items: left;
+  gap: 0.25rem;
+  margin-right: 1.5rem;       /* Abstand zwischen Checkboxen */
+  margin-bottom: 0.5rem;      /* Abstand nach unten */
+  vertical-align: middle;
+}
+
+
+/* input Checkbox etwas kleiner und mittig */
+.checkboxGroup input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Radio Buttons: gleichmäßiger Abstand und Ausrichtung */
+.radioInline {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Label-Text unter Checkboxen/Radios besser ausrichten */
+.checkboxRow, .radioItem {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+.inputField {
+  padding: 0.5rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.inputField2 {
+  padding: 0.5rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-weight: normal;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+.customDropdown {
+  position: relative;
+  width: 100%;
+  font-family: 'oswald';
+}
+
+.dropdownSelected {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dropdownList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  max-height: 260px; /* HIER wird die Höhe begrenzt */
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.dropdownList li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdownList li:hover {
+  background-color: #f2f2f2;
+}
+
+
+.specsBox {
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  
+}
+.dropdownContainer {
+  position: relative;
+  max-width: 98%;
+}
+.dropdownList {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0; right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 10;
+  border-radius: 8px;
+}
+.dropdownList li {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+.dropdownList li:hover {
+  background: #f0f0f0;
+}
+
+.specTitle {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.inputRow {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.radioGroup {
+  margin-bottom: 1.5rem;
+}
+
+.radioLabel {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.radioInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.radioItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.checkboxWrapper {
+  margin-bottom: 1rem;
+}
+
+.checkboxGroupLabel {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.checkboxFlexRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.checkboxItemInline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.checkboxVerticalGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+.labelRowNeutral {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  font-weight: normal;
+}
+
+.labelTextNormal {
+  font-weight: normal;
+}
+
+.labelTooltipIcon {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.labelTooltipText {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px); /* Rechts mit etwas Abstand */
+  transform: translateY(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  z-index: 100;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.labelTooltipIcon:hover .labelTooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+/* Link im Tooltip */
+.tooltipLink {
+  color: #00b4d8;            /* Primär‑Linkfarbe */
+  text-decoration: underline; /* Unterstrichen */
+  cursor: pointer;            /* Zeigefinger beim Hovern */
+  font-weight: 500;           /* Optional: etwas fetter */
+  transition: color 0.2s;     /* Sanfter Farbwechsel */
+}
+
+.tooltipLink:hover {
+  color: #0050c3;            /* Dunklere Farbe beim Hovern */
+}
+
+.tooltipLink:focus {
+  outline: 2px dashed #0050c3; /* Keyboard‑Focus sichtbar machen */
+  outline-offset: 2px;
+}
+
+.logistik {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  
+  
+}
+
+.errorFieldset {
+  border-color: red;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.row label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.row input[type="text"],
+.row input[type="date"] {
+  padding: 0.5rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+}
+.stepNumber {
+  width: 2rem;
+  height: 2rem;
+  background-color: #0070f3;
+  color: white;
+  border-radius: 999px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Oswald', sans-serif;
+}
+
+.headingSection {
+  font-size: 1.5rem;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  position: relative;
+}
+
+.iconTooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.5rem;
+  cursor: help;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 240px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 0.5rem;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+.logistikGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* ➕ sorgt für gleichmäßige Verteilung */
+  min-width: 0;
+}
+
+.inputGroup label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.inputGroup input,
+.inputGroup select {
+  padding: 0.5rem;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+}
+
+.inputError {
+  border: 1px solid red !important;
+}
+
+.warnung {
+  color: red;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  font-family: 'Oswald', sans-serif;
+}
+.errorBorder {
+  border: 2px solid red !important;
+  border-radius: 4px;
+}

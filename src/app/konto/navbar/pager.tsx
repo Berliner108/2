@@ -60,9 +60,9 @@ export default function Pager() {
               title: 'Verkaufen',
               href: '/verkaufen',
               links: [
-                { href: '/verkaufen?kategorie=Nasslack', text: 'Nasslacke' },
-                { href: '/verkaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
-                { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
+                { href: '/verkaufen?kategorie=nasslack', text: 'Nasslacke' },
+                { href: '/verkaufen?kategorie=pulverlack', text: 'Pulverlacke' },
+                { href: '/verkaufen?kategorie=arbeitsmittel', text: 'Arbeitsmittel' }
               ]
             },
             {

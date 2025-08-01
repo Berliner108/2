@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import Slideshow from './slideshow/slideshow';
@@ -8,25 +9,27 @@ import CookieBanner from './components/CookieBanner';
 import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLackanfragen';
+// ▶ für Shop-Artikel
+import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
-
 
 type Auftrag = {
   id: string | number;
   bilder: string[];
-  verfahren: string[];
+  verfahren: { name: string; felder: any }[];
   material: string;
   length: number;
   width: number;
   height: number;
   masse: string;
   standort: string;
-  lieferDatum: Date;
-  abholDatum: Date;
+  lieferdatum: Date;
+  abholdatum: Date;
   abholArt: string;
   lieferArt: string;
-  isSponsored?: boolean; // ← das fehlt!
+  gesponsert?: boolean;
 };
+
 type Lackanfrage = {
   id: string | number;
   titel: string;
@@ -34,125 +37,126 @@ type Lackanfrage = {
   menge: number;
   lieferdatum: Date;
   hersteller: string;
-  zustand: string;  
+  zustand: string;
   kategorie: string;
   ort: string;
 };
 
-const formatDate = (date: Date) => {
-  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('de-AT');
-};
-
-
-const category2 = [
-  { id: 7, title: "RAL 5020 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch1.jpg" },
-  { id: 8, title: "RAL 6012 Glatt Matt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch2.jpg" },
-  { id: 9, title: "NCS S 3050-B20G Glatt Seidenmatt", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch3.jpg" },
-  { id: 10, title: "Sikkens C4.55.30 Feinstruktur Seidenmatt", desc: "Pulverlack GSB und Qualicoat zertifiziert", img: "/images/strauch4.jpg" },
-  { id: 11, title: "DB702 Glatt Seidenglanz Metallic", desc: "Pulverlack GSB zertifiziert", img: "/images/strauch5.jpg" },
-  { id: 12, title: "Eloxal E6/C35 Orange", desc: "Pulverlack Qualicoat zertifiziert", img: "/images/strauch6.jpg" },
-];
-
-const category3 = [
-  { id: 13, title: "Stretch Folie", desc: "Perforiert, 15 cm breit, 10 Meter, 12 Stück / Karton 32,99€", img: "/images/stretch.jpg" },
-  { id: 14, title: "Stretchfolie breit Industrieanwendung", desc: "Perforiert", img: "/images/folie lang.jpg" },
-  { id: 15, title: "3 M Schutzmaske FFP3", desc: "Für Lackierer und Pulverbeschichter", img: "/images/atemschutz.jpg" },
-  { id: 16, title: "Atemschutzmaske mit Filter", desc: "Pulverlack, glatt glanz", img: "/images/atemschutz1.jpg" },
-  { id: 17, title: "Arbeitshandschuhe", desc: "Langlebig und passgenau", img: "/images/blume5.jpg" },
-  { id: 18, title: "Stahlhaken", desc: "Pulverlack, grobstruktur matt, anti grafitti", img: "/images/blume18.png" },
-];
+const formatDate = (date: Date) =>
+  isNaN(date.getTime()) ? '-' : date.toLocaleDateString('de-AT');
 
 const sponsoredAuftraege: Auftrag[] = dummyAuftraege
-  .filter((a) => a.isSponsored)
+  .filter((a) => a.gesponsert)
   .slice(0, 12)
   .map((a) => ({
     ...a,
-    lieferDatum: new Date(a.lieferDatum),
-    abholDatum: new Date(a.abholDatum),
+    lieferdatum: new Date(a.lieferdatum),
+    abholdatum: new Date(a.abholdatum),
   }));
 
 export default function Page() {
-  const scrollRefAuftraege = useRef<HTMLDivElement>(null);
-const scrollRefLack = useRef<HTMLDivElement>(null);
-const scrollRefLackanfragen = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [auftraege, setAuftraege] = useState<Auftrag[]>(sponsoredAuftraege);
+  // 1) State initialisieren aus URL (?search=…)
+  const [suchbegriff, setSuchbegriff] = useState(
+    () => searchParams.get('search') ?? ''
+  );
 
-  
-
-
-
-
-  const handleScroll = (ref: React.RefObject<HTMLDivElement>, direction: number) => {
-  if (ref.current) {
-    ref.current.scrollLeft += direction * 200;
-  }
-};
-
-
+  // 2) Bei URL‑Änderung das Input‑Feld nachziehen
   useEffect(() => {
-  const fetchAuftraege = async () => {
-    try {
-      const res = await fetch('/api/auftraege?sponsored=true&limit=12');
-      if (!res.ok) throw new Error('Fehler beim Laden');
-      const data = await res.json();
-      setAuftraege(
-        data.map((a: any) => ({
-          ...a,
-          lieferDatum: new Date(a.lieferDatum),
-          abholDatum: new Date(a.abholDatum),
-        }))
-      );
-    } catch {
-      // Dummy nur im Fehlerfall
-      setAuftraege(sponsoredAuftraege);
-    }
-  };
-  fetchAuftraege();
-}, []);
+    setSuchbegriff(searchParams.get('search') ?? '');
+  }, [searchParams]);
 
+  // scroll‑Refs
+  const scrollRefAuftraege = useRef<HTMLDivElement>(null);
+  const scrollRefShop = useRef<HTMLDivElement>(null);
+  const scrollRefLackanfragen = useRef<HTMLDivElement>(null);
+
+  // Auftrags‑State & Fetch
+  const [auftraege, setAuftraege] = useState<Auftrag[]>(sponsoredAuftraege);
+  useEffect(() => {
+    const fetchAuftraege = async () => {
+      try {
+        const res = await fetch('/api/auftraege?sponsored=true&limit=12');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setAuftraege(
+          data.map((a: any) => ({
+            ...a,
+            lieferdatum: new Date(a.lieferdatum),
+            abholdatum: new Date(a.abholDatum),
+          }))
+        );
+      } catch {
+        setAuftraege(sponsoredAuftraege);
+      }
+    };
+    fetchAuftraege();
+  }, []);
+
+  // Lackanfragen‑State (dummy + API)
   const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>(
-  artikelDatenLackanfragen
-    .filter((a) => a.gesponsert)
-    .slice(0, 12)
-    .map((a) => ({
-      ...a,
-      lieferdatum: new Date(a.lieferdatum),
-    }))
-);
+    artikelDatenLackanfragen
+      .filter((a) => a.gesponsert)
+      .slice(0, 12)
+      .map((a) => ({ ...a, lieferdatum: new Date(a.lieferdatum) }))
+  );
+  useEffect(() => {
+    const fetchLack = async () => {
+      try {
+        const res = await fetch('/api/lackanfragen?limit=12');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setLackanfragen(
+          data.map((a: any) => ({ ...a, lieferdatum: new Date(a.lieferdatum) }))
+        );
+      } catch {
+        /* keep dummy */
+      }
+    };
+    fetchLack();
+  }, []);
 
+  // Shop‑Artikel (gesponsert)
+  const [shopArtikel, setShopArtikel] = useState(
+    artikelDatenShop
+      .filter((a) => a.gesponsert)
+      .slice(0, 12)
+      .map((a) => ({ ...a, lieferdatum: new Date(a.lieferdatum) }))
+  );
+  useEffect(() => {
+    const fetchShop = async () => {
+      try {
+        const res = await fetch('/api/artikel?gesponsert=true&limit=12');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setShopArtikel(
+          data.map((a: any) => ({ ...a, lieferdatum: new Date(a.lieferdatum) }))
+        );
+      } catch {
+        /* keep dummy */
+      }
+    };
+    fetchShop();
+  }, []);
 
-useEffect(() => {
-  const fetchLackanfragen = async () => {
-    try {
-      const res = await fetch('/api/lackanfragen?limit=12');
-      if (!res.ok) throw new Error('Fehler beim Laden');
-      const data = await res.json();
-      setLackanfragen(
-        data.map((a: any) => ({
-          ...a,
-          lieferdatum: new Date(a.lieferdatum),
-        }))
-      );
-    } catch {
-      // Dummy bleibt
-    }
+  // Scroll‑Helper
+  const handleScroll = (ref: React.RefObject<HTMLDivElement>, dir: number) => {
+    if (ref.current) ref.current.scrollLeft += dir * 200;
   };
-  fetchLackanfragen();
-}, []);
-
-
 
   return (
     <div className={styles.wrapper}>
       <nav className={styles.navbar}>
+        
         <ul className={styles.navList}>
           {[
             { title: 'Angebote einholen', href: '/angebote', links: [{ href: '/angebote?first=Nasslackieren', text: 'Nasslackieren' },  { href: '/angebote?first=Pulverbeschichten', text: 'Pulverbeschichten' },  { href: '/angebote?first=Verzinken', text: 'Verzinken' },  { href: '/angebote?first=Eloxieren', text: 'Eloxieren' },  { href: '/angebote?first=Strahlen', text: 'Strahlen' },  { href: '/angebote?first=Entlacken', text: 'Entlacken' },  { href: '/angebote?first=Einlagern', text: 'Einlagern' },  { href: '/angebote?first=Isolierstegverpressen', text: 'Isolierstegverpressung' },  { href: '/angebote?first=Folieren', text: 'Folieren' },  { href: '/angebote', text: 'Kombiniert' }] },
             { title: 'Shop', href: '/kaufen', links: [{ href: '/about/team', text: 'Nasslacke' }, { href: '/about/vision', text: 'Pulverlacke' }, { href: '/about/vision', text: 'Arbeitsmittel' }] },
-            { title: 'Lacke anfragen', href: '/sonderlacke', links: [{ href: '/services/webdesign', text: 'Nasslack' }, { href: '/services/seo', text: 'Pulverlack' }] },
+            { title: 'Lacke anfragen', href: '/sonderlacke', links: [{ href: '/sonderlacke?kategorie=nasslack', text: 'Nasslack' }, { href: '/sonderlacke?kategorie=pulverlack', text: 'Pulverlack' }] },
             { title: 'Auftragsbörse', href: '/auftragsboerse', links: [{ href: '/about/team', text: 'Lackieren' },  { href: '/about/vision', text: 'Pulverbeschichten' },  { href: '/about/vision', text: 'Verzinken' },  { href: '/about/vision', text: 'Eloxieren' },  { href: '/about/vision', text: 'Strahlen' },  { href: '/about/vision', text: 'Entlacken' },  { href: '/about/vision', text: 'Einlagern' },  { href: '/about/vision', text: 'Isolierstegverpressung' },  { href: '/about/vision', text: 'Folieren' },  { href: '/about/vision', text: 'Kombiniert' }] },
-            { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/verkaufen?kategorie=Nasslack', text: 'Nasslacke' }, { href: '/verkaufen?kategorie=Pulverlack', text: 'Pulverlacke' }, { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }] },
+            { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/verkaufen?kategorie=nasslack', text: 'Nasslacke' }, { href: '/verkaufen?kategorie=pulverlack', text: 'Pulverlacke' }, { href: '/verkaufen?kategorie=arbeitsmittel', text: 'Arbeitsmittel' }] },
             { title: 'Lackanfragen-Börse', href: '/lackanfragen', links: [{ href: '/lackanfragen?kategorie=Nasslack', text: 'Nasslack' }, { href: '/lackanfragen?kategorie=Pulverlack', text: 'Pulverlack' }] },
             { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/wissenswertes', text: 'Vision und Mission' },{ href: '/wissenswertes#Sofunktioniert’s', text: 'So funktioniert’s' }, { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' }, { href: '/wissenswertes#Verfahren', text: 'Verfahren' }, { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' }, { href: '/wissenswertes#Pulverbeschichten', text: 'Pulverbeschichten' },  { href: '/wissenswertes#Eloxieren', text: 'Eloxieren/Anodisieren' }, { href: '/wissenswertes#Verzinken', text: 'Verzinken' }, { href: '/wissenswertes#Verzinnen', text: 'Verzinnen' }, { href: '/wissenswertes#Aluminieren', text: 'Aluminieren' }, { href: '/wissenswertes#Vernickeln', text: 'Vernickeln' }, { href: '/wissenswertes#Entlacken', text: 'Entlacken' },  { href: '/wissenswertes#Strahlen', text: 'Strahlen' }, { href: '/wissenswertes#Folieren', text: 'Folieren' }, { href: '/wissenswertes#Isolierstegverpressen', text: 'Isolierstegverpressen' }] },
             { title: 'Mein Konto', href: '/konto', links: [{ href: '/konto/angebote', text: 'Angebote' }, { href: '/konto/auftraege', text: 'Meine Aufträge' },{ href: '/konto/bestellungen', text: 'Bestellungen' },{ href: '/konto/lackanfragen', text: 'Lackanfragen' }, { href: '/konto/verkaufen', text: 'Verkaufen' }, { href: '/konto/einstellungen', text: 'Kontoeinstellungen' }, { href: '/konto/nachrichten', text: 'Nachrichten' }] }
@@ -171,7 +175,29 @@ useEffect(() => {
             </li>
           ))}
         </ul>
+      
       </nav>
+
+      {/* Suchformular */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const q = suchbegriff.trim();
+          if (q) router.push(`/kaufen?search=${encodeURIComponent(q)}`);
+        }}
+        className={styles.shopSearchForm}
+      >
+        <input
+          type="search"
+          placeholder="Shop durchsuchen…"
+          value={suchbegriff}
+          onChange={(e) => setSuchbegriff(e.target.value)}
+          className={styles.shopSearchInput}
+        />
+        <button type="submit" className={styles.shopSearchButton}>
+          Finden
+        </button>
+      </form>
       <Slideshow />
 
       {/* Auftragsbörse */}
@@ -185,14 +211,17 @@ useEffect(() => {
         <div className={styles.scrollContent} ref={scrollRefAuftraege}> 
           {auftraege.map((auftrag) => (
             <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.articleBox}>
-              <img src={auftrag.bilder[0]} alt={auftrag.verfahren.join(' & ')} className={styles.articleImg} />
+              <img src={auftrag.bilder[0]} alt={auftrag.verfahren.map(v => v.name).join(' & ')} className={styles.articleImg} />
+
+
+
               <div className={styles.articleText}>
-                <h3>{auftrag.verfahren.join(' & ') || 'Verfahren unbekannt'}</h3>
+                <h3>{auftrag.verfahren.map(v => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>
                 <p><strong>Material:</strong> {auftrag.material}</p>
                 <p><strong>Maße:</strong> {auftrag.length} x {auftrag.width} x {auftrag.height} mm</p>
                 <p><strong>Masse:</strong> {auftrag.masse}</p>                
-                <p><strong>Lieferdatum:</strong> {formatDate(auftrag.lieferDatum)}</p>
-                <p><strong>Abholdatum:</strong> {formatDate(auftrag.abholDatum)}</p>
+                <p><strong>Lieferdatum:</strong> {formatDate(auftrag.lieferdatum)}</p>
+                <p><strong>Abholdatum:</strong> {formatDate(auftrag.abholdatum)}</p>
                 <p><strong>Abholart:</strong> {auftrag.abholArt}</p>
                 <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{auftrag.standort}</p>
               </div>
@@ -214,33 +243,40 @@ useEffect(() => {
       </div>
       </section>
       {/* Lackbörse */}
-      <section className={styles.sectionWrapper}>
-      <div className={styles.articleLinkContainer}>
-        <Link href="/kaufen" className={styles.articleLink}>
-          Top Deals aus der <span className={styles.colored}>Lack- und Arbeitsmittelbörse</span>
+      {/* ▶ Shop‑Block: erste 12 gesponserte Artikel */}
+<section className={styles.sectionWrapper}>
+  <div className={styles.articleLinkContainer}>
+    <Link href="/kaufen" className={styles.articleLink}>
+      Top Deals aus unserem <span className={styles.colored}>Shop</span>
+    </Link>
+  </div>
+  <div className={styles.scrollContainer}>
+    <div className={styles.scrollContent} ref={scrollRefShop}>
+      {shopArtikel.map((art) => (
+        <Link key={art.id} href={`/kaufen/artikel/${art.id}`} className={styles.articleBox}>
+          <img src={art.bilder[0]} alt={art.titel} className={styles.articleImg} />
+          <div className={styles.articleText}>
+            <h3>{art.titel}</h3>
+            <p><strong>Menge:</strong> {art.menge} kg</p>
+            <p><strong>Lieferdatum:</strong> {formatDate(art.lieferdatum)}</p>
+            <p><strong>Hersteller:</strong> {art.hersteller}</p>
+            <p><strong>Zustand:</strong> {art.zustand}</p>
+            <p><strong>Kategorie:</strong> {art.kategorie}</p>
+            <p style={{ fontSize: '1rem', fontWeight: 500, color: 'gray' }}>  <strong>Preis ab:</strong> {art.preis.toFixed(2)} €</p>
+            
+          </div>
         </Link>
-      </div>
-      <div className={styles.scrollContainer}>        
-          <div className={styles.scrollContent} ref={scrollRefLack}> 
-        {category2.map((article) => (
-          <Link key={article.id} href={`/artikel/${article.id}`} className={styles.articleBox2}>
-            <img src={article.img} alt={article.title} className={styles.articleImg} />
-            <div className={styles.articleText}>
-              <h3>{article.title}</h3>
-              <p>{article.desc}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
-        <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLack, -1)}>
-          <ChevronLeftIcon className="h-6 w-6 text-black" />
-        </button>
-        <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefLack, 1)}>
-          <ChevronRightIcon className="h-6 w-6 text-black" />
-        </button>
-      </div>
+      ))}
+    </div>
+    <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefShop, -1)}>
+      <ChevronLeftIcon className="h-6 w-6 text-black" />
+    </button>
+    <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefShop, 1)}>
+      <ChevronRightIcon className="h-6 w-6 text-black" />
+    </button>
+  </div>
+</section>
 
-      </section>
       
       
       <div className={styles.imageContainer}>

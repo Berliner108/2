@@ -1,5 +1,5 @@
 .container {
-  max-width: 80%;
+  max-width: 88%;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -78,7 +78,32 @@
   border-color: #dc2626 !important;
   background-color: #fef2f2;
 }
+/* Grundgeruest.module.css */
+.bewerbungGruppe {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
 
+.bewerbungOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.bewerbungOption input {
+  margin-right: 0.25rem;
+}
+
+.steuerHinweis {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+}
 .hidden {
   display: none;
 }

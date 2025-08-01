@@ -12,8 +12,9 @@ import ArtikelCard from '../components/ArtikelCard';
 const kategorien = ['Nasslack', 'Pulverlack'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 const herstellerFilter = [
-  'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
-  'Sherwin Williams', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
+  'Sherwin Williams','PPG Industries','Nippon Paint', 'BASF', 'Asian Paints', 'Hempel',
+  'Adler Lacke', 'Berger','Nerolac','Benjamin Moore','RPM International','IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 
+  'Akzo Nobel','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
   'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
   'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
   'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
@@ -79,9 +80,9 @@ export default function KaufenSeite() {
         return a.titel.localeCompare(b.titel);
       case 'titel-za':
         return b.titel.localeCompare(a.titel);
-      case 'bewertung-auf':
+      case 'menge-auf':
         return (a.menge ?? 0) - (b.menge ?? 0);
-      case 'bewertung-ab':
+      case 'menge-ab':
         return (b.menge ?? 0) - (a.menge ?? 0);
       default:
         return 0;
@@ -145,12 +146,12 @@ export default function KaufenSeite() {
             <option value="lieferdatum-ab">Lieferdatum absteigend</option>
             <option value="titel-az">Titel A–Z</option>
             <option value="titel-za">Titel Z–A</option>
-            <option value="bewertung-auf">Menge aufsteigend</option>
-            <option value="bewertung-ab">Menge absteigend</option>
+            <option value="menge-auf">Menge aufsteigend</option>
+            <option value="menge-ab">Menge absteigend</option>
           </select>
 
           <input className={styles.range} type="range" min="0" max="1000" step="0.1" value={maxMenge} onChange={(e) => setMaxMenge(Number(e.target.value))} />
-          <div className={styles.bewertetText}>Max. Menge: {maxMenge} kg</div>
+          <div className={styles.mengeText}>Max. Menge: {maxMenge} kg</div>
 
           <div className={styles.checkboxGroup}>
             <strong>Kategorie</strong>

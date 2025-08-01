@@ -219,6 +219,32 @@
   font-family: 'Oswald';
   transition: color 0.3s ease;
 }
+.shopSearchForm {
+  display: flex;
+  margin: 1rem 0;
+  width: 50%;
+}
+.shopSearchInput {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #ccc;
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  font-family: 'Oswald';
+  font-size: 15px;
+}
+.shopSearchButton {
+  padding: 0.7rem 1rem;
+  border: 1px solid #ccc;
+  background: #00b4d8;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  font-family: 'Oswald';
+  width: 100px;
+  font-size: 15px;
+
+}
+
 .colored {
   color: #00b5d8;
   font-weight: bold;

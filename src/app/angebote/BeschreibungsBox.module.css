@@ -1,0 +1,85 @@
+.borderedContainer {
+  border: 3px solid #00b4d8;;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: #fff; /* Optional */
+  margin-top: 50px;  
+}
+
+.textfeldContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.oswaldTextarea {
+  max-width: 98%;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 1px solid ;
+  border-color: grey;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fff;
+  min-height: 300px;
+}
+
+.charCount {
+  text-align: right;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  transition: color 0.3s ease;
+}
+
+.stepNumber {
+  background-color: #00b4d8;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.headingSection {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.iconTooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+  color: #666;
+  cursor: pointer;
+}
+
+.tooltipText {
+  visibility: hidden;
+  width: 240px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  font-size: 0.85rem;
+  transition: opacity 0.3s ease;
+}
+
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+

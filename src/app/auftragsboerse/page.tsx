@@ -37,7 +37,7 @@ export default function Page() {
   const gefilterteAuftraege = auftraege.filter((auftrag) => {
     const verfahrenMatch = !selectedVerfahren || auftrag.verfahren.includes(selectedVerfahren);
     const materialMatch = !selectedMaterial || auftrag.material === selectedMaterial;
-    const userTypeMatch = !selectedUserType || (selectedUserType === 'business' ? auftrag.isBusiness : !auftrag.isBusiness);
+    const userTypeMatch = !selectedUserType || (selectedUserType === 'business' ? auftrag.gewerblich : !auftrag.gewerblich);
 
     const auftragWeight = parseWeight(auftrag.masse);  // Masse als Zahl umwandeln
 
@@ -49,16 +49,16 @@ export default function Page() {
     return verfahrenMatch && materialMatch && userTypeMatch && lengthMatch && widthMatch && heightMatch && weightMatch;
   });
 
-  // Sortiere Aufträge nach "isSponsored" (gesponsert zuerst) und dann nach Lieferdatum
+  // Sortiere Aufträge nach "gesponsert" (gesponsert zuerst) und dann nach Lieferdatum
   const sortierteAuftraege = gefilterteAuftraege.sort((a, b) => {
-    if (b.isSponsored === true && a.isSponsored === false) {
+    if (b.gesponsert === true && a.gesponsert === false) {
       return 1; // Gesponserte Aufträge nach oben
-    } else if (b.isSponsored === false && a.isSponsored === true) {
+    } else if (b.gesponsert === false && a.gesponsert === true) {
       return -1; // Gesponserte Aufträge nach oben
     }
 
-    const dateA = new Date(a.lieferDatum);
-    const dateB = new Date(b.lieferDatum);
+    const dateA = new Date(a.lieferdatum);
+    const dateB = new Date(b.lieferdatum);
 
     if (sortOrder === 'ascending') {
       return dateA.getTime() - dateB.getTime();
@@ -212,9 +212,10 @@ export default function Page() {
           {/* Kartencontainer */}
           <section className={styles.auftragsListe}>
             {currentItems.map((auftrag) => (
-              <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.karte}>
+             <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.karte}>
+
                 <div className={styles.cardTop}>
-                  {auftrag.isSponsored && (
+                  {auftrag.gesponsert && (
                     <div className={styles.sponsored}>Gesponsert</div>
                   )}
                   <div className={styles.imageBox}>
@@ -228,25 +229,31 @@ export default function Page() {
                   </div>
 
                   <div className={styles.cardContent}>
-                    <h4>{auftrag.verfahren.join(' & ')}</h4>
+                    <h4>{auftrag.verfahren.map((v: any) => v.name).join(' & ')}</h4>
+
                     <div className={styles.cardGrid}>
                       <div className={styles.leftColumn1}>
                         <p><strong>Material:</strong> {auftrag.material}</p>
                         <p><strong>Standort:</strong> {auftrag.standort}</p> 
                         <p><strong>Abmessung:</strong> {auftrag.length} x {auftrag.width} x {auftrag.height} mm</p>
                         <p><strong>Masse:</strong> {auftrag.masse}</p>
-                        <p><strong>Auftraggeber:</strong> {auftrag.benutzername} – ⭐ {auftrag.bewertung} 
-                          {auftrag.isBusiness ? ' (Gewerblich)' : ' (Privat)'}
+                        <p><strong>Auftraggeber:</strong> {auftrag.user}  ⭐ {auftrag.bewertung} 
+                          {auftrag.gewerblich ? ' (Gewerblich)' : ' (Privat)'}
                         </p>
                       </div>
                       <div className={styles.rightColumn}>
-                        <p><strong>Lieferdatum:</strong> {new Date(auftrag.lieferDatum).toLocaleDateString('de-AT')} ({auftrag.lieferArt})</p>
-                        <p><strong>Abholdatum:</strong> {new Date(auftrag.abholDatum).toLocaleDateString('de-AT')} ({auftrag.abholArt})</p>
+                        <p><strong>Lieferdatum:</strong> {new Date(auftrag.lieferdatum).toLocaleDateString('de-AT')} ({auftrag.lieferArt})</p>
+                        <p><strong>Abholdatum:</strong> {new Date(auftrag.abholdatum).toLocaleDateString('de-AT')} ({auftrag.abholArt})</p>
                         <ul className={styles.fileList}>
-                          {auftrag.dateien.map((file: string, index: number) => (
-                            <li key={index}>{file}</li>
-                          ))}
-                        </ul>
+                        {auftrag.dateien?.map((file: { name: string; url: string }, index: number) => (
+                          <li key={index}>
+                            <a href={file.url} target="_blank" rel="noopener noreferrer">
+                              {file.name}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+
                         <button className={styles.detailButton}>Details</button>
                       </div>
                     </div>

@@ -1,0 +1,542 @@
+.wrapper {
+  padding: 20px;
+  max-width: 85%;
+  margin: 20px auto;
+  background-color: white; /* Weißer Hintergrund für den Container */
+  border-radius: 10px; /* Ecken abrunden für ein moderneres Aussehen */ 
+  box-sizing: border-box;
+  overflow-x: hidden; /* schützt gegen zu breite Inhalte */
+  min-height: 100vw;
+}
+.oswaldTextarea {
+  width: 98%;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 1px solid ;
+  border-color: grey;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fff;
+  min-height: 300px;
+}
+.infoBox {
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  border: 1px solid #bae6fd;
+  color: #0369a1;  
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 1.0rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.infoLink {
+  margin-left: 0px;
+  color: #0369a1;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s ease;  
+}
+.infoLink:hover {
+  color: #0c4a6e;
+}
+.stepsAnimation {
+  margin: 2rem 0;
+  text-align: center;
+}
+.stepsAnimation h3 {
+  font-size: 1.6rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 1.1rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 800;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
+.stepBox:hover {
+  background-color: #f0f9ff;
+}
+.stepIcon {
+  margin-bottom: 0.3rem;
+  color: #00b4d8;
+}
+.stepBox:hover .stepIcon {
+  transform: scale(1.1);
+  transition: transform 0.3s ease;
+}
+.stepsBoxContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  overflow-x: visible; /* kein Scrollen */
+}
+.stepBox {
+  width: 280px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.stepBox p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+.stepNumber {
+  width: 36px;
+  height: 36px;
+  background-color: #00b4d8;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.toggleButton {
+  background-color: #00b4d8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin: 20px 0;
+  font-size: 0.95rem;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald';
+  margin-left: 15px;
+  align-items: center;
+  min-width: 60px;
+  max-width: 60px;  
+}
+.toggleButton:hover {
+  background-color: #009ac1;
+}
+.sectionDivider {
+  border: none;
+  border-top: 5px solid #ccc;
+  border-radius: 8px;
+  margin-top: 50px;
+  width: 100%;
+}
+.highlight {
+  color: #00b4d8; /* Sag uns in 3 einfachen Schritten was du erledigt haben willst */
+  font-weight: 600;
+}
+.iconTooltip {
+  position: relative; /* Sind die Fragezeichen neben den Begriffen */
+  display: inline-block;
+  margin-left: 8px;
+  color: #666;
+  cursor: pointer;
+}
+.tooltipText {
+  visibility: hidden;
+  width: 240px;
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  font-size: 0.85rem;
+  transition: opacity 0.3s ease;
+}
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+/* Grundgeruest.module.css */
+.bewerbungGruppe {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.bewerbungOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.bewerbungOption input {
+  margin-right: 0.25rem;
+}
+
+.steuerHinweis {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+
+.agbContainer {
+  margin-top: 2.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: #f8f9fa;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.agbLabel {
+  display: flex;/* Checkbox für Nutzungsbedingungen */
+  align-items: flex-start; /* statt center → bei mehrzeiligem Text optisch besser */
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.agbLabel input[type='checkbox'] {
+  margin-top: 3px; /* leicht nach unten versetzt, damit es zur ersten Zeile passt */
+  transform: scale(1.2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.agbLabel span {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+.agbLink,
+.nutzungsbedingungenLink {
+  color: #0077b6;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.agbLink:hover,
+.nutzungsbedingungenLink:hover {
+  color: #023e8a;
+  text-decoration: none;
+}
+
+.absendenButton {
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  font-weight: bold;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease;
+  font-family: 'Oswald';
+  margin-top: 1rem;  
+}
+
+.absendenButton:hover {
+  background: linear-gradient(to right, #00b4d8, #00e5ff);
+}
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.absendenButton {
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background: #00b4d8;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.absendenButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+.umrandung {
+  border: 3px solid #00b4d8;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.erfolg {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: green;
+}
+.vorschauWrapper {
+  margin: 2rem auto;
+  min-width: 100%;
+  text-align: left;
+}
+
+.vorschauToggle {
+  background: none;
+  border: none;
+  color: #00b4d8;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  font-family: 'Oswald';
+  
+}
+
+.vorschauContainer {
+  background: #f8f9fa;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.vorschauContainer ul {
+  padding-left: 1.2rem;
+}
+
+.vorschauContainer li {
+  margin-bottom: 0.5rem;
+}
+.progressContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #eee;
+  padding: 0;
+  z-index: 999;
+  height: 24px;
+}
+.progressBarWrapper {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+  border-top: 1px solid #ccc;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: white;
+  text-align: center;
+  line-height: 24px;
+  transition: width 0.3s ease;
+  font-size: 14px;  
+}
+
+.progressValue {
+  white-space: nowrap;
+}
+.progressText {
+  font-size: 0.9rem;
+  color: #444;
+  margin-top: 0.5rem;
+}
+@media (min-width: 600px) and (max-width: 1170px) {
+  .stepBox {
+  width: 280px;
+  max-width: 800px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;  
+  gap: 0.5rem;
+}
+.stepBox p {
+  display: none;
+}
+.stepTitle {
+  font-weight: 16px;
+}
+.stepsAnimation {
+  margin: 2rem 0;
+  text-align: center;
+}
+.stepsAnimation h3 {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 0.6rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 600;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
+
+}
+@media (max-width: 599px) {
+  .oswaldTextarea {
+  width: 92%;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid ;
+  border-color: grey;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.5;
+  background: #fff;
+  min-height: 300px;
+}
+  .infoBox {
+    display: block;
+    text-align: center;
+    font-size: 15px;
+    padding: 8px;
+    
+  }
+
+  .infoLink {
+    display: inline;
+    margin-left: 5px;
+    
+    
+  }
+ 
+  .wrapper {
+  padding: 0px;
+  max-width: 93%;
+  margin: 20px auto;
+  background-color: white; /* Weißer Hintergrund für den Container */
+  border-radius: 10px; /* Ecken abrunden für ein moderneres Aussehen */ 
+  box-sizing: border-box;
+  overflow-x: hidden; /* schützt gegen zu breite Inhalte */
+}
+.stepsBoxContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: nowrap;
+  overflow-x: visible; /* kein Scrollen */
+   padding: 0 0.5rem; /* ⬅ Abstand links und rechts */
+}
+  .stepBox {
+  width: 280px;
+  max-width: 80px;
+  min-height: 160px;
+  padding: 1rem;
+  border: 3px solid #00b4d8;
+  border-radius: 12px;
+  background: white;
+  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;  
+  gap: 0.5rem;
+}
+
+.toggleButton {
+  background-color: #00b4d8; /* Button zum ein und aufklappen der Steps */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;              /* exakt gleiche Breite */
+  height: 36px;             /* wie Höhe → ergibt Kreis */
+  padding: 0;               /* kein zusätzliches Innenpadding */
+  cursor: pointer;
+  margin: 10px 0 10px 15px;
+  font-size: 0.95rem;
+  font-family: 'Oswald';
+  line-height: 1;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.stepBox p {
+  display: none;
+}
+
+.stepsAnimation {
+  margin: 2rem 0;
+  text-align: center;
+}
+.stepsAnimation h3 {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: #0f172a;
+}
+.stepBox strong {
+  font-size: 0.6rem; /* z. B. größer als normal */
+  color: #1e293b;
+  font-weight: 600;
+  text-transform: uppercase; /* optional für mehr Präsenz */
+  letter-spacing: 0.5px;
+  display: block;  
+  margin-bottom: 0.3rem;
+  color: #1e293b;
+}
+.half {
+    flex: 1 1 50%;
+  } 
+  .stepNumberMobileMargin {
+    margin-top: 0.8rem;}
+
+ 
+}
