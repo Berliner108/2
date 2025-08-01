@@ -12,8 +12,6 @@ import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLac
 // ▶ für Shop-Artikel
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
-import { Suspense } from 'react';
-
 
 type Auftrag = {
   id: string | number;
@@ -146,7 +144,6 @@ export default function Page() {
   };
 
   return (
-    <Suspense fallback={<div>Seite lädt...</div>}>
     <div className={styles.wrapper}>
       <nav className={styles.navbar}>        
         <ul className={styles.navList}>
@@ -310,7 +307,6 @@ export default function Page() {
 </section>
       <CookieBanner />
     </div>
-    </Suspense>
   );
 }
 
