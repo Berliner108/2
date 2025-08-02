@@ -385,6 +385,9 @@
     object-fit: cover; /* Damit das Bild gut in den Container passt */
     border-radius: 0px;
   }
+  .shopSearchForm {  
+  width: 80%;
+}
 }
 /* Responsive Anpassung für kleine Bildschirme */
 @media (min-width: 601px) and (max-width: 1024px) {

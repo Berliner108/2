@@ -1,8 +1,7 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { artikelDaten } from '@/data/ArtikelDatenLackanfragen';
-import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import styles from './ArtikelDetail.module.css';
 import Pager from './navbar/pager';

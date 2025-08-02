@@ -1,9 +1,7 @@
-// page.tsx
 'use client';
 
-import { notFound } from 'next/navigation';
-import { useParams } from 'next/navigation';
-import { dummyAuftraege } from '../dummyAuftraege';
+import { notFound, useParams } from 'next/navigation';
+import { dummyAuftraege, Auftrag } from '../../../../data/dummyAuftraege';
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
@@ -17,7 +15,9 @@ import Link from 'next/link';
 
 export default function AuftragDetailPage() {
   const params = useParams();
-  const auftrag = dummyAuftraege.find((a) => a.id.toString() === params.id);
+  const auftrag: Auftrag | undefined = dummyAuftraege.find(
+    (a) => a.id.toString() === params.id
+  );
   if (!auftrag) return notFound();
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -32,7 +32,6 @@ export default function AuftragDetailPage() {
         <div className={styles.grid}>
           {/* ← Linke Spalte: Bilder + Thumbnails */}
           <div className={styles.leftColumn}>
-            {/* Wrapper um das Bild */}
             <div className={styles.imageWrapper}>
               <Image
                 src={auftrag.bilder?.[photoIndex] || ''}
@@ -50,7 +49,9 @@ export default function AuftragDetailPage() {
                   key={i}
                   src={bild}
                   alt={`Bild ${i + 1}`}
-                  className={`${styles.thumbnail} ${i === photoIndex ? styles.thumbnailActive : ''}`}
+                  className={`${styles.thumbnail} ${
+                    i === photoIndex ? styles.thumbnailActive : ''
+                  }`}
                   onClick={() => setPhotoIndex(i)}
                 />
               ))}
@@ -60,22 +61,21 @@ export default function AuftragDetailPage() {
           {/* → Rechte Spalte: Titel, Badges, Meta, Downloads, Beschreibung, Button */}
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
-  <h1 className={styles.title}>
-    {auftrag.verfahren.map(v => v.name).join(' & ')}
-  </h1>
-  <div className={styles.badges}>
-    {auftrag.gesponsert && (
-      <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
-    )}
-    {auftrag.gewerblich && (
-      <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>
-    )}
-    {auftrag.privat && (
-      <span className={`${styles.badge} ${styles.privat}`}>Privat</span>
-    )}
-  </div>
-</div>
-
+              <h1 className={styles.title}>
+                {auftrag.verfahren.map((v) => v.name).join(' & ')}
+              </h1>
+              <div className={styles.badges}>
+                {auftrag.gesponsert && (
+                  <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
+                )}
+                {auftrag.gewerblich && (
+                  <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>
+                )}
+                {auftrag.privat && (
+                  <span className={`${styles.badge} ${styles.privat}`}>Privat</span>
+                )}
+              </div>
+            </div>
 
             {/* Meta‑Bereich als 2‑Spalten‑Grid */}
             <div className={styles.metaGrid}>
@@ -91,18 +91,18 @@ export default function AuftragDetailPage() {
               </div>
               {auftrag.user && (
                 <div className={styles.metaItem}>
-                    <span className={styles.label}>User:</span>
-                    <span className={styles.value}>{auftrag.user}</span>
-                    <Link
-                    href={`/messages?empfaenger=${encodeURIComponent(auftrag.user)}`}
+                  <span className={styles.label}>User:</span>
+                  <span className={styles.value}>{auftrag.user}</span>
+                  <Link
+                    href={`/messages?empfaenger=${encodeURIComponent(
+                      auftrag.user
+                    )}`}
                     className={styles.kontaktLink}
-                    >
+                  >
                     User kontaktieren
-                    </Link>
+                  </Link>
                 </div>
-                )}
-
-
+              )}
               <div className={styles.metaItem}>
                 <span className={styles.label}>Masse:</span>
                 <span className={styles.value}>{auftrag.masse}</span>
@@ -114,78 +114,72 @@ export default function AuftragDetailPage() {
               <div className={styles.metaItem}>
                 <span className={styles.label}>Lieferart:</span>
                 <span className={styles.value}>{auftrag.lieferArt}</span>
-                </div>
-                <div className={styles.metaItem}>
+              </div>
+              <div className={styles.metaItem}>
                 <span className={styles.label}>Lieferdatum:</span>
                 <span className={styles.value}>
-                    {new Date(auftrag.lieferdatum).toLocaleDateString('de-DE')}
+                  {auftrag.lieferdatum.toLocaleDateString('de-DE')}
                 </span>
-                </div>
-                <div className={styles.metaItem}>
+              </div>
+              <div className={styles.metaItem}>
                 <span className={styles.label}>Abholart:</span>
                 <span className={styles.value}>{auftrag.abholArt}</span>
-                </div>
-                <div className={styles.metaItem}>
+              </div>
+              <div className={styles.metaItem}>
                 <span className={styles.label}>Abholdatum:</span>
                 <span className={styles.value}>
-                    {new Date(auftrag.abholdatum).toLocaleDateString('de-DE')}
+                  {auftrag.abholdatum.toLocaleDateString('de-DE')}
                 </span>
-                </div>
-
+              </div>
             </div>
-                        {/* Dynamische Felder aus jedem Verfahren */}
+
             {/* Dynamische Felder aus jedem Verfahren */}
-{auftrag.verfahren.map((v, idx) => {
-  const entries = Object.entries(v.felder)
-  if (entries.length === 0) return null
-  return (
-    <div key={idx} className={styles.verfahrenBlock}>
-      <h3 className={styles.verfahrenTitel}>{v.name}</h3>
-      {/* Hier kommt der neue 2‑Spalten-Wrapper */}
-      <div className={styles.verfahrenGrid}>
-        {entries.map(([key, val]) => (
-          <div key={key} className={styles.metaItem}>
-            <span className={styles.label}>
-              {key
-                .replace(/([A-Z])/g, ' $1')
-                .replace(/^\w/, c => c.toUpperCase())}
-              :
-            </span>
-            <span className={styles.value}>
-              {Array.isArray(val) ? val.join(', ') : val}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-})}
-
-
-            
+            {auftrag.verfahren.map((v, idx) => {
+              const entries = Object.entries(v.felder);
+              if (entries.length === 0) return null;
+              return (
+                <div key={idx} className={styles.verfahrenBlock}>
+                  <h3 className={styles.verfahrenTitel}>{v.name}</h3>
+                  <div className={styles.verfahrenGrid}>
+                    {entries.map(([key, val]) => (
+                      <div key={key} className={styles.metaItem}>
+                        <span className={styles.label}>
+                          {key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^\w/, (c) => c.toUpperCase())
+                          }:
+                        </span>
+                        <span className={styles.value}>
+                          {Array.isArray(val) ? val.join(', ') : val}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Downloads */}
-            {auftrag.dateien?.length > 0 && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Downloads:</span>
-    <ul className={styles.downloadList}>
-      {auftrag.dateien.map((file, i) => (
-        <li key={i} className={styles.downloadItem}>
-          <a
-            href={file.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.downloadLink}
-          >
-            <FaFilePdf className={styles.fileIcon} />
-            {file.name}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
-
+            {auftrag.dateien && auftrag.dateien.length > 0 && (
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Downloads:</span>
+                <ul className={styles.downloadList}>
+                  {auftrag.dateien.map((file, i) => (
+                    <li key={i} className={styles.downloadItem}>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.downloadLink}
+                      >
+                        <FaFilePdf className={styles.fileIcon} />
+                        {file.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Beschreibung ganz unten */}
             {auftrag.beschreibung && (

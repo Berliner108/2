@@ -1,7 +1,6 @@
 // /src/app/konto/page.tsx
 import Link from 'next/link';
 import { PencilIcon, ShoppingCartIcon, CogIcon, EnvelopeIcon, DocumentTextIcon, ShoppingBagIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';  // Heroicons v2
-
 import styles from './konto.module.css';
 import Pager from './navbar/pager';
 

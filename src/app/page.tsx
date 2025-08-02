@@ -5,14 +5,12 @@ import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import Slideshow from './slideshow/slideshow';
 import CookieBanner from './components/CookieBanner';
-import { dummyAuftraege } from './auftragsboerse/dummyAuftraege';
+import { dummyAuftraege } from '@/data/dummyAuftraege';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenLackanfragen } from '@/data/ArtikelDatenLackanfragen';
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
 import SearchBox from './components/SearchBox';
-
-
 
 type Auftrag = {
   id: string | number;
@@ -54,10 +52,6 @@ const sponsoredAuftraege: Auftrag[] = dummyAuftraege
   }));
 
 export default function Page() {
-  
-
-
-
   // scroll‑Refs
   const scrollRefAuftraege = useRef<HTMLDivElement>(null);
   const scrollRefShop = useRef<HTMLDivElement>(null);
@@ -149,7 +143,7 @@ export default function Page() {
             { title: 'Verkaufen', href: '/verkaufen', links: [{ href: '/verkaufen?kategorie=nasslack', text: 'Nasslacke' }, { href: '/verkaufen?kategorie=pulverlack', text: 'Pulverlacke' }, { href: '/verkaufen?kategorie=arbeitsmittel', text: 'Arbeitsmittel' }] },
             { title: 'Lackanfragen-Börse', href: '/lackanfragen', links: [{ href: '/lackanfragen?kategorie=Nasslack', text: 'Nasslack' }, { href: '/lackanfragen?kategorie=Pulverlack', text: 'Pulverlack' }] },
             { title: 'Wissenswertes', href: '/wissenswertes', links: [{ href: '/wissenswertes', text: 'Vision und Mission' },{ href: '/wissenswertes#Sofunktioniert’s', text: 'So funktioniert’s' }, { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' }, { href: '/wissenswertes#Verfahren', text: 'Verfahren' }, { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' }, { href: '/wissenswertes#Pulverbeschichten', text: 'Pulverbeschichten' },  { href: '/wissenswertes#Eloxieren', text: 'Eloxieren/Anodisieren' }, { href: '/wissenswertes#Verzinken', text: 'Verzinken' }, { href: '/wissenswertes#Verzinnen', text: 'Verzinnen' }, { href: '/wissenswertes#Aluminieren', text: 'Aluminieren' }, { href: '/wissenswertes#Vernickeln', text: 'Vernickeln' }, { href: '/wissenswertes#Entlacken', text: 'Entlacken' },  { href: '/wissenswertes#Strahlen', text: 'Strahlen' }, { href: '/wissenswertes#Folieren', text: 'Folieren' }, { href: '/wissenswertes#Isolierstegverpressen', text: 'Isolierstegverpressen' }] },
-            { title: 'Mein Konto', href: '/konto', links: [{ href: '/konto/angebote', text: 'Angebote' }, { href: '/konto/auftraege', text: 'Meine Aufträge' },{ href: '/konto/bestellungen', text: 'Bestellungen' },{ href: '/konto/lackanfragen', text: 'Lackanfragen' }, { href: '/konto/verkaufen', text: 'Verkaufen' }, { href: '/konto/einstellungen', text: 'Kontoeinstellungen' }, { href: '/konto/nachrichten', text: 'Nachrichten' }] }
+            { title: 'Mein Konto', href: '/konto', links: [{ href: '/konto/angebote', text: 'Angebote' }, { href: '/konto/auftraege', text: 'Aufträge' },{ href: '/konto/bestellungen', text: 'Bestellungen' },{ href: '/konto/lackanfragen', text: 'Lackanfragen' }, { href: '/konto/verkaufen', text: 'Verkaufen' }, { href: '/konto/einstellungen', text: 'Kontoeinstellungen' }, { href: '/konto/nachrichten', text: 'Nachrichten' }] }
           ].map((item, index) => (
             <li key={index} className={styles.navItem}>
               <Link href={item.href} className={styles.navButton}>
