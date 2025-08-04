@@ -234,28 +234,15 @@ useEffect(() => {
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
-    'Sherwin Williams', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
+    'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
     'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
     'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
     'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
     'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
     ];
     const herstellerListeNass = [
-  'Sherwin‑Williams',
-  'PPG Industries',
-  'Akzo Nobel',
-  'Nippon Paint',
-  'RPM International',
-  'Axalta',
-  'BASF',
-  'Kansai',
-  'Asian Paints',
-  'Jotun',
-  'Hempel',
-  'Adler Lacke',
-  'Berger',
-  'Nerolac',
-  'Benjamin Moore'
+  'Sherwin‑Williams', 'Brillux','PPG Industries',  'Akzo Nobel',  'Nippon Paint',  'RPM International',  'Axalta',  'BASF',  'Kansai',  'Asian Paints',  'Jotun',  'Hempel',  'Adler Lacke',
+  'Berger',  'Nerolac',  'Benjamin Moore'
 ];
 
 // 2. In deinem JSX-Dropdown wählst du die Liste dynamisch aus:

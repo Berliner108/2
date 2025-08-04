@@ -175,7 +175,7 @@ export default function Page() {
       <div className={styles.scrollContainer}>
         <div className={styles.scrollContent} ref={scrollRefAuftraege}> 
           {auftraege.map((auftrag) => (
-            <Link key={auftrag.id} href={`/auftragsboerse/${auftrag.id}`} className={styles.articleBox}>
+            <Link key={auftrag.id} href={`/auftragsboerse/auftraege/${auftrag.id}`} className={styles.articleBox}>
               <img src={auftrag.bilder[0]} alt={auftrag.verfahren.map(v => v.name).join(' & ')} className={styles.articleImg} />
               <div className={styles.articleText}>
                 <h3>{auftrag.verfahren.map(v => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>

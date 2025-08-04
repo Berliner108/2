@@ -12,8 +12,8 @@ import ArtikelCard from '../components/ArtikelKarteShop';
 const kategorien = ['Nasslack', 'Pulverlack', 'Arbeitsmittel'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 const herstellerFilter = [
-  'Sherwin Williams','PPG Industries','Nippon Paint', 'BASF', 'Asian Paints', 'Hempel',
-  'Adler Lacke', 'Berger','Nerolac','Benjamin Moore','RPM International','IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 
+  'Brillux, Sherwin Williams','PPG Industries','Nippon Paint', 'BASF', 'Asian Paints', 'Hempel',
+  'Adler Lacke', 'Berger','Nerolac','Benjamin Moore','RPM International','IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 
   'Akzo Nobel','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
   'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
   'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',

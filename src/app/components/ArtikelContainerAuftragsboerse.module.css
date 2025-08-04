@@ -6,21 +6,9 @@
   margin-top: 12px;
   color: #444;
   font-size: 15px;
-
 }
 .ortIcon {
   color: #888;
-}
-.sortSelect,
-.input {
-  width: 100%;
-  padding: 8px 10px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 15px;
-  font-family: 'Oswald';
-  box-sizing: border-box;
 }
 .card {
   display: flex;
@@ -61,8 +49,8 @@
 .cardText1 {
   font-weight: 700;
   font-size: 20px;
-  margin-bottom: 1px;
-  margin-top: -8px;
+  margin-bottom: -5px;
+  margin-top: -6px;
 }
 .cardText2,
 .cardText3,
@@ -70,7 +58,7 @@
 .cardText5,
 .cardText6 {
   font-size: 15px;
-  margin-bottom: 0px;
+  margin-bottom: -4px;
   color: #555;
 }
 .cardLink {
@@ -192,13 +180,6 @@
     width: 100%;
     height: 100%;
     z-index: 999;
-  }
-  .cardButton {
-   min-width: 90%;
-   font-size: 15px;
-   font-weight: 500;
-   padding: 10px;
-   display: none;
   }  
 }
 /* Für alle kleineren und mittleren Geräte */

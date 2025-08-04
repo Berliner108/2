@@ -90,25 +90,33 @@ export default function MaterialGuete({
   </select>
 
   <AnimatePresence>
-    {materialGuete === 'Andere' && (
-      <motion.div
-        key="custom"
-        className={styles.customInputInline}
-        initial={{ opacity: 0, width: 0 }}
-        animate={{ opacity: 1, width: '180px' }}
-        exit={{ opacity: 0, width: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <input
-          type="text"
-          placeholder="Material"
-          value={customMaterial}
-          onChange={(e) => setCustomMaterial(e.target.value)}
-          className={`${styles.inputField1} ${materialGueteError && !customMaterial ? styles.inputError : ''}`}
-        />
-      </motion.div>
-    )}
-  </AnimatePresence>
+  {materialGuete === 'Andere' && (
+    <motion.div
+      key="custom"
+      className={styles.customInputInline}
+      initial={{ opacity: 0, width: 0 }}
+      animate={{ opacity: 1, width: '180px' }}
+      exit={{ opacity: 0, width: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <input
+        type="text"
+        placeholder="Material"
+        maxLength={12} // Maximal 12 Zeichen
+        value={customMaterial}
+        onChange={(e) => {
+          // Nur Buchstaben (inkl. Umlaute) erlauben
+          const val = e.target.value.replace(/[^A-Za-zÄÖÜäöüß]/g, '');
+          setCustomMaterial(val);
+        }}
+        className={`${styles.inputField1} ${
+          materialGueteError && !customMaterial ? styles.inputError : ''
+        }`}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
+
 </div>
 
       <div className={styles.abmessungWrapper}>

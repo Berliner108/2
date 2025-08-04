@@ -26,7 +26,6 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
     lieferArt,
     bilder,
     standort,
-    user,
     gesponsert = false,
     gewerblich = false,
     privat = false,

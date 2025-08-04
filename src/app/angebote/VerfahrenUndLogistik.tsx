@@ -492,25 +492,24 @@ const renderSpecs = (specs: Specification[]) =>
 
   return (
     <section className={styles.container}>
-
       {/* DROPDOWNS */}
-      <div className={styles.dropdownContainer}>
-              <div ref={verfahrenRef}>
-                <div className={styles.labelRow}>
-        <span>Verfahren – Stufe 1:</span>
-        <span className={styles.labelTooltipIcon}>
-          <HelpCircle size={16} />
-          <span className={styles.labelTooltipText}>
-            Wähle das Hauptverfahren, mit dem dein Auftrag beginnt. Übersicht und weitere Infos zur den Verfahren findest du{' '}
-            <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
-              hier.
-            </Link>
-          </span>
+      {/* DROPDOWN 1 */}
+<div className={styles.dropdownContainer}>
+  <div ref={verfahrenRef}>
+    <div className={styles.labelRow}>
+      <span>Verfahren – Stufe 1:</span>
+      <span className={styles.labelTooltipIcon}>
+        <HelpCircle size={16} />
+        <span className={styles.labelTooltipText}>
+          Wähle das Hauptverfahren, mit dem dein Auftrag beginnt. Übersicht und weitere Infos zu den Verfahren findest du{' '}
+          <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
+            hier.
+          </Link>
         </span>
-      </div>
+      </span>
+    </div>
 
-
-              {/* Trigger */}
+    {/* Trigger */}
     <div
       className={`${styles.inputField} ${verfahrenError ? styles.errorBorder : ''}`}
       onClick={() => setOpenLevel1(prev => !prev)}
@@ -521,7 +520,8 @@ const renderSpecs = (specs: Specification[]) =>
     {/* Options */}
     {openLevel1 && (
       <ul className={styles.dropdownList}>
-        <li onClick={() => {
+        <li
+          onClick={() => {
             setSelectedOption1('');
             setSelectedOption2('');
             setSelectedOption3('');
@@ -531,7 +531,9 @@ const renderSpecs = (specs: Specification[]) =>
           Bitte wählen
         </li>
         {allOptions.map((opt, i) => (
-          <li key={i} onClick={() => {
+          <li
+            key={i}
+            onClick={() => {
               setSelectedOption1(opt);
               setSelectedOption2('');
               setSelectedOption3('');
@@ -544,16 +546,16 @@ const renderSpecs = (specs: Specification[]) =>
       </ul>
     )}
 
-        </div>
-
-        {/* Spezifikationen unter Dropdown 1 */}
-        {selectedOption1 && specificationsMap[selectedOption1]?.length > 0 && (
-          <div className={styles.specsBox}>
-            <h4 className={styles.specTitle}>Spezifikationen Stufe 1:</h4>
-            {renderSpecs(specificationsMap[selectedOption1])}
-          </div>
-        )}
+    {/* Spezifikationen unter Dropdown 1 – nur wenn geschlossen */}
+    {selectedOption1 && !openLevel1 && specificationsMap[selectedOption1]?.length > 0 && (
+      <div className={styles.specsBox}>
+        <h4 className={styles.specTitle}>Spezifikationen Stufe 1:</h4>
+        {renderSpecs(specificationsMap[selectedOption1])}
       </div>
+    )}
+  </div>
+</div>
+
 
       <AnimatePresence mode="wait">
   {selectedOption1 && (
