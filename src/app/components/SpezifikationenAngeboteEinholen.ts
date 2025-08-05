@@ -40,7 +40,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'radio',
       name: 'verfahren',
-      label: 'Verfahren',
+      label: 'Verfahren:',
       options: ['Feuerverzinken', 'Diffusionsverzinken', 'Galvanisches Verzinken', 'Lamellenverzinken', 'Mechanisches Verzinken']
     },
     
@@ -384,7 +384,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'qualität',
       label: 'Qualität:',
-      options: ['Polyester', 'Epoxy-Polyester', 'Polyester für Feuerverzinkung', 'Thermoplast']
+      options: ['Polyester', 'Epoxy-Polyester', 'Polyurethan','Polyester für Feuerverzinkung', 'Thermoplast']
     },
     {
       type: 'group',

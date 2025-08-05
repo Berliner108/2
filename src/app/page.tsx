@@ -212,7 +212,7 @@ export default function Page() {
   <div className={styles.scrollContainer}>
     <div className={styles.scrollContent} ref={scrollRefShop}>
       {shopArtikel.map((art) => (
-        <Link key={art.id} href={`/kaufen/artikel/${art.id}`} className={styles.articleBox}>
+        <Link key={art.id} href={`/kaufen/artikel/${art.id}`} className={styles.articleBox2}>
           <img src={art.bilder[0]} alt={art.titel} className={styles.articleImg} />
           <div className={styles.articleText}>
             <h3>{art.titel}</h3>

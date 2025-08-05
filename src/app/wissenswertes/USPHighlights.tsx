@@ -13,8 +13,8 @@ const highlights = [
     text: 'Schreibe unter Angebote einholen deinen Auftrag aus und erhalte sofort passende Beschichtungsangebote – ohne langes Warten.',
   },
   {
-    title: 'Diversifizierte Lackbeschaffung',
-    text: 'Mit Beschichter Scout ist die Lackbeschaffung für alle einfach zugänglich. Beschaffe deine Lacke selbst und spare dabei bares Geld.',
+    title: 'Lackbeschaffung & Recycling',
+    text: 'Lackbeschaffung für alle einfach zugänglich. Ob du deine Lacke nun selbst beschaffst, oder Restlacke revitalisiert - du sparst bares Geld',
   },
   {
     title: 'Sichere Abwicklung',

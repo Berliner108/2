@@ -8,8 +8,6 @@ import Vision from "./Vision";  // Importiere die Komponente
 import USPHighlights from './USPHighlights'; // ← Pfad anpassen!
 
 
-
-
 const Wissenswertes = () => {
   const [openContainers, setOpenContainers] = useState<{ [key: number]: boolean }>({
     0: false,
@@ -114,7 +112,7 @@ const Wissenswertes = () => {
       }));
       document.getElementById("container-9")?.scrollIntoView({ behavior: "smooth" });
     }
-    else if (hash === "#Stahlen") {  // Dieser Block jetzt korrekt eingefügt
+    else if (hash === "#Strahlen") {  // Dieser Block jetzt korrekt eingefügt
       setOpenContainers((prevState) => ({
         ...prevState,
         10: true,
@@ -150,6 +148,8 @@ useEffect(() => {
   }, [isClient]);
 
 
+
+
   const ScrollProgress = () => {
     const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -163,6 +163,8 @@ useEffect(() => {
       window.addEventListener("scroll", handleScroll);
       return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    
 
     return (
       <div className={styles.scrollProgressContainer}>

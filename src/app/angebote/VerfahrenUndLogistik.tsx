@@ -3,6 +3,7 @@ import styles from './VerfahrenUndLogistik.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation';
 
 export interface Specification {
   type: 'checkbox' | 'text' | 'radio' | 'group' | 'title' | 'dropdown';
@@ -45,7 +46,7 @@ const allOptions = [
 
 const validSecondOptions: { [key: string]: string[] } = {
     "Nasslackieren": ["Folieren", "Isolierstegverpressen", "Einlagern"],
-    "Pulverbeschichten": ["Folieren", "Isolierstegverpressen", "Einlagern"],
+    "Pulverbeschichten": ["Nasslackieren","Folieren", "Isolierstegverpressen", "Einlagern"],
     "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Strahlen", "Folieren", "Einlagern", "Isolierstegverpressen"],
     "Entlacken": ["Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Strahlen","Folieren","Einlagern","Isolierstegverpressen","Entzinken", "Anodisieren", "Verzinnen",  "Aluminieren", "Entanodisieren", "Enteloxieren", "Entzinnen"],
@@ -71,13 +72,14 @@ const validSecondOptions: { [key: string]: string[] } = {
       "Einlagern": [],
     },
     "Pulverbeschichten": {
+      "Nasslackieren": ["Einlagern","Folieren","Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Isolierstegverpressen": ["Einlagern"],
       "Einlagern": [],
     },
     "Verzinken": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -85,7 +87,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Vernickeln": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -93,7 +95,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entnickeln": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
       "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
@@ -105,7 +107,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entaluminieren": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
       "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",  "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
@@ -117,7 +119,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Eloxieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -125,7 +127,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entlacken": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Anodisieren", "Verzinnen",   "Aluminieren", "Entanodisieren", "Enteloxieren"],
@@ -142,7 +144,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Strahlen": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen"],
       "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Einlagern", "Isolierstegverpressen", "Entzinken", "Entzinnen", 
@@ -167,7 +169,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Einlagern": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Isolierstegverpressen", "Strahlen"],
       "Eloxieren": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Isolierstegverpressen", "Strahlen"],
       "Entlacken": ["Nasslackieren", "Pulverbeschichten","Verzinken", "Eloxieren", "Folieren", "Isolierstegverpressen", "Entzinken", "Entzinnen", "Anodisieren", "Verzinnen",   "Aluminieren", "Entanodisieren", "Enteloxieren"],
@@ -183,7 +185,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entzinken": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
@@ -194,7 +196,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entzinnen": {
       "Nasslackieren": ["Folieren", "Isolierstegverpressen","Einlagern"],
-      "Pulverbeschichten": ["Folieren", "Isolierstegverpressen","Einlagern"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Verzinken": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Strahlen":["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen", "Strahlen", "Verzinnen",   "Aluminieren"],
       "Folieren": ["Isolierstegverpressen", "Einlagern"],
@@ -205,7 +207,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },    
     "Anodisieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -213,7 +215,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Verzinnen": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -221,7 +223,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     " ": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -229,7 +231,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Aluminieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -237,7 +239,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Entanodisieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -246,7 +248,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     },
     "Enteloxieren": {
       "Nasslackieren": ["Folieren", "Einlagern", "Isolierstegverpressen"],
-      "Pulverbeschichten": ["Folieren", "Einlagern", "Isolierstegverpressen"],
+      "Pulverbeschichten": ["Nasslackieren","Folieren", "Einlagern", "Isolierstegverpressen"],
       "Strahlen": ["Nasslackieren", "Pulverbeschichten", "Folieren", "Einlagern", "Isolierstegverpressen"],
       "Folieren": ["Einlagern", "Isolierstegverpressen"],
       "Einlagern": [],
@@ -290,7 +292,14 @@ const level3Ref = useRef<HTMLDivElement>(null);
   const [openLevel1, setOpenLevel1] = useState(false);
   const [openLevel2, setOpenLevel2] = useState(false);
   const [openLevel3, setOpenLevel3] = useState(false);
+const searchParams = useSearchParams();
+const firstParam = searchParams.get('first');
 
+useEffect(() => {
+  if (firstParam && allOptions.includes(firstParam)) {
+    setSelectedOption1(firstParam);
+  }
+}, [firstParam]);
 
 useEffect(() => {
   const handleClickOutside = (e: MouseEvent) => {
@@ -331,7 +340,7 @@ const renderSpecs = (specs: Specification[]) =>
         <span className={styles.labelTextNormal}>{spec.label}</span>
         {spec.tooltip && (
           <span className={styles.labelTooltipIcon}>
-            <HelpCircle size={16} />
+            <HelpCircle size={18} />
             <span className={styles.labelTooltipText}>{spec.tooltip}</span>
           </span>
         )}
@@ -413,7 +422,7 @@ const renderSpecs = (specs: Specification[]) =>
   {spec.label}
   {spec.tooltip && (
     <span className={styles.iconTooltip}>
-      <HelpCircle size={16} />
+      <HelpCircle size={18} />
       <span className={styles.tooltipText}>{spec.tooltip}</span>
     </span>
   )}
@@ -452,7 +461,7 @@ const renderSpecs = (specs: Specification[]) =>
   {spec.label}
   {spec.tooltip && (
     <span className={styles.iconTooltip}>
-      <HelpCircle size={16} />
+      <HelpCircle size={18} />
       <span className={styles.tooltipText}>{spec.tooltip}</span>
     </span>
   )}
@@ -497,9 +506,9 @@ const renderSpecs = (specs: Specification[]) =>
 <div className={styles.dropdownContainer}>
   <div ref={verfahrenRef}>
     <div className={styles.labelRow}>
-      <span>Verfahren – Stufe 1:</span>
+      <span>Verfahren 1:</span>
       <span className={styles.labelTooltipIcon}>
-        <HelpCircle size={16} />
+        <HelpCircle size={18} />
         <span className={styles.labelTooltipText}>
           Wähle das Hauptverfahren, mit dem dein Auftrag beginnt. Übersicht und weitere Infos zu den Verfahren findest du{' '}
           <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
@@ -566,8 +575,7 @@ const renderSpecs = (specs: Specification[]) =>
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <label>Verfahren – Stufe 2:</label>
-
+      <label className={styles.labelRow}>Verfahren 2:</label>
       {/* Wrapper mit Ref für Click‑Outside */}
       <div className={styles.dropdownContainer} ref={level2Ref}>
         {/* Trigger */}
@@ -629,7 +637,7 @@ const renderSpecs = (specs: Specification[]) =>
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <label>Verfahren – Stufe 3:</label>
+      <label className={styles.labelRow}>Verfahren 3:</label>
 
       <div className={styles.dropdownContainer} ref={level3Ref}>
         <div
@@ -678,7 +686,8 @@ const renderSpecs = (specs: Specification[]) =>
 
       {/* LOGISTIK */}
       <fieldset className={`${styles.logistik} ${logistikError ? styles.errorFieldset : ''}`}>
-        <legend>Logistik</legend>
+      <legend className={styles.legendLogistik}>Logistik</legend>
+
         <div className={styles.logistikGrid}>
           <div className={styles.inputGroup}>
             <label>Lieferdatum</label>
@@ -704,7 +713,7 @@ const renderSpecs = (specs: Specification[]) =>
             >
               <option value="">Bitte wählen</option>
               <option value="selbst">Ich liefere selbst</option>
-              <option value="spedition">Spedition</option>
+              <option value="abholung">Abholung an meinem Standort</option>
             </select>
           </div>
           <div className={styles.inputGroup}>
@@ -730,7 +739,7 @@ const renderSpecs = (specs: Specification[]) =>
             >
               <option value="">Bitte wählen</option>
               <option value="selbst">Ich hole selbst ab</option>
-              <option value="spedition">Spedition</option>
+              <option value="anlieferung">Anlieferung an meinem Standort</option>
             </select>
           </div>
         </div>

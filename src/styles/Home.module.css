@@ -130,9 +130,19 @@
   padding-bottom: 10px; /* Verhindert, dass der Scrollbalken den Inhalt verdeckt */
   scroll-behavior: smooth; /* Sanftes Scrollen */
 }
+.imageContainer {
+  width: 100%; 
+}
+.articleImage {
+  width: 100%; /* Bild nimmt die volle Breite des Containers ein Das sind die Zwischenbilder*/
+  height: 450px; /* Höhe des Bildes auf 200px gesetzt */
+  object-fit: cover; /* Das Bild wird so skaliert, dass es den Container ausfüllt, ohne verzerrt zu werden */
+  object-position: center; /* Bild wird zentriert im Container */
+  border-radius: 8px; /* Optional: Ecken des Bildes abrunden */
+}
 .articleBox {
-  flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
-  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
+  flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt Gilt nur für die Auftragsboersecontainer*/
+  min-width: 200px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
   background: #f7f7f7;
   border-radius: 8px;
   padding: 10px;
@@ -141,13 +151,13 @@
   transition: transform 0.2s ease-in-out;
   text-decoration: none !important;
   color: black;
-  min-height: 600px;
+  max-height: 560px;
   margin-top: 18px;
   margin-bottom: 18px;  
 }
 .articleBox2 {
   flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
-  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
+  min-width: 200px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
   background: #f7f7f7;
   border-radius: 8px;
   padding: 10px;
@@ -156,12 +166,13 @@
   transition: transform 0.2s ease-in-out;
   text-decoration: none !important;
   color: black;
+  max-height: 530px;
   margin-top: 18px;
   margin-bottom: 18px;  
 }
 .articleBox3 {
   flex: 0 0 calc(100% / 12 - 16px); /* Berechnet dynamisch, wie viel Platz jede Box benötigt */
-  min-width: 180px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
+  min-width: 200px; /* Sicherstellen, dass die Boxen nicht zu klein werden */
   background: #f7f7f7;
   border-radius: 8px;
   padding: 10px;
@@ -179,7 +190,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #f1f1f1;  /* Helles Grau als Hintergrund */
+  background-color: rgba(0, 0, 0, 0.4); /* Schwarz mit 40% Deckkraft */
   color: #333;               /* Dunkler Pfeil für guten Kontrast */
   border: none;
   font-size: 24px;
@@ -195,14 +206,16 @@
 }
 .arrowLeft:hover,
 .arrowRight:hover {
-  background-color: #e0e0e0; /* Dunkleres Grau bei Hover */
+  background-color: rgba(0, 0, 0, 0.6); /* Etwas dunkler & weniger transparent bei Hover */
   transform: translateY(-50%) scale(1.1);
 }
 .arrowLeft {
   left: 10px;
+  color: white;
 }
 .arrowRight {
   right: 10px;
+  color: white;
 }
 .scrollContent::-webkit-scrollbar {
   display: none; /* Entfernt die Standard-Scrollbar */
@@ -270,7 +283,7 @@
 /* Bilder in den Artikeln */
 .articleImg {
   width: 100%;
-  height: 280px;
+  height: 250px;
   object-fit: flex;
   border-radius: 8px;
   text-decoration: none;
@@ -294,16 +307,7 @@
   color: black;
   text-decoration: none;
 }
-.imageContainer {
-  width: 100%; 
-}
-.articleImage {
-  width: 100%; /* Bild nimmt die volle Breite des Containers ein */
-  height: 450px; /* Höhe des Bildes auf 200px gesetzt */
-  object-fit: cover; /* Das Bild wird so skaliert, dass es den Container ausfüllt, ohne verzerrt zu werden */
-  object-position: center; /* Bild wird zentriert im Container */
-  border-radius: 8px; /* Optional: Ecken des Bildes abrunden */
-}
+
 
 /* Mobile Ansicht - Horizontal Scrollbar */
 @media (max-width: 1024px) {

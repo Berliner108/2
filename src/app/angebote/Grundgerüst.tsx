@@ -344,9 +344,9 @@ const calculateProgress = () => {
       <span className={styles.iconTooltip}>
         <HelpCircle size={18} />
         <span className={styles.tooltipText}>
-          Sie können bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle gängigen Dateitypen).<br />
+          Du kannst bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle gängigen Dateitypen).<br />
           Beschichter möchten alle Details kennen, um alle Anforderungen an den Auftrag erfüllen zu können.<br />
-          Dies gibt Ihnen und dem Beschichter die nötige Sicherheit für die Produktion Ihres Auftrags.
+          Dies gibt dir und dem Beschichter die nötige Sicherheit für die Produktion Ihres Auftrags.
         </span>
       </span>
     </h2>
@@ -413,7 +413,7 @@ const calculateProgress = () => {
           <span className={styles.iconTooltip}>
             <HelpCircle size={18} />
             <span className={styles.tooltipText}>
-              Hier können Sie genaue Angaben zum gewünschten Verfahren machen.
+              Hier kannst du genaue Angaben zu den gewünschten Verfahren machen.
             </span>
           </span>
         </h2>

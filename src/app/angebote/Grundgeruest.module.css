@@ -225,6 +225,7 @@
   transform: scale(1.2);
   cursor: pointer;
   flex-shrink: 0;
+  border: 2px solid #555 !important; /* hier Randdicke ändern */
 }
 
 .agbLabel span {

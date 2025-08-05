@@ -8,29 +8,26 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   font-family: 'Oswald';
 }
-
 .sectionTitle {
   font-family: 'Oswald', sans-serif;
   font-size: 1.5rem;
   font-weight: 500;
   margin-bottom: 1rem;
 }
-
 .dropdownContainer label {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   max-width: 400px;
 }
-
 .checkboxGroup {
   margin-bottom: 1rem;
   /* gruppiert die Checkboxen vertikal */
 }
-
 .checkboxGroup p.groupLabel {
-  font-weight: 600;
-  margin-bottom: 0.5rem; /* mehr Abstand nach unten */
+  font-weight: 600; /* Ist die Überschrift bei Zertifizierungen zB */
+  margin-bottom: 1.5rem; /* mehr Abstand nach unten */
+  text-decoration: underline;
 }
 .specsBox {
   border: 1px solid #ccc;
@@ -46,13 +43,12 @@
   flex-wrap: wrap;  /* bei vielen Checkboxen umbrechen */
   gap: 1.5rem;      /* Abstand zwischen Checkboxen */
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1rem;  
 }
 .selectScroll {
   max-height: 160px;
   overflow-y: auto;
 }
-
 /* Checkbox Label inline mit kleinem Abstand */
 .checkboxContainer label {
   display: flex;
@@ -61,14 +57,6 @@
   font-weight: 500;
   font-size: 0.9rem;
 }
-
-/* Checkbox selbst kleiner */
-.checkboxContainer input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-}
-
 /* Aktuell (Checkboxen nebeneinander) */
 .checkboxGroup label.checkboxRow {
   display: inline-flex;       /* nebeneinander */
@@ -78,32 +66,32 @@
   margin-bottom: 0.5rem;      /* Abstand nach unten */
   vertical-align: middle;
 }
-
-
-/* input Checkbox etwas kleiner und mittig */
-.checkboxGroup input[type="checkbox"] {
+/* Checkbox selbst kleiner */
+.checkboxContainer input[type="checkbox"] {
   width: 16px;
   height: 16px;
   margin: 0;
 }
-
+/* input Checkbox etwas kleiner und mittig */
+.checkboxGroup input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
 /* Radio Buttons: gleichmäßiger Abstand und Ausrichtung */
 .radioInline {
   display: flex;
   gap: 1.5rem;
   flex-wrap: wrap;
 }
-
 .radioItem {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
 }
-
 /* Label-Text unter Checkboxen/Radios besser ausrichten */
 .checkboxRow, .radioItem {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 .inputField {
   padding: 0.5rem;
@@ -134,7 +122,6 @@
   width: 100%;
   font-family: 'oswald';
 }
-
 .dropdownSelected {
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -142,7 +129,6 @@
   cursor: pointer;
   border-radius: 4px;
 }
-
 .dropdownList {
   position: absolute;
   top: 100%;
@@ -160,23 +146,18 @@
   margin: 0;
   list-style: none;
 }
-
 .dropdownList li {
   padding: 8px 12px;
   cursor: pointer;
 }
-
 .dropdownList li:hover {
   background-color: #f2f2f2;
 }
-
-
 .specsBox {
   border: none;
   padding: 1rem;
   border-radius: 8px;
-  background-color: #f9f9f9;
-  
+  background-color: #f9f9f9;  
 }
 .dropdownContainer {
   position: relative;
@@ -198,56 +179,43 @@
 .dropdownList li:hover {
   background: #f0f0f0;
 }
-
 .specTitle {
   font-size: 1.2rem;
   margin-bottom: 1rem;
   font-weight: 600;
+  display: none;
 }
-
 .inputRow {
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
 }
-
 .radioGroup {
   margin-bottom: 1.5rem;
 }
-
 .radioLabel {
   font-weight: 600;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.9rem;
+  text-decoration: underline;
 }
-
 .radioInline {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 2rem;
 }
-
-.radioItem {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
 .checkboxWrapper {
   margin-bottom: 1rem;
 }
-
 .checkboxGroupLabel {
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
-
 .checkboxFlexRow {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
 }
-
 .checkboxItemInline {
   display: flex;
   align-items: center;
@@ -260,14 +228,13 @@
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
-
 .labelRow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.9rem;
 }
 .labelRowNeutral {
   display: inline-flex;
@@ -282,8 +249,10 @@
 }
 
 .labelTooltipIcon {
-  position: relative;
-  display: inline-flex;
+  position: relative; /* Sind die Fragezeichen neben den Begriffen */
+  display: inline-block;
+  margin-left: 4px;
+  color: #666;
   cursor: pointer;
 }
 
@@ -331,8 +300,12 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 1rem;
-  
-  
+  margin-top: 20px;  
+}
+.legendLogistik {
+  font-weight: bold;
+  font-size: 1.01rem;
+  padding-bottom: 2px;
 }
 
 .errorFieldset {
@@ -378,10 +351,11 @@
 }
 
 .iconTooltip {
-  position: relative;
+position: relative; /* Sind die Fragezeichen neben den Begriffen */
   display: inline-block;
-  margin-left: 0.5rem;
-  cursor: help;
+  margin-left: 4px;
+  color: #666;
+  cursor: pointer;
 }
 
 .tooltipText {
