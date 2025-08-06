@@ -85,6 +85,9 @@ const [warnungWerktage, setWarnungWerktage] = useState('');
 const [warnungVersand, setWarnungVersand] = useState('');
 // Auf-Lager-Option für Menge
 const [aufLager, setAufLager] = useState<boolean>(false);
+// Für Arbeitsmittel-Mengen in Stück
+const [mengeArbeitsmittel, setMengeArbeitsmittel] = useState<number>(0);
+
 // Warnung für Menge
 const [warnungMenge, setWarnungMenge] = useState<string>('');
 const [mengeStueck, setMengeStueck] = useState<number>(1);
@@ -98,66 +101,112 @@ const [warnungStueckProEinheit, setWarnungStueckProEinheit] = useState<string>('
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
 
-  // 1. Kategorie
-  total++;
-  if (kategorie) filled++;
-
-  // 2. Bilder
-  total++;
-  if (bilder.length > 0) filled++;
-
-  // 3. Menge
-  total++;
-  if (menge > 0) filled++;
-
-  // 4. Titel
-  total++;
-  if (titel.trim() !== '') filled++;
-
-  // 5. Farbpalette
-  total++;
-  if (farbpaletteWert) filled++;
-
-  // 6. Glanzgrad
-  total++;
-  if (glanzgrad) filled++;
-
-  // 7. Zustand
-  total++;
-  if (zustand) filled++;
-
-  // 8. Oberfläche
-  total++;
-  if (oberflaeche) filled++;
-
-  // 9. Anwendung
-  total++;
-  if (anwendung) filled++;
-
-  // 10. Beschreibung
-  total++;
-  if (beschreibung.trim() !== '') filled++;
-
-  // 10. Werktage bis Lieferung
-  total++;
-  if (lieferWerktage >= 1) filled++;
-
-  // 11. Preis
-  total++;
-  if (preis > 0) filled++;
-
-  // 12. Versandkosten
-  total++;
-  if (versandKosten >= 0) filled++;
-
-  // Pulverlack-spezifisch: Aufladung
-  if (kategorie === 'pulverlack') {
+  if (kategorie === 'arbeitsmittel') {
+    // Arbeitsmittel-Pflichtfelder
+    // 1. Kategorie
     total++;
-    if (aufladung.length > 0) filled++;
+    if (kategorie) filled++;
+
+    // 2. Bilder
+    total++;
+    if (bilder.length > 0) filled++;
+
+    // 3. Menge (Stück)
+    total++;
+    if (aufLager || menge > 0) filled++;
+
+    // 4. Titel
+    total++;
+    if (titel.trim() !== '') filled++;
+
+    // 5. Stück pro Verkaufseinheit
+    total++;
+    if (stueckProEinheit > 0) filled++;
+
+    // 6. Größe
+    total++;
+    if (groesse.trim() !== '') filled++;
+
+    // 7. Beschreibung
+    total++;
+    if (beschreibung.trim() !== '') filled++;
+
+    // 8. Werktage bis Lieferung
+    total++;
+    if (lieferWerktage >= 1) filled++;
+
+    // 9. Preis
+    total++;
+    if (preis > 0) filled++;
+
+    // 10. Versandkosten
+    total++;
+    if (versandKosten >= 0) filled++;
+
+  } else {
+    // Lack-Pflichtfelder
+    // 1. Kategorie
+    total++;
+    if (kategorie) filled++;
+
+    // 2. Bilder
+    total++;
+    if (bilder.length > 0) filled++;
+
+    // 3. Menge (kg)
+    total++;
+    if (menge > 0) filled++;
+
+    // 4. Titel
+    total++;
+    if (titel.trim() !== '') filled++;
+
+    // 5. Farbpalette
+    total++;
+    if (farbpaletteWert) filled++;
+
+    // 6. Glanzgrad
+    total++;
+    if (glanzgrad) filled++;
+
+    // 7. Zustand
+    total++;
+    if (zustand) filled++;
+
+    // 8. Oberfläche
+    total++;
+    if (oberflaeche) filled++;
+
+    // 9. Anwendung
+    total++;
+    if (anwendung) filled++;
+
+    // 10. Beschreibung
+    total++;
+    if (beschreibung.trim() !== '') filled++;
+
+    // 11. Werktage bis Lieferung
+    total++;
+    if (lieferWerktage >= 1) filled++;
+
+    // 12. Preis
+    total++;
+    if (preis > 0) filled++;
+
+    // 13. Versandkosten
+    total++;
+    if (versandKosten >= 0) filled++;
+
+    // Pulverlack-spezifisch: Aufladung
+    if (kategorie === 'pulverlack') {
+      total++;
+      if (aufladung.length > 0) filled++;
+    }
   }
 
   return Math.round((filled / total) * 100);
 };
+
 
 
 const formularZuruecksetzen = () => {
@@ -398,30 +447,34 @@ if (!oberflaeche) {
     } else {
       setWarnungAufladung('');
     }}
-    if (kategorie === 'arbeitsmittel') {
-  if (mengeStueck < 1) {
-    setWarnungMengeStueck('Bitte gib mindestens 1 Stück an.');
-    fehler = true;
-  } else { setWarnungMengeStueck(''); }
 
+
+if (kategorie === 'arbeitsmittel') {
+  // Menge prüfen (nur wenn nicht "Auf Lager")
+  if (!aufLager && menge < 1) {
+    setWarnungMenge('Bitte gib mindestens 1 Stück an.');
+    fehler = true;
+  } else {
+    setWarnungMenge('');
+  }
+
+  // Stück pro Einheit prüfen
+  if (stueckProEinheit < 1) {
+    setWarnungStueckProEinheit('Bitte gib mindestens 1 Stück pro Einheit an.');
+    fehler = true;
+  } else {
+    setWarnungStueckProEinheit('');
+  }
+
+  // Größe prüfen
   if (!groesse.trim()) {
     setWarnungGroesse('Bitte gib eine Größe an.');
     fehler = true;
-  } else { setWarnungGroesse(''); }
-  if (mengeStueck < 1) {
-  setWarnungMengeStueck('Bitte gib mindestens 1 Stück an.');
-  fehler = true;
-}
-if (stueckProEinheit < 1) {
-  setWarnungStueckProEinheit('Bitte gib mindestens 1 Stück pro Einheit an.');
-  fehler = true;
-}
-if (!groesse.trim()) {
-  setWarnungGroesse('Bitte gib die Größe an.');
-  fehler = true;
+  } else {
+    setWarnungGroesse('');
+  }
 }
 
-}
 
 
     if (!beschreibung.trim()) {
@@ -495,12 +548,17 @@ if (!aufLager) {
   if (kategorie === 'pulverlack') {
     formData.append('aufladung', aufladung.join(', '));
   }
-  if (kategorie === 'arbeitsmittel') {
-  formData.append('mengeStueck', mengeStueck.toString());
-formData.append('stueckProEinheit', stueckProEinheit.toString());
-formData.append('groesse', groesse);
+ if (kategorie === 'arbeitsmittel') {
+  if (aufLager) {
+    formData.append('mengeStatus', 'Auf Lager');
+  } else {
+    formData.append('mengeStueck', menge.toString());
+  }
   
+  formData.append('stueckProEinheit', stueckProEinheit.toString());
+  formData.append('groesse', groesse);
 }
+
 
   bilder.forEach((file) => formData.append('bilder', file));
   dateien.forEach((file) => formData.append('dateien', file));
@@ -921,6 +979,7 @@ const toggleBewerbung = (option: string) => {
         {[
           'Standard',
           'Polyester',
+          'Polyurethan',
           'Polyester für Feuerverzinkung',
           'Epoxy-Polyester',
           'Thermoplast',
@@ -1411,22 +1470,53 @@ const toggleBewerbung = (option: string) => {
     
 
     {/* Stückzahl */}
-    <label className={styles.label}>
-       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-        Verfügbare Stückzahl: <span style={{ color: 'red' }}>*</span>
-      </span>
-      <input
-        type="number"
-        className={styles.input}
-        min={1}
-        step={1}
-        value={mengeStueck}
-        onChange={e => setMengeStueck(parseInt(e.target.value, 10) || 0)}
-        placeholder="Anzahl in Stück"
-        required
-      />
-    </label>
-    {warnungMengeStueck && <p className={styles.validierungsfehler}>{warnungMengeStueck}</p>}
+    { kategorie === 'arbeitsmittel' && (
+  <fieldset className={styles.mengeSection}>
+    <legend className={styles.mengeLegend}>
+      Menge (Stück): <span style={{ color: 'red' }}>*</span>
+    </legend>
+
+    {/* Radio-Buttons nebeneinander */}
+    <div className={styles.mengeRadioGroup}>
+      <label className={styles.mengeOption}>
+        <input
+          type="radio"
+          name="mengeOptionArbeitsmittel"
+          checked={aufLager}
+          onChange={() => setAufLager(true)}
+        />
+        Auf Lager
+      </label>
+      <label className={styles.mengeOption}>
+        <input
+          type="radio"
+          name="mengeOptionArbeitsmittel"
+          checked={!aufLager}
+          onChange={() => setAufLager(false)}
+        />
+        Begrenzte Menge
+      </label>
+    </div>
+
+    {!aufLager && (
+      <label className={styles.mengeNumberLabel}>
+        <span>Menge (Stück):</span>
+        <input
+          type="number"
+          step="1"
+          min="1"
+          max="999999"
+          className={styles.mengeNumberInput}
+          value={menge === 0 ? '' : menge}
+          onChange={handleMengeChange}
+          placeholder="z. B. 10"
+        />
+      </label>
+    )}
+    {warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
+  </fieldset>
+)}
+
 
     {/* Stück pro Verkaufseinheit */}
       <label className={styles.label}>
@@ -1484,51 +1574,67 @@ const toggleBewerbung = (option: string) => {
 )} 
 
 <fieldset className={styles.radioGroup}>
-  <legend className={styles.radioLegend}>
-    Lieferdetails: <span style={{ color: 'red' }}>*</span>
-  </legend>
-
   {/* Werktage bis Lieferung */}
-  <label className={styles.inputLabel}>
-    Werktage bis Lieferung
-    <input
-      type="number"
-      min={1}
-      className={styles.dateInput}
-      value={lieferWerktage}
-      onChange={e => setLieferWerktage(Number(e.target.value))}
-    />
-  </label>
+<label className={styles.inputLabel}>
+  Werktage bis Lieferung
+  <input
+    type="number"
+    min={1}
+    step={1}
+    max={999}
+    className={styles.dateInput}
+    value={lieferWerktage}
+    onChange={e => {
+      const value = e.target.value;
+      if (Number(value) <= 999) {
+        setLieferWerktage(Number(value));
+      }
+    }}
+  />
+</label>
   
   {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
-  {/* NEU: Verkaufspreis */}
-  <label className={styles.inputLabel}>
-    Preis (€)
-    <input
-      type="number"
-      min={0}
-      step={0.01}
-      className={styles.dateInput}
-      value={preis}
-      onChange={e => setPreis(Number(e.target.value))}
-    />
-  </label>
-  
-  {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
+  {/* Preis */}
+<label className={styles.inputLabel}>
+  Preis (€)
+  <input
+    type="number"
+    min={0}
+    step={0.01}
+    max={999}
+    className={styles.dateInput}
+    value={preis}
+    onChange={e => {
+      const value = e.target.value;
+      if (Number(value) <= 999) {
+        setPreis(Number(value));
+      }
+    }}
+  />
+</label>
+{warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
 
   {/* Versandkosten */}
-  <label className={styles.inputLabel}>
-    Versandkosten (€)
-    <input
-      type="number"
-      min={0}
-      step={0.01}
-      className={styles.dateInput}
-      value={versandKosten}
-      onChange={e => setVersandKosten(Number(e.target.value))}
-    />
-  </label>
-  {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
+<label className={styles.inputLabel}>
+  Versandkosten (€)
+  <input
+    type="number"
+    min={0}
+    step={0.01}
+    max={999} // sorgt dafür, dass nur max. 3 Stellen vor dem Komma erlaubt sind
+    className={styles.dateInput}
+    value={versandKosten}
+    onChange={e => {
+      const value = e.target.value;
+      // optional: zusätzlichen Schutz, falls Browser `max` ignoriert
+      if (Number(value) <= 999) {
+        setVersandKosten(Number(value));
+      }
+    }}
+  />
+</label>
+{warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
+
 </fieldset>
 
 <div className={styles.bewerbungGruppe}>
@@ -1580,33 +1686,56 @@ const toggleBewerbung = (option: string) => {
 
     <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
     <p><strong>Titel:</strong> {titel || '–'}</p>
-    <p><strong>Farbton:</strong> {farbton || '–'}</p>
-    <p><strong>Menge (kg):</strong> {menge || '–'}</p>
-    <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
-    <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
-    <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-    <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
-    <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
-    <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
-    <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
-    <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
-    <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
-    <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
+
+    {/* Lack-Vorschau */}
+    {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+      <>
+        <p><strong>Farbton:</strong> {farbton || '–'}</p>
+        <p><strong>Menge (kg):</strong> {menge || '–'}</p>
+        <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
+        <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
+        <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
+        <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+        <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
+        <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
+        <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
+        <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
+        <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
+        <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
+        {kategorie === 'pulverlack' && (
+          <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
+        )}
+      </>
+    )}
+
+    {/* Arbeitsmittel-Vorschau */}
+    {kategorie === 'arbeitsmittel' && (
+      <>
+        <p>
+          <strong>Menge (Stück):</strong>{' '}
+          {aufLager ? 'Auf Lager' : (menge || '–')}
+        </p>
+        <p>
+          <strong>Stück pro Verkaufseinheit:</strong>{' '}
+          {stueckProEinheit || '–'}
+        </p>
+        <p>
+          <strong>Größe:</strong>{' '}
+          {groesse || '–'}
+        </p>
+      </>
+    )}
+
+    {/* Felder für beide Kategorien */}
     <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage} Werktag{lieferWerktage > 1 ? 'e' : ''}</p>
     <p><strong>Preis:</strong> {preis.toFixed(2)} €</p>
     <p><strong>Versandkosten:</strong> {versandKosten.toFixed(2)} €</p>
-
-
-    {/* Nur für Pulverlack */}
-    {kategorie === 'pulverlack' && (
-      <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
-    )}
-
     <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
     <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
     <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
   </div>
 )}
+
 
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
   {ladeStatus ? (

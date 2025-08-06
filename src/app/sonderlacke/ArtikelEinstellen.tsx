@@ -770,8 +770,9 @@ const toggleBewerbung = (option: string) => {
         {[
           'Standard',
           'Polyester',
-          'Polyester für Feuerverzinkung',
           'Epoxy-Polyester',
+          'Polyurethan',
+          'Polyester für Feuerverzinkung',          
           'Thermoplast',
         ].map((q) => (
           <div
