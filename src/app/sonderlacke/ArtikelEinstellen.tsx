@@ -37,7 +37,13 @@ function istGueltigeDatei(file: File): boolean {
 
   return istErlaubterTyp || hatErlaubteEndung;
 }
-const heute = new Date().toISOString().split('T')[0];
+const heute = (() => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+})();
 
 
   const glanzgradListe = [
@@ -60,7 +66,11 @@ function ArtikelEinstellen() {
   const [warnungKategorie, setWarnungKategorie] = useState('');
   const [warnungBilder, setWarnungBilder] = useState('');
   const [warnungTitel, setWarnungTitel] = useState('');
+  const [warnungMenge, setWarnungMenge] = useState('');
+  const [warnungGlanzgrad, setWarnungGlanzgrad] = useState('');
   const [warnungPalette, setWarnungPalette] = useState('');
+  const [WarnungOberflaeche, setWarnungOberflaeche] = useState('');
+  const [warnungAnwendung, setWarnungAnwendung] = useState('');
   const [warnungZustand, setWarnungZustand] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
@@ -70,8 +80,8 @@ function ArtikelEinstellen() {
   const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
   const [qualitaet, setQualitaet] = useState('');
   const [qualitaetOffen, setQualitaetOffen] = useState(false);
-  const [lieferdatum, setLieferdatum] = useState('');
   const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
+  const [lieferDatum, setLieferDatum] = useState<Date | null>(null);
   const [firma, setFirma] = useState('');
   const [vorname, setVorname] = useState('');
   const [nachname, setNachname] = useState('');
@@ -85,8 +95,10 @@ function ArtikelEinstellen() {
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
   const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
   const [menge, setMenge] = useState<number>(0);
-
-
+  const [agbAccepted, setAgbAccepted] = useState(false)
+  const [agbError, setAgbError] = useState(false)
+  const agbRef = useRef<HTMLDivElement>(null)
+  const [formAbgesendet, setFormAbgesendet] = useState(false);
 
 
 
@@ -135,7 +147,7 @@ const berechneFortschritt = () => {
 
   // 11. Lieferdatum
   total++;
-  if (lieferdatum) filled++;
+  if (lieferDatum) filled++;
 
   // 12. Lieferadresse-Auswahl
   total++;
@@ -146,10 +158,12 @@ const berechneFortschritt = () => {
     total++;
     if (aufladung.length > 0) filled++;
   }
-
+    // 13. AGB akzeptiert
+  // AGB akzeptiert
+total++;
+if (agbAccepted) filled++;
   return Math.round((filled / total) * 100);
 };
-
 
 const formularZuruecksetzen = () => {
   setKategorie(null);
@@ -177,6 +191,17 @@ const formularZuruecksetzen = () => {
   setWarnungPalette('');
   setWarnungZustand('');
   setWarnungBeschreibung('');
+  setLieferDatum(null);  
+  setVorname('');
+  setNachname('');
+  setFirma('');
+  setStrasse('');
+  setHausnummer('');
+  setPlz('');
+  setOrt('');
+  setLand('');
+  setLieferadresseOption('profil'); // wieder Standard setzen
+  setFormAbgesendet(false); // rote Rahmen weg
 };
 
   const [aufladung, setAufladung] = useState<string[]>([]);
@@ -229,6 +254,7 @@ useEffect(() => {
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
   const [effekt, setEffekt] = useState<string[]>([]);
+  
 
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
@@ -284,14 +310,15 @@ useEffect(() => {
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, []);
 
-  function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const val = e.target.value;
+function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const val = e.target.value.replace(',', '.'); // <- neu
   if (val === '') {
     setMenge(0);
   } else if (/^\d{0,7}(\.\d{0,1})?$/.test(val)) {
     setMenge(parseFloat(val));
   }
 }
+
 
 
   const fadeIn = {
@@ -320,8 +347,7 @@ useEffect(() => {
 
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-  setLadeStatus(true);
-
+  setFormAbgesendet(true); // 🔹 wichtig für rote Rahmen
   let fehler = false;
 
   // Pflichtfelder prüfen
@@ -337,14 +363,26 @@ useEffect(() => {
     fehler = true;
   } else {
     setWarnungBilder('');
-  }
-
-  
+  }  
     if (!titel.trim()) {
       setWarnungTitel('Bitte gib einen Titel an.');
       fehler = true;
     } else {
       setWarnungTitel('');}
+      if (isNaN(menge) || menge <= 0) {
+  setWarnungMenge('Bitte gib eine gültige Menge an.');
+  fehler = true;
+} else {
+  setWarnungMenge('');
+}
+
+if (!glanzgrad) {
+  setWarnungGlanzgrad('Bitte gib den Glanzgrad an.');
+  fehler = true;
+} else {
+  setWarnungGlanzgrad('');
+}
+
     
 
     if (!farbpaletteWert) {
@@ -354,9 +392,19 @@ useEffect(() => {
       setWarnungPalette('');
     }
 
-    if (!oberflaeche) {fehler = true;}
-    if (!anwendung) {fehler = true;}
+    if (!oberflaeche) {
+  setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.');
+  fehler = true;
+} else {
+  setWarnungOberflaeche('');
+}
 
+if (!anwendung) {
+  setWarnungAnwendung('Bitte wähle eine Anwendung aus.');
+  fehler = true;
+} else {
+  setWarnungAnwendung('');
+}
     if (!zustand) {
       setWarnungZustand('Bitte wähle den Zustand aus.');
       fehler = true;
@@ -370,6 +418,7 @@ useEffect(() => {
     } else {
       setWarnungAufladung('');
     }}
+    
 
     if (!beschreibung.trim()) {
       setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
@@ -377,12 +426,26 @@ useEffect(() => {
     } else {
       setWarnungBeschreibung('');
     }
-  
+    if (!agbAccepted) {
+  setAgbError(true);
+  agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  fehler = true;  
+} else {
+  setAgbError(false);
+}
+if (lieferadresseOption === 'manuell') {
+    if (!vorname.trim() || !nachname.trim() || !strasse.trim() || 
+        !hausnummer.trim() || !plz.trim() || !ort.trim() || !land.trim()) {
+      fehler = true;
+    }
+  }
 
-  if (fehler) {
+if (fehler) {
     setLadeStatus(false);
     return;
   }
+
+  setLadeStatus(true); // ✅ Nur hier aufrufen, wenn alles korrekt ist
 
   const formData = new FormData();
   formData.append('kategorie', kategorie!);
@@ -402,6 +465,16 @@ useEffect(() => {
     formData.append('qualitaet', qualitaet);
     formData.append('bewerbung', bewerbungOptionen.join(','));
     formData.append('menge', menge.toString());
+    formData.append('lieferadresseOption', lieferadresseOption);
+    formData.append('vorname', vorname);
+    formData.append('nachname', nachname);
+    formData.append('firma', firma);
+    formData.append('strasse', strasse);
+    formData.append('hausnummer', hausnummer);
+    formData.append('plz', plz);
+    formData.append('ort', ort);
+    formData.append('land', land);
+
 
   if (kategorie === 'pulverlack') {
     formData.append('aufladung', aufladung.join(', '));
@@ -418,6 +491,7 @@ useEffect(() => {
 
     if (res.ok) {
       alert('Erfolgreich hochgeladen!');
+      formularZuruecksetzen(); // <- nutzt deine zentrale Funktion
       setBilder([]);
       setDateien([]);
       setWarnung('');
@@ -504,7 +578,9 @@ const toggleBewerbung = (option: string) => {
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
             <h2 className={styles.centeredHeading}>Ich möchte Angebote für einen</h2>
-            <div className={`${styles.iconRow} ${!kategorie && warnung.includes('Kategorie') ? styles.kategorieFehler : ''}`}>
+            <div  className={`${styles.iconRow} ${!kategorie && warnungKategorie ? styles.kategorieFehler : ''}`}
+>
+
                 <div
                 className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''}`}
                      onClick={() => {
@@ -543,24 +619,28 @@ const toggleBewerbung = (option: string) => {
               className={styles.dynamicFields}
             >
             
-
-      { (kategorie === 'pulverlack' || kategorie === 'nasslack') && (
+{ (kategorie === 'pulverlack' || kategorie === 'nasslack') && (
   <>
-  <label>
-  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-    Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
-  </span>
+    <label>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+        Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
+      </span>
 
-  <input
-    type="text"
-    className={styles.input}
-    maxLength={60}
-    value={titel}
-    onChange={(e) => setTitel(e.target.value)}
-    required
-  />
-  <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
-</label>
+      <input
+        type="text"
+        className={styles.input}
+        maxLength={60}
+        value={titel}
+        onChange={(e) => setTitel(e.target.value)}
+      />
+      <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
+    </label>
+
+    {/* ⚠️ Warnung anzeigen, falls nötig */}
+    {warnungTitel && (
+      <p className={styles.validierungsfehler}>{warnungTitel}</p>
+    )}
+  
 
 <label className={styles.label1}>
   Hersteller (optional):
@@ -603,20 +683,25 @@ const toggleBewerbung = (option: string) => {
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Menge (kg): <span style={{ color: 'red' }}>*</span>
   </span>
- <input
-  type="number"
-  step="0.1"
-  min="0.1"
-  max="99999.9"
-  className={styles.input}
-  value={menge === 0 ? '' : menge}
-  onChange={handleMengeChange}
-  placeholder="z. B. 5.5"
-  required
-/>
+  <input
+    type="number"
+    step="0.1"
+    min="0.1"
+    max="99999.9"
+    className={styles.input}
+    value={menge === 0 ? '' : menge}
+    onChange={handleMengeChange}
+    placeholder="z. B. 5.5"
+    onKeyDown={(e) => {
+      if (['e', 'E', '+', '-'].includes(e.key)) {
+        e.preventDefault();
+      }
+    }}
+  />
 </label>
-
-
+{warnungMenge && (
+  <p className={styles.validierungsfehler}>{warnungMenge}</p>
+)}
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.0rem' }}>
     Farbpalette: <span style={{ color: 'red' }}>*</span>
@@ -625,7 +710,6 @@ const toggleBewerbung = (option: string) => {
   {/* Unsichtbares echtes Pflichtfeld für native Validierung */}
   <select
   value={farbpaletteWert}
-  required
   onChange={() => {}}
   style={{
     position: 'absolute',
@@ -673,7 +757,9 @@ const toggleBewerbung = (option: string) => {
     )}
   </div>
 </label>
-
+{warnungPalette && (
+  <p className={styles.validierungsfehler}>{warnungPalette}</p>
+)}
 
     {/* Dropdown: Farbton */}
 <label>
@@ -708,7 +794,6 @@ const toggleBewerbung = (option: string) => {
   {/* Unsichtbares echtes Select für Validierung */}
   <select
     value={glanzgrad}
-    required
     onChange={() => {}}
     style={{
       position: 'absolute',
@@ -753,6 +838,9 @@ const toggleBewerbung = (option: string) => {
     )}
   </div>
 </label>
+{warnungGlanzgrad && (
+  <p className={styles.validierungsfehler}>{warnungGlanzgrad}</p>
+)}
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
@@ -852,10 +940,12 @@ const toggleBewerbung = (option: string) => {
         value="geöffnet"
         checked={zustand === 'geöffnet'}
         onChange={() => setZustand('geöffnet')}
-        required
       />
       <span>Geöffnet & Einwandfrei</span>
     </label>
+    {warnungZustand && (
+  <p className={styles.validierungsfehlerradio}>{warnungZustand}</p>
+)}
   </div>
 </fieldset>   
 <fieldset className={styles.radioGroup}>
@@ -870,7 +960,6 @@ const toggleBewerbung = (option: string) => {
         value="glatt"
         checked={oberflaeche === 'glatt'}
         onChange={() => setOberflaeche('glatt')}
-        required
       />
       <span>Glatt</span>
     </label>
@@ -881,10 +970,10 @@ const toggleBewerbung = (option: string) => {
         value="feinstruktur"
         checked={oberflaeche === 'feinstruktur'}
         onChange={() => setOberflaeche('feinstruktur')}
-        required
       />
       <span>Feinstruktur</span>
     </label>
+    
     <label className={styles.radioLabel}>
       <input
         type="radio"
@@ -892,10 +981,12 @@ const toggleBewerbung = (option: string) => {
         value="grobstruktur"
         checked={oberflaeche === 'grobstruktur'}
         onChange={() => setOberflaeche('grobstruktur')}
-        required
       />
       <span>Grobstruktur</span>
     </label>
+    {WarnungOberflaeche && (
+    <p className={styles.validierungsfehlerradio}>{WarnungOberflaeche}</p>
+      )}
   </div>
 </fieldset>
 <fieldset className={styles.radioGroup}>
@@ -910,7 +1001,6 @@ const toggleBewerbung = (option: string) => {
         value="universal"
         checked={anwendung === 'universal'}
         onChange={() => setAnwendung('universal')}
-        required
       />
       <span>Universal</span>
     </label>
@@ -921,7 +1011,6 @@ const toggleBewerbung = (option: string) => {
         value="innen"
         checked={anwendung === 'innen'}
         onChange={() => setAnwendung('innen')}
-        required
       />
       <span>Innen</span>
     </label>
@@ -932,7 +1021,6 @@ const toggleBewerbung = (option: string) => {
         value="außen"
         checked={anwendung === 'außen'}
         onChange={() => setAnwendung('außen')}
-        required
       />
       <span>Außen</span>
     </label>
@@ -943,10 +1031,12 @@ const toggleBewerbung = (option: string) => {
         value="industrie"
         checked={anwendung === 'industrie'}
         onChange={() => setAnwendung('industrie')}
-        required
       />
       <span>Industrie</span>
     </label>
+    {warnungAnwendung && (
+  <p className={styles.validierungsfehlerradio}>{warnungAnwendung}</p>
+)}
   </div>
 </fieldset>
 {kategorie === 'pulverlack' && (
@@ -1170,54 +1260,64 @@ const toggleBewerbung = (option: string) => {
 
 
 {kategorie === 'pulverlack' && (
-<fieldset className={styles.radioGroup}>
-  <legend className={styles.radioLegend}>
-    Aufladung: <span style={{ color: 'red' }}>*</span>
-  </legend>
+  <fieldset
+    className={`${styles.radioGroup} ${
+      formAbgesendet && aufladung.length === 0 ? styles.feldError : ''
+    }`}
+  >
+    <legend className={styles.radioLegend}>
+      Aufladung: <span style={{ color: 'red' }}>*</span>
+    </legend>
 
-  {/* Natives Pflichtfeld nur aktivieren wenn nichts ausgewählt */}
-  {aufladung.length === 0 && (
-    <input
-      type="checkbox"
-      required
-      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-      tabIndex={-1}
-      onChange={() => {}}
-    />
-  )}
-  <div className={styles.radioOptionsHorizontal}>
-    <label className={styles.radioLabel}>
+    
+
+    {/* Natives Pflichtfeld kann bleiben, ist aber optional */}
+    {aufladung.length === 0 && (
       <input
         type="checkbox"
-        name="aufladung"
-        value="Corona"
-        checked={aufladung.includes('Corona')}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setAufladung((prev) =>
-            checked ? [...prev, 'Corona'] : prev.filter((v) => v !== 'Corona')
-          );
-        }}
+        style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+        tabIndex={-1}
+        onChange={() => {}}
       />
-      <span>Corona</span>
-    </label>
-    <label className={styles.radioLabel}>
-      <input
-        type="checkbox"
-        name="aufladung"
-        value="Tribo"
-        checked={aufladung.includes('Tribo')}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setAufladung((prev) =>
-            checked ? [...prev, 'Tribo'] : prev.filter((v) => v !== 'Tribo')
-          );
-        }}
-      />
-      <span>Tribo</span>
-    </label>
-  </div>
-</fieldset>
+    )}
+
+    <div className={styles.radioOptionsHorizontal}>
+      <label className={styles.radioLabel}>
+        <input
+          type="checkbox"
+          name="aufladung"
+          value="Corona"
+          checked={aufladung.includes('Corona')}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setAufladung(prev => checked ? [...prev, 'Corona'] : prev.filter(v => v !== 'Corona'));
+          }}
+        />
+        <span>Corona</span>
+      </label>
+
+      <label className={styles.radioLabel}>
+        <input
+          type="checkbox"
+          name="aufladung"
+          value="Tribo"
+          checked={aufladung.includes('Tribo')}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setAufladung(prev => checked ? [...prev, 'Tribo'] : prev.filter(v => v !== 'Tribo'));
+          }}
+        />
+        <span>Tribo</span>
+      </label>
+      {/* Fehlermeldung gut sichtbar direkt unter der Legend */}
+    {(formAbgesendet && aufladung.length === 0) && (
+      <p className={styles.validierungsfehlerradio}>
+        Bitte wähle mindestens eine Option bei der Aufladung.
+      </p>
+    )}
+    </div>
+  </fieldset>
+
 )}
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -1241,8 +1341,8 @@ const toggleBewerbung = (option: string) => {
     </motion.div>    
   </AnimatePresence>
 )} 
-<fieldset className={styles.radioGroup}>
-  <legend className={styles.radioLegend}>
+<fieldset className={styles.radioGroupliefercontainer}>
+  <legend className={styles.radioLegendlieferdetails}>
     Lieferdetails: <span style={{ color: 'red' }}>*</span>
   </legend>
 
@@ -1251,17 +1351,18 @@ const toggleBewerbung = (option: string) => {
       Lieferdatum:
       <input
   type="date"
-  value={lieferdatum}
-  onChange={(e) => setLieferdatum(e.target.value)}
+  value={lieferDatum ? lieferDatum.toISOString().split('T')[0] : ''}
+  onChange={(e) => {
+    const dateString = e.target.value;
+    setLieferDatum(dateString ? new Date(dateString) : null);
+  }}
   className={styles.dateInput}
   required
   min={heute}
 />
-
     </label>
-
-    <fieldset className={styles.radioGroup}>
-  <legend className={styles.radioLegend}>
+    <fieldset className={styles.radioGrouplieferadressewaehlen}>
+  <legend className={styles.radioLegendwaehlen}>
     Lieferadresse wählen: <span style={{ color: 'red' }}>*</span>
   </legend>
 
@@ -1273,9 +1374,8 @@ const toggleBewerbung = (option: string) => {
         value="profil"
         checked={lieferadresseOption === 'profil'}
         onChange={() => setLieferadresseOption('profil')}
-        required
       />
-      <span>Meine Firmenanschrift verwenden</span>
+      <span>Meine Anschrift verwenden</span>
     </label>
 
     <label className={styles.radioLabel}>
@@ -1293,45 +1393,157 @@ const toggleBewerbung = (option: string) => {
 
 {lieferadresseOption === 'manuell' && (
   <div className={styles.grid3spaltig}>
-  <label className={styles.inputLabel}>
-    Vorname
-    <input type="text" className={styles.input} value={vorname} onChange={(e) => setVorname(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Vorname
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !vorname.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    value={vorname}
+    maxLength={15}
+    onChange={(e) =>
+      setVorname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
+    }
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    Nachname
-    <input type="text" className={styles.input} value={nachname} onChange={(e) => setNachname(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Nachname
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !nachname.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    maxLength={30}
+    value={nachname}
+    onChange={(e) =>
+      setNachname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
+    }
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    Firma
-    <input type="text" className={styles.input} value={firma} onChange={(e) => setFirma(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Firma
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !firma.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    maxLength={20}
+    value={firma}
+    onChange={(e) =>
+      setFirma(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-&]/g, ''))
+    }
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    Straße
-    <input type="text" className={styles.input} value={strasse} onChange={(e) => setStrasse(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Straße
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !strasse.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    maxLength={40}
+    value={strasse}
+    onChange={(e) =>
+      setStrasse(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-]/g, ''))
+    }
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    Hausnummer
-    <input type="text" className={styles.input} value={hausnummer} onChange={(e) => setHausnummer(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Hausnummer
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet &&
+      lieferadresseOption === 'manuell' &&
+      (!hausnummer.trim() || !/\d/.test(hausnummer))
+        ? styles.inputError
+        : ''
+    }`}
+    maxLength={4}
+    value={hausnummer}
+    onChange={(e) =>
+      setHausnummer(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))
+    }
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    PLZ
-    <input type="text" className={styles.input} value={plz} onChange={(e) => setPlz(e.target.value)} />
-  </label>
 
-  <label className={styles.inputLabel}>
-    Ort
-    <input type="text" className={styles.input} value={ort} onChange={(e) => setOrt(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  PLZ
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !plz.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    inputMode="numeric"
+    pattern="[0-9]*"
+    maxLength={6}
+    value={plz}
+    onChange={(e) => setPlz(e.target.value.replace(/\D/g, ''))}
+  />
+</label>
 
-  <label className={styles.inputLabel}>
-    Land
-    <input type="text" className={styles.input} value={land} onChange={(e) => setLand(e.target.value)} />
-  </label>
+<label className={styles.inputLabel}>
+  Ort
+  <input
+    type="text"
+    className={`${styles.input} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !ort.trim()
+        ? styles.inputError
+        : ''
+    }`}
+    value={ort}
+    maxLength={30}
+    onChange={(e) =>
+      setOrt(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
+    }
+  />
+</label>
+
+<label className={styles.inputLabel}>
+  Land
+  <select
+    className={`${styles.select} ${
+      formAbgesendet && lieferadresseOption === 'manuell' && !land
+        ? styles.selectError
+        : ''
+    }`}
+    value={land}
+    onChange={(e) => setLand(e.target.value)}
+  >
+    <option value="" disabled hidden>Bitte wählen</option>
+    <option value="Österreich">Österreich</option>
+    <option value="Deutschland">Deutschland</option>
+    <option value="Schweiz">Schweiz</option>
+    <option value="Liechtenstein">Liechtenstein</option>
+    <option value="Italien">Italien</option>
+    <option value="Frankreich">Frankreich</option>
+    <option value="Niederlande">Niederlande</option>
+    <option value="Belgien">Belgien</option>
+    <option value="Luxemburg">Luxemburg</option>
+    <option value="Tschechien">Tschechien</option>
+    <option value="Slowakei">Slowakei</option>
+    <option value="Slowenien">Slowenien</option>
+    <option value="Polen">Polen</option>
+    <option value="Ungarn">Ungarn</option>
+  </select>
+</label>
+
 </div>
 
 )}
@@ -1408,46 +1620,88 @@ const toggleBewerbung = (option: string) => {
 
   <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
 </div>
-<div className={styles.hinweisText}>
-  Es gelten unsere <a href="/nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>. Informationen zur Verarbeitung deiner Daten findest du in unserer <a href="/datenschutz" target="_blank">Datenschutzerklärung</a>.
+<div className={styles.agbContainer} ref={agbRef}>
+
+  <motion.label
+  className={`${styles.agbLabel} ${agbError ? styles.agbError : ''}`}
+  animate={agbError ? { x: [0, -4, 4, -4, 0] } : {}}
+  transition={{ duration: 0.3 }}
+>
+  <input
+    type="checkbox"
+    id="agbCheckbox"
+    checked={agbAccepted}
+    onChange={(e) => {
+      setAgbAccepted(e.target.checked);
+      setAgbError(false);
+    }}
+  />
+  <span>
+    Ich akzeptiere die{' '}
+    <a href="/agb" className={styles.nutzungsbedingungenLink}>
+      Allgemeinen Geschäftsbedingungen
+    </a>{' '}
+    zur Gänze. Informationen zur Verarbeitung deiner Daten findest du in unserer{' '}
+    <a href="/datenschutz" className={styles.agbLink}>
+      Datenschutzerklärung
+    </a>.
+  </span>
+</motion.label>
+
+{agbError && (
+  <p className={styles.validierungsfehleragb}>Bitte akzeptiere die AGB.</p>
+)}
+
+  
+
 </div>
 <button
   type="button"
   onClick={() => setVorschauAktiv(prev => !prev)}
   className={styles.vorschauToggle}
 >
-  {vorschauAktiv ? 'Vorschau ausblenden' : 'Vorschau anzeigen'}
+  {vorschauAktiv ? 'Vorschau ausblenden ▲' : 'Vorschau anzeigen ▼'}
 </button>
-{vorschauAktiv && (
-  <div className={styles.vorschauBox}>
-    <h3>📝 Vorschau deiner Angaben</h3>
 
-    <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
-    <p><strong>Titel:</strong> {titel || '–'}</p>
-    <p><strong>Farbton:</strong> {farbton || '–'}</p>
-    <p><strong>Menge (kg):</strong> {menge || '–'}</p>
-    <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
-    <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
-    <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-    <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
-    <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
-    <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
-    <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
-    <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
-    <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
-    <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
+<AnimatePresence>
+  {vorschauAktiv && (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className={styles.vorschauBox}
+    >
+      <h3>📝 Vorschau deiner Angaben</h3>
 
-    {/* Nur für Pulverlack */}
-    {kategorie === 'pulverlack' && (
-      <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
-    )}
+      <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
+      <p><strong>Titel:</strong> {titel || '–'}</p>
+      <p><strong>Farbton:</strong> {farbton || '–'}</p>
+      <p><strong>Menge (kg):</strong> {menge || '–'}</p>
+      <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
+      <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
+      <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
+      <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+      <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
+      <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
+      <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
+      <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
+      <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
+      <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
 
-    <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
-    <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
-    <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
-  </div>
-)}
+      {/* Nur für Pulverlack */}
+      {kategorie === 'pulverlack' && (
+        <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
+      )}
 
+      <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
+      <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
+      <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
+      <p><strong>Lieferdatum:</strong> {lieferDatum ? lieferDatum.toLocaleDateString('de-DE') : '–'}</p>
+      <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
+    </motion.div>
+  )}
+</AnimatePresence>
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
   {ladeStatus ? (
     <>

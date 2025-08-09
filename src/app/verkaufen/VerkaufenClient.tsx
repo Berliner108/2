@@ -76,10 +76,10 @@ function ArtikelEinstellen() {
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
   const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
   const [menge, setMenge] = useState<number>(0);
-  const [lieferWerktage, setLieferWerktage] = useState<number>(1);
-  const [versandKosten, setVersandKosten] = useState<number>(0);
+ const [versandKosten, setVersandKosten] = useState<string>(''); 
+const [lieferWerktage, setLieferWerktage] = useState<string>(''); 
   // Verkaufspreis in Euro
-const [preis, setPreis] = useState<number>(0);
+const [preis, setPreis] = useState<string>(''); 
 const [warnungPreis, setWarnungPreis] = useState('');
 const [warnungWerktage, setWarnungWerktage] = useState('');
 const [warnungVersand, setWarnungVersand] = useState('');
@@ -94,9 +94,11 @@ const [mengeStueck, setMengeStueck] = useState<number>(1);
 const [groesse, setGroesse] = useState<string>('');
 const [warnungMengeStueck, setWarnungMengeStueck] = useState<string>('');
 const [warnungGroesse, setWarnungGroesse] = useState<string>('');
-const [stueckProEinheit, setStueckProEinheit] = useState<number>(1);
+const [stueckProEinheit, setStueckProEinheit] = useState<string>('');
 const [warnungStueckProEinheit, setWarnungStueckProEinheit] = useState<string>('');
-
+const [agbAccepted, setAgbAccepted] = useState(false)
+const [agbError, setAgbError] = useState(false)
+const agbRef = useRef<HTMLDivElement>(null)
 
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
@@ -119,9 +121,10 @@ const berechneFortschritt = () => {
     total++;
     if (titel.trim() !== '') filled++;
 
-    // 5. Stück pro Verkaufseinheit
-    total++;
-    if (stueckProEinheit > 0) filled++;
+ // 5. Stück pro Verkaufseinheit
+total++;
+if (parseInt(stueckProEinheit) > 0) filled++;
+
 
     // 6. Größe
     total++;
@@ -132,16 +135,21 @@ const berechneFortschritt = () => {
     if (beschreibung.trim() !== '') filled++;
 
     // 8. Werktage bis Lieferung
-    total++;
-    if (lieferWerktage >= 1) filled++;
+    // 8. Werktage bis Lieferung
+total++;
+if (parseInt(lieferWerktage) >= 1) filled++;
 
-    // 9. Preis
-    total++;
-    if (preis > 0) filled++;
+// 9. Preis
+total++;
+if (parseFloat(preis) > 0) filled++;
 
-    // 10. Versandkosten
-    total++;
-    if (versandKosten >= 0) filled++;
+// 10. Versandkosten
+total++;
+if (parseFloat(versandKosten) >= 0) filled++;
+
+// 11. AGB akzeptiert
+  total++;
+  if (agbAccepted) filled++;
 
   } else {
     // Lack-Pflichtfelder
@@ -185,17 +193,18 @@ const berechneFortschritt = () => {
     total++;
     if (beschreibung.trim() !== '') filled++;
 
-    // 11. Werktage bis Lieferung
-    total++;
-    if (lieferWerktage >= 1) filled++;
+   // 11. Werktage bis Lieferung
+total++;
+if (parseInt(lieferWerktage) >= 1) filled++;
 
-    // 12. Preis
-    total++;
-    if (preis > 0) filled++;
+// 12. Preis
+total++;
+if (parseFloat(preis) > 0) filled++;
 
-    // 13. Versandkosten
-    total++;
-    if (versandKosten >= 0) filled++;
+// 13. Versandkosten
+total++;
+if (parseFloat(versandKosten) >= 0) filled++;
+
 
     // Pulverlack-spezifisch: Aufladung
     if (kategorie === 'pulverlack') {
@@ -203,6 +212,9 @@ const berechneFortschritt = () => {
       if (aufladung.length > 0) filled++;
     }
   }
+   total++;
+  if (agbAccepted) filled++;
+
 
   return Math.round((filled / total) * 100);
 };
@@ -264,9 +276,10 @@ const resetFieldsExceptCategory = () => {
   setSondereffekte([]);
   setBeschreibung('');
   setAufladung([]);
-    setPreis(0);
-  setLieferWerktage(1);
-  setVersandKosten(0);
+  setPreis('');
+  setLieferWerktage('1');
+  setVersandKosten('');
+
   setMenge(1);
   setAufLager(false);
   setWarnungMenge('');
@@ -309,7 +322,7 @@ useEffect(() => {
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
     const herstellerListePulver = [
-    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
+    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
     'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
     'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
     'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
@@ -397,6 +410,7 @@ useEffect(() => {
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setLadeStatus(true);
+    let hasError = false; // ← Diese Zeile neu einfügen
 
   let fehler = false;
 
@@ -407,6 +421,14 @@ useEffect(() => {
   } else {
     setWarnungKategorie('');
   }
+  if (!agbAccepted) {
+  setAgbError(true)
+  agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  hasError = true
+} else {
+  setAgbError(false)
+}
+
 
   if (bilder.length === 0) {
     setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
@@ -458,21 +480,26 @@ if (kategorie === 'arbeitsmittel') {
     setWarnungMenge('');
   }
 
-  // Stück pro Einheit prüfen
-  if (stueckProEinheit < 1) {
-    setWarnungStueckProEinheit('Bitte gib mindestens 1 Stück pro Einheit an.');
-    fehler = true;
-  } else {
-    setWarnungStueckProEinheit('');
-  }
+ // Stück pro Einheit prüfen
+if (parseInt(stueckProEinheit) < 1 || isNaN(parseInt(stueckProEinheit))) {
+  setWarnungStueckProEinheit('Bitte gib mindestens 1 Stück pro Einheit an.');
+  fehler = true;
+} else {
+  setWarnungStueckProEinheit('');
+}
+
 
   // Größe prüfen
-  if (!groesse.trim()) {
-    setWarnungGroesse('Bitte gib eine Größe an.');
-    fehler = true;
-  } else {
-    setWarnungGroesse('');
-  }
+if (!groesse.trim()) {
+  setWarnungGroesse('Bitte gib eine Größe an.');
+  fehler = true;
+} else if (groesse.length > 15) {
+  setWarnungGroesse('Größe darf maximal 15 Zeichen haben.');
+  fehler = true;
+} else {
+  setWarnungGroesse('');
+}
+
 }
 
 
@@ -483,24 +510,28 @@ if (kategorie === 'arbeitsmittel') {
     } else {
       setWarnungBeschreibung('');
     }
-    if (lieferWerktage < 1) {
-  setWarnungWerktage('Bitte gib mindestens 1 Werktag an.');
-  fehler = true;
-} else {
-  setWarnungWerktage('');
-}
-if (preis <= 0) {
-  setWarnungPreis('Bitte gib einen Preis > 0 ein.');
+    if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
+  setWarnungPreis('Bitte gib einen gültigen Preis ein.');
   fehler = true;
 } else {
   setWarnungPreis('');
 }
-if (versandKosten < 0) {
-  setWarnungVersand('Versandkosten dürfen nicht negativ sein.');
+
+if (versandKosten === '' || parseFloat(versandKosten) < 0) {
+  setWarnungVersand('Bitte gib gültige Versandkosten ein.');
   fehler = true;
 } else {
   setWarnungVersand('');
 }
+
+if (!lieferWerktage.trim() || isNaN(parseInt(lieferWerktage)) || parseInt(lieferWerktage) < 1) {
+  setWarnungWerktage('Bitte mach eine gültige Angabe.');
+  fehler = true;
+} else {
+  setWarnungWerktage('');
+}
+
+
   // ─── Menge / „Auf Lager” prüfen ───
 if (!aufLager) {
   // begrenzte Menge → muss ≥ 1 sein
@@ -562,9 +593,10 @@ if (!aufLager) {
 
   bilder.forEach((file) => formData.append('bilder', file));
   dateien.forEach((file) => formData.append('dateien', file));
-  formData.append('lieferWerktage', lieferWerktage.toString());
-  formData.append('preis', preis.toString());  
-  formData.append('versandKosten', versandKosten.toString());
+  formData.append('preis', (parseFloat(preis) || 0).toString());
+formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
+formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
+
 
   try {
     const res = await fetch('/api/verkaufen', {
@@ -584,9 +616,9 @@ if (!aufLager) {
       setFarbton('');
       setGlanzgrad('');
       setKategorie(null);
-      setPreis(0);
-      setLieferWerktage(1);
-      setVersandKosten(0);
+      setPreis('');
+      setLieferWerktage('');
+      setVersandKosten('');
       setWarnungPreis('');
       setWarnungWerktage('');
       setWarnungVersand('');
@@ -594,7 +626,7 @@ if (!aufLager) {
       setGroesse('');
       setWarnungMengeStueck('');
       setWarnungGroesse('');
-      setStueckProEinheit(0);
+      setStueckProEinheit('');
       setWarnungStueckProEinheit('');
 
     } else {
@@ -625,7 +657,7 @@ const toggleBewerbung = (option: string) => {
   viewport={{ once: true }}
 >
   💡 Ab sofort ist das Einstellen von Artikeln <strong>kostenlos</strong>!
-  <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
+  <a href="/agb" className={styles.infoLink}>Mehr erfahren</a>
 </motion.div>        
         <h1 className={styles.heading}>Artikel verkaufen </h1>
         <p className={styles.description}>
@@ -1477,79 +1509,98 @@ const toggleBewerbung = (option: string) => {
     </legend>
 
     {/* Radio-Buttons nebeneinander */}
-    <div className={styles.mengeRadioGroup}>
-      <label className={styles.mengeOption}>
-        <input
-          type="radio"
-          name="mengeOptionArbeitsmittel"
-          checked={aufLager}
-          onChange={() => setAufLager(true)}
-        />
-        Auf Lager
-      </label>
-      <label className={styles.mengeOption}>
-        <input
-          type="radio"
-          name="mengeOptionArbeitsmittel"
-          checked={!aufLager}
-          onChange={() => setAufLager(false)}
-        />
-        Begrenzte Menge
-      </label>
-    </div>
+<div className={styles.mengeRadioGroup}>
+  <label className={styles.mengeOption}>
+    <input
+      type="radio"
+      name="mengeOptionArbeitsmittel"
+      checked={aufLager}
+      onChange={() => setAufLager(true)}
+    />
+    Auf Lager
+  </label>
+  <label className={styles.mengeOption}>
+    <input
+      type="radio"
+      name="mengeOptionArbeitsmittel"
+      checked={!aufLager}
+      onChange={() => setAufLager(false)}
+    />
+    Begrenzte Menge
+  </label>
+</div>
 
-    {!aufLager && (
-      <label className={styles.mengeNumberLabel}>
-        <span>Menge (Stück):</span>
-        <input
-          type="number"
-          step="1"
-          min="1"
-          max="999999"
-          className={styles.mengeNumberInput}
-          value={menge === 0 ? '' : menge}
-          onChange={handleMengeChange}
-          placeholder="z. B. 10"
-        />
-      </label>
-    )}
-    {warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
-  </fieldset>
+{/* Eingabe nur wenn "Begrenzte Menge" */}
+{!aufLager && (
+  <label className={styles.mengeNumberLabel}>
+    <span>Menge (Stück):</span>
+    <input
+      type="number"
+      step={1}           // ❗ nur ganze Zahlen
+      min={1}
+      max={999999}
+      className={styles.mengeNumberInput}
+      value={menge === 0 ? '' : menge}
+      onChange={(e) => {
+        const value = e.target.value;
+        // Nur ganze Zahlen erlauben
+        if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
+          setMenge(Number(value));
+        }
+      }}
+      placeholder="z. B. 10"
+    />
+  </label>
+)}
+
+{warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
+</fieldset>
 )}
 
 
     {/* Stück pro Verkaufseinheit */}
       <label className={styles.label}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-        Stück pro Verkauf: <span style={{ color: 'red' }}>*</span>
-      </span>
-        <input
-          type="number"
-          className={styles.input}
-          min={1}
-          step={1}
-          value={stueckProEinheit}
-          onChange={e => setStueckProEinheit(parseInt(e.target.value, 10) || 0)}
-          required
-        />
-      </label>
+  <span>
+    Stück pro Verkauf: <span style={{ color: 'red' }}>*</span>
+  </span>
+  <input
+    type="number"
+    min={1}
+    max={9999}
+    step={1}
+    className={styles.input}
+    value={stueckProEinheit}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '' || (Number(value) >= 1 && Number(value) <= 999)) {
+        setStueckProEinheit(value);
+      }
+    }}
+  />
+</label>
+
       {warnungStueckProEinheit && <p className={styles.validierungsfehler}>{warnungStueckProEinheit}</p>}
 
     {/* Größe */}
-    <label className={styles.label}>
-       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-  Größe: <span style={{ color: 'red' }}>*</span>
-</span>
-      <input
-        type="text"
-        className={styles.input}
-        value={groesse}
-        onChange={e => setGroesse(e.target.value)}
-        placeholder="z. B. XS, S, M, L, XL oder L×B×H in cm"
-        required
-      />
-    </label>
-    {warnungGroesse && <p className={styles.validierungsfehler}>{warnungGroesse}</p>}
+<label className={styles.label}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Größe: <span style={{ color: 'red' }}>*</span>
+  </span>
+  <input
+    type="text"
+    className={styles.input}
+    maxLength={15} // Eingabe auf 50 Zeichen begrenzen
+    value={groesse}
+    onChange={e => {
+      const val = e.target.value.replace(/^\s+/, ''); // entfernt führende Leerzeichen
+      setGroesse(val);
+    }}
+    placeholder="z. B. XS, S, M, L, XL oder L×B×H in cm"
+    required
+  />
+</label>
+{warnungGroesse && <p className={styles.validierungsfehler}>{warnungGroesse}</p>}
+
 
     {/* Beschreibung */}
     <label className={styles.label}>
@@ -1575,6 +1626,48 @@ const toggleBewerbung = (option: string) => {
 
 <fieldset className={styles.radioGroup}>
   {/* Werktage bis Lieferung */}
+{/* Preis */}
+<label className={styles.inputLabel}>
+  Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
+  <input
+    type="number"
+    min={0}
+    step={0.01}
+    max={999}
+    className={styles.dateInput}
+    value={preis}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '' || Number(value) <= 999) {
+        setPreis(value);
+      }
+    }}
+  />
+</label>
+{warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
+
+
+{/* Versandkosten */}
+<label className={styles.inputLabel}>
+  Versandkosten (€)
+  <input
+    type="number"
+    min={0}
+    step={0.01}
+    max={999}
+    className={styles.dateInput}
+    value={versandKosten}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value === '' || Number(value) <= 999) {
+        setVersandKosten(value);
+      }
+    }}
+  />
+</label>
+{warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
+
+{/* Werktage bis Lieferung */}
 <label className={styles.inputLabel}>
   Werktage bis Lieferung
   <input
@@ -1584,56 +1677,16 @@ const toggleBewerbung = (option: string) => {
     max={999}
     className={styles.dateInput}
     value={lieferWerktage}
-    onChange={e => {
+    onChange={(e) => {
       const value = e.target.value;
-      if (Number(value) <= 999) {
-        setLieferWerktage(Number(value));
+      if (value === '' || Number(value) <= 999) {
+        setLieferWerktage(value);
       }
     }}
   />
 </label>
-  
-  {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
-  {/* Preis */}
-<label className={styles.inputLabel}>
-  Preis (€)
-  <input
-    type="number"
-    min={0}
-    step={0.01}
-    max={999}
-    className={styles.dateInput}
-    value={preis}
-    onChange={e => {
-      const value = e.target.value;
-      if (Number(value) <= 999) {
-        setPreis(Number(value));
-      }
-    }}
-  />
-</label>
-{warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
+{warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
 
-  {/* Versandkosten */}
-<label className={styles.inputLabel}>
-  Versandkosten (€)
-  <input
-    type="number"
-    min={0}
-    step={0.01}
-    max={999} // sorgt dafür, dass nur max. 3 Stellen vor dem Komma erlaubt sind
-    className={styles.dateInput}
-    value={versandKosten}
-    onChange={e => {
-      const value = e.target.value;
-      // optional: zusätzlichen Schutz, falls Browser `max` ignoriert
-      if (Number(value) <= 999) {
-        setVersandKosten(Number(value));
-      }
-    }}
-  />
-</label>
-{warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
 
 </fieldset>
 
@@ -1670,72 +1723,95 @@ const toggleBewerbung = (option: string) => {
 
   <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
 </div>
-<div className={styles.hinweisText}>
-  Es gelten unsere <a href="/nutzungsbedingungen" target="_blank">Nutzungsbedingungen</a>. Informationen zur Verarbeitung deiner Daten findest du in unserer <a href="/datenschutz" target="_blank">Datenschutzerklärung</a>.
+<div className={styles.agbContainer} ref={agbRef}>
+
+  <motion.label
+    className={`${styles.agbLabel} ${agbError ? styles.agbError : ''}`}
+    animate={agbError ? { x: [0, -4, 4, -4, 0] } : {}}
+    transition={{ duration: 0.3 }}
+  >
+    <input
+      type="checkbox"
+      id="agbCheckbox"
+      checked={agbAccepted}
+      onChange={(e) => {
+        setAgbAccepted(e.target.checked)
+        setAgbError(false)
+      }}
+    />
+    <span>
+      Ich akzeptiere die{' '}
+      <a href="/agb" className={styles.nutzungsbedingungenLink}>
+        Allgemeinen Geschäftsbedingungen</a>{' '}zur Gänze. Informationen zur Verarbeitung deiner Daten findest du in unserer{' '}
+      <a href="/datenschutz" className={styles.agbLink}>
+        Datenschutzerklärung
+      </a>.
+    </span>
+  </motion.label>
 </div>
-<button
+ <button
   type="button"
-  onClick={() => setVorschauAktiv(prev => !prev)}
   className={styles.vorschauToggle}
+  onClick={() => setVorschauAktiv(!vorschauAktiv)}
 >
-  {vorschauAktiv ? 'Vorschau ausblenden' : 'Vorschau anzeigen'}
+  {vorschauAktiv ? 'Vorschau ausblenden ▲' : 'Vorschau anzeigen ▼'}
 </button>
-{vorschauAktiv && (
-  <div className={styles.vorschauBox}>
-    <h3>📝 Vorschau deiner Angaben</h3>
 
-    <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
-    <p><strong>Titel:</strong> {titel || '–'}</p>
+<AnimatePresence>
+  {vorschauAktiv && (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className={styles.vorschauBox}
+    >
+      <h3>📝 Vorschau deiner Angaben</h3>
 
-    {/* Lack-Vorschau */}
-    {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
-      <>
-        <p><strong>Farbton:</strong> {farbton || '–'}</p>
-        <p><strong>Menge (kg):</strong> {menge || '–'}</p>
-        <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
-        <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
-        <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-        <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
-        <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
-        <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
-        <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
-        <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
-        <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
-        <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
-        {kategorie === 'pulverlack' && (
-          <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
-        )}
-      </>
-    )}
+      <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
+      <p><strong>Titel:</strong> {titel || '–'}</p>
 
-    {/* Arbeitsmittel-Vorschau */}
-    {kategorie === 'arbeitsmittel' && (
-      <>
-        <p>
-          <strong>Menge (Stück):</strong>{' '}
-          {aufLager ? 'Auf Lager' : (menge || '–')}
-        </p>
-        <p>
-          <strong>Stück pro Verkaufseinheit:</strong>{' '}
-          {stueckProEinheit || '–'}
-        </p>
-        <p>
-          <strong>Größe:</strong>{' '}
-          {groesse || '–'}
-        </p>
-      </>
-    )}
+      {/* Lack-Vorschau */}
+      {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+        <>
+          <p><strong>Farbton:</strong> {farbton || '–'}</p>
+          <p><strong>Menge (kg):</strong> {menge || '–'}</p>
+          <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
+          <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
+          <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
+          <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+          <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
+          <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
+          <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
+          <p><strong>Sondereffekte:</strong> {sondereffekte.join(', ') || '–'}</p>
+          <p><strong>Qualität:</strong> {qualitaet || '–'}</p>
+          <p><strong>Zertifizierungen:</strong> {zertifizierungen.join(', ') || '–'}</p>
+          {kategorie === 'pulverlack' && (
+            <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
+          )}
+        </>
+      )}
 
-    {/* Felder für beide Kategorien */}
-    <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage} Werktag{lieferWerktage > 1 ? 'e' : ''}</p>
-    <p><strong>Preis:</strong> {preis.toFixed(2)} €</p>
-    <p><strong>Versandkosten:</strong> {versandKosten.toFixed(2)} €</p>
-    <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
-    <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
-    <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
-  </div>
-)}
+      {/* Arbeitsmittel-Vorschau */}
+      {kategorie === 'arbeitsmittel' && (
+        <>
+          <p><strong>Menge (Stück):</strong> {aufLager ? 'Auf Lager' : (menge || '–')}</p>
+          <p><strong>Stück pro Verkaufseinheit:</strong> {stueckProEinheit || '–'}</p>
+          <p><strong>Größe:</strong> {groesse || '–'}</p>
+        </>
+      )}
 
+      {/* Felder für beide Kategorien */}
+      <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage || '–'} Werktag{parseInt(lieferWerktage) > 1 ? 'e' : ''}</p>
+      <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} € / ${kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'}` : '–'}</p>
+      <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
+      <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
+      <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
+      <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
+      <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
+    </motion.div>
+  )}
+</AnimatePresence>
 
     <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
   {ladeStatus ? (

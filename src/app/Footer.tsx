@@ -53,9 +53,11 @@ const Footer = () => {
           <li><Link href="/karriere"><b>Karriere</b></Link></li> {/* Der Link zur Karriere-Seite */}
           <li><Link href="/kontakt"><b>Kontakt</b></Link></li> {/* Der Link zur Kontakt-Seite */}
           <li><Link href="/datenschutz"><b>Datenschutz</b></Link></li> {/* Der Link zur Datenschutz-Seite */}
-          <li><Link href="/cookies"><b>Cookie Richtlinie</b></Link></li> {/* Der Link zur Cookies-Seite */}
+          <li><Link href="/cookies"><b>Cookie Richtlinie</b></Link></li> {/* Der Link zur Cookies-Seite */}          
+          <li><Link href="/nutzungsbedingungen"><b>Nutzungsbedingungen</b></Link></li> {/* Der Link zur AGB-Seite */}  
           <li><Link href="/impressum"><b>Impressum</b></Link></li> {/* Der Link zur Impressum-Seite */}
           <li><Link href="/agb"><b>AGB</b></Link></li> {/* Der Link zur AGB-Seite */}   
+          
           
         </ul>
 

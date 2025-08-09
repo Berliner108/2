@@ -34,6 +34,7 @@
   font-weight: 500;
   text-decoration: underline;
   transition: color 0.2s ease;  
+  display: none;
 }
 .infoLink:hover {
   color: #0c4a6e;
@@ -156,10 +157,7 @@
 
 .validierungsfehler {
   color: #b91c1c;
-  background-color: #fee2e2;
-  border: 1px solid #fca5a5;
   padding: 0.75rem;
-  border-radius: 6px;
   margin-top: -1rem;
   margin-bottom: 1rem;
   font-weight: 500;
@@ -562,21 +560,19 @@
   margin-bottom: 1rem;
   font-size: 0.95rem;
 }
-
 .vorschauToggle {
-  margin: 1rem 0;
-  padding: 0.6rem 1.2rem;
-  background-color: #f0f0f0;
-  border: 1px solid #aaa;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  color: #00b4d8;
+  font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: background-color 0.2s ease;
+  margin-bottom: 5px;
+  font-family: 'Oswald';
+  margin-top: 20px;
+  
 }
 
-.vorschauToggle:hover {
-  background-color: #e0e0e0;
-}
 /* Verkaufsseite.module.css */
 
 /* Container für die Menge-Section */
@@ -638,6 +634,48 @@
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }
+.agbContainer {
+  margin-top: 2.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: #f8f9fa;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.agbLabel {
+  display: flex;/* Checkbox für Nutzungsbedingungen */
+  align-items: flex-start; /* statt center → bei mehrzeiligem Text optisch besser */
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.agbLabel input[type='checkbox'] {
+  margin-top: 3px; /* leicht nach unten versetzt, damit es zur ersten Zeile passt */
+  transform: scale(1.2);
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 2px solid #555 !important; /* hier Randdicke ändern */
+}
+
+.agbLabel span {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+.agbLink,
+.nutzungsbedingungenLink {
+  color: #0077b6;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.agbLink:hover,
+.nutzungsbedingungenLink:hover {
+  color: #023e8a;
+  text-decoration: none;
+}
 /* Flex-Wrapper für die beiden Radio-Buttons */
 .mengeRadioGroup {
   display: flex !important;
@@ -684,6 +722,7 @@
   .infoLink {
     display: inline;
     margin-left: 5px;
+    display: none;
     
     
   }

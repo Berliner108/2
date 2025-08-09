@@ -6,42 +6,48 @@ import styles from './login.module.css';
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase-browser';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(true); // aktuell ohne Funktion – wir persistieren immer
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim();
+    const emailOrUsername = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim();
     const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
 
-    setTimeout(() => {
+    // Supabase kann nur per E-Mail einloggen. Username-Login bauen wir später über profiles -> email.
+    if (!emailOrUsername.includes('@')) {
       setLoading(false);
-      if ((email === 'test' || email === 'test@example.com') && password === '1234') {
-        const user = {
-          name: 'Martin Zajac', // Simulierter vollständiger Name
-          email: email,
-        };
+      setError('Bitte melde dich mit deiner E-Mail an (Username-Login folgt später).');
+      return;
+    }
 
-        if (rememberMe) {
-          localStorage.setItem('user', JSON.stringify(user));
-        } else {
-          sessionStorage.setItem('user', JSON.stringify(user));
-        }
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: emailOrUsername,
+      password,
+    });
 
-        window.location.href = '/';
+    setLoading(false);
 
-      } else {
-        setError('Benutzername oder Passwort ist falsch.');
-      }
-    }, 1000); // simulierte Serververzögerung
+    if (signInError) {
+      // ein paar freundlichere Texte
+      const msg = signInError.message.toLowerCase().includes('invalid login')
+        ? 'E-Mail oder Passwort ist falsch.'
+        : signInError.message;
+      setError(msg);
+      return;
+    }
+
+    // Erfolg → Home
+    router.replace('/');
   };
 
   return (
@@ -50,9 +56,8 @@ const Login = () => {
         <Image
           src="/images/signup.webp"
           alt="Login Bild"
-          layout="fill"
-          objectFit="cover"
-          objectPosition="top center"
+          fill
+          style={{ objectFit: 'cover', objectPosition: 'top center' }}
           priority
         />
       </div>
@@ -65,11 +70,11 @@ const Login = () => {
           {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
 
           <div className={styles.inputContainer}>
-            <label htmlFor="email">E-Mail oder Benutzername</label>
+            <label htmlFor="email">E-Mail</label>
             <input
               type="text"
               id="email"
-              placeholder="z. B. max@beispiel.de oder max"
+              placeholder="z. B. max@beispiel.de"
               required
               autoComplete="username"
               autoFocus
@@ -102,6 +107,8 @@ const Login = () => {
               id="remember"
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
+              disabled // wir persistieren ohnehin immer
+              title="Sitzung wird dauerhaft gespeichert"
             />
             <label htmlFor="remember">Angemeldet bleiben</label>
           </div>

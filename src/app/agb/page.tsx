@@ -28,24 +28,140 @@ const AgbPage = () => {
         <p>Die AGB gelten für alle Verträge, die über die Plattform geschlossen werden. Abweichende Bedingungen werden nicht anerkannt, es sei denn, sie wurden ausdrücklich schriftlich bestätigt. Änderungen oder Ergänzungen der AGB werden den Nutzern mitgeteilt und treten mit der nächsten Nutzung der Plattform in Kraft.
         </p>
       </section>
-      <h2 className={styles.subheading}>3. Leistungen von Beschichter Scout</h2>
+      <div className={styles.section}>
+  <h2 className={styles.subheading}>3. Vertragsgegenstand</h2>
+ <p className={styles.text}>
+  Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle registrierten
+  und nicht registrierten Nutzer der Plattform{" "}
+  <strong>BeschichterScout GmbH</strong>. Sie regeln die allgemeinen
+  Nutzungsbedingungen der Plattform sowie die Bedingungen für das Anbieten,
+  den Verkauf und den Kauf von Waren oder Dienstleistungen über die
+  Plattform. Der Plattformbetreiber stellt hierfür lediglich die technische
+  Infrastruktur zur Verfügung und wird – außer bei eigenen Angeboten – nicht
+  Vertragspartei der zwischen den Nutzern geschlossenen Kaufverträge.
+  <p>
+  Auftragsanfragagen und Lackanfragen werden standardmäßig für einen Zeitraum von 7 Tagen veröffentlicht.
+  Verkaufsanzeigen für Artikel bleiben abweichend davon „bis auf Widerruf“
+  online. Der Plattformbetreiber behält sich vor, Anzeigen vorzeitig zu
+  entfernen, wenn sie gegen diese AGB oder geltendes Recht verstoßen oder wenn
+  dies aus technischen oder organisatorischen Gründen erforderlich ist.
+</p>
+
+</p>
+
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>4. Verkäufer- und Auftragnehmerpflichten</h2>
+  <p className={styles.text}>
+    Verkäufer sind verpflichtet, vollständige und wahrheitsgemäße Angaben zu
+    ihren Angeboten zu machen und gesetzliche Informationspflichten einzuhalten
+    (z. B. Widerrufsrecht, Gewährleistung). Irreführende oder falsche Angaben
+    können zur Sperrung des Verkäuferkontos führen und darüber hinaus auch zu rechtlichen Konsequenzen.
+
+    Das Einstellen von Artikeln auf der Plattform ist für Verkäufer kostenlos.
+  Für erfolgreich abgeschlossene Verkäufe fällt eine Verkaufsprovision gemäß
+  der jeweils gültigen Gebührenordnung an.
+
+    Von Auftragnehmern abgegebene Angebote bleiben stets 3 Tage (72h nach Angebotsabgabe) bestehen und werden anschließend gelöscht, sofern kein Vertrag zustande kommt.
+  </p>
+  <p>
+  Nutzer dürfen keine Geschäfte unter Umgehung der Plattform abwickeln. Es ist
+  insbesondere untersagt, nach Kontaktaufnahme über die Plattform einen Kauf
+  oder Verkauf außerhalb der Plattform abzuschließen, um die anfallenden
+  Gebühren oder Provisionen zu umgehen. Der Plattformbetreiber behält sich vor,
+  bei Verstößen Nutzerkonten zu sperren oder dauerhaft zu löschen und
+  gegebenenfalls Schadensersatzansprüche geltend zu machen bzw. etwaige Provisionen dennoch zu verrechnen.
+</p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>5. Käufer- und Auftraggeberpflichten</h2>
+  <p className={styles.text}>
+    Käufer verpflichten sich, nur ernsthafte und verbindliche Kaufangebote
+    abzugeben und vereinbarte Zahlungen fristgerecht zu leisten. Der
+    Plattformbetreiber kann bei wiederholten Pflichtverletzungen Käuferkonten
+    sperren oder löschen.
+  </p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>6. Zahlungsabwicklung</h2>
+  <p className={styles.text}>
+    Die Zahlungsabwicklung erfolgt gemäß den auf der Plattform genannten
+    Zahlungsmethoden. Der Plattformbetreiber ist berechtigt, Zahlungen bis zur
+    Erfüllung der vertraglichen Pflichten zurückzuhalten, sofern Anzeichen für
+    einen Betrug oder Vertragsbruch vorliegen.
+  </p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>7. Gebühren</h2>
+  <p className={styles.text}>
+    Für Verkäufe über die Plattform fällt eine Provision von 7 % des
+    Verkaufspreises an. Weitere Gebühren ergeben sich aus der jeweils gültigen
+    Gebührenordnung.
+  </p>
+  <p className={styles.text}>
+    Für über die Plattform vermittelte Beschichtungsaufträge fällt eine Provision von 5 % des
+    Auftragswertes an. Generell werden Gebühren sofort bei Vertragsabschluss erhoben und müssen vom Nutzer beglichen werden.
+  </p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>8. Betrugsprävention</h2>
+  <p className={styles.text}>
+    Betrügerische Handlungen, der Versuch solcher Handlungen oder bereits der
+    begründete Verdacht darauf werden umgehend den zuständigen
+    Strafverfolgungsbehörden gemeldet. Der Plattformbetreiber behält sich vor,
+    entsprechende Konten ohne Vorwarnung zu sperren.
+  </p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>9. Haftung</h2>
+  <p className={styles.text}>
+    Der Plattformbetreiber haftet nicht für die Erfüllung oder Nichterfüllung
+    von Kaufverträgen zwischen Verkäufern und Käufern, noch für Mängel an den
+    verkauften Waren. Etwaige Ansprüche sind direkt zwischen den Vertragsparteien
+    zu klären.
+  </p>
+  <p>
+  Der Plattformbetreiber übernimmt keine Haftung für die Inhalte, Angebote,
+  Handlungen oder Unterlassungen von Nutzern. Jegliche Vereinbarungen und
+  Transaktionen erfolgen ausschließlich zwischen den jeweiligen Nutzern.
+  Der Plattformbetreiber haftet nicht für mittelbare oder unmittelbare Schäden,
+  Folgeschäden oder entgangenen Gewinn, die aus der Nutzung der Plattform oder
+  aus Geschäften zwischen Nutzern entstehen, soweit gesetzlich zulässig. BeschichterScout rät bei erworbenen Lacken dringlich dazu, diese vorab an einem Musterblech zu testen und zu prüfen, bevor z.B. ein Kundenauftrag damit beschichtet wird.  
+</p>
+</div>
+
+<div className={styles.section}>
+  <h2 className={styles.subheading}>10. Anwendbares Recht</h2>
+  <p className={styles.text}>
+    Es gilt ausschließlich österreichisches Recht unter Ausschluss des
+    UN-Kaufrechts. Gerichtsstand ist Wien, soweit gesetzlich zulässig.
+  </p>
+</div>
+
+      <h2 className={styles.subheading}>11. Leistungen von Beschichter Scout</h2>
 
       <section className={styles.section}>
-        <p>3.1. Der genaue Umfang der Dienstleistungen des AN ist im jeweiligen SLA mit dem AG
+        <p>11.1. Der genaue Umfang der Dienstleistungen des AN ist im jeweiligen SLA mit dem AG
           festgelegt. Sofern nichts anderes vereinbart wird, erbringt der AN die
           Dienstleistungen während der beim AN üblichen Geschäftszeiten laut SLA.
           Der AN wird entsprechend dem jeweiligen SLA für die Erbringung und Verfügbarkeit
           der Dienstleistungen sorgen.</p>
-          <p>3.2. Grundlage der für die Leistungserbringung von AN eingesetzten Einrichtungen und
+          <p>11.2. Grundlage der für die Leistungserbringung von AN eingesetzten Einrichtungen und
           Technologie ist der qualitative und quantitative Leistungsbedarf des AG, wie er auf
           der Grundlage der vom AG zur Verfügung gestellten Informationen ermittelt
           wurde. Machen neue Anforderungen des AG eine Änderung der Dienstleistungen
           bzw. der eingesetzten Technologie erforderlich, wird der AN auf Wunsch des AG
           ein entsprechendes Angebot unterbreiten.</p>
-          <p>3.3. Der AN ist berechtigt, die zur Erbringung der Dienstleistungen eingesetzten
+          <p>11.3. Der AN ist berechtigt, die zur Erbringung der Dienstleistungen eingesetzten
           Einrichtungen nach freiem Ermessen zu ändern, wenn keine Beeinträchtigung der
           Dienstleistungen zu erwarten ist.</p>
-          <p>3.4. Leistungen durch den AN, die vom AG über den jeweils vereinbarten
+          <p>11.4. Leistungen durch den AN, die vom AG über den jeweils vereinbarten
           Leistungsumfang hinaus in Anspruch genommen werden, werden vom AG nach
           tatsächlichem Personal- und Sachaufwand zu den jeweils beim AN gültigen Sätzen
           vergütet. Dazu zählen insbesondere Leistungen außerhalb der beim AN üblichen
@@ -54,11 +170,11 @@ const AgbPage = () => {
           nicht vom AN zu vertretende Umstände entstanden sind. Ebenso sind
           Schulungsleistungen grundsätzlich nicht in den Dienstleistungen enthalten und
           bedürfen einer gesonderten Vereinbarung.</p>
-          <p>3.5. Sofern der AN auf Wunsch des AG Leistungen Dritter vermittelt, kommen diese
+          <p>11.5. Sofern der AN auf Wunsch des AG Leistungen Dritter vermittelt, kommen diese
           Verträge ausschließlich zwischen dem AG und dem Dritten zu den jeweiligen
           Geschäftsbedingungen des Dritten zustande. Der AN ist nur für die von ihm selbst
           erbrachten Dienstleistungen verantwortlich.</p>
-          <p>3.6. Ausdrücklich weisen wir daraufhin, dass eine barrierefreie Ausgestaltung,
+          <p>11.6. Ausdrücklich weisen wir daraufhin, dass eine barrierefreie Ausgestaltung,
           insbesondere iSd Bundesgesetzes über die Gleichstellung von Menschen mit
           Behinderungen (Bundes-Behindertengleichstellungsgesetz, BGStG), des
           Bundesgesetzes über den barrierefreien Zugang zu Websites und mobilen
@@ -76,14 +192,14 @@ const AgbPage = () => {
           entsprechenden Zahlungsbedingungen voraus.</p>
 
       </section>
-      <h2 className={styles.subheading}>4. Mitwirkungs- und Beistellungspflichten</h2>
+      <h2 className={styles.subheading}>12. Mitwirkungs- und Beistellungspflichten</h2>
 
       <section className={styles.section}>
-          <p>4.1. Der AG verpflichtet sich, alle Maßnahmen zu unterstützen, die für die Erbringung
+          <p>12.1. Der AG verpflichtet sich, alle Maßnahmen zu unterstützen, die für die Erbringung
           der Dienstleistungen durch den AN erforderlich sind. Der AG verpflichtet sich
           weiters, alle Maßnahmen zu ergreifen, die zur Erfüllung des Vertrags erforderlich
           sind und die nicht im Leistungsumfang des AN enthalten sind.</p>
-          <p>4.2. Sofern die Dienstleistungen vor Ort beim AG erbracht werden, stellt der AG die zur
+          <p>12.2. Sofern die Dienstleistungen vor Ort beim AG erbracht werden, stellt der AG die zur
           Erbringung der Dienstleistungen durch den AN erforderlichen Netzkomponenten,
           Anschlüsse, Versorgungsstrom inkl. Spitzenspannungsausgleich,
           Notstromversorgungen, Stellflächen für Anlagen, Arbeitsplätze, Infrastruktur sowie
@@ -97,7 +213,7 @@ const AgbPage = () => {
           nicht berechtigt, den Mitarbeitern des AN Weisungen - gleich welcher Art - zu
           erteilen und wird alle Wünsche bezüglich der Leistungserbringung ausschließlich an
           den vom AN benannten Ansprechpartner herantragen.</p>
-          <p>4.3. Der AG stellt zu den vereinbarten Terminen und auf eigene Kosten sämtliche vom
+          <p>12.3. Der AG stellt zu den vereinbarten Terminen und auf eigene Kosten sämtliche vom
           AN zur Durchführung des Auftrages benötigten Informationen, Daten und
           Unterlagen in der vom AN geforderten Form zur Verfügung und unterstützt den AN
           auf Wunsch bei der Problemanalyse und Störungsbeseitigung, der Koordination von
@@ -106,14 +222,14 @@ const AgbPage = () => {
           erbringenden Dienstleistungen verursachen können, bedürfen der vorherigen
           Abstimmung mit dem AN hinsichtlich ihrer technischen und kommerziellen
           Auswirkungen.</p>
-          <p>4.4. Soweit dies nicht ausdrücklich im Leistungsumfang vom AN enthalten ist, wird der
+          <p>12.4. Soweit dies nicht ausdrücklich im Leistungsumfang vom AN enthalten ist, wird der
           AG auf eigenes Risiko und auf eigene Kosten für eine Netzanbindung sorgen.</p>
-          <p>4.5. Der AG ist verpflichtet, die zur Nutzung der Dienstleistungen vom AN
+          <p>12.5. Der AG ist verpflichtet, die zur Nutzung der Dienstleistungen vom AN
           erforderlichen Passwörter und Log-Ins vertraulich zu behandeln.</p>
-          <p>4.6. Der AG wird die dem AN übergebenen Daten und Informationen zusätzlich bei sich
+          <p>12.6. Der AG wird die dem AN übergebenen Daten und Informationen zusätzlich bei sich
           verwahren, so dass sie bei Verlust oder Beschädigung jederzeit rekonstruiert
           werden können.</p>
-          <p>4.7. Der AG wird alle ihm obliegenden Mitwirkungspflichten so zeitgerecht erbringen,
+          <p>12.7. Der AG wird alle ihm obliegenden Mitwirkungspflichten so zeitgerecht erbringen,
           dass der AN in der Erbringung der Dienstleistungen nicht behindert wird. Der AG
           stellt sicher, dass der AN und/oder die durch den AN beauftragten Dritten für die
           Erbringung der Dienstleistungen den erforderlichen Zugang zu den Räumlichkeiten
@@ -121,20 +237,20 @@ const AgbPage = () => {
           Der AG ist dafür verantwortlich, dass die an der Vertragserfüllung beteiligten
           Mitarbeiter seiner verbundenen Unternehmen oder von ihm beauftragte Dritte
           entsprechend an der Vertragserfüllung mitwirken.</p>
-          <p>4.8. Erfüllt der AG seine Mitwirkungspflichten nicht zu den vereinbarten Terminen oder
+          <p>12.8. Erfüllt der AG seine Mitwirkungspflichten nicht zu den vereinbarten Terminen oder
           in dem vorgesehenen Umfang, gelten die vom AN erbrachten Leistungen trotz
           möglicher Einschränkungen dennoch als vertragskonform erbracht.
           Zeitpläne für die von AN zu erbringenden Leistungen verschieben sich in
           angemessenem Umfang. Der AG wird die dem AN hierdurch entstehenden
           Mehraufwendungen und/oder Kosten zu den beim AN jeweils geltenden Sätzen
           gesondert vergüten.</p>
-          <p>4.9. Der AG sorgt dafür, dass seine Mitarbeiter und die ihm zurechenbaren Dritten die
+          <p>12.9. Der AG sorgt dafür, dass seine Mitarbeiter und die ihm zurechenbaren Dritten die
           von AN eingesetzten Einrichtungen und Technologien sowie die ihm allenfalls
           überlassenen Vermögensgegenstände sorgfältig behandeln; der AG haftet dem AN
           für jeden Schaden.</p>
-          <p>4.10. Sofern nichts anderes vereinbart wird, erfolgen Beistellungen und Mitwirkungen des
+          <p>12.10. Sofern nichts anderes vereinbart wird, erfolgen Beistellungen und Mitwirkungen des
           AG unentgeltlich.</p>
-          <p>4.11. Sofern der AN dem AG Speicherplatz zur Verfügung stellt, ist der AG verpflichtet,
+          <p>12.11. Sofern der AN dem AG Speicherplatz zur Verfügung stellt, ist der AG verpflichtet,
           auf diesem keine Daten abzulegen, deren Nutzung gegen geltendes Recht,
           behördliche Anordnungen, Rechte Dritter oder Vereinbarungen mit Dritten verstößt.
           Zudem ist der AG verpflichtet, die Daten vor der Speicherung auf diesem
@@ -143,17 +259,17 @@ const AgbPage = () => {
           einzusetzen.</p>
 
       </section>
-      <h2 className={styles.subheading}>5. Personal</h2>
+      <h2 className={styles.subheading}>13. Personal</h2>
 
       <section className={styles.section}>
-          <p>5.1. Sofern nach den zwischen den Vertragspartnern getroffenen Vereinbarungen
+          <p>13.1. Sofern nach den zwischen den Vertragspartnern getroffenen Vereinbarungen
           Mitarbeiter des AG vom AN übernommen werden, ist darüber eine separate
           schriftliche Vereinbarung zu treffen.</p>
       </section>
-      <h2 className={styles.subheading}>6. Change Requests</h2>
+      <h2 className={styles.subheading}>14. Change Requests</h2>
 
       <section className={styles.section}>
-          <p>6.1. Beide Vertragspartner können jederzeit Änderungen des Leistungsumfangs
+          <p>14.1. Beide Vertragspartner können jederzeit Änderungen des Leistungsumfangs
           verlangen (.Change Request.). Eine gewünschte Änderung muss jedoch eine genaue
           Beschreibung derselben, die Gründe für die Änderung, den Einfluss auf Zeitplanung
           und die Kosten darlegen, um dem Adressaten des Change Requests die Möglichkeit
@@ -161,37 +277,37 @@ const AgbPage = () => {
           rechtsgültige Unterschrift beider Vertragspartner bindend.
           </p>
       </section>
-      <h2 className={styles.subheading}>7. Leistungsstörungen</h2>
+      <h2 className={styles.subheading}>15. Leistungsstörungen</h2>
 
       <section className={styles.section}>
         <p>
-        7.1. Der AN verpflichtet sich zur vertragsgemäßen Erbringung der Dienstleistungen.
+        15.1. Der AN verpflichtet sich zur vertragsgemäßen Erbringung der Dienstleistungen.
         Erbringt der AN die Dienstleistungen nicht zu den vorgesehenen Zeitpunkten oder
         nur mangelhaft, d.h. mit wesentlichen Abweichungen von den vereinbarten
         Qualitätsstandards, ist der AN verpflichtet, mit der Mängelbeseitigung umgehend
         zu beginnen und innerhalb angemessener Frist seine Leistungen ordnungsgemäß
         und mangelfrei zu erbringen, indem er nach seiner Wahl die betroffenen
         Leistungen wiederholt oder notwendige Nachbesserungsarbeiten durchführt.</p>
-        <p>7.2. Beruht die Mangelhaftigkeit auf Beistellungen oder Mitwirkungen des AG oder auf
+        <p>15.2. Beruht die Mangelhaftigkeit auf Beistellungen oder Mitwirkungen des AG oder auf
         einer Verletzung der Verpflichtungen des AG gemäß Punkt 3.6, ist jede
         unentgeltliche Pflicht zur Mängelbeseitigung ausgeschlossen. In diesen Fällen
         gelten die vom AN erbrachten Leistungen trotz möglichen Einschränkungen
         dennoch als vertragsgemäß erbracht. Der AN wird auf Wunsch des AG eine
         kostenpflichtige Beseitigung des Mangels unternehmen.</p>
-        <p>7.3. Der AG wird den AN bei der Mängelbeseitigung unterstützen und alle erforderlichen
+        <p>15.3. Der AG wird den AN bei der Mängelbeseitigung unterstützen und alle erforderlichen
         Informationen zur Verfügung stellen. Aufgetretene Mängel sind vom AG
         unverzüglich schriftlich oder per e-mail dem AN zu melden. Den durch eine
         verspätete Meldung entstehenden Mehraufwand bei der Fehlerbeseitigung trägt der
         AG.</p>
-        <p>7.4. Die Gewährleistungsfrist beträgt sechs (6) Monate. Die Rechte des AG aus der
+        <p>15.4. Die Gewährleistungsfrist beträgt sechs (6) Monate. Die Rechte des AG aus der
         Gewährleistung sowie die Ansprüche daraus verjähren jedenfalls 1 Monat nach
         Ende der jeweiligen Gewährleistungsfrist. Die Möglichkeit der Einrede gegen die
         Entgeltforderung iSd § 933 Abs 3 ABGB wird ausgeschlossen.</p>
-        <p>7.5. Die Aktualisierungspflicht gem § 7 VGG iVm § 1 Abs 3 VGG wird in ihrem gesamten
+        <p>15.5. Die Aktualisierungspflicht gem § 7 VGG iVm § 1 Abs 3 VGG wird in ihrem gesamten
         Ausmaß ausgeschlossen, soweit nicht ausdrücklich anderes vereinbart wird.
         Hinsichtlich Aktualisierungen / Updates kommen daher nur die diesbezüglichen
         Vereinbarungen zwischen den Vertragsparteien zu tragen.</p>
-        <p>7.6. Die Regelungen dieses Punktes gelten sinngemäß für allfällige Lieferungen von
+        <p>15.6. Die Regelungen dieses Punktes gelten sinngemäß für allfällige Lieferungen von
         Hard- oder Softwareprodukten vom AN an den AG. § 924 ABGB Vermutung der
         Mangelhaftigkeit wird einvernehmlich ausgeschlossen. Für allfällige dem AG vom
         AN überlassene Hard- oder Softwareprodukte Dritter gelten vorrangig vor den
@@ -200,7 +316,7 @@ const AgbPage = () => {
         Eigentum an allen von ihm gelieferten Hard- und Softwareprodukten vor.
         </p>
       </section>
-      <h2 className={styles.subheading}>8. Rechte an der Datenbank</h2>
+      <h2 className={styles.subheading}>16. Rechte an der Datenbank</h2>
 
       <section className={styles.section}>
         <p>
@@ -213,31 +329,31 @@ const AgbPage = () => {
           Verstöße gegen diese Bestimmungen können zu einer Sperrung des Zugangs oder zu rechtlichen Schritten führen. Beschichter Scout behält sich vor, technische Schutzmaßnahmen zu ergreifen.
         </p>
       </section>
-      <h2 className={styles.subheading}>9. Haftung</h2>
+      <h2 className={styles.subheading}>17. Haftung</h2>
 
       <section className={styles.section}>
-        <p>9.1. Der AN haftet dem AG für von ihm nachweislich verschuldete Schäden nur im Falle
+        <p>17.1. Der AN haftet dem AG für von ihm nachweislich verschuldete Schäden nur im Falle
         groben Verschuldens und bei Vorsatz. Dies gilt sinngemäß auch für Schäden, die
         auf vom AN beigezogene Dritte zurückgehen. Im Falle von verschuldeten
         Personenschäden haftet der AN unbeschränkt.</p>
-        <p>9.2. Die Haftung für mittelbare Schäden - wie beispielsweise entgangenen Gewinn,
+        <p>17.2. Die Haftung für mittelbare Schäden - wie beispielsweise entgangenen Gewinn,
         Kosten die mit einer Betriebsunterbrechung verbunden sind, Datenverluste oder
         Ansprüche Dritter - wird ausdrücklich ausgeschlossen.</p>
-        <p>9.3. Schadenersatzansprüche verjähren nach den gesetzlichen Vorschriften, jedoch
+        <p>17.3. Schadenersatzansprüche verjähren nach den gesetzlichen Vorschriften, jedoch
         spätestens mit Ablauf eines Jahres ab Kenntnis des Schadens und des Schädigers.</p>
-        <p>9.4. Sofern der AN das Werk unter Zuhilfenahme Dritter erbringt und in diesem
+        <p>17.4. Sofern der AN das Werk unter Zuhilfenahme Dritter erbringt und in diesem
         Zusammenhang Gewährleistungs- und/oder Haftungsansprüche gegenüber diesen
         Dritten entstehen, tritt der AN diese Ansprüche an den AG ab.</p>
-        <p>9.5. Ist die Datensicherung ausdrücklich als Leistung vereinbart, so ist die Haftung für
+        <p>17.5. Ist die Datensicherung ausdrücklich als Leistung vereinbart, so ist die Haftung für
         den Verlust von Daten abweichend von Punkt 8.2 nicht ausgeschlossen, jedoch für
         die Wiederherstellung der Daten begrenzt bis maximal EUR 10 % der
         Auftragssumme je Schadensfall, maximal jedoch EUR 15.000,-. Weitergehende als
         die in diesem Vertrag genannten Gewährleistungs- und Schadenersatzansprüche
         des AG -gleich aus welchem Rechtsgrund- sind ausgeschlossen.</p>
-        <p>9.6. Der AN haftet nicht für Störungen der Telekommunikationsinfrastruktur
+        <p>17.6. Der AN haftet nicht für Störungen der Telekommunikationsinfrastruktur
         einschließlich der Telefonleitungen.</p>
       </section>
-      <h2 className={styles.subheading}>10. Vertragsstrafe</h2>
+      <h2 className={styles.subheading}>18. Vertragsstrafe</h2>
 
       <section className={styles.section}>
           <p>Der AN ist verpflichtet, die im SLA genannten Erfüllungsgrade bzw.
@@ -252,21 +368,21 @@ const AgbPage = () => {
           Sollten pönalwirksame Überschreitungen eintreten, sind diese dem AN unverzüglich
           schriftlich zur Kenntnis zu bringen.</p>
       </section>
-      <h2 className={styles.subheading}>11. Vergütung</h2>
+      <h2 className={styles.subheading}>19. Vergütung</h2>
 
       <section className={styles.section}>
-          <p>11.1. Die vom AG zu bezahlenden Vergütungen und Konditionen ergeben sich aus dem
+          <p>19.1. Die vom AG zu bezahlenden Vergütungen und Konditionen ergeben sich aus dem
           Vertrag. Die gesetzliche Umsatzsteuer wird zusätzlich verrechnet.</p>
-          <p>11.2. Reisezeiten von Mitarbeitern des AN gelten als Arbeitszeit. Reisezeiten werden in
+          <p>19.2. Reisezeiten von Mitarbeitern des AN gelten als Arbeitszeit. Reisezeiten werden in
           Höhe des vereinbarten Stundensatzes vergütet. Die genannten Sätze ändern sich
           entsprechend der Preisgleitklausel in Punkt 9.5. Zusätzlich werden die Reisekosten
           und allfällige Übernachtungskosten vom AG nach tatsächlichem Aufwand erstattet.
           Die Erstattung der notwendigen Reise-, Nächtigungs- und Verpflegungskosten
           erfolgt gegen Vorlage der Belege (Kopien).</p>
-          <p>11.3. Der AN ist jederzeit berechtigt, die Leistungserbringung von der Leistung von
+          <p>19.3. Der AN ist jederzeit berechtigt, die Leistungserbringung von der Leistung von
           Anzahlungen oder der Beibringung von sonstigen Sicherheiten durch den AG in
           angemessener Höhe abhängig zu machen.</p>
-          <p>11.4. Soweit nicht vertraglich anders vereinbart, werden einmalige Vergütungen nach
+          <p>19.4. Soweit nicht vertraglich anders vereinbart, werden einmalige Vergütungen nach
           der Leistungserbringung, laufende Vergütungen vierteljährlich im Voraus
           verrechnet. Die vom AN gelegten Rechnungen inklusive Umsatzsteuer sind
           spätestens 14 Tage ab Fakturenerhalt ohne jeden Abzug und spesenfrei zahlbar.
@@ -278,19 +394,19 @@ const AgbPage = () => {
           überschreiten, ist der AN berechtigt, sämtliche Leistungen einzustellen. Der AN ist
           überdies berechtigt, das Entgelt für alle bereits erbrachten Leistungen ungeachtet
           allfälliger Zahlungsfristen sofort fällig zu stellen.</p>
-          <p>11.5. Laufende Vergütungen beruhen auf dem Kollektivvertragsgehalt eines Angestellten
+          <p>19.5. Laufende Vergütungen beruhen auf dem Kollektivvertragsgehalt eines Angestellten
           von Unternehmen im Bereich Dienstleistungen in der automatischen
           Datenverarbeitung und Informationstechnik in der Erfahrungsstufe für spezielle
           Tätigkeiten (ST2).</p>
-          <p>11.6. Die Aufrechnung ist dem AG nur mit einer vom AN anerkannten oder rechtskräftig
+          <p>19.6. Die Aufrechnung ist dem AG nur mit einer vom AN anerkannten oder rechtskräftig
           festgestellten Gegenforderung gestattet. Ein Zurückbehaltungsrecht steht dem AG
           nicht zu.</p>
-          <p>11.7. Alle sich aus dem Vertragsverhältnis ergebenden Abgabenschuldigkeiten, wie z.B.
+          <p>19.7. Alle sich aus dem Vertragsverhältnis ergebenden Abgabenschuldigkeiten, wie z.B.
           Rechtsgeschäftsgebühren oder Quellensteuern, trägt der AG.
           Sollte der AN für solche Abgaben in Anspruch genommen werden, so wird der AG
           den AN schad- und klaglos halten.</p>
       </section>
-      <h2 className={styles.subheading}>12. Höhere Gewalt</h2>
+      <h2 className={styles.subheading}>20. Höhere Gewalt</h2>
 
       <section className={styles.section}>
         <p>
@@ -303,34 +419,34 @@ const AgbPage = () => {
         werden können, stellt dies keine Vertragsverletzung dar.
         </p>
       </section>
-      <h2 className={styles.subheading}>13. Nutzungsrechte an Softwareprodukten und Unterlagen</h2>
+      <h2 className={styles.subheading}>21. Nutzungsrechte an Softwareprodukten und Unterlagen</h2>
 
       <section className={styles.section}>
-        <p>13.1. Soweit dem AG vom AN Softwareprodukte überlassen werden oder dem AG die
+        <p>21.1. Soweit dem AG vom AN Softwareprodukte überlassen werden oder dem AG die
           Nutzung von Softwareprodukten im Rahmen der Dienstleistungen ermöglicht wird,
           steht dem AG das nichtausschließliche, nicht übertragbare, nicht unterlizenzierbare,
           auf die Laufzeit des Vertrags beschränkte Recht zu, die Softwareprodukte in
           unveränderter Form zu benutzen.</p>
           <p>13.2. Bei Nutzung von Softwareprodukten in einem Netzwerk ist für jeden gleichzeitigen
           Benutzer eine Lizenz erforderlich. Bei Nutzung von Softwareprodukten auf .StandAlone-PCs. ist für jeden PC eine Lizenz erforderlich.
-          13.3. Für dem AG vom AN überlassene Softwareprodukte Dritter gelten vorrangig vor den
+          21.3. Für dem AG vom AN überlassene Softwareprodukte Dritter gelten vorrangig vor den
           Regelungen dieses Punktes die jeweiligen Lizenzbestimmungen des Herstellers dieser
           Softwareprodukte.</p>
-          <p>13.4. Sofern keine gesonderte Vereinbarung getroffen wird, werden dem AG keine
+          <p>21.4. Sofern keine gesonderte Vereinbarung getroffen wird, werden dem AG keine
           weitergehenden Rechte an Softwareprodukten übertragen.
           Die Rechte des AG nach den §§ 40d, 40e UrhG werden hierdurch nicht
           beeinträchtigt.</p>
-          <p>13.5. Alle dem AG vom AN überlassenen Unterlagen, insbesondere die Dokumentationen
+          <p>21.5. Alle dem AG vom AN überlassenen Unterlagen, insbesondere die Dokumentationen
           zu Softwareprodukten, dürfen weder vervielfältigt noch auf irgendeine Weise
           entgeltlich oder unentgeltlich verbreitet werden.</p>
-          <p>13.6. Die für den operativen Betrieb nötige Dokumentation und dafür nötige Passwörter
+          <p>21.6. Die für den operativen Betrieb nötige Dokumentation und dafür nötige Passwörter
           werden vor Ort bei Systemübergabe ausgehändigt. Die System- und
           Administratorpasswörter sowie die Systemdokumentation werden unmittelbar nach
           vollständigem Zahlungseingang und Aufforderung durch den AG übergeben, sofern
           hierbei nicht andere Vereinbarungen hinsichtlich Servicevertrag uund
           Systemgewährleistung beeinträchtigt werden.</p>
       </section>
-      <h2 className={styles.subheading}>14. Erfüllungsgrade und Wiederherstellungszeiten</h2>
+      <h2 className={styles.subheading}>22. Erfüllungsgrade und Wiederherstellungszeiten</h2>
 
       <section className={styles.section}>
         <p>
@@ -347,39 +463,39 @@ const AgbPage = () => {
           schriftlich zur Kenntnis zu bringen.
         </p>
       </section>
-      <h2 className={styles.subheading}>15. Laufzeit des Vertrags</h2>
+      <h2 className={styles.subheading}>23. Laufzeit des Vertrags</h2>
 
       <section className={styles.section}>
-        <p>15.1. Der Vertrag tritt mit Unterschrift durch beide Vertragspartner in Kraft und läuft auf
+        <p>23.1. Der Vertrag tritt mit Unterschrift durch beide Vertragspartner in Kraft und läuft auf
         unbestimmte Zeit. Der Vertrag kann von jedem Vertragspartner unter Einhaltung
         einer Kündigungsfrist von 6 Monaten, frühestens aber zum Ende der im Vertrag
         vereinbarten Mindestlaufzeit, durch eingeschriebenen Brief gekündigt werden.</p>
-        <p>15.2. Jeder Vertragspartner ist berechtigt, den Vertrag aus wichtigem Grund mit
+        <p>23.2. Jeder Vertragspartner ist berechtigt, den Vertrag aus wichtigem Grund mit
         eingeschriebenem Brief vorzeitig und fristlos zu kündigen. Ein wichtiger Grund liegt
         insbesondere vor, wenn der jeweils andere Vertragspartner trotz schriftlicher
         Abmahnung und Androhung der Kündigung wesentliche Verpflichtungen aus dem
         Vertrag verletzt oder die Leistungen des anderen Vertragspartners infolge von
         höherer Gewalt für einen Zeitraum von länger als sechs Monaten behindert oder
         verhindert werden.</p>
-        <p>15.3. Bei Vertragsbeendigung hat der AG unverzüglich sämtliche ihm vom AN überlassene
+        <p>23.3. Bei Vertragsbeendigung hat der AG unverzüglich sämtliche ihm vom AN überlassene
         Unterlagen und Dokumentationen an den AN zurückzustellen.</p>
-        <p>15.4. Auf Wunsch unterstützt der AN bei Vertragsende den AG zu den jeweiligen beim AN
+        <p>23.4. Auf Wunsch unterstützt der AN bei Vertragsende den AG zu den jeweiligen beim AN
         geltenden Stundensätzen bei der Rückführung der Dienstleistungen auf den AG oder
         einen vom AG benannten Dritten.
         </p>
       </section>
-      <h2 className={styles.subheading}>16. Datenschutz</h2>
+      <h2 className={styles.subheading}>24. Datenschutz</h2>
 
       <section className={styles.section}>
         <p>
-          16.1. Die Datenschutzerklärung iSd Art 13 und 14 DSGVO wird dem Auftrag beigelegt.
+          24.1. Die Datenschutzerklärung iSd Art 13 und 14 DSGVO wird dem Auftrag beigelegt.
         </p>
       </section>
-      <h2 className={styles.subheading}>17. Geheimhaltung</h2>
+      <h2 className={styles.subheading}>25. Geheimhaltung</h2>
 
       <section className={styles.section}>
        <p>
-        17.1. Jeder Vertragspartner sichert dem anderen zu, alle ihm vom anderen im
+        25.1. Jeder Vertragspartner sichert dem anderen zu, alle ihm vom anderen im
         Zusammenhang mit diesem Vertrag und seiner Durchführung zur Kenntnis gebrachten
         Betriebsgeheimnisse als solche zu behandeln und Dritten nicht zugänglich zu machen,
         soweit diese nicht allgemein bekannt sind, oder dem Empfänger bereits vorher ohne
@@ -388,11 +504,11 @@ const AgbPage = () => {
         vom Empfänger nachweislich unabhängig entwickelt worden sind, oder aufgrund
         einer rechtskräftigen behördlichen oder richterlichen Entscheidung offen zu legen
         sind.</p>
-        <p>17.2. Die mit dem AN verbundenen Unterauftragnehmer gelten nicht als Dritte, soweit sie
+        <p>25.2. Die mit dem AN verbundenen Unterauftragnehmer gelten nicht als Dritte, soweit sie
         einer inhaltlich diesem Punkt entsprechenden Geheimhaltungsverpflichtung
         unterliegen.</p>
       </section>
-      <h2 className={styles.subheading}>18. Abwerbeverbot</h2>
+      <h2 className={styles.subheading}>26. Abwerbeverbot</h2>
 
       <section className={styles.section}>
         <p>
@@ -406,33 +522,33 @@ const AgbPage = () => {
         und Informationstechnik in der Erfahrungsstufe für spezielle Tätigkeiten (ST2).
         </p>
       </section>
-      <h2 className={styles.subheading}>19. Schlussbestimmungen</h2>
+      <h2 className={styles.subheading}>27. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
         <p>
-        19.1. Die Vertragspartner benennen im Vertrag sachkundige und kompetente Mitarbeiter,
+        27.1. Die Vertragspartner benennen im Vertrag sachkundige und kompetente Mitarbeiter,
         die die erforderlichen Entscheidungen fällen oder veranlassen können.</p>
-        <p>19.2. Änderungen und Ergänzungen des Vertrags bedürfen der Schriftform. Das gilt auch
+        <p>27.2. Änderungen und Ergänzungen des Vertrags bedürfen der Schriftform. Das gilt auch
         für die Aufhebung dieses Formerfordernisses.</p>
-        <p>19.3. Sollten eine oder mehrere Bestimmungen des Vertrags ganz oder teilweise
+        <p>27.3. Sollten eine oder mehrere Bestimmungen des Vertrags ganz oder teilweise
         unwirksam oder nicht durchführbar sein oder werden, so wird die Gültigkeit der
         übrigen Bestimmungen hierdurch nicht berührt. Die unwirksame oder
         undurchführbare Bestimmung ist durch eine sinngemäße gültige Regelung zu
         ersetzen, die dem wirtschaftlichen Zweck der unwirksamen oder undurchführbaren
         Klausel am nächsten kommt.</p>
-        <p>19.4. Jede Verfügung über die aufgrund des Vertrags bestehenden Rechte oder Pflichten
+        <p>27.4. Jede Verfügung über die aufgrund des Vertrags bestehenden Rechte oder Pflichten
         bedarf der vorherigen schriftlichen Zustimmung des jeweils anderen
         Vertragspartners. Der AN ist jedoch berechtigt, den Vertrag auch ohne Zustimmung
         des AG auf ein mit dem AN konzernrechtlich verbundenes Unternehmen zu
         übertragen.</p>
-        <p>19.5. Soweit nicht anders vereinbart, gelten die zwischen Unternehmern zur Anwendung
+        <p>27.5. Soweit nicht anders vereinbart, gelten die zwischen Unternehmern zur Anwendung
         kommenden gesetzlichen Bestimmungen ausschließlich nach österreichischem Recht,
         auch dann, wenn der Auftrag im Ausland durchgeführt wird. Für eventuelle
         Streitigkeiten gilt ausschließlich die örtliche Zuständigkeit des sachlich zuständigen
         Gerichtes für den Geschäftssitz des Auftragnehmers als vereinbart.
         </p>
       </section>
-      <h2 className={styles.subheading}>20. Mediationsklausel</h2>
+      <h2 className={styles.subheading}>28. Mediationsklausel</h2>
 
       <section className={styles.section}>
         <p>
@@ -451,7 +567,7 @@ const AgbPage = () => {
         Schiedsgerichtsverfahren als „vorprozessuale Kosten“ geltend gemacht werden.
         </p>
       </section>
-      <h2 className={styles.subheading}>21. Einstellungen von Inhalten</h2>
+      <h2 className={styles.subheading}>29. Einstellungen von Inhalten</h2>
 
       <section className={styles.section}>
         <p>
@@ -464,7 +580,7 @@ const AgbPage = () => {
           Bei wiederholten Verstößen kann das Nutzerkonto dauerhaft gesperrt werden. Rechtswidrige Inhalte können an die zuständigen Behörden gemeldet werden. Nutzer sind verpflichtet, sich über die rechtlichen Rahmenbedingungen ihrer Inserate zu informieren.
         </p>
       </section>
-      <h2 className={styles.subheading}>22. Verantwortlichkeit für Inhalte</h2>
+      <h2 className={styles.subheading}>30. Verantwortlichkeit für Inhalte</h2>
 
       <section className={styles.section}>
         <p>
@@ -477,7 +593,7 @@ const AgbPage = () => {
           Der Nutzer stellt Beschichter Scout von sämtlichen Ansprüchen Dritter frei, die aufgrund seiner eingestellten Inhalte entstehen. Dies gilt insbesondere für urheberrechtlich geschützte Werke oder unwahre Angaben.
         </p>
       </section>
-      <h2 className={styles.subheading}>23. Nutzungsrechte</h2>
+      <h2 className={styles.subheading}>31. Nutzungsrechte</h2>
 
       <section className={styles.section}>
         <p>
@@ -491,7 +607,7 @@ const AgbPage = () => {
         </p>
       </section>
       
-      <h2 className={styles.subheading}>24. Gewährleistung und Haftung</h2>
+      <h2 className={styles.subheading}>32. Gewährleistung und Haftung</h2>
 
       <section className={styles.section}>
         <p>
@@ -504,7 +620,7 @@ const AgbPage = () => {
           Die Haftung von Beschichter Scout ist bei einfacher Fahrlässigkeit ausgeschlossen, es sei denn, es handelt sich um Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit.
         </p>
       </section>
-      <h2 className={styles.subheading}>25. Schlussbestimmungen</h2>
+      <h2 className={styles.subheading}>33. Schlussbestimmungen</h2>
 
       <section className={styles.section}>
          <p>
@@ -513,6 +629,15 @@ const AgbPage = () => {
           wird durch eine rechtswirksame ersetzt, die dem wirtschaftlichen Zweck der ursprünglichen möglichst nahekommt.</p>
         <p>Beschichter Scout behält sich das Recht vor, diese AGB jederzeit zu ändern. Änderungen werden den Nutzern rechtzeitig mitgeteilt. 
           Bei fortgesetzter Nutzung der Plattform gelten die geänderten Bedingungen als akzeptiert.</p>
+          <p>
+          Der Plattformbetreiber behält sich vor, diese Allgemeinen Geschäftsbedingungen
+          jederzeit zu ändern, soweit dies erforderlich erscheint und den Nutzer nicht
+          unangemessen benachteiligt. Über wesentliche Änderungen wird der Nutzer in
+          geeigneter Weise informiert. Die Änderungen gelten als angenommen, wenn der
+          Nutzer der Plattform nicht innerhalb von 14 Tagen nach Mitteilung widerspricht
+          oder die Plattform weiterhin nutzt.
+        </p>
+
       </section>
       <br></br>
       <div className={styles.buttonWrapper}>

@@ -269,7 +269,7 @@ const calculateProgress = () => {
         {/* Hinweisbox */}
         <motion.div {...fadeIn} className={styles.infoBox}>
           💡 Ab sofort ist das Einholen von Angeboten <strong>kostenlos</strong>!
-          <a href="/mehr-erfahren" className={styles.infoLink}>Mehr erfahren</a>
+          <a href="/agb" className={styles.infoLink}>Mehr erfahren</a>
         </motion.div>
 
         {/* Schrittübersicht */}
@@ -514,8 +514,8 @@ const calculateProgress = () => {
     />
     <span>
       Ich akzeptiere die{' '}
-      <a href="/nutzungsbedingungen" className={styles.nutzungsbedingungenLink}>
-        Nutzungsbedingungen</a>{' '}zur Gänze. Informationen zur Verarbeitung deiner Daten findest du in unserer{' '}
+      <a href="/agb" className={styles.nutzungsbedingungenLink}>
+        Allgemeinen Geschäftsbedingungen</a>{' '}zur Gänze. Informationen zur Verarbeitung deiner Daten findest du in unserer{' '}
       <a href="/datenschutz" className={styles.agbLink}>
         Datenschutzerklärung
       </a>.
@@ -534,37 +534,51 @@ const calculateProgress = () => {
   <AnimatePresence>
     {vorschauOffen && (
       <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: 'auto', opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className={styles.vorschauContainer}
-      >
-        <h3>Deine Eingaben im Überblick</h3>
-        <ul>
-          <li><strong>Bilder:</strong> {photoFiles.length} Dateien hochgeladen</li>
-          <li><strong>Dateien:</strong> {fileFiles.length} Dateien hochgeladen</li>
-          <li><strong>Materialgüte:</strong>{' '}  {materialGuete === 'Andere'    ? `Andere (${customMaterial})`    : materialGuete || 'Noch keine Angabe'}</li>
-          <li>  <strong>Verfahren:</strong>{' '}  {selectedOption1? `${selectedOption1}${selectedOption2 ? ' – ' + selectedOption2 : ''}${selectedOption3 ? ' – ' + selectedOption3 : ''}`: 'Noch keine Auswahl getroffen'}</li>
-           {Object.keys(specSelections).length > 0 && (
-            <li>
-                <strong>Spezifikationen:</strong><ul style={{ paddingLeft: '1rem', marginTop: '0.5rem' }}>{Object.entries(specSelections).map(([label, value], i) => (
-                    <li key={i}>
-                    {label}: {Array.isArray(value) ? value.join(', ') : value}
-                    </li>
-                ))}
-                </ul>
-            </li>
-            )}
-            <li><strong>Lieferdatum:</strong> {lieferDatum || 'Noch kein Datum gewählt'}</li>
-            <li><strong>Abholdatum:</strong> {abholDatum || 'Noch kein Datum gewählt'}</li>
-            <li><strong>Lieferart:</strong> {lieferArt || 'Nicht angegeben'}</li>
-            <li><strong>Abholart:</strong> {abholArt || 'Nicht angegeben'}</li>
-          <li><strong>Beschreibung:</strong> {beschreibung ? beschreibung : 'Noch keine Angaben gemacht'}</li>
-          <li><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</li>
-          <li><strong>Werbeoptionen:</strong> {bewerbungOptionen.length > 0 ? bewerbungOptionen.join(', ') : 'Keine ausgewählt'}</li>
-        </ul>
-      </motion.div>
+  initial={{ height: 0, opacity: 0 }}
+  animate={{ height: 'auto', opacity: 1 }}
+  exit={{ height: 0, opacity: 0 }}
+  transition={{ duration: 0.4 }}
+  className={styles.vorschauContainer}
+>
+  <h3>Deine Eingaben im Überblick</h3>
+
+  <p><strong>Bilder:</strong> {photoFiles.length} Dateien hochgeladen</p>
+  <p><strong>Dateien:</strong> {fileFiles.length} Dateien hochgeladen</p>
+  <p>
+    <strong>Materialgüte:</strong>{' '}
+    {materialGuete === 'Andere'
+      ? `Andere (${customMaterial})`
+      : materialGuete || 'Noch keine Angabe'}
+  </p>
+  <p>
+    <strong>Verfahren:</strong>{' '}
+    {selectedOption1
+      ? `${selectedOption1}${selectedOption2 ? ' – ' + selectedOption2 : ''}${
+          selectedOption3 ? ' – ' + selectedOption3 : ''
+        }`
+      : 'Noch keine Auswahl getroffen'}
+  </p>
+
+  {Object.keys(specSelections).length > 0 && (
+    <div>
+      <strong>Spezifikationen:</strong>
+      {Object.entries(specSelections).map(([label, value], i) => (
+        <p key={i}>
+          {label}: {Array.isArray(value) ? value.join(', ') : value}
+        </p>
+      ))}
+    </div>
+  )}
+
+  <p><strong>Lieferdatum:</strong> {lieferDatum || 'Noch kein Datum gewählt'}</p>
+  <p><strong>Abholdatum:</strong> {abholDatum || 'Noch kein Datum gewählt'}</p>
+  <p><strong>Lieferart:</strong> {lieferArt || 'Nicht angegeben'}</p>
+  <p><strong>Abholart:</strong> {abholArt || 'Nicht angegeben'}</p>
+  <p><strong>Beschreibung:</strong> {beschreibung || 'Noch keine Angaben gemacht'}</p>  
+  <p><strong>Werbeoptionen:</strong> {bewerbungOptionen.length > 0 ? bewerbungOptionen.join(', ') : 'Keine ausgewählt'}</p>
+  <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
+</motion.div>
+
     )}
   </AnimatePresence>
 </div>

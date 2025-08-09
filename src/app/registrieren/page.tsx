@@ -4,21 +4,16 @@ import React, { useState } from "react";
 import styles from "./register.module.css";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase-browser";
 
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <div
     onClick={onClick}
-    style={{
-      position: "absolute",
-      right: "0px",
-      top: "38px",
-      cursor: "pointer",
-    }}
+    style={{ position: "absolute", right: "0px", top: "38px", cursor: "pointer" }}
   >
     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
   </div>
 );
-
 
 const Register = () => {
   const [isPrivatePerson, setIsPrivatePerson] = useState(false);
@@ -37,18 +32,18 @@ const Register = () => {
     companyName: "",
     vatNumber: ""
   });
+
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [confirmationLink, setConfirmationLink] = useState('');
+  const [confirmationLink, setConfirmationLink] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-const [isLoading, setIsLoading] = useState(false);
-
-
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Deine vollständige Validierung (unverändert)
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.firstName.trim()) newErrors.firstName = "Vorname ist erforderlich.";
@@ -74,43 +69,51 @@ const [isLoading, setIsLoading] = useState(false);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validate()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
 
-  setIsLoading(true); // Spinner aktivieren
+    setIsLoading(true);
+    setErrors({}); // alte Fehler zurücksetzen
 
-  // Simuliere einen kurzen Delay, z. B. fürs lokale Speichern
-  setTimeout(() => {
-    const usersJSON = localStorage.getItem('registeredUsers');
-    const existingUsers = usersJSON ? JSON.parse(usersJSON) : [];
+    // Registrierung bei Supabase – alle Felder in user_metadata ablegen
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+          accountType: isPrivatePerson ? "PRIVATE" : "BUSINESS",
+          address: {
+            street: formData.street,
+            houseNumber: formData.houseNumber,
+            zip: formData.zip,
+            city: formData.city,
+            country: formData.country,
+          },
+          companyName: isPrivatePerson ? null : formData.companyName,
+          vatNumber: isPrivatePerson ? null : formData.vatNumber,
+        },
+        emailRedirectTo: `${window.location.origin}/registrieren/bestaetigen`,
+      },
+    });
 
-    const usernameTaken = existingUsers.some(
-      (user: any) => user.username.toLowerCase() === formData.username.toLowerCase()
-    );
+    setIsLoading(false);
 
-    if (usernameTaken) {
-      setErrors({ username: 'Benutzername ist bereits vergeben.' });
-      setIsLoading(false);
+    if (error) {
+      // etwas freundlichere Fehlermeldung
+      const msg = error.message?.toLowerCase().includes("already registered")
+        ? "Diese E-Mail ist bereits registriert."
+        : error.message || "Registrierung fehlgeschlagen.";
+      setErrors({ email: msg });
       return;
     }
 
-    const token = Math.random().toString(36).substr(2);
-
-    existingUsers.push({
-      ...formData,
-      verified: false,
-      token,
-    });
-
-    localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
-
-    const confirmUrl = `${window.location.origin}/registrieren/bestaetigen?token=${token}`;
-    setConfirmationLink(confirmUrl);
-    setIsLoading(false); // Spinner deaktivieren
-  }, 800);
-};
-
+    // Erfolg – Hinweis für Bestätigungs-E-Mail
+    setConfirmationLink("Bitte prüfe deine E-Mails und bestätige dein Konto.");
+  };
 
   return (
     <div className={styles.registerContainer}>
@@ -128,11 +131,13 @@ const [isLoading, setIsLoading] = useState(false);
         <form className={styles.registerForm} onSubmit={handleSubmit}>
           <h1>Jetzt kostenlos registrieren</h1>
 
-          <div className={styles.sliderContainer} onClick={() => setIsPrivatePerson(!isPrivatePerson)}>
-            <div
-              className={styles.slider}
-              style={{ left: isPrivatePerson ? "50%" : "0%" }}
-            ></div>
+          <div
+            className={styles.sliderContainer}
+            onClick={() => setIsPrivatePerson(!isPrivatePerson)}
+            role="button"
+            aria-label="Account-Typ wechseln"
+          >
+            <div className={styles.slider} style={{ left: isPrivatePerson ? "50%" : "0%" }} />
             <span className={styles.sliderLabelLeft}>Gewerblich</span>
             <span className={styles.sliderLabelRight}>Privatperson</span>
           </div>
@@ -163,37 +168,28 @@ const [isLoading, setIsLoading] = useState(false);
           </div>
 
           <div className={styles.inputContainer} style={{ position: "relative" }}>
-  <label>Passwort</label>
-  <input
-    type={showPassword ? "text" : "password"}
-    name="password"
-    value={formData.password}
-    onChange={handleInputChange}
-  />
-  <EyeIcon
-    visible={showPassword}
-    onClick={() => setShowPassword(!showPassword)}
-  />
-  {errors.password && <p className={styles.error}>{errors.password}</p>}
-</div>
+            <label>Passwort</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+            />
+            <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
+            {errors.password && <p className={styles.error}>{errors.password}</p>}
+          </div>
 
-<div className={styles.inputContainer} style={{ position: "relative" }}>
-  <label>Passwort bestätigen</label>
-  <input
-    type={showConfirmPassword ? "text" : "password"}
-    name="confirmPassword"
-    value={formData.confirmPassword}
-    onChange={handleInputChange}
-  />
-  <EyeIcon
-    visible={showConfirmPassword}
-    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-  />
-  {errors.confirmPassword && (
-    <p className={styles.error}>{errors.confirmPassword}</p>
-  )}
-</div>
-
+          <div className={styles.inputContainer} style={{ position: "relative" }}>
+            <label>Passwort bestätigen</label>
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+            />
+            <EyeIcon visible={showConfirmPassword} onClick={() => setShowConfirmPassword(!showConfirmPassword)} />
+            {errors.confirmPassword && <p className={styles.error}>{errors.confirmPassword}</p>}
+          </div>
 
           <div className={styles.inputRow}>
             <div className={styles.inputContainer}>
@@ -202,7 +198,6 @@ const [isLoading, setIsLoading] = useState(false);
               {errors.street && <p className={styles.error}>{errors.street}</p>}
             </div>
             <div className={`${styles.inputContainer} ${styles.smallInput}`}>
-
               <label>Hausnr.</label>
               <input type="text" name="houseNumber" value={formData.houseNumber} onChange={handleInputChange} />
               {errors.houseNumber && <p className={styles.error}>{errors.houseNumber}</p>}
@@ -259,21 +254,13 @@ const [isLoading, setIsLoading] = useState(false);
           )}
 
           <button type="submit" disabled={isLoading}>
-  {isLoading ? (
-    <span className={styles.spinner}></span>
-  ) : (
-    "Registrieren"
-  )}
-</button>
-
+            {isLoading ? <span className={styles.spinner}></span> : "Registrieren"}
+          </button>
         </form>
 
         {confirmationLink && (
           <div className={styles.confirmBox}>
-            <p>Registrierung erfolgreich! Bitte bestätige deine E-Mail:</p>
-            <a href={confirmationLink} target="_blank" rel="noopener noreferrer">
-              {confirmationLink}
-            </a>
+            <p>Registrierung erfolgreich! {confirmationLink}</p>
           </div>
         )}
       </div>

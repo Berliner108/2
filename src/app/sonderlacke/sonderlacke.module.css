@@ -3,14 +3,12 @@
   margin: 0 auto;
   padding: 2rem;
 }
-
 .heading {
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
   text-align: center;
 }
-
 .description {
   color: #555;
   margin-bottom: 2rem;
@@ -33,7 +31,8 @@
   color: #0369a1;
   font-weight: 500;
   text-decoration: underline;
-  transition: color 0.2s ease;  
+  transition: color 0.2s ease; 
+  display: none; 
 }
 .infoLink:hover {
   color: #0c4a6e;
@@ -47,58 +46,29 @@
   margin-bottom: 1.5rem;
   transition: background-color 0.2s ease;
 }
-.dynamicFields {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
 .dropzone:hover {
   background-color: #f9f9f9;
 }
-.counter {
-  font-size: 0.8rem;
-  color: #666;
-  text-align: right;
-  margin-top: 0.2rem;
-}
-
 .dropzoneFotos {
   border-color: #00b4d8;
   background-color: #f0f6ff;
 }
-
 .dropzoneDateien {
   border-color: #888;
   background-color: #f5f5f5;
 }
-
 .dropzoneFehler {
   border-color: #dc2626 !important;
   background-color: #fef2f2;
 }
 /* Grundgeruest.module.css */
 .bewerbungGruppe {
-  margin-top: 2rem;
+  margin-top: 4rem;
   display: flex;
   flex-wrap: wrap;
   gap: 1.5rem;
   align-items: flex-start;
 }
-
-.bewerbungOption {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.bewerbungOption input {
-  margin-right: 0.25rem;
-}
-
 .steuerHinweis {
   margin-top: 1rem;
   font-size: 0.85rem;
@@ -118,12 +88,10 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   font-size: 0.95rem;
 }
-
 .selectedValue {
   padding: 0.5rem 0.75rem;
   user-select: none;
 }
-
 .optionList {
   position: absolute;
   top: 100%;
@@ -138,45 +106,28 @@
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   margin-top: 1px;
 }
-
 .optionItem {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   transition: background 0.2s;
 }
-
 .optionItem:hover {
   background-color: #00b4d8;
 }
-
 .activeOption {
   background-color: #ccf5f1;
   font-weight: 500;
 }
-
-.validierungsfehler {
-  color: #b91c1c;
-  background-color: #fee2e2;
-  border: 1px solid #fca5a5;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
 .vorschau {
   margin-top: 1rem;
   margin-bottom: 2rem;
 }
-
 .thumbnailGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 0.5rem;
 }
-
 .thumbnail {
   width: 100px;
   height: 100px;
@@ -184,13 +135,11 @@
   border-radius: 8px;
   border: 1px solid #ccc;
 }
-
 .previewItem {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-
 .removeBtn {
   margin-top: 6px;
   background-color: #e3342f;
@@ -201,11 +150,9 @@
   font-size: 0.75rem;
   cursor: pointer;
 }
-
 .removeBtn:hover {
   background-color: #cc1f1a;
 }
-
 .submitBtn {
   margin-top: 2rem;
   padding: 12px;
@@ -219,23 +166,18 @@
   width: 100%;
   font-weight: bold;
 }
-
 .submitBtn:hover {
   background-color: #00e5ff;
 }
-
 /* Kategorie-Icons */
-
 .kategorieContainer {
-  margin-bottom: 2rem;
-  
+  margin-bottom: 2rem;  
 }
 .centeredHeading {
   text-align: center;
   font-size: 24px;
   margin-top: 50px;
 }
-
 .iconRow {
   display: flex;
   gap: 1rem;
@@ -248,35 +190,46 @@
   gap: 1rem;
   margin-top: 1rem;
 }
-
 .dateInput {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
   font-family: 'Oswald';
+  margin-left: 15px;
 }
 .inputLabel {
   display: flex;
   flex-direction: column;
-  font-weight: 500;
+  font-weight: 500;  
 }
-
 .input {
   margin-top: 0.3rem;
   padding: 0.5rem;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-family: 'Oswald';
+  font-size: 16px;
 }
-
+.select {
+  margin-top: 0.3rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: 'Oswald';
+  font-size: 16px;
+  background-color: white;  
+}
 .grid3spaltig {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
-
+.inputError {
+  border: 2px solid red !important;
+}
+.selectError { border: 2px solid red !important; }
 .iconBox {
   display: flex;
   flex-direction: column;
@@ -291,24 +244,19 @@
   font-size: 1.1rem;
   transition: all 0.2s ease;
 }
-
 .iconBox span {
   font-size: 0.85rem;
   margin-top: 0.3rem;
 }
-
 .iconBox:hover {
   background-color: #eef6ff;
   border-color: #00b4d8;
 }
-
 .activeIcon {
   border-color: #00b4d8;
   background-color: #ebf4ff;
 }
-
 /* Dynamische Felder */
-
 .dynamicFields {
   overflow: hidden;
   display: flex;
@@ -321,8 +269,6 @@
   background-color: #f9f9f9;
   transition: all 0.3s ease;
 }
-
-
 .dynamicFields label {
   display: flex;
   flex-direction: column;
@@ -331,7 +277,6 @@
 .label {
   position: relative;
 }
-
 .label1 {
   margin-top: -20px;
 }
@@ -349,15 +294,11 @@
   font-weight: 500;
   color: #333;
 }
-
-.inputFarbcode {
-  
-  
+.inputFarbcode {  
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
-  margin-top: -10px;
-  
+  margin-top: -10px;  
 }
 .checkboxGrid {
   display: grid;
@@ -367,8 +308,6 @@
   line-height: 1.2;
   font-weight: 200px;
 }
-
-
 .toggleLegend {
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -376,14 +315,12 @@
   justify-content: space-between;
   align-items: center;
 }
-
 .radioOptionsHorizontal {
   display: flex;
   gap: 2rem;
   padding-left: 0.5rem;
   flex-wrap: wrap;
 }
-
 .radioLabel {
   display: inline-flex;
   align-items: center;
@@ -400,21 +337,42 @@
   font-weight: bold;
   color: #000; /* Oder deine Wunschfarbe */
   margin-bottom: -10px;
+  font-size: 16px;
+}
+.radioLegendwaehlen {
+  font-weight: bold;
+  color: #000; /* Oder deine Wunschfarbe */
+  margin-bottom: -10px;
+  font-size: 18px;
+}
+.radioLegendlieferdetails {
+  font-weight: bold;
+  color: #000; /* Oder deine Wunschfarbe */
+  margin-bottom: -10px;
+  font-size: 22px;
 }
 .radioGroup {
   border: 1px solid #ccc;   /* <- Standardgrau */
   border-radius: 8px;
-  padding: 1rem;
-  
+  padding: 1rem;  
 }
-
+.radioGrouplieferadressewaehlen {
+  border: 1px solid #ccc;   /* <- Standardgrau */
+  border-radius: 8px;
+  padding: 1rem;  
+}
+.radioGroupliefercontainer {
+  border: 1px solid #ccc;   /* <- Standardgrau */
+  border-radius: 8px;
+  padding: 1rem;  
+  margin-top: 50px;
+}
 .dragActive {
   border: 2px dashed #00b5d8;
   background-color: #f0f8ff;
   transition: background-color 0.2s ease;
 }
-.textarea {
-  
+.textarea {  
   padding: 0.75rem;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -424,7 +382,6 @@
   font-family: 'Oswald';
   height: 300px;
 }
-
 .counter {
   font-size: 0.85rem;
   text-align: right;
@@ -437,13 +394,11 @@
   border-radius: 0.5rem;
   padding: 1rem;
 }
-
 .checkboxOptions {
   display: flex;
   gap: 1.5rem;
   margin-top: 0.5rem;
 }
-
 .checkboxLabel {
   display: flex;
   align-items: center;
@@ -478,11 +433,24 @@
 .progressValue {
   white-space: nowrap;
 }
-.progressText {
-  font-size: 0.9rem;
-  color: #444;
-  margin-top: 0.5rem;
-  text-align: center;
+.validierungsfehler {
+  color: #b91c1c;
+  padding: 0.75rem;
+  margin-top: -1.5rem; 
+  font-weight: 500;
+  display: block;
+  margin-bottom: -0.5rem;
+}
+.validierungsfehleragb {
+  color: #b91c1c;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  display: block;
+}
+.validierungsfehlerradio {
+  color: #b91c1c;
+  font-weight: 500;
 }
 .spinner {
   margin-left: 10px;
@@ -495,30 +463,20 @@
   display: inline-block;
   vertical-align: middle;
 }
-.bewerbungContainer {
-  margin-top: 2rem;
-  padding: 1rem;
-  
-  border-radius: 12px;
-  background-color: #f9f9f9;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
 .bewerbungOption {
   flex: 1 1 200px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.95rem;
+  cursor: pointer;
+  font-size: 15px;
 }
-
 .bewerbungOption input {
   width: 14px;
   height: 14px;
   accent-color: #00b4d8;
+  margin-right: 0.25rem;
 }
 .bewerbungOption svg {
   margin-right: 0.3rem;
@@ -529,7 +487,6 @@
   color: #555;
   line-height: 1.4;
 }
-
 .hinweisText a {
   color: #0070f3;
   text-decoration: underline;
@@ -539,7 +496,6 @@
   justify-content: flex-end;
   margin-top: 1rem;
 }
-
 .zuruecksetzenButton {
   padding: 0.6rem 1.2rem;
   background-color: #eee;
@@ -550,7 +506,6 @@
   transition: background-color 0.2s ease;
   font-family: 'Oswald';
 }
-
 .zuruecksetzenButton:hover {
   background-color: #ddd;
 }
@@ -562,29 +517,57 @@
   margin-bottom: 1rem;
   font-size: 0.95rem;
 }
-
 .vorschauToggle {
-  margin: 1rem 0;
-  padding: 0.6rem 1.2rem;
-  background-color: #f0f0f0;
-  border: 1px solid #aaa;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  color: #00b4d8;
+  font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
+  font-family: 'Oswald';
+}
+.agbContainer {
+  margin-top: 2.5rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: #f8f9fa;
   font-size: 0.95rem;
-  transition: background-color 0.2s ease;
+  line-height: 1.6;
 }
-
-.vorschauToggle:hover {
-  background-color: #e0e0e0;
+.agbLabel {
+  display: flex;/* Checkbox für Nutzungsbedingungen */
+  align-items: flex-start; /* statt center → bei mehrzeiligem Text optisch besser */
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
-
-
+.agbLabel input[type='checkbox'] {
+  margin-top: 3px; /* leicht nach unten versetzt, damit es zur ersten Zeile passt */
+  transform: scale(1.2);
+  cursor: pointer;
+  flex-shrink: 0;
+  border: 2px solid #555 !important; /* hier Randdicke ändern */
+}
+.agbLabel span {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+.agbLink,
+.nutzungsbedingungenLink {
+  color: #0077b6;
+  text-decoration: underline;
+  font-weight: 500;
+}
+.agbLink:hover,
+.nutzungsbedingungenLink:hover {
+  color: #023e8a;
+  text-decoration: none;
+}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-
 @media (max-width: 599px) {
  .container {
   max-width: 95%;
@@ -601,24 +584,17 @@
   border: 1px solid #ccc;   /* <- Standardgrau */
   border-radius: 8px;
   padding: 1rem;
-  font-size: 13.72px;
-  
-  
+  font-size: 13.72px;  
 }
 .infoBox {
     display: block;
     text-align: center;
     font-size: 15px;
-    padding: 8px;
-    
+    padding: 8px;    
   }
-
   .infoLink {
     display: inline;
     margin-left: 5px;
-    
-    
+    display: none;    
   }
-
-
 }
