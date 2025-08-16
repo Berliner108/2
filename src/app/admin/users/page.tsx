@@ -13,12 +13,28 @@ import { updateRole, toggleBan, deleteUser } from './actions'
 type Search = { page?: string; q?: string; role?: string; confirmed?: string }
 type HashRow = { user_id: string; ip_hash: string; created_at: string }
 
-export default async function AdminUsersPage({ searchParams }: { searchParams?: Search }) {
-  const sp = searchParams ?? {}
+function getStr(v: string | string[] | undefined): string {
+  if (Array.isArray(v)) return v[0] ?? ''
+  return v ?? ''
+}
+
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  // Next 15: async searchParams
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const spRaw = await searchParams
+  const sp: Search = {
+    page: getStr(spRaw.page),
+    q: getStr(spRaw.q),
+    role: getStr(spRaw.role),
+    confirmed: getStr(spRaw.confirmed),
+  }
+
   const page = Math.max(1, parseInt(sp.page || '1', 10))
   const perPage = 25
   const q = (sp.q || '').trim().toLowerCase()
-
   const roleFilter = (sp.role || '').toLowerCase()
   const confFilter = (sp.confirmed || '').toLowerCase()
 

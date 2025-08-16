@@ -1,4 +1,3 @@
-// src/app/admin/users/[id]/logins/page.tsx
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -9,32 +8,37 @@ import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import styles from '../../users.module.css'
 
-// kleine Helfer
-function pickOne(v: unknown, fallback = ''): string {
-  if (Array.isArray(v)) return (v[0] ?? fallback) + ''
-  if (typeof v === 'string') return v
-  return fallback
+type Search = { page?: string; perPage?: string }
+
+function getStr(v: string | string[] | undefined): string {
+  if (Array.isArray(v)) return v[0] ?? ''
+  return v ?? ''
 }
 
-export default async function UserLoginsPage(props: any) {
-  // In Next 15 können params/searchParams Promises sein → sicher “entpacken”
-  const params = await Promise.resolve(props?.params ?? {})
-  const searchParams = await Promise.resolve(props?.searchParams ?? {})
+export default async function UserLoginsPage({
+  params,
+  searchParams,
+}: {
+  // Next 15: async params + searchParams
+  params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { id: userId } = await params
+  const spRaw = await searchParams
+  const sp: Search = {
+    page: getStr(spRaw.page),
+    perPage: getStr(spRaw.perPage),
+  }
 
-  const userId: string = params.id
-
-  const pageRaw = pickOne(searchParams.page, '1')
-  const perPageRaw = pickOne(searchParams.perPage, '50')
-
-  const page = Math.max(1, Number.parseInt(pageRaw, 10) || 1)
-  const perPage = Math.max(1, Math.min(100, Number.parseInt(perPageRaw, 10) || 50))
+  const page    = Math.max(1, parseInt(sp.page || '1', 10))
+  const perPage = Math.max(1, Math.min(100, parseInt(sp.perPage || '50', 10)))
   const from = (page - 1) * perPage
-  const to = from + perPage - 1
+  const to   = from + perPage - 1
 
-  // ---- Admin-Check
+  // 1) Admin-Check
   const sb = await supabaseServer()
   const { data: { user } } = await sb.auth.getUser()
-  if (!user) redirect(`/login?redirect=/admin/users/${encodeURIComponent(userId)}/logins`)
+  if (!user) redirect('/login?redirect=/admin/users')
 
   const adminEmails = (process.env.ADMIN_EMAILS ?? '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
@@ -44,7 +48,7 @@ export default async function UserLoginsPage(props: any) {
   const { data: me } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (me?.role !== 'admin') redirect('/')
 
-  // ---- Daten holen
+  // 2) Daten holen
   const admin = supabaseAdmin()
   const { data: rows, count, error } = await admin
     .from('user_login_events')
@@ -89,22 +93,17 @@ export default async function UserLoginsPage(props: any) {
               </tr>
             </thead>
             <tbody>
-              {(rows ?? []).map((r, i) => (
+              {(rows || []).map((r, i) => (
                 <tr key={i} className={styles.tr}>
                   <td className={styles.td}>
                     {r.occurred_at ? new Date(r.occurred_at as string).toLocaleString() : '—'}
                   </td>
-                  <td
-                    className={styles.td}
-                    style={{
-                      // sichere Quotes → kein TSX-Parser-Fehler
-                      fontFamily:
-                        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-                    }}
-                  >
+                  <td className={styles.td} style={{ fontFamily: 'monospace' }}>
                     {r.ip_hash ? `${(r.ip_hash as string).slice(0, 16)}…` : '—'}
                   </td>
-                  <td className={styles.td}>{(r.user_agent as string) || '—'}</td>
+                  <td className={styles.td}>
+                    {(r.user_agent as string) || '—'}
+                  </td>
                 </tr>
               ))}
               {(!rows || rows.length === 0) && (
