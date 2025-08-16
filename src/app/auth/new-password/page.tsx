@@ -1,18 +1,28 @@
+// src/app/auth/new-password/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import styles from './newpassword.module.css';
 
-export default function NewPassword() {
+export default function NewPasswordPage() {
+  // WICHTIG: Hook-Nutzung in ein Suspense-Child auslagern
+  return (
+    <Suspense fallback={<p className={styles.info}>Lade…</p>}>
+      <NewPasswordInner />
+    </Suspense>
+  );
+}
+
+function NewPasswordInner() {
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);   // Guard
+  const [ready, setReady] = useState(false); // Guard
 
   // Wie bei Registrieren
   const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
@@ -31,7 +41,8 @@ export default function NewPassword() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErr(null); setOk(null);
+    setErr(null);
+    setOk(null);
 
     if (!PASSWORD_RE.test(pw)) {
       setErr('Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.');
@@ -46,7 +57,10 @@ export default function NewPassword() {
     const { error } = await supabase.auth.updateUser({ password: pw });
     setLoading(false);
 
-    if (error) { setErr(error.message); return; }
+    if (error) {
+      setErr(error.message);
+      return;
+    }
 
     setOk('Passwort aktualisiert.');
     // Sicherheit: Recovery-Session beenden & zum Login
@@ -101,8 +115,16 @@ export default function NewPassword() {
           placeholder="••••••••"
         />
 
-        {err && <p className={styles.error} aria-live="polite">{err}</p>}
-        {ok &&  <p className={styles.success} aria-live="polite">{ok}</p>}
+        {err && (
+          <p className={styles.error} aria-live="polite">
+            {err}
+          </p>
+        )}
+        {ok && (
+          <p className={styles.success} aria-live="polite">
+            {ok}
+          </p>
+        )}
 
         <button
           className={styles.button}
