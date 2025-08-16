@@ -9,21 +9,22 @@ import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import styles from '../../users.module.css'
 
-// Props wie Next 15 sie erwartet: searchParams ist optional und Werte sind string | string[] | undefined
-type Props = {
-  params: { id: string }
-  searchParams?: Record<string, string | string[] | undefined>
+// kleine Helfer
+function pickOne(v: unknown, fallback = ''): string {
+  if (Array.isArray(v)) return (v[0] ?? fallback) + ''
+  if (typeof v === 'string') return v
+  return fallback
 }
 
-function pickOne(v: string | string[] | undefined, fallback = ''): string {
-  return Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback)
-}
+export default async function UserLoginsPage(props: any) {
+  // In Next 15 können params/searchParams Promises sein → sicher “entpacken”
+  const params = await Promise.resolve(props?.params ?? {})
+  const searchParams = await Promise.resolve(props?.searchParams ?? {})
 
-export default async function UserLoginsPage({ params, searchParams }: Props) {
-  const userId = params.id
+  const userId: string = params.id
 
-  const pageRaw = pickOne(searchParams?.page, '1')
-  const perPageRaw = pickOne(searchParams?.perPage, '50')
+  const pageRaw = pickOne(searchParams.page, '1')
+  const perPageRaw = pickOne(searchParams.perPage, '50')
 
   const page = Math.max(1, Number.parseInt(pageRaw, 10) || 1)
   const perPage = Math.max(1, Math.min(100, Number.parseInt(perPageRaw, 10) || 50))
@@ -96,7 +97,7 @@ export default async function UserLoginsPage({ params, searchParams }: Props) {
                   <td
                     className={styles.td}
                     style={{
-                      // sichere Quotes (verhindert "Unterminated string literal")
+                      // sichere Quotes → kein TSX-Parser-Fehler
                       fontFamily:
                         "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
                     }}
