@@ -1,54 +1,112 @@
-'use client';
+// src/app/login/page.tsx
+'use client'
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import styles from './login.module.css';
-import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-browser';
+import React, { useEffect, useState } from 'react' // ← useEffect ergänzt
+import Link from 'next/link'
+import styles from './login.module.css'
+import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabaseBrowser } from '@/lib/supabase-browser'
+import { logLogin } from '@/lib/log-login'
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true); // aktuell ohne Funktion – wir persistieren immer
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // ▼ NEU: Erfolgsbanner-Logik
+  const [showChanged, setShowChanged] = useState(false)
+
+  const router = useRouter()
+  const params = useSearchParams()
+  const redirectTo = params.get('redirect') ?? '/'
+
+  // ▼ NEU: ?changed=1 anzeigen & danach aus der URL entfernen
+  useEffect(() => {
+    if (params.get('changed') === '1') {
+      setShowChanged(true)
+      const url = new URL(window.location.href)
+      url.searchParams.delete('changed')
+      router.replace(
+        url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''),
+        { scroll: false }
+      )
+    }
+  }, [params, router])
+  useEffect(() => {
+  if (!showChanged) return
+  const t = setTimeout(() => setShowChanged(false), 4000)
+  return () => clearTimeout(t)
+}, [showChanged])
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    if (loading) return
+    setError('')
+    setLoading(true)
 
-    const emailOrUsername = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim();
-    const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement).value;
+    const emailOrUsername = (e.currentTarget.elements.namedItem('email') as HTMLInputElement)?.value.trim()
+    const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement)?.value || ''
 
-    // Supabase kann nur per E-Mail einloggen. Username-Login bauen wir später über profiles -> email.
-    if (!emailOrUsername.includes('@')) {
-      setLoading(false);
-      setError('Bitte melde dich mit deiner E-Mail an (Username-Login folgt später).');
-      return;
+    try {
+      const supabase = supabaseBrowser()
+
+      // 1) Email bestimmen (direkt oder via Username -> Email)
+      let emailToUse = emailOrUsername
+      if (!emailOrUsername.includes('@')) {
+        const { data: resolvedEmail, error: rpcErr } = await supabase.rpc('email_for_username', {
+          name: emailOrUsername
+        })
+
+        if (rpcErr) {
+          setError('Login derzeit nicht möglich. Bitte später erneut versuchen.')
+          setLoading(false)
+          return
+        }
+        if (!resolvedEmail) {
+          setError('E-Mail oder Passwort ist falsch.')
+          setLoading(false)
+          return
+        }
+        emailToUse = String(resolvedEmail)
+      }
+
+      // 2) Normaler Email+Passwort Login
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password,
+      })
+
+      if (signInError) {
+        const msgRaw = signInError.message?.toLowerCase() || ''
+        const msg =
+          msgRaw.includes('email not confirmed')
+            ? 'Bitte bestätige zuerst deine E-Mail.'
+            : 'E-Mail oder Passwort ist falsch.'
+        setError(msg)
+        setLoading(false)
+        return
+      }
+
+      // 3) Session verlässlich abwarten (max ~1s)
+      for (let i = 0; i < 10; i++) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) break
+        await new Promise(r => setTimeout(r, 100))
+      }
+
+      // 4) Login-Event protokollieren (Server hasht IP/UA)
+      await logLogin()
+
+      router.replace(redirectTo || '/')
+      router.refresh()
+    } catch {
+      setError('Unerwarteter Fehler. Bitte später erneut versuchen.')
+      setLoading(false)
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: emailOrUsername,
-      password,
-    });
-
-    setLoading(false);
-
-    if (signInError) {
-      // ein paar freundlichere Texte
-      const msg = signInError.message.toLowerCase().includes('invalid login')
-        ? 'E-Mail oder Passwort ist falsch.'
-        : signInError.message;
-      setError(msg);
-      return;
-    }
-
-    // Erfolg → Home
-    router.replace('/');
-  };
+  }
 
   return (
     <div className={styles.loginContainer}>
@@ -67,17 +125,36 @@ const Login = () => {
           <h1>Willkommen zurück!</h1>
           <h2>Login</h2>
 
-          {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
+          {/* ▼ NEU: Erfolgsbanner */}
+          {showChanged && (
+            <div className={styles.alertSuccess} role="status" aria-live="polite">
+              <span>✅ Passwort geändert. Bitte mit dem neuen Passwort einloggen.</span>
+              <button
+                type="button"
+                className={styles.alertClose}
+                onClick={() => setShowChanged(false)}
+                aria-label="Meldung schließen"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {error && <p style={{ color: 'red', marginBottom: '10px' }} aria-live="polite">{error}</p>}
 
           <div className={styles.inputContainer}>
-            <label htmlFor="email">E-Mail</label>
+            <label htmlFor="email">E-Mail oder Benutzername</label>
             <input
               type="text"
               id="email"
-              placeholder="z. B. max@beispiel.de"
+              name="email"
+              placeholder="z. B. max@beispiel.de oder maxmustermann"
               required
               autoComplete="username"
               autoFocus
+              disabled={loading}
+              inputMode="email"
+              autoCapitalize="none"
             />
           </div>
 
@@ -87,30 +164,22 @@ const Login = () => {
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
+                name="password"
                 placeholder="Passwort eingeben"
                 required
                 autoComplete="current-password"
+                disabled={loading}
               />
               <span
                 className={styles.eyeIcon}
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label="Passwort anzeigen/verbergen"
+                role="button"
+                tabIndex={0}
               >
                 {showPassword ? <EyeOff size={18} strokeWidth={1.5} /> : <Eye size={18} strokeWidth={1.5} />}
               </span>
             </div>
-          </div>
-
-          <div className={styles.rememberMe}>
-            <input
-              type="checkbox"
-              id="remember"
-              checked={rememberMe}
-              onChange={() => setRememberMe(!rememberMe)}
-              disabled // wir persistieren ohnehin immer
-              title="Sitzung wird dauerhaft gespeichert"
-            />
-            <label htmlFor="remember">Angemeldet bleiben</label>
           </div>
 
           <button type="submit" className={styles.loginButton} disabled={loading}>
@@ -125,17 +194,17 @@ const Login = () => {
           </button>
 
           <div className={styles.forgotPassword}>
-            <Link href="/reset-password">Passwort vergessen?</Link>
+            <Link href={`/reset-password?redirect=${encodeURIComponent(redirectTo)}`}>Passwort vergessen?</Link>
           </div>
 
           <div className={styles.registerLink}>
             <span>Noch kein Konto?</span>{' '}
-            <Link href="/registrieren">Jetzt registrieren</Link>
+            <Link href={`/registrieren?redirect=${encodeURIComponent(redirectTo)}`}>Jetzt registrieren</Link>
           </div>
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

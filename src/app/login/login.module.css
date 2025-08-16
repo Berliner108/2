@@ -16,6 +16,42 @@
   border-bottom-right-radius: 10px;
   position: relative;
 }
+/* Erfolgsmeldung unter der Login-Überschrift */
+.alertSuccess {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #059669; /* smaragd-grün */
+  background: #10b981;
+  color: #ffffff;
+  margin: 10px 0 14px 0;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.alertClose {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.9;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .alertSuccess {
+    transition: opacity .25s ease, transform .25s ease;
+    animation: alert-pop .2s ease-out;
+  }
+  @keyframes alert-pop {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
 
 .image {
   width: 100%;

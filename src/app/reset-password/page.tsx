@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import styles from './resetpassword.module.css';
 import Image from 'next/image';
+import { supabaseBrowser } from '@/lib/supabase-browser';
+import { useSearchParams } from 'next/navigation';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
@@ -11,22 +13,35 @@ const ResetPassword = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const params = useSearchParams();
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError('');
-    if (!email.includes('@')) {
+
+    if (!email || !email.includes('@')) {
       setError('Bitte gib eine gültige E-Mail-Adresse ein.');
       return;
     }
 
     setLoading(true);
+    const supabase = supabaseBrowser();
 
-    // Simuliere eine Anfrage
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-    }, 2000);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo:
+        `${location.origin}/auth/callback?flow=reset&redirect=` +
+        encodeURIComponent(params.get('redirect') ?? '/'),
+    });
+
+    setLoading(false);
+
+    if (error) {
+      // Generische Fehlermeldung, um keine Infos zu leaken
+      setError('Senden fehlgeschlagen. Bitte prüfe die E-Mail-Adresse oder versuche es später erneut.');
+      return;
+    }
+
+    setSubmitted(true);
   };
 
   return (
@@ -56,20 +71,22 @@ const ResetPassword = () => {
                   placeholder="E-Mail-Adresse eingeben"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
                 />
-                {error && <p className={styles.error}>{error}</p>}
+                {error && (
+                  <p className={styles.error} aria-live="polite">
+                    {error}
+                  </p>
+                )}
               </div>
 
-              <button type="submit" disabled={loading}>
-                {loading ? (
-                  <div className={styles.spinner}></div>
-                ) : (
-                  'Passwort zurücksetzen'
-                )}
+              <button type="submit" disabled={loading || !email}>
+                {loading ? <div className={styles.spinner}></div> : 'Passwort zurücksetzen'}
               </button>
             </>
           ) : (
-            <p className={styles.success}>
+            <p className={styles.success} aria-live="polite">
               Wenn die E-Mail existiert, wurde dir ein Link zum Zurücksetzen gesendet.
             </p>
           )}

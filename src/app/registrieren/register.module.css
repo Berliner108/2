@@ -184,6 +184,41 @@
 .registerForm button:hover {
   background-color: #00e5ff;
 }
+/* --- schlanke Erfolgs-Meldung --- */
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ecfdf5;              /* green-50 */
+  border: 1px solid #86efac;         /* green-300 */
+  color: #065f46;                    /* green-800 */
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 14px;
+  font-size: 14px;
+}
+
+.successIcon {
+  color: #10b981;                    /* green-500 */
+  line-height: 0;
+  animation: pop .25s ease-out, bob 2.2s ease-in-out .25s infinite;
+}
+
+@keyframes pop {
+  0%   { transform: scale(.6); opacity: 0; }
+  80%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes bob {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-1px); }
+}
+
+/* Barrierefreiheit: Animation bei reduziertem Bewegungswunsch aus */
+@media (prefers-reduced-motion: reduce) {
+  .successIcon { animation: none; }
+}
+
 .spinner {
   border: 3px solid #e0e0e0;
   border-top: 3px solid #00b5d8;
@@ -195,7 +230,25 @@
   vertical-align: middle;
   margin-left: 8px;
 }
+.inputContainer select,
+.select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 5px;
+  background-color: #fff;
+  font-family: 'Oswald';
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px 14px;
+  cursor: pointer;
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -216,6 +269,15 @@
   .registerForm {
     width: 90%;
   }
+  .inputContainer select {
+  width: 90%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-bottom: 5px;
+  font-family: 'Oswald';
+}
 
   .sliderContainer {
     width: 80%;
