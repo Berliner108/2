@@ -9,22 +9,31 @@ import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import styles from '../../users.module.css'
 
-type Search = { page?: string; perPage?: string }
+// Props wie Next 15 sie erwartet: searchParams ist optional und Werte sind string | string[] | undefined
+type Props = {
+  params: { id: string }
+  searchParams?: Record<string, string | string[] | undefined>
+}
 
-export default async function UserLoginsPage({
-  params,
-  searchParams,
-}: { params: { id: string }, searchParams: Search }) {
+function pickOne(v: string | string[] | undefined, fallback = ''): string {
+  return Array.isArray(v) ? (v[0] ?? fallback) : (v ?? fallback)
+}
+
+export default async function UserLoginsPage({ params, searchParams }: Props) {
   const userId = params.id
-  const page    = Math.max(1, parseInt(searchParams.page || '1', 10))
-  const perPage = Math.max(1, Math.min(100, parseInt(searchParams.perPage || '50', 10)))
-  const from = (page - 1) * perPage
-  const to   = from + perPage - 1
 
-  // 1) Admin-Check
+  const pageRaw = pickOne(searchParams?.page, '1')
+  const perPageRaw = pickOne(searchParams?.perPage, '50')
+
+  const page = Math.max(1, Number.parseInt(pageRaw, 10) || 1)
+  const perPage = Math.max(1, Math.min(100, Number.parseInt(perPageRaw, 10) || 50))
+  const from = (page - 1) * perPage
+  const to = from + perPage - 1
+
+  // ---- Admin-Check
   const sb = await supabaseServer()
   const { data: { user } } = await sb.auth.getUser()
-  if (!user) redirect('/login?redirect=/admin/users')
+  if (!user) redirect(`/login?redirect=/admin/users/${encodeURIComponent(userId)}/logins`)
 
   const adminEmails = (process.env.ADMIN_EMAILS ?? '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
@@ -34,7 +43,7 @@ export default async function UserLoginsPage({
   const { data: me } = await sb.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (me?.role !== 'admin') redirect('/')
 
-  // 2) Daten holen
+  // ---- Daten holen
   const admin = supabaseAdmin()
   const { data: rows, count, error } = await admin
     .from('user_login_events')
@@ -79,17 +88,22 @@ export default async function UserLoginsPage({
               </tr>
             </thead>
             <tbody>
-              {(rows || []).map((r, i) => (
+              {(rows ?? []).map((r, i) => (
                 <tr key={i} className={styles.tr}>
                   <td className={styles.td}>
                     {r.occurred_at ? new Date(r.occurred_at as string).toLocaleString() : '—'}
                   </td>
-                  <td className={styles.td} style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}>
+                  <td
+                    className={styles.td}
+                    style={{
+                      // sichere Quotes (verhindert "Unterminated string literal")
+                      fontFamily:
+                        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                    }}
+                  >
                     {r.ip_hash ? `${(r.ip_hash as string).slice(0, 16)}…` : '—'}
                   </td>
-                  <td className={styles.td}>
-                    {(r.user_agent as string) || '—'}
-                  </td>
+                  <td className={styles.td}>{(r.user_agent as string) || '—'}</td>
                 </tr>
               ))}
               {(!rows || rows.length === 0) && (
