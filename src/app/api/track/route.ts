@@ -55,11 +55,13 @@ export async function POST(req: NextRequest) {
   if (!existing) {
     res.cookies.set(cookieName, sid, {
       httpOnly: true,
-      sameSite: 'Lax',
+      sameSite: 'lax',                      // <-- fix
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 365,
       path: '/',
     })
+    // Alternativ:
+    // res.cookies.set({ name: cookieName, value: sid, httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60*60*24*365, path: '/' })
   }
   return res
 }
