@@ -1,20 +1,56 @@
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { NextResponse } from 'next/server'
+import { getStripe } from '@/lib/stripe'
+import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
-import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase-server";
-import { getOrCreateStripeCustomer } from "@/lib/stripe-customer";
-import { stripe } from "@/lib/stripe";
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+async function getCustomerId(userId: string) {
+  const admin = supabaseAdmin()
+  try {
+    const { data: prof } = await admin
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', userId)
+      .maybeSingle()
+    return prof?.stripe_customer_id || null
+  } catch {
+    return null
+  }
+}
 
 export async function POST(req: Request) {
-  const sb = await supabaseServer();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+  const stripe = getStripe()
+  if (!stripe) {
+    return NextResponse.json({ ok: false, error: 'stripe_not_configured' }, { status: 503 })
+  }
 
-  const { pmId } = await req.json() as { pmId?: string };
-  if (!pmId) return NextResponse.json({ error: "pmId required" }, { status: 400 });
+  const sb = await supabaseServer()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 })
+  }
 
-  const customerId = await getOrCreateStripeCustomer(user.id, user.email ?? null);
-  await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: pmId } });
-  return NextResponse.json({ ok: true });
+  let body: any = {}
+  try { body = await req.json() } catch {}
+
+  const pmId = (body?.pmId || '').toString().trim()
+  if (!pmId) {
+    return NextResponse.json({ ok: false, error: 'pmId_required' }, { status: 400 })
+  }
+
+  const customerId = await getCustomerId(user.id)
+  if (!customerId) {
+    return NextResponse.json({ ok: false, error: 'no_customer' }, { status: 400 })
+  }
+
+  try {
+    await stripe.customers.update(customerId, {
+      invoice_settings: { default_payment_method: pmId },
+    })
+    return NextResponse.json({ ok: true })
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message || 'set_default_failed' }, { status: 500 })
+  }
 }
