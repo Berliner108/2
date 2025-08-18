@@ -1,52 +1,69 @@
+// src/app/confirm-email/page.tsx  (oder wo deine Seite liegt)
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 
-const EmailConfirmationPage = () => {
+export default function EmailConfirmationPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Bitte warten...');
-  const params = useSearchParams();
-  const token = params.get('token');
+  const [message, setMessage] = useState('Bitte warten…');
 
- useEffect(() => {
-  console.log('Token aus URL:', token); // ← Debug-Ausgabe
+  useEffect(() => {
+    // Token direkt aus der URL lesen – ohne useSearchParams()
+    let token: string | null = null;
+    try {
+      token = new URLSearchParams(window.location.search).get('token');
+      // Debug:
+      // console.log('Token aus URL:', token);
+    } catch {
+      /* ignore */
+    }
 
-  if (!token) {
-    setMessage('Kein Token gefunden.');
-    return;
-  }
+    if (!token) {
+      setStatus('error');
+      setMessage('Kein Token gefunden.');
+      return;
+    }
 
-  const usersJSON = localStorage.getItem('registeredUsers');
-  if (!usersJSON) {
-    setMessage('Keine Benutzer gefunden.');
-    return;
-  }
+    const usersJSON = localStorage.getItem('registeredUsers');
+    if (!usersJSON) {
+      setStatus('error');
+      setMessage('Keine Benutzer gefunden.');
+      return;
+    }
 
-  const users = JSON.parse(usersJSON);
-  console.log('Gefundene Nutzer:', users); // ← Debug-Ausgabe
+    let users: any[] = [];
+    try {
+      users = JSON.parse(usersJSON) ?? [];
+      // console.log('Gefundene Nutzer:', users);
+    } catch {
+      setStatus('error');
+      setMessage('Gespeicherte Daten sind beschädigt.');
+      return;
+    }
 
-  const userIndex = users.findIndex((user: any) => user.token === token);
-  console.log('Benutzerindex:', userIndex); // ← Debug-Ausgabe
+    const userIndex = users.findIndex((u) => u?.token === token);
+    // console.log('Benutzerindex:', userIndex);
 
-  if (userIndex === -1) {
-    setMessage('Ungültiger oder abgelaufener Token.');
-    return;
-  }
+    if (userIndex === -1) {
+      setStatus('error');
+      setMessage('Ungültiger oder abgelaufener Token.');
+      return;
+    }
 
-  users[userIndex].verified = true;
-  localStorage.setItem('registeredUsers', JSON.stringify(users));
-  setMessage('E-Mail erfolgreich bestätigt! Du kannst dich jetzt einloggen.');
-}, [token]);
+    users[userIndex].verified = true;
+    localStorage.setItem('registeredUsers', JSON.stringify(users));
 
+    setStatus('success');
+    setMessage('E-Mail erfolgreich bestätigt! Du kannst dich jetzt einloggen.');
+  }, []);
 
-  const icon = {
+  const icon: Record<typeof status, string> = {
     loading: '⏳',
     success: '✅',
     error: '❌',
   };
 
-  const color = {
+  const color: Record<typeof status, string> = {
     loading: '#888',
     success: 'green',
     error: 'crimson',
@@ -71,6 +88,4 @@ const EmailConfirmationPage = () => {
       <h1 style={{ color: color[status], fontSize: '1.5rem' }}>{message}</h1>
     </div>
   );
-};
-
-export default EmailConfirmationPage;
+}
