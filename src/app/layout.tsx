@@ -1,10 +1,10 @@
 // src/app/layout.tsx
 import '../styles/layout.css'
 import Header from './Header'
-import React from 'react'
+import React, { Suspense } from 'react'
 import Footer from './Footer'
 import { Oswald } from 'next/font/google'
-import PageviewPing from './components/PageviewPing' // ⬅️ Neu
+import PageviewPing from './components/PageviewPing' // Client
 
 const oswald = Oswald({
   subsets: ['latin'],
@@ -27,11 +27,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
       </head>
       <body className={oswald.className}>
-        <Header />
-        {/* ⬇️ Tracker schickt Pageviews an /api/track */}
-        <PageviewPing />
-        <main>{children}</main>
-        <Footer />
+        <Suspense fallback={null}>
+          <Header />
+          {/* Tracker schickt Pageviews an /api/track */}
+          <PageviewPing />
+          <main>{children}</main>
+          <Footer />
+        </Suspense>
       </body>
     </html>
   )
