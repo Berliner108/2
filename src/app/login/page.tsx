@@ -1,7 +1,7 @@
 // src/app/login/page.tsx
 'use client'
 
-import React, { useEffect, useState } from 'react' // ← useEffect ergänzt
+import React, { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import styles from './login.module.css'
 import Image from 'next/image'
@@ -10,19 +10,19 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { logLogin } from '@/lib/log-login'
 
-const Login = () => {
+function LoginInner() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // ▼ NEU: Erfolgsbanner-Logik
+  // Erfolgsbanner für ?changed=1
   const [showChanged, setShowChanged] = useState(false)
 
   const router = useRouter()
   const params = useSearchParams()
   const redirectTo = params.get('redirect') ?? '/'
 
-  // ▼ NEU: ?changed=1 anzeigen & danach aus der URL entfernen
+  // ?changed=1 anzeigen & danach aus URL entfernen
   useEffect(() => {
     if (params.get('changed') === '1') {
       setShowChanged(true)
@@ -34,12 +34,12 @@ const Login = () => {
       )
     }
   }, [params, router])
-  useEffect(() => {
-  if (!showChanged) return
-  const t = setTimeout(() => setShowChanged(false), 4000)
-  return () => clearTimeout(t)
-}, [showChanged])
 
+  useEffect(() => {
+    if (!showChanged) return
+    const t = setTimeout(() => setShowChanged(false), 4000)
+    return () => clearTimeout(t)
+  }, [showChanged])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -73,7 +73,7 @@ const Login = () => {
         emailToUse = String(resolvedEmail)
       }
 
-      // 2) Normaler Email+Passwort Login
+      // 2) Login
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: emailToUse,
         password,
@@ -90,14 +90,14 @@ const Login = () => {
         return
       }
 
-      // 3) Session verlässlich abwarten (max ~1s)
+      // 3) Session kurz abwarten
       for (let i = 0; i < 10; i++) {
         const { data: { session } } = await supabase.auth.getSession()
         if (session) break
         await new Promise(r => setTimeout(r, 100))
       }
 
-      // 4) Login-Event protokollieren (Server hasht IP/UA)
+      // 4) Login-Event protokollieren
       await logLogin()
 
       router.replace(redirectTo || '/')
@@ -125,7 +125,6 @@ const Login = () => {
           <h1>Willkommen zurück!</h1>
           <h2>Login</h2>
 
-          {/* ▼ NEU: Erfolgsbanner */}
           {showChanged && (
             <div className={styles.alertSuccess} role="status" aria-live="polite">
               <span>✅ Passwort geändert. Bitte mit dem neuen Passwort einloggen.</span>
@@ -207,4 +206,10 @@ const Login = () => {
   )
 }
 
-export default Login
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  )
+}

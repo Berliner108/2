@@ -1,13 +1,15 @@
+// src/app/auth/reset-password/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import Link from 'next/link';
-import styles from './resetpassword.module.css';
 import Image from 'next/image';
+import styles from './resetpassword.module.css';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import { useSearchParams } from 'next/navigation';
 
-const ResetPassword = () => {
+/** Der eigentliche Screen – nutzt useSearchParams */
+function ResetPasswordInner() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -27,16 +29,17 @@ const ResetPassword = () => {
     setLoading(true);
     const supabase = supabaseBrowser();
 
+    const redirectParam = params.get('redirect') ?? '/';
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo:
-        `${location.origin}/auth/callback?flow=reset&redirect=` +
-        encodeURIComponent(params.get('redirect') ?? '/'),
+      redirectTo: `${origin}/auth/callback?flow=reset&redirect=${encodeURIComponent(redirectParam)}`,
     });
 
     setLoading(false);
 
     if (error) {
-      // Generische Fehlermeldung, um keine Infos zu leaken
+      // Generisch halten, um keine Infos zu leaken
       setError('Senden fehlgeschlagen. Bitte prüfe die E-Mail-Adresse oder versuche es später erneut.');
       return;
     }
@@ -98,6 +101,13 @@ const ResetPassword = () => {
       </div>
     </div>
   );
-};
+}
 
-export default ResetPassword;
+/** Page-Export: packt die Inner-Komponente in Suspense */
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordInner />
+    </Suspense>
+  );
+}

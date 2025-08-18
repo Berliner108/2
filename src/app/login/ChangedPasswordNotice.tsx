@@ -1,11 +1,12 @@
 // src/app/login/ChangedPasswordNotice.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import styles from './login.module.css'; // anpassen, falls anderer Pfad
+import styles from './login.module.css';
 
-export default function ChangedPasswordNotice() {
+/** Der eigentliche Inhalt – nutzt useSearchParams */
+function ChangedPasswordNoticeInner() {
   const params = useSearchParams();
   const router = useRouter();
   const [show, setShow] = useState(false);
@@ -14,10 +15,15 @@ export default function ChangedPasswordNotice() {
   useEffect(() => {
     if (params.get('changed') === '1') {
       setShow(true);
+
       // URL aufräumen, damit beim Reload die Meldung nicht erneut erscheint
       const url = new URL(window.location.href);
       url.searchParams.delete('changed');
-      router.replace(url.pathname + (url.search ? `?${url.searchParams.toString()}` : ''), { scroll: false });
+      router.replace(
+        url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''),
+        { scroll: false }
+      );
+
       // Fokus für Screenreader setzen
       setTimeout(() => boxRef.current?.focus(), 0);
     }
@@ -43,5 +49,14 @@ export default function ChangedPasswordNotice() {
         ×
       </button>
     </div>
+  );
+}
+
+/** Default-Export: packt Inner in eine Suspense-Boundary */
+export default function ChangedPasswordNotice() {
+  return (
+    <Suspense fallback={null}>
+      <ChangedPasswordNoticeInner />
+    </Suspense>
   );
 }
