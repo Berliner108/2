@@ -8,6 +8,7 @@ const PUBLIC_SINGLE_PAGES = new Set<string>([
   '/',
   '/login',
   '/registrieren',
+  '/reset-password',      // ✅ Passwort-Reset Seite offen
   '/impressum',
   '/nutzungsbedingungen',
   '/agb',
@@ -31,7 +32,7 @@ function isShopList(path: string) {
   return path === '/kaufen' || path === '/kaufen/'
 }
 
-// Auth/Callback-Routen immer offen (inkl. Passwort-Reset)
+// Auth/Callback-Routen immer offen (inkl. Passwort-Update unter /auth)
 function isAuthPath(path: string) {
   return path === '/auth' || path.startsWith('/auth/')
 }
@@ -47,48 +48,52 @@ function isPublic(path: string) {
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
 
-  // Öffentliche Pfade: einfach durchlassen
+  // Öffentliche Pfade: durchlassen
   if (isPublic(pathname)) {
     return NextResponse.next()
   }
 
+  // ENV-Variablen defensiv prüfen (verhindert @supabase/ssr-Throw)
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !anon) {
+    const login = req.nextUrl.clone()
+    login.pathname = '/login'
+    login.searchParams.set('redirect', pathname + search)
+    return NextResponse.redirect(login)
+  }
+
   // Supabase-Client für Middleware (setzt/refresh’t Cookies automatisch)
   const res = NextResponse.next()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          res.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          // Cookie „löschen“ durch Setzen auf leer (Supabase-SSR erwartet diese Signatur)
-          res.cookies.set({ name, value: '', ...options })
-        },
+  const supabase = createServerClient(url, anon, {
+    cookies: {
+      get(name: string) {
+        return req.cookies.get(name)?.value
       },
-    }
-  )
+      set(name: string, value: string, options: CookieOptions) {
+        res.cookies.set({ name, value, ...options })
+      },
+      remove(name: string, options: CookieOptions) {
+        res.cookies.set({ name, value: '', ...options })
+      },
+    },
+  })
 
-  // Session abfragen (bei Bedarf werden Cookies im `res` aktualisiert)
+  // Session prüfen
   const { data: { session } } = await supabase.auth.getSession()
-
   if (session) {
-    // WICHTIG: `res` zurückgeben, damit evtl. aktualisierte Cookies zum Browser gehen
+    // WICHTIG: `res` zurückgeben, damit evtl. aktualisierte Cookies an den Browser gehen
     return res
   }
 
   // Keine Session → zum Login mit "back to" Redirect
-  const url = req.nextUrl.clone()
-  url.pathname = '/login'
-  url.searchParams.set('redirect', pathname + search)
-  return NextResponse.redirect(url)
+  const login = req.nextUrl.clone()
+  login.pathname = '/login'
+  login.searchParams.set('redirect', pathname + search)
+  return NextResponse.redirect(login)
 }
 
-// Greife auf alles außer /api, /_next und statische Dateien (mit Punkt im Namen)
+// Alle Pfade abfangen außer /api, /_next und Dateien mit Punkt (Assets)
 export const config = {
   matcher: [
     '/((?!api|_next|.*\\..*).*)',
