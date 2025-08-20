@@ -24,8 +24,8 @@ type Auftrag = {
   standort: string;
   lieferdatum: Date;
   abholdatum: Date;
-  abholArt: string;
-  lieferArt: string;
+  warenausgabeArt: string;
+  warenannahmeArt: string;
   gesponsert?: boolean;
 };
 type Lackanfrage = {
@@ -47,8 +47,8 @@ const sponsoredAuftraege: Auftrag[] = dummyAuftraege
   .slice(0, 12)
   .map((a) => ({
     ...a,
-    lieferdatum: new Date(a.lieferdatum),
-    abholdatum: new Date(a.abholdatum),
+    lieferdatum: new Date(a.warenausgabeDatum),
+    abholdatum: new Date(a.warenannahmeDatum),
   }));
 
 export default function Page() {
@@ -184,7 +184,7 @@ export default function Page() {
                 <p><strong>Masse:</strong> {auftrag.masse}</p>                
                 <p><strong>Lieferdatum:</strong> {formatDate(auftrag.lieferdatum)}</p>
                 <p><strong>Abholdatum:</strong> {formatDate(auftrag.abholdatum)}</p>
-                <p><strong>Abholart:</strong> {auftrag.abholArt}</p>
+                <p><strong>Abholart:</strong> {auftrag.warenausgabeArt}</p>
                 <p><MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />{auftrag.standort}</p>
               </div>
             </Link>
