@@ -41,28 +41,28 @@ export default function Pager() {
               ]
             },
             {
-              title: 'Auftragsbörse',
-              href: '/auftragsboerse',
-              links: [
-                { href: '/about/team', text: 'Lackieren' },
-                { href: '/about/vision', text: 'Pulverbeschichten' },
-                { href: '/about/vision', text: 'Verzinken' },
-                { href: '/about/vision', text: 'Eloxieren' },
-                { href: '/about/vision', text: 'Strahlen' },
-                { href: '/about/vision', text: 'Entlacken' },
-                { href: '/about/vision', text: 'Einlagern' },
-                { href: '/about/vision', text: 'Isolierstegverpressung' },
-                { href: '/about/vision', text: 'Folieren' },
-                { href: '/about/vision', text: 'Kombiniert' }
-              ]
-            },
+                title: 'Auftragsbörse',
+                href: '/auftragsboerse',
+                links: [
+                  { href: '/auftragsboerse?verfahren=Nasslackieren',          text: 'Nasslackieren' },
+                  { href: '/auftragsboerse?verfahren=Pulverbeschichten',      text: 'Pulverbeschichten' },
+                  { href: '/auftragsboerse?verfahren=Verzinken',              text: 'Verzinken' },
+                  { href: '/auftragsboerse?verfahren=Eloxieren',              text: 'Eloxieren' },
+                  { href: '/auftragsboerse?verfahren=Strahlen',               text: 'Strahlen' },
+                  { href: '/auftragsboerse?verfahren=Entlacken',              text: 'Entlacken' },
+                  { href: '/auftragsboerse?verfahren=Einlagern',              text: 'Einlagern' },
+                  { href: '/auftragsboerse?verfahren=Isolierstegverpressung', text: 'Isolierstegverpressung' },
+                  { href: '/auftragsboerse?verfahren=Folieren',               text: 'Folieren' },
+                  { href: '/auftragsboerse',                                  text: 'Alle' }
+                ]
+              },
             {
               title: 'Verkaufen',
               href: '/verkaufen',
               links: [
-                { href: '/verkaufen?kategorie=nasslack', text: 'Nasslacke' },
-                { href: '/verkaufen?kategorie=pulverlack', text: 'Pulverlacke' },
-                { href: '/verkaufen?kategorie=arbeitsmittel', text: 'Arbeitsmittel' }
+                { href: '/verkaufen?kategorie=Nasslack', text: 'Nasslacke' },
+                { href: '/verkaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
+                { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
               ]
             },
             {

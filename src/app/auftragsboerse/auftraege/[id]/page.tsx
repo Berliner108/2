@@ -112,23 +112,23 @@ export default function AuftragDetailPage() {
                 <span className={styles.value}>{auftrag.standort}</span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.label}>Lieferart:</span>
-                <span className={styles.value}>{auftrag.lieferArt}</span>
+                <span className={styles.label}>Warenausgabe per:</span>
+                <span className={styles.value}>{auftrag.warenausgabeArt}</span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.label}>Lieferdatum:</span>
+                <span className={styles.label}>Datum Warenausgabe:</span>
                 <span className={styles.value}>
-                  {auftrag.lieferdatum.toLocaleDateString('de-DE')}
+                  {auftrag.warenausgabeDatum.toLocaleDateString('de-DE')}
                 </span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.label}>Abholart:</span>
-                <span className={styles.value}>{auftrag.abholArt}</span>
+                <span className={styles.label}>Warenannahme per:</span>
+                <span className={styles.value}>{auftrag.warenannahmeArt}</span>
               </div>
               <div className={styles.metaItem}>
-                <span className={styles.label}>Abholdatum:</span>
+                <span className={styles.label}>Datum Warenannahme:</span>
                 <span className={styles.value}>
-                  {auftrag.abholdatum.toLocaleDateString('de-DE')}
+                  {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
                 </span>
               </div>
             </div>

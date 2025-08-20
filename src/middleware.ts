@@ -8,7 +8,7 @@ const PUBLIC_SINGLE_PAGES = new Set<string>([
   '/',
   '/login',
   '/registrieren',
-  '/reset-password',      // ✅ Passwort-Reset Seite offen
+  '/reset-password',
   '/impressum',
   '/nutzungsbedingungen',
   '/agb',
@@ -18,21 +18,32 @@ const PUBLIC_SINGLE_PAGES = new Set<string>([
   '/kontakt',
 ])
 
-// Ganze Bereiche MIT Unterseiten öffentlich
-const PUBLIC_SECTIONS_WITH_CHILDREN = [
-  '/auftragsboerse',
-  '/auftragsbörse',        // Umlaute
-  '/auftragsb%C3%B6rse',   // URL-encoded Fallback
-  '/lackanfragen',
-  '/wissenswertes',        // Liste + Artikel offen
-]
+// Komplett offen (inkl. Unterseiten)
+const PUBLIC_SECTIONS_WITH_CHILDREN = ['/wissenswertes']  // ⬅️ nur noch das!
 
-// Shop: nur die Liste ist öffentlich, Details gesperrt
+// Shop: nur Übersicht offen
 function isShopList(path: string) {
   return path === '/kaufen' || path === '/kaufen/'
 }
 
-// Auth/Callback-Routen immer offen (inkl. Passwort-Update unter /auth)
+// Auftragsbörse: nur Übersicht offen
+const AUFTRAGS_ROOTS = new Set<string>([
+  '/auftragsboerse', '/auftragsboerse/',
+  '/auftragsbörse',  '/auftragsbörse/',
+  '/auftragsb%C3%B6rse', '/auftragsb%C3%B6rse/',
+  '/auftragsb%CC%88rse', '/auftragsb%CC%88rse/',
+])
+function isAuftragsList(path: string) {
+  return AUFTRAGS_ROOTS.has(path)
+}
+
+// Lackanfragen: nur Übersicht offen
+const LACK_ROOTS = new Set<string>(['/lackanfragen', '/lackanfragen/'])
+function isLackList(path: string) {
+  return LACK_ROOTS.has(path)
+}
+
+// Auth/Callback-Routen immer offen (inkl. Passwortrouten unter /auth)
 function isAuthPath(path: string) {
   return path === '/auth' || path.startsWith('/auth/')
 }
@@ -40,8 +51,15 @@ function isAuthPath(path: string) {
 function isPublic(path: string) {
   if (PUBLIC_SINGLE_PAGES.has(path)) return true
   if (isAuthPath(path)) return true
+
+  // komplette Bereiche
   if (PUBLIC_SECTIONS_WITH_CHILDREN.some(p => path === p || path.startsWith(p + '/'))) return true
-  if (isShopList(path)) return true // nur Übersicht von /kaufen ist offen
+
+  // nur Listen (Details NICHT öffentlich)
+  if (isShopList(path)) return true
+  if (isAuftragsList(path)) return true
+  if (isLackList(path)) return true
+
   return false
 }
 
@@ -53,8 +71,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // ENV-Variablen defensiv prüfen (verhindert @supabase/ssr-Throw)
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // ENV defensiv prüfen (verhindert Throw von @supabase/ssr)
+  const url  = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anon) {
     const login = req.nextUrl.clone()
@@ -63,13 +81,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(login)
   }
 
-  // Supabase-Client für Middleware (setzt/refresh’t Cookies automatisch)
+  // Supabase-Client (kümmert sich um Cookie-Refresh)
   const res = NextResponse.next()
   const supabase = createServerClient(url, anon, {
     cookies: {
-      get(name: string) {
-        return req.cookies.get(name)?.value
-      },
+      get: (name: string) => req.cookies.get(name)?.value,
       set(name: string, value: string, options: CookieOptions) {
         res.cookies.set({ name, value, ...options })
       },
@@ -79,23 +95,20 @@ export async function middleware(req: NextRequest) {
     },
   })
 
-  // Session prüfen
   const { data: { session } } = await supabase.auth.getSession()
   if (session) {
-    // WICHTIG: `res` zurückgeben, damit evtl. aktualisierte Cookies an den Browser gehen
+    // evtl. aktualisierte Cookies weitergeben
     return res
   }
 
-  // Keine Session → zum Login mit "back to" Redirect
+  // keine Session → Login mit Rücksprung
   const login = req.nextUrl.clone()
   login.pathname = '/login'
   login.searchParams.set('redirect', pathname + search)
   return NextResponse.redirect(login)
 }
 
-// Alle Pfade abfangen außer /api, /_next und Dateien mit Punkt (Assets)
+// Alles außer /api, /_next und statische Dateien
 export const config = {
-  matcher: [
-    '/((?!api|_next|.*\\..*).*)',
-  ],
+  matcher: ['/((?!api|_next|.*\\..*).*)'],
 }

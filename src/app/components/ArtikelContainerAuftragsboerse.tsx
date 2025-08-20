@@ -20,19 +20,19 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
     width,
     height,
     masse,
-    lieferdatum,
-    abholdatum,
-    abholArt,
-    lieferArt,
-    bilder,
+    warenausgabeDatum,
+    warenannahmeDatum,
+    warenannahmeArt,
+    warenausgabeArt,
+    bilder = [],
     standort,
     gesponsert = false,
     gewerblich = false,
     privat = false,
   } = artikel;
 
-  // Anzeige der Verfahren-Namen
   const verfahrenName = verfahren.map((v) => v.name).join(' & ');
+  const imgSrc = bilder.length > 0 ? bilder[0] : '/images/platzhalter.jpg';
 
   return (
     <Link href={`/auftragsboerse/auftraege/${id}`} className={styles.cardLink}>
@@ -42,51 +42,47 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
             {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
             <Image
               className={styles.cardBild}
-              src={bilder[0] || '/images/platzhalter.jpg'}
+              src={imgSrc}
               alt={verfahrenName}
               fill
               priority={false}
               loading="lazy"
             />
           </div>
+
           {(gewerblich || privat) && (
-            <div
-              className={`${styles.verkaufsTypLabel} ${
-                gewerblich ? styles.gewerblichLabel : styles.privatLabel
-              } ${styles.desktopOnly}`}
-            >
-              {gewerblich ? 'Gewerblich' : 'Privat'}
-            </div>
-          )}
-          {(gewerblich || privat) && (
-            <div
-              className={`${styles.verkaufsTypLabel} ${
-                gewerblich ? styles.gewerblichLabel : styles.privatLabel
-              } ${styles.mobileOnly}`}
-            >
-              {gewerblich ? 'Gewerblich' : 'Privat'}
-            </div>
+            <>
+              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.desktopOnly}`}>
+                {gewerblich ? 'Gewerblich' : 'Privat'}
+              </div>
+              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.mobileOnly}`}>
+                {gewerblich ? 'Gewerblich' : 'Privat'}
+              </div>
+            </>
           )}
         </div>
 
         <div className={styles.cardTextBlock}>
           <h4 className={styles.cardText1}>{verfahrenName}</h4>
           <p className={styles.cardText2}>Material: {material}</p>
-          <p className={styles.cardText3}>
-            Maße: {length} × {width} × {height} mm
-          </p>
+          <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
           <p className={styles.cardText4}>Masse: {masse}</p>
+
+          {/* Labels nach deinem Wunsch + Klammern nur bei vorhandenem Wert */}
           <p className={styles.cardText5}>
-            Lieferung: {lieferdatum.toLocaleDateString('de-DE')} ({lieferArt})
+            Warenausgabe: {warenausgabeDatum.toLocaleDateString('de-DE')}
+            {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
           </p>
           <p className={styles.cardText6}>
-            Abholung: {abholdatum.toLocaleDateString('de-DE')} ({abholArt})
+            Warenannahme: {warenannahmeDatum.toLocaleDateString('de-DE')}
+            {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
           </p>
+
           <div className={styles.cardOrt}>
             <MapPin size={16} className={styles.ortIcon} />
             <span>{standort}</span>
           </div>
-          </div>
+        </div>
       </div>
     </Link>
   );

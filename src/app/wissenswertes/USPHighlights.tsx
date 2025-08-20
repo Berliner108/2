@@ -18,7 +18,7 @@ const highlights = [
   },
   {
     title: 'Sichere Abwicklung',
-    text: 'Reklamationen? Wir lassen dich nicht im Regen stehen.',
+    text: 'Reklamationen? Gib deine Zahlung erst frei, wenn die Leistung zu 100% deinen Anforderungen entspricht.',
   },
   {
     title: 'Alles aus einer Hand',

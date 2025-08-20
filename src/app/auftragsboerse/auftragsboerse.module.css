@@ -108,11 +108,55 @@
   cursor: pointer;
   user-select: none;
 }
-.checkboxLabel input[type="checkbox"],
-.checkboxLabel input[type="radio"] {
+/* Checkbox: weiter nativ, nur Farbe */
+.checkboxLabel input[type="checkbox"] {
   margin-right: 8px;
   cursor: pointer;
+  accent-color: #00e5ff;
 }
+
+/* Radio: custom, damit nichts über den Rand „blutet“ */
+.checkboxLabel input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;          /* gerade Pixel -> crisp */
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin-right: 8px;
+  cursor: pointer;
+  box-sizing: border-box;        /* saubere Ränder */
+}
+
+.checkboxLabel input[type="radio"]::before {
+  content: "";
+  width: 8px;                    /* halber Durchmesser */
+  height: 8px;
+  border-radius: 50%;
+  background: #00b4d8;           /* deine Farbe */
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+/* verhindert, dass der Browser die Scrollposition „ankert“ */
+.grid { overflow-anchor: none; }
+
+.checkboxLabel input[type="radio"]:checked {
+  border-color: #00e5ff;
+}
+.checkboxLabel input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* zugänglicher, dezenter Fokus */
+.checkboxLabel input[type="radio"]:focus-visible,
+.checkboxLabel input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.35);
+  outline-offset: 2px;
+}
+
 .content {
   flex: 1;
   max-width: 1100px;
