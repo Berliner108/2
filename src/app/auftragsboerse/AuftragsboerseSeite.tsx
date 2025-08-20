@@ -406,7 +406,7 @@ export default function AuftragsboerseSeite() {
 
           {/* Typ */}
           <div className={styles.checkboxGroup}>
-            <strong>Typ</strong>
+            <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
               <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich(!gewerblich)} />
               Gewerblich

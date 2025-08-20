@@ -180,18 +180,6 @@ export default function KaufenSeite() {
           </div>
 
           <div className={styles.checkboxGroup}>
-            <strong>Verkaufstyp</strong>
-            <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich(!gewerblich)} />
-              Gewerblich
-            </label>
-            <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={privat} onChange={() => setPrivat(!privat)} />
-              Privat
-            </label>
-          </div>
-
-          <div className={styles.checkboxGroup}>
             <strong>Hersteller</strong>
             {herstellerFilter.map((h) => (
               <label key={h} className={styles.checkboxLabel}>
@@ -201,6 +189,19 @@ export default function KaufenSeite() {
                 {h}
               </label>
             ))}
+          </div>
+          
+
+          <div className={styles.checkboxGroup}>
+            <strong>Verkaufstyp</strong>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich(!gewerblich)} />
+              Gewerblich
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={privat} onChange={() => setPrivat(!privat)} />
+              Privat
+            </label>
           </div>
         </div>
 

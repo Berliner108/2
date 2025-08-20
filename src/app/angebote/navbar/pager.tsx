@@ -27,9 +27,9 @@ export default function Pager() {
               title: 'Shop',
               href: '/kaufen',
               links: [
-                { href: '/about/team', text: 'Nasslacke' },
-                { href: '/about/vision', text: 'Pulverlacke' },
-                { href: '/about/vision', text: 'Arbeitsmittel' }
+                { href: '/kaufen?kategorie=Nasslack', text: 'Nasslacke' },
+                { href: '/kaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
+                { href: '/kaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
               ]
             },
             {

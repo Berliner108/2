@@ -66,7 +66,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
       <div className={styles.cardTextBlock}>
         <div className={styles.cardText1}>{titel}</div>
-        <div className={styles.cardText2}>Menge: {menge} kg</div>
+        <div className={styles.cardText2}>Verfügbare Menge: {menge} kg</div>
         <div className={styles.cardText3}>Lieferdatum: {lieferdatum.toLocaleDateString('de-DE')}</div>
         <div className={styles.cardText4}>Hersteller: {hersteller}</div>
         <div className={styles.cardText5}>Zustand: {zustand}</div>

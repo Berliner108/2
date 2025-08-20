@@ -281,8 +281,118 @@
 }
 
 .buyButton:hover {
-  background-color: #005fa3;
+  background-color: #00b4d8;
 }
+/* ===== Preis-Accordion & Formular ===== */
+
+.priceSection {
+  padding: 1rem;
+}
+
+.disclosureBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  color: #222;
+}
+
+.disclosureBtn:hover .disclosureIcon {
+  transform: translateY(1px);
+}
+
+.disclosureIcon {
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.priceForm {
+  margin-top: 0.75rem;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.priceInput {
+  flex: 0 1 220px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.priceInput:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.15);
+}
+
+.isInvalid {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+.priceError {
+  margin-top: 0.4rem;
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.priceHint {
+  margin-top: 0.4rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+/* macht den Disclosure-Header wie den farbigen CTA, aber mit Row-Layout */
+.disclosureBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: 0.9rem 1.2rem;      /* etwas größerer Hit-Target */
+  font-weight: 800;            /* passend zu buyButton */
+  letter-spacing: .2px;
+  background-color: #00e5ff;
+}
+
+.disclosureBtn:focus-visible {
+  outline: 3px solid rgba(0,180,216,.5);
+  outline-offset: 2px;
+}
+
+.disclosureIcon {
+  line-height: 1;
+  user-select: none;
+}
+
+/* Mobile: Button vollbreit unter dem Input */
+@media (max-width: 600px) {
+  .priceRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .priceInput {
+    width: 100%;
+  }
+  .buyButton {
+    width: 100%;
+  }
+}
+
 
 @media (max-width: 768px) {
   .grid {

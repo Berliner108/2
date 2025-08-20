@@ -1,7 +1,7 @@
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
-import { dummyAuftraege, Auftrag } from '../../../../data/dummyAuftraege';
+import { dummyAuftraege, type Auftrag } from '../../../../data/dummyAuftraege';
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
@@ -14,23 +14,100 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 
 export default function AuftragDetailPage() {
-  const params = useParams();
+  // Route-Param sicher lesen
+  const params = useParams<{ id: string }>();
   const auftrag: Auftrag | undefined = dummyAuftraege.find(
     (a) => a.id.toString() === params.id
   );
-  if (!auftrag) return notFound();
+  if (!auftrag) {
+    notFound();
+    return null;
+  }
 
+  // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
-
   const slides = auftrag.bilder?.map((src) => ({ src })) || [];
+
+  // Preis-Accordion + Validierung
+  const [preisOpen, setPreisOpen] = useState(false);
+  const [preis, setPreis] = useState<string>('');
+  const [preisError, setPreisError] = useState<string | null>(null);
+
+  const onPreisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPreisError(null);
+    let v = e.target.value.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    if (v.startsWith('.')) v = '0' + v;
+
+    const firstDot = v.indexOf('.');
+    if (firstDot !== -1) {
+      v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+    }
+
+    let [int = '', dec = ''] = v.split('.');
+    if (int.length > 7) int = int.slice(0, 7);
+
+    if (v.endsWith('.')) {
+      setPreis(int + '.');
+      return;
+    }
+
+    if (dec) dec = dec.slice(0, 2);
+    setPreis(dec ? `${int}.${dec}` : int);
+  };
+
+  const onPreisBlur = () => {
+    if (!preis || preis.trim() === '') {
+      setPreisError('Bitte gib einen Preis ein.');
+      return;
+    }
+    let v = preis.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    if (v === '.' || v === '') {
+      setPreisError('Bitte gib einen Preis ein.');
+      setPreis('');
+      return;
+    }
+    const firstDot = v.indexOf('.');
+    if (firstDot !== -1) {
+      v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+    }
+    const n = Number(v);
+    if (Number.isNaN(n)) {
+      setPreisError('Bitte gib einen Preis ein.');
+      setPreis('');
+      return;
+    }
+    const clamped = Math.min(Math.max(n, 0), 9_999_999.99);
+    setPreis(clamped.toFixed(2));
+  };
+
+  const preisNumber: number | null = (() => {
+    if (!preis) return null;
+    const n = Number(preis.replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  })();
+
+  const onPreisSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!preis || preis.trim() === '') {
+      setPreisError('Bitte gib einen Preis ein.');
+      return;
+    }
+    if (preisNumber === null || preisNumber <= 0) {
+      setPreisError('Bitte gib einen gültigen Preis > 0 ein.');
+      return;
+    }
+    // TODO: API-Call (z.B. POST /api/angebote)
+    alert(`Preis übermittelt: ${preisNumber.toFixed(2)} € (Auftrag #${auftrag.id})`);
+  };
 
   return (
     <>
       <Pager />
+
       <div className={styles.container}>
         <div className={styles.grid}>
-          {/* ← Linke Spalte: Bilder + Thumbnails */}
+          {/* Bilder */}
           <div className={styles.leftColumn}>
             <div className={styles.imageWrapper}>
               <Image
@@ -43,22 +120,21 @@ export default function AuftragDetailPage() {
                 onClick={() => setLightboxOpen(true)}
               />
             </div>
+
             <div className={styles.thumbnails}>
               {auftrag.bilder.map((bild, i) => (
                 <img
                   key={i}
                   src={bild}
                   alt={`Bild ${i + 1}`}
-                  className={`${styles.thumbnail} ${
-                    i === photoIndex ? styles.thumbnailActive : ''
-                  }`}
+                  className={`${styles.thumbnail} ${i === photoIndex ? styles.thumbnailActive : ''}`}
                   onClick={() => setPhotoIndex(i)}
                 />
               ))}
             </div>
           </div>
 
-          {/* → Rechte Spalte: Titel, Badges, Meta, Downloads, Beschreibung, Button */}
+          {/* Rechte Spalte */}
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
               <h1 className={styles.title}>
@@ -77,7 +153,7 @@ export default function AuftragDetailPage() {
               </div>
             </div>
 
-            {/* Meta‑Bereich als 2‑Spalten‑Grid */}
+            {/* Meta */}
             <div className={styles.metaGrid}>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Material:</span>
@@ -86,25 +162,11 @@ export default function AuftragDetailPage() {
               <div className={styles.metaItem}>
                 <span className={styles.label}>Maße:</span>
                 <span className={styles.value}>
-                  {auftrag.length}×{auftrag.width}×{auftrag.height} mm
+                  {auftrag.length}×{auftrag.width}×{auftrag.height} mm
                 </span>
               </div>
-              {auftrag.user && (
-                <div className={styles.metaItem}>
-                  <span className={styles.label}>User:</span>
-                  <span className={styles.value}>{auftrag.user}</span>
-                  <Link
-                    href={`/messages?empfaenger=${encodeURIComponent(
-                      auftrag.user
-                    )}`}
-                    className={styles.kontaktLink}
-                  >
-                    User kontaktieren
-                  </Link>
-                </div>
-              )}
               <div className={styles.metaItem}>
-                <span className={styles.label}>Masse:</span>
+                <span className={styles.label}>Max. Masse:</span>
                 <span className={styles.value}>{auftrag.masse}</span>
               </div>
               <div className={styles.metaItem}>
@@ -113,7 +175,7 @@ export default function AuftragDetailPage() {
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenausgabe per:</span>
-                <span className={styles.value}>{auftrag.warenausgabeArt}</span>
+                <span className={styles.value}>{auftrag.warenausgabeArt || '-'}</span>
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Datum Warenausgabe:</span>
@@ -123,7 +185,7 @@ export default function AuftragDetailPage() {
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenannahme per:</span>
-                <span className={styles.value}>{auftrag.warenannahmeArt}</span>
+                <span className={styles.value}>{auftrag.warenannahmeArt || '-'}</span>
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Datum Warenannahme:</span>
@@ -133,7 +195,21 @@ export default function AuftragDetailPage() {
               </div>
             </div>
 
-            {/* Dynamische Felder aus jedem Verfahren */}
+            {/* User */}
+            {auftrag.user && (
+              <div className={styles.metaItem}>
+                <span className={styles.label}>User:</span>
+                <span className={styles.value}>{auftrag.user}</span>
+                <Link
+                  href={`/messages?empfaenger=${encodeURIComponent(auftrag.user)}`}
+                  className={styles.kontaktLink}
+                >
+                  User kontaktieren
+                </Link>
+              </div>
+            )}
+
+            {/* Dynamische Felder */}
             {auftrag.verfahren.map((v, idx) => {
               const entries = Object.entries(v.felder);
               if (entries.length === 0) return null;
@@ -144,13 +220,10 @@ export default function AuftragDetailPage() {
                     {entries.map(([key, val]) => (
                       <div key={key} className={styles.metaItem}>
                         <span className={styles.label}>
-                          {key
-                            .replace(/([A-Z])/g, ' $1')
-                            .replace(/^\w/, (c) => c.toUpperCase())
-                          }:
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^\w/, (c) => c.toUpperCase())}:
                         </span>
                         <span className={styles.value}>
-                          {Array.isArray(val) ? val.join(', ') : val}
+                          {Array.isArray(val) ? val.join(', ') : String(val)}
                         </span>
                       </div>
                     ))}
@@ -181,7 +254,7 @@ export default function AuftragDetailPage() {
               </div>
             )}
 
-            {/* Beschreibung ganz unten */}
+            {/* Beschreibung */}
             {auftrag.beschreibung && (
               <div className={styles.beschreibung}>
                 <h2>Beschreibung</h2>
@@ -189,8 +262,57 @@ export default function AuftragDetailPage() {
               </div>
             )}
 
-            {/* Button unter der Beschreibung */}
-            <button className={styles.buyButton}>Kaufen / Angebot machen</button>
+            {/* Ausklappbarer Preisbereich */}
+            <div className={`${styles.metaItem} ${styles.priceSection}`}>
+              <button
+                type="button"
+                className={`${styles.buyButton} ${styles.disclosureBtn}`}
+                aria-expanded={preisOpen}
+                aria-controls="pricePanel"
+                onClick={() => setPreisOpen(o => !o)}
+              >
+                <span>Mach ein Angebot</span>
+                <span className={styles.disclosureIcon}>{preisOpen ? '▾' : '▸'}</span>
+              </button>
+
+
+              {preisOpen && (
+                <form onSubmit={onPreisSubmit} className={styles.priceForm}>
+                  <label htmlFor="preis" className={styles.label}>
+                    Dein Preis (€):
+                  </label>
+                  <div className={styles.priceRow}>
+                    <input
+                      id="preis"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="z. B. 149.90"
+                      value={preis}
+                      onChange={onPreisChange}
+                      onBlur={onPreisBlur}
+                      aria-invalid={!!preisError}
+                      className={`${styles.priceInput} ${preisError ? styles.isInvalid : ''}`}
+                      autoComplete="off"
+                      pattern="^\d{1,7}([.,]\d{1,2})?$"
+                      title="Zahl mit bis zu 2 Nachkommastellen"
+                    />
+                    <button type="submit" className={styles.buyButton}>
+                      Angebot abgeben
+                    </button>
+                  </div>
+
+                  {preisError ? (
+                    <div role="alert" className={styles.priceError} aria-live="polite">
+                      {preisError}
+                    </div>
+                  ) : (
+                    <div className={styles.priceHint}>
+                      Mit der Angebotsabgabe bestätigst du alle Kundenanforderungen ausnahmslos erfüllen zu können. Dein Angebot ist 72h gültig.
+                    </div>
+                  )}
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </div>

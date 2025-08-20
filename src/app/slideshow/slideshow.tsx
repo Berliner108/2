@@ -21,13 +21,13 @@ const images = [
     src: "/images/slide3.webp", 
     text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
     text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
-    link: "/agb" 
+    link: "/wissenswertes#Sofunktioniert’s" 
   },
   { 
     src: "/images/slide4.webp", 
     text1: "Alle Arbeitsmittel für Beschichter aus einer Hand", 
     text2: "Nasslacke, Pulverlacke, Arbeitskleidung & Arbeitsutensilien, uvm.", 
-    link: "/kaufen" 
+    link: "/kaufen?kategorie=Arbeitsmittel"
   },
   { 
     src: "/images/slide5.webp", 
