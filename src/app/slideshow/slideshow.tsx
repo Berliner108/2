@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from "react";
 import styles from "./slideshow.module.css";
 import Image from 'next/image';
+import Link from 'next/link';
+
+// Helper: macht aus "/seite#hash" ein { pathname, hash }-Objekt für <Link/>
+function toHref(link: string): string | { pathname: string; hash: string } {
+  if (!link.includes('#')) return link;
+  const [pathname, rawHash] = link.split('#');
+  return { pathname, hash: rawHash };
+}
 
 const images = [
   { 
@@ -21,7 +29,7 @@ const images = [
     src: "/images/slide3.webp", 
     text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
     text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
-    link: "/wissenswertes#Sofunktioniert’s" 
+    link: "/wissenswertes#Sofunktioniert’s" // funktioniert jetzt zuverlässig
   },
   { 
     src: "/images/slide4.webp", 
@@ -50,7 +58,7 @@ const Slideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
 
-  const transitionDuration = 1000; // in ms
+  const transitionDuration = 1000; // ms
 
   const nextSlide = () => {
     setIsTransitioning(true);
@@ -79,9 +87,9 @@ const Slideshow = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       nextSlide();
-    }, 6000); // 7 Sekunden statt 5
+    }, 6000);
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, [currentIndex]); // bewusst wie bei dir gelassen
 
   return (
     <div className={styles.slideshowContainer}>
@@ -96,21 +104,22 @@ const Slideshow = () => {
       >
         {extendedImages.map((image, index) => (
           <div 
-  key={index} 
-  className={`${styles.slide} 
-    ${image.isFullScreen ? styles.fullImageSlide : ""} 
-    ${image.src.includes("slide5") ? styles.slide5 : ""}`}
->
-
+            key={index} 
+            className={`${styles.slide} 
+              ${image.isFullScreen ? styles.fullImageSlide : ""} 
+              ${image.src.includes("slide5") ? styles.slide5 : ""}`}
+          >
             {!image.isFullScreen && (
               <div className={styles.textContainer}>
                 <p className={styles.text1}>{image.text1}</p>
                 <p className={styles.text2}>{image.text2}</p>
-                <a href={image.link} className={styles.textLink}>Mehr erfahren</a>
+
+                {/* WICHTIG: Next Link mit Hash-Unterstützung */}
+                <Link href={toHref(image.link)} scroll className={styles.textLink}>
+                  Mehr erfahren
+                </Link>
               </div>
             )}
-
-            
 
             <div className={styles.imageContainer}>
               <Image 
@@ -118,7 +127,7 @@ const Slideshow = () => {
                 alt={`${image.text1} - ${image.text2}`} 
                 width={500}
                 height={300}
-                layout="intrinsic"
+                // layout ist in neueren Next-Versionen deprecated; width/height reicht
               />
             </div>
 
@@ -126,7 +135,11 @@ const Slideshow = () => {
               <div className={styles.overlayTextContainer}>
                 <p className={styles.overlayText1}>{image.text1}</p>
                 <p className={styles.overlayText2}>{image.text2}</p>
-                <a href={image.link} className={styles.overlayLink}>Mehr erfahren</a>
+
+                {/* auch hier Next Link */}
+                <Link href={toHref(image.link)} scroll className={styles.overlayLink}>
+                  Mehr erfahren
+                </Link>
               </div>
             )}
           </div>
