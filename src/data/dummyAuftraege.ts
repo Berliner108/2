@@ -146,7 +146,7 @@ export const dummyAuftraege = [{
       }
     }
   ],
-  material: 'Aluminium',
+  material: 'Stahl',
   length: 1200,
   width: 250,
   height: 80,
@@ -206,7 +206,7 @@ export const dummyAuftraege = [{
   bilder: ['/images/baum5.jpg'],
   dateien: [{ name: 'dokumentation.pdf', url: '/uploads/dokumentation.pdf' }],
   standort: 'Dornbirn',
-  user: 'Nutzer5',
+  user: 'Verzinkerei Gang - 4.9',
   gesponsert: true,
   gewerblich: true,
   privat: false,
@@ -364,7 +364,7 @@ export const dummyAuftraege = [{
   verfahren: [
     { name: 'Eloxieren', felder: {} }
   ],
-  material: 'Stahl',
+  material: 'Aluminium',
   length: 1000,
   width: 200,
   height: 40,
@@ -376,7 +376,7 @@ export const dummyAuftraege = [{
   bilder: ['/images/baum42.jpg'],
   dateien: [{ name: 'zeichnung.pdf', url: '/uploads/zeichnung.pdf' }],
   standort: 'Feldkirch',
-  user: 'Nutzer12',
+  user: 'Pulverbeschichtung Nemetz - 4.8',
   gesponsert: false,
   gewerblich: false,
   privat: true,
@@ -603,7 +603,7 @@ export const dummyAuftraege = [{
   verfahren: [
     { name: 'Eloxieren', felder: {} }
   ],
-  material: 'Stahl',
+  material: 'Aluminium',
   length: 1000,
   width: 220,
   height: 60,

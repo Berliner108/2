@@ -22,26 +22,32 @@ export default function Page() {
   },
   {
     href: '/konto/auftraege',
-    text: 'Aufträge',
+    text: 'Auftrags-Deals',
     sub: 'Abgeschlossene und Aufträge die noch gefertigt werden findest du hier',
     icon: <ClipboardDocumentCheckIcon className="w-6 h-6 text-red-500" />
   },
   {
     href: '/konto/bestellungen',
     text: 'Bestellungen',
-    sub: 'Deine Einkäufe',
+    sub: 'Hier hast du eine Übersicht zu deinen gekauften Artikeln',
     icon: <ShoppingCartIcon className="w-6 h-6 text-green-500 fill-current stroke-current" />
   },
   {
     href: '/konto/lackanfragen',
-    text: 'Lackanfragen',
+    text: 'Lackanfragen-Angebote',
     sub: 'Übersicht über deine eingeholten und abgegebenen Angebote für Lacke',
+    icon: <DocumentTextIcon className="w-6 h-6 text-teal-500" />
+  },
+  {
+    href: '/konto/lackangebote',
+    text: 'Lackangebote-Deals',
+    sub: 'Abgeschlossene und vereinbarte Deals für angefragte Lacke findest du hier',
     icon: <DocumentTextIcon className="w-6 h-6 text-teal-500" />
   },
   {
     href: '/konto/verkaufen',
     text: 'Verkaufen',
-    sub: 'Verwalte deine zum Verkauf stehenden Produkte',
+    sub: 'Verwalte deine eingestellten Artikel und Verkäufe',
     icon: <ShoppingBagIcon className="w-6 h-6 text-yellow-500" />
   },
   {
@@ -53,7 +59,7 @@ export default function Page() {
   {
     href: '/konto/nachrichten',
     text: 'Nachrichten',
-    sub: 'Kontakt & Kommunikation',
+    sub: 'Übersicht über deine Nachrichten von anderen Usern',
     icon: <EnvelopeIcon className="w-6 h-6 text-blue-600 fill-current stroke-current" />
   }
 ]

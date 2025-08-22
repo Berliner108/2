@@ -286,7 +286,7 @@ export default function AuftragDetailPage() {
                       id="preis"
                       type="text"
                       inputMode="decimal"
-                      placeholder="z. B. 149.90"
+                      placeholder="z. B. 449.90"
                       value={preis}
                       onChange={onPreisChange}
                       onBlur={onPreisBlur}
@@ -307,7 +307,7 @@ export default function AuftragDetailPage() {
                     </div>
                   ) : (
                     <div className={styles.priceHint}>
-                      Mit der Angebotsabgabe bestätigst du alle Kundenanforderungen ausnahmslos erfüllen zu können. Dein Angebot ist 72h gültig.
+                      Abgegebene Angebote können nicht zurückgezogen werden. Mit der Angebotsabgabe bestätigst du im Falle einer Annahme vom Auftraggeber, alle Kundenanforderungen ausnahmslos erfüllen zu können. Dein Angebot ist 72h, oder bis zum Tag der Warenausgabe gültig.
                     </div>
                   )}
                 </form>

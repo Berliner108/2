@@ -99,9 +99,10 @@ export default function Pager() {
               href: '/konto',
               links: [
                 { href: '/konto/angebote', text: 'Angebote' },
-                { href: '/konto/auftraege', text: 'Aufträge' },
+                { href: '/konto/auftraege', text: 'Auftrags-Deals' },
                 { href: '/konto/bestellungen', text: 'Bestellungen' },
                 { href: '/konto/lackanfragen', text: 'Lackanfragen' },
+                { href: '/konto/lackangebote', text: 'Lackangebote-Deals' },
                 { href: '/konto/verkaufen', text: 'Verkaufen' },
                 { href: '/konto/einstellungen', text: 'Kontoeinstellungen' },
                 { href: '/konto/nachrichten', text: 'Nachrichten' }

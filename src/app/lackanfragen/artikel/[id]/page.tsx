@@ -275,7 +275,7 @@ export default function ArtikelDetailPage() {
 
               <button className={styles.submitOfferButton}>Lack verbindlich anbieten</button>
               <p className={styles.offerNote}>
-                Mit der Angebotsabgabe bestätigen Sie, die Anforderungen zur Gänze erfüllen zu können. Ihr Angebot ist 24h gültig.
+                Mit der Angebotsabgabe bestätigen Sie, die Anforderungen zur Gänze erfüllen zu können. Ihr Angebot ist 72h gültig.
               </p>
             </div>
           </div>

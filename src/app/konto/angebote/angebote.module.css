@@ -1,7 +1,8 @@
+/* — Basis — */
 .wrapper {
   padding: 2rem;
   max-width: 100%;
- 
+  font-family: 'Oswald';
 }
 
 .heading {
@@ -15,16 +16,7 @@
 
 .kontoContainer {
   background-color: #ffffff;
-  padding: 1.5rem;
   margin-bottom: 3rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.3s ease;
-}
-
-.kontoContainer:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .kontoContainer p {
@@ -33,20 +25,405 @@
   color: #444;
 }
 
-.kontoContainer ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
+/* Segmented Control (Umschalter oben) */
+.segmented {
+  display: inline-flex;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 9999px;
+  overflow: hidden;
 }
-
-.kontoContainer li {
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  color: #222;
+.segmentedBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: .45rem .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Oswald';
 }
+.segmentedBtn + .segmentedBtn { border-left: 2px solid #e0e0e0; }
+.segmentedActive { background: #00b5d8; color: #fff; }
 
+/* Divider */
 .divider {
   height: 2px;
   background: linear-gradient(to right, #00b5d8, transparent);
   margin: 2rem 0;
   border: none;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0 0 1rem;
+}
+.search,
+.select {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 1rem;
+  font-family: 'Oswald';
+}
+.onlyActive { display: flex; gap: 0.5rem; align-items: center; font-weight: 600; }
+.search:focus-visible,
+.select:focus-visible { outline: 3px solid #9ee8f3; outline-offset: 2px; }
+
+/* A11y label helper */
+.visuallyHidden {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* ===== Karten & Listen ===== */
+
+/* Bullets für diese Listen entfernen */
+.kontoContainer ul.groupList,
+.kontoContainer ul.list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Abgegebene Liste */
+.list { display: grid; gap: 0.75rem; }
+
+.card {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  transition: box-shadow .2s, transform .06s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+
+.cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.cardTitle { font-weight: 700; }
+
+.titleLink {
+  color: #111;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.titleLink:hover { border-bottom-color: #00b5d8; }
+
+.price { font-weight: 800; }
+
+.cardMeta {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+.metaItem strong { color: #222; }
+
+.actions { margin-top: 0.75rem; }
+
+/* Einheitlicher "Zum Auftrag" Button – FILL-Variante */
+.jobLink,
+.groupActions .jobLink,
+.actions .jobLink {
+  box-sizing: border-box;
+  display: inline-block;
+  background: #00b5d8;
+  color: #fff !important;   /* erzwingt weiße Schrift */
+  border: 0;
+  padding: .45rem .8rem;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+}
+.jobLink:hover,
+.groupActions .jobLink:hover,
+.actions .jobLink:hover {
+  background: #089bb9;      /* etwas dunkler auf Hover */
+  color: #fff !important;
+}
+
+/* Falls du irgendwo noch Outline-Variante hattest: bitte entfernen oder umbenennen
+.jobLink--outline { background: transparent; color:#0b5563; border:2px solid #00b5d8; }
+.jobLink--outline:hover { background:#00b5d8; color:#fff; }
+*/
+
+
+/* ===== Gruppen (erhaltene Angebote) ===== */
+.groupList { display: grid; gap: 1rem; }
+.groupCard {
+  background:#fff; border:2px solid darkgrey; border-radius:12px; padding:1rem; box-shadow:0 12px 8px rgba(0,0,0,.04);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,.06),
+    0 8px 24px rgba(0,0,0,.08); /* weicher, angenehmer Schatten */
+    transition: box-shadow .18s ease, transform .06s ease;
+}
+
+.groupCard:hover {
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.16),
+    0 4px 10px rgba(0,0,0,.08);
+  transform: translateY(-2px);
+}
+.groupHeader { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+.groupTitle { display:flex; flex-wrap:wrap; gap:.5rem .75rem; align-items:center; font-weight:700; }
+.groupCounter {
+  font-size: .85rem;
+  padding: .2rem .6rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #16a34a 0%, #86efac 55%, #ffffff 100%);
+  border: 1px solid #16a34a;
+  color: #064e3b; /* gut lesbar auf dem Verlauf */
+  font-weight: 700;
+}
+
+.groupCounter:hover {
+  background: linear-gradient(90deg, #149142 0%, #6ee7b7 55%, #ffffff 100%);
+  border-color: #149142;
+}
+
+.bestPrice { font-weight:800; }
+.groupActions { display:flex; gap:.5rem; }
+
+/* Beste-Preis Tag */
+.tagBest {
+  margin-left:.5rem; font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
+  background:#e6fbff; border:1px solid #bdeff8; color:#006a7d;
+}
+
+/* ===== Tabelle: Anbieter | Preis | Gültig bis | Aktion ===== */
+.offerTable { margin-top:.75rem; border-top:1px dashed black; }
+.offerHeader,
+.offerRow {
+  display:grid;
+  grid-template-columns: 2fr 1fr 1.6fr 1fr;
+  gap:.5rem; padding:.5rem 0; align-items:center;
+}
+.offerHeader { font-weight:700; color:#444; }
+.offerRow + .offerRow { border-top:1px dashed #eef2f7; }
+
+.vendor { font-weight:600; }
+.priceCell { font-weight:700; }
+.colAction { text-align:right; }
+.validCell { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+
+.groupFootNote { margin-top:.5rem; color:#666; font-size:.9rem; }
+
+/* === Accept-Button mit animiertem Grün-Gradient === */
+.acceptBtn {
+  box-sizing: border-box;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid #15803d;
+  background: linear-gradient(90deg, #16a34a, #22c55e, #86efac, #22c55e);
+  background-size: 200% 200%;                /* größer -> weiche Bewegung */
+  animation: acceptGradient 3s ease infinite; /* Bewegung */
+  color: black;
+  font-family: 'Oswald';
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+  cursor: pointer;
+}
+
+.acceptBtn:hover {
+  animation-duration: 3s;                     /* etwas flotter bei Hover */
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  filter: saturate(1.05);
+}
+
+.acceptBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+
+.acceptBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.35);
+}
+
+.acceptBtn[disabled] {
+  opacity: .7;
+  filter: grayscale(.05);
+  cursor: not-allowed;
+  animation: none;                             /* keine Bewegung im Disabled-Zustand */
+}
+
+/* Motion-Preference respektieren */
+@media (prefers-reduced-motion: reduce) {
+  .acceptBtn { animation: none; }
+}
+
+@keyframes acceptGradient {
+  0%   { background-position:   0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+
+/* ===== „läuft ab in …“ Badge ===== */
+.expBadge {
+  font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
+  border:1px solid #cbd5e1; background:#f8fafc; color:#334155;
+}
+.expSoon { background:#fff7e6; border-color:#ffe1a6; color:#7a4b00; }
+.expCritical { background:#ffeef0; border-color:#ffc7cf; color:#8a0f1a; }
+
+/* Empty */
+.emptyState {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  color: #555;
+}
+
+/* ===== Responsive ===== */
+
+/* Toolbar-Stapelung beibehalten */
+@media (max-width: 768px) {
+  .toolbar { grid-template-columns: 1fr; }
+  .cardHeader { align-items: flex-start; flex-direction: column; }
+}
+
+/* Tablet leicht kompakter */
+@media (max-width: 900px) {
+  .wrapper { padding: 1rem; }
+  .heading { font-size: 1.25rem; margin-top: 2rem; }
+}
+
+/* ===== Mobile: klare Auftrag-Umrandung + 3-Spalten-Zeile ===== */
+@media (max-width: 680px) {
+  /* Auftrag (äußere Karte) kräftig umrissen */
+  .kontoContainer .groupCard {
+    box-sizing: border-box;
+    border: 2px solid #000;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0;            /* Innenabstand gezielt unten steuern */
+    margin: 0 0 .9rem 0;
+  }
+
+  /* Header/Body sauber eingerückt */
+  .groupHeader { padding: 1rem 1rem .5rem; }
+  .groupFootNote { padding: 0 1rem 1rem; }
+
+  /* „Zum Auftrag“: full width, kompakt, kein Überstand */
+  .groupActions .jobLink {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    padding: .5rem .9rem;
+    text-align: center;
+  }
+
+  /* Angebotsliste mit Trennlinie + Innenabstand */
+  .offerTable {
+    border-top: 1px dashed #e5e7eb;
+    padding: .75rem 1rem 1rem;
+    margin-top: .25rem;
+  }
+
+  /* Pro Angebotszeile: 3 Spalten in einer Linie */
+  .offerHeader { display: none !important; }
+  .offerRow {
+    display: grid !important;
+    grid-template-columns: 1.15fr 0.85fr 2.3fr;
+ /* Anbieter | Preis | Gültig bis */
+    gap: .75rem 1rem;
+    align-items: start;         /* gleiche Oberkante */
+    padding: 0;                 /* Karten-Optik kommt von groupCard */
+    border: 0;                  /* keine eigene Umrandung */
+    background: transparent;
+  }
+  .offerRow + .offerRow { margin-top: .75rem; }
+
+  /* Zellen: Label oben, Wert darunter – Spalten bleiben fluchtend */
+  .offerRow [role="cell"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .offerRow [role="cell"][data-label]::before {
+    content: attr(data-label);
+    font-size: .7rem;
+    line-height: 1.1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: .2rem;
+  }
+
+  /* „Gültig bis“: Datum oben, Badge darunter, kein Springen */
+  .validCell {
+    display: grid !important;
+    grid-template-rows: auto auto;
+    align-content: start;
+    gap: .25rem;
+  }
+
+  /* Aktion unten über volle Breite */
+  .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .4rem;
+    text-align: left;
+  }
+
+  /* Buttons sauber innerhalb */
+  .jobLink, .acceptBtn {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+  .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
+}
+/* === Mobile: 3 Spalten symmetrisch (gleiche Breite & Abstände) === */
+@media (max-width: 680px) {
+  .offerRow {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* 3 gleiche Spalten */
+    gap: .75rem 1rem;           /* gleicher Spaltenabstand */
+    align-items: start;         /* alle Zellen oben bündig */
+    padding: 0;                 /* Karten-Optik bleibt bei groupCard */
+    border: 0;
+    background: transparent;
+  }
+
+  /* Zellen verhalten sich wie kleine Stacks: Label oben, Wert darunter */
+  .offerRow [role="cell"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;               /* verhindert Überlauf bei langen Wörtern */
+  }
+
+  /* Preis hübsch rechtsbündig innerhalb seiner Spalte (optional) */
+  .offerRow .priceCell {
+    align-items: flex-end;
+    text-align: right;
+    width: 100%;
+  }
+
+  /* „Gültig bis“: Datum + Badge untereinander, ohne zu springen */
+  .offerRow .validCell {
+    display: flex !important;
+    flex-direction: column;
+    gap: .25rem;
+  }
+
+  /* Aktion bleibt unten über volle Breite */
+  .offerRow .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .4rem;
+    text-align: left;
+  }
 }

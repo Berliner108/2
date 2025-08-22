@@ -14,12 +14,12 @@ const PUBLIC_SINGLE_PAGES = new Set<string>([
   '/agb',
   '/datenschutz',
   '/cookies',
-  '/karriere',
+  // '/karriere', // wird unten inkl. Unterseiten freigegeben
   '/kontakt',
 ])
 
 // Komplett offen (inkl. Unterseiten)
-const PUBLIC_SECTIONS_WITH_CHILDREN = ['/wissenswertes']  // ⬅️ nur noch das!
+const PUBLIC_SECTIONS_WITH_CHILDREN = ['/wissenswertes', '/karriere']
 
 // Shop: nur Übersicht offen
 function isShopList(path: string) {

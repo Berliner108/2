@@ -75,6 +75,7 @@ const ContactPage = () => {
           <h1 className={styles.title}>Kontaktformular</h1>
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            
             <label className={styles.label}>Betreff / Inserat:</label>
             <input
               type="text"
@@ -116,6 +117,7 @@ const ContactPage = () => {
               maxLength={800}
               className={styles.textareaField}
               required
+              placeholder="Bitte beachte, dass wir weder Verkäufer noch Beschichter sind und somit keine Auskünfte zu bestimmten Artikeln oder Dienstleistungen von Beschichtern geben können. Nutze dafür unsere Möglichkeit direkt mit dem Verkäufer oder Beschichter im Chat zu kommunizieren."
             />
             <small>{formData.message.length}/800 Zeichen</small>
 
