@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import styles from './auftragsboerse.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { dummyAuftraege, Auftrag } from '../../data/dummyAuftraege';
@@ -308,7 +308,7 @@ export default function AuftragsboerseSeite() {
 
   return (
     <>
-      <Pager />
+      <Navbar />
 
       {/* Hamburger & Overlay */}
       <button

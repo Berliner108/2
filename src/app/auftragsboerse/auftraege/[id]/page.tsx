@@ -5,7 +5,7 @@ import { dummyAuftraege, type Auftrag } from '../../../../data/dummyAuftraege';
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../../../components/navbar/Navbar'
 import { FaFilePdf } from 'react-icons/fa';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -103,7 +103,7 @@ export default function AuftragDetailPage() {
 
   return (
     <>
-      <Pager />
+      <Navbar />
 
       <div className={styles.container}>
         <div className={styles.grid}>

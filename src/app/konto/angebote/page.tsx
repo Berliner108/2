@@ -3,7 +3,7 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Pager from './../navbar/pager'
+import Navbar from '../../components/navbar/Navbar'
 import styles from './angebote.module.css'
 import { dummyAuftraege } from '@/data/dummyAuftraege'
 
@@ -39,7 +39,7 @@ function asDateLike(v: unknown): Date | undefined {
 function computeJobTitle(job: Job): string {
   const procs = (job.verfahren ?? []).map(v => v.name).filter(Boolean).join(' & ')
   const pb = (job.verfahren ?? []).find(v => /pulver/i.test(v.name))?.felder ?? {}
-  const farbe = (pb as any)?.farbbezeichnung || (pb as any)?.farbton || (pb as any)?.farbbezeichnung
+  const farbe = (pb as any)?.farbbezeichnung || (pb as any)?.farbton
   const extras = [farbe, job.material, job.standort].filter(Boolean).join(' · ')
   let title = [procs, extras].filter(Boolean).join(' — ')
   if (!title) {
@@ -49,7 +49,6 @@ function computeJobTitle(job: Job): string {
   return title
 }
 
-// Route: /auftragsboerse/auftraege/[id]
 const jobPath = (job: Job) => `/auftragsboerse/auftraege/${job.id}`
 const jobPathById = (id: string | number) => `/auftragsboerse/auftraege/${id}`
 
@@ -57,13 +56,10 @@ const formatEUR = (c: number) =>
   (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
 const formatDateTime = (d?: Date) => (d ? d.toLocaleString('de-AT') : '—')
 
-/** Gültig-bis: früheste **zukünftige** von [Vortag zur Ausgabe, createdAt+72h]; sonst undefined */
 function computeValidUntil(offer: Offer, job?: Job): Date | undefined {
   const now = Date.now()
-
   const created = asDateLike(offer.createdAt)
   const plus72h = created ? new Date(created.getTime() + 72 * 60 * 60 * 1000) : undefined
-
   const ausgabe = asDateLike(job?.warenausgabeDatum ?? job?.lieferDatum)
   let dayBeforeEnd: Date | undefined
   if (ausgabe) {
@@ -71,30 +67,23 @@ function computeValidUntil(offer: Offer, job?: Job): Date | undefined {
     dayBeforeEnd.setDate(dayBeforeEnd.getDate() - 1)
     dayBeforeEnd.setHours(23, 59, 59, 999)
   }
-
-  const candidates = [plus72h, dayBeforeEnd].filter(
-    (d): d is Date => !!d && +d > now
-  )
+  const candidates = [plus72h, dayBeforeEnd].filter((d): d is Date => !!d && +d > now)
   if (candidates.length === 0) return undefined
   return new Date(Math.min(...candidates.map(d => +d)))
 }
 
-/** Restlaufzeit (kritisch ≤60 Min, bald ≤24h, ok >24h) + Pluralfix */
 function formatRemaining(target?: Date) {
   if (!target) return { text: '—', level: 'ok' as const }
   const ms = +target - Date.now()
   if (ms <= 0) return { text: 'abgelaufen', level: 'over' as const }
-
   const totalMinutes = Math.floor(ms / 60000)
   const days  = Math.floor(totalMinutes / (60 * 24))
   const hours = Math.floor((totalMinutes - days * 24 * 60) / 60)
   const mins  = totalMinutes % 60
-
   let text: string
   if (days >= 1)       text = `${days} ${days === 1 ? 'Tag' : 'Tage'} ${hours} Std`
   else if (hours >= 1) text = `${hours} Std ${mins} Min`
   else                 text = `${mins} Min`
-
   const level = totalMinutes <= 60 ? 'critical' : (totalMinutes <= 24 * 60 ? 'soon' : 'ok')
   return { text, level: level as 'critical' | 'soon' | 'ok' }
 }
@@ -102,16 +91,14 @@ function formatRemaining(target?: Date) {
 /* ===== Zeit-Helper ===== */
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
 
-/* ===== Dummy-Angebote (frisch & gültig) ===== */
+/* ===== Dummy-Angebote ===== */
 const initialReceived: Offer[] = [
   { id:'r1a', jobId:3,   vendor:'Blank · 4.7',    priceCents:10000, createdAt: hoursAgo(20) },
   { id:'r1b', jobId:3,   vendor:'ColorTec · 4.9', priceCents: 9500, createdAt: hoursAgo(10) },
-  { id:'r2a', jobId:12,  vendor:'AluPro · 4.6',   priceCents:15000, createdAt: hoursAgo(50) }, // #12
+  { id:'r2a', jobId:12,  vendor:'AluPro · 4.6',   priceCents:15000, createdAt: hoursAgo(50) },
   { id:'r3a', jobId:22,  vendor:'MetalX · 4.8',   priceCents:20000, createdAt: hoursAgo(30) },
   { id:'r3b', jobId:22,  vendor:'CoatIt · 4.5',   priceCents:18900, createdAt: hoursAgo(28) },
 ]
-
-/* Abgegebene – korrigiert: nur IDs, die es in dummyAuftraege gibt */
 const initialSubmitted: Offer[] = [
   { id:'s1', jobId: 5,  vendor:'Du', priceCents:12000, createdAt: hoursAgo(12) },
   { id:'s2', jobId: 15, vendor:'Du', priceCents:18000, createdAt: hoursAgo(60) },
@@ -133,7 +120,7 @@ const Angebote: FC = () => {
   }, [])
 
   const OPEN_JOB_IDS = useMemo(() => {
-    const ids = new Set<string>(['1']) // Beispiel-Gruppe ohne Angebote
+    const ids = new Set<string>(['1'])
     for (const o of initialReceived) ids.add(String(o.jobId))
     return Array.from(ids)
   }, [])
@@ -142,10 +129,25 @@ const Angebote: FC = () => {
   const [submittedData, setSubmittedData] = useState<Offer[]>(initialSubmitted)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
+  // NEW: Modal-Zustand (zu bestätigendes Angebot)
+  const [confirmOffer, setConfirmOffer] = useState<null | {
+    jobId: string | number
+    offerId: string
+    amountCents: number
+    vendor: string
+  }>(null)
+
+  // ESC schließt Modal
+  useEffect(() => {
+    if (!confirmOffer) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirmOffer(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirmOffer])
+
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('date_desc')
 
-  // Umschalter: welche Sektion steht oben?
   const [topSection, setTopSection] = useState<TopSection>('received')
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('angeboteTop') : null
@@ -183,11 +185,9 @@ const Angebote: FC = () => {
 
   const receivedGroups = useMemo(() => {
     const q = query.trim().toLowerCase()
-
     const groups = OPEN_JOB_IDS.map(id => {
       const job = jobsById.get(String(id))
       const titleLC = job ? computeJobTitle(job).toLowerCase() : `auftrag #${id}`
-
       const offersForJob = receivedData.filter(o => String(o.jobId) === String(id))
       const offers = offersForJob.filter(o =>
         !q ||
@@ -195,16 +195,12 @@ const Angebote: FC = () => {
         o.vendor.toLowerCase().includes(q) ||
         titleLC.includes(q)
       )
-
       const showNoOffersGroup = offersForJob.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
-
       return { jobId: String(id), job, offers, showNoOffersGroup, bestPrice, latest }
     })
-
     const visible = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
-
     visible.sort((a, b) => {
       if (sort === 'date_desc')  return b.latest - a.latest
       if (sort === 'date_asc')   return a.latest - b.latest
@@ -212,7 +208,6 @@ const Angebote: FC = () => {
       if (sort === 'price_asc')  return a.bestPrice - b.bestPrice
       return 0
     })
-
     return visible
   }, [OPEN_JOB_IDS, jobsById, receivedData, query, sort])
 
@@ -232,18 +227,28 @@ const Angebote: FC = () => {
     return arr
   }, [submittedData, query, sort])
 
-  /** Angebot annehmen → zur Zahlungsseite leiten (nicht sofort löschen) */
-  function onAccept(jobId: string | number, offerId: string, amountCents: number) {
-    if (!confirm(`Angebot für Auftrag #${jobId} annehmen?`)) return
-    setAcceptingId(offerId)
-
-    // Angebote NICHT sofort entfernen – erst nach erfolgreicher Zahlung
-    const url =
+  // URL für Zahlung
+  function paymentUrl({ jobId, offerId, amountCents, vendor }: { jobId: string | number, offerId: string, amountCents: number, vendor: string }) {
+    return (
       `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
       `&offerId=${encodeURIComponent(offerId)}` +
       `&amount=${amountCents}` +
+      `&vendor=${encodeURIComponent(vendor)}` +
       `&returnTo=${encodeURIComponent('/konto/auftraege')}`
+    )
+  }
 
+  // Klick auf „Auftrag vergeben“ → Modal öffnen
+  function openConfirm(jobId: string | number, offerId: string, amountCents: number, vendor: string) {
+    setConfirmOffer({ jobId, offerId, amountCents, vendor })
+  }
+
+  // Im Modal bestätigt
+  function confirmAccept() {
+    if (!confirmOffer) return
+    setAcceptingId(confirmOffer.offerId)
+    const url = paymentUrl(confirmOffer)
+    setConfirmOffer(null)
     router.push(url)
   }
 
@@ -281,7 +286,6 @@ const Angebote: FC = () => {
                     <div className={styles.groupFootNote}>Derzeit keine gültigen Angebote.</div>
                   ) : (
                     <div className={styles.offerTable} role="table" aria-label="Angebote zu diesem Auftrag">
-                      {/* Header immer bei ≥1 Angebot */}
                       {offers.length >= 1 && (
                         <div className={styles.offerHeader} role="row" style={{ gridTemplateColumns: cols }}>
                           <div role="columnheader">Anbieter</div>
@@ -296,7 +300,7 @@ const Angebote: FC = () => {
                         .sort((a,b)=>a.priceCents-b.priceCents)
                         .map(o => {
                           const j = jobsById.get(String(o.jobId))
-                          const validUntil = computeValidUntil(o, j)! // vorhanden (durch Pruning)
+                          const validUntil = computeValidUntil(o, j)!
                           const remaining = formatRemaining(validUntil)
                           return (
                             <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
@@ -326,7 +330,8 @@ const Angebote: FC = () => {
                                   type="button"
                                   className={styles.acceptBtn}
                                   disabled={acceptingId === o.id}
-                                  onClick={() => onAccept(o.jobId, o.id, o.priceCents)}
+                                  onClick={() => openConfirm(o.jobId, o.id, o.priceCents, o.vendor)}
+                                  title="Anbieter beauftragen"
                                 >
                                   {acceptingId === o.id ? 'Wird angenommen…' : 'Auftrag vergeben'}
                                 </button>
@@ -356,7 +361,7 @@ const Angebote: FC = () => {
             {submitted.map(o => {
               const job   = jobsById.get(String(o.jobId))
               const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId} (nicht verfügbar)`
-              const href  = job ? jobPath(job) : '/auftragsboerse'   // kein toter Deep-Link
+              const href  = job ? jobPath(job) : '/auftragsboerse'
               const validUntil = computeValidUntil(o, job)!
               const remaining = formatRemaining(validUntil)
               return (
@@ -396,9 +401,8 @@ const Angebote: FC = () => {
 
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.wrapper}>
-
         {/* Toolbar */}
         <div className={styles.toolbar}>
           <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
@@ -423,7 +427,6 @@ const Angebote: FC = () => {
             <option value="price_asc">Bester Preis zuerst</option>
           </select>
 
-          {/* Umschalter: Welche Sektion steht oben? */}
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
             <button
               role="tab"
@@ -461,6 +464,42 @@ const Angebote: FC = () => {
           </>
         )}
       </div>
+
+      {/* ===== Modal „Auftrag vergeben“ ===== */}
+      {confirmOffer && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirmTitle"
+          aria-describedby="confirmText"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmOffer(null) }}
+        >
+          <div className={styles.modalContent}>
+            <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
+            <p id="confirmText" className={styles.modalText}>
+              Dieser Vorgang kann nicht rückgängig gemacht werden.
+            </p>
+            <div className={styles.modalSummary}>
+              <div><strong>Auftrag:</strong> #{String(confirmOffer.jobId)}</div>
+              <div><strong>Anbieter:</strong> {confirmOffer.vendor}</div>
+              <div><strong>Preis:</strong> {formatEUR(confirmOffer.amountCents)}</div>
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnGhost} onClick={() => setConfirmOffer(null)}>
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={confirmAccept}
+              >
+                Ja, endgültig vergeben
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

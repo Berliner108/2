@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './messages.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 
 export default function MessagesLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
     <>
-          <Pager />
+          <Navbar />
     <div className={styles.container}>
       <aside className={styles.sidebar}>
         <h2>Nachrichten</h2>

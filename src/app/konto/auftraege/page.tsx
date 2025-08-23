@@ -3,9 +3,9 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import Pager from './../navbar/pager'
 import styles from './auftraege.module.css'
 import { dummyAuftraege } from '@/data/dummyAuftraege'
+import Navbar from '../../components/navbar/Navbar'
 
 type Verfahren = { name: string; felder: Record<string, any> }
 type Job = {
@@ -18,7 +18,6 @@ type Job = {
   warenausgabeDatum?: Date | string
   lieferDatum?: Date | string
   warenannahmeDatum?: Date | string
-  // aus dummyAuftraege: user ist ein String wie "Schlosserei Kalb - 4.5"
   user?: any
 }
 
@@ -30,12 +29,13 @@ type Order = {
   amountCents?: number
   acceptedAt: string // ISO
   kind: OrderKind
+  deliveredAt?: string // ISO, gesetzt nach endgültiger Bestätigung
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 
 const LS_KEY  = 'myAuftraegeV2'
-const TOP_KEY = 'auftraegeTop' // 'vergeben' | 'angenommen'
+const TOP_KEY = 'auftraegeTop'
 
 /* ---------------- Helpers ---------------- */
 function asDateLike(v: unknown): Date | undefined {
@@ -50,17 +50,11 @@ const formatEUR = (c?: number) =>
     ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
     : '—'
 
-// nur Datum (TT.MM.JJ), ohne Uhrzeit
 const formatDate = (d?: Date) =>
   d
-    ? new Intl.DateTimeFormat('de-AT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(d)
+    ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
     : '—'
 
-// Auftragstitel
 function computeJobTitle(job: Job): string {
   const procs = (job.verfahren ?? []).map(v => v.name).filter(Boolean).join(' & ')
   const pb = (job.verfahren ?? []).find(v => /pulver/i.test(v.name))?.felder ?? {}
@@ -74,41 +68,25 @@ function computeJobTitle(job: Job): string {
   return title
 }
 
-// Auftraggebername (Owner) aus dem Job (dummyAuftraege.user)
 function getOwnerName(job: Job): string {
   const j: any = job
-
-  // 1) user als String
   if (typeof j.user === 'string' && j.user.trim()) return j.user.trim()
-
-  // 2) user als Objekt (Fallbacks)
   if (j.user && typeof j.user === 'object') {
     const name =
-      j.user.name ||
-      j.user.username ||
-      j.user.displayName ||
-      j.user.firma ||
-      j.user.company
+      j.user.name || j.user.username || j.user.displayName || j.user.firma || j.user.company
     const rating =
       typeof j.user.rating === 'number'
         ? j.user.rating.toFixed(1)
         : (typeof j.user.sterne === 'number' ? j.user.sterne.toFixed(1) : null)
     if (name) return rating ? `${name} · ${rating}` : name
   }
-
-  // 3) sonstige mögliche Felder
   const candidates = [
-    j.userName, j.username, j.name,
-    j.kunde, j.kundenname,
-    j.auftraggeber, j.auftraggeberName,
-    j.owner, j.ownerName,
-    j.company, j.firma, j.betrieb,
-    j.kontakt?.name, j.kontakt?.firma,
+    j.userName, j.username, j.name, j.kunde, j.kundenname,
+    j.auftraggeber, j.auftraggeberName, j.owner, j.ownerName,
+    j.company, j.firma, j.betrieb, j.kontakt?.name, j.kontakt?.firma,
     j.ersteller?.name, j.ersteller?.username,
   ]
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) return c.trim()
-  }
+  for (const c of candidates) if (typeof c === 'string' && c.trim()) return c.trim()
   return '—'
 }
 
@@ -125,12 +103,33 @@ function computeStatus(job: Job) {
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString()
 const daysAgo  = (d: number) => new Date(Date.now() - d * 86400_000).toISOString()
 
-/* ---------------- Beispiel-Aufträge (werden gemerged) ---------------- */
+function notifyNavbarCount(count: number) {
+  try {
+    window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } }))
+  } catch {}
+}
+
+// Endgültig als geliefert markieren (keine Rücknahme vorgesehen)
+function markDeliveredForJob(
+  jobId: string | number,
+  setOrdersFn: React.Dispatch<React.SetStateAction<Order[]>>
+) {
+  setOrdersFn(prev => {
+    const next = prev.map(o =>
+      String(o.jobId) === String(jobId)
+        ? { ...o, deliveredAt: o.deliveredAt ?? new Date().toISOString() }
+        : o
+    )
+    localStorage.setItem(LS_KEY, JSON.stringify(next))
+    notifyNavbarCount(next.length)
+    return next
+  })
+}
+
+/* ---------------- Beispiel-Aufträge ---------------- */
 const EXAMPLE_ORDERS: Order[] = [
-  // Vergebene (du hast jemand beauftragt)
   { jobId: 3,  vendor: 'ColorTec · 4.9', amountCents:  9500, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
   { jobId: 22, vendor: 'MetalX · 4.8',   amountCents: 20000, acceptedAt: daysAgo(1),   kind: 'vergeben'   },
-  // Angenommene (du wurdest beauftragt)
   { jobId: 12, vendor: 'ACME GmbH',      amountCents: 15000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
   { jobId: 5,  vendor: 'Muster AG',      amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
 ]
@@ -140,7 +139,6 @@ const AuftraegePage: FC = () => {
   const router = useRouter()
   const params = useSearchParams()
 
-  // Jobs-Index
   const jobsById = useMemo(() => {
     const m = new Map<string, Job>()
     for (const j of dummyAuftraege as Job[]) m.set(String(j.id), j)
@@ -149,12 +147,20 @@ const AuftraegePage: FC = () => {
 
   const [orders, setOrders] = useState<Order[]>([])
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
-
-  // Toolbar-States (wie Angebotsseite)
   const [query, setQuery] = useState('')
   const [sort,  setSort]  = useState<SortKey>('date_desc')
 
-  // Initial laden + Beispiele mergen + Top-Sektion aus localStorage
+  // NEW: Modal-Steuerung (welcher Job wird bestätigt?)
+  const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
+
+  // ESC schließt Modal
+  useEffect(() => {
+    if (confirmJobId == null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirmJobId(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirmJobId])
+
   useEffect(() => {
     const savedTop = localStorage.getItem(TOP_KEY)
     if (savedTop === 'vergeben' || savedTop === 'angenommen') setTopSection(savedTop as OrderKind)
@@ -173,11 +179,11 @@ const AuftraegePage: FC = () => {
       }
       setOrders(merged)
       localStorage.setItem(LS_KEY, JSON.stringify(merged))
+      notifyNavbarCount(merged.length)
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobsById])
 
-  // Neue Annahme via Query übernehmen (Rücksprung z.B. von /zahlung)
   useEffect(() => {
     const accepted = params.get('accepted')
     if (!accepted) return
@@ -195,23 +201,19 @@ const AuftraegePage: FC = () => {
         { jobId: accepted, offerId, vendor, amountCents, acceptedAt: new Date().toISOString(), kind },
       ]
       localStorage.setItem(LS_KEY, JSON.stringify(next))
-      // Navbar-Badge anstoßen (optional)
-      window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count: next.length } }))
+      notifyNavbarCount(next.length)
       return next
     })
 
-    // URL säubern
     const clean = new URL(window.location.href)
     ;['accepted','offerId','vendor','amount','kind','role','side'].forEach(k => clean.searchParams.delete(k))
     router.replace(clean.pathname + clean.search)
   }, [params, router])
 
-  // Top-Sektion merken
   useEffect(() => {
     localStorage.setItem(TOP_KEY, topSection)
   }, [topSection])
 
-  // Basis-Splits
   const vergebenRaw = useMemo(
     () => orders
       .filter(o => o.kind === 'vergeben')
@@ -227,16 +229,12 @@ const AuftraegePage: FC = () => {
     [orders, jobsById]
   )
 
-  // Suche + Sortierung (wie Angebotsseite), inkl. Owner-Name für „angenommen“
   const applySearch = (items: {order: Order, job: Job}[]) => {
     const q = query.trim().toLowerCase()
     if (!q) return items
     return items.filter(({ order, job }) => {
       const title = computeJobTitle(job).toLowerCase()
-      const partyName =
-        order.kind === 'vergeben'
-          ? (order.vendor || '')
-          : getOwnerName(job)
+      const partyName = order.kind === 'vergeben' ? (order.vendor || '') : getOwnerName(job)
       return (
         String(order.jobId).toLowerCase().includes(q) ||
         title.includes(q) ||
@@ -263,10 +261,12 @@ const AuftraegePage: FC = () => {
       {items.map(({ order, job }) => {
         const j = job as Job
         const title = computeJobTitle(j)
-        const status = computeStatus(j)
+        const baseStatus = computeStatus(j)
+        const status = order.deliveredAt
+          ? ({ key: 'fertig' as const, label: 'Geliefert (bestätigt)' as const })
+          : baseStatus
         const annahme = asDateLike(j.warenannahmeDatum)
         const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
-
         const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
         const contactValue = order.kind === 'vergeben' ? (order.vendor ?? '—') : getOwnerName(j)
 
@@ -307,12 +307,30 @@ const AuftraegePage: FC = () => {
                 <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
                 <div className={styles.metaValue}>{formatDate(annahme)}</div>
               </div>
+
+              {order.deliveredAt && (
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Bestätigt</div>
+                  <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredAt))}</div>
+                </div>
+              )}
             </div>
 
             <div className={styles.actions}>
               <Link href={`/auftragsboerse/auftraege/${j.id}`} className={styles.primaryBtn}>
                 Zum Auftrag
               </Link>
+
+              {order.kind === 'angenommen' && !order.deliveredAt && (
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => setConfirmJobId(order.jobId)}
+                  title="Bestätigt Fertigung & Lieferung – endgültig"
+                >
+                  Auftrag gefertigt 
+                </button>
+              )}
             </div>
           </li>
         )
@@ -322,9 +340,9 @@ const AuftraegePage: FC = () => {
 
   return (
     <>
-      <Pager />
+      
+      <Navbar />
       <div className={styles.wrapper}>
-        {/* Toolbar (wie Angebotsseite): Suche + Sort + Segmented */}
         <div className={styles.toolbar}>
           <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
           <input
@@ -370,7 +388,6 @@ const AuftraegePage: FC = () => {
           </div>
         </div>
 
-        {/* Reihenfolge nach Wahl */}
         {topSection === 'vergeben' ? (
           <>
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
@@ -409,6 +426,37 @@ const AuftraegePage: FC = () => {
           </>
         )}
       </div>
+
+      {/* Modal: Endgültige Bestätigung */}
+      {confirmJobId !== null && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirmTitle"
+          aria-describedby="confirmText"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmJobId(null) }}
+        >
+          <div className={styles.modalContent}>
+            <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
+            <p id="confirmText" className={styles.modalText}>
+              Dieser Vorgang kann nicht rückgängig gemacht werden.
+            </p>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnGhost} onClick={() => setConfirmJobId(null)}>
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={() => { markDeliveredForJob(confirmJobId, setOrders); setConfirmJobId(null) }}
+              >
+                Ja, endgültig bestätigen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -2,12 +2,12 @@
 import Link from 'next/link';
 import { PencilIcon, ShoppingCartIcon, CogIcon, EnvelopeIcon, DocumentTextIcon, ShoppingBagIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';  // Heroicons v2
 import styles from './konto.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 
 export default function Page() {
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.wrapper}>
         <h2 className={styles.headline}>Mein Konto</h2>
 

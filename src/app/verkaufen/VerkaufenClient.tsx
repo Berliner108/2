@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import Dropzone from './Dropzone';
@@ -648,7 +648,7 @@ const toggleBewerbung = (option: string) => {
 }
   return (
     <>
-      <Pager />
+      <Navbar />
       
       <form onSubmit={handleSubmit} className={styles.container}>
         <motion.div

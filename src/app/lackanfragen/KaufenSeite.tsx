@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Fuse from 'fuse.js';
 import styles from './auftragsboerse.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { artikelDaten } from '../../data/ArtikelDatenLackanfragen';
@@ -127,7 +127,7 @@ export default function KaufenSeite() {
 
   return (
     <>
-      <Pager />
+      <Navbar />
       <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Sidebar öffnen">
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />

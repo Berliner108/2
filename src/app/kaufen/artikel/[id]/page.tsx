@@ -5,7 +5,7 @@ import { artikelDaten } from '@/data/ArtikelimShop';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import styles from './ArtikelDetail.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../../../components/navbar/Navbar'
 import { FaFilePdf } from 'react-icons/fa';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -46,7 +46,7 @@ export default function ArtikelDetailPage() {
 
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.container}>
         <div className={styles.grid}>
           {/* Linke Spalte: Bilder */}

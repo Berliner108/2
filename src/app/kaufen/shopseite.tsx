@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Fuse from 'fuse.js';
 import styles from './kaufen.module.css';
-import Pager from './navbar/pager';
+import Navbar from '../components/navbar/Navbar'
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { artikelDaten } from '../../data/ArtikelimShop';
@@ -204,7 +204,7 @@ export default function Shopseite() {
 
   return (
     <>
-      <Pager />
+      <Navbar />
 
       {/* Hamburger / Sidebar toggle */}
       <button

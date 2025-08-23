@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, FileText, HelpCircle } from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import styles from './Grundgeruest.module.css'
-import Pager from './navbar/pager'
+import Navbar from '../components/navbar/Navbar'
 import Dropzone from './Dropzone'
 import DateiVorschau from './DateiVorschau'
 import BeschreibungsBox from './BeschreibungsBox'
@@ -251,7 +251,7 @@ const calculateProgress = () => {
 }
   return (
     <div className={oswald.className}>
-      <Pager />
+      <Navbar />
       <motion.div {...fadeIn} className={styles.progressContainer}>
   <div className={styles.progressBarWrapper}>
     <div

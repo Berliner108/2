@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./wissenswertes.module.css";
-import Pager from "./navbar/pager";
+import Navbar from '../components/navbar/Navbar'
 import { motion } from "framer-motion";
 import Vision from "./Vision";  // Importiere die Komponente
 import USPHighlights from './USPHighlights'; // ← Pfad anpassen!
@@ -226,7 +226,7 @@ useEffect(() => {
 
   return (
     <>
-      <Pager />
+      <Navbar />
       <Vision />
       <ScrollProgress />
       
