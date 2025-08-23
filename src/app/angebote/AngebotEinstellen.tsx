@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './angebote.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, CheckCircle, HelpCircle, Upload, Settings, FileImage, FileText, FileArchive, File } from 'lucide-react';
-import Pager from "./navbar/pager";
+import Navbar from './../components/navbar/Navbar'
 import { useSearchParams } from 'next/navigation';
 import { Oswald } from 'next/font/google';
 import LogistikBox from './LogistikBox'; // Pfad ggf. anpassen
@@ -1235,7 +1235,7 @@ const validSecondOptions: { [key: string]: string[] } = {
   };
   return (    
     <div className={oswald.className}>        
-    <><Pager />            
+    <><Navbar />            
    <form onSubmit={handleSubmit} className={styles.wrapper}>
       <motion.div {...fadeIn} className={styles.infoBox}>
         💡 Ab sofort ist das Einholen von Angeboten <strong>kostenlos</strong>!
