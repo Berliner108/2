@@ -5,7 +5,6 @@ import { dummyAuftraege } from '@/data/dummyAuftraege'; // Importieren der Dummy
 import styles from './auftragsboerse.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
-import Pager from './navbar/pager';
 
 export default function Page() {
   // Zustand initialisieren
@@ -89,7 +88,6 @@ export default function Page() {
 
   return (
     <>
-      <Pager />
       <div className={styles.wrapper}>
         {/* Filtercontainer links */}
         <aside className={styles.filterContainer}>
