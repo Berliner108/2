@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams, useRouter  } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { User } from '@supabase/supabase-js';
 import '../styles/header.css';
@@ -10,17 +10,20 @@ import '../styles/header.css';
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
   const router = useRouter();
   const pathname = usePathname();
-const sp = useSearchParams();
-const current = pathname + (sp.toString() ? `?${sp.toString()}` : '');
-const loginHref = `/login?redirect=${encodeURIComponent(current)}`;
-const registerHref = `/registrieren?redirect=${encodeURIComponent(current)}`;
+  const sp = useSearchParams();
 
+  // Aktuelle Seite inkl. Query
+  const current = pathname + (sp.toString() ? `?${sp.toString()}` : '');
 
-  const toggleMenu = () => setMenuOpen((m) => !m);
+  // Login/Registrieren mit Rücksprungziel
+  const loginHref = `/login?redirect=${encodeURIComponent(current)}`;
+  const registerHref = `/registrieren?redirect=${encodeURIComponent(current)}`;
 
-  // Vorname aus user_metadata oder aus E-Mail ableiten
+  const toggleMenu = () => setMenuOpen(m => !m);
+
   const firstName =
     (user?.user_metadata?.firstName as string | undefined) ||
     (user?.user_metadata?.first_name as string | undefined) ||
@@ -33,22 +36,35 @@ const registerHref = `/registrieren?redirect=${encodeURIComponent(current)}`;
     // aktuelle Session/User ziehen
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user ?? null));
 
-    // auf Auth-Änderungen reagieren (Login/Logout/Token-Refresh)
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    // auf Auth-Änderungen reagieren
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
     return () => {
-      subscription.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const handleLogout = async () => {
-    const supabase = supabaseBrowser();
-    await supabase.auth.signOut();
-    setUser(null);
-    setMenuOpen(false);
-    router.replace('/login'); // oder '/' – wie du magst
+    // Nach dem Logout zur Login-Seite inkl. redirect zurück auf die aktuelle Seite
+    const afterLogout = loginHref;
+
+    try {
+      // Serverseitig Supabase-Cookies (Access & Refresh) killen
+      await fetch(`/auth/signout?next=${encodeURIComponent(afterLogout)}`, {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'include',
+      });
+    } finally {
+      // Optional: clientseitig aufräumen
+      try { await supabaseBrowser().auth.signOut(); } catch {}
+      setUser(null);
+      setMenuOpen(false);
+      router.replace(afterLogout);
+      router.refresh(); // RSC/Prefetch invalidieren
+    }
   };
 
   return (
@@ -98,9 +114,16 @@ const registerHref = `/registrieren?redirect=${encodeURIComponent(current)}`;
               </>
             ) : (
               <>
-                <li><Link href={loginHref} onClick={() => setMenuOpen(false)}>Login</Link></li>
-<li><Link href={registerHref} onClick={() => setMenuOpen(false)}>Registrieren</Link></li>
-
+                <li>
+                  <Link href={loginHref} prefetch={false} onClick={() => setMenuOpen(false)}>
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link href={registerHref} prefetch={false} onClick={() => setMenuOpen(false)}>
+                    Registrieren
+                  </Link>
+                </li>
               </>
             )}
           </ul>
@@ -138,8 +161,16 @@ const registerHref = `/registrieren?redirect=${encodeURIComponent(current)}`;
             </>
           ) : (
             <>
-              <li><Link href={loginHref} onClick={() => setMenuOpen(false)}>Login</Link></li>
-              <li><Link href={registerHref} onClick={() => setMenuOpen(false)}>Registrieren</Link></li>
+              <li>
+                <Link href={loginHref} prefetch={false} onClick={() => setMenuOpen(false)}>
+                  Login
+                </Link>
+              </li>
+              <li>
+                <Link href={registerHref} prefetch={false} onClick={() => setMenuOpen(false)}>
+                  Registrieren
+                </Link>
+              </li>
             </>
           )}
         </ul>

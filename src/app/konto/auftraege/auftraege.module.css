@@ -162,7 +162,12 @@
 }
 
 .primaryBtn {
-  display: inline-block;
+  display: inline-flex;              /* statt inline-block */
+  align-items: center;               /* vertikal zentrieren */
+  justify-content: center;           /* horizontal zentrieren */
+  text-align: center;                /* mehrzeiligen Text mittig ausrichten */
+  gap: .5rem;                        /* Abstand falls Icon + Text */
+  max-height: 40px;
   background: #00b5d8;
   color: #fff !important;
   border: 0;
@@ -170,9 +175,18 @@
   border-radius: 12px;
   font-weight: 700;
   text-decoration: none;
-  line-height: 1.1;
+  line-height: 1;                    /* stabilere vertikale Zentrierung */
   transition: filter .15s ease, transform .06s ease, box-shadow .15s ease;
+  vertical-align: middle;            /* falls der Button inline neben Text steht */
 }
+
+/* optional: Icons im Button nicht stauchen */
+.primaryBtn svg,
+.primaryBtn img {
+  flex-shrink: 0;
+  display: inline-block;
+}
+
 .primaryBtn:hover { filter: brightness(.95); }
 .primaryBtn:active { transform: translateY(1px); }
 
@@ -189,8 +203,7 @@
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  font-family: 'OSwald';
-
+  font-family: 'Oswald';
   background: linear-gradient(90deg, #b91c1c, #ef4444, #f97316, #ef4444, #b91c1c);
   background-size: 300% 300%;
   animation: btnGradientMove 6s linear infinite;
@@ -300,3 +313,24 @@
   .meta { grid-template-columns: 1fr; }
   .segmentedBtn { padding: .4rem .7rem; }
 }
+/* Button + Hinweis vertikal stacken */
+.actionStack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* Hinweis unter dem Button */
+.btnHint {
+  font-size: .82rem;
+  line-height: 1.25;
+  color: #6b7280;            /* Tailwind gray-500 */
+  padding-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnHint::before { content: none; } /* Sanduhr-Icon weg */
+

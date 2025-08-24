@@ -1,6 +1,6 @@
 // /src/app/konto/page.tsx
 import Link from 'next/link';
-import { PencilIcon, ShoppingCartIcon, CogIcon, EnvelopeIcon, DocumentTextIcon, ShoppingBagIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';  // Heroicons v2
+import { PencilIcon, ShoppingCartIcon, CogIcon,ClipboardDocumentListIcon, EnvelopeIcon, DocumentTextIcon, ShoppingBagIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';  // Heroicons v2
 import styles from './konto.module.css';
 import Navbar from '../components/navbar/Navbar'
 
@@ -16,13 +16,13 @@ export default function Page() {
             {[
   {
     href: '/konto/angebote',
-    text: 'Auftrags-Angebote',
+    text: 'Eingeholte Angebote',
     sub: 'Übersicht über deine eingeholten und abgegebenen Angebote für Beschichtungsaufträge',
     icon: <PencilIcon className="w-6 h-6 text-blue-500 fill-current stroke-current" />
   },
   {
     href: '/konto/auftraege',
-    text: 'Auftrags-Deals',
+    text: 'Aufträge',
     sub: 'Abgeschlossene und Aufträge die noch gefertigt werden findest du hier',
     icon: <ClipboardDocumentCheckIcon className="w-6 h-6 text-red-500" />
   },
@@ -40,9 +40,9 @@ export default function Page() {
   },
   {
     href: '/konto/lackangebote',
-    text: 'Lackangebote-Deals',
+    text: 'Lackanfragen-Deals',
     sub: 'Abgeschlossene und vereinbarte Deals für angefragte Lacke findest du hier',
-    icon: <DocumentTextIcon className="w-6 h-6 text-teal-500" />
+    icon: <ClipboardDocumentListIcon className="w-6 h-6 text-teal-500" />
   },
   {
     href: '/konto/verkaufen',

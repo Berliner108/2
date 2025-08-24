@@ -14,6 +14,20 @@ const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }
   </div>
 );
 
+/** ✨ Nur interne Redirects zulassen (verhindert Open-Redirects) */
+function safeRedirect(input: string | undefined | null): string {
+  if (!input) return '/';
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const url = new URL(input, base);
+    // nur gleiche Origin erlauben
+    if (typeof window !== 'undefined' && url.origin !== window.location.origin) return '/';
+    return url.pathname + url.search + url.hash || '/';
+  } catch {
+    return input.startsWith('/') ? input : '/';
+  }
+}
+
 /** Query-Param ohne useSearchParams lesen (vermeidet Suspense-Pflicht) */
 function useQueryParam(name: string) {
   const [value, setValue] = useState<string | undefined>(undefined);
@@ -39,7 +53,7 @@ const COUNTRY_OPTIONS = [
 /** Regeln / Limits */
 const NAME_MAX = 32;
 const CITY_MAX = 24;
-const USERNAME_MAX = 30;  // Kommentar korrigiert
+const USERNAME_MAX = 30;
 const ZIP_MAX = 5;
 const COMPANY_MAX = 80;
 const EMAIL_MAX = 70;
@@ -48,16 +62,12 @@ const STREET_MAX = 48;
 // Nur Buchstaben (inkl. Umlaute) + Leerzeichen
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g;
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/;
-
 // Passwort: mind. 8, mind. 1 Groß-, 1 Kleinbuchstabe, 1 Sonderzeichen
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
-
 // Hausnummer (nur kleinbuchstaben als Suffix)
 const HNR_RE = /^\d{1,3}[a-z]?$/;
-
 // PLZ: nur Ziffern, max. 5
 const ZIP_RE = /^\d{1,5}$/;
-
 // USt-ID grob
 const VAT_RE = /^[A-Z0-9-]{8,14}$/;
 
@@ -87,7 +97,8 @@ const Register = () => {
 
   const router = useRouter();
   const invitedBy = useQueryParam('invited_by');
-  const redirectParam = useQueryParam('redirect') || '/';
+  // ✨ redirect sicher normalisieren
+  const redirectParam = safeRedirect(useQueryParam('redirect') || '/');
 
   /** Sanitizing beim Tippen */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -99,43 +110,33 @@ const Register = () => {
       case 'lastName':
         value = value.replace(ONLY_LETTERS_SANITIZE, '').slice(0, NAME_MAX);
         break;
-
       case 'username':
         value = value.replace(/\s+/g, '').slice(0, USERNAME_MAX);
         break;
-
       case 'email':
         value = value.slice(0, EMAIL_MAX);
         break;
-
       case 'street':
         value = value.replace(ONLY_LETTERS_SANITIZE, '').slice(0, STREET_MAX);
         break;
-
       case 'houseNumber': {
         const digits = value.replace(/\D/g, '').slice(0, 3);
-        const letter = value.replace(/[^a-z]/g, '').slice(0, 1); // nur klein
+        const letter = value.replace(/[^a-z]/g, '').slice(0, 1);
         value = digits + letter;
         break;
       }
-
       case 'zip':
         value = value.replace(/\D/g, '').slice(0, ZIP_MAX);
         break;
-
       case 'city':
         value = value.replace(ONLY_LETTERS_SANITIZE, '').slice(0, CITY_MAX);
         break;
-
       case 'vatNumber':
         value = value.toUpperCase().replace(/\s+/g, '');
         break;
-
-      // country kommt aus Dropdown – Wert direkt übernehmen
       default:
         break;
     }
-
     setFormData((s) => ({ ...s, [name]: value }));
   };
 
@@ -203,7 +204,7 @@ const Register = () => {
     const usernameNorm = formData.username.trim();
 
     try {
-      // 0) E-Mail serverseitig prüfen
+      // 0) E-Mail serverseitig prüfen (optional; ok so)
       try {
         const res = await fetch('/api/check-user', {
           method: 'POST',
@@ -247,7 +248,7 @@ const Register = () => {
           return;
         }
       } else if (!available) {
-        setErrors({ username: 'Benutzername ist bereits vergeben.' });
+        setErrors({ username: 'Benutz ername ist bereits vergeben.' });
         return;
       }
 
@@ -272,9 +273,8 @@ const Register = () => {
             companyName: isPrivatePerson ? null : formData.companyName,
             vatNumber: isPrivatePerson ? null : formData.vatNumber,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(
-            redirectParam
-          )}`,
+          /** ✨ Absoluter Callback + redirect (wird in /auth/callback serverseitig ausgetauscht) */
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`,
         },
       });
 
@@ -294,7 +294,7 @@ const Register = () => {
         return;
       }
 
-      // 3) IP-Hash speichern (Duplikaterkennung)
+      // 3) IP-Hash speichern (Duplikaterkennung – optional)
       if (data?.user?.id) {
         try {
           await fetch('/api/ip-dup', {
@@ -302,9 +302,7 @@ const Register = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: data.user.id }),
           });
-        } catch {
-          /* ignorieren */
-        }
+        } catch { /* ignorieren */ }
       }
 
       setConfirmationLink('Bitte bestätige deine E-Mail, dann kannst du dich einloggen.');

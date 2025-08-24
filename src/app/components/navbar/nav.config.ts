@@ -93,11 +93,11 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Mein Konto',
     href: '/konto',
     links: [
-      { href: '/konto/angebote',       text: 'Angebote' },
-      { href: '/konto/auftraege',      text: 'Auftrags-Deals' },
+      { href: '/konto/angebote',       text: 'Eingeholte Angebote' },
+      { href: '/konto/auftraege',      text: 'Aufträge' },
       { href: '/konto/bestellungen',   text: 'Bestellungen' },
       { href: '/konto/lackanfragen',   text: 'Lackanfragen' },
-      { href: '/konto/lackangebote',   text: 'Lackangebote-Deals' },
+      { href: '/konto/lackangebote',   text: 'Lackanfragen-Deals' },
       { href: '/konto/verkaufen',      text: 'Verkaufen' },
       { href: '/konto/einstellungen',  text: 'Kontoeinstellungen' },
       { href: '/konto/nachrichten',    text: 'Nachrichten' }
