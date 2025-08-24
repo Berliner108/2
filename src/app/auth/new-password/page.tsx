@@ -1,49 +1,62 @@
-// src/app/auth/new-password/page.tsx
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import styles from './newpassword.module.css';
 
-export default function NewPasswordPage() {
-  // WICHTIG: Hook-Nutzung in ein Suspense-Child auslagern
-  return (
-    <Suspense fallback={<p className={styles.info}>Lade…</p>}>
-      <NewPasswordInner />
-    </Suspense>
-  );
+const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function safeInternal(path?: string | null) {
+  if (!path) return '/';
+  try {
+    const u = new URL(path, window.location.origin);
+    return u.origin === window.location.origin
+      ? (u.pathname + u.search + u.hash || '/')
+      : '/';
+  } catch {
+    return path.startsWith('/') ? path : '/';
+  }
 }
 
 function NewPasswordInner() {
+  const router = useRouter();
+  const sp = useSearchParams();
+
+  const redirect = safeInternal(sp.get('redirect'));
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
-  const [show, setShow] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false); // Guard
+  const [err, setErr] = useState<string>('');
 
-  // Wie bei Registrieren
-  const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
-
-  const router = useRouter();
-  const params = useSearchParams();
-  const supabase = supabaseBrowser();
-
-  // Nur mit aktiver Recovery-Session erlauben
+  // 1) Sicherstellen, dass eine gültige (Recovery-)Session existiert,
+  //    sonst auf Fehlerseite schicken.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setErr('Sitzung abgelaufen. Bitte fordere den Link erneut an.');
-      setReady(true);
-    });
-  }, [supabase]);
+    const run = async () => {
+      try {
+        const supabase = supabaseBrowser();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          router.replace(
+            `/auth/error?code=no_session&type=recovery&redirect=${encodeURIComponent(redirect)}`
+          );
+        }
+      } catch {
+        router.replace(
+          `/auth/error?code=session_check_failed&type=recovery&redirect=${encodeURIComponent(redirect)}`
+        );
+      }
+    };
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const save = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null);
-    setOk(null);
+    if (loading) return;
+    setErr('');
 
+    // 2) Clientseitige Validierung
     if (!PASSWORD_RE.test(pw)) {
       setErr('Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.');
       return;
@@ -54,86 +67,96 @@ function NewPasswordInner() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: pw });
-    setLoading(false);
+    try {
+      const supabase = supabaseBrowser();
 
-    if (error) {
-      setErr(error.message);
-      return;
+      // 3) Passwort setzen (benötigt aktive Session – kommt vom Callback)
+      const { error } = await supabase.auth.updateUser({ password: pw });
+      if (error) {
+        const m = (error.message || '').toLowerCase();
+        // freundliche Standard-Fehler
+        if (m.includes('token') || m.includes('session')) {
+          setErr('Der Reset-Link ist abgelaufen. Bitte fordere einen neuen Link an.');
+        } else if (m.includes('short') || m.includes('weak')) {
+          setErr('Das Passwort erfüllt die Anforderungen nicht.');
+        } else {
+          setErr('Passwort konnte nicht aktualisiert werden. Bitte später erneut versuchen.');
+        }
+        setLoading(false);
+        return;
+      }
+
+      // 4) Sicherheit: hart abmelden (Server + Client), damit alte Session nicht weiterlebt
+      try {
+        await fetch('/auth/signout', { method: 'POST', credentials: 'include', cache: 'no-store' });
+      } catch {}
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+
+      // 5) Zur Login-Seite mit Hinweis zurück
+      router.replace(`/login?changed=1&redirect=${encodeURIComponent(redirect)}`);
+      router.refresh();
+    } catch {
+      setErr('Unerwarteter Fehler. Bitte später erneut versuchen.');
+      setLoading(false);
     }
-
-    setOk('Passwort aktualisiert.');
-    // Sicherheit: Recovery-Session beenden & zum Login
-    await supabase.auth.signOut();
-    const to = params.get('redirect') ?? '/login?changed=1';
-    const next = to.includes('/login') ? to : '/login?changed=1';
-    router.replace(next);
-  };
-
-  if (!ready) return <p className={styles.info}>Lade…</p>;
+  }
 
   return (
     <div className={styles.container}>
-      <form onSubmit={save} className={styles.form}>
-        <h1>Neues Passwort</h1>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <h1>Neues Passwort setzen</h1>
+        <p className={styles.hint}>
+          Bitte vergib ein starkes Passwort (mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen).
+        </p>
 
-        <label className={styles.label}>Neues Passwort</label>
-        <div className={styles.inputWrap}>
+        {err && <p className={styles.error} role="alert" aria-live="polite">{err}</p>}
+
+        <div className={styles.field}>
+          <label htmlFor="pw">Neues Passwort</label>
           <input
-            type={show ? 'text' : 'password'}
+            id="pw"
+            type="password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            required
             minLength={8}
+            autoComplete="new-password"
+            placeholder="********"
             pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
             title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
-            required
-            autoComplete="new-password"
-            className={styles.input}
-            placeholder="••••••••"
+            disabled={loading}
           />
-          <button
-            type="button"
-            onClick={() => setShow(!show)}
-            className={styles.toggle}
-            aria-label="Passwort anzeigen/verbergen"
-          >
-            {show ? 'Verbergen' : 'Anzeigen'}
-          </button>
         </div>
 
-        <label className={styles.label}>Passwort bestätigen</label>
-        <input
-          type={show ? 'text' : 'password'}
-          value={pw2}
-          onChange={(e) => setPw2(e.target.value)}
-          minLength={8}
-          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-          title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
-          required
-          autoComplete="new-password"
-          className={styles.input}
-          placeholder="••••••••"
-        />
+        <div className={styles.field}>
+          <label htmlFor="pw2">Passwort bestätigen</label>
+          <input
+            id="pw2"
+            type="password"
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="********"
+            disabled={loading}
+          />
+        </div>
 
-        {err && (
-          <p className={styles.error} aria-live="polite">
-            {err}
-          </p>
-        )}
-        {ok && (
-          <p className={styles.success} aria-live="polite">
-            {ok}
-          </p>
-        )}
-
-        <button
-          className={styles.button}
-          disabled={loading || !PASSWORD_RE.test(pw) || pw !== pw2}
-          type="submit"
-        >
-          {loading ? 'Speichere…' : 'Speichern'}
+        <button type="submit" className={styles.btn} disabled={loading}>
+          {loading ? 'Speichere…' : 'Passwort speichern'}
         </button>
       </form>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <NewPasswordInner />
+    </Suspense>
   );
 }
