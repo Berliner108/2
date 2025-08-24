@@ -13,14 +13,11 @@ import { logLogin } from '@/lib/log-login'
 /** ✨ Sanitize + normalisieren: nur interne Pfade erlauben */
 function safeRedirect(input: string | null | undefined): string {
   if (!input) return '/'
-  // Akzeptiere sowohl bereits encodete als auch rohe Pfade
   try {
-    // Absolute URLs verhindern Open-Redirects
     const url = new URL(input, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
     if (typeof window !== 'undefined' && url.origin !== window.location.origin) return '/'
     return url.pathname + url.search + url.hash
   } catch {
-    // Fallback: nur interne Pfade zulassen
     return input.startsWith('/') ? input : '/'
   }
 }
@@ -45,7 +42,6 @@ function LoginInner() {
       setShowChanged(true)
       const url = new URL(window.location.href)
       url.searchParams.delete('changed')
-      // ✨ redirect/next NICHT anfassen – bleiben in der URL!
       router.replace(
         url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''),
         { scroll: false }
@@ -83,7 +79,7 @@ function LoginInner() {
         emailToUse = String(resolvedEmail)
       }
 
-      // 2) Login
+      // 2) Login (clientseitige Session)
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: emailToUse, password })
       if (signInError) {
         const msgRaw = signInError.message?.toLowerCase() || ''
@@ -93,19 +89,36 @@ function LoginInner() {
         return
       }
 
-      // 3) Session kurz abwarten (Cookie-Set auf Browser)
-      for (let i = 0; i < 10; i++) {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) break
-        await new Promise(r => setTimeout(r, 80))
+      // 3) Client-Session (Tokens) holen
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token || !session?.refresh_token) {
+        setError('Login fehlgeschlagen. Bitte erneut versuchen.')
+        setLoading(false)
+        return
       }
 
-      // 4) Login-Event protokollieren (idempotent, aber Fehler hier blockieren nicht den Redirect)
+      // 4) ✨ Server-Session (HttpOnly-Cookies für Middleware/SSR) setzen
+      const resp = await fetch('/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        cache: 'no-store',
+        body: JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        }),
+      })
+      if (!resp.ok) {
+        setError('Session konnte nicht gesetzt werden. Bitte erneut versuchen.')
+        setLoading(false)
+        return
+      }
+
+      // 5) Login-Event protokollieren (optional)
       try { await logLogin() } catch {}
 
-      // 5) ✨ Zurück zur Zielseite
-      router.replace(redirectTo || '/')
-      router.refresh()
+      // 6) **Harte** Navigation – so sieht die Middleware die Cookies sofort
+      window.location.href = redirectTo || '/'
     } catch {
       setError('Unerwarteter Fehler. Bitte später erneut versuchen.')
       setLoading(false)
