@@ -100,6 +100,8 @@
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
   transition: box-shadow .2s ease, transform .06s ease;
+  content-visibility: auto;              /* Performance */
+  contain-intrinsic-size: 200px 400px;   /* verhindert Layout-Jumps */
 }
 .card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.10); transform: translateY(-1px); }
 
@@ -161,9 +163,9 @@
   flex-wrap: wrap;
 }
 
-/* (bereinigt & einmalig) */
+/* Primary */
 .primaryBtn {
-  display: inline-flex;           /* zentriert Text & Icon */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: .5rem;
@@ -181,12 +183,10 @@
   transition: filter .15s ease, transform .06s ease, box-shadow .15s ease;
   vertical-align: middle;
 }
-.primaryBtn svg,
-.primaryBtn img { flex-shrink: 0; display: inline-block; }
 .primaryBtn:hover { filter: brightness(.95); }
 .primaryBtn:active { transform: translateY(1px); }
 
-/* Sekundär (animierter Verlauf wie bei Angebote) */
+/* Secondary (animierter Verlauf) */
 .secondaryBtn {
   position: relative;
   display: inline-flex;
@@ -221,17 +221,8 @@
 }
 
 /* Button + Hinweis vertikal stacken */
-.actionStack {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-.btnHint {
-  margin-top: 6px;
-  font-size: .85rem;
-  color: #777;
-}
+.actionStack { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.btnHint { margin-top: 6px; font-size: .85rem; color: #777; }
 
 /* ===== Modal ===== */
 .modal {
@@ -257,6 +248,7 @@
 .modalTitle { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: #111827; }
 .modalText  { margin: 0 0 18px; color: #374151; line-height: 1.45; }
 .modalActions { display: flex; justify-content: flex-end; gap: 10px; }
+
 .btnGhost {
   appearance: none;
   border: 1px solid #e5e7eb;
@@ -268,6 +260,7 @@
   cursor: pointer;
 }
 .btnGhost:hover { background: #f9fafb; }
+
 .btnDanger {
   appearance: none;
   border: 1px solid rgba(0,0,0,.08);
@@ -285,7 +278,7 @@
 .btnDanger:active { transform: translateY(0); }
 .btnDanger:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(239, 68, 68, .35), 0 2px 6px rgba(0,0,0,.15); }
 
-/* ===== Pagination (wie Angebote) ===== */
+/* ===== Pagination ===== */
 .pagination {
   display: flex;
   align-items: center;
@@ -350,13 +343,6 @@
   .meta { grid-template-columns: 1fr; }
   .segmentedBtn { padding: .4rem .7rem; }
 }
-/* in deiner auftraege.module.css / angebote.module.css */
-.card {
-  content-visibility: auto;           /* rendert Offscreen-Inhalte erst bei Bedarf */
-  contain-intrinsic-size: 200px 400px;/* reserviert Platz, verhindert Layout-Jumps */
-}
-/* Hinweis unter Buttons (nutzt du bereits) */
-.btnHint { margin-top: 6px; font-size: .85rem; color: #777; }
 
 /* Bewertung */
 .stars {

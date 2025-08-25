@@ -93,6 +93,7 @@
 
 /* Abgegebene Liste */
 .list { display: grid; gap: 0.75rem; }
+
 /* Modal (wie auf Aufträge-Seite) */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;animation:modalFade .15s ease-out}
 @keyframes modalFade{from{opacity:0}to{opacity:1}}
@@ -121,10 +122,11 @@
 
 .cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .cardTitle { font-weight: 700; }
-/* in deiner auftraege.module.css / angebote.module.css */
+
+/* Performance-Optimierung */
 .card {
-  content-visibility: auto;           /* rendert Offscreen-Inhalte erst bei Bedarf */
-  contain-intrinsic-size: 200px 400px;/* reserviert Platz, verhindert Layout-Jumps */
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 400px;
 }
 
 .titleLink {
@@ -148,14 +150,14 @@
 
 .actions { margin-top: 0.75rem; }
 
-/* Einheitlicher "Zum Auftrag" Button – FILL-Variante */
+/* Einheitlicher Link-Button */
 .jobLink,
 .groupActions .jobLink,
 .actions .jobLink {
   box-sizing: border-box;
   display: inline-block;
   background: #00b5d8;
-  color: #fff !important;   /* erzwingt weiße Schrift */
+  color: #fff !important;
   border: 0;
   padding: .45rem .8rem;
   border-radius: 12px;
@@ -166,26 +168,19 @@
 .jobLink:hover,
 .groupActions .jobLink:hover,
 .actions .jobLink:hover {
-  background: #089bb9;      /* etwas dunkler auf Hover */
+  background: #089bb9;
   color: #fff !important;
 }
-
-/* Falls du irgendwo noch Outline-Variante hattest: bitte entfernen oder umbenennen
-.jobLink--outline { background: transparent; color:#0b5563; border:2px solid #00b5d8; }
-.jobLink--outline:hover { background:#00b5d8; color:#fff; }
-*/
-
 
 /* ===== Gruppen (erhaltene Angebote) ===== */
 .groupList { display: grid; gap: 1rem; }
 .groupCard {
-  background:#fff; border:2px solid darkgrey; border-radius:12px; padding:1rem; box-shadow:0 12px 8px rgba(0,0,0,.04);
+  background:#fff; border:2px solid darkgrey; border-radius:12px; padding:1rem;
   box-shadow:
     0 1px 3px rgba(0,0,0,.06),
-    0 8px 24px rgba(0,0,0,.08); /* weicher, angenehmer Schatten */
-    transition: box-shadow .18s ease, transform .06s ease;
+    0 8px 24px rgba(0,0,0,.08);
+  transition: box-shadow .18s ease, transform .06s ease;
 }
-
 .groupCard:hover {
   box-shadow:
     0 12px 28px rgba(0,0,0,.16),
@@ -200,10 +195,9 @@
   border-radius: 9999px;
   background: linear-gradient(90deg, #16a34a 0%, #86efac 55%, #ffffff 100%);
   border: 1px solid #16a34a;
-  color: #064e3b; /* gut lesbar auf dem Verlauf */
+  color: #064e3b;
   font-weight: 700;
 }
-
 .groupCounter:hover {
   background: linear-gradient(90deg, #149142 0%, #6ee7b7 55%, #ffffff 100%);
   border-color: #149142;
@@ -236,15 +230,15 @@
 
 .groupFootNote { margin-top:.5rem; color:#666; font-size:.9rem; }
 
-/* === Accept-Button mit animiertem Grün-Gradient === */
+/* Accept-Button */
 .acceptBtn {
   box-sizing: border-box;
   min-height: 40px;
   border-radius: 12px;
   border: 1px solid #15803d;
   background: linear-gradient(90deg, #16a34a, #22c55e, #86efac, #22c55e);
-  background-size: 200% 200%;                /* größer -> weiche Bewegung */
-  animation: acceptGradient 3s ease infinite; /* Bewegung */
+  background-size: 200% 200%;
+  animation: acceptGradient 3s ease infinite;
   color: black;
   font-family: 'Oswald';
   font-weight: 600;
@@ -252,41 +246,33 @@
   transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
   cursor: pointer;
 }
-
 .acceptBtn:hover {
-  animation-duration: 3s;                     /* etwas flotter bei Hover */
+  animation-duration: 3s;
   box-shadow: 0 2px 6px rgba(0,0,0,.12);
   filter: saturate(1.05);
 }
-
 .acceptBtn:active {
   transform: translateY(1px);
   box-shadow: 0 1px 3px rgba(0,0,0,.12);
 }
-
 .acceptBtn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(34,197,94,.35);
 }
-
 .acceptBtn[disabled] {
   opacity: .7;
   filter: grayscale(.05);
   cursor: not-allowed;
-  animation: none;                             /* keine Bewegung im Disabled-Zustand */
+  animation: none;
 }
-
-/* Motion-Preference respektieren */
 @media (prefers-reduced-motion: reduce) {
   .acceptBtn { animation: none; }
 }
-
 @keyframes acceptGradient {
   0%   { background-position:   0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position:   0% 50%; }
 }
-
 
 /* ===== „läuft ab in …“ Badge ===== */
 .expBadge {
@@ -306,36 +292,28 @@
 }
 
 /* ===== Responsive ===== */
-
-/* Toolbar-Stapelung beibehalten */
 @media (max-width: 768px) {
   .toolbar { grid-template-columns: 1fr; }
   .cardHeader { align-items: flex-start; flex-direction: column; }
 }
 
-/* Tablet leicht kompakter */
 @media (max-width: 900px) {
   .wrapper { padding: 1rem; }
   .heading { font-size: 1.25rem; margin-top: 2rem; }
 }
 
-/* ===== Mobile: klare Auftrag-Umrandung + 3-Spalten-Zeile ===== */
+/* Mobile Gruppenlayout */
 @media (max-width: 680px) {
-  /* Auftrag (äußere Karte) kräftig umrissen */
   .kontoContainer .groupCard {
     box-sizing: border-box;
     border: 2px solid #000;
     border-radius: 12px;
     background: #fff;
-    padding: 0;            /* Innenabstand gezielt unten steuern */
+    padding: 0;
     margin: 0 0 .9rem 0;
   }
-
-  /* Header/Body sauber eingerückt */
   .groupHeader { padding: 1rem 1rem .5rem; }
   .groupFootNote { padding: 0 1rem 1rem; }
-
-  /* „Zum Auftrag“: full width, kompakt, kein Überstand */
   .groupActions .jobLink {
     display: block;
     width: 100%;
@@ -343,29 +321,22 @@
     padding: .5rem .9rem;
     text-align: center;
   }
-
-  /* Angebotsliste mit Trennlinie + Innenabstand */
   .offerTable {
     border-top: 1px dashed #e5e7eb;
     padding: .75rem 1rem 1rem;
     margin-top: .25rem;
   }
-
-  /* Pro Angebotszeile: 3 Spalten in einer Linie */
   .offerHeader { display: none !important; }
   .offerRow {
     display: grid !important;
     grid-template-columns: 1.15fr 0.85fr 2.3fr;
- /* Anbieter | Preis | Gültig bis */
     gap: .75rem 1rem;
-    align-items: start;         /* gleiche Oberkante */
-    padding: 0;                 /* Karten-Optik kommt von groupCard */
-    border: 0;                  /* keine eigene Umrandung */
+    align-items: start;
+    padding: 0;
+    border: 0;
     background: transparent;
   }
   .offerRow + .offerRow { margin-top: .75rem; }
-
-  /* Zellen: Label oben, Wert darunter – Spalten bleiben fluchtend */
   .offerRow [role="cell"] {
     display: flex !important;
     flex-direction: column;
@@ -382,23 +353,17 @@
     font-weight: 700;
     margin-bottom: .2rem;
   }
-
-  /* „Gültig bis“: Datum oben, Badge darunter, kein Springen */
   .validCell {
     display: grid !important;
     grid-template-rows: auto auto;
     align-content: start;
     gap: .25rem;
   }
-
-  /* Aktion unten über volle Breite */
   .colAction {
     grid-column: 1 / -1 !important;
     margin-top: .4rem;
     text-align: left;
   }
-
-  /* Buttons sauber innerhalb */
   .jobLink, .acceptBtn {
     box-sizing: border-box;
     width: 100%;
@@ -406,47 +371,41 @@
   }
   .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
 }
-/* === Mobile: 3 Spalten symmetrisch (gleiche Breite & Abstände) === */
+
+/* Mobile 3-Spalten-Variante */
 @media (max-width: 680px) {
   .offerRow {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important; /* 3 gleiche Spalten */
-    gap: .75rem 1rem;           /* gleicher Spaltenabstand */
-    align-items: start;         /* alle Zellen oben bündig */
-    padding: 0;                 /* Karten-Optik bleibt bei groupCard */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .75rem 1rem;
+    align-items: start;
+    padding: 0;
     border: 0;
     background: transparent;
   }
-
-  /* Zellen verhalten sich wie kleine Stacks: Label oben, Wert darunter */
   .offerRow [role="cell"] {
     display: flex !important;
     flex-direction: column;
     align-items: flex-start;
-    min-width: 0;               /* verhindert Überlauf bei langen Wörtern */
+    min-width: 0;
   }
-
-  /* Preis hübsch rechtsbündig innerhalb seiner Spalte (optional) */
   .offerRow .priceCell {
     align-items: flex-end;
     text-align: right;
     width: 100%;
   }
-
-  /* „Gültig bis“: Datum + Badge untereinander, ohne zu springen */
   .offerRow .validCell {
     display: flex !important;
     flex-direction: column;
     gap: .25rem;
   }
-
-  /* Aktion bleibt unten über volle Breite */
   .offerRow .colAction {
     grid-column: 1 / -1 !important;
     margin-top: .4rem;
     text-align: left;
   }
 }
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -456,16 +415,13 @@
   margin-top: 1rem;
   flex-wrap: wrap;
 }
-
 .pageInfo { color: #444; font-size: .95rem; }
-
 .pagiControls {
   display: flex;
   align-items: center;
   gap: .5rem;
   flex-wrap: wrap;
 }
-
 .pageSizeLabel { font-size: .9rem; color: #6b7280; }
 .pageSize {
   border: 2px solid #e0e0e0;
@@ -474,13 +430,11 @@
   font: inherit;
   background: #fff;
 }
-
 .pageButtons {
   display: inline-flex;
   align-items: center;
   gap: .35rem;
 }
-
 .pageBtn {
   appearance: none;
   border: 2px solid #e5e7eb;
@@ -492,8 +446,8 @@
 }
 .pageBtn:hover:not(:disabled) { background: #f9fafb; }
 .pageBtn:disabled { opacity: .55; cursor: not-allowed; }
-
 .pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
+
 .modalSummary {
   display: grid;
   gap: .4rem;

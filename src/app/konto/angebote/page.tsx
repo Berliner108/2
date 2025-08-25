@@ -27,7 +27,7 @@ type Offer = {
   createdAt: string // ISO
 }
 
-/* ============== Helpers ============== */
+/* ================= Helpers ================= */
 
 function asDateLike(v: unknown): Date | undefined {
   if (!v) return undefined
@@ -108,6 +108,76 @@ const initialSubmitted: Offer[] = [
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type TopSection = 'received' | 'submitted'
 
+/* ============ Pagination-UI ============ */
+const Pagination: FC<{
+  page: number
+  setPage: (p:number)=>void
+  pageSize: number
+  setPageSize: (n:number)=>void
+  total: number
+  from: number
+  to: number
+  idPrefix: string
+}> = ({ page, setPage, pageSize, setPageSize, total, from, to, idPrefix }) => {
+  const pages = Math.max(1, Math.ceil(total / pageSize))
+  return (
+    <div className={styles.pagination} aria-label="Seitensteuerung">
+      <div className={styles.pageInfo} id={`${idPrefix}-info`}>
+        {total === 0
+          ? 'Keine Einträge'
+          : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
+      </div>
+      <div className={styles.pagiControls}>
+        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
+        <select
+          id={`${idPrefix}-ps`}
+          className={styles.pageSize}
+          value={pageSize}
+          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
+        >
+          {/* Du kannst hier 2 lassen zum Testen */}
+          <option value={2}>2</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+
+        <div className={styles.pageButtons}>
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(1)}
+            disabled={page <= 1}
+            aria-label="Erste Seite"
+          >«</button>
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(page - 1)}
+            disabled={page <= 1}
+            aria-label="Vorherige Seite"
+          >‹</button>
+          <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(page + 1)}
+            disabled={page >= pages}
+            aria-label="Nächste Seite"
+          >›</button>
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(pages)}
+            disabled={page >= pages}
+            aria-label="Letzte Seite"
+          >»</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ================= Component ================= */
 
 const Angebote: FC = () => {
@@ -129,7 +199,7 @@ const Angebote: FC = () => {
   const [submittedData, setSubmittedData] = useState<Offer[]>(initialSubmitted)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
-  // NEW: Modal-Zustand (zu bestätigendes Angebot)
+  // Modal-Zustand
   const [confirmOffer, setConfirmOffer] = useState<null | {
     jobId: string | number
     offerId: string
@@ -183,6 +253,7 @@ const Angebote: FC = () => {
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
   }, [])
 
+  /* ===== Filter + Sort ===== */
   const receivedGroups = useMemo(() => {
     const q = query.trim().toLowerCase()
     const groups = OPEN_JOB_IDS.map(id => {
@@ -227,7 +298,54 @@ const Angebote: FC = () => {
     return arr
   }, [submittedData, query, sort])
 
-  // URL für Zahlung
+  /* ===== Pagination-States (persistiert) ===== */
+  const [pageRec, setPageRec] = useState(1)
+  const [psRec, setPsRec] = useState<number>(10)
+
+  const [pageSub, setPageSub] = useState(1)
+  const [psSub, setPsSub] = useState<number>(10)
+
+  // initial aus localStorage
+  useEffect(() => {
+    try {
+      const a = Number(localStorage.getItem('angebote:ps:received')) || 10
+      const b = Number(localStorage.getItem('angebote:ps:submitted')) || 10
+      if (a) setPsRec(a)
+      if (b) setPsSub(b)
+    } catch {}
+  }, [])
+  // speichern
+  useEffect(() => { try { localStorage.setItem('angebote:ps:received', String(psRec)) } catch {} }, [psRec])
+  useEffect(() => { try { localStorage.setItem('angebote:ps:submitted', String(psSub)) } catch {} }, [psSub])
+
+  // bei Such-/Sort-Änderung Seite zurücksetzen
+  useEffect(() => { setPageRec(1); setPageSub(1) }, [query, sort])
+
+  // Slice-Helfer
+  function sliceByPage<T>(arr: T[], page: number, ps: number) {
+    const total = arr.length
+    const pages = Math.max(1, Math.ceil(total / ps))
+    const safePage = Math.min(Math.max(1, page), pages)
+    const start = (safePage - 1) * ps
+    const end = Math.min(start + ps, total)
+    return {
+      pageItems: arr.slice(start, end),
+      from: total === 0 ? 0 : start + 1,
+      to: end,
+      total,
+      safePage,
+      pages,
+    }
+  }
+
+  // Slices berechnen
+  const rec = sliceByPage(receivedGroups, pageRec, psRec)
+  useEffect(() => { if (rec.safePage !== pageRec) setPageRec(rec.safePage) }, [rec.safePage, pageRec])
+
+  const sub = sliceByPage(submitted, pageSub, psSub)
+  useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
+
+  /* ===== Payment + Modal ===== */
   function paymentUrl({ jobId, offerId, amountCents, vendor }: { jobId: string | number, offerId: string, amountCents: number, vendor: string }) {
     return (
       `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
@@ -237,13 +355,9 @@ const Angebote: FC = () => {
       `&returnTo=${encodeURIComponent('/konto/auftraege')}`
     )
   }
-
-  // Klick auf „Auftrag vergeben“ → Modal öffnen
   function openConfirm(jobId: string | number, offerId: string, amountCents: number, vendor: string) {
     setConfirmOffer({ jobId, offerId, amountCents, vendor })
   }
-
-  // Im Modal bestätigt
   function confirmAccept() {
     if (!confirmOffer) return
     setAcceptingId(confirmOffer.offerId)
@@ -252,99 +366,112 @@ const Angebote: FC = () => {
     router.push(url)
   }
 
-  const cols = '2fr 1fr 1.6fr 1fr' // Anbieter | Preis | Gültig bis | Aktion
+  const cols = '2fr 1fr 1.6fr 1fr'
 
   const ReceivedSection = () => (
     <>
       <h2 className={styles.heading}>Erhaltene Angebote für deine zu vergebenden Aufträge</h2>
       <div className={styles.kontoContainer}>
-        {receivedGroups.length === 0 ? (
+        {rec.total === 0 ? (
           <div className={styles.emptyState}><strong>Keine Aufträge/Angebote sichtbar.</strong></div>
         ) : (
-          <ul className={styles.groupList}>
-            {receivedGroups.map(({ jobId, job, offers, showNoOffersGroup, bestPrice }) => {
-              const title = job ? computeJobTitle(job) : `Auftrag #${jobId}`
-              const href  = job ? jobPath(job) : jobPathById(jobId)
-              return (
-                <li key={jobId} className={styles.groupCard}>
-                  <div className={styles.groupHeader}>
-                    <div className={styles.groupTitle}>
-                      <Link href={href} className={styles.titleLink}>{title}</Link>
-                      <span className={styles.groupCounter}>
-                        {offers.length} {offers.length === 1 ? 'Angebot' : 'Angebote'}
-                      </span>
-                      {offers.length > 0 && (
-                        <span className={styles.bestPrice}>{formatEUR(bestPrice)}</span>
-                      )}
+          <>
+            <ul className={styles.groupList}>
+              {rec.pageItems.map(({ jobId, job, offers, showNoOffersGroup, bestPrice }) => {
+                const title = job ? computeJobTitle(job) : `Auftrag #${jobId}`
+                const href  = job ? jobPath(job) : jobPathById(jobId)
+                return (
+                  <li key={jobId} className={styles.groupCard}>
+                    <div className={styles.groupHeader}>
+                      <div className={styles.groupTitle}>
+                        <Link href={href} className={styles.titleLink}>{title}</Link>
+                        <span className={styles.groupCounter}>
+                          {offers.length} {offers.length === 1 ? 'Angebot' : 'Angebote'}
+                        </span>
+                        {offers.length > 0 && (
+                          <span className={styles.bestPrice}>{formatEUR(bestPrice)}</span>
+                        )}
+                      </div>
+                      <div className={styles.groupActions}>
+                        <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
+                      </div>
                     </div>
-                    <div className={styles.groupActions}>
-                      <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
-                    </div>
-                  </div>
 
-                  {offers.length === 0 && showNoOffersGroup ? (
-                    <div className={styles.groupFootNote}>Derzeit keine gültigen Angebote.</div>
-                  ) : (
-                    <div className={styles.offerTable} role="table" aria-label="Angebote zu diesem Auftrag">
-                      {offers.length >= 1 && (
-                        <div className={styles.offerHeader} role="row" style={{ gridTemplateColumns: cols }}>
-                          <div role="columnheader">Anbieter</div>
-                          <div role="columnheader">Preis</div>
-                          <div role="columnheader">Angebot gültig bis</div>
-                          <div role="columnheader" className={styles.colAction}>Aktion</div>
-                        </div>
-                      )}
+                    {offers.length === 0 && showNoOffersGroup ? (
+                      <div className={styles.groupFootNote}>Derzeit keine gültigen Angebote.</div>
+                    ) : (
+                      <div className={styles.offerTable} role="table" aria-label="Angebote zu diesem Auftrag">
+                        {offers.length >= 1 && (
+                          <div className={styles.offerHeader} role="row" style={{ gridTemplateColumns: cols }}>
+                            <div role="columnheader">Anbieter</div>
+                            <div role="columnheader">Preis</div>
+                            <div role="columnheader">Angebot gültig bis</div>
+                            <div role="columnheader" className={styles.colAction}>Aktion</div>
+                          </div>
+                        )}
 
-                      {offers
-                        .slice()
-                        .sort((a,b)=>a.priceCents-b.priceCents)
-                        .map(o => {
-                          const j = jobsById.get(String(o.jobId))
-                          const validUntil = computeValidUntil(o, j)!
-                          const remaining = formatRemaining(validUntil)
-                          return (
-                            <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
-                              <div role="cell" data-label="Anbieter">
-                                <span className={styles.vendor}>{o.vendor}</span>
-                                {o.priceCents === bestPrice && offers.length > 1 && (
-                                  <span className={styles.tagBest}>Bester Preis</span>
-                                )}
+                        {offers
+                          .slice()
+                          .sort((a,b)=>a.priceCents-b.priceCents)
+                          .map(o => {
+                            const j = jobsById.get(String(o.jobId))
+                            const validUntil = computeValidUntil(o, j)!
+                            const remaining = formatRemaining(validUntil)
+                            return (
+                              <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
+                                <div role="cell" data-label="Anbieter">
+                                  <span className={styles.vendor}>{o.vendor}</span>
+                                  {o.priceCents === bestPrice && offers.length > 1 && (
+                                    <span className={styles.tagBest}>Bester Preis</span>
+                                  )}
+                                </div>
+                                <div role="cell" className={styles.priceCell} data-label="Preis">
+                                  {formatEUR(o.priceCents)}
+                                </div>
+                                <div role="cell" className={styles.validCell} data-label="Gültig bis">
+                                  <span>{formatDateTime(validUntil)}</span>
+                                  <span
+                                    className={[
+                                      styles.expBadge,
+                                      remaining.level === 'soon' ? styles.expSoon : '',
+                                      remaining.level === 'critical' ? styles.expCritical : '',
+                                    ].join(' ')}
+                                  >
+                                    läuft ab in {remaining.text}
+                                  </span>
+                                </div>
+                                <div role="cell" className={styles.colAction} data-label="Aktion">
+                                  <button
+                                    type="button"
+                                    className={styles.acceptBtn}
+                                    disabled={acceptingId === o.id}
+                                    onClick={() => openConfirm(o.jobId, o.id, o.priceCents, o.vendor)}
+                                    title="Anbieter beauftragen"
+                                  >
+                                    {acceptingId === o.id ? 'Wird angenommen…' : 'Auftrag vergeben'}
+                                  </button>
+                                </div>
                               </div>
-                              <div role="cell" className={styles.priceCell} data-label="Preis">
-                                {formatEUR(o.priceCents)}
-                              </div>
-                              <div role="cell" className={styles.validCell} data-label="Gültig bis">
-                                <span>{formatDateTime(validUntil)}</span>
-                                <span
-                                  className={[
-                                    styles.expBadge,
-                                    remaining.level === 'soon' ? styles.expSoon : '',
-                                    remaining.level === 'critical' ? styles.expCritical : '',
-                                  ].join(' ')}
-                                >
-                                  läuft ab in {remaining.text}
-                                </span>
-                              </div>
-                              <div role="cell" className={styles.colAction} data-label="Aktion">
-                                <button
-                                  type="button"
-                                  className={styles.acceptBtn}
-                                  disabled={acceptingId === o.id}
-                                  onClick={() => openConfirm(o.jobId, o.id, o.priceCents, o.vendor)}
-                                  title="Anbieter beauftragen"
-                                >
-                                  {acceptingId === o.id ? 'Wird angenommen…' : 'Auftrag vergeben'}
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                    </div>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+                            )
+                          })}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+
+            <Pagination
+              page={rec.safePage}
+              setPage={setPageRec}
+              pageSize={psRec}
+              setPageSize={setPsRec}
+              total={rec.total}
+              from={rec.from}
+              to={rec.to}
+              idPrefix="rec"
+            />
+          </>
         )}
       </div>
     </>
@@ -354,46 +481,59 @@ const Angebote: FC = () => {
     <>
       <h2 className={styles.heading}>Übersicht zu deinen abgegebenen Angeboten</h2>
       <div className={styles.kontoContainer}>
-        {submitted.length === 0 ? (
+        {sub.total === 0 ? (
           <div className={styles.emptyState}><strong>Keine gültigen Angebote abgegeben.</strong></div>
         ) : (
-          <ul className={styles.list}>
-            {submitted.map(o => {
-              const job   = jobsById.get(String(o.jobId))
-              const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId} (nicht verfügbar)`
-              const href  = job ? jobPath(job) : '/auftragsboerse'
-              const validUntil = computeValidUntil(o, job)!
-              const remaining = formatRemaining(validUntil)
-              return (
-                <li key={o.id} className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div className={styles.cardTitle}>
-                      <Link href={href} className={styles.titleLink}>{title}</Link>
+          <>
+            <ul className={styles.list}>
+              {sub.pageItems.map(o => {
+                const job   = jobsById.get(String(o.jobId))
+                const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId} (nicht verfügbar)`
+                const href  = job ? jobPath(job) : '/auftragsboerse'
+                const validUntil = computeValidUntil(o, job)!
+                const remaining = formatRemaining(validUntil)
+                return (
+                  <li key={o.id} className={styles.card}>
+                    <div className={styles.cardHeader}>
+                      <div className={styles.cardTitle}>
+                        <Link href={href} className={styles.titleLink}>{title}</Link>
+                      </div>
+                      <div className={styles.price}>{formatEUR(o.priceCents)}</div>
                     </div>
-                    <div className={styles.price}>{formatEUR(o.priceCents)}</div>
-                  </div>
-                  <div className={styles.cardMeta}>
-                    <span className={styles.metaItem}>Auftrags-Nr.: <strong>{o.jobId}</strong></span>
-                    <span className={styles.metaItem}>
-                      Gültig bis: {formatDateTime(validUntil)}{' '}
-                      <span
-                        className={[
-                          styles.expBadge,
-                          remaining.level === 'soon' ? styles.expSoon : '',
-                          remaining.level === 'critical' ? styles.expCritical : '',
-                        ].join(' ')}
-                      >
-                        läuft ab in {remaining.text}
+                    <div className={styles.cardMeta}>
+                      <span className={styles.metaItem}>Auftrags-Nr.: <strong>{o.jobId}</strong></span>
+                      <span className={styles.metaItem}>
+                        Gültig bis: {formatDateTime(validUntil)}{' '}
+                        <span
+                          className={[
+                            styles.expBadge,
+                            remaining.level === 'soon' ? styles.expSoon : '',
+                            remaining.level === 'critical' ? styles.expCritical : '',
+                          ].join(' ')}
+                        >
+                          läuft ab in {remaining.text}
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                  <div className={styles.actions}>
-                    <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                    </div>
+                    <div className={styles.actions}>
+                      <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <Pagination
+              page={sub.safePage}
+              setPage={setPageSub}
+              pageSize={psSub}
+              setPageSize={setPsSub}
+              total={sub.total}
+              from={sub.from}
+              to={sub.to}
+              idPrefix="sub"
+            />
+          </>
         )}
       </div>
     </>
@@ -481,8 +621,8 @@ const Angebote: FC = () => {
               Dieser Vorgang kann nicht rückgängig gemacht werden.
             </p>
             <div className={styles.modalSummary}>
-              <div><strong>Auftrag:</strong> #{String(confirmOffer.jobId)}</div>
-              <div><strong>Anbieter:</strong> {confirmOffer.vendor}</div>
+              <div><strong>Auftragnummer:</strong> #{String(confirmOffer.jobId)}</div>
+              <div><strong>Auftragnehmer:</strong> {confirmOffer.vendor}</div>
               <div><strong>Preis:</strong> {formatEUR(confirmOffer.amountCents)}</div>
             </div>
             <div className={styles.modalActions}>

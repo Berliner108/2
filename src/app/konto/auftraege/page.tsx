@@ -21,6 +21,9 @@ type Job = {
   user?: any
 }
 
+/* ---------- Neuer, expliziter Auftragsstatus (frontend-only) ---------- */
+type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
+
 type OrderKind = 'vergeben' | 'angenommen'
 type Order = {
   jobId: string | number
@@ -29,7 +32,20 @@ type Order = {
   amountCents?: number
   acceptedAt: string // ISO
   kind: OrderKind
-  deliveredAt?: string // ISO, gesetzt nach endgültiger Bestätigung
+
+  // NEU: Status-Felder (nur Frontend)
+  status?: OrderStatus
+  deliveredReportedAt?: string // Auftragnehmer hat "abgeschlossen" gemeldet
+  deliveredConfirmedAt?: string // Auftraggeber hat bestätigt (oder Auto-Freigabe)
+  autoReleaseAt?: string        // Zeitpunkt für automatische Freigabe
+  disputeOpenedAt?: string
+  disputeReason?: string | null
+
+  // Alt (Kompatibilität): falls noch vorhanden, mappen wir auf confirmed
+  deliveredAt?: string
+
+  // Bewertung durch Auftraggeber
+  review?: { rating: number; text?: string }
 }
 
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -46,6 +62,7 @@ type PagePayload<T> = {
 const LS_KEY  = 'myAuftraegeV2'
 const TOP_KEY = 'auftraegeTop'
 const PER_PAGE = 10
+const AUTO_RELEASE_DAYS = 14
 
 /* ---------------- Helpers ---------------- */
 function asDateLike(v: unknown): Date | undefined {
@@ -100,7 +117,7 @@ function getOwnerName(job: Job): string {
   return '—'
 }
 
-/** Interner Status (stark getypt) */
+/** „Produktionsstatus“ aus Terminen (wie gehabt) */
 function computeStatus(job: Job): {
   key: StatusKey
   label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
@@ -114,19 +131,18 @@ function computeStatus(job: Job): {
   return { key: 'aktiv', label: 'In Bearbeitung' }
 }
 
-/** darf „Auftrag fertig/geliefert“ klicken? → erst NACH Warenausgabe(Kunde) */
+/** darf „Auftrag abgeschlossen“ klicken? → erst NACH Warenausgabe(Kunde) */
 function canConfirmDelivered(job?: Job): { ok: boolean; reason: string } {
   const ausgabe = job && asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
   if (!ausgabe) return { ok: false, reason: 'Kein Warenausgabe-Datum hinterlegt' }
-  if (Date.now() < +ausgabe) {
-    return { ok: false, reason: `Verfügbar ab ${formatDate(ausgabe)}` }
-  }
+  if (Date.now() < +ausgabe) return { ok: false, reason: `Verfügbar ab ${formatDate(ausgabe)}` }
   return { ok: true, reason: '' }
 }
 
-/** Status-Schlüssel inkl. delivered-Override */
+/** Für Filterung „wartet/aktiv/fertig“ (reported/disputed/confirmed => „fertig“) */
 function getStatusKeyFor(order: Order, job: Job): StatusKey {
-  if (order.deliveredAt) return 'fertig'
+  if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
+  if (order.deliveredAt) return 'fertig' // Legacy
   return computeStatus(job).key
 }
 
@@ -134,38 +150,11 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString(
 const daysAgo  = (d: number) => new Date(Date.now() - d * 86400_000).toISOString()
 
 function notifyNavbarCount(count: number) {
-  try {
-    window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } }))
-  } catch {}
+  try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } })) } catch {}
 }
-
-// Endgültig als geliefert markieren (keine Rücknahme vorgesehen)
-function markDeliveredForJob(
-  jobId: string | number,
-  setOrdersFn: React.Dispatch<React.SetStateAction<Order[]>>
-) {
-  setOrdersFn(prev => {
-    const next = prev.map(o =>
-      String(o.jobId) === String(jobId)
-        ? { ...o, deliveredAt: o.deliveredAt ?? new Date().toISOString() }
-        : o
-    )
-    localStorage.setItem(LS_KEY, JSON.stringify(next))
-    notifyNavbarCount(next.length)
-    return next
-  })
-}
-
-/* ---------------- Beispiel-Aufträge ---------------- */
-const EXAMPLE_ORDERS: Order[] = [
-  { jobId: 3,  vendor: 'ColorTec · 4.9', amountCents:  9500, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
-  { jobId: 22, vendor: 'MetalX · 4.8',   amountCents: 20000, acceptedAt: daysAgo(1),   kind: 'vergeben'   },
-  { jobId: 12, vendor: 'ACME GmbH',      amountCents: 15000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
-  { jobId: 5,  vendor: 'Muster AG',      amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
-]
 
 /* ---------------- Cursor-Utils (Shim) ---------------- */
-// Wir kodieren den Offset als base64 "o:<number>"
+// Offset als base64 "o:<number>"
 const makeCursor = (offset: number) => btoa(`o:${offset}`)
 const readCursor = (cursor?: string | null) => {
   if (!cursor) return 0
@@ -176,6 +165,14 @@ const readCursor = (cursor?: string | null) => {
     return Number.isFinite(n) && n >= 0 ? n : 0
   } catch { return 0 }
 }
+
+/* ---------------- Beispiel-Aufträge ---------------- */
+const EXAMPLE_ORDERS: Order[] = [
+  { jobId: 3,  vendor: 'ColorTec · 4.9', amountCents:  9500, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
+  { jobId: 22, vendor: 'MetalX · 4.8',   amountCents: 20000, acceptedAt: daysAgo(1),   kind: 'vergeben'   },
+  { jobId: 12, vendor: 'ACME GmbH',      amountCents: 15000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
+  { jobId: 5,  vendor: 'Muster AG',      amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
+]
 
 /* ---------------- Component ---------------- */
 const AuftraegePage: FC = () => {
@@ -198,17 +195,23 @@ const AuftraegePage: FC = () => {
   const cursorV = params.get('cursorV') // vergebene
   const cursorA = params.get('cursorA') // angenommene
 
-  // Modal-Steuerung (welcher Job wird bestätigt?)
+  // Modal: Fertig/geliefert bestätigen (Auftragnehmer)
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
+
+  // Bewertung
+  const [rateOrderId, setRateOrderId] = useState<string | number | null>(null)
+  const [rating, setRating] = useState(5)
+  const [ratingText, setRatingText] = useState('')
 
   // ESC schließt Modal
   useEffect(() => {
-    if (confirmJobId == null) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirmJobId(null) }
+    if (confirmJobId == null && rateOrderId == null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setConfirmJobId(null); setRateOrderId(null) } }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [confirmJobId])
+  }, [confirmJobId, rateOrderId])
 
+  /* ---------- Orders laden & migrieren ---------- */
   useEffect(() => {
     const savedTop = localStorage.getItem(TOP_KEY)
     if (savedTop === 'vergeben' || savedTop === 'angenommen') setTopSection(savedTop as OrderKind)
@@ -216,14 +219,22 @@ const AuftraegePage: FC = () => {
     try {
       const raw = localStorage.getItem(LS_KEY)
       const existing: Order[] = raw ? JSON.parse(raw) : []
+      // Migration: Beispielaufträge hinzufügen (einmalig) + Legacy deliveredAt → confirmed
       const seen = new Set(existing.map(o => `${o.kind}-${o.jobId}`))
-      const merged = [...existing]
+      const merged: Order[] = existing.map((o): Order => {
+        if (o.deliveredAt && !o.status) {
+          return {
+            ...o,
+            status: 'confirmed' as OrderStatus,
+            deliveredConfirmedAt: o.deliveredConfirmedAt ?? o.deliveredAt,
+          }
+        }
+        return o
+      })
+
       for (const ex of EXAMPLE_ORDERS) {
         if (!jobsById.has(String(ex.jobId))) continue
-        if (!seen.has(`${ex.kind}-${ex.jobId}`)) {
-          seen.add(`${ex.kind}-${ex.jobId}`)
-          merged.push(ex)
-        }
+        if (!seen.has(`${ex.kind}-${ex.jobId}`)) merged.push(ex)
       }
       setOrders(merged)
       localStorage.setItem(LS_KEY, JSON.stringify(merged))
@@ -232,24 +243,28 @@ const AuftraegePage: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobsById])
 
+  // Param „accepted“ aus Zahlung etc. übernehmen (falls genutzt – hier nur Cleanup & Auto-Release-Check)
   useEffect(() => {
     const accepted = params.get('accepted')
     if (!accepted) return
-    const offerId = params.get('offerId') ?? undefined
-    const vendor  = params.get('vendor')  ?? undefined
-    const amountParam = params.get('amount')
-    const amountCents = amountParam ? Number(amountParam) : undefined
-    const kindParam = (params.get('kind') || params.get('role') || params.get('side')) ?? ''
-    const kind: OrderKind = (kindParam.toLowerCase() === 'angenommen' ? 'angenommen' : 'vergeben')
+    // (Optional: hier könntest du per accepted einen neuen Order hinzufügen)
 
+    // Laufende Auto-Release-Prüfung einmal triggern
     setOrders(prev => {
-      if (prev.some(o => String(o.jobId) === String(accepted) && o.kind === kind)) return prev
-      const next: Order[] = [
-        ...prev,
-        { jobId: accepted, offerId, vendor, amountCents, acceptedAt: new Date().toISOString(), kind },
-      ]
-      localStorage.setItem(LS_KEY, JSON.stringify(next))
-      notifyNavbarCount(next.length)
+      const now = Date.now()
+      let changed = false
+      const next = prev.map((o): Order => {
+        if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
+          changed = true
+          return {
+            ...o,
+            status: 'confirmed' as OrderStatus,
+            deliveredConfirmedAt: new Date().toISOString(),
+          }
+        }
+        return o
+      })
+      if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
       return next
     })
 
@@ -259,9 +274,39 @@ const AuftraegePage: FC = () => {
   }, [params, router])
 
   // Top-Sektion merken
+  useEffect(() => { localStorage.setItem(TOP_KEY, topSection) }, [topSection])
+
+  /* ---------- Auto-Freigabe (Frontend-Simulation) ---------- */
+  const runAutoRelease = () => {
+    setOrders(prev => {
+      const now = Date.now()
+      let changed = false
+
+      const next: Order[] = prev.map((o): Order => {
+        if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
+          changed = true
+          return {
+            ...o,
+            status: 'confirmed' as const,
+            deliveredConfirmedAt: new Date().toISOString(),
+          }
+        }
+        return o
+      })
+
+      if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
+      return next
+    })
+  }
+
   useEffect(() => {
-    localStorage.setItem(TOP_KEY, topSection)
-  }, [topSection])
+    runAutoRelease() // sofort beim Mount
+    const id = setInterval(runAutoRelease, 60_000) // minütlich
+    const onVis = () => { if (!document.hidden) runAutoRelease() }
+    document.addEventListener('visibilitychange', onVis)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* ---------- Filter + Sort ---------- */
   const allVergeben = useMemo(
@@ -316,10 +361,7 @@ const AuftraegePage: FC = () => {
     [allAngenommen, query, sort, statusFilter]
   )
 
-  /* ---------- Cursor-Pagination Loader (Shim) ----------
-     Heute: clientseitig, schneidet Stücke aus filteredSortedX.
-     Morgen: einfach diese Funktionen durch API-Fetch ersetzen.
-  ----------------------------------------------------- */
+  /* ---------- Cursor-Pagination Loader (client-only) ---------- */
   async function loadPage(
     kind: OrderKind,
     cursor: string | null | undefined,
@@ -332,17 +374,12 @@ const AuftraegePage: FC = () => {
     const items = arr.slice(start, end)
     const next = end < arr.length ? makeCursor(end) : undefined
     const prev = start > 0 ? makeCursor(Math.max(0, start - perPage)) : undefined
-
-    // TODO (server): fetch(`/api/orders?kind=${kind}&limit=${perPage}&cursor=${cursor ?? ''}&q=${query}&sort=${sort}&status=${statusFilter}`)
-
     return { items, nextCursor: next, prevCursor: prev, total: arr.length }
   }
 
-  // Seitenzustand je Sektion
   const [pageV, setPageV] = useState<PagePayload<{order:Order, job:Job}>>({ items: [] })
   const [pageA, setPageA] = useState<PagePayload<{order:Order, job:Job}>>({ items: [] })
 
-  // Funktion: Cursor in URL setzen (für Deep-Linkbarkeit)
   const setCursorParam = (key: 'cursorV' | 'cursorA', val?: string) => {
     const url = new URL(window.location.href)
     if (!val) url.searchParams.delete(key)
@@ -350,7 +387,6 @@ const AuftraegePage: FC = () => {
     router.replace(url.pathname + '?' + url.searchParams.toString())
   }
 
-  // Initial + bei URL/Filter/Sort/Orders neu laden
   useEffect(() => {
     let ignore = false
     ;(async () => {
@@ -359,21 +395,76 @@ const AuftraegePage: FC = () => {
         loadPage('angenommen', cursorA, PER_PAGE),
       ])
       if (ignore) return
-      setPageV(pv)
-      setPageA(pa)
+      setPageV(pv); setPageA(pa)
     })()
     return () => { ignore = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursorV, cursorA, filteredSortedV, filteredSortedA])
 
-  // Bei Filter/Suche/Sort/Tab: Cursor zurücksetzen (Seite 1)
   useEffect(() => {
     const url = new URL(window.location.href)
     url.searchParams.delete('cursorV')
     url.searchParams.delete('cursorA')
     router.replace(url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, sort, statusFilter, topSection])
+
+  /* ---------- Actions (frontend only) ---------- */
+  function persist(next: Order[]) {
+    localStorage.setItem(LS_KEY, JSON.stringify(next))
+    setOrders(next)
+  }
+
+  function reportDelivered(jobId: string | number) {
+    const next = orders.map((o): Order =>
+      String(o.jobId) === String(jobId)
+        ? {
+            ...o,
+            status: 'reported' as OrderStatus,
+            deliveredReportedAt: new Date().toISOString(),
+            autoReleaseAt: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString(),
+          }
+        : o
+    )
+    persist(next)
+  }
+
+  function confirmDelivered(jobId: string | number) {
+    const next: Order[] = orders.map((o): Order =>
+      String(o.jobId) === String(jobId)
+        ? {
+            ...o,
+            status: 'confirmed' as OrderStatus,
+            deliveredConfirmedAt: new Date().toISOString(),
+          }
+        : o
+    )
+    persist(next)
+  }
+
+  function openDispute(jobId: string | number) {
+    const reason = window.prompt('Problem melden (optional):')
+    const next = orders.map((o): Order =>
+      String(o.jobId) === String(jobId)
+        ? {
+            ...o,
+            status: 'disputed' as OrderStatus,
+            disputeOpenedAt: new Date().toISOString(),
+            disputeReason: reason || null,
+          }
+        : o
+    )
+    persist(next)
+  }
+
+  function remainingText(iso?: string) {
+    if (!iso) return '–'
+    const delta = +new Date(iso) - Date.now()
+    if (delta <= 0) return 'kurzfristig'
+    const days  = Math.floor(delta / 86400000)
+    const hours = Math.floor((delta % 86400000) / 3600000)
+    return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours} Std` : `${hours} Std`
+  }
 
   /* ---------------- Section Renderer + Pager ---------------- */
   const SectionList: FC<{
@@ -381,17 +472,23 @@ const AuftraegePage: FC = () => {
     page: PagePayload<{order:Order, job:Job}>
     onPrev: () => void
     onNext: () => void
-    totalVisible: number // Anzahl nach Filter (für Chip)
-  }> = ({ kind, page, onPrev, onNext, totalVisible }) => (
+    totalVisible: number
+    onConfirmDelivered: (jobId: string | number) => void
+  }> = ({ kind, page, onPrev, onNext, onConfirmDelivered }) => (
     <>
       <ul className={styles.list}>
         {page.items.map(({ order, job }) => {
           const j = job as Job
-          const title = computeJobTitle(j)
-          const baseStatus = computeStatus(j)
-          const status = order.deliveredAt
-            ? ({ key: 'fertig' as StatusKey, label: 'Abholbereit/Versandt' as const })
-            : baseStatus
+          const prodStatus = computeStatus(j) // Produktionsstatus
+          // Anzeige-Status überschreiben, wenn Flow-Status gesetzt:
+          const display =
+            order.status === 'confirmed'
+              ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const }
+              : order.status === 'disputed'
+                ? { key: 'fertig' as StatusKey, label: 'Reklamation offen' as const }
+                : order.status === 'reported'
+                  ? { key: 'fertig' as StatusKey, label: 'Zustellung gemeldet' as const }
+                  : prodStatus
 
           const annahme = asDateLike(j.warenannahmeDatum)
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
@@ -401,23 +498,29 @@ const AuftraegePage: FC = () => {
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
+          const isVendor = order.kind === 'angenommen'
+          const isCustomer = order.kind === 'vergeben'
+
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
                   <Link href={`/auftragsboerse/auftraege/${j.id}`} className={styles.titleLink}>
-                    {title}
+                    {computeJobTitle(j)}
                   </Link>
                 </div>
                 <span
                   className={[
                     styles.statusBadge,
-                    status.key === 'aktiv' ? styles.statusActive : '',
-                    status.key === 'wartet' ? styles.statusPending : '',
-                    status.key === 'fertig' ? styles.statusDone : '',
+                    display.label === 'In Bearbeitung' ? styles.statusActive : '',
+                    display.label === 'Anlieferung geplant' ? styles.statusPending : '',
+                    display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
+                    display.label === 'Zustellung gemeldet' ? styles.statusPending : '',
+                    display.label === 'Reklamation offen' ? styles.statusPending : '',
+                    display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
                   ].join(' ').trim()}
                 >
-                  {status.label}
+                  {display.label}
                 </span>
               </div>
 
@@ -439,10 +542,16 @@ const AuftraegePage: FC = () => {
                   <div className={styles.metaValue}>{formatDate(annahme)}</div>
                 </div>
 
-                {order.deliveredAt && (
+                {order.deliveredReportedAt && (
+                  <div className={styles.metaCol}>
+                    <div className={styles.metaLabel}>Gemeldet</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredReportedAt))}</div>
+                  </div>
+                )}
+                {order.deliveredConfirmedAt && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Bestätigt</div>
-                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredAt))}</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
                   </div>
                 )}
               </div>
@@ -452,7 +561,8 @@ const AuftraegePage: FC = () => {
                   Zum Auftrag
                 </Link>
 
-                {order.kind === 'angenommen' && !order.deliveredAt && (() => {
+                {/* Auftragnehmer: „Auftrag abgeschlossen“ (nur solange nicht gemeldet/rekla/confirmed) */}
+                {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (() => {
                   const hintId = `deliver-hint-${order.kind}-${order.jobId}`
                   return (
                     <div className={styles.actionStack}>
@@ -467,15 +577,45 @@ const AuftraegePage: FC = () => {
                       >
                         Auftrag abgeschlossen
                       </button>
-
-                      {!canClick && (
-                        <div id={hintId} className={styles.btnHint} role="note" aria-live="polite">
-                          {reason}
-                        </div>
-                      )}
+                      {!canClick && <div id={hintId} className={styles.btnHint}> {reason} </div>}
                     </div>
                   )
                 })()}
+
+                {/* Auftraggeber: nach Meldung bestätigen / reklamieren */}
+                {isCustomer && order.status === 'reported' && (
+                  <div className={styles.actionStack}>
+                    <button
+                      type="button"
+                      className={styles.primaryBtn}
+                      onClick={() => onConfirmDelivered(order.jobId)}
+                      title="Empfang bestätigen & Zahlung freigeben"
+                    >
+                      Empfang bestätigen & Zahlung freigeben
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.btnGhost}
+                      onClick={() => openDispute(order.jobId)}
+                    >
+                      Problem melden
+                    </button>
+                    <div className={styles.btnHint}>
+                      Auto-Freigabe in {remainingText(order.autoReleaseAt)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Auftraggeber: nach Bestätigung bewerten (einmalig) */}
+                {isCustomer && order.status === 'confirmed' && !order.review && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={() => { setRateOrderId(order.jobId); setRating(5); setRatingText('') }}
+                  >
+                    Auftragnehmer bewerten
+                  </button>
+                )}
               </div>
             </li>
           )
@@ -485,33 +625,21 @@ const AuftraegePage: FC = () => {
       {/* Pager */}
       {page.total && page.total > PER_PAGE && (
         <div className={styles.pagination}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={onPrev}
-            disabled={!page.prevCursor}
-            aria-label="Vorherige Seite"
-          >
-            ‹
-          </button>
-          <span className={styles.pageInfo}>
-            {Math.min(PER_PAGE, page.items.length)} / {page.total} {kind === 'vergeben' ? 'vergeben' : 'angenommen'}
-          </span>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={onNext}
-            disabled={!page.nextCursor}
-            aria-label="Nächste Seite"
-          >
-            ›
-          </button>
+          <div className={styles.pagiControls}>
+            <div className={styles.pageButtons}>
+              <button type="button" className={styles.pageBtn} onClick={onPrev} disabled={!page.prevCursor} aria-label="Vorherige Seite">‹</button>
+              <button type="button" className={styles.pageBtn} onClick={onNext} disabled={!page.nextCursor} aria-label="Nächste Seite">›</button>
+            </div>
+            <span className={styles.pageInfo}>
+              {page.items.length} / {page.total}
+            </span>
+          </div>
         </div>
       )}
     </>
   )
 
-  // Pager-Aktionen: Cursor vor/zurück in URL schreiben → useEffect lädt neu
+  // Pager-Aktionen
   const goPrevV = () => setCursorParam('cursorV', pageV.prevCursor)
   const goNextV = () => setCursorParam('cursorV', pageV.nextCursor)
   const goPrevA = () => setCursorParam('cursorA', pageA.prevCursor)
@@ -587,7 +715,14 @@ const AuftraegePage: FC = () => {
             <div className={styles.kontoContainer}>
               {(pageV.total ?? filteredSortedV.length) === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
-                : <SectionList kind="vergeben" page={pageV} onPrev={goPrevV} onNext={goNextV} totalVisible={filteredSortedV.length} />}
+                : <SectionList
+                    kind="vergeben"
+                    page={pageV}
+                    onPrev={goPrevV}
+                    onNext={goNextV}
+                    totalVisible={filteredSortedV.length}
+                    onConfirmDelivered={confirmDelivered}
+                  />}
             </div>
 
             <hr className={styles.divider} />
@@ -596,7 +731,14 @@ const AuftraegePage: FC = () => {
             <div className={styles.kontoContainer}>
               {(pageA.total ?? filteredSortedA.length) === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
-                : <SectionList kind="angenommen" page={pageA} onPrev={goPrevA} onNext={goNextA} totalVisible={filteredSortedA.length} />}
+                : <SectionList
+                    kind="angenommen"
+                    page={pageA}
+                    onPrev={goPrevA}
+                    onNext={goNextA}
+                    totalVisible={filteredSortedA.length}
+                    onConfirmDelivered={confirmDelivered}
+                  />}
             </div>
           </>
         ) : (
@@ -605,7 +747,14 @@ const AuftraegePage: FC = () => {
             <div className={styles.kontoContainer}>
               {(pageA.total ?? filteredSortedA.length) === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
-                : <SectionList kind="angenommen" page={pageA} onPrev={goPrevA} onNext={goNextA} totalVisible={filteredSortedA.length} />}
+                : <SectionList
+                    kind="angenommen"
+                    page={pageA}
+                    onPrev={goPrevA}
+                    onNext={goNextA}
+                    totalVisible={filteredSortedA.length}
+                    onConfirmDelivered={confirmDelivered}
+                  />}
             </div>
 
             <hr className={styles.divider} />
@@ -614,13 +763,20 @@ const AuftraegePage: FC = () => {
             <div className={styles.kontoContainer}>
               {(pageV.total ?? filteredSortedV.length) === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
-                : <SectionList kind="vergeben" page={pageV} onPrev={goPrevV} onNext={goNextV} totalVisible={filteredSortedV.length} />}
+                : <SectionList
+                    kind="vergeben"
+                    page={pageV}
+                    onPrev={goPrevV}
+                    onNext={goNextV}
+                    totalVisible={filteredSortedV.length}
+                    onConfirmDelivered={confirmDelivered}
+                  />}
             </div>
           </>
         )}
       </div>
 
-      {/* Modal: Endgültige Bestätigung */}
+      {/* Modal: Auftragnehmer meldet „abgeschlossen“ */}
       {confirmJobId !== null && (
         <div
           className={styles.modal}
@@ -633,7 +789,7 @@ const AuftraegePage: FC = () => {
           <div className={styles.modalContent}>
             <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
             <p id="confirmText" className={styles.modalText}>
-              Dieser Vorgang kann nicht rückgängig gemacht werden.
+              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung. Danach startet automatisch eine 14-Tage-Frist zur Freigabe.
             </p>
             <div className={styles.modalActions}>
               <button type="button" className={styles.btnGhost} onClick={() => setConfirmJobId(null)}>
@@ -642,19 +798,54 @@ const AuftraegePage: FC = () => {
               <button
                 type="button"
                 className={styles.btnDanger}
+                onClick={() => { reportDelivered(confirmJobId); setConfirmJobId(null) }}
+              >
+                Ja, Zustellung melden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Bewertung */}
+      {rateOrderId !== null && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rateTitle"
+          onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
+        >
+          <div className={styles.modalContent}>
+            <h3 id="rateTitle" className={styles.modalTitle}>Auftragnehmer bewerten</h3>
+            <div className={styles.stars}>
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn}>
+                  {n <= rating ? '★' : '☆'}
+                </button>
+              ))}
+            </div>
+            <textarea
+              className={styles.reviewBox}
+              value={ratingText}
+              onChange={e => setRatingText(e.target.value)}
+              placeholder="Optionales Feedback…"
+              rows={4}
+            />
+            <div className={styles.modalActions}>
+              <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
+              <button
+                className={styles.primaryBtn}
                 onClick={() => {
-                  const job = jobsById.get(String(confirmJobId))
-                  const gate = canConfirmDelivered(job)
-                  if (!gate.ok) {
-                    alert(gate.reason || 'Noch nicht freigeschaltet.')
-                    setConfirmJobId(null)
-                    return
-                  }
-                  markDeliveredForJob(confirmJobId, setOrders)
-                  setConfirmJobId(null)
+                  persist(orders.map(o =>
+                    String(o.jobId) === String(rateOrderId)
+                      ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
+                      : o
+                  ))
+                  setRateOrderId(null)
                 }}
               >
-                Ja, endgültig bestätigen
+                Abschicken
               </button>
             </div>
           </div>
