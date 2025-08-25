@@ -23,7 +23,6 @@ type Job = {
 
 /* ---------- Neuer, expliziter Auftragsstatus (frontend-only) ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
-
 type OrderKind = 'vergeben' | 'angenommen'
 type Order = {
   jobId: string | number
@@ -33,18 +32,15 @@ type Order = {
   acceptedAt: string // ISO
   kind: OrderKind
 
-  // NEU: Status-Felder (nur Frontend)
   status?: OrderStatus
-  deliveredReportedAt?: string // Auftragnehmer hat "abgeschlossen" gemeldet
-  deliveredConfirmedAt?: string // Auftraggeber hat bestätigt (oder Auto-Freigabe)
-  autoReleaseAt?: string        // Zeitpunkt für automatische Freigabe
+  deliveredReportedAt?: string
+  deliveredConfirmedAt?: string
+  autoReleaseAt?: string
   disputeOpenedAt?: string
   disputeReason?: string | null
 
-  // Alt (Kompatibilität): falls noch vorhanden, mappen wir auf confirmed
-  deliveredAt?: string
+  deliveredAt?: string // legacy
 
-  // Bewertung durch Auftraggeber
   review?: { rating: number; text?: string }
 }
 
@@ -52,17 +48,36 @@ type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
-type PagePayload<T> = {
-  items: T[]
-  nextCursor?: string
-  prevCursor?: string
-  total?: number
-}
-
-const LS_KEY  = 'myAuftraegeV2'
-const TOP_KEY = 'auftraegeTop'
-const PER_PAGE = 10
+/* ---------- Persist Keys & Defaults ---------- */
+const LS_KEY     = 'myAuftraegeV2'
+const TOP_KEY    = 'auftraegeTop'
+const LS_PS_V    = 'orders:ps:v'
+const LS_PS_A    = 'orders:ps:a'
+const LS_PAGE_V  = 'orders:page:v'
+const LS_PAGE_A  = 'orders:page:a'
 const AUTO_RELEASE_DAYS = 14
+
+const DEFAULTS = {
+  q: '',
+  sort: 'date_desc' as SortKey,
+  status: 'alle' as FilterKey,
+  tab: 'vergeben' as OrderKind,
+  psV: 10,
+  psA: 10,
+  pageV: 1,
+  pageA: 1,
+}
+const ALLOWED_PS = [2, 10, 20, 50]
+
+/* ---------- Hooks ---------- */
+function useDebouncedValue<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState<T>(value)
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(id)
+  }, [value, delay])
+  return debounced
+}
 
 /* ---------------- Helpers ---------------- */
 function asDateLike(v: unknown): Date | undefined {
@@ -117,7 +132,7 @@ function getOwnerName(job: Job): string {
   return '—'
 }
 
-/** „Produktionsstatus“ aus Terminen (wie gehabt) */
+/** „Produktionsstatus“ aus Terminen */
 function computeStatus(job: Job): {
   key: StatusKey
   label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
@@ -153,19 +168,6 @@ function notifyNavbarCount(count: number) {
   try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } })) } catch {}
 }
 
-/* ---------------- Cursor-Utils (Shim) ---------------- */
-// Offset als base64 "o:<number>"
-const makeCursor = (offset: number) => btoa(`o:${offset}`)
-const readCursor = (cursor?: string | null) => {
-  if (!cursor) return 0
-  try {
-    const t = atob(cursor)
-    if (!t.startsWith('o:')) return 0
-    const n = parseInt(t.slice(2), 10)
-    return Number.isFinite(n) && n >= 0 ? n : 0
-  } catch { return 0 }
-}
-
 /* ---------------- Beispiel-Aufträge ---------------- */
 const EXAMPLE_ORDERS: Order[] = [
   { jobId: 3,  vendor: 'ColorTec · 4.9', amountCents:  9500, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
@@ -173,6 +175,76 @@ const EXAMPLE_ORDERS: Order[] = [
   { jobId: 12, vendor: 'ACME GmbH',      amountCents: 15000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
   { jobId: 5,  vendor: 'Muster AG',      amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
 ]
+
+/* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
+const Pagination: FC<{
+  page: number
+  setPage: (p:number)=>void
+  pageSize: number
+  setPageSize: (n:number)=>void
+  total: number
+  from: number
+  to: number
+  idPrefix: string
+}> = ({ page, setPage, pageSize, setPageSize, total, from, to, idPrefix }) => {
+  const pages = Math.max(1, Math.ceil(total / pageSize))
+  return (
+    <div className={styles.pagination} aria-label="Seitensteuerung">
+      <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
+        {total === 0
+          ? 'Keine Einträge'
+          : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
+      </div>
+      <div className={styles.pagiControls}>
+        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
+        <select
+          id={`${idPrefix}-ps`}
+          className={styles.pageSize}
+          value={pageSize}
+          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
+        >
+          <option value={2}>2</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+
+        <div className={styles.pageButtons}>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
+          <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Slice Helper ---------- */
+type Slice<T> = {
+  pageItems: T[]
+  from: number
+  to: number
+  total: number
+  safePage: number
+  pages: number
+}
+function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
+  const total = arr.length
+  const pages = Math.max(1, Math.ceil(total / ps))
+  const safePage = Math.min(Math.max(1, page), pages)
+  const start = (safePage - 1) * ps
+  const end = Math.min(start + ps, total)
+  return {
+    pageItems: arr.slice(start, end),
+    from: total === 0 ? 0 : start + 1,
+    to: end,
+    total,
+    safePage,
+    pages,
+  }
+}
 
 /* ---------------- Component ---------------- */
 const AuftraegePage: FC = () => {
@@ -188,12 +260,15 @@ const AuftraegePage: FC = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
   const [query, setQuery] = useState('')
+  const debouncedQuery = useDebouncedValue(query, 300)
   const [sort,  setSort]  = useState<SortKey>('date_desc')
   const [statusFilter, setStatusFilter] = useState<FilterKey>('alle')
 
-  // URL-Cursor je Sektion
-  const cursorV = params.get('cursorV') // vergebene
-  const cursorA = params.get('cursorA') // angenommene
+  // Seiten & PageSizes
+  const [pageV, setPageV] = useState(1)
+  const [psV,   setPsV]   = useState<number>(10)
+  const [pageA, setPageA] = useState(1)
+  const [psA,   setPsA]   = useState<number>(10)
 
   // Modal: Fertig/geliefert bestätigen (Auftragnehmer)
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
@@ -219,7 +294,6 @@ const AuftraegePage: FC = () => {
     try {
       const raw = localStorage.getItem(LS_KEY)
       const existing: Order[] = raw ? JSON.parse(raw) : []
-      // Migration: Beispielaufträge hinzufügen (einmalig) + Legacy deliveredAt → confirmed
       const seen = new Set(existing.map(o => `${o.kind}-${o.jobId}`))
       const merged: Order[] = existing.map((o): Order => {
         if (o.deliveredAt && !o.status) {
@@ -240,16 +314,13 @@ const AuftraegePage: FC = () => {
       localStorage.setItem(LS_KEY, JSON.stringify(merged))
       notifyNavbarCount(merged.length)
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobsById])
 
-  // Param „accepted“ aus Zahlung etc. übernehmen (falls genutzt – hier nur Cleanup & Auto-Release-Check)
+  // Param „accepted“ cleanup + Auto-Release Check
   useEffect(() => {
     const accepted = params.get('accepted')
     if (!accepted) return
-    // (Optional: hier könntest du per accepted einen neuen Order hinzufügen)
 
-    // Laufende Auto-Release-Prüfung einmal triggern
     setOrders(prev => {
       const now = Date.now()
       let changed = false
@@ -274,14 +345,13 @@ const AuftraegePage: FC = () => {
   }, [params, router])
 
   // Top-Sektion merken
-  useEffect(() => { localStorage.setItem(TOP_KEY, topSection) }, [topSection])
+  useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
 
-  /* ---------- Auto-Freigabe (Frontend-Simulation) ---------- */
+  /* ---------- Auto-Freigabe ---------- */
   const runAutoRelease = () => {
     setOrders(prev => {
       const now = Date.now()
       let changed = false
-
       const next: Order[] = prev.map((o): Order => {
         if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
           changed = true
@@ -293,19 +363,16 @@ const AuftraegePage: FC = () => {
         }
         return o
       })
-
       if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
       return next
     })
   }
-
   useEffect(() => {
-    runAutoRelease() // sofort beim Mount
-    const id = setInterval(runAutoRelease, 60_000) // minütlich
+    runAutoRelease()
+    const id = setInterval(runAutoRelease, 60_000)
     const onVis = () => { if (!document.hidden) runAutoRelease() }
     document.addEventListener('visibilitychange', onVis)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* ---------- Filter + Sort ---------- */
@@ -324,8 +391,8 @@ const AuftraegePage: FC = () => {
     [orders, jobsById]
   )
 
-  const applySearchAndFilter = (items: {order:Order, job:Job}[]) => {
-    const q = query.trim().toLowerCase()
+  const applySearchAndFilter = (items: {order:Order, job:Job}[], qStr: string) => {
+    const q = qStr.trim().toLowerCase()
     return items.filter(({ order, job }) => {
       if (statusFilter !== 'alle') {
         const key = getStatusKeyFor(order, job)
@@ -353,61 +420,88 @@ const AuftraegePage: FC = () => {
   }
 
   const filteredSortedV = useMemo(
-    () => applySort(applySearchAndFilter(allVergeben)),
-    [allVergeben, query, sort, statusFilter]
+    () => applySort(applySearchAndFilter(allVergeben, debouncedQuery)),
+    [allVergeben, debouncedQuery, sort, statusFilter]
   )
   const filteredSortedA = useMemo(
-    () => applySort(applySearchAndFilter(allAngenommen)),
-    [allAngenommen, query, sort, statusFilter]
+    () => applySort(applySearchAndFilter(allAngenommen, debouncedQuery)),
+    [allAngenommen, debouncedQuery, sort, statusFilter]
   )
 
-  /* ---------- Cursor-Pagination Loader (client-only) ---------- */
-  async function loadPage(
-    kind: OrderKind,
-    cursor: string | null | undefined,
-    perPage: number
-  ): Promise<PagePayload<{order: Order, job: Job}>> {
-    const arr = kind === 'vergeben' ? filteredSortedV : filteredSortedA
-    const offset = readCursor(cursor)
-    const start = Math.min(Math.max(0, offset), Math.max(0, arr.length))
-    const end = Math.min(start + perPage, arr.length)
-    const items = arr.slice(start, end)
-    const next = end < arr.length ? makeCursor(end) : undefined
-    const prev = start > 0 ? makeCursor(Math.max(0, start - perPage)) : undefined
-    return { items, nextCursor: next, prevCursor: prev, total: arr.length }
-  }
-
-  const [pageV, setPageV] = useState<PagePayload<{order:Order, job:Job}>>({ items: [] })
-  const [pageA, setPageA] = useState<PagePayload<{order:Order, job:Job}>>({ items: [] })
-
-  const setCursorParam = (key: 'cursorV' | 'cursorA', val?: string) => {
-    const url = new URL(window.location.href)
-    if (!val) url.searchParams.delete(key)
-    else url.searchParams.set(key, val)
-    router.replace(url.pathname + '?' + url.searchParams.toString())
-  }
-
+  /* ---------- URL → State (Init aus URL & LocalStorage) ---------- */
   useEffect(() => {
-    let ignore = false
-    ;(async () => {
-      const [pv, pa] = await Promise.all([
-        loadPage('vergeben', cursorV, PER_PAGE),
-        loadPage('angenommen', cursorA, PER_PAGE),
-      ])
-      if (ignore) return
-      setPageV(pv); setPageA(pa)
-    })()
-    return () => { ignore = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursorV, cursorA, filteredSortedV, filteredSortedA])
+    try {
+      const p = new URLSearchParams(window.location.search)
 
+      const q = p.get('q'); if (q !== null) setQuery(q)
+
+      const s = p.get('sort') as SortKey | null
+      if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
+
+      const st = p.get('status') as FilterKey | null
+      if (st && ['alle','wartet','aktiv','fertig'].includes(st)) setStatusFilter(st)
+
+      const tab = p.get('tab') as OrderKind | null
+      if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
+        setTopSection(tab)
+      } else {
+        const saved = localStorage.getItem(TOP_KEY)
+        if (saved === 'vergeben' || saved === 'angenommen') setTopSection(saved as OrderKind)
+      }
+
+      const lPsV = Number(localStorage.getItem(LS_PS_V)) || DEFAULTS.psV
+      const lPsA = Number(localStorage.getItem(LS_PS_A)) || DEFAULTS.psA
+      const uPsV = Number(p.get('psV'))
+      const uPsA = Number(p.get('psA'))
+      setPsV(ALLOWED_PS.includes(uPsV) ? uPsV : (ALLOWED_PS.includes(lPsV) ? lPsV : DEFAULTS.psV))
+      setPsA(ALLOWED_PS.includes(uPsA) ? uPsA : (ALLOWED_PS.includes(lPsA) ? lPsA : DEFAULTS.psA))
+
+      const lPageV = Number(localStorage.getItem(LS_PAGE_V)) || DEFAULTS.pageV
+      const lPageA = Number(localStorage.getItem(LS_PAGE_A)) || DEFAULTS.pageA
+      const uPageV = Number(p.get('pageV')) || undefined
+      const uPageA = Number(p.get('pageA')) || undefined
+      setPageV(uPageV && uPageV > 0 ? uPageV : (lPageV > 0 ? lPageV : DEFAULTS.pageV))
+      setPageA(uPageA && uPageA > 0 ? uPageA : (lPageA > 0 ? lPageA : DEFAULTS.pageA))
+    } catch {}
+  }, [])
+
+  /* ---------- Persistenzen ---------- */
+  useEffect(() => { try { localStorage.setItem(LS_PS_V,   String(psV)) } catch {} }, [psV])
+  useEffect(() => { try { localStorage.setItem(LS_PS_A,   String(psA)) } catch {} }, [psA])
+  useEffect(() => { try { localStorage.setItem(LS_PAGE_V, String(pageV)) } catch {} }, [pageV])
+  useEffect(() => { try { localStorage.setItem(LS_PAGE_A, String(pageA)) } catch {} }, [pageA])
+
+  // Bei (debounced) Such-/Sort-/Status-Änderung beide Seiten zurücksetzen
+  useEffect(() => { setPageV(1); setPageA(1) }, [debouncedQuery, sort, statusFilter])
+
+  /* ---------- URL-Sync ---------- */
   useEffect(() => {
-    const url = new URL(window.location.href)
-    url.searchParams.delete('cursorV')
-    url.searchParams.delete('cursorA')
-    router.replace(url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, sort, statusFilter, topSection])
+    try {
+      const p = new URLSearchParams()
+      if (debouncedQuery !== DEFAULTS.q) p.set('q', debouncedQuery)
+      if (sort !== DEFAULTS.sort)        p.set('sort', sort)
+      if (statusFilter !== DEFAULTS.status) p.set('status', statusFilter)
+      if (topSection !== DEFAULTS.tab)   p.set('tab', topSection)
+      if (psV !== DEFAULTS.psV)          p.set('psV', String(psV))
+      if (psA !== DEFAULTS.psA)          p.set('psA', String(psA))
+      if (pageV !== DEFAULTS.pageV)      p.set('pageV', String(pageV))
+      if (pageA !== DEFAULTS.pageA)      p.set('pageA', String(pageA))
+
+      const qs   = p.toString()
+      const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
+      const curr = `${window.location.pathname}${window.location.search}`
+      if (next !== curr) {
+        router.replace(next, { scroll: false })
+      }
+    } catch {}
+  }, [debouncedQuery, sort, statusFilter, topSection, psV, psA, pageV, pageA, router])
+
+  /* ---------- Slices ---------- */
+  const sliceV = sliceByPage(filteredSortedV, pageV, psV)
+  useEffect(() => { if (sliceV.safePage !== pageV) setPageV(sliceV.safePage) }, [sliceV.safePage, pageV])
+
+  const sliceA = sliceByPage(filteredSortedA, pageA, psA)
+  useEffect(() => { if (sliceA.safePage !== pageA) setPageA(sliceA.safePage) }, [sliceA.safePage, pageA])
 
   /* ---------- Actions (frontend only) ---------- */
   function persist(next: Order[]) {
@@ -466,21 +560,18 @@ const AuftraegePage: FC = () => {
     return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours} Std` : `${hours} Std`
   }
 
-  /* ---------------- Section Renderer + Pager ---------------- */
+  /* ---------------- Section Renderer ---------------- */
   const SectionList: FC<{
     kind: OrderKind
-    page: PagePayload<{order:Order, job:Job}>
-    onPrev: () => void
-    onNext: () => void
-    totalVisible: number
+    slice: Slice<{order:Order, job:Job}>
+    idPrefix: string
     onConfirmDelivered: (jobId: string | number) => void
-  }> = ({ kind, page, onPrev, onNext, onConfirmDelivered }) => (
+  }> = ({ kind, slice, idPrefix, onConfirmDelivered }) => (
     <>
       <ul className={styles.list}>
-        {page.items.map(({ order, job }) => {
+        {slice.pageItems.map(({ order, job }) => {
           const j = job as Job
-          const prodStatus = computeStatus(j) // Produktionsstatus
-          // Anzeige-Status überschreiben, wenn Flow-Status gesetzt:
+          const prodStatus = computeStatus(j)
           const display =
             order.status === 'confirmed'
               ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const }
@@ -498,7 +589,7 @@ const AuftraegePage: FC = () => {
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
-          const isVendor = order.kind === 'angenommen'
+          const isVendor   = order.kind === 'angenommen'
           const isCustomer = order.kind === 'vergeben'
 
           return (
@@ -561,7 +652,7 @@ const AuftraegePage: FC = () => {
                   Zum Auftrag
                 </Link>
 
-                {/* Auftragnehmer: „Auftrag abgeschlossen“ (nur solange nicht gemeldet/rekla/confirmed) */}
+                {/* Auftragnehmer: „Auftrag abgeschlossen“ */}
                 {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (() => {
                   const hintId = `deliver-hint-${order.kind}-${order.jobId}`
                   return (
@@ -623,27 +714,18 @@ const AuftraegePage: FC = () => {
       </ul>
 
       {/* Pager */}
-      {page.total && page.total > PER_PAGE && (
-        <div className={styles.pagination}>
-          <div className={styles.pagiControls}>
-            <div className={styles.pageButtons}>
-              <button type="button" className={styles.pageBtn} onClick={onPrev} disabled={!page.prevCursor} aria-label="Vorherige Seite">‹</button>
-              <button type="button" className={styles.pageBtn} onClick={onNext} disabled={!page.nextCursor} aria-label="Nächste Seite">›</button>
-            </div>
-            <span className={styles.pageInfo}>
-              {page.items.length} / {page.total}
-            </span>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={slice.safePage}
+        setPage={idPrefix === 'v' ? setPageV : setPageA}
+        pageSize={idPrefix === 'v' ? psV : psA}
+        setPageSize={idPrefix === 'v' ? setPsV : setPsA}
+        total={slice.total}
+        from={slice.from}
+        to={slice.to}
+        idPrefix={idPrefix}
+      />
     </>
   )
-
-  // Pager-Aktionen
-  const goPrevV = () => setCursorParam('cursorV', pageV.prevCursor)
-  const goNextV = () => setCursorParam('cursorV', pageV.nextCursor)
-  const goPrevA = () => setCursorParam('cursorA', pageA.prevCursor)
-  const goNextA = () => setCursorParam('cursorA', pageA.nextCursor)
 
   return (
     <>
@@ -713,14 +795,12 @@ const AuftraegePage: FC = () => {
           <>
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {(pageV.total ?? filteredSortedV.length) === 0
+              {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
                 : <SectionList
                     kind="vergeben"
-                    page={pageV}
-                    onPrev={goPrevV}
-                    onNext={goNextV}
-                    totalVisible={filteredSortedV.length}
+                    slice={sliceV}
+                    idPrefix="v"
                     onConfirmDelivered={confirmDelivered}
                   />}
             </div>
@@ -729,14 +809,12 @@ const AuftraegePage: FC = () => {
 
             <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {(pageA.total ?? filteredSortedA.length) === 0
+              {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
                 : <SectionList
                     kind="angenommen"
-                    page={pageA}
-                    onPrev={goPrevA}
-                    onNext={goNextA}
-                    totalVisible={filteredSortedA.length}
+                    slice={sliceA}
+                    idPrefix="a"
                     onConfirmDelivered={confirmDelivered}
                   />}
             </div>
@@ -745,14 +823,12 @@ const AuftraegePage: FC = () => {
           <>
             <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {(pageA.total ?? filteredSortedA.length) === 0
+              {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
                 : <SectionList
                     kind="angenommen"
-                    page={pageA}
-                    onPrev={goPrevA}
-                    onNext={goNextA}
-                    totalVisible={filteredSortedA.length}
+                    slice={sliceA}
+                    idPrefix="a"
                     onConfirmDelivered={confirmDelivered}
                   />}
             </div>
@@ -761,14 +837,12 @@ const AuftraegePage: FC = () => {
 
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {(pageV.total ?? filteredSortedV.length) === 0
+              {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
                 : <SectionList
                     kind="vergeben"
-                    page={pageV}
-                    onPrev={goPrevV}
-                    onNext={goNextV}
-                    totalVisible={filteredSortedV.length}
+                    slice={sliceV}
+                    idPrefix="v"
                     onConfirmDelivered={confirmDelivered}
                   />}
             </div>
@@ -837,11 +911,15 @@ const AuftraegePage: FC = () => {
               <button
                 className={styles.primaryBtn}
                 onClick={() => {
-                  persist(orders.map(o =>
-                    String(o.jobId) === String(rateOrderId)
-                      ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
-                      : o
-                  ))
+                  setOrders(prev => {
+                    const next = prev.map(o =>
+                      String(o.jobId) === String(rateOrderId)
+                        ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
+                        : o
+                    )
+                    localStorage.setItem(LS_KEY, JSON.stringify(next))
+                    return next
+                  })
                   setRateOrderId(null)
                 }}
               >

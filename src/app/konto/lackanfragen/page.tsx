@@ -94,6 +94,18 @@ const initialSubmitted: LackOffer[] = [
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type TopSection = 'received' | 'submitted'
 
+/* ===== Defaults & Allowed PageSizes ===== */
+const DEFAULTS = {
+  q: '',
+  sort: 'date_desc' as SortKey,
+  tab: 'received' as TopSection,
+  psRec: 10,
+  psSub: 10,
+  pageRec: 1,
+  pageSub: 1,
+}
+const ALLOWED_PS = [2, 10, 20, 50]
+
 /* ============ Pagination-UI ============ */
 const Pagination: FC<{
   page: number
@@ -108,7 +120,7 @@ const Pagination: FC<{
   const pages = Math.max(1, Math.ceil(total / pageSize))
   return (
     <div className={styles.pagination} aria-label="Seitensteuerung">
-      <div className={styles.pageInfo} id={`${idPrefix}-info`}>
+      <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
         {total === 0
           ? 'Keine Einträge'
           : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
@@ -202,11 +214,7 @@ const LackanfragenAngebote: FC = () => {
 
   const [topSection, setTopSection] = useState<TopSection>('received')
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('lack-angeboteTop') : null
-    if (saved === 'received' || saved === 'submitted') setTopSection(saved)
-  }, [])
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('lack-angeboteTop', topSection)
+    try { localStorage.setItem('lack-angeboteTop', topSection) } catch {}
   }, [topSection])
 
   // Abgelaufene Angebote entfernen
@@ -236,6 +244,15 @@ const LackanfragenAngebote: FC = () => {
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Preis-Comparator (Infinity robust)
+  const compareBestPrice = (a: number, b: number, dir: 'asc' | 'desc') => {
+    const aInf = !Number.isFinite(a), bInf = !Number.isFinite(b)
+    if (aInf && bInf) return 0
+    if (aInf) return 1
+    if (bInf) return -1
+    return dir === 'asc' ? a - b : b - a
+  }
+
   /* ===== Filter + Sort ===== */
   const receivedGroups = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -258,8 +275,8 @@ const LackanfragenAngebote: FC = () => {
     visible.sort((a, b) => {
       if (sort === 'date_desc')  return b.latest - a.latest
       if (sort === 'date_asc')   return a.latest - b.latest
-      if (sort === 'price_desc') return b.bestPrice - a.bestPrice
-      if (sort === 'price_asc')  return a.bestPrice - b.bestPrice
+      if (sort === 'price_desc') return compareBestPrice(a.bestPrice, b.bestPrice, 'desc')
+      if (sort === 'price_asc')  return compareBestPrice(a.bestPrice, b.bestPrice, 'asc')
       return 0
     })
     return visible
@@ -284,23 +301,84 @@ const LackanfragenAngebote: FC = () => {
   /* ===== Pagination-States (persistiert) ===== */
   const [pageRec, setPageRec] = useState(1)
   const [psRec, setPsRec] = useState<number>(10)
-
   const [pageSub, setPageSub] = useState(1)
   const [psSub, setPsSub] = useState<number>(10)
 
+  /* ===== URL → State (mit Fallback LocalStorage) ===== */
   useEffect(() => {
     try {
-      const a = Number(localStorage.getItem('lack-angebote:ps:received')) || 10
-      const b = Number(localStorage.getItem('lack-angebote:ps:submitted')) || 10
-      if (a) setPsRec(a)
-      if (b) setPsSub(b)
+      const params = new URLSearchParams(window.location.search)
+
+      // Query
+      const q = params.get('q')
+      if (q !== null) setQuery(q)
+
+      // Sort
+      const s = params.get('sort') as SortKey | null
+      if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
+
+      // Tab (URL bevorzugt, sonst localStorage)
+      const tab = params.get('tab') as TopSection | null
+      if (tab && (tab === 'received' || tab === 'submitted')) {
+        setTopSection(tab)
+      } else {
+        const saved = localStorage.getItem('lack-angeboteTop')
+        if (saved === 'received' || saved === 'submitted') setTopSection(saved as TopSection)
+      }
+
+      // PageSize (URL > localStorage > Default) + Validation
+      const lPsRec = Number(localStorage.getItem('lack-angebote:ps:received')) || DEFAULTS.psRec
+      const lPsSub = Number(localStorage.getItem('lack-angebote:ps:submitted')) || DEFAULTS.psSub
+      const urlPsRec = Number(params.get('psRec'))
+      const urlPsSub = Number(params.get('psSub'))
+      const initPsRec = ALLOWED_PS.includes(urlPsRec) ? urlPsRec : (ALLOWED_PS.includes(lPsRec) ? lPsRec : DEFAULTS.psRec)
+      const initPsSub = ALLOWED_PS.includes(urlPsSub) ? urlPsSub : (ALLOWED_PS.includes(lPsSub) ? lPsSub : DEFAULTS.psSub)
+      setPsRec(initPsRec)
+      setPsSub(initPsSub)
+
+      // Page (URL > localStorage > Default)
+      const lPageRec = Number(localStorage.getItem('lack-angebote:page:received')) || DEFAULTS.pageRec
+      const lPageSub = Number(localStorage.getItem('lack-angebote:page:submitted')) || DEFAULTS.pageSub
+      const urlPageRec = Number(params.get('pageRec')) || undefined
+      const urlPageSub = Number(params.get('pageSub')) || undefined
+      setPageRec(urlPageRec && urlPageRec > 0 ? urlPageRec : (lPageRec > 0 ? lPageRec : DEFAULTS.pageRec))
+      setPageSub(urlPageSub && urlPageSub > 0 ? urlPageSub : (lPageSub > 0 ? lPageSub : DEFAULTS.pageSub))
     } catch {}
   }, [])
+
+  /* ===== Persistenzen ===== */
+  // PageSizes
   useEffect(() => { try { localStorage.setItem('lack-angebote:ps:received', String(psRec)) } catch {} }, [psRec])
   useEffect(() => { try { localStorage.setItem('lack-angebote:ps:submitted', String(psSub)) } catch {} }, [psSub])
 
+  // Pages
+  useEffect(() => { try { localStorage.setItem('lack-angebote:page:received', String(pageRec)) } catch {} }, [pageRec])
+  useEffect(() => { try { localStorage.setItem('lack-angebote:page:submitted', String(pageSub)) } catch {} }, [pageSub])
+
   // bei Such-/Sort-Änderung Seite zurücksetzen
   useEffect(() => { setPageRec(1); setPageSub(1) }, [query, sort])
+
+  /* ===== URL-Synchronisation ===== */
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams()
+      if (query !== DEFAULTS.q)         p.set('q', query)
+      if (sort !== DEFAULTS.sort)       p.set('sort', sort)
+      if (topSection !== DEFAULTS.tab)  p.set('tab', topSection)
+      if (psRec !== DEFAULTS.psRec)     p.set('psRec', String(psRec))
+      if (psSub !== DEFAULTS.psSub)     p.set('psSub', String(psSub))
+      if (pageRec !== DEFAULTS.pageRec) p.set('pageRec', String(pageRec))
+      if (pageSub !== DEFAULTS.pageSub) p.set('pageSub', String(pageSub))
+
+      const qs   = p.toString()
+      const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
+      const curr = `${window.location.pathname}${window.location.search}`
+
+      if (next !== curr) {
+        router.replace(next, { scroll: false })
+      }
+    } catch {}
+  }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
 
   // Slice-Helfer
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
