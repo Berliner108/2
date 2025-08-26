@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const runtime = 'nodejs' // wichtig für raw body in app router
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic' // wichtig bei Webhooks
 
 export async function POST(req: Request) {
   const stripe = getStripe()
@@ -20,27 +21,39 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, whSecret)
   } catch (err: any) {
-    return NextResponse.json({ error: `Invalid signature: ${err.message}` }, { status: 400 })
+    console.error('[stripe webhook] invalid signature:', err?.message)
+    return NextResponse.json({ error: `Invalid signature` }, { status: 400 })
   }
 
   const admin = supabaseAdmin()
 
   try {
     switch (event.type) {
-      case 'payment_intent.succeeded':
+      // ===== Zahlungen =====
       case 'payment_intent.processing': {
-        const pi = event.data.object as {
-          id: string
-          metadata?: Record<string, string>
-          latest_charge?: string | { id: string }
-        }
+        const pi = event.data.object as { metadata?: Record<string,string> }
+        const orderId = pi.metadata?.order_id
+        if (!orderId) break
+        await admin
+          .from('orders')
+          .update({
+            status: 'processing',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orderId)
+          .in('status', ['requires_payment', 'processing']) // idempotent
+        break
+      }
+
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object as any
         const orderId = pi.metadata?.order_id
         if (!orderId) break
 
-        // charge_id extrahieren
-        let chargeId: string | null = null
-        if (typeof pi.latest_charge === 'string') chargeId = pi.latest_charge
-        else if (pi.latest_charge && typeof (pi.latest_charge as any).id === 'string') chargeId = (pi.latest_charge as any).id
+        // charge_id extrahieren (robust)
+        const chargeId: string | null =
+          (pi.latest_charge && typeof pi.latest_charge === 'string' && pi.latest_charge) ||
+          (pi.charges?.data?.[0]?.id ?? null)
 
         await admin
           .from('orders')
@@ -50,16 +63,15 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq('id', orderId)
-          .in('status', ['processing']) // idempotent: nur wenn noch „offen“
+          .in('status', ['requires_payment', 'processing']) // idempotent
         break
       }
 
       case 'payment_intent.payment_failed':
       case 'payment_intent.canceled': {
-        const pi = event.data.object as { id: string; metadata?: Record<string, string> }
+        const pi = event.data.object as { metadata?: Record<string,string> }
         const orderId = pi.metadata?.order_id
         if (!orderId) break
-
         await admin
           .from('orders')
           .update({
@@ -67,31 +79,103 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq('id', orderId)
-          .in('status', ['processing']) // nur offene Orders zurücksetzen
+          .in('status', ['requires_payment', 'processing'])
         break
       }
 
+      // ===== Refunds / Disputes =====
       case 'charge.refunded': {
-        const ch = event.data.object as { id: string }
-        // markiere Order als refundet
+        const ch = event.data.object as { id: string; metadata?: Record<string,string> }
+        // Falls du order_id in die Charge-Metadata schreibst, nutze die – sonst via charge_id matchen.
+        const orderId = ch.metadata?.order_id
+        if (orderId) {
+          await admin
+            .from('orders')
+            .update({
+              status: 'refunded',
+              refunded_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', orderId)
+        } else {
+          await admin
+            .from('orders')
+            .update({
+              status: 'refunded',
+              refunded_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('charge_id', ch.id)
+        }
+        break
+      }
+
+      case 'charge.dispute.created': {
+        const ch = event.data.object as { id: string; metadata?: Record<string,string> }
+        const orderId = ch.metadata?.order_id
+        if (orderId) {
+          await admin
+            .from('orders')
+            .update({
+              status: 'disputed',
+              dispute_opened_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', orderId)
+        } else {
+          await admin
+            .from('orders')
+            .update({
+              status: 'disputed',
+              dispute_opened_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('charge_id', ch.id)
+        }
+        break
+      }
+
+      // ===== Transfers (Release der Auszahlung an den Supplier) =====
+      case 'transfer.created': {
+        const tr = event.data.object as any
+        const orderId = tr.metadata?.order_id
+        if (!orderId) break
         await admin
           .from('orders')
           .update({
-            refunded_at: new Date().toISOString(),
-            status: 'canceled', // oder eigener Status, falls gewünscht
+            transfer_id: tr.id,
+            transferred_cents: Math.round(tr.amount ?? 0),
+            released_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq('charge_id', ch.id)
+          .eq('id', orderId)
         break
       }
 
-      default:
-        // andere Events ignorieren
+      case 'transfer.reversed': {
+        const tr = event.data.object as any
+        const orderId = tr.metadata?.order_id
+        if (!orderId) break
+        await admin
+          .from('orders')
+          .update({
+            status: 'reversed',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orderId)
         break
+      }
+
+      default: {
+        // Optional: zum Debuggen kurz loggen
+        // console.log('[stripe webhook] unhandled event', event.type)
+        break
+      }
     }
+
     return NextResponse.json({ received: true })
-  } catch (err: any) {
-    console.error('[stripe webhook] DB error', err)
+  } catch (err) {
+    console.error('[stripe webhook] handler error', err)
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }
