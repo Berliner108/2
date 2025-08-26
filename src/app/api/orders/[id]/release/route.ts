@@ -1,5 +1,5 @@
 // src/app/api/orders/[id]/release/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
@@ -7,22 +7,21 @@ import { getStripe } from '@/lib/stripe'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function POST(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe()
     if (!stripe) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
     }
 
-    const orderId = params?.id
+    // id aus Pfad /api/orders/[id]/release extrahieren
+    const match = req.nextUrl.pathname.match(/\/api\/orders\/([^/]+)\/release$/)
+    const orderId = match?.[1]
     if (!orderId) {
       return NextResponse.json({ error: 'Missing order id' }, { status: 400 })
     }
 
-    // Auth (nur Käufer darf freigeben)
+    // Auth: nur Käufer darf freigeben
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) {
@@ -43,7 +42,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Nur freigebbar, wenn Zahlung durch & noch nicht transferiert
+    // nur freigeben, wenn bezahlt & noch nicht transferiert
     if (order.status !== 'succeeded') {
       return NextResponse.json({ error: `Order status not releasable: ${order.status}` }, { status: 409 })
     }
@@ -54,7 +53,7 @@ export async function POST(
       return NextResponse.json({ error: 'Missing charge on order' }, { status: 422 })
     }
 
-    // Supplier Connect-ID holen (achte darauf, dass profiles.stripe_connect_id existiert)
+    // Supplier Connect-ID holen (profiles.stripe_connect_id muss existieren)
     const { data: supplier, error: supErr } = await admin
       .from('profiles')
       .select('id,stripe_connect_id')
@@ -84,7 +83,7 @@ export async function POST(
       metadata: { order_id: String(order.id), supplier_id: String(order.supplier_id) },
     })
 
-    // Order updaten
+    // Order aktualisieren
     const { error: updErr } = await admin
       .from('orders')
       .update({
