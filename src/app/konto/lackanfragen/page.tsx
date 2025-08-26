@@ -1,11 +1,14 @@
+// /src/app/konto/lackanfragen/page.tsx
 'use client'
 
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
-import styles from './lackanfragen.module.css' // gleicher Look & Feel
+import styles from './lackanfragen.module.css'
 import { artikelDaten, type Artikel } from '@/data/ArtikelDatenLackanfragen'
+
+/* ================= Types ================= */
 
 type LackOffer = {
   id: string
@@ -13,6 +16,15 @@ type LackOffer = {
   vendor: string
   priceCents: number
   createdAt: string // ISO
+}
+
+type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
+type TopSection = 'received' | 'submitted'
+
+type AcceptOfferResponse = {
+  orderId: string
+  clientSecret?: string | null
+  redirectUrl?: string | null
 }
 
 /* ================= Helpers ================= */
@@ -25,8 +37,7 @@ function asDateLike(v: unknown): Date | undefined {
 }
 
 function computeItemTitle(a: Artikel): string {
-  // Haupttitel + nützliche Extras (Hersteller · Ort · Menge)
-  const extras = [a.hersteller, a.ort, (a.menge ? `${a.menge} kg` : '')].filter(Boolean).join(' · ')
+  const extras = [a.hersteller, a.ort, a.menge ? `${a.menge} kg` : ''].filter(Boolean).join(' · ')
   return [a.titel, extras].filter(Boolean).join(' — ')
 }
 
@@ -72,12 +83,9 @@ function formatRemaining(target?: Date) {
   return { text, level: level as 'critical' | 'soon' | 'ok' }
 }
 
-/* ===== Zeit-Helper ===== */
 const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
 
-/* ===== Dummy-Angebote (Lack) =====
-   requestId referenziert Artikel.id (string in deinen Beispieldaten)
-*/
+/* ===== Dummy-Angebote (Lack) ===== */
 const initialReceived: LackOffer[] = [
   { id:'r1a', requestId:'1', vendor:'LackPro · 4.7',    priceCents: 9900, createdAt: hoursAgo(20) },
   { id:'r1b', requestId:'1', vendor:'ColorTec · 4.9',   priceCents: 9500, createdAt: hoursAgo(10) },
@@ -91,22 +99,7 @@ const initialSubmitted: LackOffer[] = [
   { id:'s3', requestId:'4', vendor:'Du', priceCents:21000, createdAt: hoursAgo(6)  },
 ]
 
-type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
-type TopSection = 'received' | 'submitted'
-
-/* ===== Defaults & Allowed PageSizes ===== */
-const DEFAULTS = {
-  q: '',
-  sort: 'date_desc' as SortKey,
-  tab: 'received' as TopSection,
-  psRec: 10,
-  psSub: 10,
-  pageRec: 1,
-  pageSub: 1,
-}
-const ALLOWED_PS = [2, 10, 20, 50]
-
-/* ============ Pagination-UI ============ */
+/* ============ Pagination UI ============ */
 const Pagination: FC<{
   page: number
   setPage: (p:number)=>void
@@ -140,45 +133,52 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(1)}
-            disabled={page <= 1}
-            aria-label="Erste Seite"
-          >«</button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page - 1)}
-            disabled={page <= 1}
-            aria-label="Vorherige Seite"
-          >‹</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
           <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page + 1)}
-            disabled={page >= pages}
-            aria-label="Nächste Seite"
-          >›</button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(pages)}
-            disabled={page >= pages}
-            aria-label="Letzte Seite"
-          >»</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
         </div>
       </div>
     </div>
   )
 }
 
+/* ============ Tiny Toast Hook ============ */
+function useToast() {
+  const [msg, setMsg] = useState<string | null>(null)
+  return {
+    msg,
+    ok: (m: string) => setMsg(m),
+    err: (m: string) => setMsg(m),
+    clear: () => setMsg(null),
+    View: () => msg ? (
+      <div style={{
+        position:'fixed', right:16, bottom:16, padding:'10px 12px',
+        borderRadius:10, background:'#111827', color:'#fff', zIndex:1000
+      }}>
+        {msg} <button onClick={()=>setMsg(null)} style={{marginLeft:8, color:'#fff'}}>×</button>
+      </div>
+    ) : null
+  }
+}
+
 /* ================= Component ================= */
+
+const DEFAULTS = {
+  q: '',
+  sort: 'date_desc' as SortKey,
+  tab: 'received' as TopSection,
+  psRec: 10,
+  psSub: 10,
+  pageRec: 1,
+  pageSub: 1,
+}
+const ALLOWED_PS = [2, 10, 20, 50]
 
 const LackanfragenAngebote: FC = () => {
   const router = useRouter()
+  const { msg, ok: toastOk, err: toastErr, View: Toast } = useToast()
 
   const itemsById = useMemo(() => {
     const map = new Map<string, Artikel>()
@@ -186,14 +186,12 @@ const LackanfragenAngebote: FC = () => {
     return map
   }, [])
 
-  // Alle sichtbaren Lackanfragen (Gruppen) – zeigt auch Gruppen ohne Angebote
   const OPEN_REQUEST_IDS = useMemo(() => Array.from(itemsById.keys()), [itemsById])
 
   const [receivedData, setReceivedData] = useState<LackOffer[]>(initialReceived)
   const [submittedData, setSubmittedData] = useState<LackOffer[]>(initialSubmitted)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
-  // Modal-Zustand
   const [confirmOffer, setConfirmOffer] = useState<null | {
     requestId: string | number
     offerId: string
@@ -201,7 +199,6 @@ const LackanfragenAngebote: FC = () => {
     vendor: string
   }>(null)
 
-  // ESC schließt Modal
   useEffect(() => {
     if (!confirmOffer) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirmOffer(null) }
@@ -211,13 +208,12 @@ const LackanfragenAngebote: FC = () => {
 
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('date_desc')
-
   const [topSection, setTopSection] = useState<TopSection>('received')
+
   useEffect(() => {
     try { localStorage.setItem('lack-angeboteTop', topSection) } catch {}
   }, [topSection])
 
-  // Abgelaufene Angebote entfernen
   const pruneExpiredOffers = () => {
     const now = Date.now()
     setReceivedData(prev =>
@@ -242,9 +238,9 @@ const LackanfragenAngebote: FC = () => {
     const onVis = () => { if (!document.hidden) pruneExpiredOffers() }
     document.addEventListener('visibilitychange', onVis)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  // Preis-Comparator (Infinity robust)
   const compareBestPrice = (a: number, b: number, dir: 'asc' | 'desc') => {
     const aInf = !Number.isFinite(a), bInf = !Number.isFinite(b)
     if (aInf && bInf) return 0
@@ -253,7 +249,6 @@ const LackanfragenAngebote: FC = () => {
     return dir === 'asc' ? a - b : b - a
   }
 
-  /* ===== Filter + Sort ===== */
   const receivedGroups = useMemo(() => {
     const q = query.trim().toLowerCase()
     const groups = OPEN_REQUEST_IDS.map(id => {
@@ -298,26 +293,21 @@ const LackanfragenAngebote: FC = () => {
     return arr
   }, [submittedData, query, sort])
 
-  /* ===== Pagination-States (persistiert) ===== */
   const [pageRec, setPageRec] = useState(1)
   const [psRec, setPsRec] = useState<number>(10)
   const [pageSub, setPageSub] = useState(1)
   const [psSub, setPsSub] = useState<number>(10)
 
-  /* ===== URL → State (mit Fallback LocalStorage) ===== */
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
 
-      // Query
       const q = params.get('q')
       if (q !== null) setQuery(q)
 
-      // Sort
       const s = params.get('sort') as SortKey | null
       if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
 
-      // Tab (URL bevorzugt, sonst localStorage)
       const tab = params.get('tab') as TopSection | null
       if (tab && (tab === 'received' || tab === 'submitted')) {
         setTopSection(tab)
@@ -326,7 +316,6 @@ const LackanfragenAngebote: FC = () => {
         if (saved === 'received' || saved === 'submitted') setTopSection(saved as TopSection)
       }
 
-      // PageSize (URL > localStorage > Default) + Validation
       const lPsRec = Number(localStorage.getItem('lack-angebote:ps:received')) || DEFAULTS.psRec
       const lPsSub = Number(localStorage.getItem('lack-angebote:ps:submitted')) || DEFAULTS.psSub
       const urlPsRec = Number(params.get('psRec'))
@@ -336,7 +325,6 @@ const LackanfragenAngebote: FC = () => {
       setPsRec(initPsRec)
       setPsSub(initPsSub)
 
-      // Page (URL > localStorage > Default)
       const lPageRec = Number(localStorage.getItem('lack-angebote:page:received')) || DEFAULTS.pageRec
       const lPageSub = Number(localStorage.getItem('lack-angebote:page:submitted')) || DEFAULTS.pageSub
       const urlPageRec = Number(params.get('pageRec')) || undefined
@@ -346,19 +334,12 @@ const LackanfragenAngebote: FC = () => {
     } catch {}
   }, [])
 
-  /* ===== Persistenzen ===== */
-  // PageSizes
   useEffect(() => { try { localStorage.setItem('lack-angebote:ps:received', String(psRec)) } catch {} }, [psRec])
   useEffect(() => { try { localStorage.setItem('lack-angebote:ps:submitted', String(psSub)) } catch {} }, [psSub])
-
-  // Pages
   useEffect(() => { try { localStorage.setItem('lack-angebote:page:received', String(pageRec)) } catch {} }, [pageRec])
   useEffect(() => { try { localStorage.setItem('lack-angebote:page:submitted', String(pageSub)) } catch {} }, [pageSub])
-
-  // bei Such-/Sort-Änderung Seite zurücksetzen
   useEffect(() => { setPageRec(1); setPageSub(1) }, [query, sort])
 
-  /* ===== URL-Synchronisation ===== */
   useEffect(() => {
     try {
       const p = new URLSearchParams()
@@ -380,7 +361,6 @@ const LackanfragenAngebote: FC = () => {
     } catch {}
   }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
 
-  // Slice-Helfer
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
     const total = arr.length
     const pages = Math.max(1, Math.ceil(total / ps))
@@ -403,25 +383,48 @@ const LackanfragenAngebote: FC = () => {
   const sub = sliceByPage(submitted, pageSub, psSub)
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
-  /* ===== Payment + Modal ===== */
-  function paymentUrl({ requestId, offerId, amountCents, vendor }: { requestId: string | number, offerId: string, amountCents: number, vendor: string }) {
-    return (
-      `/zahlung?requestId=${encodeURIComponent(String(requestId))}` +
-      `&offerId=${encodeURIComponent(offerId)}` +
-      `&amount=${amountCents}` +
-      `&vendor=${encodeURIComponent(vendor)}` +
-      `&returnTo=${encodeURIComponent('/konto/lackanfragen')}`
-    )
-  }
+  /* ===== Modal / Accept Flow ===== */
   function openConfirm(requestId: string | number, offerId: string, amountCents: number, vendor: string) {
     setConfirmOffer({ requestId, offerId, amountCents, vendor })
   }
-  function confirmAccept() {
+
+  async function confirmAccept() {
     if (!confirmOffer) return
     setAcceptingId(confirmOffer.offerId)
-    const url = paymentUrl(confirmOffer)
-    setConfirmOffer(null)
-    router.push(url)
+
+    try {
+      const res = await fetch('/api/lack/accept-offer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: String(confirmOffer.requestId),
+          offerId: confirmOffer.offerId,
+        }),
+      })
+      const json: AcceptOfferResponse & { error?: string } = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Annahme fehlgeschlagen.')
+
+      setConfirmOffer(null)
+
+      if (json.redirectUrl) {
+        router.push(json.redirectUrl)
+        return
+      }
+
+      if (json.clientSecret) {
+        router.push(
+          `/zahlung?orderId=${encodeURIComponent(json.orderId)}&cs=${encodeURIComponent(json.clientSecret)}&returnTo=${encodeURIComponent('/konto/lackanfragen')}`
+        )
+        return
+      }
+
+      toastOk('Angebot angenommen.')
+      router.push(`/konto/orders/${encodeURIComponent(json.orderId)}`)
+    } catch (e: any) {
+      toastErr(e?.message || 'Konnte Angebot nicht annehmen.')
+    } finally {
+      setAcceptingId(null)
+    }
   }
 
   const cols = '2fr 1fr 1.6fr 1fr'
@@ -601,7 +604,6 @@ const LackanfragenAngebote: FC = () => {
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        {/* Toolbar */}
         <div className={styles.toolbar}>
           <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
           <input
@@ -647,7 +649,6 @@ const LackanfragenAngebote: FC = () => {
           </div>
         </div>
 
-        {/* Reihenfolge nach Wahl */}
         {topSection === 'received' ? (
           <>
             <ReceivedSection />
@@ -663,7 +664,7 @@ const LackanfragenAngebote: FC = () => {
         )}
       </div>
 
-      {/* ===== Modal „Angebot annehmen“ ===== */}
+      {/* Modal: Angebot annehmen */}
       {confirmOffer && (
         <div
           className={styles.modal}
@@ -687,17 +688,15 @@ const LackanfragenAngebote: FC = () => {
               <button type="button" className={styles.btnGhost} onClick={() => setConfirmOffer(null)}>
                 Abbrechen
               </button>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                onClick={confirmAccept}
-              >
+              <button type="button" className={styles.btnDanger} onClick={confirmAccept}>
                 Ja, Angebot annehmen
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <Toast />
     </>
   )
 }
