@@ -1,33 +1,34 @@
 import { NextResponse } from 'next/server'
-import { getStripe } from '@/lib/stripe'
 import { supabaseServer } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getStripe } from '@/lib/stripe'
+import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
 
 export async function POST(req: Request) {
-  const { pmId } = await req.json() as { pmId?: string }
-  if (!pmId) return NextResponse.json({ error: 'pmId required' }, { status: 400 })
+  try {
+    const stripe = getStripe()
+    if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-  const stripe = getStripe()
-  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    const sb = await supabaseServer()
+    const { data: { user } } = await sb.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const sb = await supabaseServer()
-  const { data: { user }, error: authErr } = await sb.auth.getUser()
-  if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { pmId } = await req.json()
+    if (!pmId) return NextResponse.json({ error: 'pmId missing' }, { status: 400 })
 
-  const admin = supabaseAdmin()
-  const { data: prof } = await admin
-    .from('profiles')
-    .select('stripe_customer_id')
-    .eq('id', user.id)
-    .maybeSingle()
+    const customerId = await getOrCreateStripeCustomer(user.id, user.email)
 
-  const customerId = prof?.stripe_customer_id
-  if (!customerId) return NextResponse.json({ error: 'No stripe_customer_id' }, { status: 400 })
+    // Guard: gehört die PM wirklich dem Customer?
+    const pm = await stripe.paymentMethods.retrieve(pmId)
+    if ((pm as any).customer !== customerId) {
+      return NextResponse.json({ error: 'Payment method does not belong to customer' }, { status: 400 })
+    }
 
-  // Nur SETZEN, niemals null schicken:
-  await stripe.customers.update(customerId, {
-    invoice_settings: { default_payment_method: pmId },
-  })
+    await stripe.customers.update(customerId, {
+      invoice_settings: { default_payment_method: pmId },
+    })
 
-  return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Failed to set default PM' }, { status: 500 })
+  }
 }
