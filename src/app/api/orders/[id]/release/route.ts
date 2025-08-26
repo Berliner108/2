@@ -1,5 +1,5 @@
 // src/app/api/orders/[id]/release/route.ts
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
@@ -7,9 +7,10 @@ import { getStripe } from '@/lib/stripe'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-type Context = { params: { id: string } }
-
-export async function POST(req: NextRequest, { params }: Context) {
+export async function POST(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const stripe = getStripe()
     if (!stripe) {
@@ -21,14 +22,14 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'Missing order id' }, { status: 400 })
     }
 
-    // Auth prüfen (nur Käufer darf freigeben)
+    // Auth (nur Käufer darf freigeben)
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // Order + Supplier lesen
+    // Order lesen
     const admin = supabaseAdmin()
     const { data: order, error: ordErr } = await admin
       .from('orders')
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Nur wenn Zahlung erfolgreich ist, noch nichts transferiert wurde
+    // Nur freigebbar, wenn Zahlung durch & noch nicht transferiert
     if (order.status !== 'succeeded') {
       return NextResponse.json({ error: `Order status not releasable: ${order.status}` }, { status: 409 })
     }
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'Missing charge on order' }, { status: 422 })
     }
 
-    // Supplier Connect-ID holen
+    // Supplier Connect-ID holen (achte darauf, dass profiles.stripe_connect_id existiert)
     const { data: supplier, error: supErr } = await admin
       .from('profiles')
       .select('id,stripe_connect_id')
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'Supplier not onboarded to Stripe Connect' }, { status: 422 })
     }
 
-    // Auszahlungsbetrag = amount - fee (Fee wurde beim PI als application_fee_amount kassiert)
+    // Auszahlungsbetrag = amount - fee - bereits transferiert
     const gross = Number(order.amount_cents || 0)
     const fee = Number(order.fee_cents || 0)
     const already = Number(order.transferred_cents || 0)
@@ -74,12 +75,12 @@ export async function POST(req: NextRequest, { params }: Context) {
       return NextResponse.json({ error: 'Nothing to transfer' }, { status: 409 })
     }
 
-    // Transfer vom Plattform-Guthaben an den Connect-Account; verknüpft mit der Charge
+    // Transfer aus Plattform-Guthaben an den Connect-Account, verknüpft mit der Charge
     const tr = await stripe.transfers.create({
       amount: toTransfer,
       currency: order.currency || 'eur',
       destination: supplier.stripe_connect_id,
-      source_transaction: order.charge_id, // koppelt Transfer an die ursprüngliche Charge
+      source_transaction: order.charge_id,
       metadata: { order_id: String(order.id), supplier_id: String(order.supplier_id) },
     })
 
@@ -98,7 +99,6 @@ export async function POST(req: NextRequest, { params }: Context) {
 
     return NextResponse.json({ ok: true, transferId: tr.id })
   } catch (err: any) {
-    const msg = err?.message || 'Release failed'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: err?.message || 'Release failed' }, { status: 500 })
   }
 }
