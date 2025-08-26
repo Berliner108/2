@@ -3,54 +3,31 @@ import { getStripe } from '@/lib/stripe'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-async function getCustomerId(userId: string) {
-  const admin = supabaseAdmin()
-  try {
-    const { data: prof } = await admin
-      .from('profiles')
-      .select('stripe_customer_id')
-      .eq('id', userId)
-      .maybeSingle()
-    return prof?.stripe_customer_id || null
-  } catch {
-    return null
-  }
-}
-
 export async function POST(req: Request) {
+  const { pmId } = await req.json() as { pmId?: string }
+  if (!pmId) return NextResponse.json({ error: 'pmId required' }, { status: 400 })
+
   const stripe = getStripe()
-  if (!stripe) {
-    return NextResponse.json({ ok: false, error: 'stripe_not_configured' }, { status: 503 })
-  }
+  if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
   const sb = await supabaseServer()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 })
-  }
+  const { data: { user }, error: authErr } = await sb.auth.getUser()
+  if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  let body: any = {}
-  try { body = await req.json() } catch {}
+  const admin = supabaseAdmin()
+  const { data: prof } = await admin
+    .from('profiles')
+    .select('stripe_customer_id')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  const pmId = (body?.pmId || '').toString().trim()
-  if (!pmId) {
-    return NextResponse.json({ ok: false, error: 'pmId_required' }, { status: 400 })
-  }
+  const customerId = prof?.stripe_customer_id
+  if (!customerId) return NextResponse.json({ error: 'No stripe_customer_id' }, { status: 400 })
 
-  const customerId = await getCustomerId(user.id)
-  if (!customerId) {
-    return NextResponse.json({ ok: false, error: 'no_customer' }, { status: 400 })
-  }
+  // Nur SETZEN, niemals null schicken:
+  await stripe.customers.update(customerId, {
+    invoice_settings: { default_payment_method: pmId },
+  })
 
-  try {
-    await stripe.customers.update(customerId, {
-      invoice_settings: { default_payment_method: pmId },
-    })
-    return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || 'set_default_failed' }, { status: 500 })
-  }
+  return NextResponse.json({ ok: true })
 }

@@ -681,7 +681,7 @@ const toggleBewerbung = (option: string) => {
 </label>
 <label className={styles.labelmenge}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-    Menge (kg): <span style={{ color: 'red' }}>*</span>
+    Benötigte Menge (kg): <span style={{ color: 'red' }}>*</span>
   </span>
   <input
     type="number"
