@@ -27,7 +27,7 @@ type LackOrder = {
   disputeReason?: string | null
 
   // Bewertung durch Auftraggeber
-  review?: { rating: number; text?: string }
+  review?: { rating: 'good' | 'neutral'; text: string }
 }
 
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -234,6 +234,8 @@ const LackanfragenOrdersPage: FC = () => {
   const [rateOrderId, setRateOrderId] = useState<string | number | null>(null)
   const [rating, setRating] = useState(5)
   const [ratingText, setRatingText] = useState('')
+  const [ratingChoice, setRatingChoice] = useState<'good' | 'neutral' | ''>('');
+
 
   // ESC schließt Modals
   useEffect(() => {
@@ -656,7 +658,11 @@ const LackanfragenOrdersPage: FC = () => {
                   <button
                     type="button"
                     className={styles.primaryBtn}
-                    onClick={() => { setRateOrderId(order.requestId); setRating(5); setRatingText('') }}
+                    onClick={() => {
+                      setRateOrderId(order.requestId);
+                      setRatingChoice('good');     // <-- NEU: Standard „gut“
+                      setRatingText('');           // deinen bestehenden Text-State nutzen
+                    }}
                   >
                     Anbieter bewerten
                   </button>
@@ -837,49 +843,101 @@ const LackanfragenOrdersPage: FC = () => {
       )}
 
       {/* Modal: Bewertung */}
-      {rateOrderId !== null && (
-        <div
-          className={styles.modal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rateTitle"
-          onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
+      {/* Modal: Bewertung (gut/neutral + Pflicht-Text, POST -> /api/orders/[id]/review) */}
+{rateOrderId !== null && (
+  <div
+    className={styles.modal}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="rateTitle"
+    onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
+  >
+    <div className={styles.modalContent}>
+      <h3 id="rateTitle" className={styles.modalTitle}>Anbieter bewerten</h3>
+
+      {/* Auswahl gut/neutral */}
+      <div className={styles.actions} style={{ gap: 8, marginBottom: 8 }}>
+        <label className={styles.segmentedBtn}>
+          <input
+            type="radio"
+            name="ratingChoice"
+            value="good"
+            checked={ratingChoice === 'good'}
+            onChange={() => setRatingChoice('good')}
+          />
+          <span style={{ marginLeft: 8 }}>gut</span>
+        </label>
+        <label className={styles.segmentedBtn}>
+          <input
+            type="radio"
+            name="ratingChoice"
+            value="neutral"
+            checked={ratingChoice === 'neutral'}
+            onChange={() => setRatingChoice('neutral')}
+          />
+          <span style={{ marginLeft: 8 }}>neutral</span>
+        </label>
+      </div>
+
+      {/* Pflicht-Text */}
+      <textarea
+        className={styles.reviewBox}
+        value={ratingText}
+        onChange={e => setRatingText(e.target.value)}
+        placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
+        rows={4}
+        required
+      />
+      <div className={styles.btnHint} aria-live="polite">
+        {ratingText.trim().length}/800
+      </div>
+
+      {/* Aktionen */}
+      <div className={styles.modalActions}>
+        <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
+        <button
+          className={styles.primaryBtn}
+          onClick={async () => {
+            const orderId = String(rateOrderId);
+            if (ratingChoice !== 'good' && ratingChoice !== 'neutral') {
+              alert("Bitte 'gut' oder 'neutral' auswählen.");
+              return;
+            }
+            const comment = ratingText.trim();
+            if (!comment) {
+              alert('Bitte einen kurzen Kommentar eingeben.');
+              return;
+            }
+
+            try {
+              const res = await fetch(`/api/orders/${orderId}/review`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: ratingChoice, comment }),
+              });
+              const json = await res.json();
+              if (!res.ok) throw new Error(json?.error || 'Speichern fehlgeschlagen');
+
+              // lokal mitschreiben, damit UI sofort aktualisiert
+              persist(orders.map(o =>
+                String(o.requestId) === orderId
+                  ? { ...o, review: { rating: ratingChoice, text: comment } }
+                  : o
+              ));
+
+              setRateOrderId(null);
+            } catch (err: any) {
+              alert(err?.message || 'Speichern fehlgeschlagen');
+            }
+          }}
         >
-          <div className={styles.modalContent}>
-            <h3 id="rateTitle" className={styles.modalTitle}>Anbieter bewerten</h3>
-            <div className={styles.stars}>
-              {[1,2,3,4,5].map(n => (
-                <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn}>
-                  {n <= rating ? '★' : '☆'}
-                </button>
-              ))}
-            </div>
-            <textarea
-              className={styles.reviewBox}
-              value={ratingText}
-              onChange={e => setRatingText(e.target.value)}
-              placeholder="Optionales Feedback…"
-              rows={4}
-            />
-            <div className={styles.modalActions}>
-              <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
-              <button
-                className={styles.primaryBtn}
-                onClick={() => {
-                  persist(orders.map(o =>
-                    String(o.requestId) === String(rateOrderId)
-                      ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
-                      : o
-                  ))
-                  setRateOrderId(null)
-                }}
-              >
-                Abschicken
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          Abschicken
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </>
   )
 }

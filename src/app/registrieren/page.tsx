@@ -261,7 +261,7 @@ const Register = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             username: usernameNorm,
-            accountType: isPrivatePerson ? 'PRIVATE' : 'COMPANY',
+            accountType: isPrivatePerson ? 'private' : 'business',
             invited_by: invitedBy,
             address: {
               street: formData.street,

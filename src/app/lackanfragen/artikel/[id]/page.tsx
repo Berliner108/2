@@ -253,15 +253,6 @@ export default function ArtikelDetailPage() {
                   placeholder="Preis (€)"
                 />
 
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={extraPreisVisible}
-                    onChange={(e) => setExtraPreisVisible(e.target.checked)}
-                  />
-                  <span>&nbsp;5 Musterbleche anbieten</span>
-                </label>
-
                 {extraPreisVisible && (
                   <input
                     type="number"
