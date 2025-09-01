@@ -6,19 +6,23 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(req: Request, { params }: { params: Record<string, string | string[]> }) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> } // <- Promise
+) {
+  const { id } = await params // <- zwingend in Next 15
+
   const userClient = await supabaseServer()
   const { data: auth } = await userClient.auth.getUser()
   const user = auth?.user
-  const allow = (process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim()).filter(Boolean)
+  const allow = (process.env.ADMIN_EMAILS || '')
+    .split(',').map(s => s.trim()).filter(Boolean)
 
   if (!user || !allow.includes((user.email || '').toLowerCase())) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
 
   const admin = supabaseAdmin()
-  const id = Array.isArray(params.id) ? params.id[0] : params.id
-  if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 })
 
   // Owner für Storage-Pfad ermitteln
   const { data: row, error: selErr } = await admin
@@ -43,14 +47,12 @@ export async function DELETE(req: Request, { params }: { params: Record<string, 
       const { error: remErr } = await admin.storage.from(bucket).remove(paths)
       if (remErr) console.warn('[admin delete] remove failed', remErr.message)
     }
-    // Unterordner rekursiv (falls als "Ordner" gelistet)
     for (const entry of list || []) {
       if (entry.name?.endsWith('/')) await removePrefix(`${pfx}${entry.name}`)
     }
   }
   await removePrefix(prefix)
 
-  // Datenzeile löschen
   const { error: delErr } = await admin.from('lack_requests').delete().eq('id', id)
   if (delErr) return NextResponse.json({ error: 'db delete failed' }, { status: 500 })
 
