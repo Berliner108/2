@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(req: Request, ctx: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Record<string, string | string[]> }) {
   const userClient = await supabaseServer()
   const { data: auth } = await userClient.auth.getUser()
   const user = auth?.user
@@ -17,7 +17,8 @@ export async function DELETE(req: Request, ctx: { params: { id: string } }) {
   }
 
   const admin = supabaseAdmin()
-  const { id } = ctx.params
+  const id = Array.isArray(params.id) ? params.id[0] : params.id
+  if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 })
 
   // Owner für Storage-Pfad ermitteln
   const { data: row, error: selErr } = await admin
@@ -42,10 +43,9 @@ export async function DELETE(req: Request, ctx: { params: { id: string } }) {
       const { error: remErr } = await admin.storage.from(bucket).remove(paths)
       if (remErr) console.warn('[admin delete] remove failed', remErr.message)
     }
-    // Unterordner rekursiv
+    // Unterordner rekursiv (falls als "Ordner" gelistet)
     for (const entry of list || []) {
-      if (entry.id) continue
-      if (entry.name.endsWith('/')) await removePrefix(`${pfx}${entry.name}`)
+      if (entry.name?.endsWith('/')) await removePrefix(`${pfx}${entry.name}`)
     }
   }
   await removePrefix(prefix)
