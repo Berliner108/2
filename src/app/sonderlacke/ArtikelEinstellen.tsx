@@ -5,10 +5,10 @@ import styles from './sonderlacke.module.css';
 import { FaSprayCan, FaCloud } from 'react-icons/fa';
 import Navbar from '../components/navbar/Navbar';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
-import { Star, Search, Crown } from 'lucide-react';
+import { Star, Search, Crown, Loader2 } from 'lucide-react';
 
 import {
   gemeinsameFeiertageDEAT,
@@ -17,11 +17,49 @@ import {
   todayDate,
 } from '../../lib/dateUtils';
 
-// ————————————————————————————————————————————————
-// Mini-Kalender (Mo–So) – dependency-frei
-// ————————————————————————————————————————————————
+/* ---------------- Fancy Loader Components ---------------- */
+
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Mini-Kalender (Mo–So) ---------------- */
+
 type MiniCalendarProps = {
-  month: Date; // beliebiger Tag im Monat
+  month: Date;
   onMonthChange: (next: Date) => void;
   selected?: Date | null;
   onSelect: (d: Date) => void;
@@ -38,10 +76,9 @@ function MiniCalendar({
   minDate,
 }: MiniCalendarProps) {
   const y = month.getFullYear();
-  const m = month.getMonth(); // 0..11
+  const m = month.getMonth();
   const firstOfMonth = new Date(y, m, 1);
-  // JS: 0=So..6=Sa -> wir wollen Mo=0..So=6
-  const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
+  const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mo=0..So=6
   const daysInMonth = new Date(y, m + 1, 0).getDate();
 
   const weeks: Array<Array<Date | null>> = [];
@@ -59,7 +96,6 @@ function MiniCalendar({
   }
 
   const monthLabel = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(month);
-
   const goPrev = () => onMonthChange(new Date(y, m - 1, 1));
   const goNext = () => onMonthChange(new Date(y, m + 1, 1));
 
@@ -107,9 +143,8 @@ function MiniCalendar({
   );
 }
 
-// ————————————————————————————————————————————————
-// Hilfen/Typen
-// ————————————————————————————————————————————————
+/* ---------------- Hilfen/Typen ---------------- */
+
 function istGueltigeDatei(file: File): boolean {
   const erlaubteMimeTypen = [
     'application/pdf',
@@ -123,9 +158,10 @@ function istGueltigeDatei(file: File): boolean {
     'text/csv',
     'model/step',
     'model/stl',
+    'application/octet-stream',
   ];
   const erlaubteEndungen = [
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv', '.dwg', '.dxf', '.step', '.stp'
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv', '.dwg', '.dxf', '.step', '.stp', '.stl'
   ];
   const dateiname = file.name.toLowerCase();
   const hatErlaubteEndung = erlaubteEndungen.some(ext => dateiname.endsWith(ext));
@@ -139,7 +175,7 @@ type PromoKey = 'startseite' | 'suche' | 'premium';
 type Adresse = {
   vorname: string;
   nachname: string;
-  firma: string;     // optional
+  firma: string;
   strasse: string;
   hausnummer: string;
   plz: string;
@@ -156,8 +192,22 @@ const glanzgradListe = [
   { name: 'Hochglanz', value: 'Hochglanz' },
 ];
 
+/** Hilfsfunktionen für Adressnormalisierung */
+const toAddressString = (a?: Partial<Adresse>) => {
+  if (!a) return '';
+  const zeile1 = [a.strasse, a.hausnummer].filter(Boolean).join(' ');
+  const zeile2 = [a.plz, a.ort].filter(Boolean).join(' ');
+  return [zeile1, zeile2, a.land].filter(Boolean).join(', ');
+};
+
+/* ---------------- Seite ---------------- */
+
 function ArtikelEinstellen() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Boot-Loading (Profil)
+  const [bootLoading, setBootLoading] = useState(true);
 
   // Auswahl/Felder
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | null>(null);
@@ -176,6 +226,7 @@ function ArtikelEinstellen() {
   const [farbton, setFarbton] = useState<string>('');
   const [hersteller, setHersteller] = useState<string>('');
   const [aufladung, setAufladung] = useState<string[]>([]);
+  const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
 
   // Adresse/Profil
   const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
@@ -183,7 +234,7 @@ function ArtikelEinstellen() {
 
   const [vorname, setVorname] = useState<string>('');
   const [nachname, setNachname] = useState<string>('');
-  const [firma, setFirma] = useState<string>(''); // optional!
+  const [firma, setFirma] = useState<string>('');
   const [strasse, setStrasse] = useState<string>('');
   const [hausnummer, setHausnummer] = useState<string>('');
   const [plz, setPlz] = useState<string>('');
@@ -209,7 +260,7 @@ function ArtikelEinstellen() {
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState<boolean>(false);
   const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState<boolean>(false);
   const [vorschauAktiv, setVorschauAktiv] = useState<boolean>(false);
-  const [ladeStatus, setLadeStatus] = useState<boolean>(false);
+  const [ladeStatus, setLadeStatus] = useState<boolean>(false); // ← zeigt auch das Popup
   const [bewerbungOptionen, setBewerbungOptionen] = useState<PromoKey[] | string[]>([]);
   const [menge, setMenge] = useState<number>(0);
   const [agbAccepted, setAgbAccepted] = useState<boolean>(false);
@@ -228,6 +279,7 @@ function ArtikelEinstellen() {
   const [warnungZustand, setWarnungZustand] = useState<string>('');
   const [warnungAufladung, setWarnungAufladung] = useState<string>('');
   const [warnungBeschreibung, setWarnungBeschreibung] = useState<string>('');
+  const [warnungFarbton, setWarnungFarbton] = useState<string>('');
   const [warnung, setWarnung] = useState<string>('');
 
   // Refs
@@ -283,37 +335,69 @@ function ArtikelEinstellen() {
     }
   }, [searchParams]);
 
-  // Profil laden (Adresse + account_type)
+  /* ===== Profil laden ===== */
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/profil');
+        setBootLoading(true);
+        const res = await fetch('/api/profile', { cache: 'no-store', credentials: 'same-origin' });
         if (!res.ok) return;
 
         const data = await res.json();
-        const at = (data?.account_type ?? data?.accountType ?? '').toString() as 'business' | 'private' | '';
+        if (cancelled) return;
+
+        const p = data?.profile ?? {};
+        const a = p?.address ?? {};
+        const at = (p?.account_type ?? '').toString() as 'business' | 'private' | '';
+
         setAccountType(at);
+        setNutzerTyp(at === 'business' ? 'gewerblich' : at === 'private' ? 'privat' : '');
 
-        const t: NutzerTyp = at === 'business' ? 'gewerblich' : at === 'private' ? 'privat' : '';
-        setNutzerTyp(t);
+        const adr: Adresse = {
+          vorname:  p.firstName || '',
+          nachname: p.lastName  || '',
+          firma:    at === 'business' ? (p.company || '') : '',
+          strasse:  a.street || '',
+          hausnummer: a.houseNumber || '',
+          plz:      a.zip || '',
+          ort:      a.city || '',
+          land:     a.country || '',
+        };
+        setProfilAdresse(adr);
 
-        setProfilAdresse({
-          vorname:    data?.profile?.firstName   ?? data?.vorname    ?? '',
-          nachname:   data?.profile?.lastName    ?? data?.nachname   ?? '',
-          firma:      at === 'business'
-                        ? (data?.profile?.company ?? data?.firma ?? '')
-                        : '', // privat => Firma leer
-          strasse:    data?.profile?.street      ?? data?.strasse    ?? '',
-          hausnummer: data?.profile?.houseNumber ?? data?.hausnummer ?? '',
-          plz:        data?.profile?.zip         ?? data?.plz        ?? '',
-          ort:        data?.profile?.city        ?? data?.ort        ?? '',
-          land:       data?.profile?.country     ?? data?.land       ?? '',
-        });
+        if (lieferadresseOption === 'manuell') {
+          setVorname(adr.vorname);
+          setNachname(adr.nachname);
+          setFirma(adr.firma);
+          setStrasse(adr.strasse);
+          setHausnummer(adr.hausnummer);
+          setPlz(adr.plz);
+          setOrt(adr.ort);
+          setLand(adr.land);
+        }
       } catch (err) {
         console.error('Profil laden fehlgeschlagen', err);
+      } finally {
+        if (!cancelled) setBootLoading(false);
       }
     })();
-  }, []);
+    return () => { cancelled = true; };
+  }, [lieferadresseOption]);
+
+  // Beim Umschalten auf "manuell" Felder aus Profil übernehmen
+  useEffect(() => {
+    if (lieferadresseOption === 'manuell') {
+      setVorname(profilAdresse.vorname);
+      setNachname(profilAdresse.nachname);
+      setFirma(profilAdresse.firma);
+      setStrasse(profilAdresse.strasse);
+      setHausnummer(profilAdresse.hausnummer);
+      setPlz(profilAdresse.plz);
+      setOrt(profilAdresse.ort);
+      setLand(profilAdresse.land);
+    }
+  }, [lieferadresseOption, profilAdresse]);
 
   // Dropdowns schließen bei Click außerhalb
   useEffect(() => {
@@ -343,7 +427,7 @@ function ArtikelEinstellen() {
   function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const val = e.target.value.replace(',', '.');
     if (val === '') setMenge(0);
-    else if (/^\d{0,7}(\.\d{0,1})?$/.test(val)) setMenge(parseFloat(val));
+    else if (/^\d{0,4}(\.\d{0,1})?$/.test(val)) setMenge(parseFloat(val));
   }
 
   const fadeIn = {
@@ -353,7 +437,7 @@ function ArtikelEinstellen() {
     transition: { duration: 0.3 },
   } as const;
 
-  // ——— Feiertags-/Werktag-Handling ———
+  // Feiertags-/Werktag-Handling
   const today = useMemo<Date>(() => todayDate(), []);
   const holidaysSet = useMemo<Set<string>>(() => {
     const y = today.getFullYear();
@@ -363,9 +447,9 @@ function ArtikelEinstellen() {
   }, [today]);
 
   const isDisabledDay = (d: Date): boolean => {
-    if (d < today) return true;               // Vergangenheit
-    if (isWeekend(d)) return true;            // Sa/So
-    if (holidaysSet.has(toYMD(d))) return true; // Gemeinsamer Feiertag DE/AT
+    if (d < today) return true;
+    if (isWeekend(d)) return true;
+    if (holidaysSet.has(toYMD(d))) return true;
     return false;
   };
 
@@ -380,6 +464,7 @@ function ArtikelEinstellen() {
     total++; if (glanzgrad) filled++;
     total++; if (zustand) filled++;
     total++; if (oberflaeche) filled++;
+    total++; if (farbton.trim() !== '') filled++;
     total++; if (anwendung) filled++;
     total++; if (beschreibung.trim() !== '') filled++;
     total++; if (lieferDatum) filled++;
@@ -434,6 +519,7 @@ function ArtikelEinstellen() {
     setWarnungPalette('');
     setWarnungZustand('');
     setWarnungBeschreibung('');
+    setWarnungFarbton('');
     setLieferDatum(null);
     setVorname('');
     setNachname('');
@@ -449,10 +535,12 @@ function ArtikelEinstellen() {
     setAgbError(false);
   };
 
-  // ——— Submit ———
+  /* ---------------- Submit ---------------- */
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setFormAbgesendet(true);
+
     let fehler = false;
 
     // Pflichtfelder
@@ -465,6 +553,7 @@ function ArtikelEinstellen() {
     if (!oberflaeche) { setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.'); fehler = true; } else { setWarnungOberflaeche(''); }
     if (!anwendung) { setWarnungAnwendung('Bitte wähle eine Anwendung aus.'); fehler = true; } else { setWarnungAnwendung(''); }
     if (!zustand) { setWarnungZustand('Bitte wähle den Zustand aus.'); fehler = true; } else { setWarnungZustand(''); }
+    if (!farbton.trim()) { setWarnungFarbton('Bitte gib den Farbton an.'); fehler = true; } else { setWarnungFarbton(''); }
     if (kategorie === 'pulverlack') {
       if (aufladung.length === 0) { setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.'); fehler = true; }
       else { setWarnungAufladung(''); }
@@ -486,7 +575,7 @@ function ArtikelEinstellen() {
       setAgbError(false);
     }
 
-    // Lieferadresse manuell -> Pflichtfelder (Firma NICHT Pflicht!)
+    // Lieferadresse manuell -> Pflichtfelder
     if (lieferadresseOption === 'manuell') {
       if (!vorname.trim() || !nachname.trim() || !strasse.trim() ||
           !hausnummer.trim() || !plz.trim() || !ort.trim() || !land.trim()) {
@@ -499,24 +588,27 @@ function ArtikelEinstellen() {
       return;
     }
 
+    // AB HIER: Popup sofort zeigen
     setLadeStatus(true);
 
-    // gesponsert = irgendeine Bewerbung gewählt?
     const gesponsert = (bewerbungOptionen as string[]).length > 0;
 
-    // Adresse, die gesendet wird
+    // Adresse für Anzeige
     const adr: Adresse = (lieferadresseOption === 'profil') ? profilAdresse : {
       vorname, nachname, firma, strasse, hausnummer, plz, ort, land
     };
+
+    const lieferort = [adr.plz, adr.ort].filter(Boolean).join(' ') || adr.ort || '';
+    const lieferadresseString = toAddressString(adr);
 
     // FormData
     const formData = new FormData();
     formData.append('kategorie', kategorie!);
     formData.append('zertifizierungen', zertifizierungen.join(', '));
     formData.append('titel', titel);
-    formData.append('farbton', farbton);
+    formData.append('farbton', farbton.trim());
     formData.append('glanzgrad', glanzgrad);
-    formData.append('hersteller', hersteller);
+    formData.append('hersteller', hersteller === 'Alle' ? '' : hersteller);
     formData.append('zustand', zustand);
     formData.append('farbpalette', farbpaletteWert);
     formData.append('beschreibung', beschreibung);
@@ -531,21 +623,25 @@ function ArtikelEinstellen() {
     formData.append('lieferadresseOption', lieferadresseOption);
 
     // Registrierung / Sponsoring / Lieferdatum
-    formData.append('account_type', accountType);                        // 'business' | 'private'
-    formData.append('nutzerTyp', nutzerTyp);                             // 'gewerblich' | 'privat'
-    formData.append('istGewerblich', String(accountType === 'business'));// 'true' | 'false'
-    formData.append('gesponsert', String(gesponsert));
+    formData.append('account_type', accountType);
+    formData.append('nutzerTyp', nutzerTyp);
+    formData.append('istGewerblich', String(accountType === 'business'));
     formData.append('lieferdatum', toYMD(lieferDatum!));
+    formData.append('gesponsert', String(gesponsert));
 
-    // Adresse
+    // Adresse (Einzelteile)
     formData.append('vorname', adr.vorname);
     formData.append('nachname', adr.nachname);
-    formData.append('firma', adr.firma); // optional
+    formData.append('firma', adr.firma);
     formData.append('strasse', adr.strasse);
     formData.append('hausnummer', adr.hausnummer);
     formData.append('plz', adr.plz);
     formData.append('ort', adr.ort);
     formData.append('land', adr.land);
+
+    // Normalisierte Felder
+    formData.append('lieferort', lieferort);
+    formData.append('lieferadresse', lieferadresseString);
 
     if (kategorie === 'pulverlack') {
       formData.append('aufladung', aufladung.join(', '));
@@ -555,13 +651,11 @@ function ArtikelEinstellen() {
 
     try {
       if (gesponsert) {
-        // 1) Draft anlegen
         const draftRes = await fetch('/api/angebot-einstellen/draft', { method: 'POST', body: formData });
         if (!draftRes.ok) throw new Error('Draft konnte nicht erstellt werden.');
         const draftJson = await draftRes.json();
         const draftId: string = draftJson?.id || draftJson?.draftId;
 
-        // 2) Checkout starten
         const items = (bewerbungOptionen as string[]).map((k) => ({ key: k }));
         const checkoutRes = await fetch('/api/checkout', {
           method: 'POST',
@@ -571,6 +665,8 @@ function ArtikelEinstellen() {
         if (!checkoutRes.ok) throw new Error('Checkout konnte nicht gestartet werden.');
         const co = await checkoutRes.json();
         if (!co?.url) throw new Error('Keine Checkout-URL erhalten.');
+
+        // Overlay bleibt sichtbar, direkte Weiterleitung:
         window.location.assign(co.url as string);
         return;
       }
@@ -582,10 +678,10 @@ function ArtikelEinstellen() {
       const data = await res.json().catch(() => ({} as any));
       const id: string | undefined = data?.id || data?.insertedId || data?.angebotId;
 
-      // In Lackanfragen-Börse veröffentlichen (best effort)
+      // In Börse veröffentlichen (best effort)
       if (id) {
         try {
-          await fetch('/api/lackanfragen-boerse/publish', {
+          await fetch('/api/lackanfragen/publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id }),
@@ -595,17 +691,16 @@ function ArtikelEinstellen() {
         }
       }
 
-      alert('Erfolgreich hochgeladen!');
-      formularZuruecksetzen();
+      // Sofortige Weiterleitung – Overlay bleibt bis zur Navigation sichtbar
+      router.replace('/konto/lackanfragen');
     } catch (error) {
       console.error(error);
-      alert((error as Error).message || 'Serverfehler');
-    } finally {
       setLadeStatus(false);
+      alert((error as Error).message || 'Serverfehler');
     }
   };
 
-  const toggleBewerbung = (option: string): void => {
+  const toggleBewerbung = (option: PromoKey): void => {
     setBewerbungOptionen(prev =>
       (prev as string[]).includes(option)
         ? (prev as string[]).filter(o => o !== option)
@@ -613,13 +708,13 @@ function ArtikelEinstellen() {
     );
   };
 
-  // ——— Kalender-Overlay Logik ———
+  /* ---------------- Kalender-Overlay Logik ---------------- */
+
   const [calOpen, setCalOpen] = useState<boolean>(false);
   const [calMonth, setCalMonth] = useState<Date>(() => today);
   const popoverRef = useRef<HTMLDivElement>(null);
   const dateFieldRef = useRef<HTMLDivElement>(null);
 
-  // Beim Öffnen richtigen Monat zeigen
   useEffect(() => {
     if (calOpen) {
       if (lieferDatum) setCalMonth(new Date(lieferDatum.getFullYear(), lieferDatum.getMonth(), 1));
@@ -627,7 +722,6 @@ function ArtikelEinstellen() {
     }
   }, [calOpen, lieferDatum, today]);
 
-  // 1) Schließe bei Klick außerhalb des Popovers & außerhalb des Feldbereichs
   useEffect(() => {
     if (!calOpen) return;
     const onDown = (e: MouseEvent) => {
@@ -649,10 +743,22 @@ function ArtikelEinstellen() {
     };
   }, [calOpen]);
 
-  // 2) Automatisch schließen, sobald ein Datum gewählt wurde
   useEffect(() => {
     if (lieferDatum) setCalOpen(false);
   }, [lieferDatum]);
+
+  /* ---------- Skeleton beim Initial-Load ---------- */
+  if (bootLoading) {
+    return (
+      <>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.container}>
+          <FormSkeleton />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -694,7 +800,7 @@ function ArtikelEinstellen() {
         <Dropzone
           type="dateien"
           label="Dateien hierher ziehen oder klicken (max. 8)"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp,.stl"
           maxFiles={8}
           files={dateien}
           setFiles={setDateien}
@@ -755,7 +861,7 @@ function ArtikelEinstellen() {
                       className={styles.input}
                       maxLength={60}
                       value={titel}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitel(e.target.value)}
+                      onChange={(e) => setTitel(e.target.value)}
                     />
                     <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
                   </label>
@@ -774,7 +880,7 @@ function ArtikelEinstellen() {
                         <div className={styles.optionList}>
                           <div
                             className={styles.optionItem}
-                            onClick={(e) => { e.stopPropagation(); setHersteller(''); setHerstellerDropdownOffen(false); }}
+                            onClick={(e) => { e.stopPropagation(); setHersteller('Alle'); setHerstellerDropdownOffen(false); }}
                           >
                             Alle
                           </div>
@@ -801,7 +907,7 @@ function ArtikelEinstellen() {
                       type="number"
                       step="0.1"
                       min="0.1"
-                      max="99999.9"
+                      max="9999.9"
                       className={styles.input}
                       value={menge === 0 ? '' : menge}
                       onChange={handleMengeChange}
@@ -817,17 +923,17 @@ function ArtikelEinstellen() {
                       Farbpalette: <span style={{ color: 'red' }}>*</span>
                     </span>
 
-                    {/* verstecktes natives Select */}
                     <select
                       value={farbpaletteWert}
                       onChange={() => {}}
+                      aria-hidden
+                      tabIndex={-1}
                       style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: -1 }}
                     >
                       <option value="">Bitte wählen</option>
                       {farbpalette.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
                     </select>
 
-                    {/* Custom Select */}
                     <div
                       ref={farbpaletteRef}
                       className={styles.customSelect}
@@ -854,18 +960,22 @@ function ArtikelEinstellen() {
                   {warnungPalette && <p className={styles.validierungsfehler}>{warnungPalette}</p>}
 
                   {/* Farbton / Farbcode */}
-                  <label>
-                    Farbton (optional):
+                  <label className={styles.label}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      Farbtonbezeichung: <span style={{ color: 'red' }}>*</span>
+                    </span>
                     <input
                       type="text"
                       className={styles.input}
                       maxLength={20}
                       value={farbton}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFarbton(e.target.value)}
+                      onChange={(e) => setFarbton(e.target.value)}
                       placeholder="z. B. 9010 bei RAL oder S-8500 bei NCS "
+                      aria-invalid={Boolean(warnungFarbton)}
                     />
                     <div className={styles.counter}>{farbton.length} / 20 Zeichen</div>
                   </label>
+                  {warnungFarbton && <p className={styles.validierungsfehler}>{warnungFarbton}</p>}
 
                   <label className={styles.labelFarbcode}>
                     Farbcode (optional):
@@ -874,7 +984,7 @@ function ArtikelEinstellen() {
                       className={styles.inputFarbcode}
                       maxLength={20}
                       value={farbcode}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFarbcode(e.target.value)}
+                      onChange={(e) => setFarbcode(e.target.value)}
                       placeholder="z. B. #00e5ff"
                     />
                     <div className={styles.counter}>{farbcode.length} / 20 Zeichen</div>
@@ -889,6 +999,8 @@ function ArtikelEinstellen() {
                     <select
                       value={glanzgrad}
                       onChange={() => {}}
+                      aria-hidden
+                      tabIndex={-1}
                       style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: -1 }}
                     >
                       <option value="">Bitte wählen</option>
@@ -970,11 +1082,11 @@ function ArtikelEinstellen() {
                     <div className={styles.radioOptionsHorizontal}>
                       <label className={styles.radioLabel}>
                         <input type="radio" name="zustand" value="neu" checked={zustand === 'neu'} onChange={() => setZustand('neu')} />
-                        <span>Neu & Ungeöffnet</span>
+                        <span>Neu und ungeöffnet</span>
                       </label>
                       <label className={styles.radioLabel}>
                         <input type="radio" name="zustand" value="geöffnet" checked={zustand === 'geöffnet'} onChange={() => setZustand('geöffnet')} />
-                        <span>Geöffnet & Einwandfrei</span>
+                        <span>Geöffnet und einwandfrei</span>
                       </label>
                       {warnungZustand && <p className={styles.validierungsfehlerradio}>{warnungZustand}</p>}
                     </div>
@@ -1034,7 +1146,10 @@ function ArtikelEinstellen() {
                       <legend className={styles.radioLegend}>Zertifizierungen (optional):</legend>
                       <div className={styles.radioOptionsHorizontal}>
                         <label className={styles.radioLabel}>
-                          <input type="checkbox" name="zertifizierungen" value="GSB"
+                          <input
+                            type="checkbox"
+                            name="zertifizierungen"
+                            value="GSB"
                             checked={zertifizierungen.includes('GSB')}
                             onChange={(e) => {
                               const checked = e.target.checked;
@@ -1044,7 +1159,10 @@ function ArtikelEinstellen() {
                           <span>GSB</span>
                         </label>
                         <label className={styles.radioLabel}>
-                          <input type="checkbox" name="zertifizierungen" value="Qualicoat"
+                          <input
+                            type="checkbox"
+                            name="zertifizierungen"
+                            value="Qualicoat"
                             checked={zertifizierungen.includes('Qualicoat')}
                             onChange={(e) => {
                               const checked = e.target.checked;
@@ -1122,7 +1240,7 @@ function ArtikelEinstellen() {
                         {sondereffekteOffen && (
                           <motion.div className={styles.checkboxGrid} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
                             {[
-                              'Hochwetterfest','Ultra Hochwetterfest','Transparent','Niedrigtemperaturpulver','Hochtemperaturpulver','Anti-Ausgasung',
+                              'Hochwetterfest','Ultra Hochwetterfest','Transparent','Niedrigtemp.pulver','Hochtemp.pulver','Anti-Ausgasung',
                               'Kratzresistent','Elektrisch Ableitfähig','Solar geeignet','Soft-Touch','Hammerschlag','Eisenglimmer','Perlglimmer',
                               'Selbstreinigend','Anti-Bakteriell','Anti-Grafitti','Anti-Quietsch','Anti-Rutsch',
                             ].map((eff) => (
@@ -1155,7 +1273,7 @@ function ArtikelEinstellen() {
                         {sondereffekteOffen && (
                           <motion.div className={styles.checkboxGrid} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}>
                             {[
-                              'Hochwetterfest','Ultra Hochwetterfest','Transparent','Kratzresistent','Elektrisch Ableitfähig','Solar geeignet','Soft-Touch',
+                              'Hochwetterfest','Ultra Hochwetterfest','Transparent','Kratzresistent','Elektr. Ableitfähig','Solar geeignet','Soft-Touch',
                               'Hammerschlag','Eisenglimmer','Perlglimmer','Selbstreinigend','Anti-Bakteriell','Anti-Grafitti','Anti-Quietsch','Anti-Rutsch',
                             ].map((eff) => (
                               <label key={eff} className={styles.radioLabel}>
@@ -1185,6 +1303,7 @@ function ArtikelEinstellen() {
                         Aufladung: <span style={{ color: 'red' }}>*</span>
                       </legend>
 
+                      {/* "Pflicht" für Screenreader/Validation */}
                       {aufladung.length === 0 && (
                         <input type="checkbox" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} tabIndex={-1} onChange={() => {}} />
                       )}
@@ -1233,7 +1352,7 @@ function ArtikelEinstellen() {
                       maxLength={600}
                       rows={6}
                       value={beschreibung}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBeschreibung(e.target.value)}
+                      onChange={(e) => setBeschreibung(e.target.value)}
                       placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
                     />
                     <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
@@ -1252,7 +1371,7 @@ function ArtikelEinstellen() {
           </legend>
 
           <div className={styles.lieferContainer}>
-            {/* Custom Werktags-Datepicker */}
+            {/* Werktags-Datepicker */}
             <label className={styles.label} style={{ position: 'relative' }}>
               Lieferdatum:
               <div ref={dateFieldRef} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
@@ -1280,7 +1399,7 @@ function ArtikelEinstellen() {
                     month={calMonth}
                     onMonthChange={setCalMonth}
                     selected={lieferDatum}
-                    onSelect={(d: Date) => { setLieferDatum(d); /* useEffect schließt */ }}
+                    onSelect={(d: Date) => { setLieferDatum(d); }}
                     isDisabled={isDisabledDay}
                     minDate={today}
                   />
@@ -1326,9 +1445,7 @@ function ArtikelEinstellen() {
                     className={`${styles.input} ${formAbgesendet && !vorname.trim() ? styles.inputError : ''}`}
                     value={vorname}
                     maxLength={15}
-                    onChange={(e) =>
-                      setVorname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
-                    }
+                    onChange={(e) => setVorname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))}
                   />
                 </label>
 
@@ -1339,9 +1456,7 @@ function ArtikelEinstellen() {
                     className={`${styles.input} ${formAbgesendet && !nachname.trim() ? styles.inputError : ''}`}
                     maxLength={30}
                     value={nachname}
-                    onChange={(e) =>
-                      setNachname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
-                    }
+                    onChange={(e) => setNachname(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))}
                   />
                 </label>
 
@@ -1349,12 +1464,10 @@ function ArtikelEinstellen() {
                   Firma
                   <input
                     type="text"
-                    className={styles.input} // kein Pflichtfehler
+                    className={styles.input}
                     maxLength={20}
                     value={firma}
-                    onChange={(e) =>
-                      setFirma(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-&]/g, ''))
-                    }
+                    onChange={(e) => setFirma(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-&]/g, ''))}
                   />
                 </label>
 
@@ -1365,9 +1478,7 @@ function ArtikelEinstellen() {
                     className={`${styles.input} ${formAbgesendet && !strasse.trim() ? styles.inputError : ''}`}
                     maxLength={40}
                     value={strasse}
-                    onChange={(e) =>
-                      setStrasse(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-]/g, ''))
-                    }
+                    onChange={(e) => setStrasse(e.target.value.replace(/[^a-zA-Z0-9äöüÄÖÜß .\-]/g, ''))}
                   />
                 </label>
 
@@ -1378,9 +1489,7 @@ function ArtikelEinstellen() {
                     className={`${styles.input} ${formAbgesendet && (!hausnummer.trim() || !/\d/.test(hausnummer)) ? styles.inputError : ''}`}
                     maxLength={4}
                     value={hausnummer}
-                    onChange={(e) =>
-                      setHausnummer(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))
-                    }
+                    onChange={(e) => setHausnummer(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
                   />
                 </label>
 
@@ -1404,9 +1513,7 @@ function ArtikelEinstellen() {
                     className={`${styles.input} ${formAbgesendet && !ort.trim() ? styles.inputError : ''}`}
                     value={ort}
                     maxLength={30}
-                    onChange={(e) =>
-                      setOrt(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))
-                    }
+                    onChange={(e) => setOrt(e.target.value.replace(/[^a-zA-ZäöüÄÖÜß \-]/g, ''))}
                   />
                 </label>
 
@@ -1418,20 +1525,10 @@ function ArtikelEinstellen() {
                     onChange={(e) => setLand(e.target.value)}
                   >
                     <option value="" disabled hidden>Bitte wählen</option>
-                    <option value="Österreich">Österreich</option>
                     <option value="Deutschland">Deutschland</option>
+                    <option value="Österreich">Österreich</option>
                     <option value="Schweiz">Schweiz</option>
                     <option value="Liechtenstein">Liechtenstein</option>
-                    <option value="Italien">Italien</option>
-                    <option value="Frankreich">Frankreich</option>
-                    <option value="Niederlande">Niederlande</option>
-                    <option value="Belgien">Belgien</option>
-                    <option value="Luxemburg">Luxemburg</option>
-                    <option value="Tschechien">Tschechien</option>
-                    <option value="Slowakei">Slowakei</option>
-                    <option value="Slowenien">Slowenien</option>
-                    <option value="Polen">Polen</option>
-                    <option value="Ungarn">Ungarn</option>
                   </select>
                 </label>
               </div>
@@ -1475,41 +1572,50 @@ function ArtikelEinstellen() {
             )}
           </div>
         </fieldset>
+        {/* Bewerbung – alles in einem Panel */}
+<div className={styles.bewerbungPanel} role="region" aria-label="Bewerbung deiner Anfrage">
+  <div className={styles.bewerbungHeader}>
+    <span className={styles.bewerbungIcon} aria-hidden></span>
+    <p className={styles.bewerbungText}>
+      Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
+    </p>
+  </div>
 
-        {/* Bewerbung */}
-        <div className={styles.bewerbungGruppe}>
-          <label className={styles.bewerbungOption}>
-            <input
-              type="checkbox"
-              onChange={() => toggleBewerbung('startseite')}
-              checked={(bewerbungOptionen as string[]).includes('startseite')}
-            />
-            <Star size={18} color="#f5b400" />
-            Anzeige auf Startseite hervorheben (39,99 €)
-          </label>
+  <div className={styles.bewerbungGruppe}>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('startseite')}
+        checked={(bewerbungOptionen as string[]).includes('startseite')}
+      />
+      <Star size={18} color="#f5b400" />
+      Anzeige auf Startseite hervorheben (39,99 €)
+    </label>
 
-          <label className={styles.bewerbungOption}>
-            <input
-              type="checkbox"
-              onChange={() => toggleBewerbung('suche')}
-              checked={(bewerbungOptionen as string[]).includes('suche')}
-            />
-            <Search size={18} color="#0070f3" />
-            Anzeige in Suche priorisieren (17,99 €)
-          </label>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('suche')}
+        checked={(bewerbungOptionen as string[]).includes('suche')}
+      />
+      <Search size={18} color="#0070f3" />
+      Anzeige in Suche priorisieren (17,99 €)
+    </label>
 
-          <label className={styles.bewerbungOption}>
-            <input
-              type="checkbox"
-              onChange={() => toggleBewerbung('premium')}
-              checked={(bewerbungOptionen as string[]).includes('premium')}
-            />
-            <Crown size={18} color="#9b59b6" />
-            Premium-Anzeige aktivieren (19,99 €)
-          </label>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('premium')}
+        checked={(bewerbungOptionen as string[]).includes('premium')}
+      />
+      <Crown size={18} color="#9b59b6" />
+      Premium-Anzeige aktivieren (19,99 €)
+    </label>
 
-          <p className={styles.steuerHinweis}>Preise inkl. Ust. / MwSt.</p>
-        </div>
+    <p className={styles.steuerHinweis}>Preise inkl. Ust. / MwSt.</p>
+  </div>
+</div>
+
 
         {/* AGB */}
         <div className={styles.agbContainer} ref={agbRef}>
@@ -1518,15 +1624,21 @@ function ArtikelEinstellen() {
             animate={agbError ? { x: [0, -4, 4, -4, 0] } : {}}
             transition={{ duration: 0.3 }}
           >
-            <input
-              type="checkbox"
-              id="agbCheckbox"
-              checked={agbAccepted}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setAgbAccepted(e.target.checked);
-                setAgbError(false);
-              }}
-            />
+            <label
+              className={`${styles.agbLabel} ${styles.checkboxLabel} ${agbError ? styles.agbError : ''}`}
+              htmlFor="agbCheckbox"
+            >
+              <input
+                type="checkbox"
+                id="agbCheckbox"
+                checked={agbAccepted}
+                onChange={(e) => {
+                  setAgbAccepted(e.target.checked);
+                  setAgbError(false);
+                }}
+              />
+            </label>
+
             <span>
               Ich akzeptiere die{' '}
               <a href="/agb" className={styles.nutzungsbedingungenLink}>Allgemeinen Geschäftsbedingungen</a>{' '}
@@ -1555,12 +1667,12 @@ function ArtikelEinstellen() {
 
               <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
               <p><strong>Titel:</strong> {titel || '–'}</p>
-              <p><strong>Farbton:</strong> {farbton || '–'}</p>
+              <p><strong>Farbtonbezeichnung:</strong> {farbton || '–'}</p>
               <p><strong>Menge (kg):</strong> {menge || '–'}</p>
               <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
               <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
               <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-              <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+              <p><strong>Hersteller:</strong> {displayHersteller(hersteller)}</p>
               <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
               <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
               <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
@@ -1574,6 +1686,8 @@ function ArtikelEinstellen() {
               <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
               <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
               <p><strong>Lieferdatum:</strong> {lieferDatum ? lieferDatum.toLocaleDateString('de-DE') : '–'}</p>
+              <p><strong>Lieferort:</strong> {[plz, ort].filter(Boolean).join(' ') || ort || (lieferadresseOption === 'profil' ? [profilAdresse.plz, profilAdresse.ort].filter(Boolean).join(' ') || profilAdresse.ort : '–')}</p>
+              <p><strong>Lieferadresse:</strong> {lieferadresseOption === 'profil' ? toAddressString(profilAdresse) : toAddressString({ vorname, nachname, firma, strasse, hausnummer, plz, ort, land }) || '–'}</p>
               <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
               <p><strong>Registrierung:</strong> {nutzerTyp || '–'}</p>
             </motion.div>
@@ -1594,7 +1708,7 @@ function ArtikelEinstellen() {
 
         {/* Reset */}
         <div className={styles.buttonRechts}>
-          <button type="button" onClick={formularZuruecksetzen} className={styles.zuruecksetzenButton}>
+          <button type="button" onClick={formularZuruecksetzen} className={styles.zuruecksetzenButton} disabled={ladeStatus}>
             Alle Eingaben zurücksetzen
           </button>
         </div>
@@ -1608,6 +1722,32 @@ function ArtikelEinstellen() {
           </div>
         </div>
       </form>
+
+      {/* ---------- POPUP: während des Ladens sichtbar ---------- */}
+      <AnimatePresence>
+        {ladeStatus && (
+          <motion.div
+            className={styles.modalOverlay}
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className={styles.modalCard}
+              initial={{ y: 10, scale: 0.98, opacity: 0 }}
+              animate={{ y: 0, scale: 1, opacity: 1 }}
+              exit={{ y: 10, scale: 0.98, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              <Loader2 className={styles.modalIcon} />
+              <h3 className={styles.modalTitle}>Wir veröffentlichen deine Anzeige …</h3>
+              <p className={styles.modalText}>Wir leiten gleich weiter.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

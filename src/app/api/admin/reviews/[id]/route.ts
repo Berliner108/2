@@ -5,7 +5,7 @@ import { supabaseServer } from '@/lib/supabase-server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Record<string, string | string[]> }) {
   try {
     const sb = await supabaseServer()
 
@@ -13,7 +13,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    // 2) Admin-Check (RLS-Policy rev_delete_admin greift zusätzlich)
+    // 2) Admin-Check
     const { data: prof, error: pErr } = await sb
       .from('profiles')
       .select('role')
@@ -25,13 +25,14 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     }
 
     // 3) Löschen
+    const id = Array.isArray(params.id) ? params.id[0] : params.id
     const { data, error } = await sb
       .from('reviews')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .select('id') // returning
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ ok: true, deleted: data?.length ?? 0 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to delete review' }, { status: 500 })

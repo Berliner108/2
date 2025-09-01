@@ -499,7 +499,7 @@
 
 
 /* Für alle kleineren und mittleren Geräte */
-@media (min-width: 665px) and (max-width: 1023px) 
+@media (min-width: 600px) and (max-width: 1181px) 
   {
   .sidebar {
     position: fixed;
@@ -514,6 +514,17 @@
     transition: transform 0.3s ease-in-out;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
   }
+  .cardText1 {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+
+  white-space: normal;          /* kein nowrap */
+  overflow-wrap: anywhere;      /* moderne Lösung */
+  word-break: break-word;       /* Fallback */
+  hyphens: auto;                /* schöne Trennstriche (mit lang="de") */
+}
+
 
   .sidebarOpen {
     transform: translateX(0);

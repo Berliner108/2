@@ -1,5 +1,5 @@
 .container {
-  max-width: 88%;
+  max-width: 90%;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -452,17 +452,6 @@
   color: #b91c1c;
   font-weight: 500;
 }
-.spinner {
-  margin-left: 10px;
-  width: 16px;
-  height: 16px;
-  border: 2px solid white;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-}
 .bewerbungOption {
   flex: 1 1 200px;
   display: flex;
@@ -564,6 +553,7 @@
   color: #023e8a;
   text-decoration: none;
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -597,4 +587,264 @@
     margin-left: 5px;
     display: none;    
   }
+}
+/* ===== Fancy Top Loader (farbig) ===== */
+.topLoader {
+  position: sticky;
+  top: 0;
+  height: 4px;
+  width: 100%;
+  z-index: 60;
+  overflow: hidden;
+  background: transparent;
+}
+.topLoaderInner {
+  height: 100%;
+  width: 30%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6, #60a5fa);
+  background-size: 300% 100%;
+  animation: sweep 1.1s ease-in-out infinite;
+  transform: translateX(-50%);
+}
+@keyframes sweep {
+  0% { transform: translateX(-50%); background-position: 0% 0; }
+  100% { transform: translateX(350%); background-position: 100% 0; }
+}
+
+/* ===== Page Skeleton ===== */
+.skeletonPage {
+  display: grid;
+  gap: 16px;
+  padding: 16px 0 32px 0;
+}
+
+.skelHeader { display: grid; gap: 10px; }
+.skelLine {
+  height: 16px;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+.skelLineWide { height: 24px; width: 60%; }
+
+.skelBlock, .skelBlockSmall, .skelDrop, .skelDropSmall, .skelInput {
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.04);
+}
+.skelBlock { height: 56px; }
+.skelBlockSmall { height: 40px; width: 50%; }
+.skelInput { height: 44px; }
+.skelDrop { height: 180px; }
+.skelDropSmall { height: 120px; }
+
+.skelTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelTwoCols { grid-template-columns: 1fr; }
+}
+
+.skelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelGrid { grid-template-columns: 1fr; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0, 0 0; }
+  100% { background-position: 200% 0, 0 0; }
+}
+/* Optional: pulsierende Punkte statt Spinner */
+.spinner {
+  display: inline-block;
+  width: 3ch;
+  text-align: left;
+  margin-left: 8px;
+}
+.spinner::after {
+  content: '●●●';
+  letter-spacing: 2px;
+  animation: dots 1s steps(4, end) infinite;
+  color: currentColor;
+  opacity: 0.7;
+}
+@keyframes dots {
+  0% { clip-path: inset(0 2ch 0 0); }
+  33% { clip-path: inset(0 1ch 0 0); }
+  66% { clip-path: inset(0 0ch 0 0); }
+  100% { clip-path: inset(0 2ch 0 0); }
+}
+/* Vollflächiger, nicht klickbarer Overlay-Hintergrund */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45); /* slate-900/45 */
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  pointer-events: all;   /* blockiert Klicks auf die Seite */
+  cursor: progress;      /* signalisiert: wir leiten weiter */
+}
+
+/* Karte im Overlay (keine Interaktion nötig) */
+.modalCard {
+  width: min(92vw, 440px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  user-select: none;
+}
+
+/* Icon + Texte */
+.modalIcon {
+  width: 40px;
+  height: 40px;
+  color: #10b981; /* grün */
+  display: block;
+  margin: 2px auto 8px;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0 0 6px;
+  color: #0f172a; /* slate-900 */
+}
+
+.modalText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569; /* slate-600 */
+}
+
+/* Motion-User achten */
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay, .modalCard {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.checkboxGroup {
+  margin-bottom: 20px;
+  font-size: 17px;
+}
+.checkboxLabel,
+.radioLabel {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Checkbox: nativ, nur Farbe */
+.checkboxLabel input[type="checkbox"],
+.radioLabel input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #00e5ff;
+}
+
+/* Radio: custom, damit nichts über den Rand „blutet“ */
+.checkboxLabel input[type="radio"],
+.radioLabel   input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;          /* Außen-Durchmesser */
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin-right: 8px;
+  cursor: pointer;
+  box-sizing: border-box; /* saubere Ränder */
+}
+
+.checkboxLabel input[type="radio"]::before,
+.radioLabel   input[type="radio"]::before {
+  content: "";
+  width: 8px;           /* Innen-Durchmesser */
+  height: 8px;
+  border-radius: 50%;
+  background: #00b4d8;  /* Punktfarbe */
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+
+/* verhindert, dass der Browser die Scrollposition „ankert“ */
+.grid { overflow-anchor: none; }
+
+.checkboxLabel input[type="radio"]:checked,
+.radioLabel   input[type="radio"]:checked {
+  border-color: #00e5ff;
+}
+.checkboxLabel input[type="radio"]:checked::before,
+.radioLabel   input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* zugänglicher, dezenter Fokus */
+.checkboxLabel input[type="radio"]:focus-visible,
+.checkboxLabel input[type="checkbox"]:focus-visible,
+.radioLabel   input[type="radio"]:focus-visible,
+.radioLabel   input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.35);
+  outline-offset: 2px;
+}
+/* Panel-Hintergrund für Hinweis + Optionen */
+.bewerbungPanel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  background: linear-gradient(to right, rgba(0,229,255,.12), rgba(0,180,216,.12));
+}
+
+/* Kopfzeile im Panel */
+.bewerbungHeader {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+
+}
+.bewerbungIcon { font-size: 1.1rem; }
+.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
+
+/* Gruppe im Panel enger + ohne Außenabstand */
+.bewerbungPanel .bewerbungGruppe {
+  margin: 0;                 /* statt vorher 4rem */
+  gap: 1rem;                 /* kompakter als 1.5rem */
+}
+
+/* Mobile leicht kompakter */
+@media (max-width: 599px) {
+  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
+  .bewerbungText { font-size: .95rem; }
 }

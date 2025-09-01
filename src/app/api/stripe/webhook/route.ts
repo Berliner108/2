@@ -89,12 +89,12 @@ export async function POST(req: Request) {
 
         // Anfrage auf paid
         if (lackId) {
-          const { error } = await admin
-            .from('lack_requests')
-            .update({ status: 'paid' })
-            .eq('id', lackId)
-          if (error) throw error
-        }
+                const { error } = await admin
+                    .from('lack_requests')
+                    .update({ status: 'paid', published: true, updated_at: new Date().toISOString() })
+                    .eq('id', lackId)
+                if (error) throw error
+}
         break
       }
 

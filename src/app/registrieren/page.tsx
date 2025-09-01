@@ -248,7 +248,7 @@ const Register = () => {
           return;
         }
       } else if (!available) {
-        setErrors({ username: 'Benutz ername ist bereits vergeben.' });
+        setErrors({ username: 'Benutzername ist bereits vergeben.' });
         return;
       }
 

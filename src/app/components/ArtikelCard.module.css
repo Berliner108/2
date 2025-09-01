@@ -29,7 +29,7 @@
   border-radius: 10px;
   background: white;
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   transition: box-shadow 0.3s ease;
   position: relative; /* wichtig für Label-Position */
@@ -62,7 +62,6 @@
   font-size: 20px;
   margin-bottom: 15px;
 }
-.cardText2,
 .cardText3,
 .cardText4,
 .cardText5,
@@ -71,13 +70,25 @@
   margin-bottom: 4px;
   color: #555;
 }
-
+.cardText2 {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #555;
+}
+.cardText3 {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #555;
+}
 
 .cardLink {
   text-decoration: none;
   color: inherit;
   display: block;
 }
+
 
 
 .gesponsertLabel {
@@ -109,14 +120,15 @@
 }
 
 .gewerblichLabel {
-  background-color: #d1e7dd;
+  background-color: rgba(209, 231, 221, 0.75); /* #d1e7dd bei 75% Deckkraft */
   color: #0f5132;
 }
 
 .privatLabel {
-  background-color: #e2e3e5;
+  background-color: rgba(226, 227, 229, 0.75); /* #e2e3e5 bei 75% Deckkraft */
   color: #41464b;
 }
+
 .cardBildContainer {
   display: flex;
   flex-direction: column;
@@ -141,28 +153,20 @@
     margin-top: 8px;
     text-align: left;
   }
-
-
-
   .gewerblichLabel {
     background-color: #d1e7dd;
     color: #0f5132;
   }
-
   .privatLabel {
     background-color: #e2e3e5;
     color: #41464b;
   }
-
- 
-
   .card {
   flex-direction: row;
   align-items: flex-start;
   padding: 15px 0; /* oben/unten 15px, seitlich 0 */
   width: 100vw;
   border-radius: 0; /* optional für randloses Design */
-  
 }
 
   
@@ -237,7 +241,130 @@
     height: 100%;
     z-index: 999;
   }
+   .card {
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 15px 0; /* oben/unten 15px, seitlich 0 */
+  width: 100vw;
+  border-radius: 0; /* optional für randloses Design */
+  margin-left: -10px;
+}
 }
 
-  
+/* Badge für Lieferdatum */
+.deadlineBadge {
+  display: inline-block;
+  margin-left: 8px;
+  margin-top: -5px;
+  padding: 9px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 600;
+  vertical-align: middle;
+}
 
+.deadlineOk {
+  background: #e6f6ea;   /* sanftes Grün */
+  color: green;
+}
+
+.deadlineWarn {
+  background: #fff3cd;   /* Gelb */
+  color: #664d03;
+}
+
+.deadlineDanger {
+  background: #f8d7da;   /* Rot */
+  color: #842029;
+}  
+
+
+@media (max-width: 375px){  
+/* Badge für Lieferdatum */
+.deadlineBadge {
+  display: inline-block;
+  padding: 5px;
+  margin-top: 2px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 600;
+}}
+@media (max-width: 601px){
+.cardText1 {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+  white-space: normal;          /* kein nowrap */
+  overflow-wrap: anywhere;      /* moderne Lösung */
+  word-break: break-word;       /* Fallback */
+  hyphens: auto;                /* schöne Trennstriche (mit lang="de") */
+}}
+/* Kleine, farbige Radios – nur äußerer Kreis verkleinert */
+.radioGroup .radioLabel input[type="radio"],
+.checkboxGroup .checkboxLabel input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;                 /* Außendurchmesser */
+  height: 12px;
+  border: 1px solid #94a3b8;   /* Außenring-Farbe (slate-400) */
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin-right: .4rem;
+  box-sizing: border-box;
+  vertical-align: -1px;
+  cursor: pointer;
+}
+
+/* Innenpunkt + Farben */
+.radioGroup .radioLabel input[type="radio"]::before,
+.checkboxGroup .checkboxLabel input[type="radio"]::before {
+  content: "";
+  width: 6px;                  /* Innendurchmesser */
+  height: 6px;
+  border-radius: 50%;
+  background: #00b4d8;         /* Punktfarbe */
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+
+/* Checked-State: Außenring + Punkt sichtbar */
+.radioGroup .radioLabel input[type="radio"]:checked,
+.checkboxGroup .checkboxLabel input[type="radio"]:checked {
+  border-color: #00e5ff;       /* Außenring wenn aktiv */
+}
+.radioGroup .radioLabel input[type="radio"]:checked::before,
+.checkboxGroup .checkboxLabel input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* Tastatur-Fokus */
+.radioGroup .radioLabel input[type="radio"]:focus-visible,
+.checkboxGroup .checkboxLabel input[type="radio"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, .4);
+  outline-offset: 2px;
+}
+
+/* Disabled */
+.radioGroup .radioLabel input[type="radio"]:disabled,
+.checkboxGroup .checkboxLabel input[type="radio"]:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* Sehr kleine Screens: noch kompakter */
+@media (max-width: 599px) {
+  .radioGroup .radioLabel input[type="radio"],
+  .checkboxGroup .checkboxLabel input[type="radio"] {
+    width: 10px;
+    height: 10px;
+  }
+  .radioGroup .radioLabel input[type="radio"]::before,
+  .checkboxGroup .checkboxLabel input[type="radio"]::before {
+    width: 4px;
+    height: 4px;
+  }
+}

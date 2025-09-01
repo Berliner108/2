@@ -3,7 +3,7 @@ export type NavItem = { title: string; href: string; links: NavLink[] }
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    title: 'Angebote einholen',
+    title: 'Aufträge vergeben',
     href: '/angebote',
     links: [
       { href: '/angebote?first=Nasslackieren', text: 'Nasslackieren' },
@@ -19,6 +19,14 @@ export const NAV_ITEMS: NavItem[] = [
     ]
   },
   {
+    title: 'Lacke beschaffen',
+    href: '/sonderlacke',
+    links: [
+      { href: '/sonderlacke?kategorie=nasslack', text: 'Nasslack' },
+      { href: '/sonderlacke?kategorie=pulverlack', text: 'Pulverlack' }
+    ]
+  },
+  {
     title: 'Shop',
     href: '/kaufen',
     links: [
@@ -27,14 +35,7 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/kaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
     ]
   },
-  {
-    title: 'Lacke anfragen',
-    href: '/sonderlacke',
-    links: [
-      { href: '/sonderlacke?kategorie=nasslack', text: 'Nasslack' },
-      { href: '/sonderlacke?kategorie=pulverlack', text: 'Pulverlack' }
-    ]
-  },
+  
   {
     title: 'Auftragsbörse',
     href: '/auftragsboerse',
@@ -51,6 +52,15 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/auftragsboerse',                                  text: 'Alle' }
     ]
   },
+  
+  {
+    title: 'Lackanfragen-Börse',
+    href: '/lackanfragen',
+    links: [
+      { href: '/lackanfragen?kategorie=Nasslack', text: 'Nasslack' },
+      { href: '/lackanfragen?kategorie=Pulverlack', text: 'Pulverlack' }
+    ]
+  },
   {
     title: 'Verkaufen',
     href: '/verkaufen',
@@ -58,14 +68,6 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/verkaufen?kategorie=Nasslack', text: 'Nasslacke' },
       { href: '/verkaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
       { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
-    ]
-  },
-  {
-    title: 'Lackanfragen-Börse',
-    href: '/lackanfragen',
-    links: [
-      { href: '/lackanfragen?kategorie=Nasslack', text: 'Nasslack' },
-      { href: '/lackanfragen?kategorie=Pulverlack', text: 'Pulverlack' }
     ]
   },
   {
