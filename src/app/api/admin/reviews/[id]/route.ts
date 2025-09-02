@@ -1,43 +1,54 @@
-// src/app/api/admin/reviews/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+// src/app/api/lack/requests/[id]/offer/route.ts
+import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }   // <- Promise!
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> } // Next 15: params is a Promise
 ) {
   try {
-    const { id } = await params                       // <- await erforderlich
-    const sb = await supabaseServer()
+    const { id } = await params
 
-    // 1) Auth
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-
-    // 2) Admin-Check
-    const { data: prof, error: pErr } = await sb
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    if (pErr) return NextResponse.json({ error: pErr.message }, { status: 400 })
-    if (!prof || (prof.role !== 'admin' && prof.role !== 'superadmin')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const userClient = await supabaseServer()
+    const { data: auth } = await userClient.auth.getUser()
+    const user = auth?.user
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // 3) Löschen
-    const { data, error } = await sb
-      .from('reviews')
-      .delete()
-      .eq('id', id)
-      .select('id')
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    return NextResponse.json({ ok: true, deleted: data?.length ?? 0 })
+    // Beispiel: Angebot anlegen (Tabellen-/Feldnamen ggf. anpassen)
+    const admin = supabaseAdmin()
+    const insert = {
+      request_id: id,
+      user_id: user.id,
+      amount: body.amount ?? null,
+      message: body.message ?? null,
+      // weitere Felder aus body übernehmen, falls vorhanden:
+      // delivery_date: body.delivery_date ?? null,
+      // attachments: body.attachments ?? null,
+    }
+
+    const { data, error } = await admin
+      .from('lack_offers') // <— ggf. auf eure Tabelle ändern
+      .insert(insert)
+      .select('id')
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({ ok: true, offerId: data.id })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed to delete review' }, { status: 500 })
+    return NextResponse.json({ error: e?.message ?? 'Failed to create offer' }, { status: 500 })
   }
 }
