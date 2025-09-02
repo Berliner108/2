@@ -18,14 +18,13 @@ export async function GET(req: NextRequest) {
 
     if (userId) {
       rateeId = userId
-      // username optional dazu laden
       const { data: p } = await admin.from('profiles').select('username').eq('id', userId).maybeSingle()
       rateeUsername = p?.username ?? null
     } else if (username) {
       const { data: p, error } = await admin
         .from('profiles')
         .select('id, username')
-        .ilike('username', username) // case-insensitiv
+        .ilike('username', username)
         .maybeSingle()
       if (error) return NextResponse.json({ error: error.message }, { status: 400 })
       if (!p)     return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -36,21 +35,24 @@ export async function GET(req: NextRequest) {
     }
 
     // 2) Aggregation
-    // total
     const totalQ = admin.from('reviews').select('id', { count: 'exact', head: true }).eq('ratee_id', rateeId)
     const goodQ  = admin.from('reviews').select('id', { count: 'exact', head: true }).eq('ratee_id', rateeId).eq('rating', 'good')
     const neutQ  = admin.from('reviews').select('id', { count: 'exact', head: true }).eq('ratee_id', rateeId).eq('rating', 'neutral')
     const lastQ  = admin.from('reviews').select('created_at').eq('ratee_id', rateeId).order('created_at', { ascending: false }).limit(1)
 
-    const [{ count: total = 0 }, { count: good = 0 }, { count: neutral = 0 }, { data: lastRows, error: lastErr }] =
-      await Promise.all([totalQ, goodQ, neutQ, lastQ])
+    const [totalRes, goodRes, neutRes, lastRes] = await Promise.all([totalQ, goodQ, neutQ, lastQ])
 
-    if (lastErr) return NextResponse.json({ error: lastErr.message }, { status: 400 })
+    if (lastRes.error) return NextResponse.json({ error: lastRes.error.message }, { status: 400 })
 
-    const goodRatio = total > 0 ? good / total : 0
+    // counts sicher in number umwandeln
+    const total: number   = Number(totalRes.count  ?? 0)
+    const good: number    = Number(goodRes.count   ?? 0)
+    const neutral: number = Number(neutRes.count   ?? 0)
+
+    const goodRatio  = total > 0 ? good / total : 0
     // Mapping: good=5.0 ★, neutral=4.0 ★ → Durchschnitt = 4 + goodRatio
-    const avgStars  = total > 0 ? +(4 + goodRatio).toFixed(2) : null
-    const lastReviewAt = lastRows && lastRows.length ? lastRows[0].created_at : null
+    const avgStars   = total > 0 ? +(4 + goodRatio).toFixed(2) : null
+    const lastReviewAt = lastRes.data?.[0]?.created_at ?? null
 
     return NextResponse.json({
       userId: rateeId,
@@ -59,8 +61,8 @@ export async function GET(req: NextRequest) {
       goodCount: good,
       neutralCount: neutral,
       goodRatio,
-      avgStars,        // z.B. 4.67
-      lastReviewAt,    // ISO
+      avgStars,
+      lastReviewAt,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to fetch review stats' }, { status: 500 })
