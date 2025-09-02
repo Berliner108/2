@@ -5,8 +5,12 @@ import { supabaseServer } from '@/lib/supabase-server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(_req: NextRequest, { params }: { params: Record<string, string | string[]> }) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }   // <- Promise!
+) {
   try {
+    const { id } = await params                       // <- await erforderlich
     const sb = await supabaseServer()
 
     // 1) Auth
@@ -25,12 +29,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Record<str
     }
 
     // 3) Löschen
-    const id = Array.isArray(params.id) ? params.id[0] : params.id
     const { data, error } = await sb
       .from('reviews')
       .delete()
       .eq('id', id)
-      .select('id') // returning
+      .select('id')
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ ok: true, deleted: data?.length ?? 0 })
