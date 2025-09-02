@@ -52,25 +52,26 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    const [{ count: total = 0, error: countErr }, { data: rows, error: pageErr }] =
-      await Promise.all([countQ, pageQ])
+    const [countRes, pageRes] = await Promise.all([countQ, pageQ])
 
-    if (countErr) return NextResponse.json({ error: countErr.message }, { status: 400 })
-    if (pageErr)  return NextResponse.json({ error: pageErr.message }, { status: 400 })
+    if (countRes.error) return NextResponse.json({ error: countRes.error.message }, { status: 400 })
+    if (pageRes.error)  return NextResponse.json({ error: pageRes.error.message }, { status: 400 })
+
+    const total: number = Number(countRes.count ?? 0)
 
     // 3) Rater-Namen auflösen
-    const raterIds = Array.from(new Set((rows ?? []).map(r => r.rater_id).filter(Boolean)))
+    const raterIds = Array.from(new Set((pageRes.data ?? []).map(r => r.rater_id).filter(Boolean))) as string[]
     let raterMap = new Map<string, { id: string; username: string | null }>()
     if (raterIds.length) {
       const { data: profs, error: profErr } = await admin
         .from('profiles')
         .select('id, username')
-        .in('id', raterIds as string[])
+        .in('id', raterIds)
       if (profErr) return NextResponse.json({ error: profErr.message }, { status: 400 })
       for (const p of profs ?? []) raterMap.set(p.id, { id: p.id, username: p.username ?? null })
     }
 
-    const reviews = (rows ?? []).map(r => ({
+    const reviews = (pageRes.data ?? []).map(r => ({
       id: r.id,
       rating: r.rating as 'good' | 'neutral',
       comment: r.comment,
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
     }))
 
     const pages = Math.max(1, Math.ceil(total / pageSize))
+
     return NextResponse.json({
       ratee: { userId: rateeId, username: rateeUsername },
       page,
