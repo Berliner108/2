@@ -8,10 +8,10 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(
   req: NextRequest,
-  ctx: RouteContext<'/api/lack/requests/[id]/offer'> // Next 15: Context-Helfer + async params
+  { params }: { params: Promise<{ id: string }> } // Next 15: params ist ein Promise
 ) {
   try {
-    const { id } = await ctx.params // <-- zwingend await in v15
+    const { id } = await params
 
     const userClient = await supabaseServer()
     const { data: auth } = await userClient.auth.getUser()
@@ -30,15 +30,14 @@ export async function POST(
     const insert = {
       request_id: id,
       user_id: user.id,
-      amount: body.amount ?? null,
-      message: body.message ?? null,
-      // weitere Felder:
-      // delivery_date: body.delivery_date ?? null,
-      // attachments: body.attachments ?? null,
+      amount: (body as any).amount ?? null,
+      message: (body as any).message ?? null,
+      // delivery_date: (body as any).delivery_date ?? null,
+      // attachments: (body as any).attachments ?? null,
     }
 
     const { data, error } = await admin
-      .from('lack_offers') // ggf. an eure Tabelle anpassen
+      .from('lack_offers')
       .insert(insert)
       .select('id')
       .single()
