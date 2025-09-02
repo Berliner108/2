@@ -10,8 +10,13 @@ type Body = {
   comment: string
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> } // Next 15: params ist ein Promise
+) {
   try {
+    const { id } = await params
+
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -31,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { data: order, error: oErr } = await sb
       .from('orders')
       .select('id, buyer_id, supplier_id, status, released_at, refunded_at')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle()
 
     if (oErr)  return NextResponse.json({ error: `order read failed: ${oErr.message}` }, { status: 400 })
@@ -57,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           rating: r as 'good' | 'neutral',
           comment: c,
         },
-        { onConflict: 'order_id,rater_id' } // existiert? -> update
+        { onConflict: 'order_id,rater_id' }
       )
       .select('id')
       .single()
