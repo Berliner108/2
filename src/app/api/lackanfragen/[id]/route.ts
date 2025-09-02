@@ -66,9 +66,13 @@ function normalizeZustand(z?: unknown): string {
   return (z ?? '').toString()
 }
 
-export async function GET(_req: Request, ctx: { params: { id: string } }) {
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }   // Next 15: params ist ein Promise
+) {
+  const { id } = await params
+
   const supa = await supabaseServer()
-  const { id } = ctx.params
 
   // Datensatz
   const { data, error } = await supa
