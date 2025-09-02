@@ -6,19 +6,22 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 type Body = {
-  amountCents?: number              // bevorzugt: Preis in Cent
-  amount?: string | number          // alternativ: "149.99"
-  message?: string                  // kurze Nachricht an den Suchenden
-  expiresAt?: string | null         // ISO (optional)
+  amountCents?: number
+  amount?: string | number
+  message?: string
+  expiresAt?: string | null
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }   // <-- Promise
+) {
   try {
+    const { id: requestId } = await params            // <-- await erforderlich
+
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-
-    const requestId = params.id
     if (!requestId) return NextResponse.json({ error: 'Missing request id' }, { status: 400 })
 
     const input = (await req.json()) as Body
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: 'Cannot offer on your own request' }, { status: 400 })
     }
 
-    // Finale Erstellung (KEIN Update). Unique-Index (request_id, supplier_id) erzwingt 1 Angebot je Anbieter.
+    // Angebot anlegen (ein Angebot pro Anbieter per Unique-Index)
     const { data, error } = await sb
       .from('lack_offers')
       .insert({
@@ -68,13 +71,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         currency: 'eur',
         message,
         expires_at: expiresAt ? expiresAt.toISOString() : null,
-        // status bleibt 'active' (DB-Default), keine spätere Bearbeitung vorgesehen
       })
       .select('id, request_id, supplier_id, amount_cents, currency, status, expires_at, message, created_at')
       .single()
 
     if (error) {
-      // Duplicate-Offer sauber signalisieren (Unique-Index ux_lack_offers_one_per_supplier)
       const code = (error as any)?.code || ''
       const msg  = (error as any)?.message || ''
       if (code === '23505' || /ux_lack_offers_one_per_supplier/i.test(msg)) {
