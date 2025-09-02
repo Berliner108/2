@@ -1,5 +1,5 @@
 // src/app/api/lack/requests/[id]/offer/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
@@ -7,11 +7,11 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> } // Next 15: params is a Promise
+  req: NextRequest,
+  ctx: RouteContext<'/api/lack/requests/[id]/offer'> // Next 15: Context-Helfer + async params
 ) {
   try {
-    const { id } = await params
+    const { id } = await ctx.params // <-- zwingend await in v15
 
     const userClient = await supabaseServer()
     const { data: auth } = await userClient.auth.getUser()
@@ -32,21 +32,18 @@ export async function POST(
       user_id: user.id,
       amount: body.amount ?? null,
       message: body.message ?? null,
-      // weitere Felder aus body übernehmen, falls vorhanden:
+      // weitere Felder:
       // delivery_date: body.delivery_date ?? null,
       // attachments: body.attachments ?? null,
     }
 
     const { data, error } = await admin
-      .from('lack_offers') // <— ggf. auf eure Tabelle ändern
+      .from('lack_offers') // ggf. an eure Tabelle anpassen
       .insert(insert)
       .select('id')
       .single()
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 })
-    }
-
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ ok: true, offerId: data.id })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? 'Failed to create offer' }, { status: 500 })
