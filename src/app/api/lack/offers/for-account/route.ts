@@ -12,6 +12,18 @@ type ReqRow = {
   status: string | null
 }
 
+type OfferRow = {
+  id: string
+  request_id: string
+  supplier_id: string | null
+  amount_cents: number | null
+  item_amount_cents: number | null
+  shipping_cents: number | null
+  created_at: string
+  expires_at: string | null
+  status: string
+}
+
 export async function GET() {
   try {
     const sb = await supabaseServer()
@@ -32,20 +44,12 @@ export async function GET() {
     const nowIso = new Date().toISOString()
 
     // 2) Erhaltene Angebote für diese Requests (nur aktive & nicht abgelaufen)
-    let received: Array<{
-      id: string
-      request_id: string
-      supplier_id: string | null
-      amount_cents: number
-      created_at: string
-      expires_at: string | null
-      status: string
-    }> = []
+    let received: OfferRow[] = []
 
     if (reqIds.length) {
       const { data: rec, error: recErr } = await sb
         .from('lack_offers')
-        .select('id, request_id, supplier_id, amount_cents, created_at, expires_at, status')
+        .select('id, request_id, supplier_id, amount_cents, item_amount_cents, shipping_cents, created_at, expires_at, status')
         .in('request_id', reqIds)
         .eq('status', 'active')
         .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
@@ -54,54 +58,73 @@ export async function GET() {
       received = (rec || []) as any
     }
 
-    // 3) Vendor-Infos (Username + Rating) aus profiles per Admin-Client (um RLS-Probleme zu vermeiden)
+    // 3) Vendor-Infos (Username + Firma + Rating) aus profiles per Admin-Client
     const supplierIds = Array.from(
       new Set(received.map(o => o.supplier_id).filter((v): v is string => !!v))
     )
 
     const vendors = new Map<string, {
-      display: string
       handle: string | null
+      display: string | null
       rating?: number | null
       rating_count?: number | null
     }>()
     if (supplierIds.length) {
       const admin = supabaseAdmin()
-      const { data: profs } = await admin
+      const { data: profs, error: profErr } = await admin
         .from('profiles')
-        .select('id, username, display_name, company_name, rating_avg, rating_count')
+        // ⚠️ Kein display_name in deiner DDL – wir nehmen username + company_name
+        .select('id, username, company_name, rating_avg, rating_count')
         .in('id', supplierIds)
 
+      if (profErr) {
+        return NextResponse.json({ error: profErr.message }, { status: 400 })
+      }
+
       for (const p of (profs || []) as any[]) {
-        const display =
-          p.display_name?.trim?.() ||
-          p.username?.trim?.() ||
-          p.company_name?.trim?.() ||
-          'Anbieter'
-        const handle = (p.username && String(p.username).trim()) || null
+        const handle  = (typeof p.username === 'string' && p.username.trim()) || null
+        const display = (typeof p.company_name === 'string' && p.company_name.trim()) || null
         const rating = typeof p.rating_avg === 'number' ? p.rating_avg : (p.rating_avg != null ? Number(p.rating_avg) : null)
         const rating_count = typeof p.rating_count === 'number' ? p.rating_count : (p.rating_count != null ? Number(p.rating_count) : null)
-        vendors.set(p.id, { display, handle, rating, rating_count })
+        vendors.set(p.id, { handle, display, rating, rating_count })
       }
     }
 
     const receivedOut = received.map(o => {
       const v = o.supplier_id ? vendors.get(o.supplier_id) : undefined
-      const vendorName = v?.display || 'Anbieter'
       const vendorUsername = v?.handle ?? null
+      const vendorDisplay  = v?.display ?? null
+      // Hauptname: Handle (ohne @) oder Firmenname
+      const vendorName = vendorUsername || vendorDisplay || 'Anbieter'
+
       const vendorRating = (typeof v?.rating === 'number' && isFinite(v.rating)) ? v.rating : null
       const vendorRatingCount = (typeof v?.rating_count === 'number' && isFinite(v.rating_count)) ? v.rating_count : null
+
+      // Beträge: saubere Aufteilung mit Fallbacks
+      const item = (typeof o.item_amount_cents === 'number' && isFinite(o.item_amount_cents))
+        ? o.item_amount_cents
+        : (typeof o.amount_cents === 'number' ? o.amount_cents : 0)
+
+      const ship = (typeof o.shipping_cents === 'number' && isFinite(o.shipping_cents))
+        ? o.shipping_cents
+        : 0
+
+      const total = (typeof o.amount_cents === 'number' && isFinite(o.amount_cents))
+        ? o.amount_cents
+        : (item + ship)
 
       return {
         id: o.id,
         requestId: o.request_id,
-        vendorName,
-        vendorUsername, // <- Handle (@username) zusätzlich
+        vendorName,          // z.B. "mario" oder "Musterspedition GmbH"
+        vendorUsername,      // z.B. "mario"
+        vendorDisplay,       // z.B. "Musterspedition GmbH"
         vendorRating,
         vendorRatingCount,
-        priceCents: o.amount_cents,
+        priceCents: total,
+        itemCents: item,
+        shippingCents: ship,
         createdAt: o.created_at,
-        // expiresAt optional, Frontend berechnet "gültig bis" aus createdAt & lieferdatum
         expiresAt: o.expires_at,
       }
     })
@@ -109,24 +132,41 @@ export async function GET() {
     // 4) Deine eigenen abgegebenen Angebote (als Anbieter)
     const { data: sub, error: subErr } = await sb
       .from('lack_offers')
-      .select('id, request_id, amount_cents, created_at, expires_at, status')
+      .select('id, request_id, amount_cents, item_amount_cents, shipping_cents, created_at, expires_at, status')
       .eq('supplier_id', user.id)
       .eq('status', 'active')
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
 
     if (subErr) return NextResponse.json({ error: subErr.message }, { status: 400 })
 
-    const submittedOut = (sub || []).map((o: any) => ({
-      id: o.id as string,
-      requestId: o.request_id as string,
-      vendorName: 'Du',
-      vendorUsername: null as string | null,
-      vendorRating: null,
-      vendorRatingCount: null,
-      priceCents: o.amount_cents as number,
-      createdAt: o.created_at as string,
-      expiresAt: o.expires_at as (string | null),
-    }))
+    const submittedOut = (sub || []).map((o: any) => {
+      const item = (typeof o.item_amount_cents === 'number' && isFinite(o.item_amount_cents))
+        ? o.item_amount_cents
+        : (typeof o.amount_cents === 'number' ? o.amount_cents : 0)
+
+      const ship = (typeof o.shipping_cents === 'number' && isFinite(o.shipping_cents))
+        ? o.shipping_cents
+        : 0
+
+      const total = (typeof o.amount_cents === 'number' && isFinite(o.amount_cents))
+        ? o.amount_cents
+        : (item + ship)
+
+      return {
+        id: o.id as string,
+        requestId: o.request_id as string,
+        vendorName: 'Du',
+        vendorUsername: null as string | null,
+        vendorDisplay: null as string | null,
+        vendorRating: null,
+        vendorRatingCount: null,
+        priceCents: total,
+        itemCents: item,
+        shippingCents: ship,
+        createdAt: o.created_at as string,
+        expiresAt: o.expires_at as (string | null),
+      }
+    })
 
     // 5) Request-Metadaten (für Titel + Lieferdatum im FE)
     const requestsOut = requests.map(r => ({

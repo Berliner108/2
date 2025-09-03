@@ -1,6 +1,8 @@
-// /src/app/api/lack/offers/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
   try {
@@ -8,39 +10,44 @@ export async function POST(req: Request) {
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const body = await req.json().catch(() => ({}))
-    const requestId   = String(body.requestId || '')
-    const amountCents = Number(body.amountCents)
+    const body = await req.json().catch(() => ({} as any))
+    const requestId = String(body.requestId || '')
+    const currencyIn = String(body.currency || 'EUR').toLowerCase()
     const description = body.description ?? null
-    const expiresAt   = body.expiresAt ? new Date(body.expiresAt) : null
-    const currencyIn  = String(body.currency || 'EUR').toLowerCase()
+    const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null
+    if (!requestId) return NextResponse.json({ error: 'requestId required' }, { status: 400 })
+    if (currencyIn !== 'eur') return NextResponse.json({ error: 'Only EUR supported' }, { status: 400 })
+    if (expiresAt && isNaN(+expiresAt)) return NextResponse.json({ error: 'expiresAt invalid' }, { status: 400 })
 
-    if (!requestId || !Number.isInteger(amountCents) || amountCents <= 0) {
-      return NextResponse.json({ error: 'requestId and positive amountCents required' }, { status: 400 })
+    // Beträge (neu + Fallback)
+    let itemAmountCents = Number.isInteger(body.itemAmountCents) ? Number(body.itemAmountCents) : undefined
+    let shippingCents   = Number.isInteger(body.shippingCents)   ? Number(body.shippingCents)   : 0
+    if (itemAmountCents == null) {
+      const totalBody = Number.isInteger(body.amountCents) ? Number(body.amountCents) : undefined
+      if (totalBody != null) itemAmountCents = totalBody
     }
-    if (currencyIn !== 'eur') {
-      return NextResponse.json({ error: 'Only EUR supported' }, { status: 400 })
+    if (!(itemAmountCents! > 0) || shippingCents < 0) {
+      return NextResponse.json({ error: 'itemAmountCents (>0) and shippingCents (>=0) required' }, { status: 400 })
     }
 
-    // Anfrage laden & prüfen
+    // Request prüfen
     const { data: reqRow, error: reqErr } = await sb
       .from('lack_requests')
       .select('id, owner_id, delivery_at, lieferdatum, status')
       .eq('id', requestId)
       .maybeSingle()
     if (reqErr)  return NextResponse.json({ error: reqErr.message }, { status: 400 })
-    if (!reqRow) return NextResponse.json({ error: 'Request not found' }, { status: 404 })
+    if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden' }, { status: 404 })
     if (reqRow.owner_id === user.id) {
-      return NextResponse.json({ error: 'You cannot offer on your own request' }, { status: 403 })
+      return NextResponse.json({ error: 'Du kannst zu eigenen Anfragen keine Angebote abgeben' }, { status: 403 })
     }
     if (!['open','awarded'].includes(String(reqRow.status))) {
       return NextResponse.json({ error: `Request status not open/awarded (${reqRow.status})` }, { status: 400 })
     }
 
-    // expires_at: min(now+72h, Tag davor 23:59) – override via body.expiresAt erlaubt
-    const now = Date.now()
-    const plus72h = new Date(now + 72 * 60 * 60 * 1000)
-    const delivery = reqRow.delivery_at || reqRow.lieferdatum
+    // expires_at: min(now+72h, Tag-vor-Lieferdatum 23:59)
+    const plus72h = new Date(Date.now() + 72 * 60 * 60 * 1000)
+    const delivery = (reqRow as any).delivery_at || (reqRow as any).lieferdatum
     let cap: Date | null = null
     if (delivery) {
       const d = new Date(delivery)
@@ -51,26 +58,27 @@ export async function POST(req: Request) {
     let exp = expiresAt && !isNaN(+expiresAt) ? expiresAt : plus72h
     if (cap && +cap < +exp) exp = cap
 
+    const total = itemAmountCents! + shippingCents
+
     const { data: ins, error: insErr } = await sb
       .from('lack_offers')
       .insert({
         request_id: reqRow.id,
-        supplier_id: user.id,           // RLS with_check
-        amount_cents: amountCents,
+        supplier_id: user.id,
+        item_amount_cents: itemAmountCents!,
+        shipping_cents:    shippingCents,
+        amount_cents:      total,
         currency: 'eur',
         status: 'active',
-        message: description,           // Spalte heißt message
+        message: description,
         expires_at: exp.toISOString(),
       })
-      .select('id, request_id, supplier_id, amount_cents, currency, status, expires_at')
+      .select('id, request_id, supplier_id, item_amount_cents, shipping_cents, amount_cents, currency, status, expires_at')
       .maybeSingle()
 
     if (insErr) {
       const msg = insErr.message || ''
-      if (
-        msg.includes('ux_lack_offers_one_per_supplier') ||
-        msg.includes('uniq_lof_active_per_supplier')
-      ) {
+      if (msg.includes('ux_lack_offers_one_per_supplier') || msg.includes('uniq_lof_active_per_supplier')) {
         return NextResponse.json({ error: 'ALREADY_OFFERED' }, { status: 409 })
       }
       return NextResponse.json({ error: msg }, { status: 400 })

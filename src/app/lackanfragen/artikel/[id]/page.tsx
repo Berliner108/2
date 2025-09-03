@@ -563,10 +563,11 @@ export default function ArtikelDetailPage() {
       return;
     }
 
-    const priceBase   = toNum(basisPreis);
-    const shipping    = toNum(versandPreis);
-    const total       = priceBase + shipping;
-    const amountCents = Math.round(total * 100);
+    const priceBase = toNum(basisPreis);   // Artikelpreis (float)
+    const shipping  = toNum(versandPreis); // Versand (float)
+    const itemCents = Math.round(priceBase * 100);
+    const shipCents = Math.round(shipping  * 100);
+    const total     = priceBase + shipping;
 
     const description =
       `Artikelpreis: ${formatEUR(priceBase)}; ` +
@@ -575,19 +576,23 @@ export default function ArtikelDetailPage() {
       `Rückversand zahlt ${buyerPaysReturn ? 'Käufer' : 'Verkäufer'}.`;
 
     try {
-      const res = await fetch('/api/lack/offers', {
+      const res = await fetch(`/api/lack/requests/${encodeURIComponent(String(artikel.id))}/offer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requestId: String(artikel.id),
-          amountCents,
-          currency: 'EUR', // wird serverseitig normalisiert
-          description,
+          itemAmountCents: itemCents,   // 🔹 Artikelpreis in Cent
+          shippingCents:   shipCents,   // 🔹 Versand in Cent (0 erlaubt)
+          currency:        'eur',
+          message:         description, // optional, nur Anzeige
+          // expiresAt: ... (optional ISO-String)
         }),
       });
-      const j = await res.json().catch(() => ({}))
+      const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (j?.error === 'ALREADY_OFFERED') throw new Error('Du hast zu dieser Anfrage bereits ein Angebot abgegeben.');
+        const err = String(j?.error || '');
+        if (err.toLowerCase() === 'already_offered') {
+          throw new Error('Du hast zu dieser Anfrage bereits ein Angebot abgegeben.');
+        }
         throw new Error(j?.error || 'Fehler beim Senden des Angebots');
       }
       alert('Angebot gesendet.');
@@ -873,21 +878,6 @@ export default function ArtikelDetailPage() {
                 />
                 <div className={styles.offerNote} style={{ marginTop: 6 }}>
                   Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den Rückversand aufkommen.
-                </div>
-              </div>
-
-              <div className={styles.inputGroup} style={{ marginTop: 10 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={buyerPaysReturn}
-                    onChange={(e) => setBuyerPaysReturn(e.target.checked)}
-                    aria-label="Rückversand zahlt der Käufer"
-                  />
-                  Rückversand zahlt der Käufer
-                </label>
-                <div className={styles.offerNote} style={{ marginTop: 6 }}>
-                  Dieser Hinweis wird im Angebot gespeichert und dem Käufer angezeigt.
                 </div>
               </div>
 

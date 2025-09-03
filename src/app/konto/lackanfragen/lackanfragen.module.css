@@ -458,3 +458,15 @@
   margin-bottom: 12px;
 }
 .modalSummary > div { font-size: .95rem; }
+/* lackanfragen.module.css */
+.metaInline { margin-left: 10px; opacity: .85; }
+/* lackanfragen.module.css */
+.groupMetaLine {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0 10px;
+  font-size: .95rem;
+  opacity: .9;
+}
+.metaDot { margin: 0 4px; opacity: .6; }
