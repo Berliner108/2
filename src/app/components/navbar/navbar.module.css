@@ -91,3 +91,38 @@
   .navItem { margin: 0 10px; }
   .dropdown { display: none !important; }
 }
+/* Der Button braucht einen Positioning-Context */
+.navButton {
+  position: relative;
+}
+
+/* Nur damit der Text sauber getrennt ist (optional) */
+.navButtonLabel {
+  display: inline-block;
+}
+
+/* 🔴 Perfekt runder Zähler */
+.counter {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+
+  width: 20px;          /* gleiche Breite/Höhe = Kreis */
+  height: 20px;
+  border-radius: 50%;   /* macht es rund */
+
+  display: inline-flex; /* Zentrierung der Zahl */
+  align-items: center;
+  justify-content: center;
+
+  background: #ef4444;  /* Rot */
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+  text-align: center;
+
+  box-shadow: 0 0 0 2px #fff; /* weißer Ring, optional */
+}
+
+/* Wenn du sehr enge Abstände hast, kannst du top/right feinjustieren */

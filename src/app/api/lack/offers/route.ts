@@ -1,23 +1,29 @@
+// /src/app/api/lack/offers/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+function reply(status: number, code: string, message: string, extra?: any) {
+  return NextResponse.json({ ok: false, code, message, ...extra }, { status })
+}
+
 export async function POST(req: Request) {
   try {
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    if (!user) return reply(401, 'NICHT_ANGEMELDET', 'Bitte melde dich an, um ein Angebot abzugeben.')
 
     const body = await req.json().catch(() => ({} as any))
     const requestId = String(body.requestId || '')
     const currencyIn = String(body.currency || 'EUR').toLowerCase()
     const description = body.description ?? null
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null
-    if (!requestId) return NextResponse.json({ error: 'requestId required' }, { status: 400 })
-    if (currencyIn !== 'eur') return NextResponse.json({ error: 'Only EUR supported' }, { status: 400 })
-    if (expiresAt && isNaN(+expiresAt)) return NextResponse.json({ error: 'expiresAt invalid' }, { status: 400 })
+
+    if (!requestId) return reply(400, 'REQUEST_ID_FEHLT', 'Die Anfrage-ID fehlt.')
+    if (currencyIn !== 'eur') return reply(400, 'WAEHRUNG_NICHT_UNTERSTUETZT', 'Aktuell wird nur EUR unterstützt.')
+    if (expiresAt && isNaN(+expiresAt)) return reply(400, 'DATUM_UNGUELTIG', 'Das Ablaufdatum ist ungültig.')
 
     // Beträge (neu + Fallback)
     let itemAmountCents = Number.isInteger(body.itemAmountCents) ? Number(body.itemAmountCents) : undefined
@@ -27,7 +33,7 @@ export async function POST(req: Request) {
       if (totalBody != null) itemAmountCents = totalBody
     }
     if (!(itemAmountCents! > 0) || shippingCents < 0) {
-      return NextResponse.json({ error: 'itemAmountCents (>0) and shippingCents (>=0) required' }, { status: 400 })
+      return reply(400, 'BETRAG_UNGUELTIG', 'Bitte Artikelpreis (> 0 €) und Versandkosten (≥ 0 €) korrekt angeben.')
     }
 
     // Request prüfen
@@ -36,13 +42,14 @@ export async function POST(req: Request) {
       .select('id, owner_id, delivery_at, lieferdatum, status')
       .eq('id', requestId)
       .maybeSingle()
-    if (reqErr)  return NextResponse.json({ error: reqErr.message }, { status: 400 })
-    if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden' }, { status: 404 })
+
+    if (reqErr)  return reply(400, 'ANFRAGE_LESEN_FEHLGESCHLAGEN', 'Die Anfrage konnte nicht geladen werden.')
+    if (!reqRow) return reply(404, 'ANFRAGE_NICHT_GEFUNDEN', 'Die Lackanfrage wurde nicht gefunden.')
     if (reqRow.owner_id === user.id) {
-      return NextResponse.json({ error: 'Du kannst zu eigenen Anfragen keine Angebote abgeben' }, { status: 403 })
+      return reply(403, 'EIGENE_ANFRAGE', 'Du kannst keine Angebote auf deine eigene Anfrage abgeben.')
     }
     if (!['open','awarded'].includes(String(reqRow.status))) {
-      return NextResponse.json({ error: `Request status not open/awarded (${reqRow.status})` }, { status: 400 })
+      return reply(400, 'ANFRAGE_NICHT_OFFEN', 'Diese Anfrage ist nicht mehr offen.')
     }
 
     // expires_at: min(now+72h, Tag-vor-Lieferdatum 23:59)
@@ -77,15 +84,27 @@ export async function POST(req: Request) {
       .maybeSingle()
 
     if (insErr) {
-      const msg = insErr.message || ''
-      if (msg.includes('ux_lack_offers_one_per_supplier') || msg.includes('uniq_lof_active_per_supplier')) {
-        return NextResponse.json({ error: 'ALREADY_OFFERED' }, { status: 409 })
+      const pgMsg = insErr.message || ''
+      const pgCode = (insErr as any).code
+      if (
+        pgMsg.includes('ux_lack_offers_one_per_supplier') ||
+        pgMsg.includes('uniq_lof_active_per_supplier') ||
+        pgCode === '23505'
+      ) {
+        return reply(409, 'BEREITS_ANGEBOTEN', 'Du hast zu dieser Anfrage bereits ein aktives Angebot abgegeben.')
       }
-      return NextResponse.json({ error: msg }, { status: 400 })
+      if (pgCode === '23514') {
+        return reply(400, 'PRUEFUNG_FEHLGESCHLAGEN', 'Die Angaben wurden vom System abgelehnt. Bitte prüfe den Preis.')
+      }
+      return reply(400, 'SPEICHERN_FEHLGESCHLAGEN', 'Dein Angebot konnte nicht gespeichert werden.')
     }
 
-    return NextResponse.json({ ok: true, offer: ins })
+    return NextResponse.json({
+      ok: true,
+      message: 'Dein Angebot wurde gesendet.',
+      offer: ins
+    })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Create offer failed' }, { status: 500 })
+    return reply(500, 'SERVER_FEHLER', 'Unerwarteter Fehler. Bitte versuche es später erneut.')
   }
 }

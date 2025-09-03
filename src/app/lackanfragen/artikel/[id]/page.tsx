@@ -1,3 +1,4 @@
+// /src/app/lackanfragen/artikel/[id]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -10,6 +11,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
+import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
 
 /* ===== Fancy Loader Components (nur während loading) ===== */
 function TopLoader() {
@@ -47,7 +49,6 @@ function DetailSkeleton() {
 }
 
 /* ===================== Typen ===================== */
-
 type ApiItem = {
   id: string;
   title?: string | null;
@@ -97,12 +98,14 @@ type ArtikelView = {
 };
 
 /* ===================== Helfer ===================== */
-
 const toBool = (v: unknown): boolean =>
-  typeof v === 'boolean' ? v
-  : typeof v === 'string' ? ['1','true','yes','ja','wahr'].includes(v.toLowerCase())
-  : typeof v === 'number' ? v !== 0
-  : !!v;
+  typeof v === 'boolean'
+    ? v
+    : typeof v === 'string'
+    ? ['1', 'true', 'yes', 'ja', 'wahr'].includes(v.toLowerCase())
+    : typeof v === 'number'
+    ? v !== 0
+    : !!v;
 
 function toDateOrNull(s?: string | null): Date | null {
   if (!s) return null;
@@ -150,9 +153,10 @@ function resolveBilder(d: any, fallback?: string[]): string[] {
   const b = d?.bilder;
   if (Array.isArray(b) && b.length) {
     if (typeof b[0] === 'string') return b as string[];
-    if (typeof b[0] === 'object' && (b[0] as any)?.url) return (b as Array<{ url: string }>).map(x => x.url).filter(Boolean);
+    if (typeof b[0] === 'object' && (b[0] as any)?.url)
+      return (b as Array<{ url: string }>).map((x) => x.url).filter(Boolean);
   }
-  if (typeof b === 'string' && b.trim()) return b.split(',').map(s => s.trim()).filter(Boolean);
+  if (typeof b === 'string' && b.trim()) return b.split(',').map((s) => s.trim()).filter(Boolean);
   return ['/images/platzhalter.jpg'];
 }
 
@@ -162,7 +166,8 @@ function getNameFromUrl(u: string): string {
     const last = p.pathname.split('/').filter(Boolean).pop() || 'datei';
     return decodeURIComponent(last);
   } catch {
-    const parts = u.split('/'); return decodeURIComponent(parts[parts.length - 1] || 'datei');
+    const parts = u.split('/');
+    return decodeURIComponent(parts[parts.length - 1] || 'datei');
   }
 }
 
@@ -172,7 +177,7 @@ function resolveDateien(d: any): DateiItem[] {
   if (Array.isArray(arr)) {
     if (!arr.length) return [];
     if (typeof arr[0] === 'string') {
-      return (arr as string[]).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }));
+      return (arr as string[]).filter(Boolean).map((url) => ({ name: getNameFromUrl(url), url }));
     }
     return (arr as any[])
       .map((x) => {
@@ -183,15 +188,13 @@ function resolveDateien(d: any): DateiItem[] {
       .filter(Boolean) as DateiItem[];
   }
   if (typeof arr === 'string' && arr.trim()) {
-    return arr.split(',').map(s => s.trim()).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }));
+    return arr
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((url) => ({ name: getNameFromUrl(url), url }));
   }
   return [];
-}
-
-function joinPlzOrt(plz?: any, ort?: any): string {
-  const p = (plz ?? '').toString().trim();
-  const o = (ort ?? '').toString().trim();
-  return [p, o].filter(Boolean).join(' ') || o || '';
 }
 
 function deepFindFirst(obj: any, keyPred: (k: string) => boolean): unknown {
@@ -221,6 +224,11 @@ function extractPlzOrtFromText(s?: unknown): string {
   const zip = m[1].trim();
   const city = m[2].trim().replace(/\s+/g, ' ');
   return [zip, city].filter(Boolean).join(' ');
+}
+function joinPlzOrt(plz?: any, ort?: any): string {
+  const p = (plz ?? '').toString().trim();
+  const o = (ort ?? '').toString().trim();
+  return [p, o].filter(Boolean).join(' ') || o || '';
 }
 function deepGetLieferort(obj: any): string {
   const v = deepFindFirst(obj, (k) => /^(lieferort|lieferOrt)$/i.test(k));
@@ -267,29 +275,45 @@ function resolveLieferort(obj: any): string {
   return '';
 }
 function resolveGewerblich(d: any): boolean | undefined {
-  return d?.istGewerblich != null ? toBool(d.istGewerblich)
-    : d?.account_type != null ? String(d.account_type).toLowerCase() === 'business'
-    : d?.gewerblich != null ? toBool(d.gewerblich)
+  return d?.istGewerblich != null
+    ? toBool(d.istGewerblich)
+    : d?.account_type != null
+    ? String(d.account_type).toLowerCase() === 'business'
+    : d?.gewerblich != null
+    ? toBool(d.gewerblich)
     : undefined;
 }
 function clampRating(n: unknown): number | null {
-  const v = typeof n === 'string' ? parseFloat(n) : (typeof n === 'number' ? n : NaN);
+  const v = typeof n === 'string' ? parseFloat(n) : typeof n === 'number' ? n : NaN;
   if (!isFinite(v)) return null;
   return Math.max(0, Math.min(5, v));
 }
 function intOrNull(n: unknown): number | null {
-  const v = typeof n === 'string' ? parseInt(n, 10) : (typeof n === 'number' ? Math.round(n) : NaN);
+  const v = typeof n === 'string' ? parseInt(n, 10) : typeof n === 'number' ? Math.round(n) : NaN;
   return isFinite(v) && v >= 0 ? v : null;
 }
 function resolveUserName(d: any): string | undefined {
   if (typeof d?.user === 'string' && d.user.trim()) return d.user.trim();
-  const fullName = [d?.profile?.firstName, d?.profile?.lastName].filter(Boolean).join(' ').trim() || undefined;
-  const candidates = [d?.user?.name, d?.account_name, d?.profile?.company, fullName, d?.username, d?.user_name]
-    .filter((x) => typeof x === 'string' && x.trim()) as string[];
+  const fullName =
+    [d?.profile?.firstName, d?.profile?.lastName].filter(Boolean).join(' ').trim() || undefined;
+  const candidates = [
+    d?.user?.name,
+    d?.account_name,
+    d?.profile?.company,
+    fullName,
+    d?.username,
+    d?.user_name,
+  ].filter((x) => typeof x === 'string' && x.trim()) as string[];
   return candidates[0];
 }
 function resolveUserRatingAvg(d: any): number | null {
-  return clampRating(d?.user_rating_avg) ?? clampRating(d?.user_rating) ?? clampRating(d?.user?.ratingAvg) ?? clampRating(d?.user?.rating) ?? null;
+  return (
+    clampRating(d?.user_rating_avg) ??
+    clampRating(d?.user_rating) ??
+    clampRating(d?.user?.ratingAvg) ??
+    clampRating(d?.user?.rating) ??
+    null
+  );
 }
 function resolveUserRatingCount(d: any): number | null {
   return intOrNull(d?.user_rating_count) ?? intOrNull(d?.user?.ratingCount) ?? null;
@@ -298,8 +322,8 @@ function resolveUserRatingCount(d: any): number | null {
 const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
 
 function listToText(v: unknown): string {
-  if (Array.isArray(v)) return (v as unknown[]).map(String).map(s => s.trim()).filter(Boolean).join(', ');
-  if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean).join(', ');
+  if (Array.isArray(v)) return (v as unknown[]).map(String).map((s) => s.trim()).filter(Boolean).join(', ');
+  if (typeof v === 'string') return v.split(',').map((s) => s.trim()).filter(Boolean).join(', ');
   return '';
 }
 
@@ -347,8 +371,7 @@ function DeadlineBadge({ date }: { date: Date | null }) {
     text = `in ${d} Tagen`;
   }
 
-  const variant =
-    d < 0 ? styles.badgeDanger : d <= 3 ? styles.badgeWarn : styles.badgeOk;
+  const variant = d < 0 ? styles.badgeDanger : d <= 3 ? styles.badgeWarn : styles.badgeOk;
 
   return (
     <span
@@ -362,7 +385,6 @@ function DeadlineBadge({ date }: { date: Date | null }) {
 }
 
 /* === Preis-/Eingabe-Helper === */
-
 function limitMoneyInput(raw: string): string {
   let v = (raw || '').replace(/[^\d.,]/g, '');
   const firstSep = v.search(/[.,]/);
@@ -388,19 +410,17 @@ function formatEUR(n: number): string {
 }
 
 /* ===================== Mapping ===================== */
-
 function mapItem(it: ApiItem): ArtikelView {
   const d = it.data || {};
   const bilder = resolveBilder(d, it.bilder);
   const lieferdatum = resolveLieferdatum(it);
 
-  const sondereigenschaft =
-    listToText(d.sondereffekte) || listToText(d.sondereigenschaft);
-
+  const sondereigenschaft = listToText(d.sondereffekte) || listToText(d.sondereigenschaft);
   const effekt = listToText(d.effekt);
 
   const istGewerblich = resolveGewerblich(d);
-  const ort = (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
+  const ort =
+    (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
 
   return {
     id: it.id,
@@ -414,7 +434,8 @@ function mapItem(it: ApiItem): ArtikelView {
     kategorie: normKategorie(d.kategorie),
     user: it.user || resolveUserName(d) || undefined,
     user_rating: typeof it.user_rating === 'number' ? clampRating(it.user_rating) : resolveUserRatingAvg(d),
-    user_rating_count: typeof it.user_rating_count === 'number' ? intOrNull(it.user_rating_count) : resolveUserRatingCount(d),
+    user_rating_count:
+      typeof it.user_rating_count === 'number' ? intOrNull(it.user_rating_count) : resolveUserRatingCount(d),
     farbcode: d.farbcode || '',
     effekt,
     anwendung: prettyLabel(d.anwendung, ANWENDUNG_LABELS),
@@ -434,48 +455,75 @@ function mapItem(it: ApiItem): ArtikelView {
   };
 }
 
+/* ====== Fehlermeldungen hübsch machen ====== */
+function friendlyErr(raw: unknown): string {
+  const txt = String(raw || '').trim();
+  if (!txt) return 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.';
+  const lc = txt.toLowerCase();
+  // Wenn der Server bereits DE liefert, nimm das
+  if (/[äöüß]/i.test(txt) || /anfrage|angebot|du kannst|nicht|bereits|fehl(er)?/i.test(txt)) return txt;
+
+  // Bekannte Keys/Codes mappen
+  if (lc.includes('already_offered') || lc.includes('already offered'))
+    return 'Du hast zu dieser Anfrage bereits ein Angebot abgegeben.';
+  if (lc.includes('not authenticated')) return 'Bitte melde dich an.';
+  if (lc.includes('anfrage nicht gefunden') || lc.includes('request not found')) return 'Anfrage nicht gefunden.';
+  if (lc.includes('anfrage ist nicht verfügbar') || lc.includes('request status'))
+    return 'Diese Anfrage ist nicht mehr verfügbar.';
+  if (lc.includes('du kannst zu eigenen anfragen') || lc.includes('own request'))
+    return 'Du kannst zu deinen eigenen Anfragen keine Angebote abgeben.';
+  if (lc.includes('itemamountcents invalid') || lc.includes('amount'))
+    return 'Bitte einen gültigen Artikelpreis angeben.';
+  if (lc.includes('shippingcents invalid')) return 'Bitte gültige Versandkosten angeben (oder 0).';
+  return txt;
+}
+
 /* ===================== Seite ===================== */
 
-export default function ArtikelDetailPage() {
-  const params = useParams() as { id?: string };
+function PageBody() {
+  const { id: rawParam } = useParams<{ id?: string }>();
   const [artikel, setArtikel] = useState<ArtikelView | null>(null);
   const [loading, setLoading] = useState(true);
+  const { success, error: toastError, info } = useLocalToast();
 
   // Preis-States
   const [basisPreis, setBasisPreis] = useState('');
   const [versandPreis, setVersandPreis] = useState('');
   const [buyerPaysReturn, setBuyerPaysReturn] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
   useEffect(() => {
     let active = true;
-    const raw = params?.id;
-    const id = raw ? decodeURIComponent(String(raw)) : '';
-    if (!id) { setLoading(false); return; }
+    const id = rawParam ? decodeURIComponent(String(rawParam)) : '';
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {
         let view: ArtikelView | null = null;
 
+        // Detail-API
         try {
           const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}`, { cache: 'no-store' });
           if (res.ok) {
             const j = await res.json();
             const a = j?.artikel;
             if (a) {
-              const sondereffekteText =
-                listToText(a.sondereffekte) || listToText(a.sondereigenschaft);
-
+              const sondereffekteText = listToText(a.sondereffekte) || listToText(a.sondereigenschaft);
               view = {
                 id: a.id ?? id,
                 titel: a.titel || a.title || 'Unbenannt',
                 bilder: Array.isArray(a.bilder) ? a.bilder : [],
-                lieferdatum: typeof a.lieferdatum === 'string' ? toDateOrNull(a.lieferdatum) : (a.lieferdatum ?? null),
+                lieferdatum:
+                  typeof a.lieferdatum === 'string' ? toDateOrNull(a.lieferdatum) : a.lieferdatum ?? null,
                 zustand: normZustand(a.zustand || ''),
                 hersteller: a.hersteller || '',
-                menge: typeof a.menge === 'number' ? a.menge : (a.menge ?? null),
+                menge: typeof a.menge === 'number' ? a.menge : a.menge ?? null,
                 ort: typeof a.ort === 'string' ? a.ort : '',
                 kategorie: a.kategorie || '',
                 user: a.user || undefined,
@@ -502,15 +550,27 @@ export default function ArtikelDetailPage() {
           }
         } catch {}
 
+        // Fallback: Liste
         try {
-          const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
-          if (resList.ok) {
-            const json = await resList.json();
-            const items: ApiItem[] = json?.items || [];
-            const found = items.find((x) => String(x.id) === id);
-            if (found) {
-              const mapped = mapItem(found);
-              if (view) {
+          if (!view) {
+            const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
+            if (resList.ok) {
+              const json = await resList.json();
+              const items: ApiItem[] = json?.items || [];
+              const found = items.find((x) => String(x.id) === id);
+              if (found) {
+                view = mapItem(found);
+              }
+            }
+          } else {
+            // ergänze aus der Liste
+            const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
+            if (resList.ok) {
+              const json = await resList.json();
+              const items: ApiItem[] = json?.items || [];
+              const found = items.find((x) => String(x.id) === id);
+              if (found) {
+                const mapped = mapItem(found);
                 if (!view.user) view.user = mapped.user;
                 if (view.user_rating == null) view.user_rating = mapped.user_rating;
                 if (view.user_rating_count == null) view.user_rating_count = mapped.user_rating_count;
@@ -520,8 +580,6 @@ export default function ArtikelDetailPage() {
                 if (!view.effekt) view.effekt = mapped.effekt;
                 if (!view.anwendung) view.anwendung = mapped.anwendung;
                 if (!view.oberfläche) view.oberfläche = mapped.oberfläche;
-              } else {
-                view = mapped;
               }
             }
           }
@@ -535,39 +593,37 @@ export default function ArtikelDetailPage() {
       }
     })();
 
-    return () => { active = false; };
-  }, [params?.id]);
+    return () => {
+      active = false;
+    };
+  }, [rawParam]);
 
-  const slides = useMemo(
-    () => (artikel?.bilder || []).map((src: string) => ({ src })),
-    [artikel?.bilder]
-  );
+  const slides = useMemo(() => (artikel?.bilder || []).map((src: string) => ({ src })), [artikel?.bilder]);
 
-  const gesamtPreis = useMemo(
-    () => toNum(basisPreis) + toNum(versandPreis),
-    [basisPreis, versandPreis]
-  );
+  const gesamtPreis = useMemo(() => toNum(basisPreis) + toNum(versandPreis), [basisPreis, versandPreis]);
 
   async function handleSubmitOffer() {
+    if (submitting) return;
+
     // finale Validierung
     if (!MONEY_REGEX_FINAL.test(basisPreis)) {
-      alert('Bitte einen gültigen Artikelpreis eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
+      toastError('Bitte einen gültigen Artikelpreis eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
       return;
     }
     if (versandPreis && !MONEY_REGEX_FINAL.test(versandPreis)) {
-      alert('Bitte gültige Versandkosten eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
+      toastError('Bitte gültige Versandkosten eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
       return;
     }
     if (!artikel?.id) {
-      alert('Artikel-/Request-ID fehlt.');
+      toastError('Artikel-/Request-ID fehlt.');
       return;
     }
 
-    const priceBase = toNum(basisPreis);   // Artikelpreis (float)
-    const shipping  = toNum(versandPreis); // Versand (float)
+    const priceBase = toNum(basisPreis); // Artikelpreis (float)
+    const shipping = toNum(versandPreis); // Versand (float)
     const itemCents = Math.round(priceBase * 100);
-    const shipCents = Math.round(shipping  * 100);
-    const total     = priceBase + shipping;
+    const shipCents = Math.round(shipping * 100);
+    const total = priceBase + shipping;
 
     const description =
       `Artikelpreis: ${formatEUR(priceBase)}; ` +
@@ -575,33 +631,33 @@ export default function ArtikelDetailPage() {
       `Gesamt: ${formatEUR(total)}; ` +
       `Rückversand zahlt ${buyerPaysReturn ? 'Käufer' : 'Verkäufer'}.`;
 
+    setSubmitting(true);
     try {
       const res = await fetch(`/api/lack/requests/${encodeURIComponent(String(artikel.id))}/offer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          itemAmountCents: itemCents,   // 🔹 Artikelpreis in Cent
-          shippingCents:   shipCents,   // 🔹 Versand in Cent (0 erlaubt)
-          currency:        'eur',
-          message:         description, // optional, nur Anzeige
-          // expiresAt: ... (optional ISO-String)
+          itemAmountCents: itemCents, // Artikel in Cent
+          shippingCents: shipCents, // Versand in Cent (0 erlaubt)
+          currency: 'eur',
+          message: description, // optional
         }),
       });
+
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const err = String(j?.error || '');
-        if (err.toLowerCase() === 'already_offered') {
-          throw new Error('Du hast zu dieser Anfrage bereits ein Angebot abgegeben.');
-        }
-        throw new Error(j?.error || 'Fehler beim Senden des Angebots');
+        const rawMsg = j?.error || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.';
+        throw new Error(friendlyErr(rawMsg));
       }
-      alert('Angebot gesendet.');
-      // optional: Felder zurücksetzen
+
+      success('Angebot gesendet.');
       setBasisPreis('');
       setVersandPreis('');
       setBuyerPaysReturn(true);
-    } catch (e) {
-      alert((e as Error).message || 'Unbekannter Fehler');
+    } catch (e: any) {
+      toastError(friendlyErr(e?.message));
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -765,9 +821,14 @@ export default function ArtikelDetailPage() {
                   <span className={styles.value}>{artikel.user}</span>
 
                   <div className={styles.userRating} style={{ marginTop: 6 }}>
-                    {ratingCount > 0
-                      ? <>Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung{ratingCount === 1 ? '' : 'en'}</>
-                      : <>Bewertung: Noch keine Bewertungen</>}
+                    {ratingCount > 0 ? (
+                      <>
+                        Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung
+                        {ratingCount === 1 ? '' : 'en'}
+                      </>
+                    ) : (
+                      <>Bewertung: Noch keine Bewertungen</>
+                    )}
                   </div>
 
                   <div style={{ marginTop: 6 }}>
@@ -837,16 +898,14 @@ export default function ArtikelDetailPage() {
               {artikel.gewerblich && (
                 <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>
               )}
-              {artikel.privat && (
-                <span className={`${styles.badge} ${styles.privat}`}>Privat</span>
-              )}
+              {artikel.privat && <span className={`${styles.badge} ${styles.privat}`}>Privat</span>}
             </div>
 
             {/* === Angebotsbox === */}
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
-                  Artikelpreis (ohne Versand)
+                  Artikelpreis in € (ohne Versand)
                 </label>
                 <input
                   type="text"
@@ -863,7 +922,7 @@ export default function ArtikelDetailPage() {
 
               <div className={styles.inputGroup} style={{ marginTop: 10 }}>
                 <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
-                  Versandkosten (separat)
+                  Versandkosten in € (separat)
                 </label>
                 <input
                   type="text"
@@ -877,7 +936,8 @@ export default function ArtikelDetailPage() {
                   aria-label="Versandkosten separat"
                 />
                 <div className={styles.offerNote} style={{ marginTop: 6 }}>
-                  Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den Rückversand aufkommen.
+                  Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den
+                  Rückversand aufkommen.
                 </div>
               </div>
 
@@ -885,19 +945,23 @@ export default function ArtikelDetailPage() {
                 Gesamt (inkl. Versand): {formatEUR(gesamtPreis)}
               </div>
 
-              <button className={styles.submitOfferButton} onClick={handleSubmitOffer}>
-                Lack verbindlich anbieten
+              <button
+                className={styles.submitOfferButton}
+                onClick={handleSubmitOffer}
+                disabled={submitting}
+                aria-busy={submitting}
+              >
+                {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
               </button>
 
               <p className={styles.offerNote}>
-                Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können.
-                Dein Angebot ist 72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen
-                Zustellnachweis bereit.
+                Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist
+                72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Zustellnachweis bereit.
               </p>
 
               <p className={styles.offerNote} style={{ marginTop: 6 }}>
-                <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer
-                Rückabwicklung trägt der Käufer ggf. die Kosten für den Rückversand.
+                <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer Rückabwicklung
+                trägt der Käufer ggf. die Kosten für den Rückversand.
               </p>
             </div>
             {/* === /Angebotsbox === */}
@@ -917,5 +981,13 @@ export default function ArtikelDetailPage() {
         />
       )}
     </>
+  );
+}
+
+export default function Page() {
+  return (
+    <LocalToastProvider>
+      <PageBody />
+    </LocalToastProvider>
   );
 }

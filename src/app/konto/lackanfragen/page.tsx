@@ -16,9 +16,9 @@ type LackOffer = {
   vendorDisplay?: string | null
   vendorRating: number | null
   vendorRatingCount: number | null
-  priceCents: number                 // Gesamt
-  itemCents?: number                 // 🔹 Artikel
-  shippingCents?: number             // 🔹 Versand
+  priceCents: number
+  itemCents?: number
+  shippingCents?: number
   createdAt: string
   expiresAt?: string | null
 }
@@ -33,6 +33,13 @@ type RequestMeta = {
   lieferdatum?: string | null
   delivery_at?: string | null
   data?: Record<string, any> | null
+
+  // 🔹 neu: Owner (Anfragesteller)
+  ownerId?: string | null
+  ownerHandle?: string | null
+  ownerDisplay?: string | null
+  ownerRating?: number | null
+  ownerRatingCount?: number | null
 }
 
 /* ================= Helpers ================= */
@@ -55,6 +62,7 @@ function endOfDay(d?: Date): Date | undefined {
   x.setHours(23, 59, 59, 999)
   return x
 }
+
 const itemPathBy = (id: string | number) => `/lackanfragen/artikel/${encodeURIComponent(String(id))}`
 const formatEUR = (c: number) => (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
 const formatDate = (d?: Date) => (d ? d.toLocaleDateString('de-AT') : '—')
@@ -65,14 +73,12 @@ function computeValidUntil(offer: LackOffer, lieferdatum?: Date): Date | undefin
   const now = Date.now()
   const created = asDateLike(offer.createdAt)
   const plus72h = created ? new Date(created.getTime() + 72 * 60 * 60 * 1000) : undefined
-
   let dayBeforeEnd: Date | undefined
   if (lieferdatum) {
     dayBeforeEnd = new Date(lieferdatum)
     dayBeforeEnd.setDate(dayBeforeEnd.getDate() - 1)
     dayBeforeEnd.setHours(23, 59, 59, 999)
   }
-
   const candidates = [plus72h, dayBeforeEnd].filter((d): d is Date => !!d && +d > now)
   if (candidates.length === 0) return undefined
   return new Date(Math.min(...candidates.map(d => +d)))
@@ -244,7 +250,7 @@ const LackanfragenAngebote: FC = () => {
 
   function parseMaxMasse(d?: Record<string, any> | null): number | undefined {
     if (!d) return undefined
-    const candidates = [d.max_masse, d.maxMasse, d.menge, d.menge_kg, d.gewicht, d.max_gewicht]
+    const candidates = [d?.max_masse, d?.maxMasse, d?.menge, d?.menge_kg, d?.gewicht, d?.max_gewicht]
     for (const c of candidates) {
       const n = typeof c === 'string' ? parseFloat(c.replace(',', '.')) : (typeof c === 'number' ? c : NaN)
       if (isFinite(n) && n > 0) return n
@@ -406,6 +412,13 @@ const LackanfragenAngebote: FC = () => {
       if (next !== curr) router.replace(next, { scroll: false })
     } catch {}
   }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
+
+  // ⤵️ Badge "neu" ausblenden wenn diese Seite geöffnet wird
+  useEffect(() => {
+    try {
+      localStorage.setItem('offers:lastSeen', String(Date.now()))
+    } catch {}
+  }, [])
 
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
     const total = arr.length
@@ -609,11 +622,21 @@ const LackanfragenAngebote: FC = () => {
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
                 const id = String(o.requestId)
+                const meta = metaById.get(id)
                 const title = buildGroupTitle(id)
                 const href  = itemPathBy(id)
                 const liefer = lieferdatumFor(id)
                 const validUntil = computeValidUntil(o, liefer)
                 const remaining  = formatRemaining(validUntil)
+                const reqExpires = endOfDay(liefer)
+
+                // 🔹 Anfragesteller + Rating
+                const askerName = meta?.ownerHandle || meta?.ownerDisplay || 'Anfragesteller'
+                const ratingTxt =
+                  (typeof meta?.ownerRating === 'number' && isFinite(meta.ownerRating) && meta?.ownerRatingCount && meta.ownerRatingCount > 0)
+                    ? `${meta.ownerRating.toFixed(1)}/5 · ${meta.ownerRatingCount}`
+                    : 'keine Bewertungen'
+
                 return (
                   <li key={o.id} className={styles.card}>
                     <div className={styles.cardHeader}>
@@ -622,9 +645,21 @@ const LackanfragenAngebote: FC = () => {
                       </div>
                       <div className={styles.price}>{formatEUR(o.priceCents)}</div>
                     </div>
+
+                    {/* ✅ gleicher Meta-Streifen wie oben */}
+                    <div className={styles.groupMetaLine} aria-label="Anfrage-Metadaten">
+                      <span>Lieferdatum: <strong>{formatDate(liefer)}</strong></span>
+                      <span className={styles.metaDot} aria-hidden>•</span>
+                      <span>Anfrage läuft bis: <strong>{formatDateTime(reqExpires)}</strong></span>
+                    </div>
+
                     <div className={styles.cardMeta}>
                       <span className={styles.metaItem}>Anfrage-Nr.: <strong>{o.requestId}</strong></span>
-                      <span className={styles.metaItem}>Lieferdatum: {formatDate(liefer)}</span>
+                      <span className={styles.metaItem}>
+                        Anfragesteller: <strong>{askerName}</strong>
+                        {meta?.ownerDisplay && meta?.ownerHandle ? <span> · {meta.ownerDisplay}</span> : null}
+                        <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
+                      </span>
                       <span className={styles.metaItem}>
                         Gültig bis: {formatDateTime(validUntil)}{' '}
                         <span
@@ -641,6 +676,7 @@ const LackanfragenAngebote: FC = () => {
                         Preisaufschlüsselung: Artikel {formatEUR(o.itemCents ?? o.priceCents)} · Versand {(o.shippingCents ?? 0) > 0 ? formatEUR(o.shippingCents!) : 'Kostenlos'}
                       </span>
                     </div>
+
                     <div className={styles.actions}>
                       <Link href={href} className={styles.jobLink}>Zur Lackanfrage</Link>
                     </div>

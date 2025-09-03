@@ -119,3 +119,31 @@
     color: inherit; /* Entfernt die Hover-Farbe für Icons */
   }
 }
+/* Die Kachel braucht einen Positioning-Context */
+.kontoBox {
+  position: relative;
+}
+
+/* 🔴 Runder Counter oben rechts auf der Kachel */
+.kontoCardBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ef4444;
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+  text-align: center;
+
+  box-shadow: 0 0 0 2px #fff; /* optionaler weißer Ring */
+}

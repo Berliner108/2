@@ -74,12 +74,12 @@ export async function POST(
       .eq('id', id)
       .maybeSingle()
     if (reqErr)  return NextResponse.json({ error: `request read failed: ${reqErr.message}` }, { status: 400 })
-    if (!reqRow) return NextResponse.json({ error: 'Request not found' }, { status: 404 })
+    if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden' }, { status: 404 })
     if ((reqRow.status as string) !== 'open') {
-      return NextResponse.json({ error: 'Request is not open' }, { status: 400 })
+      return NextResponse.json({ error: 'Anfrage ist nicht verfügbar' }, { status: 400 })
     }
     if (reqRow.owner_id === user.id) {
-      return NextResponse.json({ error: 'Cannot offer on your own request' }, { status: 400 })
+      return NextResponse.json({ error: 'Du kannst zu eigenen Anfragen keine Angebote abgeben' }, { status: 400 })
     }
 
     // expires_at: min(now+72h, Tag davor 23:59)
