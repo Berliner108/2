@@ -29,9 +29,7 @@ function DetailSkeleton() {
       </div>
 
       <div className={styles.skelTwoCols}>
-        {/* linke Spalte: großes Bild */}
         <div className={styles.skelDrop} />
-        {/* rechte Spalte: mehrere Felder */}
         <div className={styles.skelGrid}>
           <div className={styles.skelInput} />
           <div className={styles.skelInput} />
@@ -113,7 +111,6 @@ function toDateOrNull(s?: string | null): Date | null {
 }
 function formatKg(n?: number | null): string {
   if (typeof n !== 'number' || !isFinite(n)) return '—';
-  // 0–1 Nachkommastelle, deutsches Format (Komma)
   const s = n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
   return `${s} kg`;
 }
@@ -133,7 +130,6 @@ function normZustand(z?: string): string {
 }
 
 function resolveLieferdatum(it: ApiItem): Date | null {
-  // liest aus mehreren möglichen Feldern
   // @ts-ignore
   const d = it.lieferdatum || it.delivery_at || it.data?.lieferdatum || it.data?.delivery_at;
   return toDateOrNull(d);
@@ -154,7 +150,7 @@ function resolveBilder(d: any, fallback?: string[]): string[] {
   const b = d?.bilder;
   if (Array.isArray(b) && b.length) {
     if (typeof b[0] === 'string') return b as string[];
-    if (typeof b[0] === 'object' && b[0]?.url) return (b as Array<{ url: string }>).map(x => x.url).filter(Boolean);
+    if (typeof b[0] === 'object' && (b[0] as any)?.url) return (b as Array<{ url: string }>).map(x => x.url).filter(Boolean);
   }
   if (typeof b === 'string' && b.trim()) return b.split(',').map(s => s.trim()).filter(Boolean);
   return ['/images/platzhalter.jpg'];
@@ -299,17 +295,14 @@ function resolveUserRatingCount(d: any): number | null {
   return intOrNull(d?.user_rating_count) ?? intOrNull(d?.user?.ratingCount) ?? null;
 }
 
-/* === Anzeige-Helper (Variante 1): 'Alle' zeigen, wenn leer === */
 const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
 
-/* === Neu: Robuster Listen-zu-Text Converter === */
 function listToText(v: unknown): string {
   if (Array.isArray(v)) return (v as unknown[]).map(String).map(s => s.trim()).filter(Boolean).join(', ');
   if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean).join(', ');
   return '';
 }
 
-/* === Neu: Labels & Pretty-Helper für Anwendung/Oberfläche === */
 const ANWENDUNG_LABELS: Record<string, string> = {
   innen: 'Innen',
   außen: 'Außen',
@@ -330,7 +323,7 @@ function prettyLabel(val: unknown, labels: Record<string, string>) {
   const key = s.normalize('NFKC').toLowerCase();
   return labels[key] ?? (s.charAt(0).toUpperCase() + s.slice(1));
 }
-// === Resttage-Badge für "Lieferdatum bis" ===
+
 function daysUntil(date: Date): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -368,6 +361,31 @@ function DeadlineBadge({ date }: { date: Date | null }) {
   );
 }
 
+/* === Preis-/Eingabe-Helper === */
+
+function limitMoneyInput(raw: string): string {
+  let v = (raw || '').replace(/[^\d.,]/g, '');
+  const firstSep = v.search(/[.,]/);
+  if (firstSep === -1) {
+    return v.replace(/\D/g, '').slice(0, 5);
+  }
+  const sepChar = v[firstSep];
+  const intPart = v.slice(0, firstSep).replace(/\D/g, '').slice(0, 5);
+  const fracDigits = v.slice(firstSep + 1).replace(/\D/g, '').slice(0, 2);
+  const safeInt = intPart;
+  return `${safeInt}${sepChar}${fracDigits}`;
+}
+
+const MONEY_REGEX_FINAL = /^\d{1,5}([.,]\d{1,2})?$/;
+
+function toNum(s: string): number {
+  if (!s) return 0;
+  const n = parseFloat(s.replace(',', '.'));
+  return isNaN(n) ? 0 : n;
+}
+function formatEUR(n: number): string {
+  return n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+}
 
 /* ===================== Mapping ===================== */
 
@@ -422,10 +440,11 @@ export default function ArtikelDetailPage() {
   const params = useParams() as { id?: string };
   const [artikel, setArtikel] = useState<ArtikelView | null>(null);
   const [loading, setLoading] = useState(true);
-  const [preis, setPreis] = useState('');
-  const [extraPreisVisible] = useState(false);
-  const [extraPreis, setExtraPreis] = useState('');
-  const [showFarbcodeHint, setShowFarbcodeHint] = useState(false);
+
+  // Preis-States
+  const [basisPreis, setBasisPreis] = useState('');
+  const [versandPreis, setVersandPreis] = useState('');
+  const [buyerPaysReturn, setBuyerPaysReturn] = useState(true);
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -440,7 +459,6 @@ export default function ArtikelDetailPage() {
       try {
         let view: ArtikelView | null = null;
 
-        // Detail
         try {
           const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}`, { cache: 'no-store' });
           if (res.ok) {
@@ -484,7 +502,6 @@ export default function ArtikelDetailPage() {
           }
         } catch {}
 
-        // Liste zum Auffüllen
         try {
           const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
           if (resList.ok) {
@@ -526,7 +543,64 @@ export default function ArtikelDetailPage() {
     [artikel?.bilder]
   );
 
-  // ===== Loading-Zustand: nur TopLoader + Skeleton unter der Navbar
+  const gesamtPreis = useMemo(
+    () => toNum(basisPreis) + toNum(versandPreis),
+    [basisPreis, versandPreis]
+  );
+
+  async function handleSubmitOffer() {
+    // finale Validierung
+    if (!MONEY_REGEX_FINAL.test(basisPreis)) {
+      alert('Bitte einen gültigen Artikelpreis eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
+      return;
+    }
+    if (versandPreis && !MONEY_REGEX_FINAL.test(versandPreis)) {
+      alert('Bitte gültige Versandkosten eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
+      return;
+    }
+    if (!artikel?.id) {
+      alert('Artikel-/Request-ID fehlt.');
+      return;
+    }
+
+    const priceBase   = toNum(basisPreis);
+    const shipping    = toNum(versandPreis);
+    const total       = priceBase + shipping;
+    const amountCents = Math.round(total * 100);
+
+    const description =
+      `Artikelpreis: ${formatEUR(priceBase)}; ` +
+      `Versand: ${formatEUR(shipping)}; ` +
+      `Gesamt: ${formatEUR(total)}; ` +
+      `Rückversand zahlt ${buyerPaysReturn ? 'Käufer' : 'Verkäufer'}.`;
+
+    try {
+      const res = await fetch('/api/lack/offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: String(artikel.id),
+          amountCents,
+          currency: 'EUR', // wird serverseitig normalisiert
+          description,
+        }),
+      });
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (j?.error === 'ALREADY_OFFERED') throw new Error('Du hast zu dieser Anfrage bereits ein Angebot abgegeben.');
+        throw new Error(j?.error || 'Fehler beim Senden des Angebots');
+      }
+      alert('Angebot gesendet.');
+      // optional: Felder zurücksetzen
+      setBasisPreis('');
+      setVersandPreis('');
+      setBuyerPaysReturn(true);
+    } catch (e) {
+      alert((e as Error).message || 'Unbekannter Fehler');
+    }
+  }
+
+  // ===== Loading
   if (loading) {
     return (
       <>
@@ -596,7 +670,6 @@ export default function ArtikelDetailPage() {
 
             {/* === META-GRID === */}
             <div className={styles.meta}>
-              
               <div className={styles.metaItem1}>
                 <span className={styles.label}>Lieferdatum bis:</span>
                 <span className={styles.value}>
@@ -609,10 +682,8 @@ export default function ArtikelDetailPage() {
                 <div className={styles.metaItem1}>
                   <span className={styles.label}>Benötigte Menge:</span>
                   <span className={styles.value}>{formatKg(artikel.menge)}</span>
-                  {/* oder ganz simpel: <span className={styles.value}>{artikel.menge} kg</span> */}
                 </div>
               )}
-
 
               {artikel.kategorie && (
                 <div className={styles.metaItem}>
@@ -660,9 +731,8 @@ export default function ArtikelDetailPage() {
               <div className={styles.metaItem}>
                 <span className={styles.label}>Farbcode:</span>
                 <span className={styles.value}>{artikel.farbcode || '—'}</span>
-
-                
               </div>
+
               {artikel.qualität && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>Qualität:</span>
@@ -713,7 +783,6 @@ export default function ArtikelDetailPage() {
                 <span className={styles.label}>Benötigter Zustand:</span>
                 <span className={styles.value}>{artikel.zustand || '—'}</span>
               </div>
-              
 
               {artikel.effekt && (
                 <div className={styles.metaItem}>
@@ -753,12 +822,11 @@ export default function ArtikelDetailPage() {
 
             {/* Beschreibung */}
             {artikel.beschreibung && (
-                <div className={styles.beschreibung}>
-                  <h2>Beschreibung zur Anfrage:</h2>
-                  <p className={styles.preserveNewlines}>{artikel.beschreibung}</p>
-                </div>
-              )}
-
+              <div className={styles.beschreibung}>
+                <h2>Beschreibung zur Anfrage:</h2>
+                <p className={styles.preserveNewlines}>{artikel.beschreibung}</p>
+              </div>
+            )}
 
             <div className={styles.badges}>
               {artikel.gewerblich && (
@@ -769,33 +837,80 @@ export default function ArtikelDetailPage() {
               )}
             </div>
 
+            {/* === Angebotsbox === */}
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
-                Preis inkl. Versand:
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                  Artikelpreis (ohne Versand)
+                </label>
                 <input
-                  type="number"
-                  value={preis}
-                  onChange={(e) => setPreis(e.target.value)}
+                  type="text"
+                  inputMode="decimal"
+                  pattern="^\d{1,5}([.,]\d{1,2})?$"
+                  maxLength={8}
+                  value={basisPreis}
+                  onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
                   className={styles.priceField}
-                  placeholder="Preis (€)"
+                  placeholder="z. B. 120,00"
+                  aria-label="Artikelpreis ohne Versand"
                 />
-
-                {extraPreisVisible && (
-                  <input
-                    type="number"
-                    value={extraPreis}
-                    onChange={(e) => setExtraPreis(e.target.value)}
-                    className={styles.altPriceField}
-                    placeholder="Preis inkl. Versand (€)"
-                  />
-                )}
               </div>
 
-              <button className={styles.submitOfferButton}>Lack verbindlich anbieten</button>
+              <div className={styles.inputGroup} style={{ marginTop: 10 }}>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                  Versandkosten (separat)
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  pattern="^\d{1,5}([.,]\d{1,2})?$"
+                  maxLength={8}
+                  value={versandPreis}
+                  onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}
+                  className={styles.altPriceField}
+                  placeholder="z. B. 6,90"
+                  aria-label="Versandkosten separat"
+                />
+                <div className={styles.offerNote} style={{ marginTop: 6 }}>
+                  Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den Rückversand aufkommen.
+                </div>
+              </div>
+
+              <div className={styles.inputGroup} style={{ marginTop: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={buyerPaysReturn}
+                    onChange={(e) => setBuyerPaysReturn(e.target.checked)}
+                    aria-label="Rückversand zahlt der Käufer"
+                  />
+                  Rückversand zahlt der Käufer
+                </label>
+                <div className={styles.offerNote} style={{ marginTop: 6 }}>
+                  Dieser Hinweis wird im Angebot gespeichert und dem Käufer angezeigt.
+                </div>
+              </div>
+
+              <div className={styles.totalRow} style={{ marginTop: 12, fontWeight: 700 }}>
+                Gesamt (inkl. Versand): {formatEUR(gesamtPreis)}
+              </div>
+
+              <button className={styles.submitOfferButton} onClick={handleSubmitOffer}>
+                Lack verbindlich anbieten
+              </button>
+
               <p className={styles.offerNote}>
-                Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist 72h gültig. Halte nach dem Versand bitte unbedingt stets einen Zustellnachweis bereit.
+                Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können.
+                Dein Angebot ist 72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen
+                Zustellnachweis bereit.
+              </p>
+
+              <p className={styles.offerNote} style={{ marginTop: 6 }}>
+                <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer
+                Rückabwicklung trägt der Käufer ggf. die Kosten für den Rückversand.
               </p>
             </div>
+            {/* === /Angebotsbox === */}
           </div>
         </div>
       </div>

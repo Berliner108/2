@@ -7,11 +7,6 @@ import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// STRIPE
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
-
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
 
@@ -99,64 +94,6 @@ async function persistUsernameOnce(u: string) {
   }
 }
 
-type AddPaymentMethodProps = { onDone: () => void; onError: (msg: string) => void }
-
-function AddPaymentMethod({ onDone, onError }: AddPaymentMethodProps): JSX.Element {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [saving, setSaving] = useState(false)
-
-  async function submit() {
-    if (!stripe || !elements) return
-    setSaving(true)
-
-    const { error, setupIntent } = await stripe.confirmSetup({
-      elements,
-      redirect: 'if_required',
-      confirmParams: { return_url: window.location.href },
-    })
-
-    setSaving(false)
-
-    if (error) {
-      onError(error.message || 'Fehler beim Speichern der Zahlungsmethode.')
-      return
-    }
-
-    switch (setupIntent?.status) {
-      case 'succeeded':
-      case 'processing':
-      case 'requires_action':
-        onDone()
-        break
-      default:
-        onDone()
-    }
-  }
-
-  return (
-    <div style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 10 }}>
-      <PaymentElement options={{ layout: 'tabs' }} />
-      <button
-        onClick={submit}
-        disabled={saving}
-        style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: '#111827', color: '#fff' }}
-      >
-        {saving ? 'Wird gespeichert…' : 'Zahlungsmethode speichern'}
-      </button>
-    </div>
-  )
-}
-
-type StripePm = {
-  id: string
-  type: 'card' | 'sepa_debit' | string
-  brand?: string
-  last4?: string
-  exp?: string | null
-  bank?: string | null
-}
-
 type InviteRow = {
   id: string
   invitee_email: string
@@ -199,16 +136,6 @@ const Einstellungen = (): JSX.Element => {
   const [signOutAll, setSignOutAll] = useState(true)
   const [showPw, setShowPw] = useState(false)
 
-  // Autofill fürs PaymentElement
-  const [billingName, setBillingName] = useState<string>('')
-
-  // STRIPE state
-  const [pmItems, setPmItems] = useState<StripePm[]>([])
-  const [pmDefault, setPmDefault] = useState<string | null>(null)
-  const [pmLoading, setPmLoading] = useState<boolean>(false)
-  const [adding, setAdding] = useState(false)
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-
   // Invite state
   const [inviteLink, setInviteLink] = useState<string>('')
   const [inviteEmails, setInviteEmails] = useState<string>('')
@@ -216,10 +143,6 @@ const Einstellungen = (): JSX.Element => {
   const [invMsg, setInvMsg] = useState<string | null>(null)
   const [inviteList, setInviteList] = useState<InviteRow[]>([])
   const [listLoading, setListLoading] = useState<boolean>(false)
-
-  // Delete account
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
 
   // Dummy-Bewertungen (unverändert)
   const [reviews] = useState([
@@ -286,16 +209,11 @@ const Einstellungen = (): JSX.Element => {
       setCompanyName(String(prof?.company_name ?? meta.companyName ?? ''))
       setVatNumber(String(prof?.vat_number ?? meta.vatNumber ?? ''))
 
-      // Billing Name fürs PaymentElement (Vor-/Nachname aus metadata, sonst Username)
-      const billing = [meta.firstName, meta.lastName].filter(Boolean).join(' ').trim()
-      setBillingName(billing || uname || '')
-
       // Einladungslink
       const origin = window.location.origin.replace(/\/$/, '')
       setInviteLink(`${origin}/registrieren?invited_by=${user.id}`)
 
-      // Stripe + Invites
-      refreshPms()
+      // Einladungen laden
       loadInvites()
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -312,24 +230,7 @@ const Einstellungen = (): JSX.Element => {
   }
   const onChangeVat = (v: string) => setVatNumber(v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 14))
 
-  // ====== Stripe / Invites Helpers ======
-  const refreshPms = async () => {
-    try {
-      setPmLoading(true)
-      const res = await fetch('/api/stripe/list-pms')
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || 'Fehler beim Laden der Zahlungsmethoden.')
-      setPmItems(json.items || [])
-      setPmDefault(json.defaultPm || null)
-    } catch (e: any) {
-      setToast({ type: 'error', message: e?.message || 'Zahlungsmethoden konnten nicht geladen werden.' })
-      setPmItems([])
-      setPmDefault(null)
-    } finally {
-      setPmLoading(false)
-    }
-  }
-
+  // ====== Invites Helpers ======
   const loadInvites = async () => {
     try {
       setListLoading(true)
@@ -375,47 +276,6 @@ const Einstellungen = (): JSX.Element => {
       setInvMsg(e?.message || 'Fehler beim Senden')
     } finally {
       setSendingInv(false)
-    }
-  }
-
-  const startAdd = async () => {
-    try {
-      setAdding(true)
-      const res = await fetch('/api/stripe/setup-intent', { method: 'POST' })
-      const json = await res.json()
-      if (!res.ok || !json.clientSecret) throw new Error(json?.error || 'Setup fehlgeschlagen.')
-      setClientSecret(json.clientSecret)
-    } catch (e: any) {
-      setToast({ type: 'error', message: e?.message || 'Setup fehlgeschlagen.' })
-      setAdding(false)
-    }
-  }
-
-  const setDefaultPm = async (pmId: string) => {
-    try {
-      await fetch('/api/stripe/set-default', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pmId }),
-      })
-      await refreshPms()
-      setToast({ type: 'success', message: 'Als Standard festgelegt.' })
-    } catch {
-      setToast({ type: 'error', message: 'Konnte nicht als Standard gesetzt werden.' })
-    }
-  }
-
-  const removePm = async (pmId: string) => {
-    try {
-      await fetch('/api/stripe/detach-pm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pmId }),
-      })
-      await refreshPms()
-      setToast({ type: 'success', message: 'Zahlungsmethode entfernt.' })
-    } catch {
-      setToast({ type: 'error', message: 'Entfernen fehlgeschlagen.' })
     }
   }
 
@@ -570,21 +430,8 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
-  const stripeOptions = useMemo(
-    () => (clientSecret
-      ? ({
-          clientSecret,
-          appearance: { theme: 'stripe' },
-          defaultValues: {
-            billingDetails: {
-              name: billingName || undefined,
-              email: email || undefined,
-            },
-          },
-        } as const)
-      : null),
-    [clientSecret, billingName, email],
-  )
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   return (
     <>
@@ -833,98 +680,6 @@ const Einstellungen = (): JSX.Element => {
                 {pwSaving ? 'Ändere…' : 'Passwort ändern'}
               </button>
             </div>
-
-            {/* Zahlungsdetails */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Zahlungsdetails</h3>
-
-            <div className={styles.inputGroup}>
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', width: '100%' }}>
-                <div style={{ padding: 12, background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontWeight: 600 }}>
-                  Gespeicherte Methoden
-                </div>
-                <div style={{ padding: 12 }}>
-                  {pmLoading && <div style={{ color: '#6b7280' }}>Lade…</div>}
-                  {!pmLoading && pmItems.length === 0 && <div style={{ color: '#6b7280' }}>Noch keine Zahlungsmethode gespeichert.</div>}
-
-                  {!pmLoading && pmItems.length > 0 && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ textAlign: 'left', fontSize: 14, color: '#6b7280' }}>
-                          <th style={{ padding: '8px 6px' }}>Typ</th>
-                          <th style={{ padding: '8px 6px' }}>Details</th>
-                          <th style={{ padding: '8px 6px' }}>Standard</th>
-                          <th style={{ padding: '8px 6px' }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pmItems.map(pm => (
-                          <tr key={pm.id} style={{ borderTop: '1px solid #f3f4f6' }}>
-                            <td style={{ padding: '10px 6px' }}>{pm.type === 'card' ? 'Karte' : pm.type === 'sepa_debit' ? 'SEPA' : pm.type}</td>
-                            <td style={{ padding: '10px 6px' }}>
-                              {pm.type === 'card' && <>•••• {pm.last4} — {pm.brand?.toUpperCase()} {pm.exp ? `(exp. ${pm.exp})` : ''}</>}
-                              {pm.type === 'sepa_debit' && <>IBAN ••••{pm.last4}</>}
-                            </td>
-                            <td style={{ padding: '10px 6px' }}>
-                              {pmDefault === pm.id ? (
-                                <span style={{ color: '#10b981' }}>✓</span>
-                              ) : (
-                                <button
-                                  onClick={() => setDefaultPm(pm.id)}
-                                  type="button"
-                                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e5e7eb' }}
-                                >
-                                  Als Standard
-                                </button>
-                              )}
-                            </td>
-                            <td style={{ padding: '10px 6px', textAlign: 'right' }}>
-                              <button
-                                onClick={() => removePm(pm.id)}
-                                type="button"
-                                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e5e7eb', color: '#b91c1c' }}
-                              >
-                                Entfernen
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Zahlungsmethode hinzufügen */}
-            {!adding ? (
-              <div className={styles.inputGroup}>
-                <button
-                  type="button"
-                  onClick={startAdd}
-                  className={styles.saveButton}
-                  style={{ width: 'fit-content' }}
-                >
-                  Zahlungsmethode hinzufügen
-                </button>
-              </div>
-            ) : (
-              clientSecret && stripePromise && (
-                <div className={styles.inputGroup}>
-                  <Elements stripe={stripePromise} options={stripeOptions!}>
-                    <AddPaymentMethod
-                      onDone={() => {
-                        setAdding(false)
-                        setClientSecret(null)
-                        refreshPms()
-                        setToast({ type: 'success', message: 'Zahlungsmethode gespeichert.' })
-                      }}
-                      onError={(msg) => setToast({ type: 'error', message: msg })}
-                    />
-                  </Elements>
-                </div>
-              )
-            )}
 
             {/* Leute einladen */}
             <div className={styles.separator}></div>

@@ -6,25 +6,34 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './lackanfragen.module.css'
-import { artikelDaten, type Artikel } from '@/data/ArtikelDatenLackanfragen'
+
+// Checkout-Modal
+import CheckoutModal from '../../components/checkout/CheckoutModal'
 
 /* ================= Types ================= */
 
 type LackOffer = {
   id: string
   requestId: string | number
-  vendor: string
+  vendorName: string
+  vendorUsername?: string | null // <- Handle optional
+  vendorRating: number | null
+  vendorRatingCount: number | null
   priceCents: number
   createdAt: string // ISO
+  expiresAt?: string | null
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type TopSection = 'received' | 'submitted'
 
-type AcceptOfferResponse = {
-  orderId: string
-  clientSecret?: string | null
-  redirectUrl?: string | null
+type RequestMeta = {
+  id: string
+  title?: string | null
+  ort?: string | null // (falls vorhanden in data)
+  lieferdatum?: string | null
+  delivery_at?: string | null
+  data?: Record<string, any> | null
 }
 
 /* ================= Helpers ================= */
@@ -36,28 +45,30 @@ function asDateLike(v: unknown): Date | undefined {
   return isNaN(+d) ? undefined : d
 }
 
-function computeItemTitle(a: Artikel): string {
-  const extras = [a.hersteller, a.ort, a.menge ? `${a.menge} kg` : ''].filter(Boolean).join(' · ')
-  return [a.titel, extras].filter(Boolean).join(' — ')
+function toDateOrUndef(...vals: Array<string | null | undefined>): Date | undefined {
+  for (const v of vals) {
+    const d = asDateLike(v || undefined)
+    if (d) return d
+  }
+  return undefined
 }
 
-const itemPath   = (a: Artikel) => `/lackanfragen/artikel/${encodeURIComponent(String(a.id))}`
 const itemPathBy = (id: string | number) => `/lackanfragen/artikel/${encodeURIComponent(String(id))}`
 
 const formatEUR = (c: number) =>
   (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
+const formatDate = (d?: Date) => (d ? d.toLocaleDateString('de-AT') : '—')
 const formatDateTime = (d?: Date) => (d ? d.toLocaleString('de-AT') : '—')
 
 /** Gültig bis: min(created+72h, (lieferdatum - 1 Tag, 23:59)) */
-function computeValidUntil(offer: LackOffer, artikel?: Artikel): Date | undefined {
+function computeValidUntil(offer: LackOffer, lieferdatum?: Date): Date | undefined {
   const now = Date.now()
   const created = asDateLike(offer.createdAt)
   const plus72h = created ? new Date(created.getTime() + 72 * 60 * 60 * 1000) : undefined
 
-  const liefer = asDateLike(artikel?.lieferdatum)
   let dayBeforeEnd: Date | undefined
-  if (liefer) {
-    dayBeforeEnd = new Date(liefer)
+  if (lieferdatum) {
+    dayBeforeEnd = new Date(lieferdatum)
     dayBeforeEnd.setDate(dayBeforeEnd.getDate() - 1)
     dayBeforeEnd.setHours(23, 59, 59, 999)
   }
@@ -82,22 +93,6 @@ function formatRemaining(target?: Date) {
   const level = totalMinutes <= 60 ? 'critical' : (totalMinutes <= 24 * 60 ? 'soon' : 'ok')
   return { text, level: level as 'critical' | 'soon' | 'ok' }
 }
-
-const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
-
-/* ===== Dummy-Angebote (Lack) ===== */
-const initialReceived: LackOffer[] = [
-  { id:'r1a', requestId:'1', vendor:'LackPro · 4.7',    priceCents: 9900, createdAt: hoursAgo(20) },
-  { id:'r1b', requestId:'1', vendor:'ColorTec · 4.9',   priceCents: 9500, createdAt: hoursAgo(10) },
-  { id:'r2a', requestId:'3', vendor:'PowderX · 4.6',    priceCents:14900, createdAt: hoursAgo(50) },
-  { id:'r3a', requestId:'4', vendor:'CoatHub · 4.8',    priceCents:21000, createdAt: hoursAgo(30) },
-  { id:'r3b', requestId:'4', vendor:'CoatIt · 4.5',     priceCents:18900, createdAt: hoursAgo(28) },
-]
-const initialSubmitted: LackOffer[] = [
-  { id:'s1', requestId:'2', vendor:'Du', priceCents:12000, createdAt: hoursAgo(12) },
-  { id:'s2', requestId:'3', vendor:'Du', priceCents:18000, createdAt: hoursAgo(60) },
-  { id:'s3', requestId:'4', vendor:'Du', priceCents:21000, createdAt: hoursAgo(6)  },
-]
 
 /* ============ Pagination UI ============ */
 const Pagination: FC<{
@@ -178,18 +173,15 @@ const ALLOWED_PS = [2, 10, 20, 50]
 
 const LackanfragenAngebote: FC = () => {
   const router = useRouter()
-  const { msg, ok: toastOk, err: toastErr, View: Toast } = useToast()
+  const { ok: toastOk, err: toastErr, View: Toast } = useToast()
 
-  const itemsById = useMemo(() => {
-    const map = new Map<string, Artikel>()
-    for (const a of artikelDaten as Artikel[]) map.set(String(a.id), a)
-    return map
-  }, [])
+  // vom Server: IDs + Metadaten deiner eigenen Requests
+  const [requestIds, setRequestIds] = useState<string[]>([])
+  const [requestMeta, setRequestMeta] = useState<RequestMeta[]>([])
 
-  const OPEN_REQUEST_IDS = useMemo(() => Array.from(itemsById.keys()), [itemsById])
-
-  const [receivedData, setReceivedData] = useState<LackOffer[]>(initialReceived)
-  const [submittedData, setSubmittedData] = useState<LackOffer[]>(initialSubmitted)
+  // Daten-States (leer initialisiert – KEINE Dummy-Daten)
+  const [receivedData, setReceivedData] = useState<LackOffer[]>([])
+  const [submittedData, setSubmittedData] = useState<LackOffer[]>([])
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
   const [confirmOffer, setConfirmOffer] = useState<null | {
@@ -198,6 +190,11 @@ const LackanfragenAngebote: FC = () => {
     amountCents: number
     vendor: string
   }>(null)
+
+  // Checkout-Modal State
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!confirmOffer) return
@@ -214,19 +211,83 @@ const LackanfragenAngebote: FC = () => {
     try { localStorage.setItem('lack-angeboteTop', topSection) } catch {}
   }, [topSection])
 
+  // echte Offers + eigene Request-IDs + Metadaten laden
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const res = await fetch('/api/lack/offers/for-account', { cache: 'no-store' })
+        if (!res.ok) return
+        const j: {
+          received?: LackOffer[]
+          submitted?: LackOffer[]
+          requestIds?: (string | number)[]
+          requests?: RequestMeta[]
+        } = await res.json()
+        if (Array.isArray(j.received))  setReceivedData(j.received)
+        if (Array.isArray(j.submitted)) setSubmittedData(j.submitted)
+        if (Array.isArray(j.requestIds)) setRequestIds(j.requestIds.map(id => String(id)))
+        if (Array.isArray(j.requests))  setRequestMeta(j.requests)
+      } catch {}
+    })()
+  }, [])
+
+  const metaById = useMemo(() => {
+    const m = new Map<string, RequestMeta>()
+    requestMeta.forEach(r => m.set(String(r.id), r))
+    return m
+  }, [requestMeta])
+
+  // IDs für Gruppierung:
+  const OPEN_REQUEST_IDS = useMemo(() => {
+    const s = new Set<string>()
+    requestIds.forEach(id => s.add(String(id)))
+    receivedData.forEach(o => s.add(String(o.requestId)))
+    return Array.from(s)
+  }, [requestIds, receivedData])
+
+  function parseMaxMasse(d?: Record<string, any> | null): number | undefined {
+    if (!d) return undefined
+    const candidates = [d.max_masse, d.maxMasse, d.menge, d.menge_kg, d.gewicht, d.max_gewicht]
+    for (const c of candidates) {
+      const n = typeof c === 'string' ? parseFloat(c.replace(',', '.')) : (typeof c === 'number' ? c : NaN)
+      if (isFinite(n) && n > 0) return n
+    }
+    return undefined
+  }
+
+  function buildGroupTitle(id: string): string {
+    const meta = metaById.get(id)
+
+    const verfahrenstitel =
+      (meta?.data?.verfahrenstitel ||
+       meta?.data?.verfahrenTitel ||
+       meta?.data?.verfahren ||
+       meta?.title ||
+       `Anfrage #${id}`) as string
+
+    const ort = (meta?.data?.ort || meta?.ort || '').toString().trim()
+    const mm = parseMaxMasse(meta?.data)
+
+    const extras = [ort, (typeof mm === 'number' ? `${mm} kg` : '')].filter(Boolean).join(' · ')
+    return [verfahrenstitel, extras].filter(Boolean).join(' — ')
+  }
+
+  function lieferdatumFor(id: string): Date | undefined {
+    const meta = metaById.get(id)
+    return toDateOrUndef(meta?.lieferdatum, meta?.delivery_at, meta?.data?.lieferdatum, meta?.data?.delivery_at)
+  }
+
   const pruneExpiredOffers = () => {
     const now = Date.now()
     setReceivedData(prev =>
       prev.filter(o => {
-        const a = itemsById.get(String(o.requestId))
-        const vu = computeValidUntil(o, a)
+        const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
         return !!vu && +vu > now
       })
     )
     setSubmittedData(prev =>
       prev.filter(o => {
-        const a = itemsById.get(String(o.requestId))
-        const vu = computeValidUntil(o, a)
+        const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
         return !!vu && +vu > now
       })
     )
@@ -252,19 +313,20 @@ const LackanfragenAngebote: FC = () => {
   const receivedGroups = useMemo(() => {
     const q = query.trim().toLowerCase()
     const groups = OPEN_REQUEST_IDS.map(id => {
-      const artikel = itemsById.get(String(id))
-      const titleLC = artikel ? computeItemTitle(artikel).toLowerCase() : `anfrage #${id}`
+      const title = buildGroupTitle(id)
+      const titleLC = title.toLowerCase()
       const offersForItem = receivedData.filter(o => String(o.requestId) === String(id))
       const offers = offersForItem.filter(o =>
         !q ||
         String(o.requestId).toLowerCase().includes(q) ||
-        o.vendor.toLowerCase().includes(q) ||
+        o.vendorName.toLowerCase().includes(q) ||
+        (o.vendorUsername && o.vendorUsername.toLowerCase().includes(q)) || // <- Suche über Handle
         titleLC.includes(q)
       )
       const showNoOffersGroup = offersForItem.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
-      return { requestId: String(id), artikel, offers, showNoOffersGroup, bestPrice, latest }
+      return { requestId: String(id), title, offers, showNoOffersGroup, bestPrice, latest }
     })
     const visible = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
     visible.sort((a, b) => {
@@ -275,7 +337,7 @@ const LackanfragenAngebote: FC = () => {
       return 0
     })
     return visible
-  }, [OPEN_REQUEST_IDS, itemsById, receivedData, query, sort])
+  }, [OPEN_REQUEST_IDS, receivedData, query, sort, metaById])
 
   const submitted = useMemo(() => {
     let arr = submittedData
@@ -393,33 +455,32 @@ const LackanfragenAngebote: FC = () => {
     setAcceptingId(confirmOffer.offerId)
 
     try {
-      const res = await fetch('/api/lack/accept-offer', {
+      const res = await fetch('/api/orders/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          kind: 'lack',
           requestId: String(confirmOffer.requestId),
           offerId: confirmOffer.offerId,
         }),
       })
-      const json: AcceptOfferResponse & { error?: string } = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Annahme fehlgeschlagen.')
+      const json: { orderId: string; clientSecret?: string | null; error?: string } = await res.json()
+      if (!res.ok) {
+        if (json.error === 'SELLER_NOT_CONNECTED') throw new Error('Dieser Anbieter hat sein Auszahlungskonto noch nicht verbunden.')
+        if (json.error === 'SELLER_NOT_READY')     throw new Error('Dieser Anbieter ist noch nicht auszahlungsbereit.')
+        if (json.error === 'OFFER_NOT_FOUND')      throw new Error('Das Angebot existiert nicht mehr oder ist abgelaufen.')
+        throw new Error(json.error || 'Annahme fehlgeschlagen.')
+      }
 
       setConfirmOffer(null)
-
-      if (json.redirectUrl) {
-        router.push(json.redirectUrl)
-        return
-      }
-
+      setActiveOrderId(json.orderId || null)
       if (json.clientSecret) {
-        router.push(
-          `/zahlung?orderId=${encodeURIComponent(json.orderId)}&cs=${encodeURIComponent(json.clientSecret)}&returnTo=${encodeURIComponent('/konto/lackanfragen')}`
-        )
-        return
+        setClientSecret(json.clientSecret)
+        setCheckoutOpen(true)
+      } else {
+        toastOk('Angebot angenommen.')
+        router.push(`/konto/orders/${encodeURIComponent(json.orderId)}`)
       }
-
-      toastOk('Angebot angenommen.')
-      router.push(`/konto/orders/${encodeURIComponent(json.orderId)}`)
     } catch (e: any) {
       toastErr(e?.message || 'Konnte Angebot nicht annehmen.')
     } finally {
@@ -427,7 +488,7 @@ const LackanfragenAngebote: FC = () => {
     }
   }
 
-  const cols = '2fr 1fr 1.6fr 1fr'
+  const cols = '2fr 1fr 1.2fr 1.6fr 1fr' // Anbieter | Preis | Lieferdatum | Gültig bis | Aktion
 
   const ReceivedSection = () => (
     <>
@@ -438,9 +499,9 @@ const LackanfragenAngebote: FC = () => {
         ) : (
           <>
             <ul className={styles.groupList}>
-              {rec.pageItems.map(({ requestId, artikel, offers, showNoOffersGroup, bestPrice }) => {
-                const title = artikel ? computeItemTitle(artikel) : `Anfrage #${requestId}`
-                const href  = artikel ? itemPath(artikel) : itemPathBy(requestId)
+              {rec.pageItems.map(({ requestId, title, offers, showNoOffersGroup, bestPrice }) => {
+                const href  = itemPathBy(requestId)
+                const liefer = lieferdatumFor(String(requestId))
                 return (
                   <li key={requestId} className={styles.groupCard}>
                     <div className={styles.groupHeader}>
@@ -466,6 +527,7 @@ const LackanfragenAngebote: FC = () => {
                           <div className={styles.offerHeader} role="row" style={{ gridTemplateColumns: cols }}>
                             <div role="columnheader">Anbieter</div>
                             <div role="columnheader">Preis</div>
+                            <div role="columnheader">Lieferdatum</div>
                             <div role="columnheader">Angebot gültig bis</div>
                             <div role="columnheader" className={styles.colAction}>Aktion</div>
                           </div>
@@ -475,19 +537,31 @@ const LackanfragenAngebote: FC = () => {
                           .slice()
                           .sort((a,b)=>a.priceCents-b.priceCents)
                           .map(o => {
-                            const a = itemsById.get(String(o.requestId))
-                            const validUntil = computeValidUntil(o, a)!
+                            const validUntil = computeValidUntil(o, liefer)
                             const remaining = formatRemaining(validUntil)
+
+                            const ratingTxt =
+                              (o.vendorRatingCount && o.vendorRatingCount > 0 && typeof o.vendorRating === 'number')
+                                ? `${o.vendorRating.toFixed(1)}/5 · ${o.vendorRatingCount}`
+                                : 'keine Bewertungen'
+
                             return (
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
-                                  <span className={styles.vendor}>{o.vendor}</span>
+                                  <span className={styles.vendor}>{o.vendorName}</span>
+                                  {o.vendorUsername ? (
+                                    <span className={styles.vendorHandle}> @{o.vendorUsername}</span>
+                                  ) : null}
+                                  <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                                   {o.priceCents === bestPrice && offers.length > 1 && (
                                     <span className={styles.tagBest}>Bester Preis</span>
                                   )}
                                 </div>
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
                                   {formatEUR(o.priceCents)}
+                                </div>
+                                <div role="cell" data-label="Lieferdatum">
+                                  {formatDate(liefer)}
                                 </div>
                                 <div role="cell" className={styles.validCell} data-label="Gültig bis">
                                   <span>{formatDateTime(validUntil)}</span>
@@ -506,7 +580,12 @@ const LackanfragenAngebote: FC = () => {
                                     type="button"
                                     className={styles.acceptBtn}
                                     disabled={acceptingId === o.id}
-                                    onClick={() => openConfirm(o.requestId, o.id, o.priceCents, o.vendor)}
+                                    onClick={() => openConfirm(
+                                      o.requestId,
+                                      o.id,
+                                      o.priceCents,
+                                      o.vendorUsername ? `${o.vendorName} (@${o.vendorUsername})` : o.vendorName
+                                    )}
                                     title="Angebot annehmen"
                                   >
                                     {acceptingId === o.id ? 'Wird angenommen…' : 'Angebot annehmen'}
@@ -548,10 +627,11 @@ const LackanfragenAngebote: FC = () => {
           <>
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
-                const artikel = itemsById.get(String(o.requestId))
-                const title   = artikel ? computeItemTitle(artikel) : `Anfrage #${o.requestId} (nicht verfügbar)`
-                const href    = artikel ? itemPath(artikel) : '/lackanfragen'
-                const validUntil = computeValidUntil(o, artikel)!
+                const id = String(o.requestId)
+                const title = buildGroupTitle(id)
+                const href  = itemPathBy(id)
+                const liefer = lieferdatumFor(id)
+                const validUntil = computeValidUntil(o, liefer)
                 const remaining  = formatRemaining(validUntil)
                 return (
                   <li key={o.id} className={styles.card}>
@@ -563,6 +643,7 @@ const LackanfragenAngebote: FC = () => {
                     </div>
                     <div className={styles.cardMeta}>
                       <span className={styles.metaItem}>Anfrage-Nr.: <strong>{o.requestId}</strong></span>
+                      <span className={styles.metaItem}>Lieferdatum: {formatDate(liefer)}</span>
                       <span className={styles.metaItem}>
                         Gültig bis: {formatDateTime(validUntil)}{' '}
                         <span
@@ -614,7 +695,7 @@ const LackanfragenAngebote: FC = () => {
             placeholder="Anfrage-Nr., Anbieter oder Titel…"
             className={styles.search}
           />
-          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
+        <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
           <select
             id="sort"
             value={sort}
@@ -695,6 +776,17 @@ const LackanfragenAngebote: FC = () => {
           </div>
         </div>
       )}
+
+      {/* Checkout-Modal */}
+      <CheckoutModal
+        clientSecret={clientSecret}
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        onSuccess={() => {
+          toastOk('Zahlung wurde gestartet.')
+          if (activeOrderId) router.push(`/konto/orders/${encodeURIComponent(activeOrderId)}`)
+        }}
+      />
 
       <Toast />
     </>

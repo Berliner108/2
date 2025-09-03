@@ -32,8 +32,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'PaymentIntent not yet created' }, { status: 400 })
     }
 
-    // Optional: nur zulässige Stati zulassen
-    const allowed = new Set(['requires_payment', 'processing'])
+    // Neu – erlaubt das Abholen des client_secret vor der Bestätigung
+const allowed = new Set([
+  'requires_confirmation',
+  'processing',
+])
+
     if (!allowed.has(String(ord.status))) {
       return NextResponse.json({ error: `Order is ${ord.status}, no client_secret available` }, { status: 400 })
     }

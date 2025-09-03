@@ -6,6 +6,20 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+function addDaysISO(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString()
+}
+
+function getChargeIdFromPI(pi: any): string | null {
+  if (!pi) return null
+  const lc = pi.latest_charge
+  if (typeof lc === 'string') return lc
+  if (lc && typeof lc.id === 'string') return lc.id
+  return null
+}
+
 export async function POST(req: Request) {
   const stripe = getStripe()
   if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
@@ -16,7 +30,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing webhook signature or secret' }, { status: 400 })
   }
 
-  const rawBody = await req.text() // RAW body, kein JSON-parse!
+  // WICHTIG: raw body verwenden für die Signaturprüfung
+  const rawBody = await req.text()
   let event: any
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, whSecret)
@@ -57,44 +72,58 @@ export async function POST(req: Request) {
       }
 
       case 'payment_intent.succeeded': {
+        // Variante B: Zahlung erfasst → Geld liegt bei DIR (Platform-Balance) → späterer Transfer
         const pi = event.data.object as {
           id: string
           metadata?: Record<string, string>
           latest_charge?: string | { id: string }
         }
         const orderId = pi.metadata?.order_id
-        const lackId  = pi.metadata?.lack_request_id || pi.metadata?.request_id
         if (!orderId) break
 
-        let chargeId: string | null = null
-        if (typeof pi.latest_charge === 'string') chargeId = pi.latest_charge
-        else if (pi.latest_charge && typeof (pi.latest_charge as any).id === 'string') {
-          chargeId = (pi.latest_charge as any).id
+        // Offer/Request finalisieren (idempotent)
+        const offerId   = pi.metadata?.offer_id
+        const requestId = pi.metadata?.lack_request_id || pi.metadata?.request_id
+
+        if (offerId && requestId) {
+          // Angenommenes Angebot markieren …
+          await admin
+            .from('lack_offers')
+            .update({ status: 'accepted', updated_at: new Date().toISOString() })
+            .eq('id', offerId)
+            .in('status', ['active'])
+
+          // … konkurrierende aktive Angebote ablehnen
+          await admin
+            .from('lack_offers')
+            .update({ status: 'declined', updated_at: new Date().toISOString() })
+            .eq('request_id', requestId)
+            .neq('id', offerId)
+            .eq('status', 'active')
+
+          // Anfrage auf accepted
+          await admin
+            .from('lack_requests')
+            .update({ status: 'accepted', updated_at: new Date().toISOString() })
+            .eq('id', requestId)
         }
 
-        // Order auf succeeded
-        {
-          const { error } = await admin
-            .from('orders')
-            .update({
-              status: 'succeeded',
-              payment_intent_id: pi.id,
-              charge_id: chargeId,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', orderId)
-            .in('status', ['processing']) // schützt vor Doppelverarbeitung
-          if (error) throw error
-        }
+        const chargeId = getChargeIdFromPI(pi)
 
-        // Anfrage auf paid
-        if (lackId) {
-                const { error } = await admin
-                    .from('lack_requests')
-                    .update({ status: 'paid', published: true, updated_at: new Date().toISOString() })
-                    .eq('id', lackId)
-                if (error) throw error
-}
+        // Order auf funds_held setzen + charge_id verknüpfen
+        const { error } = await admin
+          .from('orders')
+          .update({
+            status: 'funds_held',
+            payment_intent_id: pi.id,
+            charge_id: chargeId,
+            auto_release_at: addDaysISO(28), // ggf. überschreibt vorhandenes – ok für unseren Zweck
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', orderId)
+          .in('status', ['processing', 'requires_confirmation', 'requires_capture'])
+        if (error) throw error
+
         break
       }
 
@@ -111,17 +140,13 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq('id', orderId)
-          .in('status', ['processing'])
+          .in('status', ['processing', 'requires_confirmation'])
         if (error) throw error
-
-        // Optional: lack_requests bei Abbruch wieder öffnen:
-        // const lackId = pi.metadata?.lack_request_id || pi.metadata?.request_id
-        // if (lackId) await admin.from('lack_requests').update({ status: 'accepted' }).eq('id', lackId)
-
         break
       }
 
       case 'charge.refunded': {
+        // Volle Rückerstattung → Order schließen
         const ch = event.data.object as { id: string }
         const { error } = await admin
           .from('orders')
@@ -135,14 +160,44 @@ export async function POST(req: Request) {
         break
       }
 
-      // Optional:
+      case 'charge.dispute.created': {
+        // Kartenstorno/Dispute eröffnet → markieren
+        const ch = event.data.object as { charge: string }
+        const { error } = await admin
+          .from('orders')
+          .update({
+            dispute_opened_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('charge_id', ch.charge)
+        if (error) throw error
+        break
+      }
+
+      case 'charge.dispute.closed': {
+        // Optional: outcome auswerten; Refund käme separat.
+        const dp = event.data.object as { charge: string }
+        const { error } = await admin
+          .from('orders')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('charge_id', dp.charge)
+        if (error) throw error
+        break
+      }
+
       case 'transfer.failed': {
+        // Auszahlung an Verkäufer fehlgeschlagen → optional markieren
         const tr = event.data.object as { id: string }
         console.warn('[stripe webhook] transfer.failed', tr.id)
+        await admin
+          .from('orders')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('transfer_id', tr.id)
         break
       }
 
       default:
+        // andere Events aktuell ignorieren
         break
     }
 
