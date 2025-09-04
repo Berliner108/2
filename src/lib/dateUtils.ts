@@ -6,6 +6,34 @@ export function todayDate(): Date {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
+/** Ist das Datum "heute" (lokal)? */
+export function isToday(d: Date): boolean {
+  const t = todayDate(); // 00:00 lokal
+  return (
+    d.getFullYear() === t.getFullYear() &&
+    d.getMonth() === t.getMonth() &&
+    d.getDate() === t.getDate()
+  );
+}
+
+/**
+ * Ist das Datum auswählbar?
+ * - Heute ist NICHT auswählbar
+ * - (Optional: du kannst in deinem Picker zusätzlich Wochenende/Feiertage sperren)
+ */
+export function isSelectable(d: Date): boolean {
+  if (isToday(d)) return false; // heute sperren
+  // Beispiel, wenn du auch WE/Feiertage sperren willst:
+  // if (isWeekend(d)) return false;
+  // if (gemeinsameFeiertageDEAT(d.getFullYear()).has(toYMD(d))) return false;
+  return true;
+}
+
+/** Frühestes erlaubtes Datum = morgen (lokal) */
+export function minSelectableDate(): Date {
+  return addDays(todayDate(), 1);
+}
+
 /** Date -> YYYY-MM-DD (lokal) */
 export function toYMD(d: Date): string {
   const y = d.getFullYear();
@@ -14,7 +42,7 @@ export function toYMD(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Neue Instanz mit +n Tagen */
+/** Neue Instanz mit +n Tagen (nur Datum, keine Zeit) */
 export function addDays(d: Date, n: number): Date {
   const c = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   c.setDate(c.getDate() + n);

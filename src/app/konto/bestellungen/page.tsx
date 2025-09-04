@@ -2,7 +2,7 @@
 'use client';  // Markiert diese Datei als Client Component
 
 import { FC, useState } from 'react';
-import Pager from './../navbar/pager';  // Relativer Import für Pager
+import Navbar from '../../components/navbar/Navbar';
 import styles from './bestellungen.module.css';  // Relativer Import für styles
 
 const Bestellungen: FC = () => {
@@ -16,7 +16,7 @@ const Bestellungen: FC = () => {
 
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.wrapper}>
         <h2>Bestellungen</h2>
         <div className={styles.kontoContainer}>

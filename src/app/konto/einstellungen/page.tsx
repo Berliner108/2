@@ -2,7 +2,7 @@
 'use client'
 
 import { FC, useEffect, useMemo, useState } from 'react'
-import Pager from './../navbar/pager'
+import Navbar from '../../components/navbar/Navbar';
 import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -10,21 +10,44 @@ import { useRouter } from 'next/navigation'
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
 
-// ====== Validierungen wie Registrieren ======
+/* ---------- Validation ---------- */
 const CITY_MAX = 24
 const STREET_MAX = 48
 const COMPANY_MAX = 80
 const ZIP_MAX = 5
+const COUNTRY_MAX = 56
 
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/
 const HNR_RE = /^\d{1,3}[a-z]?$/
 const ZIP_RE = /^\d{1,5}$/
-const VAT_RE = /^[A-Z0-9-]{8,14}$/ // USt-ID grob
-
-// Passwort-Policy: 8+, Groß/Klein, Sonderz.
+const VAT_RE = /^[A-Z0-9-]{8,14}$/
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/
 
+/* ---------- Country dropdown ---------- */
+const COUNTRY_OPTIONS = [
+  'Deutschland',
+  'Österreich',
+  'Schweiz',
+  'Liechtenstein',
+] as const
+
+/* ---------- Types ---------- */
+type DbAccountType = 'private' | 'business'
+
+type ApiGetResponse = {
+  id: string
+  email: string
+  profile: {
+    username: string
+    account_type: '' | DbAccountType
+    company: string
+    vatNumber: string
+    address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
+  }
+}
+
+/* ---------- Toast ---------- */
 const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose }) => {
   const palette = useMemo(() => {
     if (!toast) return { bg: '#333', color: '#fff', border: '#444' }
@@ -81,156 +104,99 @@ const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose 
   )
 }
 
-// ---------- Helper: Username einmalig in profiles persistieren ----------
-async function persistUsernameOnce(u: string) {
-  try {
-    await fetch('/api/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u }),
-    })
-  } catch {
-    // still ok – Anzeige funktioniert über Fallbacks
-  }
-}
-
-type InviteRow = {
-  id: string
-  invitee_email: string
-  status: 'sent' | 'accepted' | 'failed' | 'revoked'
-  created_at: string
-  accepted_at: string | null
-}
-
-// Was wir aus profiles lesen wollen (für TS)
-type ProfileRow = {
-  username?: string | null
-  account_type?: 'PRIVATE' | 'COMPANY' | null
-  address?: { street?: string; houseNumber?: string; zip?: string; city?: string } | null
-  company_name?: string | null
-  vat_number?: string | null
-} | null
-
+/* ---------- Seite ---------- */
 const Einstellungen = (): JSX.Element => {
   const router = useRouter()
   const [toast, setToast] = useState<ToastState>(null)
 
-  // Nutzer-Basics
-  const [username, setUsername] = useState<string>('') // read-only Anzeige
-  const [email, setEmail] = useState<string>('') // read-only Anzeige
+  // Anzeige-Basics
+  const [username, setUsername] = useState<string>('') // read-only
+  const [email, setEmail] = useState<string>('') // read-only
 
-  // ----- Stammdaten -----
+  // Stammdaten
   const [isPrivatePerson, setIsPrivatePerson] = useState<boolean>(false)
   const [street, setStreet] = useState('')
   const [houseNumber, setHouseNumber] = useState('')
   const [zip, setZip] = useState('')
   const [city, setCity] = useState('')
+  const [country, setCountry] = useState<string>('') // dropdown value (Pflicht)
   const [companyName, setCompanyName] = useState('')
   const [vatNumber, setVatNumber] = useState('')
 
-  // Passwort-Ändern
-  const [password, setPassword] = useState('') // aktuelles Passwort
+  // Passwort ändern
+  const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
   const [signOutAll, setSignOutAll] = useState(true)
   const [showPw, setShowPw] = useState(false)
 
-  // Invite state
+  // Einladungen
   const [inviteLink, setInviteLink] = useState<string>('')
   const [inviteEmails, setInviteEmails] = useState<string>('')
   const [sendingInv, setSendingInv] = useState<boolean>(false)
   const [invMsg, setInvMsg] = useState<string | null>(null)
-  const [inviteList, setInviteList] = useState<InviteRow[]>([])
+  const [inviteList, setInviteList] = useState<any[]>([])
   const [listLoading, setListLoading] = useState<boolean>(false)
 
-  // Dummy-Bewertungen (unverändert)
-  const [reviews] = useState([
-    { id: 1, username: 'JohnDoe', title: 'Toller Service', rating: 5, comment: 'Sehr zufrieden mit dem Produkt!' },
-    { id: 2, username: 'JaneDoe', title: 'Gute Qualität', rating: 4, comment: 'Preis-Leistungs-Verhältnis ist gut.' },
-    { id: 3, username: 'MaxMustermann', title: 'Schnelle Lieferung', rating: 5, comment: 'Das Produkt kam super schnell an!' },
-  ])
-
-  const calculateAverageRating = () => {
-    const total = reviews.reduce((acc, r) => acc + r.rating, 0)
-    return reviews.length ? (total / reviews.length).toFixed(1) : '0'
-  }
-
-  // ====== Laden & Prefill ======
+  // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
     ;(async () => {
-      const sb = supabaseBrowser()
-      const { data: { user }, error } = await sb.auth.getUser()
-      if (error) {
-        setToast({ type: 'error', message: 'Fehler beim Laden der Sitzung.' })
-        return
+      try {
+        const sb = supabaseBrowser()
+        const { data: { user } } = await sb.auth.getUser()
+        if (!user) {
+          setToast({ type: 'info', message: 'Bitte melde dich an.' })
+          return
+        }
+
+        const res = await fetch('/api/profile', { cache: 'no-store' })
+        const j: ApiGetResponse = await res.json()
+        if (!res.ok) {
+          setToast({ type: 'error', message: 'Profil konnte nicht geladen werden.' })
+          return
+        }
+
+        setEmail(j.email ?? '')
+        setUsername(j.profile.username ?? (j.email?.split('@')[0] ?? ''))
+
+        const acct = (j.profile.account_type || 'private') as DbAccountType
+        setIsPrivatePerson(acct === 'private')
+
+        const a = j.profile.address || ({} as ApiGetResponse['profile']['address'])
+        setStreet(a.street || '')
+        setHouseNumber(a.houseNumber || '')
+        setZip(a.zip || '')
+        setCity(a.city || '')
+
+        // Country aus Profil übernehmen, nur wenn erlaubt – sonst leer (Pflicht wird unten geprüft)
+        setCountry(a.country && (COUNTRY_OPTIONS as readonly string[]).includes(a.country) ? a.country : '')
+
+        setCompanyName(j.profile.company || '')
+        setVatNumber(j.profile.vatNumber || '')
+
+        const origin = window.location.origin.replace(/\/$/, '')
+        setInviteLink(`${origin}/registrieren?invited_by=${j.id}`)
+
+        loadInvites()
+      } catch {
+        setToast({ type: 'error', message: 'Fehler beim Laden des Profils.' })
       }
-      if (!user) {
-        setToast({ type: 'info', message: 'Bitte melde dich an.' })
-        return
-      }
-
-      setEmail(user.email ?? '')
-
-      // profiles lesen (alle Felder, die wir unten verwenden)
-      const { data: profRaw } = await sb
-        .from('profiles')
-        .select('username, account_type, address, company_name, vat_number')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      const prof = (profRaw as ProfileRow) ?? null
-
-      // Username-Fallbacks
-      const meta = (user.user_metadata ?? {}) as any
-      const metaUsername: string | undefined = typeof meta.username === 'string' ? meta.username : undefined
-      const emailLocal = user.email?.split('@')[0] ?? ''
-      const uname =
-        (prof?.username && String(prof.username).trim()) ||
-        (metaUsername && metaUsername.trim()) ||
-        emailLocal
-
-      setUsername(uname)
-
-      // Falls in profiles leer, aber metadata vorhanden → einmalig persistieren
-      if (!prof?.username && metaUsername) {
-        persistUsernameOnce(metaUsername.trim())
-      }
-
-      // Prefill: erst metadata, dann von profiles überschreiben
-      const mdAddr = meta.address || {}
-      const acctType = (prof?.account_type ?? meta.accountType ?? 'PRIVATE') as 'PRIVATE' | 'COMPANY'
-      setIsPrivatePerson(acctType !== 'COMPANY')
-
-      setStreet(String(prof?.address?.street ?? mdAddr.street ?? ''))
-      setHouseNumber(String(prof?.address?.houseNumber ?? mdAddr.houseNumber ?? ''))
-      setZip(String(prof?.address?.zip ?? mdAddr.zip ?? ''))
-      setCity(String(prof?.address?.city ?? mdAddr.city ?? ''))
-      setCompanyName(String(prof?.company_name ?? meta.companyName ?? ''))
-      setVatNumber(String(prof?.vat_number ?? meta.vatNumber ?? ''))
-
-      // Einladungslink
-      const origin = window.location.origin.replace(/\/$/, '')
-      setInviteLink(`${origin}/registrieren?invited_by=${user.id}`)
-
-      // Einladungen laden
-      loadInvites()
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ====== Sanitize onChange ======
+  // ===== Helpers =====
   const onChangeStreet = (v: string) => setStreet(v.replace(ONLY_LETTERS_SANITIZE, '').slice(0, STREET_MAX))
   const onChangeCity = (v: string) => setCity(v.replace(ONLY_LETTERS_SANITIZE, '').slice(0, CITY_MAX))
   const onChangeZip = (v: string) => setZip(v.replace(/\D/g, '').slice(0, ZIP_MAX))
   const onChangeHnr = (v: string) => {
     const digits = v.replace(/\D/g, '').slice(0, 3)
-    const letter = v.replace(/[^a-z]/g, '').slice(0, 1) // nur klein
+    const letter = v.replace(/[^a-z]/g, '').slice(0, 1)
     setHouseNumber(digits + letter)
   }
   const onChangeVat = (v: string) => setVatNumber(v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 14))
 
-  // ====== Invites Helpers ======
   const loadInvites = async () => {
     try {
       setListLoading(true)
@@ -245,41 +211,7 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
-  const copyInviteLink = async () => {
-    try {
-      await navigator.clipboard.writeText(inviteLink)
-      setInvMsg('Einladungslink kopiert.')
-      setTimeout(() => setInvMsg(null), 2000)
-    } catch {
-      setInvMsg('Konnte nicht kopieren.')
-    }
-  }
-
-  const sendInviteEmails = async () => {
-    if (!inviteEmails.trim()) return
-    setSendingInv(true)
-    setInvMsg(null)
-    try {
-      const res = await fetch('/api/invitations/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emails: inviteEmails }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || 'Fehler beim Senden')
-      const ok = (json.results || []).filter((r: any) => r.ok).length
-      const fail = (json.results || []).filter((r: any) => !r.ok).length
-      setInvMsg(`${ok} Einladung(en) gesendet${fail ? `, ${fail} fehlgeschlagen` : ''}.`)
-      setInviteEmails('')
-      await loadInvites()
-    } catch (e: any) {
-      setInvMsg(e?.message || 'Fehler beim Senden')
-    } finally {
-      setSendingInv(false)
-    }
-  }
-
-  // ====== Speichern: Stammdaten ======
+  // ===== Speichern =====
   const handleSave = async () => {
     const sb = supabaseBrowser()
     try {
@@ -306,6 +238,13 @@ const Einstellungen = (): JSX.Element => {
         setToast({ type: 'error', message: `Ort: nur Buchstaben/Leerzeichen, max. ${CITY_MAX} Zeichen.` })
         return
       }
+
+      // >>> Land ist Pflicht (privat & gewerblich) <<<
+      if (!country || !(COUNTRY_OPTIONS as readonly string[]).includes(country)) {
+        setToast({ type: 'error', message: 'Bitte ein gültiges Land auswählen.' })
+        return
+      }
+
       if (!isPrivatePerson) {
         if (!companyName.trim() || companyName.length > COMPANY_MAX) {
           setToast({ type: 'error', message: `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).` })
@@ -317,40 +256,52 @@ const Einstellungen = (): JSX.Element => {
         }
       }
 
-      const acctType: 'PRIVATE' | 'COMPANY' = isPrivatePerson ? 'PRIVATE' : 'COMPANY'
+      const acctTypeDB: DbAccountType = isPrivatePerson ? 'private' : 'business'
 
-      // Auth-Metadaten (camelCase)
-      const mdUpdate: any = {
-        accountType: acctType,
-        address: { street, houseNumber, zip, city },
+      // Metadaten MERGEN (firstName/lastName bleiben erhalten)
+      const currentMeta = (user.user_metadata || {}) as any
+      const nextMeta = {
+        ...currentMeta,
+        accountType: acctTypeDB,
+        address: {
+          ...(currentMeta.address || {}),
+          street,
+          houseNumber,
+          zip,
+          city,
+          country,
+        },
         companyName: isPrivatePerson ? null : companyName.trim(),
         vatNumber: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
       }
-      const { error: metaErr } = await sb.auth.updateUser({ data: mdUpdate })
+
+      const { error: metaErr } = await sb.auth.updateUser({ data: nextMeta })
       if (metaErr) {
         setToast({ type: 'error', message: metaErr.message || 'Profil-Metadaten konnten nicht gespeichert werden.' })
         return
       }
 
-      // Profile-API (snake_case)
+      // Profile-API (DB-ENUM erwartet 'private'|'business')
       const profRes = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          account_type: acctType,
-          address: { street, houseNumber, zip, city },
+          account_type: acctTypeDB,
+          address: { street, houseNumber, zip, city, country },
           company_name: isPrivatePerson ? null : companyName.trim(),
           vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
         }),
       })
 
       let j: any = {}
-      try { j = await profRes.json() } catch { /* evtl. kein JSON */ }
+      try { j = await profRes.json() } catch {}
 
       if (!profRes.ok) {
-        console.error('[profile PUT failed]', j)
         const extra = [j?.message, j?.details, j?.hint, j?.code].filter(Boolean).join(' • ')
-        setToast({ type: 'error', message: `Profil konnte nicht gespeichert werden.${extra ? ' — ' + extra : ''}` })
+        const nicer = /invalid_account_type|invalid input value for enum/i.test(extra)
+          ? 'Ungültiger Konto-Typ.'
+          : extra
+        setToast({ type: 'error', message: `Profil konnte nicht gespeichert werden.${nicer ? ' — ' + nicer : ''}` })
         return
       }
 
@@ -362,12 +313,11 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
-  // ====== Passwort separat ändern (Re-Auth) ======
+  // ===== Passwort ändern =====
   const handleChangePassword = async () => {
     const sb = supabaseBrowser()
     try {
       setToast(null)
-
       if (!password) return setToast({ type: 'error', message: 'Bitte aktuelles Passwort eingeben.' })
       if (!PASSWORD_RE.test(newPassword))
         return setToast({ type: 'error', message: 'Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.' })
@@ -379,11 +329,9 @@ const Einstellungen = (): JSX.Element => {
       const { data: { user } } = await sb.auth.getUser()
       if (!user?.email) { setPwSaving(false); return setToast({ type: 'error', message: 'Sitzung abgelaufen. Bitte erneut einloggen.' }) }
 
-      // Re-Auth
       const { error: reauthErr } = await sb.auth.signInWithPassword({ email: user.email, password })
       if (reauthErr) { setPwSaving(false); return setToast({ type: 'error', message: 'Aktuelles Passwort ist falsch.' }) }
 
-      // Neues Passwort setzen
       const { error: updErr } = await sb.auth.updateUser({ password: newPassword })
       if (updErr) { setPwSaving(false); return setToast({ type: 'error', message: updErr.message || 'Passwort konnte nicht geändert werden.' }) }
 
@@ -403,6 +351,10 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
+  // ===== Konto löschen =====
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   const handleDeleteAccount = async () => {
     if (!deleteConfirm) {
       setToast({ type: 'error', message: 'Bitte bestätige die Checkbox vor dem Löschen.' })
@@ -420,7 +372,6 @@ const Einstellungen = (): JSX.Element => {
         setToast({ type: 'error', message: json?.error || 'Löschung fehlgeschlagen.' })
         return
       }
-
       await supabaseBrowser().auth.signOut()
       router.replace('/?deleted=1')
     } catch {
@@ -430,12 +381,9 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.wrapper}>
         <h2 className={styles.title}>Kontoeinstellungen</h2>
         <div className={styles.kontoContainer}>
@@ -444,23 +392,16 @@ const Einstellungen = (): JSX.Element => {
           </p>
 
           <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
-            {/* Benutzername (nur anzeigen) */}
+            {/* Benutzername */}
             <div className={styles.inputGroup}>
               <label>Benutzername</label>
               <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
             </div>
 
-            {/* E-Mail (nicht änderbar) */}
+            {/* E-Mail */}
             <div className={styles.inputGroup}>
               <label htmlFor="email">E-Mail-Adresse</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                readOnly
-                className={styles.inputReadonly}
-                autoComplete="email"
-              />
+              <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
             </div>
 
             {/* Kontoart */}
@@ -469,21 +410,11 @@ const Einstellungen = (): JSX.Element => {
             <div className={styles.inputGroup}>
               <div style={{ display: 'flex', gap: 12 }}>
                 <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="radio"
-                    name="acct"
-                    checked={!isPrivatePerson}
-                    onChange={() => setIsPrivatePerson(false)}
-                  />
+                  <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
                   Gewerblich
                 </label>
                 <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="radio"
-                    name="acct"
-                    checked={isPrivatePerson}
-                    onChange={() => setIsPrivatePerson(true)}
-                  />
+                  <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
                   Privatperson
                 </label>
               </div>
@@ -556,6 +487,23 @@ const Einstellungen = (): JSX.Element => {
               </div>
             </div>
 
+            {/* Land (Dropdown) – Pflicht */}
+            <div className={styles.inputGroup}>
+              <label>Land</label>
+              <select
+                value={country || ''}
+                onChange={(e) => setCountry(e.target.value)}
+                className={styles.input}
+                aria-label="Land auswählen"
+                required
+              >
+                <option value="">— Bitte wählen —</option>
+                {COUNTRY_OPTIONS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Firmenfelder nur wenn gewerblich */}
             {!isPrivatePerson && (
               <>
@@ -592,11 +540,7 @@ const Einstellungen = (): JSX.Element => {
 
             {/* Änderungen speichern */}
             <div className={styles.inputGroup}>
-              <button
-                type="button"
-                onClick={handleSave}
-                className={styles.saveButton}
-              >
+              <button type="button" onClick={handleSave} className={styles.saveButton}>
                 Änderungen speichern
               </button>
             </div>
@@ -618,12 +562,7 @@ const Einstellungen = (): JSX.Element => {
                   autoComplete="current-password"
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(s => !s)}
-                  className={styles.saveButton}
-                  style={{ whiteSpace: 'nowrap' }}
-                >
+                <button type="button" onClick={() => setShowPw(s => !s)} className={styles.saveButton} style={{ whiteSpace: 'nowrap' }}>
                   {showPw ? 'Verbergen' : 'Anzeigen'}
                 </button>
               </div>
@@ -673,7 +612,7 @@ const Einstellungen = (): JSX.Element => {
             <div className={styles.inputGroup}>
               <button
                 type="button"
-                onClick={handleChangePassword}
+                onClick={async () => await handleChangePassword()}
                 className={styles.saveButton}
                 disabled={pwSaving || !PASSWORD_RE.test(newPassword) || newPassword !== confirmPassword}
               >
@@ -681,23 +620,31 @@ const Einstellungen = (): JSX.Element => {
               </button>
             </div>
 
-            {/* Leute einladen */}
+            {/* Einladungen */}
             <div className={styles.separator}></div>
             <h3 className={styles.subSectionTitle}>Leute einladen</h3>
 
-            {/* Einladungslink */}
             <div className={styles.inputGroup}>
               <label>Dein Einladungslink</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input type="text" readOnly value={inviteLink} className={styles.input} />
-                <button type="button" onClick={copyInviteLink} className={styles.saveButton}>Kopieren</button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try { await navigator.clipboard.writeText(inviteLink); setInvMsg('Einladungslink kopiert.') }
+                    catch { setInvMsg('Konnte nicht kopieren.') }
+                    setTimeout(() => setInvMsg(null), 2000)
+                  }}
+                  className={styles.saveButton}
+                >
+                  Kopieren
+                </button>
               </div>
               <p style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
                 Jeder, der sich über diesen Link registriert, wird dir zugeordnet.
               </p>
             </div>
 
-            {/* E-Mail-Einladungen (optional) */}
             <div className={styles.inputGroup}>
               <label>E-Mail(s) einladen (optional)</label>
               <textarea
@@ -710,7 +657,28 @@ const Einstellungen = (): JSX.Element => {
               />
               <button
                 type="button"
-                onClick={sendInviteEmails}
+                onClick={async () => {
+                  if (!inviteEmails.trim()) return
+                  setSendingInv(true); setInvMsg(null)
+                  try {
+                    const res = await fetch('/api/invitations/send', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ emails: inviteEmails }),
+                    })
+                    const json = await res.json()
+                    if (!res.ok) throw new Error(json?.error || 'Fehler beim Senden')
+                    const ok = (json.results || []).filter((r: any) => r.ok).length
+                    const fail = (json.results || []).filter((r: any) => !r.ok).length
+                    setInvMsg(`${ok} Einladung(en) gesendet${fail ? `, ${fail} fehlgeschlagen` : ''}.`)
+                    setInviteEmails('')
+                    await loadInvites()
+                  } catch (e: any) {
+                    setInvMsg(e?.message || 'Fehler beim Senden')
+                  } finally {
+                    setSendingInv(false)
+                  }
+                }}
                 disabled={sendingInv}
                 className={styles.saveButton}
                 style={{ width: 'fit-content', marginTop: 8 }}
@@ -730,7 +698,6 @@ const Einstellungen = (): JSX.Element => {
               )}
             </div>
 
-            {/* Eigene Einladungen (kleine Liste) */}
             <div className={styles.inputGroup}>
               <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', width: '100%' }}>
                 <div style={{ padding: 12, background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontWeight: 600 }}>
@@ -752,7 +719,7 @@ const Einstellungen = (): JSX.Element => {
                         </tr>
                       </thead>
                       <tbody>
-                        {inviteList.map(r => (
+                        {inviteList.map((r: any) => (
                           <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
                             <td style={{ padding: '10px 6px' }}>{r.invitee_email}</td>
                             <td style={{ padding: '10px 6px' }}>
@@ -780,12 +747,7 @@ const Einstellungen = (): JSX.Element => {
             </p>
 
             <label htmlFor="deleteConfirm" style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              <input
-                id="deleteConfirm"
-                type="checkbox"
-                checked={deleteConfirm}
-                onChange={(e) => setDeleteConfirm(e.target.checked)}
-              />
+              <input id="deleteConfirm" type="checkbox" checked={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.checked)} />
               Ich bestätige, dass ich mein Konto löschen möchte.
             </label>
 

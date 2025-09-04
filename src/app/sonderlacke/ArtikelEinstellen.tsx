@@ -15,6 +15,7 @@ import {
   isWeekend,
   toYMD,
   todayDate,
+  minSelectableDate, // ⬅️ neu
 } from '../../lib/dateUtils';
 
 /* ---------------- Fancy Loader Components ---------------- */
@@ -117,7 +118,7 @@ function MiniCalendar({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
         {weeks.map((w, wi) => w.map((d, di) => {
           if (!d) return <div key={`${wi}-${di}`} />;
-          const disabled = isDisabled(d) || d < minDate;
+          const disabled = isDisabled(d) || d < minDate; // ⬅️ heute + Vergangenheit gesperrt
           const isSelected = !!selected && toYMD(selected) === toYMD(d);
           return (
             <button
@@ -439,6 +440,7 @@ function ArtikelEinstellen() {
 
   // Feiertags-/Werktag-Handling
   const today = useMemo<Date>(() => todayDate(), []);
+  const minDate = useMemo<Date>(() => minSelectableDate(), []); // ⬅️ morgen
   const holidaysSet = useMemo<Set<string>>(() => {
     const y = today.getFullYear();
     const s1 = gemeinsameFeiertageDEAT(y);
@@ -447,7 +449,7 @@ function ArtikelEinstellen() {
   }, [today]);
 
   const isDisabledDay = (d: Date): boolean => {
-    if (d < today) return true;
+    if (d < minDate) return true;              // ⬅️ heute + Vergangenheit sperren
     if (isWeekend(d)) return true;
     if (holidaysSet.has(toYMD(d))) return true;
     return false;
@@ -562,7 +564,7 @@ function ArtikelEinstellen() {
 
     // Lieferdatum prüfen
     if (!lieferDatum || isDisabledDay(lieferDatum)) {
-      alert('Bitte einen Werktag wählen (kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
+      alert('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
       fehler = true;
     }
 
@@ -718,9 +720,9 @@ function ArtikelEinstellen() {
   useEffect(() => {
     if (calOpen) {
       if (lieferDatum) setCalMonth(new Date(lieferDatum.getFullYear(), lieferDatum.getMonth(), 1));
-      else setCalMonth(today);
+      else setCalMonth(minDate); // ⬅️ öffne bei morgen statt heute
     }
-  }, [calOpen, lieferDatum, today]);
+  }, [calOpen, lieferDatum, minDate]);
 
   useEffect(() => {
     if (!calOpen) return;
@@ -1401,7 +1403,7 @@ function ArtikelEinstellen() {
                     selected={lieferDatum}
                     onSelect={(d: Date) => { setLieferDatum(d); }}
                     isDisabled={isDisabledDay}
-                    minDate={today}
+                    minDate={minDate} // ⬅️ morgen
                   />
                 </div>
               )}

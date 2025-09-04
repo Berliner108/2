@@ -33,7 +33,7 @@ function ResetPasswordInner() {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?flow=reset&redirect=${encodeURIComponent(redirectParam)}`,
+      redirectTo: `${origin}/auth/confirm?flow=reset&redirect=${encodeURIComponent(redirectParam)}`,
     });
 
     setLoading(false);

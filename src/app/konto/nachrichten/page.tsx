@@ -1,12 +1,12 @@
 // /src/app/konto/nachrichten/page.tsx
 import { FC } from 'react';
-import Pager from './../navbar/pager';  // Relativer Import für Pager
+import Navbar from '../../components/navbar/Navbar';
 import styles from './../konto.module.css';  // Relativer Import für styles
 
 const Nachrichten: FC = () => {
   return (
     <>
-      <Pager />
+      <Navbar />
       <div className={styles.wrapper}>
         <h2>Nachrichten</h2>
         <div className={styles.kontoContainer}>

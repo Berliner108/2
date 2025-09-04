@@ -96,9 +96,15 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const invitedBy = useQueryParam('invited_by');
+  const invitedByRaw = useQueryParam('invited_by');
   // ✨ redirect sicher normalisieren
   const redirectParam = safeRedirect(useQueryParam('redirect') || '/');
+
+  /** Optional: invited_by nur weitergeben, wenn es wie eine UUID aussieht */
+  const invitedBy =
+    invitedByRaw && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(invitedByRaw)
+      ? invitedByRaw
+      : undefined;
 
   /** Sanitizing beim Tippen */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -204,7 +210,7 @@ const Register = () => {
     const usernameNorm = formData.username.trim();
 
     try {
-      // 0) E-Mail serverseitig prüfen (optional; ok so)
+      // 0) E-Mail serverseitig prüfen (optional)
       try {
         const res = await fetch('/api/check-user', {
           method: 'POST',
@@ -222,79 +228,69 @@ const Register = () => {
           return;
         }
       } catch {
-        /* weiter – Supabase fängt harte Duplikate */
+        // weiter – Supabase fängt harte Duplikate
       }
 
-      // 1) Username-Check (RPC + Fallback)
+      // 1) Username-Check (RPC + kleiner Fallback)
       const { data: available, error: rpcErr } = await supabase.rpc('is_username_available', {
         name: usernameNorm,
       });
 
       if (rpcErr) {
-        try {
-          const res2 = await fetch('/api/check-availability', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: usernameNorm }),
-          });
-          const json = await res2.json();
-          if (!res2.ok) throw new Error(json?.error || 'CHECK_FAILED');
-          if (json.usernameTaken) {
-            setErrors({ username: 'Benutzername ist bereits vergeben.' });
-            return;
-          }
-        } catch {
-          setErrors({ username: 'Benutzername-Prüfung derzeit nicht möglich. Bitte später erneut versuchen.' });
-          return;
-        }
-      } else if (!available) {
+        // RPC down – minimaler Fallback: nichts blockieren, Supabase unique Index fängt es notfalls ab
+        console.warn('[is_username_available RPC failed]', rpcErr);
+      } else if (available === false) {
         setErrors({ username: 'Benutzername ist bereits vergeben.' });
         return;
       }
 
-      // 2) SignUp
+      // 2) SignUp – accountType: 'private' | 'business'
+      const meta: Record<string, any> = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: usernameNorm,
+        accountType: isPrivatePerson ? 'private' : 'business',
+        address: {
+          street: formData.street,
+          houseNumber: formData.houseNumber,
+          zip: formData.zip,
+          city: formData.city,
+          country: formData.country,
+        },
+        companyName: isPrivatePerson ? null : formData.companyName,
+        vatNumber: isPrivatePerson ? null : formData.vatNumber,
+      };
+      if (invitedBy) meta.invited_by = invitedBy; // nur setzen, wenn valide UUID
+
       const { data, error } = await supabase.auth.signUp({
         email: emailNorm,
         password: formData.password,
         options: {
-          data: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            username: usernameNorm,
-            accountType: isPrivatePerson ? 'private' : 'business',
-            invited_by: invitedBy,
-            address: {
-              street: formData.street,
-              houseNumber: formData.houseNumber,
-              zip: formData.zip,
-              city: formData.city,
-              country: formData.country,
-            },
-            companyName: isPrivatePerson ? null : formData.companyName,
-            vatNumber: isPrivatePerson ? null : formData.vatNumber,
-          },
-          /** ✨ Absoluter Callback + redirect (wird in /auth/callback serverseitig ausgetauscht) */
+          data: meta,
+          /** Absoluter Callback + redirect (wird in /auth/callback serverseitig ausgetauscht) */
           emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`,
         },
       });
 
       if (error) {
-        const msg = (error.message || '').toLowerCase();
+        // echte Supabase-Meldung anzeigen (hilft, Konfig-/Policy-Fehler zu finden)
+        console.error('[signUp error]', { message: error.message, status: (error as any)?.status, code: (error as any)?.code });
+        const msg = (error.message || '').trim();
         const alreadyExists =
-          /already|exist|registered|duplicate/.test(msg) ||
-          (error as any).status === 400 ||
-          (error as any).code === 'user_already_exists' ||
-          (error as any).code === 'email_exists';
+          /already|exist|registered|duplicate/i.test(msg) ||
+          (error as any)?.status === 400 ||
+          (error as any)?.code === 'user_already_exists' ||
+          (error as any)?.code === 'email_exists';
 
         setErrors({
           email: alreadyExists
             ? 'Diese E-Mail ist bereits registriert.'
-            : 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.',
+            : (msg || 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.'),
         });
         return;
       }
 
-      // 3) IP-Hash speichern (Duplikaterkennung – optional)
+      // 3) Optional: IP-Hash speichern (kann fehlschlagen, ohne UX zu blocken)
       if (data?.user?.id) {
         try {
           await fetch('/api/ip-dup', {
@@ -302,7 +298,9 @@ const Register = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: data.user.id }),
           });
-        } catch { /* ignorieren */ }
+        } catch {
+          /* ignorieren */
+        }
       }
 
       setConfirmationLink('Bitte bestätige deine E-Mail, dann kannst du dich einloggen.');
