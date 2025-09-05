@@ -18,14 +18,11 @@ function safeRedirectPath(input: string | null | undefined): string {
   }
 }
 
-/** Liest Proto/Host aus Request-Headern (Headers sind bereits übergeben). */
-function getOriginFromHeaders(h: Headers | Readonly<Headers> | { get(name: string): string | null }): string {
+function getOriginFromHeaders(
+  h: Headers | Readonly<Headers> | { get(name: string): string | null }
+): string {
   const proto = h.get("x-forwarded-proto") ?? "https";
-  const host =
-    h.get("x-forwarded-host") ??
-    h.get("host") ??
-    "localhost:3000";
-
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   return (
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
     `${proto}://${host}`
@@ -45,7 +42,7 @@ export async function registerAction(formData: FormData): Promise<Result> {
   }
 
   try {
-    // 1) Request-Header einmalig holen (kompatibel, falls headers() Promise zurückgibt)
+    // 1) Request-Header einmalig holen (async in neueren Next-Versionen)
     const h = await headers();
 
     // 2) IP-Hash berechnen
@@ -60,21 +57,28 @@ export async function registerAction(formData: FormData): Promise<Result> {
 
     const duplicate = (dupCountPre ?? 0) >= 1;
 
-    // 4) Supabase-Serverclient
-    const cookieStore = cookies();
+    // 4) Supabase-Serverclient (cookies() ist in deiner Umgebung async)
+    const cookieStore = (await cookies()) as any;
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            return cookieStore.get?.(name)?.value;
           },
           set(name: string, value: string, options: CookieOptions) {
-            try { cookieStore.set({ name, value, ...options }); } catch {}
+            try {
+              // neue Signatur: set(name, value, options?)
+              cookieStore.set?.(name, value, options as any);
+            } catch {}
           },
           remove(name: string, options: CookieOptions) {
-            try { cookieStore.set({ name, value: "", ...options }); } catch {}
+            try {
+              // per Konvention via set + maxAge: 0 löschen
+              cookieStore.set?.(name, "", { ...(options as any), maxAge: 0 });
+            } catch {}
           },
         },
       }
@@ -83,12 +87,8 @@ export async function registerAction(formData: FormData): Promise<Result> {
     // 5) Username-Verfügbarkeit prüfen (RPC, case-insensitiv)
     const { data: available, error: availErr } = await supabase
       .rpc("is_username_available", { name: username });
-    if (availErr) {
-      return { ok: false, error: "USERNAME_CHECK_FAILED" };
-    }
-    if (available === false) {
-      return { ok: false, error: "USERNAME_TAKEN" };
-    }
+    if (availErr) return { ok: false, error: "USERNAME_CHECK_FAILED" };
+    if (available === false) return { ok: false, error: "USERNAME_TAKEN" };
 
     // 6) User registrieren (Bestätigungslink inkl. redirect-Param)
     const origin = getOriginFromHeaders(h);
@@ -98,8 +98,8 @@ export async function registerAction(formData: FormData): Promise<Result> {
       email,
       password,
       options: {
-        data: { username },           // lowercase speichern
-        emailRedirectTo,              // Bestätigungslink-Ziel
+        data: { username },  // lowercase speichern
+        emailRedirectTo,     // Bestätigungslink-Ziel
       },
     });
 
@@ -114,9 +114,7 @@ export async function registerAction(formData: FormData): Promise<Result> {
         { ip_hash: ipHash, user_id: user.id },
         { onConflict: "user_id,ip_hash", ignoreDuplicates: true }
       );
-    if (insErr) {
-      return { ok: false, error: insErr.message };
-    }
+    if (insErr) return { ok: false, error: insErr.message };
 
     return { ok: true, duplicate };
   } catch (e: any) {
