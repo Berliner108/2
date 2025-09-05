@@ -13,7 +13,7 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
 
-/* ===== Fancy Loader Components (nur während loading) ===== */
+/* ===== Loader ===== */
 function TopLoader() {
   return (
     <div className={styles.topLoader} aria-hidden>
@@ -21,7 +21,6 @@ function TopLoader() {
     </div>
   );
 }
-
 function DetailSkeleton() {
   return (
     <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
@@ -29,7 +28,6 @@ function DetailSkeleton() {
         <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
         <div className={styles.skelLine} />
       </div>
-
       <div className={styles.skelTwoCols}>
         <div className={styles.skelDrop} />
         <div className={styles.skelGrid}>
@@ -41,7 +39,6 @@ function DetailSkeleton() {
           <div className={styles.skelInput} />
         </div>
       </div>
-
       <div className={styles.skelBlock} />
       <div className={styles.skelBlockSmall} />
     </div>
@@ -55,7 +52,7 @@ type ApiItem = {
   lieferdatum?: string | null;
   delivery_at?: string | null;
   status?: string | null;
-  published?: boolean | null;
+  published?: boolean | string | number | null;
   data?: Record<string, any> | null;
   ort?: string;
   bilder?: string[];
@@ -361,22 +358,17 @@ function DeadlineBadge({ date }: { date: Date | null }) {
 
   const d = daysUntil(date);
   let text = '';
-  if (d < 0) {
-    text = `überfällig seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
-  } else if (d === 0) {
-    text = 'heute';
-  } else if (d === 1) {
-    text = 'morgen';
-  } else {
-    text = `in ${d} Tagen`;
-  }
+  if (d < 0) text = `überfällig seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
+  else if (d === 0) text = 'heute';
+  else if (d === 1) text = 'morgen';
+  else text = `in ${d} Tagen`;
 
   const variant = d < 0 ? styles.badgeDanger : d <= 3 ? styles.badgeWarn : styles.badgeOk;
 
   return (
     <span
       className={`${styles.badge} ${styles.deadline} ${variant}`}
-      title={`Lieferfrist: ${date.toLocaleDateString('de-DE')}`}
+      title={`Lieferfrist: ${date?.toLocaleDateString('de-DE')}`}
       aria-label={`Lieferfrist ${text}`}
     >
       {text}
@@ -397,7 +389,6 @@ function limitMoneyInput(raw: string): string {
   const safeInt = intPart;
   return `${safeInt}${sepChar}${fracDigits}`;
 }
-
 const MONEY_REGEX_FINAL = /^\d{1,5}([.,]\d{1,2})?$/;
 
 function toNum(s: string): number {
@@ -414,13 +405,10 @@ function mapItem(it: ApiItem): ArtikelView {
   const d = it.data || {};
   const bilder = resolveBilder(d, it.bilder);
   const lieferdatum = resolveLieferdatum(it);
-
   const sondereigenschaft = listToText(d.sondereffekte) || listToText(d.sondereigenschaft);
   const effekt = listToText(d.effekt);
-
   const istGewerblich = resolveGewerblich(d);
-  const ort =
-    (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
+  const ort = (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
 
   return {
     id: it.id,
@@ -455,27 +443,100 @@ function mapItem(it: ApiItem): ArtikelView {
   };
 }
 
-/* ====== Fehlermeldungen hübsch machen ====== */
+/* ===== Fehlermeldungen hübsch machen ===== */
 function friendlyErr(raw: unknown): string {
   const txt = String(raw || '').trim();
   if (!txt) return 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.';
   const lc = txt.toLowerCase();
-  // Wenn der Server bereits DE liefert, nimm das
   if (/[äöüß]/i.test(txt) || /anfrage|angebot|du kannst|nicht|bereits|fehl(er)?/i.test(txt)) return txt;
-
-  // Bekannte Keys/Codes mappen
-  if (lc.includes('already_offered') || lc.includes('already offered'))
-    return 'Du hast zu dieser Anfrage bereits ein Angebot abgegeben.';
+  if (lc.includes('already_offered') || lc.includes('already offered')) return 'Du hast zu dieser Anfrage bereits ein Angebot abgegeben.';
   if (lc.includes('not authenticated')) return 'Bitte melde dich an.';
   if (lc.includes('anfrage nicht gefunden') || lc.includes('request not found')) return 'Anfrage nicht gefunden.';
-  if (lc.includes('anfrage ist nicht verfügbar') || lc.includes('request status'))
-    return 'Diese Anfrage ist nicht mehr verfügbar.';
-  if (lc.includes('du kannst zu eigenen anfragen') || lc.includes('own request'))
-    return 'Du kannst zu deinen eigenen Anfragen keine Angebote abgeben.';
-  if (lc.includes('itemamountcents invalid') || lc.includes('amount'))
-    return 'Bitte einen gültigen Artikelpreis angeben.';
+  if (lc.includes('anfrage ist nicht verfügbar') || lc.includes('request status')) return 'Diese Anfrage ist nicht mehr verfügbar.';
+  if (lc.includes('du kannst zu eigenen anfragen') || lc.includes('own request')) return 'Du kannst zu deinen eigenen Anfragen keine Angebote abgeben.';
+  if (lc.includes('itemamountcents invalid') || lc.includes('amount')) return 'Bitte einen gültigen Artikelpreis angeben.';
   if (lc.includes('shippingcents invalid')) return 'Bitte gültige Versandkosten angeben (oder 0).';
   return txt;
+}
+
+/* ===== Detail -> ApiItem normalisieren ===== */
+function toApiItemFromDetail(a: any, id: string): ApiItem {
+  return {
+    id: a?.id ?? id,
+    title: a?.titel || a?.title || null,
+    lieferdatum: typeof a?.lieferdatum === 'string' ? a.lieferdatum : (typeof a?.delivery_at === 'string' ? a.delivery_at : null),
+    delivery_at: typeof a?.delivery_at === 'string' ? a.delivery_at : null,
+    published: a?.published ?? a?.is_published ?? null, // bool ODER 'false'/'true'
+    data: a?.data ?? a ?? {},
+    ort: typeof a?.ort === 'string' ? a.ort : undefined,
+    bilder: Array.isArray(a?.bilder) ? a.bilder : undefined,
+    user: typeof a?.user === 'string' ? a.user : undefined,
+    user_rating: typeof a?.user_rating === 'number' ? a.user_rating : null,
+    user_rating_count: typeof a?.user_rating_count === 'number' ? a.user_rating_count : null,
+    status: typeof a?.status === 'string' ? a.status : null,
+  };
+}
+
+/* ===== List-Fallback: robust nach ID suchen ===== */
+async function findByIdViaList(id: string): Promise<ApiItem | null> {
+  // 1) Erst alle sinnvollen ID-Filter probieren
+  const directCandidates = [
+    `/api/lackanfragen?id=${encodeURIComponent(id)}&includeUnpublished=1`,
+    `/api/lackanfragen?ids=${encodeURIComponent(id)}&includeUnpublished=1`,
+    `/api/lackanfragen?q=${encodeURIComponent(id)}&includeUnpublished=1`,
+    `/api/lackanfragen?search=${encodeURIComponent(id)}&includeUnpublished=1`,
+  ];
+  for (const url of directCandidates) {
+    try {
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const json = await r.json().catch(() => ({}));
+      const items: any = json?.items ?? json;
+      const arr: ApiItem[] = Array.isArray(items) ? items : [];
+      const found = arr.find((x) => String(x.id) === id);
+      if (found) return found;
+    } catch {/* ignore */}
+  }
+
+  // 2) Paginierte Suche (offset/page/skip/start)
+  const LIMIT = 200;
+  const MAX = 1200; // bis 1200 Einträge durchsuchen (6 Seiten à 200)
+  const pagers = ['offset', 'page', 'skip', 'start'] as const;
+
+  for (const pager of pagers) {
+    for (let i = 0; i < MAX; i += LIMIT) {
+      const value = pager === 'page' ? i / LIMIT + 1 : i;
+      const url = `/api/lackanfragen?limit=${LIMIT}&${pager}=${value}&includeUnpublished=1`;
+      try {
+        const r = await fetch(url, { cache: 'no-store' });
+        if (!r.ok) break;
+        const json = await r.json().catch(() => ({}));
+        const items: any = json?.items ?? json;
+        const arr: ApiItem[] = Array.isArray(items) ? items : [];
+        if (!arr.length) break;
+        const found = arr.find((x) => String(x.id) === id);
+        if (found) return found;
+        // kleine Heuristik: wenn weniger als LIMIT kamen, ist Schluss
+        if (arr.length < LIMIT) break;
+      } catch {
+        break;
+      }
+    }
+  }
+
+  // 3) Letzte Chance: große Liste (einmalig)
+  try {
+    const r = await fetch(`/api/lackanfragen?limit=10000&includeUnpublished=1`, { cache: 'no-store' });
+    if (r.ok) {
+      const json = await r.json().catch(() => ({}));
+      const items: any = json?.items ?? json;
+      const arr: ApiItem[] = Array.isArray(items) ? items : [];
+      const found = arr.find((x) => String(x.id) === id);
+      if (found) return found;
+    }
+  } catch {/* ignore */}
+
+  return null;
 }
 
 /* ===================== Seite ===================== */
@@ -484,7 +545,7 @@ function PageBody() {
   const { id: rawParam } = useParams<{ id?: string }>();
   const [artikel, setArtikel] = useState<ArtikelView | null>(null);
   const [loading, setLoading] = useState(true);
-  const { success, error: toastError, info } = useLocalToast();
+  const { success, error: toastError } = useLocalToast();
 
   // Preis-States
   const [basisPreis, setBasisPreis] = useState('');
@@ -494,9 +555,11 @@ function PageBody() {
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [vermittelt, setVermittelt] = useState(false);
 
   useEffect(() => {
     let active = true;
+
     const id = rawParam ? decodeURIComponent(String(rawParam)) : '';
     if (!id) {
       setLoading(false);
@@ -506,106 +569,55 @@ function PageBody() {
     (async () => {
       try {
         let view: ArtikelView | null = null;
+        let vermitteltFlag = false;
 
-        // Detail-API
+        // 1) Detail holen (inkl. unveröffentlicht, falls Backend das zulässt)
         try {
-          const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}`, { cache: 'no-store' });
+          const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, { cache: 'no-store' });
           if (res.ok) {
-            const j = await res.json();
-            const a = j?.artikel;
-            if (a) {
-              const sondereffekteText = listToText(a.sondereffekte) || listToText(a.sondereigenschaft);
-              view = {
-                id: a.id ?? id,
-                titel: a.titel || a.title || 'Unbenannt',
-                bilder: Array.isArray(a.bilder) ? a.bilder : [],
-                lieferdatum:
-                  typeof a.lieferdatum === 'string' ? toDateOrNull(a.lieferdatum) : a.lieferdatum ?? null,
-                zustand: normZustand(a.zustand || ''),
-                hersteller: a.hersteller || '',
-                menge: typeof a.menge === 'number' ? a.menge : a.menge ?? null,
-                ort: typeof a.ort === 'string' ? a.ort : '',
-                kategorie: a.kategorie || '',
-                user: a.user || undefined,
-                user_rating: a.user_rating ?? null,
-                user_rating_count: a.user_rating_count ?? null,
-                farbcode: a.farbcode || '',
-                effekt: listToText(a.effekt),
-                anwendung: prettyLabel(a.anwendung, ANWENDUNG_LABELS),
-                oberfläche: prettyLabel(a.oberfläche ?? a.oberflaeche, OBERFLAECHE_LABELS),
-                glanzgrad: a.glanzgrad || '',
-                sondereigenschaft: sondereffekteText,
-                beschreibung: a.beschreibung || '',
-                gesponsert: !!a.gesponsert,
-                gewerblich: !!a.gewerblich,
-                privat: !!a.privat,
-                dateien: Array.isArray(a.dateien) ? a.dateien : [],
-                farbpalette: a.farbpalette || '',
-                farbton: a.farbton || '',
-                qualität: a.qualität || a.qualitaet || '',
-                zertifizierung: Array.isArray(a.zertifizierung) ? a.zertifizierung : [],
-                aufladung: Array.isArray(a.aufladung) ? a.aufladung : [],
-              };
+            const j = await res.json().catch(() => null as any);
+            const a = j?.artikel ?? j?.request ?? j?.item ?? j;
+            if (a && (a.id || a.data)) {
+              const apiItem = toApiItemFromDetail(a, id);
+              vermitteltFlag = apiItem.published != null ? !toBool(apiItem.published) : false;
+              view = mapItem(apiItem);
             }
           }
-        } catch {}
+        } catch {/* fallback below */}
 
-        // Fallback: Liste
-        try {
-          if (!view) {
-            const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
-            if (resList.ok) {
-              const json = await resList.json();
-              const items: ApiItem[] = json?.items || [];
-              const found = items.find((x) => String(x.id) === id);
-              if (found) {
-                view = mapItem(found);
-              }
-            }
-          } else {
-            // ergänze aus der Liste
-            const resList = await fetch('/api/lackanfragen?limit=200', { cache: 'no-store' });
-            if (resList.ok) {
-              const json = await resList.json();
-              const items: ApiItem[] = json?.items || [];
-              const found = items.find((x) => String(x.id) === id);
-              if (found) {
-                const mapped = mapItem(found);
-                if (!view.user) view.user = mapped.user;
-                if (view.user_rating == null) view.user_rating = mapped.user_rating;
-                if (view.user_rating_count == null) view.user_rating_count = mapped.user_rating_count;
-                if (!view.ort) view.ort = mapped.ort;
-                if (!view.bilder?.length) view.bilder = mapped.bilder;
-                if (!view.sondereigenschaft) view.sondereigenschaft = mapped.sondereigenschaft;
-                if (!view.effekt) view.effekt = mapped.effekt;
-                if (!view.anwendung) view.anwendung = mapped.anwendung;
-                if (!view.oberfläche) view.oberfläche = mapped.oberfläche;
-              }
-            }
+        // 2) Fallback: Listen-Suche nach ID (robust/paginierend)
+        if (!view) {
+          const found = await findByIdViaList(id);
+          if (found) {
+            vermitteltFlag = found.published != null ? !toBool(found.published) : false;
+            view = mapItem(found);
           }
-        } catch {}
+        }
 
-        if (active) setArtikel(view);
-      } catch {
-        if (active) setArtikel(null);
+        if (active) {
+          setArtikel(view);
+          setVermittelt(vermitteltFlag);
+        }
+      } catch (e: any) {
+        if (active) {
+          setArtikel(null);
+          const msg = friendlyErr(e?.message);
+          if (msg) toastError(msg);
+        }
       } finally {
         if (active) setLoading(false);
       }
     })();
 
-    return () => {
-      active = false;
-    };
-  }, [rawParam]);
+    return () => { active = false; };
+  }, [rawParam, toastError]);
 
   const slides = useMemo(() => (artikel?.bilder || []).map((src: string) => ({ src })), [artikel?.bilder]);
-
   const gesamtPreis = useMemo(() => toNum(basisPreis) + toNum(versandPreis), [basisPreis, versandPreis]);
 
   async function handleSubmitOffer() {
     if (submitting) return;
 
-    // finale Validierung
     if (!MONEY_REGEX_FINAL.test(basisPreis)) {
       toastError('Bitte einen gültigen Artikelpreis eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
       return;
@@ -619,8 +631,8 @@ function PageBody() {
       return;
     }
 
-    const priceBase = toNum(basisPreis); // Artikelpreis (float)
-    const shipping = toNum(versandPreis); // Versand (float)
+    const priceBase = toNum(basisPreis);
+    const shipping = toNum(versandPreis);
     const itemCents = Math.round(priceBase * 100);
     const shipCents = Math.round(shipping * 100);
     const total = priceBase + shipping;
@@ -636,19 +648,11 @@ function PageBody() {
       const res = await fetch(`/api/lack/requests/${encodeURIComponent(String(artikel.id))}/offer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          itemAmountCents: itemCents, // Artikel in Cent
-          shippingCents: shipCents, // Versand in Cent (0 erlaubt)
-          currency: 'eur',
-          message: description, // optional
-        }),
+        body: JSON.stringify({ itemAmountCents: itemCents, shippingCents: shipCents, currency: 'eur', message: description }),
       });
 
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const rawMsg = j?.error || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.';
-        throw new Error(friendlyErr(rawMsg));
-      }
+      if (!res.ok) throw new Error(friendlyErr(j?.error || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.'));
 
       success('Angebot gesendet.');
       setBasisPreis('');
@@ -674,14 +678,30 @@ function PageBody() {
     );
   }
 
+  // Wenn selbst nach Fallback nichts geladen wurde:
   if (!artikel) {
     return (
       <>
         <Navbar />
         <div className={styles.container}>
-          <h1>Keine Lackanfrage gefunden</h1>
-          <p>Die angeforderte Anfrage existiert nicht (mehr) oder ist nicht veröffentlicht.</p>
-          <Link href="/lackanfragen" className={styles.kontaktLink}>
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              display: 'block',
+              marginTop: 16,
+              padding: '16px 20px',
+              border: '2px solid #d9d9d9',
+              background: '#fafafa',
+              color: '#444',
+              fontWeight: 600,
+              textAlign: 'center',
+              borderRadius: 12,
+            }}
+          >
+            Details konnten nicht geladen werden.
+          </div>
+          <Link href="/lackanfragen" className={styles.kontaktLink} style={{ marginTop: 12, display: 'inline-block' }}>
             Zurück zur Börse
           </Link>
         </div>
@@ -724,9 +744,7 @@ function PageBody() {
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
               <h1 className={styles.title}>{artikel.titel}</h1>
-              {artikel.gesponsert && (
-                <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
-              )}
+              {artikel.gesponsert && <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>}
             </div>
 
             {/* === META-GRID === */}
@@ -823,8 +841,7 @@ function PageBody() {
                   <div className={styles.userRating} style={{ marginTop: 6 }}>
                     {ratingCount > 0 ? (
                       <>
-                        Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung
-                        {ratingCount === 1 ? '' : 'en'}
+                        Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung{ratingCount === 1 ? '' : 'en'}
                       </>
                     ) : (
                       <>Bewertung: Noch keine Bewertungen</>
@@ -895,76 +912,96 @@ function PageBody() {
             )}
 
             <div className={styles.badges}>
-              {artikel.gewerblich && (
-                <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>
-              )}
+              {artikel.gewerblich && <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>}
               {artikel.privat && <span className={`${styles.badge} ${styles.privat}`}>Privat</span>}
             </div>
 
-            {/* === Angebotsbox === */}
-            <div className={styles.offerBox}>
-              <div className={styles.inputGroup}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
-                  Artikelpreis in € (ohne Versand)
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^\d{1,5}([.,]\d{1,2})?$"
-                  maxLength={8}
-                  value={basisPreis}
-                  onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
-                  className={styles.priceField}
-                  placeholder="z. B. 120,00"
-                  aria-label="Artikelpreis ohne Versand"
-                />
-              </div>
-
-              <div className={styles.inputGroup} style={{ marginTop: 10 }}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
-                  Versandkosten in € (separat)
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^\d{1,5}([.,]\d{1,2})?$"
-                  maxLength={8}
-                  value={versandPreis}
-                  onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}
-                  className={styles.altPriceField}
-                  placeholder="z. B. 6,90"
-                  aria-label="Versandkosten separat"
-                />
-                <div className={styles.offerNote} style={{ marginTop: 6 }}>
-                  Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den
-                  Rückversand aufkommen.
-                </div>
-              </div>
-
-              <div className={styles.totalRow} style={{ marginTop: 12, fontWeight: 700 }}>
-                Gesamt (inkl. Versand): {formatEUR(gesamtPreis)}
-              </div>
-
-              <button
-                className={styles.submitOfferButton}
-                onClick={handleSubmitOffer}
-                disabled={submitting}
-                aria-busy={submitting}
+            {/* === Angebotsbereich === */}
+            {vermittelt ? (
+              <div
+                className={styles.patchVermittelt}
+                role="status"
+                aria-live="polite"
+                style={{
+                  display: 'block',
+                  marginTop: 16,
+                  padding: '16px 20px',
+                  border: '3px solid #ff4d4f',
+                  background: '#fff1f0',
+                  color: '#a8071a',
+                  fontWeight: 700,
+                  textAlign: 'center',
+                  borderRadius: 14,
+                  boxShadow: 'inset 0 2px 8px rgba(0,0,0,.06)',
+                }}
               >
-                {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
-              </button>
+                <strong>Anfrage vermittelt</strong>
+              </div>
+            ) : (
+              <div className={styles.offerBox}>
+                <div className={styles.inputGroup}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                    Artikelpreis in € (ohne Versand)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="^\\d{1,5}([.,]\\d{1,2})?$"
+                    maxLength={8}
+                    value={basisPreis}
+                    onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
+                    className={styles.priceField}
+                    placeholder="z. B. 120,00"
+                    aria-label="Artikelpreis ohne Versand"
+                  />
+                </div>
 
-              <p className={styles.offerNote}>
-                Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist
-                72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Zustellnachweis bereit.
-              </p>
+                <div className={styles.inputGroup} style={{ marginTop: 10 }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                    Versandkosten in € (separat)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="^\\d{1,5}([.,]\\d{1,2})?$"
+                    maxLength={8}
+                    value={versandPreis}
+                    onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}
+                    className={styles.altPriceField}
+                    placeholder="z. B. 6,90"
+                    aria-label="Versandkosten separat"
+                  />
+                  <div className={styles.offerNote} style={{ marginTop: 6 }}>
+                    Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den
+                    Rückversand aufkommen.
+                  </div>
+                </div>
 
-              <p className={styles.offerNote} style={{ marginTop: 6 }}>
-                <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer Rückabwicklung
-                trägt der Käufer ggf. die Kosten für den Rückversand.
-              </p>
-            </div>
-            {/* === /Angebotsbox === */}
+                <div className={styles.totalRow} style={{ marginTop: 12, fontWeight: 700 }}>
+                  Gesamt (inkl. Versand): {formatEUR(gesamtPreis)}
+                </div>
+
+                <button
+                  className={styles.submitOfferButton}
+                  onClick={handleSubmitOffer}
+                  disabled={submitting}
+                  aria-busy={submitting}
+                >
+                  {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
+                </button>
+
+                <p className={styles.offerNote}>
+                  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist
+                  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Zustellnachweis bereit.
+                </p>
+
+                <p className={styles.offerNote} style={{ marginTop: 6 }}>
+                  <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer Rückabwicklung
+                  trägt der Käufer ggf. die Kosten für den Rückversand.
+                </p>
+              </div>
+            )}
+            {/* === /Angebotsbereich === */}
           </div>
         </div>
       </div>

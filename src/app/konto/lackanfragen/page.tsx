@@ -33,8 +33,6 @@ type RequestMeta = {
   lieferdatum?: string | null
   delivery_at?: string | null
   data?: Record<string, any> | null
-
-  // 🔹 neu: Owner (Anfragesteller)
   ownerId?: string | null
   ownerHandle?: string | null
   ownerDisplay?: string | null
@@ -164,6 +162,34 @@ function useToast() {
   }
 }
 
+/* ============ Skeleton Components ============ */
+const GroupSkeleton: FC = () => (
+  <div style={{display:'grid', gap:12}}>
+    <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+    <div className={styles.skelLine} />
+    <div className={styles.skelDropSmall} />
+  </div>
+)
+
+const PageSkeleton: FC = () => (
+  <div className={styles.skeletonPage} role="status" aria-busy="true" aria-label="Lade Angebote">
+    <div className={styles.skelHeader}>
+      <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelBlockSmall} />
+      </div>
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelBlock} />
+        <div className={styles.skelBlock} />
+      </div>
+    </div>
+    <div className={styles.skelGrid}>
+      {Array.from({length: 4}).map((_, i) => <GroupSkeleton key={i} />)}
+    </div>
+  </div>
+)
+
 /* ================= Component ================= */
 const DEFAULTS = { q: '', sort: 'date_desc' as SortKey, tab: 'received' as TopSection, psRec: 10, psSub: 10, pageRec: 1, pageSub: 1 }
 const ALLOWED_PS = [2, 10, 20, 50]
@@ -171,6 +197,8 @@ const ALLOWED_PS = [2, 10, 20, 50]
 const LackanfragenAngebote: FC = () => {
   const router = useRouter()
   const { ok: toastOk, err: toastErr, View: Toast } = useToast()
+
+  const [isLoading, setIsLoading] = useState(true)
 
   const [requestIds, setRequestIds] = useState<string[]>([])
   const [requestMeta, setRequestMeta] = useState<RequestMeta[]>([])
@@ -198,15 +226,16 @@ const LackanfragenAngebote: FC = () => {
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmOffer])
 
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useState<SortKey>('date_desc')
-  const [topSection, setTopSection] = useState<TopSection>('received')
+  const [query, setQuery] = useState(DEFAULTS.q)
+  const [sort, setSort] = useState<SortKey>(DEFAULTS.sort)
+  const [topSection, setTopSection] = useState<TopSection>(DEFAULTS.tab)
   useEffect(() => { try { localStorage.setItem('lack-angeboteTop', topSection) } catch {} }, [topSection])
 
   // Offers + Request-IDs + Metadaten laden
   useEffect(() => {
     ;(async () => {
       try {
+        setIsLoading(true)
         const res = await fetch('/api/lack/offers/for-account', { cache: 'no-store' })
         if (!res.ok) return
         const j: {
@@ -231,7 +260,11 @@ const LackanfragenAngebote: FC = () => {
         if (Array.isArray(j.submitted)) setSubmittedData(j.submitted.map(normOffer))
         if (Array.isArray(j.requestIds)) setRequestIds(j.requestIds.map(id => String(id)))
         if (Array.isArray(j.requests))  setRequestMeta(j.requests)
-      } catch {}
+      } catch {
+        // optional: toastErr('Konnte Angebote nicht laden.')
+      } finally {
+        setIsLoading(false)
+      }
     })()
   }, [])
 
@@ -356,10 +389,10 @@ const LackanfragenAngebote: FC = () => {
     return arr
   }, [submittedData, query, sort])
 
-  const [pageRec, setPageRec] = useState(1)
-  const [psRec, setPsRec] = useState<number>(10)
-  const [pageSub, setPageSub] = useState(1)
-  const [psSub, setPsSub] = useState<number>(10)
+  const [pageRec, setPageRec] = useState(DEFAULTS.pageRec)
+  const [psRec, setPsRec] = useState<number>(DEFAULTS.psRec)
+  const [pageSub, setPageSub] = useState(DEFAULTS.pageSub)
+  const [psSub, setPsSub] = useState<number>(DEFAULTS.psSub)
 
   useEffect(() => {
     try {
@@ -630,7 +663,6 @@ const LackanfragenAngebote: FC = () => {
                 const remaining  = formatRemaining(validUntil)
                 const reqExpires = endOfDay(liefer)
 
-                // 🔹 Anfragesteller + Rating
                 const askerName = meta?.ownerHandle || meta?.ownerDisplay || 'Anfragesteller'
                 const ratingTxt =
                   (typeof meta?.ownerRating === 'number' && isFinite(meta.ownerRating) && meta?.ownerRatingCount && meta.ownerRatingCount > 0)
@@ -646,7 +678,6 @@ const LackanfragenAngebote: FC = () => {
                       <div className={styles.price}>{formatEUR(o.priceCents)}</div>
                     </div>
 
-                    {/* ✅ gleicher Meta-Streifen wie oben */}
                     <div className={styles.groupMetaLine} aria-label="Anfrage-Metadaten">
                       <span>Lieferdatum: <strong>{formatDate(liefer)}</strong></span>
                       <span className={styles.metaDot} aria-hidden>•</span>
@@ -705,62 +736,68 @@ const LackanfragenAngebote: FC = () => {
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        <div className={styles.toolbar}>
-          <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
-          <input
-            id="search"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Anfrage-Nr., Anbieter oder Titel…"
-            className={styles.search}
-          />
-          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className={styles.select}
-          >
-            <option value="date_desc">Neueste zuerst</option>
-            <option value="date_asc">Älteste zuerst</option>
-            <option value="price_desc">Bester Preis zuletzt</option>
-            <option value="price_asc">Bester Preis zuerst</option>
-          </select>
-
-          <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
-            <button
-              role="tab"
-              aria-selected={topSection === 'received'}
-              className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
-              onClick={() => setTopSection('received')}
-              type="button"
-            >
-              Erhaltene oben
-            </button>
-            <button
-              role="tab"
-              aria-selected={topSection === 'submitted'}
-              className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
-              onClick={() => setTopSection('submitted')}
-              type="button"
-            >
-              Abgegebene oben
-            </button>
-          </div>
-        </div>
-
-        {topSection === 'received' ? (
-          <>
-            <ReceivedSection />
-            <hr className={styles.divider} />
-            <SubmittedSection />
-          </>
+        {isLoading ? (
+          <PageSkeleton />
         ) : (
           <>
-            <SubmittedSection />
-            <hr className={styles.divider} />
-            <ReceivedSection />
+            <div className={styles.toolbar}>
+              <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
+              <input
+                id="search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Anfrage-Nr., Anbieter oder Titel…"
+                className={styles.search}
+              />
+              <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
+              <select
+                id="sort"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className={styles.select}
+              >
+                <option value="date_desc">Neueste zuerst</option>
+                <option value="date_asc">Älteste zuerst</option>
+                <option value="price_desc">Bester Preis zuletzt</option>
+                <option value="price_asc">Bester Preis zuerst</option>
+              </select>
+
+              <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
+                <button
+                  role="tab"
+                  aria-selected={topSection === 'received'}
+                  className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
+                  onClick={() => setTopSection('received')}
+                  type="button"
+                >
+                  Erhaltene oben
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={topSection === 'submitted'}
+                  className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
+                  onClick={() => setTopSection('submitted')}
+                  type="button"
+                >
+                  Abgegebene oben
+                </button>
+              </div>
+            </div>
+
+            {topSection === 'received' ? (
+              <>
+                <ReceivedSection />
+                <hr className={styles.divider} />
+                <SubmittedSection />
+              </>
+            ) : (
+              <>
+                <SubmittedSection />
+                <hr className={styles.divider} />
+                <ReceivedSection />
+              </>
+            )}
           </>
         )}
       </div>

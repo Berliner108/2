@@ -25,7 +25,6 @@ function normalizeBilder(d: any): string[] {
   return []
 }
 
-// Nur username verwenden – andere Felder sind optional/nicht vorhanden
 function displayNameFromProfile(p?: any): string | undefined {
   const u = (p?.username ?? '').toString().trim()
   return u || undefined
@@ -35,19 +34,53 @@ export async function GET(req: Request) {
   try {
     const supabase = await supabaseServer()
     const url = new URL(req.url)
+
     const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200)
     const kategorie = url.searchParams.get('kategorie') ?? ''
+    const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
 
-    // published: true ODER NULL (ältere Datensätze)
+    const id = url.searchParams.get('id') ?? ''
+    const idsRaw = url.searchParams.get('ids') ?? ''
+    const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
+
+    const offsetParam = url.searchParams.get('offset') ?? url.searchParams.get('skip') ?? url.searchParams.get('start')
+    const pageParam = url.searchParams.get('page')
+    const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
+    const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
+
     let q = supabase
       .from('lack_requests')
       .select('id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id', { count: 'exact' })
-      .or('published.eq.true,published.is.null')
       .order('created_at', { ascending: false })
-      .limit(limit)
 
-    if (kategorie) {
-      q = q.eq('data->>kategorie', kategorie)
+    // Standard: nur veröffentlichte (oder alte mit NULL)
+    if (!includeUnpublished) {
+      q = q.or('published.eq.true,published.is.null')
+    }
+
+    if (kategorie) q = q.eq('data->>kategorie', kategorie)
+
+    if (id) q = q.eq('id', id)
+
+    const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
+    if (ids.length) q = q.in('id', ids)
+
+    if (search) {
+      // einfache Suche: ID oder Titel
+      q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
+    }
+
+    // Pagination
+    if (page) {
+      const from = (page - 1) * limit
+      const to = from + limit - 1
+      q = q.range(from, to)
+    } else if (offset != null) {
+      const from = offset
+      const to = from + limit - 1
+      q = q.range(from, to)
+    } else {
+      q = q.range(0, limit - 1)
     }
 
     const { data, error } = await q
@@ -59,7 +92,6 @@ export async function GET(req: Request) {
     const rows = data ?? []
     const ownerIds = Array.from(new Set(rows.map((r: any) => r.owner_id).filter(Boolean)))
 
-    // Profile lookup (Username + Ratings)
     let profilesById = new Map<string, any>()
     if (ownerIds.length) {
       const { data: profs, error: profErr } = await supabase
@@ -79,7 +111,6 @@ export async function GET(req: Request) {
       const prof = profilesById.get(row.owner_id)
       const nameFromProfile = displayNameFromProfile(prof)
 
-      // Profile bevorzugen, sonst Fallback aus data
       const user =
         nameFromProfile ||
         (d.user ?? '').toString().trim() ||
@@ -91,7 +122,7 @@ export async function GET(req: Request) {
 
       const user_rating_count =
         typeof prof?.rating_count === 'number' ? prof.rating_count
-        : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0) // sicherer Default 0
+        : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
 
       return {
         id: row.id,
@@ -103,12 +134,10 @@ export async function GET(req: Request) {
         published: row.published,
         data: row.data,
 
-        // Komfortfelder fürs Frontend:
         ort: computeOrtShort(d),
         bilder: normalizeBilder(d),
         lieferadresse_full: (d.lieferadresse ?? '').toString(),
 
-        // User + Ratings
         user,
         user_rating,
         user_rating_count,

@@ -11,6 +11,7 @@ type ReqRow = {
   data: Record<string, any> | null
   status: string | null
   owner_id?: string | null
+  published?: any // kann boolean | string | number sein
 }
 
 type OfferRow = {
@@ -25,26 +26,40 @@ type OfferRow = {
   status: string
 }
 
+/** Akzeptiert true, 'true', 't', '1', 'yes', 'on' (und Varianten in Groß/Kleinschreibung) */
+function isPublished(v: any): boolean {
+  if (v === true) return true
+  if (typeof v === 'number') return v === 1
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase()
+    return s === 'true' || s === 't' || s === '1' || s === 'yes' || s === 'on'
+  }
+  return false
+}
+
 export async function GET() {
   try {
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
+    const nowIso = new Date().toISOString()
+
     // 1) Nur DEINE Lackanfragen (für "Erhaltene Angebote")
-    const { data: myReqs, error: reqErr } = await sb
+    //    -> published wird mitgeladen und danach Node-seitig gefiltert (robust)
+    const { data: myReqsRaw, error: reqErr } = await sb
       .from('lack_requests')
-      .select('id, title, lieferdatum, delivery_at, data, status')
+      .select('id, title, lieferdatum, delivery_at, data, status, published')
       .eq('owner_id', user.id)
       .in('status', ['open', 'awarded'])
 
     if (reqErr) return NextResponse.json({ error: reqErr.message }, { status: 400 })
 
-    const myRequests: ReqRow[] = (myReqs || []) as any
+    const myRequestsAll: ReqRow[] = (myReqsRaw || []) as any
+    const myRequests: ReqRow[] = myRequestsAll.filter(r => isPublished(r.published))
     const myReqIds = myRequests.map(r => String(r.id))
-    const nowIso = new Date().toISOString()
 
-    // 2) Erhaltene Angebote zu DEINEN Requests (aktiv & nicht abgelaufen)
+    // 2) Erhaltene Angebote zu DEINEN (veröffentlichten) Requests (aktiv & nicht abgelaufen)
     let received: OfferRow[] = []
     if (myReqIds.length) {
       const { data: rec, error: recErr } = await sb
@@ -52,12 +67,13 @@ export async function GET() {
         .select('id, request_id, supplier_id, amount_cents, item_amount_cents, shipping_cents, created_at, expires_at, status')
         .in('request_id', myReqIds)
         .eq('status', 'active')
+        .not('supplier_id', 'is', null) // gelöschte Anbieter ausblenden
         .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
       if (recErr) return NextResponse.json({ error: recErr.message }, { status: 400 })
       received = (rec || []) as any
     }
 
-    // 3) Deine abgegebenen Angebote (du = supplier)
+    // 3) Deine abgegebenen Angebote (du = supplier), noch UNGEFILTERT nach published
     const { data: sub, error: subErr } = await sb
       .from('lack_offers')
       .select('id, request_id, amount_cents, item_amount_cents, shipping_cents, created_at, expires_at, status')
@@ -65,13 +81,13 @@ export async function GET() {
       .eq('status', 'active')
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     if (subErr) return NextResponse.json({ error: subErr.message }, { status: 400 })
-    const submitted: OfferRow[] = (sub || []) as any
+    const submittedAll: OfferRow[] = (sub || []) as any
 
     // === Zusätzliche Metadaten NUR für die Requests, auf die du geboten hast ===
-    const submittedReqIds = Array.from(new Set(submitted.map(o => String(o.request_id))))
-    const extraReqIds = submittedReqIds.filter(id => !myReqIds.includes(id)) // nur die "fremden"
+    const submittedReqIdsAll = Array.from(new Set(submittedAll.map(o => String(o.request_id))))
+    const extraReqIds = submittedReqIdsAll.filter(id => !myReqIds.includes(id)) // nur die "fremden"
 
-    // 4) Anbieter-Infos (für received) – profiles via Admin, aber nur needed supplier_ids
+    // 4) Anbieter-Infos (für received) – profiles via Admin, aber nur benötigte supplier_ids
     const supplierIds = Array.from(
       new Set(received.map(o => o.supplier_id).filter((v): v is string => !!v))
     )
@@ -133,7 +149,27 @@ export async function GET() {
       }
     })
 
-    // 5) Abgegebene (submitted) normalisieren
+    // 5) Extra-Requests (fremde) laden und **auf published filtern**
+    const admin = supabaseAdmin()
+    let extraReqsPublished: ReqRow[] = []
+    if (extraReqIds.length) {
+      const { data: extraRows, error: extraErr } = await admin
+        .from('lack_requests')
+        .select('id, title, lieferdatum, delivery_at, data, status, owner_id, published')
+        .in('id', extraReqIds)
+      if (extraErr) return NextResponse.json({ error: extraErr.message }, { status: 400 })
+      extraReqsPublished = ((extraRows || []) as ReqRow[]).filter(r => isPublished(r.published))
+    }
+
+    // 6) SUBMITTED auf veröffentlichte Requests einschränken:
+    //    erlaubt sind: eigene (myReqIds, bereits published-gefiltert) ODER extraReqsPublished
+    const allowedSubmittedIds = new Set<string>([
+      ...myReqIds,
+      ...extraReqsPublished.map(r => String(r.id)),
+    ])
+    const submitted: OfferRow[] = submittedAll.filter(o => allowedSubmittedIds.has(String(o.request_id)))
+
+    // 7) Abgegebene (submitted) normalisieren
     const submittedOut = submitted.map((o) => {
       const item = (typeof o.item_amount_cents === 'number' && isFinite(o.item_amount_cents))
         ? o.item_amount_cents
@@ -161,24 +197,10 @@ export async function GET() {
       }
     })
 
-    // 6) Request-Metadaten:
-    //    - deine eigenen (myRequests)
-    //    - PLUS die "fremden" Requests, auf die du geboten hast (extraReqIds)
-    const admin = supabaseAdmin()
-    let extraReqs: ReqRow[] = []
-    if (extraReqIds.length) {
-      const { data: extraRows, error: extraErr } = await admin
-        .from('lack_requests')
-        .select('id, title, lieferdatum, delivery_at, data, status, owner_id')
-        .in('id', extraReqIds) // 🔒 nur diese IDs!
-      if (extraErr) return NextResponse.json({ error: extraErr.message }, { status: 400 })
-      extraReqs = (extraRows || []) as any
-    }
-
-    // 7) Owner-Profile für ALLE Requests, die wir im FE anzeigen
+    // 8) Request-Metadaten fürs FE (eigene + veröffentlichte "extra")
     const allReqRows: ReqRow[] = [
       ...myRequests.map(r => ({ ...r, owner_id: user.id } as ReqRow)),
-      ...extraReqs,
+      ...extraReqsPublished,
     ]
 
     const ownerIds = Array.from(new Set(allReqRows.map(r => r.owner_id).filter(Boolean))) as string[]
@@ -205,7 +227,7 @@ export async function GET() {
       }
     }
 
-    // 8) Requests für FE (mit Owner-Infos); Deduplizieren nach id
+    // 9) Requests für FE (mit Owner-Infos); Deduplizieren nach id
     const seen = new Set<string>()
     const requestsOut = allReqRows
       .filter(r => {
@@ -229,14 +251,11 @@ export async function GET() {
         }
       })
 
-    // ❗Wichtig:
-    // - requestIds => NUR deine eigenen (für die "Erhaltene"-Gruppierung)
-    // - requests    => Metadaten für eigene + die mitgebotenen (für Titel/Ort/Owner im "Abgegebene"-Bereich)
     return NextResponse.json({
       received: receivedOut,
       submitted: submittedOut,
-      requestIds: myReqIds,     // 🔒 nur deine
-      requests: requestsOut,    // 🔎 Metadaten: eigene + die aus submitted
+      requestIds: myReqIds, // nur DEINE (und bereits published)
+      requests: requestsOut, // eigene + veröffentlichte der submitted
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to list offers' }, { status: 500 })

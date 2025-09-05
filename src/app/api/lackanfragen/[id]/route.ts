@@ -67,14 +67,15 @@ function normalizeZustand(z?: unknown): string {
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }   // Next 15: params ist ein Promise
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  const url = new URL(req.url)
+  const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
 
   const supa = await supabaseServer()
 
-  // Datensatz
   const { data, error } = await supa
     .from('lack_requests')
     .select('id,title,lieferdatum,delivery_at,created_at,updated_at,status,owner_id,data,published')
@@ -85,7 +86,14 @@ export async function GET(
     console.error('[lackanfragen] detail error', error.message)
     return NextResponse.json({ error: 'DB error' }, { status: 500 })
   }
-  if (!data || data.published === false || data.status === 'deleted') {
+
+  // Nur wirklich nicht vorhandene oder gelöschte Requests blocken
+  if (!data || data.status === 'deleted') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // Wenn unveröffentlicht und explizit NICHT erlaubt -> 404
+  if (data.published === false && !includeUnpublished) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -111,7 +119,6 @@ export async function GET(
 
   const d: any = data.data || {}
 
-  // Fallbacks aus Datensatz
   if (!userName) {
     const fromData = (d.user ?? d.username ?? d.user_name ?? '').toString().trim()
     userName = fromData || null
@@ -133,7 +140,6 @@ export async function GET(
     hersteller: d.hersteller || '',
     menge: typeof d.menge === 'number' ? d.menge : (d.menge ? Number(d.menge) : null),
 
-    // Adresse
     ort: computeOrtShort(d),
     lieferadresse_full: (d.lieferadresse ?? '').toString(),
 
@@ -142,7 +148,6 @@ export async function GET(
       : (d.kategorie || '').toString().toLowerCase() === 'nasslack' ? 'Nasslack'
       : (d.kategorie || ''),
 
-    // User-Infos (Naming wie in der Listen-API)
     user_id: data.owner_id as string,
     user: userName,
     user_rating: userRating,
@@ -167,6 +172,10 @@ export async function GET(
     qualität: d.qualitaet || d.qualität || '',
     zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
     aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
+
+    // >>> wichtig für das Frontend:
+    published: data.published,   // <- damit kannst du den "Anfrage vermittelt" Patch triggern
+    status: data.status,
   }
 
   return NextResponse.json({ artikel })
