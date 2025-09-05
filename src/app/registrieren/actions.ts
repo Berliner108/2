@@ -18,12 +18,18 @@ function safeRedirectPath(input: string | null | undefined): string {
   }
 }
 
-function getOriginFromHeaders(): string {
-  const h = headers();
-  const proto = h.get("x-forwarded-proto") || "https";
-  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "")
-    || `${proto}://${host}`;
+/** Liest Proto/Host aus Request-Headern (Headers sind bereits übergeben). */
+function getOriginFromHeaders(h: Headers | Readonly<Headers> | { get(name: string): string | null }): string {
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const host =
+    h.get("x-forwarded-host") ??
+    h.get("host") ??
+    "localhost:3000";
+
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ||
+    `${proto}://${host}`
+  );
 }
 
 export async function registerAction(formData: FormData): Promise<Result> {
@@ -39,11 +45,13 @@ export async function registerAction(formData: FormData): Promise<Result> {
   }
 
   try {
-    // 1) IP-Hash berechnen
-    const h = headers();
+    // 1) Request-Header einmalig holen (kompatibel, falls headers() Promise zurückgibt)
+    const h = await headers();
+
+    // 2) IP-Hash berechnen
     const ipHash = hashIp(getClientIp(h));
 
-    // 2) Duplikate zählen (nur Flag)
+    // 3) Duplikate zählen (nur Flag)
     const admin = supabaseAdmin();
     const { count: dupCountPre } = await admin
       .from("user_ip_hashes")
@@ -52,7 +60,7 @@ export async function registerAction(formData: FormData): Promise<Result> {
 
     const duplicate = (dupCountPre ?? 0) >= 1;
 
-    // 3) Supabase-Serverclient
+    // 4) Supabase-Serverclient
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -72,7 +80,7 @@ export async function registerAction(formData: FormData): Promise<Result> {
       }
     );
 
-    // 4) Username-Verfügbarkeit prüfen (RPC, case-insensitiv)
+    // 5) Username-Verfügbarkeit prüfen (RPC, case-insensitiv)
     const { data: available, error: availErr } = await supabase
       .rpc("is_username_available", { name: username });
     if (availErr) {
@@ -82,8 +90,8 @@ export async function registerAction(formData: FormData): Promise<Result> {
       return { ok: false, error: "USERNAME_TAKEN" };
     }
 
-    // 5) User registrieren (Bestätigungslink inkl. redirect-Param)
-    const origin = getOriginFromHeaders();
+    // 6) User registrieren (Bestätigungslink inkl. redirect-Param)
+    const origin = getOriginFromHeaders(h);
     const emailRedirectTo = `${origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`;
 
     const { data, error } = await supabase.auth.signUp({
@@ -99,7 +107,7 @@ export async function registerAction(formData: FormData): Promise<Result> {
     const user = data.user;
     if (!user) return { ok: false, error: "USER_CREATE_FAILED" };
 
-    // 6) IP-Hash persistieren (idempotent)
+    // 7) IP-Hash persistieren (idempotent)
     const { error: insErr } = await admin
       .from("user_ip_hashes")
       .upsert(
