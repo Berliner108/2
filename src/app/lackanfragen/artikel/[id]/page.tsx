@@ -479,7 +479,6 @@ function toApiItemFromDetail(a: any, id: string): ApiItem {
 
 /* ===== List-Fallback: robust nach ID suchen ===== */
 async function findByIdViaList(id: string): Promise<ApiItem | null> {
-  // 1) Erst alle sinnvollen ID-Filter probieren
   const directCandidates = [
     `/api/lackanfragen?id=${encodeURIComponent(id)}&includeUnpublished=1`,
     `/api/lackanfragen?ids=${encodeURIComponent(id)}&includeUnpublished=1`,
@@ -495,12 +494,11 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
       const arr: ApiItem[] = Array.isArray(items) ? items : [];
       const found = arr.find((x) => String(x.id) === id);
       if (found) return found;
-    } catch {/* ignore */}
+    } catch {}
   }
 
-  // 2) Paginierte Suche (offset/page/skip/start)
   const LIMIT = 200;
-  const MAX = 1200; // bis 1200 Einträge durchsuchen (6 Seiten à 200)
+  const MAX = 1200;
   const pagers = ['offset', 'page', 'skip', 'start'] as const;
 
   for (const pager of pagers) {
@@ -516,7 +514,6 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
         if (!arr.length) break;
         const found = arr.find((x) => String(x.id) === id);
         if (found) return found;
-        // kleine Heuristik: wenn weniger als LIMIT kamen, ist Schluss
         if (arr.length < LIMIT) break;
       } catch {
         break;
@@ -524,7 +521,6 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
     }
   }
 
-  // 3) Letzte Chance: große Liste (einmalig)
   try {
     const r = await fetch(`/api/lackanfragen?limit=10000&includeUnpublished=1`, { cache: 'no-store' });
     if (r.ok) {
@@ -534,7 +530,7 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
       const found = arr.find((x) => String(x.id) === id);
       if (found) return found;
     }
-  } catch {/* ignore */}
+  } catch {}
 
   return null;
 }
@@ -571,7 +567,7 @@ function PageBody() {
         let view: ArtikelView | null = null;
         let vermitteltFlag = false;
 
-        // 1) Detail holen (inkl. unveröffentlicht, falls Backend das zulässt)
+        // Detail (mit includeUnpublished)
         try {
           const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, { cache: 'no-store' });
           if (res.ok) {
@@ -583,9 +579,9 @@ function PageBody() {
               view = mapItem(apiItem);
             }
           }
-        } catch {/* fallback below */}
+        } catch {}
 
-        // 2) Fallback: Listen-Suche nach ID (robust/paginierend)
+        // Fallback: Liste
         if (!view) {
           const found = await findByIdViaList(id);
           if (found) {
@@ -678,7 +674,7 @@ function PageBody() {
     );
   }
 
-  // Wenn selbst nach Fallback nichts geladen wurde:
+  // Kein Artikel gefunden
   if (!artikel) {
     return (
       <>
@@ -892,7 +888,7 @@ function PageBody() {
                           rel="noopener noreferrer"
                           className={styles.downloadLink}
                         >
-                          <FaFilePdf style={{ color: 'red', marginRight: '0.4rem' }} />
+                          <FaFilePdf style={{ marginRight: '0.4rem' }} />
                           {file.name}
                         </a>
                       </li>
@@ -926,16 +922,16 @@ function PageBody() {
                   display: 'block',
                   marginTop: 16,
                   padding: '16px 20px',
-                  border: '3px solid #ff4d4f',
-                  background: '#fff1f0',
-                  color: '#a8071a',
+                  border: '3px solid #52c41a',     // grün
+                  background: '#f6ffed',           // hellgrün
+                  color: '#135200',                 // dunkles grün
                   fontWeight: 700,
                   textAlign: 'center',
                   borderRadius: 14,
                   boxShadow: 'inset 0 2px 8px rgba(0,0,0,.06)',
                 }}
               >
-                <strong>Anfrage vermittelt</strong>
+                <strong>Anfrage erfolgreich vermittelt</strong>
               </div>
             ) : (
               <div className={styles.offerBox}>
@@ -946,7 +942,7 @@ function PageBody() {
                   <input
                     type="text"
                     inputMode="decimal"
-                    pattern="^\\d{1,5}([.,]\\d{1,2})?$"
+                    pattern="^\d{1,5}([.,]\d{1,2})?$"
                     maxLength={8}
                     value={basisPreis}
                     onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
@@ -963,7 +959,7 @@ function PageBody() {
                   <input
                     type="text"
                     inputMode="decimal"
-                    pattern="^\\d{1,5}([.,]\\d{1,2})?$"
+                    pattern="^\d{1,5}([.,]\d{1,2})?$"
                     maxLength={8}
                     value={versandPreis}
                     onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}

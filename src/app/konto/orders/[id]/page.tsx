@@ -4,7 +4,11 @@ import OrderActions from '../OrderActions'
 
 export const dynamic = 'force-dynamic'
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage(
+  { params }: PageProps<'/konto/orders/[id]'>
+) {
+  const { id } = await params
+
   const sb = await supabaseServer()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return <div style={{ padding: 20 }}>Bitte melde dich an.</div>
@@ -19,7 +23,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       charge_id, transfer_id, fee_cents, transferred_cents,
       kind, request_id, offer_id
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .maybeSingle()
 
   if (error) return <div style={{ padding: 20, color: '#b91c1c' }}>Fehler: {error.message}</div>
