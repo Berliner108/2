@@ -848,3 +848,22 @@
   .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
   .bewerbungText { font-size: .95rem; }
 }
+/* Kalender-Popover schwebt über allen Inputs */
+.calendarPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  z-index: 2000;      /* wichtig: über Radios/Checkboxen */
+  isolation: isolate; /* eigener Stacking-Context, verhindert „Durchschimmern“ */
+}
+
+/* Sicherheitsnetz: Radios bekommen keinen eigenen hohen Layer */
+.radioLabel input[type="radio"],
+.checkboxLabel input[type="radio"] {
+  position: relative;
+  z-index: 0;
+}
+
+/* Falls irgendwo gesetzt: sicherstellen, dass nichts abgeschnitten wird */
+.radioGroupliefercontainer { overflow: visible; }

@@ -61,29 +61,45 @@ function LoginInner() {
     setError('')
     setLoading(true)
 
-    const emailOrUsername = (e.currentTarget.elements.namedItem('email') as HTMLInputElement)?.value.trim()
+    const raw = (e.currentTarget.elements.namedItem('email') as HTMLInputElement)?.value.trim()
     const password = (e.currentTarget.elements.namedItem('password') as HTMLInputElement)?.value || ''
+    const supabase = supabaseBrowser()
 
     try {
-      const supabase = supabaseBrowser()
-
       // 1) Email bestimmen (direkt oder via Username -> Email)
-      let emailToUse = emailOrUsername
-      if (!emailOrUsername.includes('@')) {
-        const { data: resolvedEmail, error: rpcErr } = await supabase.rpc('email_for_username', { name: emailOrUsername })
-        if (rpcErr || !resolvedEmail) {
-          setError(rpcErr ? 'Login derzeit nicht möglich. Bitte später erneut versuchen.' : 'E-Mail oder Passwort ist falsch.')
+      let emailToUse = raw
+
+      if (raw.includes('@')) {
+        emailToUse = raw.toLowerCase()
+      } else {
+        const name = raw.toLowerCase()
+        const { data: rows, error: infoErr } = await supabase.rpc('email_for_username_info', { name })
+        if (infoErr) {
+          setError('Login derzeit nicht möglich. Bitte später erneut versuchen.')
           setLoading(false)
           return
         }
-        emailToUse = String(resolvedEmail)
+        const rec = Array.isArray(rows) ? rows[0] : null
+        if (!rec?.email) {
+          setError('E-Mail oder Passwort ist falsch.')
+          setLoading(false)
+          return
+        }
+        if (rec.confirmed === false) {
+          setError('Bitte bestätige zuerst deine E-Mail.')
+          setLoading(false)
+          return
+        }
+        emailToUse = String(rec.email).toLowerCase()
       }
 
       // 2) Login (clientseitige Session)
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: emailToUse, password })
       if (signInError) {
         const msgRaw = signInError.message?.toLowerCase() || ''
-        const msg = msgRaw.includes('email not confirmed') ? 'Bitte bestätige zuerst deine E-Mail.' : 'E-Mail oder Passwort ist falsch.'
+        const msg = msgRaw.includes('email not confirmed')
+          ? 'Bitte bestätige zuerst deine E-Mail.'
+          : 'E-Mail oder Passwort ist falsch.'
         setError(msg)
         setLoading(false)
         return
@@ -169,7 +185,7 @@ function LoginInner() {
               autoComplete="username"
               autoFocus
               disabled={loading}
-              inputMode="email"
+              inputMode="text"
               autoCapitalize="none"
             />
           </div>
@@ -201,6 +217,55 @@ function LoginInner() {
           <button type="submit" className={styles.loginButton} disabled={loading}>
             {loading ? <>Einloggen<span className={styles.spinner}></span></> : 'Einloggen'}
           </button>
+
+          {error === 'Bitte bestätige zuerst deine E-Mail.' && (
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true)
+                try {
+                  const supabase = supabaseBrowser()
+                  const val = (document.getElementById('email') as HTMLInputElement)?.value.trim()
+                  if (!val) {
+                    setError('Bitte gib deine E-Mail oder deinen Benutzernamen ein.')
+                    return
+                  }
+
+                  let emailToUse = ''
+                  if (val.includes('@')) {
+                    emailToUse = val.toLowerCase()
+                  } else {
+                    const name = val.toLowerCase()
+                    const { data, error: infoErr } = await supabase.rpc('email_for_username_info', { name })
+                    if (infoErr) {
+                      setError('Bitte gib deine E-Mail-Adresse ein, um die Bestätigung erneut zu senden.')
+                      return
+                    }
+                    const rec = Array.isArray(data) ? data[0] : null
+                    if (!rec?.email) {
+                      setError('Unbekannter Benutzername. Bitte gib deine E-Mail ein.')
+                      return
+                    }
+                    if (rec.confirmed) {
+                      setError('Diese E-Mail ist bereits bestätigt.')
+                      return
+                    }
+                    emailToUse = String(rec.email).toLowerCase()
+                  }
+
+                  await supabase.auth.resend({
+                    type: 'signup',
+                    email: emailToUse,
+                    options: { emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectTo)}` }
+                  })
+                  setError('Bestätigungsmail wurde erneut gesendet.')
+                } finally { setLoading(false) }
+              }}
+              className={styles.linkButton}
+            >
+              Bestätigungsmail erneut senden
+            </button>
+          )}
 
           <div className={styles.forgotPassword}>
             <Link href={`/reset-password?redirect=${encodeURIComponent(redirectTo)}`}>Passwort vergessen?</Link>

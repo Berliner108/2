@@ -7,14 +7,40 @@ import { getClientIp, hashIp } from "@/lib/ip-hash";
 
 type Result = { ok: true; duplicate: boolean } | { ok: false; error: string };
 
+function safeRedirectPath(input: string | null | undefined): string {
+  if (!input) return "/";
+  try {
+    const url = new URL(input, "https://dummy.local");
+    // nur Pfad+Query+Hash zulassen
+    return url.pathname + url.search + url.hash || "/";
+  } catch {
+    return input.startsWith("/") ? input : "/";
+  }
+}
+
+function getOriginFromHeaders(): string {
+  const h = headers();
+  const proto = h.get("x-forwarded-proto") || "https";
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "")
+    || `${proto}://${host}`;
+}
+
 export async function registerAction(formData: FormData): Promise<Result> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const username = String(formData.get("username") ?? "").trim();
+  const usernameRaw = String(formData.get("username") ?? "").trim();
+  const redirectParam = safeRedirectPath(String(formData.get("redirect") ?? "/"));
+
+  // username serverseitig normalisieren + validieren
+  const username = usernameRaw.replace(/[^a-z0-9_-]/gi, "").toLowerCase().slice(0, 24);
+  if (!/^[a-z0-9_-]{3,24}$/.test(username)) {
+    return { ok: false, error: "INVALID_USERNAME" };
+  }
 
   try {
-    // 1) IP-Hash berechnen (Next 15: headers() ist async)
-    const h = await headers();
+    // 1) IP-Hash berechnen
+    const h = headers();
     const ipHash = hashIp(getClientIp(h));
 
     // 2) Duplikate zählen (nur Flag)
@@ -26,8 +52,8 @@ export async function registerAction(formData: FormData): Promise<Result> {
 
     const duplicate = (dupCountPre ?? 0) >= 1;
 
-    // 3) Supabase-Serverclient (Next 15: cookies() ist ggf. async)
-    const cookieStore = await cookies();
+    // 3) Supabase-Serverclient
+    const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -37,42 +63,52 @@ export async function registerAction(formData: FormData): Promise<Result> {
             return cookieStore.get(name)?.value;
           },
           set(name: string, value: string, options: CookieOptions) {
-            // Im Server-Action-Kontext absichern
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch {}
+            try { cookieStore.set({ name, value, ...options }); } catch {}
           },
           remove(name: string, options: CookieOptions) {
-            try {
-              cookieStore.set({ name, value: "", ...options });
-            } catch {}
+            try { cookieStore.set({ name, value: "", ...options }); } catch {}
           },
         },
       }
     );
 
-    // 4) User registrieren
+    // 4) Username-Verfügbarkeit prüfen (RPC, case-insensitiv)
+    const { data: available, error: availErr } = await supabase
+      .rpc("is_username_available", { name: username });
+    if (availErr) {
+      return { ok: false, error: "USERNAME_CHECK_FAILED" };
+    }
+    if (available === false) {
+      return { ok: false, error: "USERNAME_TAKEN" };
+    }
+
+    // 5) User registrieren (Bestätigungslink inkl. redirect-Param)
+    const origin = getOriginFromHeaders();
+    const emailRedirectTo = `${origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      options: {
+        data: { username },           // lowercase speichern
+        emailRedirectTo,              // Bestätigungslink-Ziel
+      },
     });
-    if (error) return { ok: false, error: error.message };
+
+    if (error) return { ok: false, error: error.message || "SIGNUP_FAILED" };
     const user = data.user;
     if (!user) return { ok: false, error: "USER_CREATE_FAILED" };
 
-    // statt: .insert(...).onConflict(...).ignore()
-const { error: insErr } = await admin
-  .from('user_ip_hashes')
-  .upsert(
-    { ip_hash: ipHash, user_id: user.id },
-    { onConflict: 'user_id,ip_hash', ignoreDuplicates: true }
-  );
-
-if (insErr) {
-  return { ok: false, error: insErr.message };
-}
-
+    // 6) IP-Hash persistieren (idempotent)
+    const { error: insErr } = await admin
+      .from("user_ip_hashes")
+      .upsert(
+        { ip_hash: ipHash, user_id: user.id },
+        { onConflict: "user_id,ip_hash", ignoreDuplicates: true }
+      );
+    if (insErr) {
+      return { ok: false, error: insErr.message };
+    }
 
     return { ok: true, duplicate };
   } catch (e: any) {

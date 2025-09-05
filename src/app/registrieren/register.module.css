@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&display=swap');
+
+
 .registerContainer {
   display: flex;
   width: 100%;
@@ -348,4 +351,64 @@
     margin-bottom: 28px;
     text-align: center;
   }
+}
+/* Button mit abgerundeten Ecken, Oswald-Font */
+.linkButton {
+  --btn: #00e5ff;         /* hell */
+  --btn-strong: #00b4d8;  /* dunkel */
+  --radius: 10px;
+
+  font-family: 'Oswald', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius);
+
+  border: 1px solid color-mix(in srgb, var(--btn) 60%, transparent);
+  background: color-mix(in srgb, var(--btn) 10%, transparent);
+  color: var(--btn-strong);
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .06s ease;
+}
+
+@supports not (color-mix: in srgb, red, white) {
+  .linkButton {
+    border-color: rgba(0, 229, 255, .6);
+    background: rgba(0, 229, 255, .10);
+  }
+}
+
+.linkButton:hover {
+  background: color-mix(in srgb, var(--btn) 16%, white 84%);
+  border-color: var(--btn);
+  color: var(--btn-strong);
+}
+
+.linkButton:active { transform: translateY(1px); }
+
+.linkButton:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--btn) 35%, transparent);
+  outline-offset: 2px;
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.linkButton[disabled] {
+  opacity: .55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.successBanner .linkButton { margin-left: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .linkButton { transition: none; }
 }

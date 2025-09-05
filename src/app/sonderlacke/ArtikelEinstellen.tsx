@@ -335,6 +335,7 @@ function ArtikelEinstellen() {
       setKategorie(vorausgewaehlt);
     }
   }, [searchParams]);
+  
 
   /* ===== Profil laden ===== */
   useEffect(() => {
@@ -1396,17 +1397,23 @@ function ArtikelEinstellen() {
               </div>
 
               {calOpen && (
-                <div ref={popoverRef} style={{ position: 'absolute', top: '100%', left: 0, marginTop: 8 }}>
-                  <MiniCalendar
-                    month={calMonth}
-                    onMonthChange={setCalMonth}
-                    selected={lieferDatum}
-                    onSelect={(d: Date) => { setLieferDatum(d); }}
-                    isDisabled={isDisabledDay}
-                    minDate={minDate} // ⬅️ morgen
-                  />
-                </div>
-              )}
+  <div
+    ref={popoverRef}
+    className={styles.calendarPopover}
+    role="dialog"
+    aria-label="Kalender"
+  >
+    <MiniCalendar
+      month={calMonth}
+      onMonthChange={setCalMonth}
+      selected={lieferDatum}
+      onSelect={(d: Date) => setLieferDatum(d)}
+      isDisabled={isDisabledDay}
+      minDate={minDate}
+    />
+  </div>
+)}
+
             </label>
 
             {/* Lieferadresse wählen */}

@@ -6,7 +6,6 @@ import styles from './register.module.css';
 import Image from 'next/image';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
-import { useRouter } from 'next/navigation';
 
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <div onClick={onClick} style={{ position: 'absolute', right: '0px', top: '38px', cursor: 'pointer' }}>
@@ -53,7 +52,7 @@ const COUNTRY_OPTIONS = [
 /** Regeln / Limits */
 const NAME_MAX = 32;
 const CITY_MAX = 24;
-const USERNAME_MAX = 30;
+const USERNAME_MAX = 24;
 const ZIP_MAX = 5;
 const COMPANY_MAX = 80;
 const EMAIL_MAX = 70;
@@ -95,7 +94,10 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const router = useRouter();
+  // Resend Confirmation
+  const [resending, setResending] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
+
   const invitedByRaw = useQueryParam('invited_by');
   // ✨ redirect sicher normalisieren
   const redirectParam = safeRedirect(useQueryParam('redirect') || '/');
@@ -116,9 +118,13 @@ const Register = () => {
       case 'lastName':
         value = value.replace(ONLY_LETTERS_SANITIZE, '').slice(0, NAME_MAX);
         break;
-      case 'username':
-        value = value.replace(/\s+/g, '').slice(0, USERNAME_MAX);
+      case 'username': {
+        value = value
+          .replace(/[^a-z0-9_-]/gi, '') // nur a-z, 0-9, _-
+          .toLowerCase()                // lowercase erzwingen
+          .slice(0, 24);                // Länge begrenzen
         break;
+      }
       case 'email':
         value = value.slice(0, EMAIL_MAX);
         break;
@@ -162,8 +168,8 @@ const Register = () => {
     if (formData.email.length > EMAIL_MAX || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.email)) {
       newErrors.email = 'Bitte eine gültige E-Mail eingeben.';
     }
-    if (!formData.username || formData.username.length > USERNAME_MAX) {
-      newErrors.username = `Benutzername: max. ${USERNAME_MAX} Zeichen.`;
+    if (!/^[a-z0-9_-]{3,24}$/.test(formData.username)) {
+      newErrors.username = 'Benutzername: nur a–z, 0–9, _-, 3–24 Zeichen.';
     }
     if (!PASSWORD_RE.test(formData.password)) {
       newErrors.password = 'Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.';
@@ -207,7 +213,7 @@ const Register = () => {
 
     const supabase = supabaseBrowser();
     const emailNorm = formData.email.trim().toLowerCase();
-    const usernameNorm = formData.username.trim();
+    const usernameNorm = formData.username.trim().toLowerCase();
 
     try {
       // 0) E-Mail serverseitig prüfen (optional)
@@ -231,14 +237,15 @@ const Register = () => {
         // weiter – Supabase fängt harte Duplikate
       }
 
-      // 1) Username-Check (RPC + kleiner Fallback)
+      // 1) Username-Check (RPC + klarer Abbruch)
       const { data: available, error: rpcErr } = await supabase.rpc('is_username_available', {
         name: usernameNorm,
       });
 
       if (rpcErr) {
-        // RPC down – minimaler Fallback: nichts blockieren, Supabase unique Index fängt es notfalls ab
         console.warn('[is_username_available RPC failed]', rpcErr);
+        setErrors({ username: 'Benutzername konnte nicht geprüft werden. Bitte später erneut.' });
+        return;
       } else if (available === false) {
         setErrors({ username: 'Benutzername ist bereits vergeben.' });
         return;
@@ -248,7 +255,7 @@ const Register = () => {
       const meta: Record<string, any> = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        username: usernameNorm,
+        username: usernameNorm, // lowercase speichern
         accountType: isPrivatePerson ? 'private' : 'business',
         address: {
           street: formData.street,
@@ -273,7 +280,6 @@ const Register = () => {
       });
 
       if (error) {
-        // echte Supabase-Meldung anzeigen (hilft, Konfig-/Policy-Fehler zu finden)
         console.error('[signUp error]', { message: error.message, status: (error as any)?.status, code: (error as any)?.code });
         const msg = (error.message || '').trim();
         const alreadyExists =
@@ -304,10 +310,30 @@ const Register = () => {
       }
 
       setConfirmationLink('Bitte bestätige deine E-Mail, dann kannst du dich einloggen.');
+      setResendDone(false); // bei neuer Registrierung erneut erlauben
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Bestätigungsmail erneut senden
+  async function handleResend() {
+    if (resending) return;
+    setResending(true);
+    try {
+      const supabase = supabaseBrowser();
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email.trim().toLowerCase(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`
+        }
+      });
+      setResendDone(!error);
+    } finally {
+      setResending(false);
+    }
+  }
 
   return (
     <div className={styles.registerContainer}>
@@ -608,12 +634,20 @@ const Register = () => {
 
         {confirmationLink && (
           <div className={styles.successBanner} role="status" aria-live="polite">
-            <span className={styles.successIcon}>
-              <Check size={18} />
-            </span>
+            <span className={styles.successIcon}><Check size={18} /></span>
             <span>{confirmationLink}</span>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || resendDone}
+              className={styles.linkButton}
+              style={{ marginLeft: 12 }}
+            >
+              {resending ? 'Sende…' : resendDone ? 'Erneut gesendet ✓' : 'E-Mail erneut senden'}
+            </button>
           </div>
         )}
+
       </div>
     </div>
   );

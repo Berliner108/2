@@ -384,8 +384,9 @@ const Einstellungen = (): JSX.Element => {
   return (
     <>
       <Navbar />
+      <h2 className={styles.title}>Kontoeinstellungen</h2>
       <div className={styles.wrapper}>
-        <h2 className={styles.title}>Kontoeinstellungen</h2>
+        
         <div className={styles.kontoContainer}>
           <p className={styles.description}>
             Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.

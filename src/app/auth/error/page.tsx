@@ -27,57 +27,42 @@ export default function AuthErrorPage() {
 
   switch (type) {
     case 'signup':
-      hint = 'Dein Bestätigungslink ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an oder logge dich erneut ein.';
-      break;
+      hint = 'Dein Bestätigungslink ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an oder logge dich erneut ein.'; break;
     case 'recovery':
-      hint = 'Dein Passwort-Reset-Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.';
-      break;
+      hint = 'Dein Passwort-Reset-Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'; break;
     case 'email_change':
-      hint = 'Der E-Mail-Änderungslink ist ungültig oder abgelaufen.';
-      break;
+      hint = 'Der E-Mail-Änderungslink ist ungültig oder abgelaufen.'; break;
     case 'magiclink':
     case 'invite':
-      hint = 'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.';
-      break;
-    default:
-      break;
+      hint = 'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.'; break;
+    default: break;
   }
 
   return (
+  <div className={styles.wrapper}>
     <main className={styles.page}>
       <div className={styles.card} role="alert" aria-live="polite">
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.text}>{hint}</p>
 
         <div className={styles.actions}>
-          <Link
-            href={`/login?redirect=${encodeURIComponent(redirect)}`}
-            className={styles.btnPrimary}
-          >
+          <Link href={`/login?redirect=${encodeURIComponent(redirect)}`} className={styles.btnPrimary}>
             Erneut einloggen
           </Link>
-
           {type === 'recovery' && (
-            <Link
-              href={`/reset-password?redirect=${encodeURIComponent(redirect)}`}
-              className={styles.btnGhost}
-            >
+            <Link href={`/reset-password?redirect=${encodeURIComponent(redirect)}`} className={styles.btnGhost}>
               Neuen Reset-Link anfordern
             </Link>
           )}
-
-          <Link href="/" className={styles.btnGhost}>
-            Zur Startseite
-          </Link>
+          <Link href="/" className={styles.btnGhost}>Zur Startseite</Link>
         </div>
 
         <div className={styles.meta}>
-          Fehlercode:&nbsp;
-          <code className={styles.code}>
-            {code}{type ? `:${type}` : ''}
-          </code>
+          Fehlercode:&nbsp;<code className={styles.code}>{code}{type ? `:${type}` : ''}</code>
         </div>
       </div>
     </main>
-  );
+  </div>
+);
+
 }

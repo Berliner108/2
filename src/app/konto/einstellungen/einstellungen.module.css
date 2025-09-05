@@ -1,13 +1,31 @@
 /* /src/app/konto/einstellungen/einstellungen.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
-/* Wrapper für das Layout */
+/* Box-Sizing & Schrift global innerhalb des Wrappers */
+.wrapper * {
+  box-sizing: border-box;
+  font-family: 'Oswald', sans-serif;
+}
+
+/* Wrapper – Desktop nicht zu breit, horizontal zentriert */
 .wrapper {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 40px;
-  margin-bottom: 40px;
+  justify-content: center;  /* zentriert den Inhalt horizontal */
+  padding: 0 12px;
+  margin: 40px 0;
+}
+
+/* Container – Zentriert und schmaler als vorher */
+.kontoContainer {
+  width: 100%;
+  max-width: 960px;          /* <= schmaler als 1000px */
+  margin: 0 auto;            /* zentriert */
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* Titel der Seite */
@@ -16,265 +34,35 @@
   color: #333;
   text-align: center;
   margin-bottom: 20px;
-  font-weight: bold;
+  font-weight: 700;
+  font-family: 'Oswald', sans-serif;
 }
 
-/* Container für die Kontoinformationen */
-.kontoContainer {
-  max-width: 1000px;
-  width: 100%;
-  background-color: #fff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Beschreibung der Seite */
+/* Beschreibung */
 .description {
   font-size: 1rem;
   color: #666;
   margin-bottom: 20px;
 }
-/* /src/app/konto/einstellungen/einstellungen.module.css */
 
-/* Abschnitt für Konto löschen */
+/* Abschnittstitel */
 .subSectionTitle {
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #333;
   margin-top: 30px;
   margin-bottom: 10px;
 }
 
-/* Bestätigungs-Checkbox */
-.deleteConfirmationText {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-/* Lösch-Button */
-.deleteButton {
-  width: 100%;
-  padding: 12px;
-  background-color: #e53e3e;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.deleteButton:hover {
-  background-color: #c53030;
-}
-
-.deleteButton:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-/* Separator zwischen den Abschnitten */
-.separator {
-  border-top: 1px solid #e0e0e0;
-  margin: 30px 0;
-}
-/* /src/app/konto/einstellungen/einstellungen.module.css */
-
-/* Benutzername nur zur Anzeige, nicht bearbeitbar */
-.inputReadonly {
-  width: 100%;
-  padding: 12px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  color: #333;
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-/* Abschnitt für Konto löschen */
-.subSectionTitle {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  margin-top: 30px;
-  margin-bottom: 10px;
-}
-
-/* Bestätigungs-Checkbox */
-.deleteConfirmationText {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-/* Lösch-Button */
-.deleteButton {
-  width: 100%;
-  padding: 12px;
-  background-color: #e53e3e;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.deleteButton:hover {
-  background-color: #c53030;
-}
-
-.deleteButton:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-/* Separator zwischen den Abschnitten */
-.separator {
-  border-top: 1px solid #e0e0e0;
-  margin: 30px 0;
-}
-/* /src/app/konto/einstellungen/einstellungen.module.css */
-
-/* Abschnitt für Bewertungen */
-.reviews {
-  margin-top: 20px;
-}
-
-.reviewItem {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.reviewItem h4 {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-.reviewItem p {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* Profilbild Vorschau */
-.imagePreview {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-}
-
-.previewImage {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 8px;
-}
-/* /src/app/konto/einstellungen/einstellungen.module.css */
-
-/* Abschnitt für Bewertungen */
-.reviews {
-  margin-top: 20px;
-}
-
-.reviewItem {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.reviewItem h4 {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-.reviewItem p {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* Profilbild Vorschau */
-.imagePreview {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-}
-
-.previewImage {
-  max-width: 200px;
-  max-height: 200px;
-  border-radius: 8px;
-}
-
-/* Separator zwischen den Abschnitten */
+/* Separator */
 .separator {
   border-top: 1px solid #e0e0e0;
   margin: 30px 0;
 }
 
-/* Abschnitt für Konto löschen */
-.subSectionTitle {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  margin-top: 30px;
-  margin-bottom: 10px;
-}
-
-/* Bestätigungs-Checkbox */
-.deleteConfirmationText {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 10px;
-}
-
-/* Lösch-Button */
-.deleteButton {
-  width: 100%;
-  padding: 12px;
-  background-color: #e53e3e;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.deleteButton:hover {
-  background-color: #c53030;
-}
-
-.deleteButton:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-/* Fehler- und Erfolgsnachrichten */
-.error {
-  color: red;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-}
-
-.success {
-  color: green;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-}
+/* Hinweise */
+.error { color: red; font-size: 0.9rem; margin-bottom: 20px; }
+.success { color: green; font-size: 0.9rem; margin-bottom: 20px; }
 
 /* Formular */
 .form {
@@ -283,82 +71,160 @@
   gap: 20px;
 }
 
-/* Eingabefelder */
+/* Gruppen */
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
-
 .inputGroup label {
   font-size: 1rem;
   color: #333;
 }
 
-.input {
+/* Eingabereihe (Hausnr., PLZ, Ort) – flexibel, kein Überlappen */
+.inputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr; /* Hnr 1fr, PLZ 1fr, Ort 2fr */
+  gap: 12px;
   width: 100%;
+}
+.smallInput { min-width: 0; }
+
+/* Eingabefelder */
+.input,
+.inputReadonly {
+  width: 100%;
+  min-width: 0;                 /* wichtig in Grids – verhindert Überlauf */
   padding: 12px;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 1rem;
   color: #333;
+  background: #fff;
 }
-
 .input:focus {
   outline: none;
   border-color: #00b4d8;
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.18);
+}
+.inputReadonly {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
 }
 
-/* Speichern-Button */
+/* CHECKBOX – nativ, nur Farbe; RADIO – custom wie dein Beispiel */
+/* Pure via .form */
+.form input[type="checkbox"] {
+  accent-color: #00e5ff;
+}
+
+/* RADIO custom */
+.form input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin: 0;                  /* Label hat bereits gap */
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.form input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00b4d8;        /* dein Türkis */
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+.form input[type="radio"]:checked {
+  border-color: #00e5ff;
+}
+.form input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+/* Zugänglicher Fokus */
+.form input[type="radio"]:focus-visible,
+.form input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.35);
+  outline-offset: 2px;
+}
+
+/* Buttons */
 .saveButton {
   width: 100%;
   padding: 12px;
   background-color: #00b4d8;
   color: white;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 700;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
 }
+.saveButton:hover { background-color: #0094b6; }
+.saveButton:disabled { opacity: .6; cursor: not-allowed; }
 
-.saveButton:hover {
-  background-color: #0094b6;
+/* Löschen */
+.deleteButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #e53e3e;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
 }
+.deleteButton:hover { background-color: #c53030; }
+.deleteButton:disabled { background-color: #ddd; cursor: not-allowed; }
 
-/* Separator zwischen den Abschnitten */
-.separator {
-  border-top: 1px solid #e0e0e0;
-  margin: 30px 0;
-}
-
-/* Abschnittstitel für Zahlungsdetails und Anschrift */
-.subSectionTitle {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  margin-top: 30px;
+/* Bewertungen (optional) */
+.reviews { margin-top: 20px; }
+.reviewItem {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
   margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .kontoContainer {
-    width: 95%;
-    padding: 20px;
-  }
-
-  .title {
-    font-size: 1.5rem;
-  }
-
-  .input {
-    font-size: 0.9rem;
-    padding: 10px;
-  }
-
-  .saveButton {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
+.reviewItem h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 5px;
 }
+.reviewItem p { font-size: 0.9rem; color: #666; }
+
+/* Bildvorschau (optional) */
+.imagePreview { margin-top: 15px; display: flex; justify-content: center; }
+.previewImage { max-width: 200px; max-height: 200px; border-radius: 8px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .kontoContainer { padding: 20px; max-width: 720px; }
+  .inputRow { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .title { font-size: 1.5rem; }
+  .kontoContainer { padding: 16px; max-width: 100%; }
+  .input { font-size: .95rem; padding: 10px; }
+  .saveButton, .deleteButton { padding: 10px; font-size: .95rem; }
+  .inputRow { grid-template-columns: 1fr; gap: 10px; } /* untereinander, kein Überlaufen */
+}
+@media (max-width: 560px) {
+.wrapper {
+  max-width: 90%;
+  display: flex;
+  justify-content: center;  /* zentriert den Inhalt horizontal */
+  padding: 0 12px;
+  margin: 40px 0;
+}}
