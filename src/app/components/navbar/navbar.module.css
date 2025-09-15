@@ -87,6 +87,13 @@
     justify-content: flex-start;
     min-width: 100vw;
   }
+  /* navbar.module.css */
+.navList {
+  display: flex;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth; /* optional */
+}
+
   .navList { display: flex; flex-wrap: nowrap; justify-content: flex-start; padding: 10px 0; margin: 0; min-width: max-content; }
   .navItem { margin: 0 10px; }
   .dropdown { display: none !important; }
@@ -126,3 +133,35 @@
 }
 
 /* Wenn du sehr enge Abstände hast, kannst du top/right feinjustieren */
+/* ===== fixierter Overlay-Badge rechts (nur Ergänzung) ===== */
+.edgeBadge {
+  position: fixed;
+  right: 6px;
+  top: 8px;              /* wird per inline-style gesetzt */
+  z-index: 10000;
+
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ef4444;
+  color: #fff;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1;
+  text-align: center;
+
+  box-shadow: 0 0 0 2px #fff;
+  pointer-events: none;
+}
+
+@keyframes edgePulse {
+  0%   { transform: scale(1);   opacity: 1; }
+  70%  { transform: scale(1.08); opacity: .92; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.edgeBadge { animation: edgePulse 2.4s ease-in-out infinite; }

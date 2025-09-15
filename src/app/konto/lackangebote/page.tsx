@@ -2,22 +2,86 @@
 
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './lackangebote.module.css'
-import { artikelDaten, type Artikel } from '@/data/ArtikelDatenLackanfragen'
+
+/* ---------- Fancy Loader Components ---------- */
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  )
+}
+// Link zur Plattform-Rechnung (PDF) für diese Order
+const invoiceUrl = (o: LackOrder) => `/api/invoices/${encodeURIComponent(String(o.orderId))}`
+
+function FormSkeleton() {
+  return (
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+    </div>
+  )
+}
 
 /* ---------- Status / Typen ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type OrderKind   = 'vergeben' | 'angenommen'
 
 type LackOrder = {
+  orderId: string
+
   requestId: string | number
   offerId?: string
-  vendor?: string
   amountCents?: number
+  itemCents?: number
+  shippingCents?: number
   acceptedAt: string // ISO
   kind: OrderKind
+  shippedAt?: string
+  autoRefundAt?: string
+  refundedAt?: string
+
+  // Gegenpartei & Ratings (Aggregatwerte)
+  vendorName?: string
+  vendorUsername?: string | null
+  vendorDisplay?: string | null
+  vendorRating?: number | null
+  vendorRatingCount?: number | null
+
+  ownerHandle?: string | null
+  ownerDisplay?: string | null
+  ownerRating?: number | null
+  ownerRatingCount?: number | null
+
+  // Request-Meta
+  title?: string | null
+  ort?: string | null
+  lieferdatum?: string | null
+  mengeKg?: number | null
 
   status?: OrderStatus
   deliveredReportedAt?: string
@@ -26,34 +90,36 @@ type LackOrder = {
   disputeOpenedAt?: string
   disputeReason?: string | null
 
-  // Bewertung durch Auftraggeber
-  review?: { rating: 'good' | 'neutral'; text: string }
+  myReview?: { stars: 1 | 2 | 3 | 4 | 5; text: string }
+  review?: { stars: 1 | 2 | 3 | 4 | 5; text: string }
 }
 
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
-const LS_KEY     = 'myLackOrdersV1'
-const TOP_KEY    = 'lackAuftraegeTop'
-const LS_PS_V    = 'lack-orders:ps:v'
-const LS_PS_A    = 'lack-orders:ps:a'
-const LS_PAGE_V  = 'lack-orders:page:v'
-const LS_PAGE_A  = 'lack-orders:page:a'
-const AUTO_RELEASE_DAYS = 14
+const LS_KEY       = 'myLackOrdersV1'
+const TOP_KEY      = 'lackAuftraegeTop'
+const LS_PS_V      = 'lack-orders:ps:v'
+const LS_PS_A      = 'lack-orders:ps:a'
+const LS_PAGE_V    = 'lack-orders:page:v'
+const LS_PAGE_A    = 'lack-orders:page:a'
+const LS_SEEN_ORDERS = 'lackOrders:lastSeen'   // 👈 neu
 
-/* ---------- Defaults & Allowed --------- */
-const DEFAULTS = {
-  q: '',
-  sort: 'date_desc' as SortKey,
-  status: 'alle' as FilterKey,
-  tab: 'vergeben' as OrderKind,
-  psV: 10,
-  psA: 10,
-  pageV: 1,
-  pageA: 1,
+/** 28 Tage Auto-Release-Frist nach „Versandt“ */
+const AUTO_RELEASE_DAYS = 28
+
+// Link zur Review-Seite der Gegenpartei
+function profileReviewsHref(order: LackOrder): string | undefined {
+  if (order.kind === 'vergeben') {
+    if (order.vendorUsername) return `/u/${order.vendorUsername}/reviews`
+    if ((order as any).vendorId) return `/u/${(order as any).vendorId}/reviews`
+  } else {
+    if (order.ownerHandle) return `/u/${order.ownerHandle}/reviews`
+    if ((order as any).ownerId) return `/u/${(order as any).ownerId}/reviews`
+  }
+  return undefined
 }
-const ALLOWED_PS = [2, 10, 20, 50]
 
 /* ---------- Hooks ---------- */
 function useDebouncedValue<T>(value: T, delay = 300): T {
@@ -74,104 +140,75 @@ function asDateLike(v: unknown): Date | undefined {
 }
 
 const formatEUR = (c?: number) =>
-  typeof c === 'number'
-    ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
-    : '—'
+  typeof c === 'number' ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' }) : '—'
 
 const formatDate = (d?: Date) =>
-  d
-    ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
-    : '—'
+  d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
 
-function computeItemTitle(a: Artikel): string {
-  const extras = [a.hersteller, a.ort, a.menge ? `${a.menge} kg` : ''].filter(Boolean).join(' · ')
-  return [a.titel, extras].filter(Boolean).join(' — ')
+function statusFromLiefer(d?: Date): { key: StatusKey; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
+  if (!d) return { key: 'aktiv', label: 'In Bearbeitung' }
+  return Date.now() < +d
+    ? { key: 'wartet', label: 'Anlieferung geplant' }
+    : { key: 'fertig', label: 'Abholbereit/Versandt' }
 }
-
-function getRequesterName(a: Artikel): string {
-  return a.user?.trim?.() || '—'
-}
-
-/** Produktions-/Abwicklungsstatus aus Lieferdatum der Anfrage */
-function computeStatusFromArtikel(a: Artikel): {
-  key: StatusKey
-  label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
-} {
-  const now = Date.now()
-  const liefer = asDateLike(a.lieferdatum)
-  if (liefer && now < +liefer) return { key: 'aktiv',  label: 'In Bearbeitung' } // ggf. "wartet" hier abbilden
-  if (liefer && now >= +liefer) return { key: 'fertig', label: 'Abholbereit/Versandt' }
-  return { key: 'aktiv', label: 'In Bearbeitung' }
-}
-
-/** Darf „Auftrag abgeschlossen“ (Lieferung melden)? -> erst ab Lieferdatum */
-function canConfirmDeliveredArtikel(a?: Artikel): { ok: boolean; reason: string } {
-  const liefer = a && asDateLike(a.lieferdatum)
-  if (!liefer) return { ok: false, reason: 'Kein Lieferdatum hinterlegt' }
-  if (Date.now() < +liefer) return { ok: false, reason: `Verfügbar ab ${formatDate(liefer)}` }
-  return { ok: true, reason: '' }
-}
-
-/** Für Filterung „wartet/aktiv/fertig“ (reported/disputed/confirmed => „fertig“) */
-function getStatusKeyFor(order: LackOrder, artikel: Artikel): StatusKey {
-  if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
-  return computeStatusFromArtikel(artikel).key
-}
-
-const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString()
-const daysAgo  = (d: number) => new Date(Date.now() - d * 86400_000).toISOString()
 
 function notifyNavbarCount(count: number) {
   try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'lackOrders', count } })) } catch {}
 }
+function endOfDayIso(d?: string | null): string | undefined {
+  if (!d) return undefined
+  const dt = new Date(d)
+  if (isNaN(+dt)) return undefined
+  dt.setHours(23, 59, 59, 999)
+  return dt.toISOString()
+}
 
-/* ---------- Beispiel-Aufträge (Lack) ---------- */
-const EXAMPLE_ORDERS: LackOrder[] = [
-  { requestId: '1', vendor: 'LackPro · 4.7', amountCents:  9900, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
-  { requestId: '3', vendor: 'PowderX · 4.6', amountCents: 14900, acceptedAt: daysAgo(1),   kind: 'vergeben'   },
-  { requestId: '4', vendor: 'CoatHub · 4.8', amountCents: 21000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
-  { requestId: '2', vendor: 'Du',            amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
-]
+/* ========= fetcher ========= */
+const fetcher = (url: string) =>
+  fetch(url, { credentials: 'include' }).then(async r => {
+    if (!r.ok) {
+      let msg = 'Laden fehlgeschlagen'
+      try { const j = await r.json(); msg = j?.error || msg } catch {}
+      throw new Error(msg)
+    }
+    return r.json()
+  })
 
-/* ============ Pagination-UI (wie Lackanfragen) ============ */
+/* ========= POST-Helper ========= */
+async function apiPost(path: string, body?: any) {
+  const r = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  const json = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(json?.error || 'Aktion fehlgeschlagen')
+  return json
+}
+
+/* ============ Pagination-UI ============ */
 const Pagination: FC<{
-  page: number
-  setPage: (p:number)=>void
-  pageSize: number
-  setPageSize: (n:number)=>void
-  total: number
-  from: number
-  to: number
-  idPrefix: string
+  page: number; setPage: (p:number)=>void; pageSize: number; setPageSize: (n:number)=>void;
+  total: number; from: number; to: number; idPrefix: string
 }> = ({ page, setPage, pageSize, setPageSize, total, from, to, idPrefix }) => {
   const pages = Math.max(1, Math.ceil(total / pageSize))
   return (
     <div className={styles.pagination} aria-label="Seitensteuerung">
       <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
-        {total === 0
-          ? 'Keine Einträge'
-          : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
+        {total === 0 ? 'Keine Einträge' : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
       </div>
       <div className={styles.pagiControls}>
         <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
-        <select
-          id={`${idPrefix}-ps`}
-          className={styles.pageSize}
-          value={pageSize}
-          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
-        >
-          <option value={2}>2</option>
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
+        <select id={`${idPrefix}-ps`} className={styles.pageSize} value={pageSize} onChange={(e)=>{ setPageSize(Number(e.target.value)); setPage(1) }}>
+          <option value={2}>2</option><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option>
         </select>
-
         <div className={styles.pageButtons}>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
+          <button type="button" className={styles.pageBtn} onClick={()=>setPage(1)} disabled={page<=1} aria-label="Erste Seite">«</button>
+          <button type="button" className={styles.pageBtn} onClick={()=>setPage(page-1)} disabled={page<=1} aria-label="Vorherige Seite">‹</button>
           <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
+          <button type="button" className={styles.pageBtn} onClick={()=>setPage(page+1)} disabled={page>=pages} aria-label="Nächste Seite">›</button>
+          <button type="button" className={styles.pageBtn} onClick={()=>setPage(pages)} disabled={page>=pages} aria-label="Letzte Seite">»</button>
         </div>
       </div>
     </div>
@@ -179,28 +216,14 @@ const Pagination: FC<{
 }
 
 /* ---------- Slice Helper ---------- */
-type Slice<T> = {
-  pageItems: T[]
-  from: number
-  to: number
-  total: number
-  safePage: number
-  pages: number
-}
+type Slice<T> = { pageItems: T[]; from: number; to: number; total: number; safePage: number; pages: number }
 function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const total = arr.length
   const pages = Math.max(1, Math.ceil(total / ps))
   const safePage = Math.min(Math.max(1, page), pages)
   const start = (safePage - 1) * ps
   const end = Math.min(start + ps, total)
-  return {
-    pageItems: arr.slice(start, end),
-    from: total === 0 ? 0 : start + 1,
-    to: end,
-    total,
-    safePage,
-    pages,
-  }
+  return { pageItems: arr.slice(start, end), from: total===0 ? 0 : start+1, to: end, total, safePage, pages }
 }
 
 /* ================= Component ================= */
@@ -208,14 +231,55 @@ const LackanfragenOrdersPage: FC = () => {
   const router = useRouter()
   const params = useSearchParams()
 
-  const itemsById = useMemo(() => {
-    const m = new Map<string, Artikel>()
-    for (const a of artikelDaten as Artikel[]) m.set(String(a.id), a)
-    return m
-  }, [])
+  // ---- Orders aus API laden ----
+  const { data: apiOrders, isLoading, error, mutate } = useSWR<{ vergeben: LackOrder[]; angenommen: LackOrder[] }>(
+    '/api/orders/for-account', fetcher, { refreshInterval: 60_000, revalidateOnFocus: true }
+  )
 
   const [orders, setOrders] = useState<LackOrder[]>([])
+  const [shipOrder, setShipOrder] = useState<LackOrder | null>(null)
+
+  // 👉 Beim Öffnen diese Seite: Events als „gesehen“ markieren (verhindert Altlasten)
+  useEffect(() => {
+    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+  }, [])
+
+  // Orders in lokalen State übernehmen
+  useEffect(() => {
+    if (!apiOrders) return
+    const merged = [...(apiOrders.vergeben ?? []), ...(apiOrders.angenommen ?? [])]
+    setOrders(merged)
+    try { localStorage.setItem(LS_KEY, JSON.stringify(merged)) } catch {}
+    notifyNavbarCount(merged.length)
+  }, [apiOrders])
+
+  // Nach Payment-Return: Auto-Release + URL cleanup
+  useEffect(() => {
+    const accepted = params.get('accepted')
+    if (accepted) {
+      setOrders(prev => {
+        const now = Date.now()
+        let changed = false
+        const next: LackOrder[] = prev.map((o): LackOrder => {
+          if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
+            changed = true
+            return { ...o, status: 'confirmed' as OrderStatus, deliveredConfirmedAt: new Date().toISOString() }
+          }
+          return o
+        })
+        if (changed) try { localStorage.setItem(LS_KEY, JSON.stringify(next)) } catch {}
+        return next
+      })
+      const clean = new URL(window.location.href)
+      ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA'].forEach(k => clean.searchParams.delete(k))
+      router.replace(clean.pathname + clean.search)
+    }
+  }, [params, router])
+
+  // Toolbar-State
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
+  useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
+
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 300)
   const [sort,  setSort]  = useState<SortKey>('date_desc')
@@ -227,77 +291,27 @@ const LackanfragenOrdersPage: FC = () => {
   const [pageA, setPageA] = useState(1)
   const [psA,   setPsA]   = useState<number>(10)
 
-  // Modal: Fertig/geliefert bestätigen (Anbieter-Seite)
-  const [confirmRequestId, setConfirmRequestId] = useState<string | number | null>(null)
-
-  // Bewertung
-  const [rateOrderId, setRateOrderId] = useState<string | number | null>(null)
-  const [rating, setRating] = useState(5)
+  // Bewertung (Modal)
+  const [rateOrderId, setRateOrderId] = useState<string | null>(null)
   const [ratingText, setRatingText] = useState('')
-  const [ratingChoice, setRatingChoice] = useState<'good' | 'neutral' | ''>('');
+  const [ratingStars, setRatingStars] = useState<1|2|3|4|5>(5)
 
+  // Ticker
+  const [, setNowTick] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   // ESC schließt Modals
   useEffect(() => {
-    if (confirmRequestId == null && rateOrderId == null) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setConfirmRequestId(null); setRateOrderId(null) } }
+    if (shipOrder == null && rateOrderId == null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setShipOrder(null); setRateOrderId(null) } }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [confirmRequestId, rateOrderId])
+  }, [shipOrder, rateOrderId])
 
-  /* ---------- Orders laden & migrieren ---------- */
-  useEffect(() => {
-    const savedTop = localStorage.getItem(TOP_KEY)
-    if (savedTop === 'vergeben' || savedTop === 'angenommen') setTopSection(savedTop as OrderKind)
-
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      const existing: LackOrder[] = raw ? JSON.parse(raw) : []
-      const seen = new Set(existing.map(o => `${o.kind}-${o.requestId}`))
-      const merged: LackOrder[] = [...existing]
-
-      for (const ex of EXAMPLE_ORDERS) {
-        if (!itemsById.has(String(ex.requestId))) continue
-        if (!seen.has(`${ex.kind}-${ex.requestId}`)) merged.push(ex)
-      }
-      setOrders(merged)
-      localStorage.setItem(LS_KEY, JSON.stringify(merged))
-      notifyNavbarCount(merged.length)
-    } catch {}
-  }, [itemsById])
-
-  // Query-Params cleanup + Auto-Release Tick (falls z.B. von Zahlung zurück)
-  useEffect(() => {
-    const accepted = params.get('accepted')
-    if (accepted) {
-      setOrders(prev => {
-        const now = Date.now()
-        let changed = false
-        const next = prev.map((o): LackOrder => {
-          if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
-            changed = true
-            return {
-              ...o,
-              status: 'confirmed' as OrderStatus,
-              deliveredConfirmedAt: new Date().toISOString(),
-            }
-          }
-          return o
-        })
-        if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
-        return next
-      })
-
-      const clean = new URL(window.location.href)
-      ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA'].forEach(k => clean.searchParams.delete(k))
-      router.replace(clean.pathname + clean.search)
-    }
-  }, [params, router])
-
-  // Top-Sektion merken
-  useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
-
-  /* ---------- Auto-Freigabe ---------- */
+  /* ---------- Auto-Freigabe (Käufer inaktiv nach „Versandt“) ---------- */
   const runAutoRelease = () => {
     setOrders(prev => {
       const now = Date.now()
@@ -305,15 +319,11 @@ const LackanfragenOrdersPage: FC = () => {
       const next: LackOrder[] = prev.map((o): LackOrder => {
         if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
           changed = true
-          return {
-            ...o,
-            status: 'confirmed' as const,
-            deliveredConfirmedAt: new Date().toISOString(),
-          }
+          return { ...o, status: 'confirmed' as const, deliveredConfirmedAt: new Date().toISOString() }
         }
         return o
       })
-      if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
+      if (changed) try { localStorage.setItem(LS_KEY, JSON.stringify(next)) } catch {}
       return next
     })
   }
@@ -324,48 +334,55 @@ const LackanfragenOrdersPage: FC = () => {
     const onVis = () => { if (!document.hidden) runAutoRelease() }
     document.addEventListener('visibilitychange', onVis)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
-  /* ---------- Filter + Sort ---------- */
-  const allVergeben = useMemo(
-    () => orders
-      .filter(o => o.kind === 'vergeben')
-      .map(o => ({ order: o, artikel: itemsById.get(String(o.requestId)) }))
-      .filter(x => !!x.artikel) as {order:LackOrder, artikel:Artikel}[],
-    [orders, itemsById]
-  )
-  const allAngenommen = useMemo(
-    () => orders
-      .filter(o => o.kind === 'angenommen')
-      .map(o => ({ order: o, artikel: itemsById.get(String(o.requestId)) }))
-      .filter(x => !!x.artikel) as {order:LackOrder, artikel:Artikel}[],
-    [orders, itemsById]
-  )
+  /* ---------- Anzeige-Helfer ---------- */
+  const pickLiefer = (order: LackOrder) => asDateLike(order.lieferdatum)
+  const pickTitle  = (order: LackOrder) => {
+    if (order.title && order.title.trim()) {
+      const extras = [order.ort, typeof order.mengeKg === 'number' ? `${order.mengeKg} kg` : ''].filter(Boolean).join(' · ')
+      return [order.title, extras].filter(Boolean).join(' — ')
+    }
+    return `Anfrage #${String(order.requestId).slice(0, 8)}`
+  }
+  const pickCounterpartyName = (order: LackOrder) =>
+    order.kind === 'vergeben'
+      ? (order.vendorDisplay || order.vendorName || order.vendorUsername || '—')
+      : (order.ownerDisplay || order.ownerHandle || '—')
+  const pickCounterpartyRatingTxt = (order: LackOrder) => {
+    const rating   = order.kind === 'vergeben' ? order.vendorRating : order.ownerRating
+    const ratingCt = order.kind === 'vergeben' ? order.vendorRatingCount : order.ownerRatingCount
+    return (typeof rating === 'number' && (ratingCt ?? 0) > 0) ? `${rating.toFixed(1)}/5 · ${ratingCt}` : 'keine Bewertungen'
+  }
+  function getStatusKeyFor(order: LackOrder, liefer?: Date): StatusKey {
+    if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
+    return statusFromLiefer(liefer).key
+  }
 
-  const applySearchAndFilter = (items: {order:LackOrder, artikel:Artikel}[], qStr: string) => {
+  const allVergeben   = useMemo(() => orders.filter(o => o.kind === 'vergeben'),   [orders])
+  const allAngenommen = useMemo(() => orders.filter(o => o.kind === 'angenommen'), [orders])
+
+  const applySearchAndFilter = (items: LackOrder[], qStr: string) => {
     const q = qStr.trim().toLowerCase()
-    return items.filter(({ order, artikel }) => {
+    return items.filter((order) => {
+      const liefer = pickLiefer(order)
       if (statusFilter !== 'alle') {
-        const key = getStatusKeyFor(order, artikel)
+        const key = getStatusKeyFor(order, liefer)
         if (key !== statusFilter) return false
       }
       if (!q) return true
-      const title = computeItemTitle(artikel).toLowerCase()
-      const partyName = order.kind === 'vergeben' ? (order.vendor || '') : getRequesterName(artikel)
-      return (
-        String(order.requestId).toLowerCase().includes(q) ||
-        title.includes(q) ||
-        partyName.toLowerCase().includes(q)
-      )
+      const title = pickTitle(order).toLowerCase()
+      const partyName = pickCounterpartyName(order).toLowerCase()
+      return String(order.requestId).toLowerCase().includes(q) || title.includes(q) || partyName.includes(q)
     })
   }
 
-  const applySort = (items: {order: LackOrder, artikel: Artikel}[]) => {
+  const applySort = (items: LackOrder[]) => {
     return [...items].sort((a, b) => {
-      if (sort === 'date_desc')  return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
-      if (sort === 'date_asc')   return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
-      if (sort === 'price_desc') return (b.order.amountCents ?? 0) - (a.order.amountCents ?? 0)
-      if (sort === 'price_asc')  return (a.order.amountCents ?? 0) - (b.order.amountCents ?? 0)
+      if (sort === 'date_desc')  return +new Date(b.acceptedAt) - +new Date(a.acceptedAt)
+      if (sort === 'date_asc')   return +new Date(a.acceptedAt) - +new Date(b.acceptedAt)
+      if (sort === 'price_desc') return (b.amountCents ?? 0) - (a.amountCents ?? 0)
+      if (sort === 'price_asc')  return (a.amountCents ?? 0) - (b.amountCents ?? 0)
       return 0
     })
   }
@@ -379,23 +396,19 @@ const LackanfragenOrdersPage: FC = () => {
     [allAngenommen, debouncedQuery, sort, statusFilter]
   )
 
-  /* ---------- URL → State (mit Fallback LocalStorage) ---------- */
+  /* ---------- URL → State ---------- */
   useEffect(() => {
     try {
       const p = new URLSearchParams(window.location.search)
 
-      // Query
       const q = p.get('q'); if (q !== null) setQuery(q)
 
-      // Sort
       const s = p.get('sort') as SortKey | null
       if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
 
-      // Status
       const st = p.get('status') as FilterKey | null
       if (st && ['alle','wartet','aktiv','fertig'].includes(st)) setStatusFilter(st)
 
-      // Tab (URL bevorzugt, sonst LS)
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
         setTopSection(tab)
@@ -404,21 +417,19 @@ const LackanfragenOrdersPage: FC = () => {
         if (saved === 'vergeben' || saved === 'angenommen') setTopSection(saved as OrderKind)
       }
 
-      // PageSizes (URL > LS > Default)
-      const lPsV = Number(localStorage.getItem(LS_PS_V)) || DEFAULTS.psV
-      const lPsA = Number(localStorage.getItem(LS_PS_A)) || DEFAULTS.psA
+      const lPsV = Number(localStorage.getItem(LS_PS_V)) || 10
+      const lPsA = Number(localStorage.getItem(LS_PS_A)) || 10
       const uPsV = Number(p.get('psV'))
       const uPsA = Number(p.get('psA'))
-      setPsV(ALLOWED_PS.includes(uPsV) ? uPsV : (ALLOWED_PS.includes(lPsV) ? lPsV : DEFAULTS.psV))
-      setPsA(ALLOWED_PS.includes(uPsA) ? uPsA : (ALLOWED_PS.includes(lPsA) ? lPsA : DEFAULTS.psA))
+      setPsV([2,10,20,50].includes(uPsV) ? uPsV : ([2,10,20,50].includes(lPsV) ? lPsV : 10))
+      setPsA([2,10,20,50].includes(uPsA) ? uPsA : ([2,10,20,50].includes(lPsA) ? lPsA : 10))
 
-      // Pages (URL > LS > Default)
-      const lPageV = Number(localStorage.getItem(LS_PAGE_V)) || DEFAULTS.pageV
-      const lPageA = Number(localStorage.getItem(LS_PAGE_A)) || DEFAULTS.pageA
+      const lPageV = Number(localStorage.getItem(LS_PAGE_V)) || 1
+      const lPageA = Number(localStorage.getItem(LS_PAGE_A)) || 1
       const uPageV = Number(p.get('pageV')) || undefined
       const uPageA = Number(p.get('pageA')) || undefined
-      setPageV(uPageV && uPageV > 0 ? uPageV : (lPageV > 0 ? lPageV : DEFAULTS.pageV))
-      setPageA(uPageA && uPageA > 0 ? uPageA : (lPageA > 0 ? lPageA : DEFAULTS.pageA))
+      setPageV(uPageV && uPageV > 0 ? uPageV : (lPageV > 0 ? lPageV : 1))
+      setPageA(uPageA && uPageA > 0 ? uPageA : (lPageA > 0 ? lPageA : 1))
     } catch {}
   }, [])
 
@@ -428,28 +439,25 @@ const LackanfragenOrdersPage: FC = () => {
   useEffect(() => { try { localStorage.setItem(LS_PAGE_V, String(pageV)) } catch {} }, [pageV])
   useEffect(() => { try { localStorage.setItem(LS_PAGE_A, String(pageA)) } catch {} }, [pageA])
 
-  // Bei (debounced) Such-/Sort-/Status-Änderung beide Seiten zurücksetzen
   useEffect(() => { setPageV(1); setPageA(1) }, [debouncedQuery, sort, statusFilter])
 
-  /* ---------- URL-Synchronisation (mit Debounce) ---------- */
+  /* ---------- URL-Synchronisation ---------- */
   useEffect(() => {
     try {
       const p = new URLSearchParams()
-      if (debouncedQuery !== DEFAULTS.q) p.set('q', debouncedQuery)
-      if (sort !== DEFAULTS.sort)        p.set('sort', sort)
-      if (statusFilter !== DEFAULTS.status) p.set('status', statusFilter)
-      if (topSection !== DEFAULTS.tab)   p.set('tab', topSection)
-      if (psV !== DEFAULTS.psV)          p.set('psV', String(psV))
-      if (psA !== DEFAULTS.psA)          p.set('psA', String(psA))
-      if (pageV !== DEFAULTS.pageV)      p.set('pageV', String(pageV))
-      if (pageA !== DEFAULTS.pageA)      p.set('pageA', String(pageA))
+      if (debouncedQuery) p.set('q', debouncedQuery)
+      if (sort !== 'date_desc')        p.set('sort', sort)
+      if (statusFilter !== 'alle')     p.set('status', statusFilter)
+      if (topSection !== 'vergeben')   p.set('tab', topSection)
+      if (psV !== 10)                  p.set('psV', String(psV))
+      if (psA !== 10)                  p.set('psA', String(psA))
+      if (pageV !== 1)                 p.set('pageV', String(pageV))
+      if (pageA !== 1)                 p.set('pageA', String(pageA))
 
       const qs   = p.toString()
       const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
       const curr = `${window.location.pathname}${window.location.search}`
-      if (next !== curr) {
-        router.replace(next, { scroll: false })
-      }
+      if (next !== curr) router.replace(next, { scroll: false })
     } catch {}
   }, [debouncedQuery, sort, statusFilter, topSection, psV, psA, pageV, pageA, router])
 
@@ -460,113 +468,150 @@ const LackanfragenOrdersPage: FC = () => {
   const sliceA = sliceByPage(filteredSortedA, pageA, psA)
   useEffect(() => { if (sliceA.safePage !== pageA) setPageA(sliceA.safePage) }, [sliceA.safePage, pageA])
 
-  /* ---------- Actions ---------- */
+  /* ---------- Lokale Persist-Helper ---------- */
   function persist(next: LackOrder[]) {
-    localStorage.setItem(LS_KEY, JSON.stringify(next))
+    try { localStorage.setItem(LS_KEY, JSON.stringify(next)) } catch {}
     setOrders(next)
   }
 
-  function reportDelivered(requestId: string | number) {
-    const next = orders.map((o): LackOrder =>
-      String(o.requestId) === String(requestId)
-        ? {
-            ...o,
-            status: 'reported' as OrderStatus,
-            deliveredReportedAt: new Date().toISOString(),
-            autoReleaseAt: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString(),
-          }
-        : o
-    )
-    persist(next)
+  /* ---------- Server-Actions ---------- */
+  async function doShip(o: LackOrder) {
+    try {
+      await apiPost(`/api/orders/${o.orderId}/ship`)
+      const nowIso  = new Date().toISOString()
+      const autoRel = new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString()
+
+      const next: LackOrder[] = orders.map((x): LackOrder =>
+        x.orderId === o.orderId
+          ? {
+              ...x,
+              status: 'reported' as OrderStatus,
+              shippedAt: nowIso,
+              deliveredReportedAt: nowIso,
+              autoReleaseAt: autoRel,
+            }
+          : x
+      )
+
+      persist(next)
+      // Nach Aktion: als gesehen stempeln
+      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+      mutate()
+    } catch (e: any) {
+      alert(e?.message || 'Aktion fehlgeschlagen')
+    }
   }
 
-  function confirmDelivered(requestId: string | number) {
-    const next: LackOrder[] = orders.map((o): LackOrder =>
-      String(o.requestId) === String(requestId)
-        ? {
-            ...o,
-            status: 'confirmed' as OrderStatus,
-            deliveredConfirmedAt: new Date().toISOString(),
-          }
-        : o
-    )
-    persist(next)
+  async function doRelease(o: LackOrder) {
+    try {
+      await apiPost(`/api/orders/${o.orderId}/release`)
+      const nowIso = new Date().toISOString()
+
+      const next: LackOrder[] = orders.map((x): LackOrder =>
+        x.orderId === o.orderId
+          ? {
+              ...x,
+              status: 'confirmed' as OrderStatus,
+              deliveredConfirmedAt: nowIso,
+            }
+          : x
+      )
+
+      persist(next)
+      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+      mutate()
+    } catch (e: any) {
+      alert(e?.message || 'Aktion fehlgeschlagen')
+    }
   }
 
-  function openDispute(requestId: string | number) {
-    const reason = window.prompt('Problem melden (optional):')
-    const next = orders.map((o): LackOrder =>
-      String(o.requestId) === String(requestId)
-        ? {
-            ...o,
-            status: 'disputed' as OrderStatus,
-            disputeOpenedAt: new Date().toISOString(),
-            disputeReason: reason || null,
-          }
-        : o
-    )
-    persist(next)
+  async function doDispute(o: LackOrder) {
+    try {
+      const reason = window.prompt('Problem melden (optional):') || ''
+      await apiPost(`/api/orders/${o.orderId}/dispute`, { reason })
+      const nowIso = new Date().toISOString()
+
+      const next: LackOrder[] = orders.map((x): LackOrder =>
+        x.orderId === o.orderId
+          ? {
+              ...x,
+              status: 'disputed' as OrderStatus,
+              disputeOpenedAt: nowIso,
+              disputeReason: reason || null,
+            }
+          : x
+      )
+
+      persist(next)
+      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+      mutate()
+    } catch (e: any) {
+      alert(e?.message || 'Aktion fehlgeschlagen')
+    }
   }
 
   function remainingText(iso?: string) {
     if (!iso) return '–'
     const delta = +new Date(iso) - Date.now()
-    if (delta <= 0) return 'kurzfristig'
+    if (delta <= 0) return 'abgelaufen'
     const days  = Math.floor(delta / 86400000)
     const hours = Math.floor((delta % 86400000) / 3600000)
     return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours} Std` : `${hours} Std`
   }
 
+  const alreadyRated = (o: LackOrder) => !!(o.myReview || o.review)
+  const canRateNow   = (o: LackOrder) => !alreadyRated(o)
+
   /* ---------- Section Renderer ---------- */
   const SectionList: FC<{
     kind: OrderKind
-    slice: Slice<{order:LackOrder, artikel:Artikel}>
+    slice: Slice<LackOrder>
     idPrefix: string
-    onConfirmDelivered: (requestId: string | number) => void
-  }> = ({ kind, slice, idPrefix, onConfirmDelivered }) => (
+  }> = ({ kind, slice, idPrefix }) => (
     <>
       <ul className={styles.list}>
-        {slice.pageItems.map(({ order, artikel }) => {
-          const a = artikel as Artikel
-          const prodStatus = computeStatusFromArtikel(a)
+        {slice.pageItems.map((order) => {
+          const liefer = pickLiefer(order)
+          const prodStatus = statusFromLiefer(liefer)
           const display =
-            order.status === 'confirmed'
-              ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const }
-              : order.status === 'disputed'
-                ? { key: 'fertig' as StatusKey, label: 'Reklamation offen' as const }
-                : order.status === 'reported'
-                  ? { key: 'fertig' as StatusKey, label: 'Zustellung gemeldet' as const }
-                  : prodStatus
-
-          const liefer = asDateLike(a.lieferdatum)
+            order.status === 'confirmed' ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const } :
+            order.status === 'disputed'  ? { key: 'fertig' as StatusKey, label: 'Reklamation offen' as const } :
+            order.status === 'reported'  ? { key: 'fertig' as StatusKey, label: 'Versandt' as const } :
+            prodStatus
 
           const contactLabel = order.kind === 'vergeben' ? 'Anbieter' : 'Auftraggeber'
-          const contactValue = order.kind === 'vergeben' ? (order.vendor ?? '—') : getRequesterName(a)
-
-          const { ok: canClick, reason } = canConfirmDeliveredArtikel(a)
+          const contactName  = pickCounterpartyName(order)
+          const ratingTxt    = pickCounterpartyRatingTxt(order)
+          const title        = pickTitle(order)
+          const menge        = typeof order.mengeKg === 'number' ? order.mengeKg : undefined
 
           const isVendor   = order.kind === 'angenommen'
           const isCustomer = order.kind === 'vergeben'
 
+          const refundDeadlineIso =
+            order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
+          const refundHint =
+            (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && refundDeadlineIso)
+              ? `Automatischer Refund in ${remainingText(refundDeadlineIso)}${isVendor ? ' – bitte rechtzeitig „Versandt“ melden.' : ' (kein Versand gemeldet).'}`
+              : (order.refundedAt ? `Erstattung erfolgt am ${formatDate(asDateLike(order.refundedAt))}` : '')
+
           return (
-            <li key={`${order.kind}-${order.requestId}-${order.offerId ?? 'x'}`} className={styles.card}>
+            <li key={`${order.kind}-${order.orderId}`} className={styles.card}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
-                  <Link href={`/lackanfragen/artikel/${a.id}`} className={styles.titleLink}>
-                    {computeItemTitle(a)}
+                  <Link href={`/lackanfragen/artikel/${String(order.requestId)}`} className={styles.titleLink}>
+                    {title}
                   </Link>
                 </div>
-                <span
-                  className={[
-                    styles.statusBadge,
-                    display.label === 'In Bearbeitung' ? styles.statusActive : '',
-                    display.label === 'Anlieferung geplant' ? styles.statusPending : '',
-                    display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
-                    display.label === 'Zustellung gemeldet' ? styles.statusPending : '',
-                    display.label === 'Reklamation offen' ? styles.statusPending : '',
-                    display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
-                  ].join(' ').trim()}
-                >
+                <span className={[
+                  styles.statusBadge,
+                  display.label === 'In Bearbeitung' ? styles.statusActive : '',
+                  display.label === 'Anlieferung geplant' ? styles.statusPending : '',
+                  display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
+                  display.label === 'Versandt' ? styles.statusPending : '',
+                  display.label === 'Reklamation offen' ? styles.statusPending : '',
+                  display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
+                ].join(' ').trim()}>
                   {display.label}
                 </span>
               </div>
@@ -574,19 +619,37 @@ const LackanfragenOrdersPage: FC = () => {
               <div className={styles.meta}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
-                  <div className={styles.metaValue}>{contactValue}</div>
+                  <div className={styles.metaValue}>
+                    {(() => {
+                      const href = profileReviewsHref(order)
+                      return href
+                        ? <Link href={href} className={styles.titleLink}>{contactName}</Link>
+                        : <>{contactName}</>
+                    })()}
+                    <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
+                  </div>
                 </div>
+
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
-                  <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
+                  <div className={styles.metaValue}>
+                    {formatEUR(order.amountCents)}
+                    {(typeof order.itemCents === 'number' || typeof order.shippingCents === 'number') && (
+                      <div style={{ fontSize:'0.9em', opacity:.8 }}>
+                        Artikel {formatEUR(order.itemCents ?? order.amountCents)} · Versand {(order.shippingCents ?? 0) > 0 ? formatEUR(order.shippingCents) : 'Kostenlos'}
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Lieferdatum</div>
                   <div className={styles.metaValue}>{formatDate(liefer)}</div>
                 </div>
+
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Menge</div>
-                  <div className={styles.metaValue}>{a.menge ? `${a.menge} kg` : '—'}</div>
+                  <div className={styles.metaValue}>{typeof menge === 'number' ? `${menge} kg` : '—'}</div>
                 </div>
 
                 {order.deliveredReportedAt && (
@@ -604,67 +667,72 @@ const LackanfragenOrdersPage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-                <Link href={`/lackanfragen/artikel/${a.id}`} className={styles.primaryBtn}>
+                <Link href={`/lackanfragen/artikel/${String(order.requestId)}`} className={styles.primaryBtn}>
                   Zur Lackanfrage
                 </Link>
+                {/* Verkäufer: Rechnung downloaden (sichtbar NACH Freigabe/Auto-Release) */}
+                {isVendor && order.status === 'confirmed' && (
+                  <a
+                     href={`/api/invoices/${order.orderId}/download`}
+                    className={styles.secondaryBtn}
+                    target="_blank"
+                    rel="noopener"
+                    title="Plattformrechnung (PDF) herunterladen"
+                  >
+                    Rechnung herunterladen (PDF)
+                  </a>
+                )}
 
-                {/* Anbieter: „Auftrag abgeschlossen“ */}
-                {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (() => {
-                  const hintId = `deliver-hint-${order.kind}-${order.requestId}`
-                  return (
-                    <div className={styles.actionStack}>
-                      <button
-                        type="button"
-                        className={styles.secondaryBtn}
-                        disabled={!canClick}
-                        aria-disabled={!canClick}
-                        aria-describedby={!canClick ? hintId : undefined}
-                        onClick={() => { if (canClick) setConfirmRequestId(order.requestId) }}
-                        title={canClick ? 'Bestätigt Lieferung – endgültig' : reason}
-                      >
-                        Auftrag abgeschlossen
-                      </button>
-                      {!canClick && <div id={hintId} className={styles.btnHint}> {reason} </div>}
-                    </div>
-                  )
-                })()}
 
-                {/* Auftraggeber: nach Meldung bestätigen / reklamieren */}
+                {/* Verkäufer: „Versandt melden“ */}
+                {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
+                  <div className={styles.actionStack}>
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      onClick={() => setShipOrder(order)}
+                      title="Versand an Käufer melden"
+                    >
+                      Versandt melden
+                    </button>
+                    {refundHint && (
+                      <div className={styles.btnHint}>{refundHint}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Käufer sieht Refund-Hinweis, wenn kein Versand */}
+                {isCustomer && refundHint && (!order.shippedAt) && (
+                  <div className={styles.btnHint}>{refundHint}</div>
+                )}
+
+                {/* Käufer: nach Meldung bestätigen / reklamieren */}
                 {isCustomer && order.status === 'reported' && (
                   <div className={styles.actionStack}>
                     <button
                       type="button"
                       className={styles.primaryBtn}
-                      onClick={() => onConfirmDelivered(order.requestId)}
+                      onClick={() => doRelease(order)}
                       title="Empfang bestätigen & Zahlung freigeben"
                     >
                       Empfang bestätigen & Zahlung freigeben
                     </button>
-                    <button
-                      type="button"
-                      className={styles.btnGhost}
-                      onClick={() => openDispute(order.requestId)}
-                    >
+                    <button type="button" className={styles.btnGhost} onClick={() => doDispute(order)}>
                       Problem melden
                     </button>
-                    <div className={styles.btnHint}>
-                      Auto-Freigabe in {remainingText(order.autoReleaseAt)}
-                    </div>
+                    <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
                   </div>
                 )}
 
-                {/* Auftraggeber: nach Bestätigung bewerten (einmalig) */}
-                {isCustomer && order.status === 'confirmed' && !order.review && (
+                {/* IMMER: Gegenpartei bewerten (wenn ich noch nicht bewertet habe) */}
+                {canRateNow(order) && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
-                    onClick={() => {
-                      setRateOrderId(order.requestId);
-                      setRatingChoice('good');     // <-- NEU: Standard „gut“
-                      setRatingText('');           // deinen bestehenden Text-State nutzen
-                    }}
+                    onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
+                    title="Gegenpartei bewerten"
                   >
-                    Anbieter bewerten
+                    Gegenpartei bewerten
                   </button>
                 )}
               </div>
@@ -687,6 +755,30 @@ const LackanfragenOrdersPage: FC = () => {
     </>
   )
 
+  /* ---------- Ladezustände ---------- */
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.wrapper}>
+          <FormSkeleton />
+        </div>
+      </>
+    )
+  }
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className={styles.wrapper}>
+          <div className={styles.emptyState}><strong>Fehler beim Laden.</strong> {(error as any)?.message || 'Bitte später erneut versuchen.'}</div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <Navbar />
@@ -703,12 +795,7 @@ const LackanfragenOrdersPage: FC = () => {
             className={styles.search}
           />
           <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className={styles.select}
-          >
+          <select id="sort" value={sort} onChange={(e)=>setSort(e.target.value as SortKey)} className={styles.select}>
             <option value="date_desc">Neueste zuerst</option>
             <option value="date_asc">Älteste zuerst</option>
             <option value="price_desc">Höchster Preis zuerst</option>
@@ -758,12 +845,7 @@ const LackanfragenOrdersPage: FC = () => {
             <div className={styles.kontoContainer}>
               {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen vergeben.</strong></div>
-                : <SectionList
-                    kind="vergeben"
-                    slice={sliceV}
-                    idPrefix="v"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+                : <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />}
             </div>
 
             <hr className={styles.divider} />
@@ -772,12 +854,7 @@ const LackanfragenOrdersPage: FC = () => {
             <div className={styles.kontoContainer}>
               {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen angenommen.</strong></div>
-                : <SectionList
-                    kind="angenommen"
-                    slice={sliceA}
-                    idPrefix="a"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+                : <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />}
             </div>
           </>
         ) : (
@@ -786,12 +863,7 @@ const LackanfragenOrdersPage: FC = () => {
             <div className={styles.kontoContainer}>
               {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen angenommen.</strong></div>
-                : <SectionList
-                    kind="angenommen"
-                    slice={sliceA}
-                    idPrefix="a"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+                : <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />}
             </div>
 
             <hr className={styles.divider} />
@@ -800,144 +872,127 @@ const LackanfragenOrdersPage: FC = () => {
             <div className={styles.kontoContainer}>
               {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen vergeben.</strong></div>
-                : <SectionList
-                    kind="vergeben"
-                    slice={sliceV}
-                    idPrefix="v"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+                : <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />}
             </div>
           </>
         )}
       </div>
 
-      {/* Modal: Anbieter meldet „abgeschlossen“ */}
-      {confirmRequestId !== null && (
+      {/* Modal: Verkäufer meldet „Versandt“ */}
+      {shipOrder !== null && (
         <div
           className={styles.modal}
           role="dialog"
           aria-modal="true"
           aria-labelledby="confirmTitle"
           aria-describedby="confirmText"
-          onClick={(e) => { if (e.target === e.currentTarget) setConfirmRequestId(null) }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShipOrder(null) }}
         >
           <div className={styles.modalContent}>
-            <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
+            <h3 id="confirmTitle" className={styles.modalTitle}>Versand melden?</h3>
             <p id="confirmText" className={styles.modalText}>
-              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung. Danach startet automatisch eine 14-Tage-Frist zur Freigabe.
+              Mit „Versandt melden“ informierst du den Käufer. Danach startet automatisch eine <strong>28-Tage-Frist</strong> zur Freigabe der Zahlung (Auto-Release).
             </p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} onClick={() => setConfirmRequestId(null)}>
-                Abbrechen
-              </button>
+              <button type="button" className={styles.btnGhost} onClick={() => setShipOrder(null)}>Abbrechen</button>
               <button
                 type="button"
                 className={styles.btnDanger}
-                onClick={() => { reportDelivered(confirmRequestId); setConfirmRequestId(null) }}
+                onClick={async () => { if (shipOrder) { await doShip(shipOrder); setShipOrder(null) } }}
               >
-                Ja, Zustellung melden
+                Ja, Versand melden
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal: Bewertung */}
-      {/* Modal: Bewertung (gut/neutral + Pflicht-Text, POST -> /api/orders/[id]/review) */}
-{rateOrderId !== null && (
-  <div
-    className={styles.modal}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="rateTitle"
-    onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
-  >
-    <div className={styles.modalContent}>
-      <h3 id="rateTitle" className={styles.modalTitle}>Anbieter bewerten</h3>
-
-      {/* Auswahl gut/neutral */}
-      <div className={styles.actions} style={{ gap: 8, marginBottom: 8 }}>
-        <label className={styles.segmentedBtn}>
-          <input
-            type="radio"
-            name="ratingChoice"
-            value="good"
-            checked={ratingChoice === 'good'}
-            onChange={() => setRatingChoice('good')}
-          />
-          <span style={{ marginLeft: 8 }}>gut</span>
-        </label>
-        <label className={styles.segmentedBtn}>
-          <input
-            type="radio"
-            name="ratingChoice"
-            value="neutral"
-            checked={ratingChoice === 'neutral'}
-            onChange={() => setRatingChoice('neutral')}
-          />
-          <span style={{ marginLeft: 8 }}>neutral</span>
-        </label>
-      </div>
-
-      {/* Pflicht-Text */}
-      <textarea
-        className={styles.reviewBox}
-        value={ratingText}
-        onChange={e => setRatingText(e.target.value)}
-        placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
-        rows={4}
-        required
-      />
-      <div className={styles.btnHint} aria-live="polite">
-        {ratingText.trim().length}/800
-      </div>
-
-      {/* Aktionen */}
-      <div className={styles.modalActions}>
-        <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
-        <button
-          className={styles.primaryBtn}
-          onClick={async () => {
-            const orderId = String(rateOrderId);
-            if (ratingChoice !== 'good' && ratingChoice !== 'neutral') {
-              alert("Bitte 'gut' oder 'neutral' auswählen.");
-              return;
-            }
-            const comment = ratingText.trim();
-            if (!comment) {
-              alert('Bitte einen kurzen Kommentar eingeben.');
-              return;
-            }
-
-            try {
-              const res = await fetch(`/api/orders/${orderId}/review`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rating: ratingChoice, comment }),
-              });
-              const json = await res.json();
-              if (!res.ok) throw new Error(json?.error || 'Speichern fehlgeschlagen');
-
-              // lokal mitschreiben, damit UI sofort aktualisiert
-              persist(orders.map(o =>
-                String(o.requestId) === orderId
-                  ? { ...o, review: { rating: ratingChoice, text: comment } }
-                  : o
-              ));
-
-              setRateOrderId(null);
-            } catch (err: any) {
-              alert(err?.message || 'Speichern fehlgeschlagen');
-            }
-          }}
+      {/* Modal: Bewertung (beide Rollen, jederzeit, solange nicht bereits bewertet) */}
+      {rateOrderId !== null && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rateTitle"
+          onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
         >
-          Abschicken
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div className={styles.modalContent}>
+            <h3 id="rateTitle" className={styles.modalTitle}>Gegenpartei bewerten</h3>
 
+            {/* 1–5 Sterne */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+              {[1,2,3,4,5].map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setRatingStars(s as 1|2|3|4|5)}
+                  aria-label={`${s} Sterne`}
+                  style={{
+                    fontSize: 28, lineHeight: 1, background: 'none', border: 'none',
+                    cursor: 'pointer', opacity: s <= ratingStars ? 1 : 0.35
+                  }}
+                  title={`${s} Sterne`}
+                >
+                  ★
+                </button>
+              ))}
+              <span style={{opacity:.8}}>
+                {ratingStars === 1 ? 'neutral' : (ratingStars === 5 ? 'sehr gut' : `${ratingStars} Sterne`)}
+              </span>
+            </div>
+
+            <textarea
+              className={styles.reviewBox}
+              value={ratingText}
+              onChange={e => setRatingText(e.target.value)}
+              placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
+              rows={4}
+              required
+            />
+            <div className={styles.btnHint} aria-live="polite">{ratingText.trim().length}/800</div>
+
+            <div className={styles.modalActions}>
+              <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
+              <button
+                className={styles.primaryBtn}
+                onClick={async () => {
+                  const orderId = String(rateOrderId)
+                  const comment = ratingText.trim()
+                  if (!comment) { alert('Bitte einen kurzen Kommentar eingeben.'); return }
+                  try {
+                    const res = await fetch(`/api/orders/${orderId}/review`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ rating: ratingStars, comment }),
+                    })
+                    const json = await res.json().catch(()=> ({}))
+                    if (!res.ok) {
+                      if (res.status === 409) { alert('Du hast diese Bestellung bereits bewertet.'); setRateOrderId(null); return }
+                      throw new Error(json?.error || 'Speichern fehlgeschlagen')
+                    }
+
+                    // lokal markieren → Button verschwindet sofort
+                    const next: LackOrder[] = orders.map((o): LackOrder =>
+                      o.orderId === orderId ? { ...o, myReview: { stars: ratingStars, text: comment } } as LackOrder : o
+                    )
+
+                    persist(next)
+                    // optional als gesehen
+                    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+                    setRateOrderId(null)
+                    mutate()
+                  } catch (err: any) {
+                    alert(err?.message || 'Speichern fehlgeschlagen')
+                  }
+                }}
+              >
+                Abschicken
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

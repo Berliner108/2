@@ -2,6 +2,7 @@
 
 import { FC, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './lackanfragen.module.css'
@@ -23,7 +24,7 @@ type LackOffer = {
   expiresAt?: string | null
 }
 
-type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
+type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc' | 'delivery_asc' | 'delivery_desc'
 type TopSection = 'received' | 'submitted'
 
 type RequestMeta = {
@@ -192,20 +193,48 @@ const PageSkeleton: FC = () => (
 
 /* ================= Component ================= */
 const DEFAULTS = { q: '', sort: 'date_desc' as SortKey, tab: 'received' as TopSection, psRec: 10, psSub: 10, pageRec: 1, pageSub: 1 }
-const ALLOWED_PS = [2, 10, 20, 50]
+const ALLOWED_SORTS: SortKey[] = ['date_desc','date_asc','price_desc','price_asc','delivery_asc','delivery_desc']
+
+const fetcher = (url: string) =>
+  fetch(url, { credentials: 'include' }).then(r => {
+    if (!r.ok) throw new Error('Laden fehlgeschlagen')
+    return r.json()
+  })
 
 const LackanfragenAngebote: FC = () => {
   const router = useRouter()
   const { ok: toastOk, err: toastErr, View: Toast } = useToast()
 
-  const [isLoading, setIsLoading] = useState(true)
+  // Backend laden (SWR)
+  const { data, error, isLoading, mutate } = useSWR<{
+    received?: any[]
+    submitted?: any[]
+    requestIds?: (string | number)[]
+    requests?: RequestMeta[]
+  }>(
+    '/api/lack/offers/for-account',
+    fetcher,
+    { refreshInterval: 60_000, revalidateOnFocus: true }
+  )
 
-  const [requestIds, setRequestIds] = useState<string[]>([])
-  const [requestMeta, setRequestMeta] = useState<RequestMeta[]>([])
-  const [receivedData, setReceivedData] = useState<LackOffer[]>([])
-  const [submittedData, setSubmittedData] = useState<LackOffer[]>([])
+  // Normalisierung (falls Backend item_amount_cents/shipping_cents liefert)
+  const normalizeOffer = (o: any): LackOffer => {
+    const item = Number.isFinite(o.itemCents) ? o.itemCents
+              : Number.isFinite(o.item_amount_cents) ? o.item_amount_cents
+              : Number.isFinite(o.priceCents) ? o.priceCents : 0
+    const ship = Number.isFinite(o.shippingCents) ? o.shippingCents
+              : Number.isFinite(o.shipping_cents) ? o.shipping_cents
+              : 0
+    const total = Number.isFinite(o.priceCents) ? o.priceCents : (item + ship)
+    return { ...o, itemCents: item, shippingCents: ship, priceCents: total } as LackOffer
+  }
+
+  const requestIds   = useMemo(() => (data?.requestIds ?? []).map(String), [data])
+  const requestMeta  = data?.requests ?? []
+  const receivedRaw  = useMemo(() => (data?.received ?? []).map(normalizeOffer), [data])
+  const submittedRaw = useMemo(() => (data?.submitted ?? []).map(normalizeOffer), [data])
+
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
-
   const [confirmOffer, setConfirmOffer] = useState<null | {
     requestId: string | number
     offerId: string
@@ -231,43 +260,6 @@ const LackanfragenAngebote: FC = () => {
   const [topSection, setTopSection] = useState<TopSection>(DEFAULTS.tab)
   useEffect(() => { try { localStorage.setItem('lack-angeboteTop', topSection) } catch {} }, [topSection])
 
-  // Offers + Request-IDs + Metadaten laden
-  useEffect(() => {
-    ;(async () => {
-      try {
-        setIsLoading(true)
-        const res = await fetch('/api/lack/offers/for-account', { cache: 'no-store' })
-        if (!res.ok) return
-        const j: {
-          received?: any[]
-          submitted?: any[]
-          requestIds?: (string | number)[]
-          requests?: RequestMeta[]
-        } = await res.json()
-
-        const normOffer = (o: any): LackOffer => {
-          const item = Number.isFinite(o.itemCents) ? o.itemCents
-                    : Number.isFinite(o.item_amount_cents) ? o.item_amount_cents
-                    : Number.isFinite(o.priceCents) ? o.priceCents : 0
-          const ship = Number.isFinite(o.shippingCents) ? o.shippingCents
-                    : Number.isFinite(o.shipping_cents) ? o.shipping_cents
-                    : 0
-          const total = Number.isFinite(o.priceCents) ? o.priceCents : (item + ship)
-          return { ...o, itemCents: item, shippingCents: ship, priceCents: total }
-        }
-
-        if (Array.isArray(j.received))  setReceivedData(j.received.map(normOffer))
-        if (Array.isArray(j.submitted)) setSubmittedData(j.submitted.map(normOffer))
-        if (Array.isArray(j.requestIds)) setRequestIds(j.requestIds.map(id => String(id)))
-        if (Array.isArray(j.requests))  setRequestMeta(j.requests)
-      } catch {
-        // optional: toastErr('Konnte Angebote nicht laden.')
-      } finally {
-        setIsLoading(false)
-      }
-    })()
-  }, [])
-
   const metaById = useMemo(() => {
     const m = new Map<string, RequestMeta>()
     requestMeta.forEach(r => m.set(String(r.id), r))
@@ -277,9 +269,9 @@ const LackanfragenAngebote: FC = () => {
   const OPEN_REQUEST_IDS = useMemo(() => {
     const s = new Set<string>()
     requestIds.forEach(id => s.add(String(id)))
-    receivedData.forEach(o => s.add(String(o.requestId)))
+    receivedRaw.forEach(o => s.add(String(o.requestId)))
     return Array.from(s)
-  }, [requestIds, receivedData])
+  }, [requestIds, receivedRaw])
 
   function parseMaxMasse(d?: Record<string, any> | null): number | undefined {
     if (!d) return undefined
@@ -310,30 +302,22 @@ const LackanfragenAngebote: FC = () => {
     return toDateOrUndef(meta?.lieferdatum, meta?.delivery_at, meta?.data?.lieferdatum, meta?.data?.delivery_at)
   }
 
-  const pruneExpiredOffers = () => {
+  // Abgelaufene Angebote clientseitig herausfiltern (kein Interval mehr nötig)
+  const receivedData = useMemo(() => {
     const now = Date.now()
-    setReceivedData(prev =>
-      prev.filter(o => {
-        const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
-        return !!vu && +vu > now
-      })
-    )
-    setSubmittedData(prev =>
-      prev.filter(o => {
-        const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
-        return !!vu && +vu > now
-      })
-    )
-  }
+    return receivedRaw.filter(o => {
+      const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
+      return !!vu && +vu > now
+    })
+  }, [receivedRaw, metaById])
 
-  useEffect(() => {
-    pruneExpiredOffers()
-    const id = setInterval(pruneExpiredOffers, 60_000)
-    const onVis = () => { if (!document.hidden) pruneExpiredOffers() }
-    document.addEventListener('visibilitychange', onVis)
-    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const submittedData = useMemo(() => {
+    const now = Date.now()
+    return submittedRaw.filter(o => {
+      const vu = computeValidUntil(o, lieferdatumFor(String(o.requestId)))
+      return !!vu && +vu > now
+    })
+  }, [submittedRaw, metaById])
 
   const compareBestPrice = (a: number, b: number, dir: 'asc' | 'desc') => {
     const aInf = !Number.isFinite(a), bInf = !Number.isFinite(b)
@@ -341,6 +325,15 @@ const LackanfragenAngebote: FC = () => {
     if (aInf) return 1
     if (bInf) return -1
     return dir === 'asc' ? a - b : b - a
+  }
+
+  function compareDelivery(aTs: number | undefined, bTs: number | undefined, dir: 'asc' | 'desc') {
+    const aHas = Number.isFinite(aTs)
+    const bHas = Number.isFinite(bTs)
+    if (!aHas && !bHas) return 0
+    if (!aHas) return 1
+    if (!bHas) return -1
+    return dir === 'asc' ? (aTs! - bTs!) : (bTs! - aTs!)
   }
 
   const receivedGroups = useMemo(() => {
@@ -360,14 +353,20 @@ const LackanfragenAngebote: FC = () => {
       const showNoOffersGroup = offersForItem.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
-      return { requestId: String(id), title, offers, showNoOffersGroup, bestPrice, latest }
+
+      const ld = lieferdatumFor(String(id))
+      const deliveryTs = ld ? +ld : undefined
+
+      return { requestId: String(id), title, offers, showNoOffersGroup, bestPrice, latest, deliveryTs }
     })
     const visible = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
     visible.sort((a, b) => {
-      if (sort === 'date_desc')  return b.latest - a.latest
-      if (sort === 'date_asc')   return a.latest - b.latest
-      if (sort === 'price_desc') return compareBestPrice(a.bestPrice, b.bestPrice, 'desc')
-      if (sort === 'price_asc')  return compareBestPrice(a.bestPrice, b.bestPrice, 'asc')
+      if (sort === 'date_desc')      return b.latest - a.latest
+      if (sort === 'date_asc')       return a.latest - b.latest
+      if (sort === 'price_desc')     return compareBestPrice(a.bestPrice, b.bestPrice, 'desc')
+      if (sort === 'price_asc')      return compareBestPrice(a.bestPrice, b.bestPrice, 'asc')
+      if (sort === 'delivery_asc')   return compareDelivery(a.deliveryTs, b.deliveryTs, 'asc')
+      if (sort === 'delivery_desc')  return compareDelivery(a.deliveryTs, b.deliveryTs, 'desc')
       return 0
     })
     return visible
@@ -380,10 +379,14 @@ const LackanfragenAngebote: FC = () => {
       arr = arr.filter(o => String(o.requestId).toLowerCase().includes(q))
     }
     arr = [...arr].sort((a, b) => {
-      if (sort === 'date_desc')  return +new Date(b.createdAt) - +new Date(a.createdAt)
-      if (sort === 'date_asc')   return +new Date(a.createdAt) - +new Date(b.createdAt)
-      if (sort === 'price_desc') return b.priceCents - a.priceCents
-      if (sort === 'price_asc')  return a.priceCents - b.priceCents
+      if (sort === 'date_desc')      return +new Date(b.createdAt) - +new Date(a.createdAt)
+      if (sort === 'date_asc')       return +new Date(a.createdAt) - +new Date(b.createdAt)
+      if (sort === 'price_desc')     return b.priceCents - a.priceCents
+      if (sort === 'price_asc')      return a.priceCents - b.priceCents
+      const tsA = lieferdatumFor(String(a.requestId))?.getTime()
+      const tsB = lieferdatumFor(String(b.requestId))?.getTime()
+      if (sort === 'delivery_asc')   return compareDelivery(tsA, tsB, 'asc')
+      if (sort === 'delivery_desc')  return compareDelivery(tsA, tsB, 'desc')
       return 0
     })
     return arr
@@ -399,7 +402,7 @@ const LackanfragenAngebote: FC = () => {
       const params = new URLSearchParams(window.location.search)
       const q = params.get('q'); if (q !== null) setQuery(q)
       const s = params.get('sort') as SortKey | null
-      if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
+      if (s && ALLOWED_SORTS.includes(s)) setSort(s)
       const tab = params.get('tab') as TopSection | null
       if (tab && (tab === 'received' || tab === 'submitted')) setTopSection(tab)
       else {
@@ -446,12 +449,8 @@ const LackanfragenAngebote: FC = () => {
     } catch {}
   }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
 
-  // ⤵️ Badge "neu" ausblenden wenn diese Seite geöffnet wird
-  useEffect(() => {
-    try {
-      localStorage.setItem('offers:lastSeen', String(Date.now()))
-    } catch {}
-  }, [])
+  // Badge „neu“ ausblenden wenn diese Seite geöffnet wird
+  useEffect(() => { try { localStorage.setItem('offers:lastSeen', String(Date.now())) } catch {} }, [])
 
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
     const total = arr.length
@@ -491,6 +490,8 @@ const LackanfragenAngebote: FC = () => {
       }
       setConfirmOffer(null)
       setActiveOrderId(json.orderId || null)
+      // Nach Erfolg Daten neu holen
+      await mutate()
       if (json.clientSecret) { setClientSecret(json.clientSecret); setCheckoutOpen(true) }
       else { toastOk('Angebot angenommen.'); router.push(`/konto/orders/${encodeURIComponent(json.orderId)}`) }
     } catch (e: any) {
@@ -732,72 +733,71 @@ const LackanfragenAngebote: FC = () => {
     </>
   )
 
+  if (error)     return <div className={styles.wrapper}>Konnte Daten nicht laden.</div>
+  if (isLoading) return <PageSkeleton />
+
   return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        {isLoading ? (
-          <PageSkeleton />
+        <div className={styles.toolbar}>
+          <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
+          <input
+            id="search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Anfrage-Nr., Anbieter oder Titel…"
+            className={styles.search}
+          />
+          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
+          <select
+            id="sort"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className={styles.select}
+          >
+            <option value="delivery_asc">Frühestes Lieferdatum zuerst</option>
+            <option value="delivery_desc">Spätestes Lieferdatum zuerst</option>
+            <option value="date_desc">Neueste Anfrage zuerst</option>
+            <option value="date_asc">Älteste Anfrage zuerst</option>
+            <option value="price_desc">Bester Preis zuletzt</option>
+            <option value="price_asc">Bester Preis zuerst</option>
+          </select>
+
+          <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
+            <button
+              role="tab"
+              aria-selected={topSection === 'received'}
+              className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
+              onClick={() => setTopSection('received')}
+              type="button"
+            >
+              Erhaltene oben
+            </button>
+            <button
+              role="tab"
+              aria-selected={topSection === 'submitted'}
+              className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
+              onClick={() => setTopSection('submitted')}
+              type="button"
+            >
+              Abgegebene oben
+            </button>
+          </div>
+        </div>
+
+        {topSection === 'received' ? (
+          <>
+            <ReceivedSection />
+            <hr className={styles.divider} />
+            <SubmittedSection />
+          </>
         ) : (
           <>
-            <div className={styles.toolbar}>
-              <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
-              <input
-                id="search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Anfrage-Nr., Anbieter oder Titel…"
-                className={styles.search}
-              />
-              <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
-              <select
-                id="sort"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-                className={styles.select}
-              >
-                <option value="date_desc">Neueste zuerst</option>
-                <option value="date_asc">Älteste zuerst</option>
-                <option value="price_desc">Bester Preis zuletzt</option>
-                <option value="price_asc">Bester Preis zuerst</option>
-              </select>
-
-              <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
-                <button
-                  role="tab"
-                  aria-selected={topSection === 'received'}
-                  className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
-                  onClick={() => setTopSection('received')}
-                  type="button"
-                >
-                  Erhaltene oben
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={topSection === 'submitted'}
-                  className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
-                  onClick={() => setTopSection('submitted')}
-                  type="button"
-                >
-                  Abgegebene oben
-                </button>
-              </div>
-            </div>
-
-            {topSection === 'received' ? (
-              <>
-                <ReceivedSection />
-                <hr className={styles.divider} />
-                <SubmittedSection />
-              </>
-            ) : (
-              <>
-                <SubmittedSection />
-                <hr className={styles.divider} />
-                <ReceivedSection />
-              </>
-            )}
+            <SubmittedSection />
+            <hr className={styles.divider} />
+            <ReceivedSection />
           </>
         )}
       </div>

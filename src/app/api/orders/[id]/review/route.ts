@@ -1,75 +1,78 @@
 // src/app/api/orders/[id]/review/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-type Body = {
-  rating: 'good' | 'neutral'
-  comment: string
-}
-
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // Next 15: params ist ein Promise
-) {
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params
+    const { id } = await ctx.params
+    const orderId = id
+    if (!orderId) return NextResponse.json({ error: 'Order-ID fehlt' }, { status: 400 })
 
+    const body = await req.json().catch(() => ({} as any))
+    const starsRaw = body?.rating ?? body?.stars
+    const stars = Number(starsRaw)
+    const comment = (body?.comment ?? '').toString().trim()
+
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+      return NextResponse.json({ error: 'Rating muss 1–5 Sterne sein' }, { status: 400 })
+    }
+    if (!comment) {
+      return NextResponse.json({ error: 'Kommentar erforderlich' }, { status: 400 })
+    }
+
+    // Auth
     const sb = await supabaseServer()
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    const { data: { user }, error: userErr } = await sb.auth.getUser()
+    if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
+    if (!user)    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-    const { rating, comment } = (await req.json()) as Body
-    const r = String(rating || '').toLowerCase()
-    const c = String(comment || '').trim()
-
-    if (r !== 'good' && r !== 'neutral') {
-      return NextResponse.json({ error: "rating must be 'good' or 'neutral'" }, { status: 400 })
-    }
-    if (!c) {
-      return NextResponse.json({ error: 'comment is required' }, { status: 400 })
-    }
-
-    // Order laden, um supplier_id zu kennen & Buyer-Eigentum zu verifizieren
-    const { data: order, error: oErr } = await sb
+    // Order laden & prüfen: User muss Käufer ODER Anbieter sein
+    const { data: order, error: ordErr } = await sb
       .from('orders')
-      .select('id, buyer_id, supplier_id, status, released_at, refunded_at')
-      .eq('id', id)
-      .maybeSingle()
-
-    if (oErr)  return NextResponse.json({ error: `order read failed: ${oErr.message}` }, { status: 400 })
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    if (order.buyer_id !== user.id) {
-      return NextResponse.json({ error: 'Only buyer can review this order' }, { status: 403 })
-    }
-
-    const finished =
-      (order.status === 'succeeded' && !!order.released_at) || !!order.refunded_at
-    if (!finished) {
-      return NextResponse.json({ error: 'Review only after release or refund' }, { status: 400 })
-    }
-
-    // Upsert: genau eine Bewertung pro (order_id, rater_id)
-    const { data, error } = await sb
-      .from('reviews')
-      .upsert(
-        {
-          order_id: order.id,
-          rater_id: user.id,
-          ratee_id: order.supplier_id,
-          rating: r as 'good' | 'neutral',
-          comment: c,
-        },
-        { onConflict: 'order_id,rater_id' }
-      )
-      .select('id')
+      .select('id, kind, buyer_id, supplier_id')
+      .eq('id', orderId)
+      .eq('kind', 'lack')
       .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    return NextResponse.json({ ok: true, id: data.id })
+    if (ordErr) return NextResponse.json({ error: ordErr.message }, { status: 400 })
+    if (!order)  return NextResponse.json({ error: 'Order nicht gefunden' }, { status: 404 })
+
+    const isBuyer    = order.buyer_id    === user.id
+    const isSupplier = order.supplier_id === user.id
+    if (!isBuyer && !isSupplier) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
+    const rateeId = isBuyer ? order.supplier_id : order.buyer_id
+
+    const admin = supabaseAdmin()
+
+    // Schon bewertet? (je Rater & Order genau 1x)
+    const { data: existing, error: existErr } = await admin
+      .from('reviews')
+      .select('id')
+      .eq('order_id', orderId)
+      .eq('rater_id', user.id)
+      .maybeSingle()
+
+    if (existErr) return NextResponse.json({ error: existErr.message }, { status: 400 })
+    if (existing) return NextResponse.json({ error: 'bereits bewertet' }, { status: 409 })
+
+    // INSERT: rating = String(stars) -> passt zu deinem ENUM (’1’…’5’)
+    const { error: insErr } = await admin
+      .from('reviews')
+      .insert({
+        order_id: orderId,
+        rater_id: user.id,
+        ratee_id: rateeId,
+        rating: String(stars) as any, // ENUM-Label ’1’..’5’
+        stars,                        // numerisch 1..5 (deine echte Auswertung)
+        comment: comment.slice(0, 800),
+      })
+
+    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 400 })
+    return NextResponse.json({ ok: true })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed to create review' }, { status: 500 })
+    return NextResponse.json({ error: e?.message || 'Fehlgeschlagen' }, { status: 500 })
   }
 }

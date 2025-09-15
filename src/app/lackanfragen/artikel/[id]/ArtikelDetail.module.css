@@ -762,3 +762,106 @@
     */
   }
 }
+/* --- Hinweisbox für Stripe-Onboarding --- */
+.connectNotice {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 2px solid #faad14;      /* Amber */
+  background: #fffbe6;            /* Soft gelb */
+  color: #613400;                  /* Dunkles Braun */
+  border-radius: 12px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: connectFadeIn .2s ease-out;
+}
+
+.connectNotice p {
+  margin: 0;
+}
+
+/* Button-Zeile */
+.connectActions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* --- Primärer CTA-Button --- */
+.connectBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #0958d9;
+  background: #1677ff;            /* Blau */
+  color: #fff;
+  font-weight: 700;
+  font-family: 'Oswald';
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(5, 145, 255, 0.2);
+  transition: background .2s ease, box-shadow .2s ease, transform .02s ease;
+}
+
+.connectBtn:hover {
+  background: #0958d9;
+  box-shadow: 0 3px 8px rgba(9, 88, 217, 0.25);
+  transform: translateY(-1px);
+}
+
+.connectBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(9, 88, 217, 0.2);
+}
+
+.connectBtn:focus-visible {
+  outline: 3px solid #91caff;
+  outline-offset: 2px;
+}
+
+.connectBtn:disabled,
+.connectBtn[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dark-Mode Tweaks (optional) */
+@media (prefers-color-scheme: dark) {
+  .connectNotice {
+    border-color: #d89614;
+    background: #2b2a16;
+    color: #ffe58f;
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+  .connectBtn {
+    border-color: #177ddc;
+    background: #177ddc;
+    box-shadow: 0 2px 0 rgba(23, 125, 220, 0.25);
+  }
+  .connectBtn:hover {
+    background: #0958d9;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .connectNotice {
+    animation: none;
+  }
+  .connectBtn {
+    transition: none;
+  }
+}
+
+@keyframes connectFadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

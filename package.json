@@ -20,6 +20,7 @@
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.503.0",
     "next": "^15.3.5",
+    "pdfkit": "^0.17.2",
     "react": "^18.3.1",
     "react-datepicker": "^8.3.0",
     "react-dom": "^18.3.1",
@@ -30,11 +31,13 @@
     "resend": "^4.6.0",
     "stripe": "^18.4.0",
     "swiper": "^11.2.8",
+    "swr": "^2.3.6",
     "yet-another-react-lightbox": "^3.23.2"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^15.3.5",
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.3",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "eslint": "^8.57.1",

@@ -1,92 +1,80 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { supabaseServer } from '@/lib/supabase-server'
-import OrderActions from '../OrderActions'
 
-export const dynamic = 'force-dynamic'
+export default function OrderDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState<string|null>(null)
+  const [order, setOrder] = useState<any>(null)
+  const [isBuyer, setIsBuyer] = useState(false)
+  const [isSupplier, setIsSupplier] = useState(false)
+  const [busy, setBusy] = useState(false)
 
-export default async function OrderDetailPage(
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
+  async function load() {
+    setLoading(true); setErr(null)
+    try {
+      const r = await fetch(`/api/orders/${encodeURIComponent(String(id))}`, { cache:'no-store' })
+      const j = await r.json()
+      if (!r.ok) throw new Error(j?.error || 'Laden fehlgeschlagen')
+      setOrder(j.order); setIsBuyer(j.isBuyer); setIsSupplier(j.isSupplier)
+    } catch(e:any) { setErr(e?.message||'Fehler') } finally { setLoading(false) }
+  }
+  useEffect(()=>{ load() }, [id])
 
-  const sb = await supabaseServer()
-  const { data: { user } } = await sb.auth.getUser()
-  if (!user) return <div style={{ padding: 20 }}>Bitte melde dich an.</div>
+  async function post(path: string, body: any) {
+    setBusy(true); setErr(null)
+    try {
+      const r = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+      const j = await r.json().catch(()=> ({}))
+      if (!r.ok) throw new Error(j?.error || 'Aktion fehlgeschlagen')
+      await load()
+      alert('OK')
+    } catch(e:any) { setErr(e?.message||'Fehler') } finally { setBusy(false) }
+  }
 
-  const { data: order, error } = await sb
-    .from('orders')
-    .select(`
-      id, created_at, updated_at,
-      buyer_id, supplier_id,
-      amount_cents, currency,
-      status, auto_release_at, released_at, refunded_at,
-      charge_id, transfer_id, fee_cents, transferred_cents,
-      kind, request_id, offer_id
-    `)
-    .eq('id', id)
-    .maybeSingle()
+  const fmt = (c:number) => (c/100).toLocaleString('de-DE',{style:'currency',currency: (order?.currency||'eur').toUpperCase()})
 
-  if (error) return <div style={{ padding: 20, color: '#b91c1c' }}>Fehler: {error.message}</div>
-  if (!order) return <div style={{ padding: 20 }}>Bestellung nicht gefunden.</div>
+  if (loading) return <div style={{padding:16}}>Lade…</div>
+  if (err)     return <div style={{padding:16,color:'#b91c1c'}}>Fehler: {err}</div>
+  if (!order)  return <div style={{padding:16}}>Nicht gefunden.</div>
 
-  const canSee = order.buyer_id === user.id || order.supplier_id === user.id
-  if (!canSee) return <div style={{ padding: 20 }}>Kein Zugriff.</div>
-
-  const isBuyer = order.buyer_id === user.id
-  const canRelease = isBuyer && order.status === 'funds_held'
-
-  const fmt = new Intl.NumberFormat('de-AT', {
-    style: 'currency',
-    currency: (order.currency || 'eur').toUpperCase(),
-  })
-  const amount = fmt.format(order.amount_cents / 100)
-  const fee = typeof order.fee_cents === 'number' ? fmt.format(order.fee_cents / 100) : '—'
-  const net = typeof order.transferred_cents === 'number' ? fmt.format(order.transferred_cents / 100) : '—'
+  const canShip    = isSupplier && order.status === 'funds_held'
+  const canReceive = isBuyer    && order.status === 'funds_held'
+  const canDispute = isBuyer    && order.status === 'funds_held'
 
   return (
-    <div style={{ maxWidth: 900, margin: '24px auto', padding: '0 16px' }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>Bestellung #{order.id.slice(0, 8)}</h1>
-      <div style={{ marginBottom: 12, color: '#6b7280' }}>
-        Erstellt: {new Date(order.created_at).toLocaleString('de-AT')}
+    <div style={{maxWidth:720, margin:'24px auto', padding:16, border:'1px solid #e5e7eb', borderRadius:12}}>
+      <h1 style={{marginBottom:8}}>Bestellung #{order.id.slice(0,8)}</h1>
+      <div style={{opacity:.8, marginBottom:12}}>
+        Status: <b>{order.status}</b> · Betrag: <b>{fmt(order.amount_cents)}</b> · Gebühr: {fmt(order.fee_cents||0)}
       </div>
-
-      <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div><strong>Status:</strong> {order.status}</div>
-          <div><strong>Betrag:</strong> {amount}</div>
-          <div><strong>Typ:</strong> {order.kind}</div>
-          <div>
-            <strong>Anfrage:</strong>{' '}
-            {order.request_id ? (
-              <Link href={`/lackanfragen/artikel/${encodeURIComponent(String(order.request_id))}`}>
-                {String(order.request_id)}
-              </Link>
-            ) : '—'}
-          </div>
-          <div><strong>Käufer:</strong> {order.buyer_id}</div>
-          <div><strong>Verkäufer:</strong> {order.supplier_id}</div>
-          <div>
-            <strong>Auto-Freigabe am:</strong>{' '}
-            {order.auto_release_at ? new Date(order.auto_release_at).toLocaleString('de-AT') : '—'}
-          </div>
-          <div>
-            <strong>Freigegeben:</strong>{' '}
-            {order.released_at ? new Date(order.released_at).toLocaleString('de-AT') : '—'}
-          </div>
-          <div><strong>Gebühr (7%):</strong> {fee}</div>
-          <div><strong>Netto an Verkäufer:</strong> {net}</div>
-          <div><strong>Charge ID:</strong> {order.charge_id || '—'}</div>
-          <div><strong>Transfer ID:</strong> {order.transfer_id || '—'}</div>
-        </div>
-
-        {isBuyer && (
-          <OrderActions orderId={order.id} canRelease={canRelease} />
+      <div style={{display:'flex', gap:8, flexWrap:'wrap', margin:'12px 0'}}>
+        {canShip && (
+          <button disabled={busy} onClick={()=>post('/api/orders/mark-shipped',{orderId:order.id})}>
+            {busy ? '…' : 'Versendet markieren'}
+          </button>
+        )}
+        {canReceive && (
+          <button disabled={busy} onClick={()=>post('/api/orders/mark-received',{orderId:order.id})}>
+            {busy ? '…' : 'Erhalten (freigeben)'}
+          </button>
+        )}
+        {canDispute && (
+          <button disabled={busy} onClick={()=>post('/api/orders/dispute',{orderId:order.id, reason:'not_ok'})}>
+            {busy ? '…' : 'Reklamieren (Rückzahlung)'}
+          </button>
         )}
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        <Link href="/konto/lackanfragen">← Zurück zu deinen Lackanfragen</Link>
+      <div style={{marginTop:8}}>
+        <Link href={`/lackanfragen/artikel/${encodeURIComponent(order.request_id)}`}>Zur Lackanfrage</Link>
       </div>
+
+      <pre style={{marginTop:16, background:'#f9fafb', padding:12, borderRadius:8, overflow:'auto'}}>
+        {JSON.stringify(order, null, 2)}
+      </pre>
     </div>
   )
 }

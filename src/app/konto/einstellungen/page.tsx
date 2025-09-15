@@ -6,6 +6,7 @@ import Navbar from '../../components/navbar/Navbar';
 import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link' // <-- NEU
 
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
@@ -46,6 +47,10 @@ type ApiGetResponse = {
     address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
   }
 }
+
+/* ---------- (NEU) Reviews-Helpers ---------- */
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
+const looksLikeHandle = (s?: string | null) => !!(s && HANDLE_RE.test(s.trim()))
 
 /* ---------- Toast ---------- */
 const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose }) => {
@@ -381,6 +386,11 @@ const Einstellungen = (): JSX.Element => {
     }
   }
 
+  /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
+  const myReviewsHref = useMemo(() => {
+    return looksLikeHandle(username) ? `/u/${encodeURIComponent(username)}/reviews` : undefined
+  }, [username])
+
   return (
     <>
       <Navbar />
@@ -619,6 +629,31 @@ const Einstellungen = (): JSX.Element => {
               >
                 {pwSaving ? 'Ändere…' : 'Passwort ändern'}
               </button>
+            </div>
+
+            {/* (NEU) Meine Bewertungen */}
+            <div className={styles.separator}></div>
+            <h3 className={styles.subSectionTitle}>Meine Bewertungen</h3>
+            <div className={styles.inputGroup}>
+              <p className={styles.description} style={{ marginTop: 0 }}>
+                Sieh dir deine öffentlichen Bewertungen an.
+              </p>
+              {myReviewsHref ? (
+                <Link href={myReviewsHref} className={styles.saveButton} style={{ width: 'fit-content' }}>
+                  Zu meinen Bewertungen
+                </Link>
+              ) : (
+                <div style={{
+                  marginTop: 6,
+                  padding: '8px 10px',
+                  borderRadius: 10,
+                  border: '1px solid #e5e7eb',
+                  background: '#f9fafb',
+                  color: '#6b7280'
+                }}>
+                  Kein öffentlicher Benutzername vorhanden – Bewertungen sind aktuell nicht verlinkbar.
+                </div>
+              )}
             </div>
 
             {/* Einladungen */}

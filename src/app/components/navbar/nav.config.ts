@@ -101,7 +101,7 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/konto/lackanfragen',   text: 'Lackanfragen Angebote' },
       { href: '/konto/lackangebote',   text: 'Lackanfragen-Deals' },
       { href: '/konto/verkaufen',      text: 'Verkaufen' },
-      { href: '/konto/einstellungen',  text: 'Kontoeinstellungen' },
+      { href: '/konto/einstellungen',  text: 'Einstellungen' },
       { href: '/konto/nachrichten',    text: 'Nachrichten' }
     ]
   }

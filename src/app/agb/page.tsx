@@ -7,6 +7,100 @@ const AgbPage = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.heading}>Allgemeine Geschäftsbedingungen (AGB)</h1>
+
+      <h2 className={styles.subheading}>1. Zahlungsabwicklung und Auszahlung</h2>
+      <section className={styles.section}>
+        <p>Sollte es nach einer Zahlung zu Problemen mit der Leistungserbringung kommen, können Käufer:innen innerhalb von 28 Tagen nach Bestätigung der Leistungserbringung 
+          von Seiten des Anbieters / der Anbieterin eine Reklamation einreichen und bekommen das eingezahlte Geld zurückerstattet. Die Plattform vermittelt im Streitfall 
+          auf Wunsch zwischen den Vertragspartner:innen, trifft jedoch keine bindende Entscheidung über etwaige Rückerstattungen oder Rückabwicklungen. Die Verantwortung für die 
+          ordnungsgemäße Leistung liegt ausschließlich bei den Vertragspartner:innen (Käufer:in und Anbieter:in). Rückzahlungen können im Rahmen der Stripe-Zahlungsabwicklung 
+          über Rückerstattungsmechanismen oder über offizielle Stripe-Dispute-Verfahren erfolgen. 
+          Um eine Reklamation einzureichen, reklamieren Sie bitte innerhalb der Frist den betroffenen Auftrag / Lieferung. 
+        </p>
+        <p>Sobald der/die Käufer:in die erfolgreiche Erbringung der Leistung bestätigt, wird die Auszahlung ausgelöst. 
+          Erfolgt innerhalb von 28 Tagen keine Bestätigung oder Reklamation, gilt die Leistung als erbracht und die Auszahlung wird automatisch veranlasst.
+          Bei fristgerechten Reklamationen wird die Auszahlung rückabgewickelt. Es gelten jedoch ausnahmslos die gesetzlichen Rechte und Pflichten zwischen den Vertragspartnern.
+        </p>
+        <p>Die Plattform entscheidet <strong>nicht nach eigenem Ermessen </strong> über Auszahlungen, sondern folgt automatisierten, transparenten und fairen Regeln. Es besteht 
+        <strong>kein Treuhandverhältnis</strong> die Plattform verwahrt kein Geld für Dritte. Die Zahlung erfolgt ausschließlich über Stripe gemäß deren Nutzungsbedingungen. </p>
+      </section>
+
+      <h2 className={styles.subheading}>2. Reklamations- und Streitfallprozess</h2>
+      <section className={styles.section}>
+        <p>
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>1. Geltungsbereich</h2>
+      <section className={styles.section}>
+        <p>Diese AGB gelten für die Nutzung der Plattform Beschichter Scout (nachfolgend "Plattform") über die Anbieter:innen Dienstleistungen anbieten und Nutzer:innen 
+          (Käufer:innen) diese buchen und bezahlen können. 
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>2. Rolle der Plattform</h2>
+      <section className={styles.section}>
+        <p>Die Plattform vermittelt lediglich den Kontakt und die Zahlungsabwicklung zwischen Anbieter:innen und Käufer:innen. Es kommt ausschließlich zwischen diesen beiden 
+          Parteien ein Vertrag über die jeweilige Leistung zustande. Die Plattform ist selbst nicht Vertragspartei und übernimmt keine Verantwortung für die Inhalte oder Durchführung der vereinbarten Leistungen.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>3. Zahlungsabwicklung über Stripe</h2>
+      <section className={styles.section}>
+        <p>Zahlungen erfolgen über den externen Zahlungsdienstleister Stripe. Beim Buchen einer Leistung wird der Zahlungsbetrag vom Käufer eingezogen und über Stripe im Rahmmen der
+          technischen Zahlungsabwicklung verarbeitet. Die Auszahlung an den/die Anbieter:in erfolgt erst, wenn eine der folgenden Bedingungen erfüllt ist:
+          Der/die Käufer:in bestätigt aktiv, dass die Leistung ordnungsgemäß erbracht wurde, ODER
+          28 Tage nach Bestätigung des Leistungserbringers (Anbieter:in) über das Erbringen der Leistung sind vergangen, ohne dass eine Reklamation eingereicht wurde.
+        </p>
+        <p>Bis zu diesem Zeitpunkt wird die Auszahlung durch ein technisches Regelwerk automatisch pausiert. Die Plattform verwaltet keine Gelder im eigenen Namen und
+          trifft keine Ermessensentscheidungen über den Geldfluss. Es besteht <strong>kein Treuhandverhältnis</strong> im rechtlichen Sinne. 
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>4. Reklamationen und Streitfälle</h2>
+      <section className={styles.section}>
+        <p>Käufer:innen können innerhalb von 28 Tagen nach Bestätigung über die Leistungserbringung eine Reklamation einreichen, wenn die Leistung nicht oder nicht wie 
+          vereinbart erbracht wurde. Die Auszahlung an den/die Anbieter:in wird in diesem Fall automatisch rückabgewickelt. Diese Entscheidung trifft ausschließlich der/die 
+          Käufer:in und die Plattform hat darauf keinen Einfluss. Gesetzliche Rechte und Pflichten bleiben jedoch jedenfalls für Käufer:in und Anbieter:in unberührt. 
+          Die Plattform kann auf Wunsch vermittelnd tätig werden, übernimmt jedoch keine Garantie für eine Einigung. Rückzahlungen erfolgen ausschließlich über den 
+          Zahlungsabwickler Stripe.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>5. Nutzerkonten & Identität</h2>
+      <section className={styles.section}>
+        <p>Zur Nutzung der Plattform und der Zahlungsfunktionen ist ein Nutzerkonto erforderlich. Anbieter:innen müssen ein Stripe Konto einrichten und verifizieren. Die 
+          Plattform behält sich vor, Konten bei Verstößen zu sperren.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>6. Gebühren</h2>
+      <section className={styles.section}>
+        <p>Die Nutzung der Plattform kann mit Gebühren verbunden sein (z.B. Vermittlungsprovisionen). Diese werden transparent im Buchungsprozess ausgewiesen. Die Plattform 
+          kann Gebühren direkt im Rahmen der Stripe-Zahlungsabwicklung einbehalten. Automatische Gebühren werden ausschließlich bei erfolgreichen Abschlüssen (keine Reklamationen)
+          berechnet und eingezogen.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>7. Haftung</h2>
+      <section className={styles.section}>
+        <p>Die Plattform haftet nicht für Schäden, die aus der Nichterfüllung oder mangelhaften Erfüllung der gebuchten Leistungen resultieren. Jegliche Haftung für Handlungen 
+          Dritter (insb. Anbieter:innen) ist ausgeschlossen.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>8. Änderungen der AGB</h2>
+      <section className={styles.section}>
+        <p>Die Plattform behält sich das Recht vor, diese AGB jederzeit zu ändern. Änderungen werden den Nutzer:innen rechtzeitig mitgeteilt. 
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>9. Gerichtsstand und anwendbares Recht</h2>
+      <section className={styles.section}>
+        <p>Es gilt das Recht der Republik Österreich. Gerichtsstand ist der Sitz des Unternehmens.
+        </p>
+      </section>
+
       <h2 className={styles.subheading}>1. Allgemeines</h2>
 
       <section className={styles.section}>

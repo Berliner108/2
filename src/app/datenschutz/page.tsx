@@ -33,6 +33,17 @@ const DatenschutzPage = () => {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.subheading}>2. Zahlungsabwicklung über Stripe</h2>
+        <p>
+        Zur Abwicklung von Zahlungen nutzen wir den Dienstleister Stripe (Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Grand Canal Dock, Dublin Irland). 
+        Wenn Nutzer:innen über unsere Plattform Zahlungen tätigen oder empfangen, werden personenbezogene Daten (z.B. Name, E-Mail-Adresse, Bank- oder Kartendaten) an 
+        Stripe übermittelt, soweit dies zur Zahlungsabwicklung erforderlich ist. Dies umfasst auch Transaktionsinformationen wie Betrag, Zeitstempel und Zahlungsstatus. 
+        Die Datenverarbeitung erfogt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an sicherer und effizienter 
+        Zahlungsabwicklung). Stripe agiert hierbei als eigenständig Verantwortlicher gemäß DSGVO. Weitere Informationen finden Sie in der Datenschutzerklärung von Stripe: https://stripe.com/privacy
+        </p>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.subheading}>2. Datenerhebung und -verwendung zur Vertragsabwicklung</h2>
         <p>
          Wir erheben personenbezogene Daten, wenn Sie uns diese im Rahmen Ihrer Bestellung oder bei einer Kontaktaufnahme mit uns 

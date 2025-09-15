@@ -1,103 +1,52 @@
-// src/app/api/orders/[id]/release/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+// /src/app/api/orders/[id]/release/route.ts
+import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { getStripe } from '@/lib/stripe'
+import { ensureInvoiceForOrder } from '@/server/invoices' // erzeugt/holt PDF & speichert im Storage
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
-export async function POST(req: NextRequest) {
+export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
-    const stripe = getStripe()
-    if (!stripe) {
-      return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
-    }
+    const { id } = await ctx.params
+    const orderId = id
+    if (!orderId) return NextResponse.json({ error: 'Order-ID fehlt' }, { status: 400 })
 
-    // id aus Pfad /api/orders/[id]/release extrahieren
-    const match = req.nextUrl.pathname.match(/\/api\/orders\/([^/]+)\/release$/)
-    const orderId = match?.[1]
-    if (!orderId) {
-      return NextResponse.json({ error: 'Missing order id' }, { status: 400 })
-    }
-
-    // Auth: nur Käufer darf freigeben
     const sb = await supabaseServer()
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-    }
+    const { data: { user }, error: userErr } = await sb.auth.getUser()
+    if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
+    if (!user)    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-    // Order lesen
-    const admin = supabaseAdmin()
-    const { data: order, error: ordErr } = await admin
+    const nowIso = new Date().toISOString()
+    const { error: upErr } = await sb
       .from('orders')
-      .select('id,buyer_id,supplier_id,amount_cents,fee_cents,currency,charge_id,transfer_id,status,transferred_cents')
+      .update({ released_at: nowIso })
       .eq('id', orderId)
-      .maybeSingle()
+      .eq('kind', 'lack')
+      .eq('buyer_id', user.id)
+      .is('released_at', null)
 
-    if (ordErr) throw new Error(`orders read failed: ${ordErr.message}`)
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    if (order.buyer_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 400 })
+
+    // --- Rechnungs-PDF für den Verkäufer erzeugen (idempotent) ---
+    // Falls schon vorhanden, wird nichts doppelt angelegt.
+    let invoiceUrl: string | undefined
+    try {
+      const { pdf_path } = await ensureInvoiceForOrder(orderId)
+
+      // signierte URL für den Direktdownload (10 Minuten gültig)
+      const admin = supabaseAdmin()
+      const signed = await admin.storage.from('invoices').createSignedUrl(pdf_path, 600)
+      if ('error' in signed && signed.error) {
+        console.error('[release] signed url failed:', signed.error)
+      } else {
+        invoiceUrl = (signed as any).signedUrl
+      }
+    } catch (err) {
+      // Fehler bei der Rechnung soll den Release nicht blockieren
+      console.error('[release] invoice generation failed:', err)
     }
 
-    // nur freigeben, wenn bezahlt & noch nicht transferiert
-    if (order.status !== 'succeeded') {
-      return NextResponse.json({ error: `Order status not releasable: ${order.status}` }, { status: 409 })
-    }
-    if (order.transfer_id) {
-      return NextResponse.json({ error: 'Already released' }, { status: 409 })
-    }
-    if (!order.charge_id) {
-      return NextResponse.json({ error: 'Missing charge on order' }, { status: 422 })
-    }
-
-    // Supplier Connect-ID holen (profiles.stripe_connect_id muss existieren)
-    const { data: supplier, error: supErr } = await admin
-      .from('profiles')
-      .select('id,stripe_connect_id')
-      .eq('id', order.supplier_id)
-      .maybeSingle()
-
-    if (supErr) throw new Error(`profiles read failed: ${supErr.message}`)
-    if (!supplier?.stripe_connect_id) {
-      return NextResponse.json({ error: 'Supplier not onboarded to Stripe Connect' }, { status: 422 })
-    }
-
-    // Auszahlungsbetrag = amount - fee - bereits transferiert
-    const gross = Number(order.amount_cents || 0)
-    const fee = Number(order.fee_cents || 0)
-    const already = Number(order.transferred_cents || 0)
-    const toTransfer = gross - fee - already
-    if (toTransfer <= 0) {
-      return NextResponse.json({ error: 'Nothing to transfer' }, { status: 409 })
-    }
-
-    // Transfer aus Plattform-Guthaben an den Connect-Account, verknüpft mit der Charge
-    const tr = await stripe.transfers.create({
-      amount: toTransfer,
-      currency: order.currency || 'eur',
-      destination: supplier.stripe_connect_id,
-      source_transaction: order.charge_id,
-      metadata: { order_id: String(order.id), supplier_id: String(order.supplier_id) },
-    })
-
-    // Order aktualisieren
-    const { error: updErr } = await admin
-      .from('orders')
-      .update({
-        transfer_id: tr.id,
-        transferred_cents: already + toTransfer,
-        released_at: new Date().toISOString(),
-        status: 'released',
-      })
-      .eq('id', order.id)
-
-    if (updErr) throw new Error(`orders update failed: ${updErr.message}`)
-
-    return NextResponse.json({ ok: true, transferId: tr.id })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Release failed' }, { status: 500 })
+    return NextResponse.json({ ok: true, invoiceUrl })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Fehlgeschlagen' }, { status: 500 })
   }
 }

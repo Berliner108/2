@@ -1,8 +1,8 @@
-// /src/app/lackanfragen/artikel/[id]/page.tsx
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import styles from './ArtikelDetail.module.css';
 import Navbar from '../../../components/navbar/Navbar';
 import { FaFilePdf } from 'react-icons/fa';
@@ -10,40 +10,7 @@ import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
-import Link from 'next/link';
 import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
-
-/* ===== Loader ===== */
-function TopLoader() {
-  return (
-    <div className={styles.topLoader} aria-hidden>
-      <div className={styles.topLoaderInner} />
-    </div>
-  );
-}
-function DetailSkeleton() {
-  return (
-    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
-      <div className={styles.skelHeader}>
-        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-        <div className={styles.skelLine} />
-      </div>
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelDrop} />
-        <div className={styles.skelGrid}>
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-        </div>
-      </div>
-      <div className={styles.skelBlock} />
-      <div className={styles.skelBlockSmall} />
-    </div>
-  );
-}
 
 /* ===================== Typen ===================== */
 type ApiItem = {
@@ -92,7 +59,44 @@ type ArtikelView = {
   qualität?: string;
   zertifizierung?: string[];
   aufladung?: string[];
+
+  /* === NEU (optional, rückwärtskompatibel) === */
+  user_handle?: string | null;
 };
+
+type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
+
+/* ===================== Loader / Skeleton ===================== */
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
+function DetailSkeleton() {
+  return (
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelDrop} />
+        <div className={styles.skelGrid}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+      </div>
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+    </div>
+  );
+}
 
 /* ===================== Helfer ===================== */
 const toBool = (v: unknown): boolean =>
@@ -114,27 +118,24 @@ function formatKg(n?: number | null): string {
   const s = n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
   return `${s} kg`;
 }
-
 function normKategorie(k?: string): string {
   const v = (k || '').toLowerCase();
   if (v === 'pulverlack') return 'Pulverlack';
   if (v === 'nasslack') return 'Nasslack';
   return k || '';
 }
-
 function normZustand(z?: string): string {
   const v = (z || '').toLowerCase();
   if (v.includes('neu')) return 'Neu und ungeöffnet';
-  if (v.includes('geöffnet') || v.includes('geoeffnet') || v.includes('offen')) return 'Geöffnet und einwandfrei';
+  if (v.includes('geöffnet') || v.includes('geoeffnet') || v.includes('offen'))
+    return 'Geöffnet und einwandfrei';
   return z || '';
 }
-
 function resolveLieferdatum(it: ApiItem): Date | null {
   // @ts-ignore
   const d = it.lieferdatum || it.delivery_at || it.data?.lieferdatum || it.data?.delivery_at;
   return toDateOrNull(d);
 }
-
 function resolveMenge(d: any): number | null {
   const raw = d?.menge;
   if (typeof raw === 'number') return raw;
@@ -144,7 +145,6 @@ function resolveMenge(d: any): number | null {
   }
   return null;
 }
-
 function resolveBilder(d: any, fallback?: string[]): string[] {
   if (Array.isArray(fallback) && fallback.length) return fallback;
   const b = d?.bilder;
@@ -156,7 +156,6 @@ function resolveBilder(d: any, fallback?: string[]): string[] {
   if (typeof b === 'string' && b.trim()) return b.split(',').map((s) => s.trim()).filter(Boolean);
   return ['/images/platzhalter.jpg'];
 }
-
 function getNameFromUrl(u: string): string {
   try {
     const p = new URL(u);
@@ -167,7 +166,6 @@ function getNameFromUrl(u: string): string {
     return decodeURIComponent(parts[parts.length - 1] || 'datei');
   }
 }
-
 function resolveDateien(d: any): DateiItem[] {
   const arr = d?.dateien;
   if (!arr) return [];
@@ -193,7 +191,6 @@ function resolveDateien(d: any): DateiItem[] {
   }
   return [];
 }
-
 function deepFindFirst(obj: any, keyPred: (k: string) => boolean): unknown {
   if (!obj || typeof obj !== 'object') return undefined;
   for (const [k, v] of Object.entries(obj)) {
@@ -291,39 +288,16 @@ function intOrNull(n: unknown): number | null {
 }
 function resolveUserName(d: any): string | undefined {
   if (typeof d?.user === 'string' && d.user.trim()) return d.user.trim();
-  const fullName =
-    [d?.profile?.firstName, d?.profile?.lastName].filter(Boolean).join(' ').trim() || undefined;
-  const candidates = [
-    d?.user?.name,
-    d?.account_name,
-    d?.profile?.company,
-    fullName,
-    d?.username,
-    d?.user_name,
-  ].filter((x) => typeof x === 'string' && x.trim()) as string[];
+  const fullName = [d?.profile?.firstName, d?.profile?.lastName].filter(Boolean).join(' ').trim() || undefined;
+  const candidates = [d?.user?.name, d?.account_name, d?.profile?.company, fullName, d?.username, d?.user_name]
+    .filter((x) => typeof x === 'string' && x.trim()) as string[];
   return candidates[0];
 }
-function resolveUserRatingAvg(d: any): number | null {
-  return (
-    clampRating(d?.user_rating_avg) ??
-    clampRating(d?.user_rating) ??
-    clampRating(d?.user?.ratingAvg) ??
-    clampRating(d?.user?.rating) ??
-    null
-  );
-}
-function resolveUserRatingCount(d: any): number | null {
-  return intOrNull(d?.user_rating_count) ?? intOrNull(d?.user?.ratingCount) ?? null;
-}
-
-const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
-
 function listToText(v: unknown): string {
   if (Array.isArray(v)) return (v as unknown[]).map(String).map((s) => s.trim()).filter(Boolean).join(', ');
   if (typeof v === 'string') return v.split(',').map((s) => s.trim()).filter(Boolean).join(', ');
   return '';
 }
-
 const ANWENDUNG_LABELS: Record<string, string> = {
   innen: 'Innen',
   außen: 'Außen',
@@ -331,40 +305,33 @@ const ANWENDUNG_LABELS: Record<string, string> = {
   industrie: 'Industrie',
   universal: 'Universal',
 };
-
 const OBERFLAECHE_LABELS: Record<string, string> = {
   glatt: 'Glatt',
   feinstruktur: 'Feinstruktur',
   grobstruktur: 'Grobstruktur',
 };
-
 function prettyLabel(val: unknown, labels: Record<string, string>) {
   const s = (val ?? '').toString().trim();
   if (!s) return '';
   const key = s.normalize('NFKC').toLowerCase();
   return labels[key] ?? (s.charAt(0).toUpperCase() + s.slice(1));
 }
-
 function daysUntil(date: Date): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const end = new Date(date);
   end.setHours(0, 0, 0, 0);
-  return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.ceil((end.getTime()) - (today.getTime())) / (1000 * 60 * 60 * 24);
 }
-
 function DeadlineBadge({ date }: { date: Date | null }) {
   if (!date) return null;
-
   const d = daysUntil(date);
   let text = '';
   if (d < 0) text = `überfällig seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
   else if (d === 0) text = 'heute';
   else if (d === 1) text = 'morgen';
   else text = `in ${d} Tagen`;
-
   const variant = d < 0 ? styles.badgeDanger : d <= 3 ? styles.badgeWarn : styles.badgeOk;
-
   return (
     <span
       className={`${styles.badge} ${styles.deadline} ${variant}`}
@@ -386,10 +353,13 @@ function limitMoneyInput(raw: string): string {
   const sepChar = v[firstSep];
   const intPart = v.slice(0, firstSep).replace(/\D/g, '').slice(0, 5);
   const fracDigits = v.slice(firstSep + 1).replace(/\D/g, '').slice(0, 2);
-  const safeInt = intPart;
-  return `${safeInt}${sepChar}${fracDigits}`;
+  return `${intPart}${sepChar}${fracDigits}`;
 }
-const MONEY_REGEX_FINAL = /^\d{1,5}([.,]\d{1,2})?$/;
+// erlaubt 1-5 Stellen vor dem Komma und 0-2 Nachkommastellen (ganze Zahlen OK)
+const MONEY_REGEX_FINAL = /^\d{1,5}([.,]\d{0,2})?$/;
+
+// Versandkosten max. 50% vom Artikelpreis
+const MAX_SHIP_RATIO = 0.5;
 
 function toNum(s: string): number {
   if (!s) return 0;
@@ -398,49 +368,6 @@ function toNum(s: string): number {
 }
 function formatEUR(n: number): string {
   return n.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
-}
-
-/* ===================== Mapping ===================== */
-function mapItem(it: ApiItem): ArtikelView {
-  const d = it.data || {};
-  const bilder = resolveBilder(d, it.bilder);
-  const lieferdatum = resolveLieferdatum(it);
-  const sondereigenschaft = listToText(d.sondereffekte) || listToText(d.sondereigenschaft);
-  const effekt = listToText(d.effekt);
-  const istGewerblich = resolveGewerblich(d);
-  const ort = (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
-
-  return {
-    id: it.id,
-    titel: d.titel || it.title || 'Unbenannt',
-    bilder,
-    lieferdatum,
-    zustand: normZustand(d.zustand),
-    hersteller: d.hersteller || '',
-    menge: resolveMenge(d),
-    ort,
-    kategorie: normKategorie(d.kategorie),
-    user: it.user || resolveUserName(d) || undefined,
-    user_rating: typeof it.user_rating === 'number' ? clampRating(it.user_rating) : resolveUserRatingAvg(d),
-    user_rating_count:
-      typeof it.user_rating_count === 'number' ? intOrNull(it.user_rating_count) : resolveUserRatingCount(d),
-    farbcode: d.farbcode || '',
-    effekt,
-    anwendung: prettyLabel(d.anwendung, ANWENDUNG_LABELS),
-    oberfläche: prettyLabel(d.oberfläche ?? d.oberflaeche, OBERFLAECHE_LABELS),
-    glanzgrad: d.glanzgrad || '',
-    sondereigenschaft,
-    beschreibung: d.beschreibung || '',
-    gesponsert: Boolean(d.gesponsert),
-    gewerblich: istGewerblich,
-    privat: istGewerblich === false ? true : false,
-    dateien: resolveDateien(d),
-    farbpalette: d.farbpalette || '',
-    farbton: d.farbton || '',
-    qualität: d.qualität || d.qualitaet || '',
-    zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
-    aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
-  };
 }
 
 /* ===== Fehlermeldungen hübsch machen ===== */
@@ -453,10 +380,46 @@ function friendlyErr(raw: unknown): string {
   if (lc.includes('not authenticated')) return 'Bitte melde dich an.';
   if (lc.includes('anfrage nicht gefunden') || lc.includes('request not found')) return 'Anfrage nicht gefunden.';
   if (lc.includes('anfrage ist nicht verfügbar') || lc.includes('request status')) return 'Diese Anfrage ist nicht mehr verfügbar.';
-  if (lc.includes('du kannst zu eigenen anfragen') || lc.includes('own request')) return 'Du kannst zu deinen eigenen Anfragen keine Angebote abgeben.';
-  if (lc.includes('itemamountcents invalid') || lc.includes('amount')) return 'Bitte einen gültigen Artikelpreis angeben.';
-  if (lc.includes('shippingcents invalid')) return 'Bitte gültige Versandkosten angeben (oder 0).';
+  if (lc.includes('itemamountcents invalid') || lc.includes('item_amount_cents')) return 'Bitte einen gültigen Artikelpreis angeben.';
+  if (lc.includes('shippingcents invalid') || lc.includes('shipping_cents')) return 'Bitte gültige Versandkosten angeben (oder 0).';
+  if (lc.includes('shipping_too_high') || lc.includes('shipping too high')) return 'Versandkosten dürfen max. 50% des Artikelpreises betragen.';
   return txt;
+}
+
+/* ===== (NEU) Handle/Reviews-Helper ===== */
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/; // 2–32 Zeichen, start/end alnum
+const looksLikeHandle = (s?: string | null) => !!(s && HANDLE_RE.test(s.trim()));
+
+function resolveUserHandle(d: any, it?: ApiItem): string | null {
+  const cand: Array<unknown> = [
+    d?.user?.handle,
+    d?.user?.username,
+    d?.user?.nick,
+    d?.user?.slug,
+    d?.owner?.handle,
+    d?.owner?.username,
+    d?.owner?.slug,
+    d?.anbieter?.handle,
+    d?.anbieter?.username,
+    d?.vendor?.handle,
+    d?.vendor?.username,
+    d?.account?.handle,
+    it?.user, // falls it.user bereits ein Handle ist
+    d?.username,
+    d?.user_name,
+  ];
+  for (const c of cand) {
+    const s = typeof c === 'string' ? c.trim() : '';
+    if (looksLikeHandle(s)) return s;
+  }
+  return null;
+}
+
+function profileReviewsHrefFromView(a: { user?: string; user_handle?: string | null } | null): string | undefined {
+  if (!a) return undefined;
+  if (looksLikeHandle(a.user_handle || '')) return `/u/${a.user_handle}/reviews`;
+  if (looksLikeHandle(a.user)) return `/u/${a.user}/reviews`;
+  return undefined;
 }
 
 /* ===== Detail -> ApiItem normalisieren ===== */
@@ -466,7 +429,7 @@ function toApiItemFromDetail(a: any, id: string): ApiItem {
     title: a?.titel || a?.title || null,
     lieferdatum: typeof a?.lieferdatum === 'string' ? a.lieferdatum : (typeof a?.delivery_at === 'string' ? a.delivery_at : null),
     delivery_at: typeof a?.delivery_at === 'string' ? a.delivery_at : null,
-    published: a?.published ?? a?.is_published ?? null, // bool ODER 'false'/'true'
+    published: a?.published ?? a?.is_published ?? null,
     data: a?.data ?? a ?? {},
     ort: typeof a?.ort === 'string' ? a.ort : undefined,
     bilder: Array.isArray(a?.bilder) ? a.bilder : undefined,
@@ -477,7 +440,7 @@ function toApiItemFromDetail(a: any, id: string): ApiItem {
   };
 }
 
-/* ===== List-Fallback: robust nach ID suchen ===== */
+/* ===== List-Fallback ===== */
 async function findByIdViaList(id: string): Promise<ApiItem | null> {
   const directCandidates = [
     `/api/lackanfragen?id=${encodeURIComponent(id)}&includeUnpublished=1`,
@@ -487,7 +450,7 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
   ];
   for (const url of directCandidates) {
     try {
-      const r = await fetch(url, { cache: 'no-store' });
+      const r = await fetch(url, { cache: 'no-store', credentials: 'include' });
       if (!r.ok) continue;
       const json = await r.json().catch(() => ({}));
       const items: any = json?.items ?? json;
@@ -506,7 +469,7 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
       const value = pager === 'page' ? i / LIMIT + 1 : i;
       const url = `/api/lackanfragen?limit=${LIMIT}&${pager}=${value}&includeUnpublished=1`;
       try {
-        const r = await fetch(url, { cache: 'no-store' });
+        const r = await fetch(url, { cache: 'no-store', credentials: 'include' });
         if (!r.ok) break;
         const json = await r.json().catch(() => ({}));
         const items: any = json?.items ?? json;
@@ -522,7 +485,7 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
   }
 
   try {
-    const r = await fetch(`/api/lackanfragen?limit=10000&includeUnpublished=1`, { cache: 'no-store' });
+    const r = await fetch(`/api/lackanfragen?limit=10000&includeUnpublished=1`, { cache: 'no-store', credentials: 'include' });
     if (r.ok) {
       const json = await r.json().catch(() => ({}));
       const items: any = json?.items ?? json;
@@ -536,7 +499,6 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
 }
 
 /* ===================== Seite ===================== */
-
 function PageBody() {
   const { id: rawParam } = useParams<{ id?: string }>();
   const [artikel, setArtikel] = useState<ArtikelView | null>(null);
@@ -553,10 +515,16 @@ function PageBody() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [vermittelt, setVermittelt] = useState(false);
 
+  // Connect (Stripe) Status
+  const [connect, setConnect] = useState<ConnectStatus | null>(null);
+  const [connectLoaded, setConnectLoaded] = useState(false);
+
+  const requestId = rawParam ? decodeURIComponent(String(rawParam)) : '';
+
   useEffect(() => {
     let active = true;
 
-    const id = rawParam ? decodeURIComponent(String(rawParam)) : '';
+    const id = requestId;
     if (!id) {
       setLoading(false);
       return;
@@ -567,9 +535,12 @@ function PageBody() {
         let view: ArtikelView | null = null;
         let vermitteltFlag = false;
 
-        // Detail (mit includeUnpublished)
+        // Detail laden (inkl. unveröffentlicht)
         try {
-          const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, { cache: 'no-store' });
+          const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, {
+            cache: 'no-store',
+            credentials: 'include',
+          });
           if (res.ok) {
             const j = await res.json().catch(() => null as any);
             const a = j?.artikel ?? j?.request ?? j?.item ?? j;
@@ -581,7 +552,7 @@ function PageBody() {
           }
         } catch {}
 
-        // Fallback: Liste
+        // Fallback: Liste durchsuchen
         if (!view) {
           const found = await findByIdViaList(id);
           if (found) {
@@ -605,21 +576,92 @@ function PageBody() {
       }
     })();
 
-    return () => { active = false; };
-  }, [rawParam, toastError]);
+    return () => {
+      active = false;
+    };
+  }, [requestId, toastError]);
+
+  // Connect-Status laden (stabil, ohne Flackern)
+  const fetchConnect = useCallback(async () => {
+    try {
+      const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+      const j: ConnectStatus = await r.json().catch(() => ({ ready: false }));
+      setConnect(r.ok ? j : { ready: false });
+    } finally {
+      setConnectLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConnect();
+  }, [fetchConnect]);
+
+  // Beim Zurückkehren/Focus Status erneut prüfen (Banner bleibt sichtbar während des Fetch)
+  useEffect(() => {
+    const onFocus = () => {
+      fetchConnect();
+    };
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('pageshow', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('pageshow', onFocus);
+    };
+  }, [fetchConnect]);
 
   const slides = useMemo(() => (artikel?.bilder || []).map((src: string) => ({ src })), [artikel?.bilder]);
-  const gesamtPreis = useMemo(() => toNum(basisPreis) + toNum(versandPreis), [basisPreis, versandPreis]);
+  const gesamtPreis = useMemo(() => {
+    const p = (basisPreis || '').replace(/\s/g, '');
+    const s = (versandPreis || '').replace(/\s/g, '');
+    return toNum(p) + toNum(s || '0');
+  }, [basisPreis, versandPreis]);
+
+  // --- 50%-Regel (live) ---
+  const shippingCap = useMemo(() => {
+    const base = toNum((basisPreis || '').replace(/\s/g, ''));
+    return Math.max(0, base * MAX_SHIP_RATIO);
+  }, [basisPreis]);
+
+  const shippingTooHigh = useMemo(() => {
+    const ship = toNum((versandPreis || '').replace(/\s/g, ''));
+    return ship > shippingCap + 1e-9;
+  }, [versandPreis, shippingCap]);
+
+  // Onboarding starten – ohne Auswahl privat/gewerblich
+  const goToStripeOnboarding = useCallback(async () => {
+    try {
+      const r = await fetch('/api/connect/account-link', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          return_to: typeof window !== 'undefined' ? window.location.href : undefined,
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.url) {
+        const msg = j?.reason || j?.error || 'Onboarding-Link konnte nicht erstellt werden.';
+        const extra = [j?.code, j?.mode].filter(Boolean).join(' · ');
+        throw new Error(extra ? `${msg} (${extra})` : msg);
+      }
+      window.location.assign(j.url as string);
+    } catch (e: any) {
+      toastError(friendlyErr(e?.message));
+    }
+  }, [toastError]);
 
   async function handleSubmitOffer() {
     if (submitting) return;
 
-    if (!MONEY_REGEX_FINAL.test(basisPreis)) {
+    const baseStr = (basisPreis || '').replace(/\s/g, '');
+    const shipStr = (versandPreis || '').replace(/\s/g, '');
+
+    if (!MONEY_REGEX_FINAL.test(baseStr)) {
       toastError('Bitte einen gültigen Artikelpreis eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
       return;
     }
-    if (versandPreis && !MONEY_REGEX_FINAL.test(versandPreis)) {
-      toastError('Bitte gültige Versandkosten eingeben (bis 5 Stellen vor dem Komma und max. 2 Nachkommastellen).');
+    if (shipStr && !MONEY_REGEX_FINAL.test(shipStr)) {
+      toastError('Bitte gültige Versandkosten eingeben (oder 0).');
       return;
     }
     if (!artikel?.id) {
@@ -627,8 +669,39 @@ function PageBody() {
       return;
     }
 
-    const priceBase = toNum(basisPreis);
-    const shipping = toNum(versandPreis);
+    const priceBase = toNum(baseStr);
+    const shipping = shipStr ? toNum(shipStr) : 0;
+
+    if (priceBase <= 0) {
+      toastError('Artikelpreis muss größer 0 sein.');
+      return;
+    }
+    const maxShip = priceBase * MAX_SHIP_RATIO;
+    if (shipping > maxShip + 1e-9) {
+      toastError(
+        `Versandkosten (${formatEUR(shipping)}) dürfen max. 50% des Artikelpreises (${formatEUR(priceBase)}) sein – ` +
+          `maximal erlaubt: ${formatEUR(maxShip)}.`
+      );
+      return;
+    }
+
+    // Connect-Ready prüfen
+    try {
+      const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+      const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false }));
+      if (!stRes.ok) {
+        toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
+        return;
+      }
+      if (!st.ready) {
+        await goToStripeOnboarding();
+        return;
+      }
+    } catch {
+      toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
+      return;
+    }
+
     const itemCents = Math.round(priceBase * 100);
     const shipCents = Math.round(shipping * 100);
     const total = priceBase + shipping;
@@ -639,22 +712,47 @@ function PageBody() {
       `Gesamt: ${formatEUR(total)}; ` +
       `Rückversand zahlt ${buyerPaysReturn ? 'Käufer' : 'Verkäufer'}.`;
 
+    // Payload kompatibel zu alter/neuer Route
+    const payload = {
+      itemAmountCents: itemCents,
+      shippingCents: shipCents,
+      item_amount_cents: itemCents,
+      shipping_cents: shipCents,
+      currency: 'eur',
+      message: description,
+      buyerPaysReturn,
+    };
+
     setSubmitting(true);
     try {
       const res = await fetch(`/api/lack/requests/${encodeURIComponent(String(artikel.id))}/offer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemAmountCents: itemCents, shippingCents: shipCents, currency: 'eur', message: description }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(friendlyErr(j?.error || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.'));
+      const j = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) {
+        const field = (j?.field || j?.error_field || '').toString().toLowerCase();
+        if (field.includes('item') && field.includes('cent')) throw new Error('Bitte einen gültigen Artikelpreis angeben.');
+        if (field.includes('shipping') && field.includes('cent')) {
+          if ((j?.error || '').toString().toUpperCase().includes('SHIPPING_TOO_HIGH')) {
+            throw new Error('Versandkosten dürfen max. 50% des Artikelpreises betragen.');
+          }
+          throw new Error('Bitte gültige Versandkosten angeben (oder 0).');
+        }
+        const raw = j?.error || j?.message || '';
+        throw new Error(friendlyErr(raw || 'Es ist ein Fehler aufgetreten. Bitte versuche es erneut.'));
+      }
 
       success('Angebot gesendet.');
       setBasisPreis('');
       setVersandPreis('');
       setBuyerPaysReturn(true);
     } catch (e: any) {
+      console.debug('[offer] failed', e?.message);
       toastError(friendlyErr(e?.message));
     } finally {
       setSubmitting(false);
@@ -674,7 +772,6 @@ function PageBody() {
     );
   }
 
-  // Kein Artikel gefunden
   if (!artikel) {
     return (
       <>
@@ -707,6 +804,10 @@ function PageBody() {
 
   const ratingValue = typeof artikel.user_rating === 'number' ? artikel.user_rating : 0;
   const ratingCount = typeof artikel.user_rating_count === 'number' ? artikel.user_rating_count : 0;
+
+  /* === NEU: Reviews-/Kontakt-Links berechnen (UI-only) === */
+  const reviewsHref = profileReviewsHrefFromView(artikel);
+  const messageTarget = encodeURIComponent(artikel.user_handle || artikel.user || '');
 
   return (
     <>
@@ -742,6 +843,27 @@ function PageBody() {
               <h1 className={styles.title}>{artikel.titel}</h1>
               {artikel.gesponsert && <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>}
             </div>
+
+            {/* Hinweis Onboarding – stabil sichtbar wenn not ready */}
+            {connectLoaded && connect?.ready === false && (
+              <div className={styles.connectNotice} role="status" aria-live="polite">
+                <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
+
+                {connect?.reason && (
+                  <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
+                )}
+
+                <div className={styles.connectActions}>
+                  <button
+                    type="button"
+                    className={styles.connectBtn}
+                    onClick={goToStripeOnboarding}
+                  >
+                    Jetzt bei Stripe verifizieren
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* === META-GRID === */}
             <div className={styles.meta}>
@@ -800,7 +922,7 @@ function PageBody() {
               )}
               <div className={styles.metaItem}>
                 <span className={styles.label}>Hersteller:</span>
-                <span className={styles.value}>{displayHersteller(artikel.hersteller)}</span>
+                <span className={styles.value}>{(artikel.hersteller && artikel.hersteller.trim()) || 'Alle'}</span>
               </div>
 
               <div className={styles.metaItem}>
@@ -832,7 +954,15 @@ function PageBody() {
               {artikel.user && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>User:</span>
-                  <span className={styles.value}>{artikel.user}</span>
+                  <span className={styles.value}>
+                    {reviewsHref ? (
+                      <Link href={reviewsHref} className={styles.kontaktLink} title="Zu den Bewertungen">
+                        {artikel.user}
+                      </Link>
+                    ) : (
+                      artikel.user
+                    )}
+                  </span>
 
                   <div className={styles.userRating} style={{ marginTop: 6 }}>
                     {ratingCount > 0 ? (
@@ -845,10 +975,7 @@ function PageBody() {
                   </div>
 
                   <div style={{ marginTop: 6 }}>
-                    <Link
-                      href={`/messages?empfaenger=${encodeURIComponent(artikel.user)}`}
-                      className={styles.kontaktLink}
-                    >
+                    <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
                       User kontaktieren
                     </Link>
                   </div>
@@ -882,12 +1009,7 @@ function PageBody() {
                   <ul className={styles.downloadList}>
                     {artikel.dateien.map((file, i) => (
                       <li key={i} className={styles.downloadItem}>
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.downloadLink}
-                        >
+                        <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.downloadLink}>
                           <FaFilePdf style={{ marginRight: '0.4rem' }} />
                           {file.name}
                         </a>
@@ -922,9 +1044,9 @@ function PageBody() {
                   display: 'block',
                   marginTop: 16,
                   padding: '16px 20px',
-                  border: '3px solid #52c41a',     // grün
-                  background: '#f6ffed',           // hellgrün
-                  color: '#135200',                 // dunkles grün
+                  border: '3px solid #52c41a',
+                  background: '#f6ffed',
+                  color: '#135200',
                   fontWeight: 700,
                   textAlign: 'center',
                   borderRadius: 14,
@@ -971,6 +1093,18 @@ function PageBody() {
                     Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den
                     Rückversand aufkommen.
                   </div>
+                  <div className={styles.offerNote} style={{ marginTop: 6 }}>
+                    Maximal zulässig: <strong>{formatEUR(shippingCap)}</strong> (50% des Artikelpreises).
+                    {shippingTooHigh && (
+                      <span
+                        role="alert"
+                        aria-live="polite"
+                        style={{ marginLeft: 8, color: '#d4380d', fontWeight: 600 }}
+                      >
+                        Überschreitung!
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.totalRow} style={{ marginTop: 12, fontWeight: 700 }}>
@@ -980,8 +1114,9 @@ function PageBody() {
                 <button
                   className={styles.submitOfferButton}
                   onClick={handleSubmitOffer}
-                  disabled={submitting}
+                  disabled={submitting || shippingTooHigh}
                   aria-busy={submitting}
+                  title={shippingTooHigh ? 'Versandkosten überschreiten 50% des Artikelpreises' : 'Lack verbindlich anbieten'}
                 >
                   {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
                 </button>
@@ -1023,4 +1158,52 @@ export default function Page() {
       <PageBody />
     </LocalToastProvider>
   );
+}
+
+/* ===================== Mapper (unten, damit oben lesbarer) ===================== */
+function mapItem(it: ApiItem): ArtikelView {
+  const d = it.data || {};
+  const bilder = resolveBilder(d, it.bilder);
+  const lieferdatum = resolveLieferdatum(it);
+  const sondereigenschaft = listToText(d.sondereffekte) || listToText(d.sondereigenschaft);
+  const effekt = listToText(d.effekt);
+  const istGewerblich = resolveGewerblich(d);
+  const ort = (typeof it.ort === 'string' && it.ort.trim()) ? it.ort.trim() : resolveLieferort({ data: d, ...it });
+
+  /* === NEU: Handle zusätzlich ermitteln (ohne bestehende Logik zu ändern) === */
+  const user_handle = resolveUserHandle(d, it);
+
+  return {
+    id: it.id,
+    titel: d.titel || it.title || 'Unbenannt',
+    bilder,
+    lieferdatum,
+    zustand: normZustand(d.zustand),
+    hersteller: d.hersteller || '',
+    menge: resolveMenge(d),
+    ort,
+    kategorie: normKategorie(d.kategorie),
+    user: it.user || resolveUserName(d) || undefined,
+    user_rating: typeof it.user_rating === 'number' ? clampRating(it.user_rating) : clampRating(d?.user_rating ?? d?.user?.rating),
+    user_rating_count: typeof it.user_rating_count === 'number' ? intOrNull(it.user_rating_count) : intOrNull(d?.user?.ratingCount),
+    farbcode: d.farbcode || '',
+    effekt,
+    anwendung: prettyLabel(d.anwendung, ANWENDUNG_LABELS),
+    oberfläche: prettyLabel(d.oberfläche ?? (d as any).oberflaeche, OBERFLAECHE_LABELS),
+    glanzgrad: d.glanzgrad || '',
+    sondereigenschaft,
+    beschreibung: d.beschreibung || '',
+    gesponsert: Boolean(d.gesponsert),
+    gewerblich: istGewerblich,
+    privat: istGewerblich === false ? true : false,
+    dateien: resolveDateien(d),
+    farbpalette: d.farbpalette || '',
+    farbton: d.farbton || '',
+    qualität: (d as any).qualität || (d as any).qualitaet || '',
+    zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
+    aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
+
+    /* === NEU: nur Zusatzfeld, rest unverändert === */
+    user_handle,
+  };
 }

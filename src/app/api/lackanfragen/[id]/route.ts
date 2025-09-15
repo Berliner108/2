@@ -1,10 +1,12 @@
 // /src/app/api/lackanfragen/[id]/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+/* ---------------------- Utils / Normalizer ---------------------- */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
@@ -66,17 +68,22 @@ function normalizeZustand(z?: unknown): string {
   return (z ?? '').toString()
 }
 
+/* ---------------------- Route ---------------------- */
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const url = new URL(req.url)
-  const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
 
-  const supa = await supabaseServer()
+  // 0) Nur eingeloggte User erlauben (Middleware deckt das i.d.R. ab; hier trotzdem Guard)
+  const sb = await supabaseServer()
+  const { data: { user }, error: userErr } = await sb.auth.getUser()
+  if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
+  if (!user)    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const { data, error } = await supa
+  // 1) Anfrage via Admin (RLS umgehen) holen
+  const admin = supabaseAdmin()
+  const { data, error } = await admin
     .from('lack_requests')
     .select('id,title,lieferdatum,delivery_at,created_at,updated_at,status,owner_id,data,published')
     .eq('id', id)
@@ -87,31 +94,28 @@ export async function GET(
     return NextResponse.json({ error: 'DB error' }, { status: 500 })
   }
 
-  // Nur wirklich nicht vorhandene oder gelöschte Requests blocken
+  // Nicht vorhanden/gelöscht?
   if (!data || data.status === 'deleted') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Wenn unveröffentlicht und explizit NICHT erlaubt -> 404
-  if (data.published === false && !includeUnpublished) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  // Username & Ratings aus profiles holen
+  // 2) Owner-Profile (Name/Rating) via Admin
   let userName: string | null = null
   let userRating: number | null = null
   let userRatingCount = 0
   try {
-    const { data: prof, error: pErr } = await supa
+    const { data: prof } = await admin
       .from('profiles')
-      .select('id, username, rating_avg, rating_count')
+      .select('id, username, company_name, rating_avg, rating_count')
       .eq('id', data.owner_id)
       .maybeSingle()
 
-    if (!pErr && prof) {
-      userName = (prof.username ?? null)
-      userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : null
-      userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : 0
+    if (prof) {
+      const handle  = (prof.username ?? '').toString().trim() || null
+      const display = (prof.company_name ?? '').toString().trim() || null
+      userName = display || handle
+      userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
+      userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : (prof.rating_count != null ? Number(prof.rating_count) : 0)
     }
   } catch (e) {
     console.warn('[lackanfragen] profile lookup failed (non-fatal)', (e as any)?.message)
@@ -130,6 +134,7 @@ export async function GET(
     userRatingCount = d.user_rating_count
   }
 
+  // 3) Antwort im bestehenden Format
   const artikel = {
     id: data.id,
     titel: data.title || d.titel || 'Ohne Titel',
@@ -173,8 +178,8 @@ export async function GET(
     zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
     aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
 
-    // >>> wichtig für das Frontend:
-    published: data.published,   // <- damit kannst du den "Anfrage vermittelt" Patch triggern
+    // fürs FE (Banner etc.)
+    published: data.published,
     status: data.status,
   }
 

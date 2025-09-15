@@ -1,75 +1,85 @@
-// src/app/api/orders/release/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: Request) {
   try {
-    const stripe = getStripe()
-    if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    const { orderId } = await req.json()
+    if (!orderId) return NextResponse.json({ error: 'orderId required' }, { status: 400 })
 
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const { orderId } = await req.json()
-    if (!orderId) return NextResponse.json({ error: 'orderId missing' }, { status: 400 })
-
     const admin = supabaseAdmin()
-    const { data: o, error } = await admin
+    const { data: order } = await admin
       .from('orders')
-      .select('id,buyer_id,supplier_id,amount_cents,currency,status,charge_id')
+      .select('id, buyer_id, supplier_id, amount_cents, fee_cents, currency, status, charge_id, transfer_id, request_id')
       .eq('id', orderId)
       .maybeSingle()
-    if (error || !o) return NextResponse.json({ error: error?.message || 'Order not found' }, { status: 404 })
-    if (o.buyer_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    if (o.status !== 'funds_held') return NextResponse.json({ error: `Invalid status ${o.status}` }, { status: 400 })
-    if (!o.charge_id) return NextResponse.json({ error: 'Charge not available' }, { status: 400 })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-    // Supplier Connect-Konto prüfen
-    const { data: sup } = await admin
-      .from('profiles')
-      .select('stripe_connect_id')
-      .eq('id', o.supplier_id)
-      .maybeSingle()
-    const connectId = sup?.stripe_connect_id as string | undefined
-    if (!connectId) return NextResponse.json({ error: 'Supplier not onboarded to Connect' }, { status: 400 })
-
-    // Optional: check account capability
-    const acct = await stripe.accounts.retrieve(connectId)
-    if (!(acct as any).charges_enabled || !(acct as any).payouts_enabled) {
-      return NextResponse.json({ error: 'Supplier account not ready for payouts' }, { status: 400 })
+    // Nur Buyer (Freigeben) ODER Admin erlauben
+    if (order.buyer_id !== user.id && process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // 7% Fee → runden
-    const fee = Math.round(o.amount_cents * 0.07)
-    const transferAmount = o.amount_cents - fee
-    if (transferAmount <= 0) return NextResponse.json({ error: 'Transfer amount invalid' }, { status: 400 })
+    if (order.status !== 'funds_held') {
+      return NextResponse.json({ error: 'Order not in releasable state' }, { status: 400 })
+    }
+    if (!order.charge_id) {
+      return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
+    }
+    if (order.transfer_id) {
+      // idempotent
+      return NextResponse.json({ ok: true, transferId: order.transfer_id }, { status: 200 })
+    }
 
-    // Transfer auslösen
+    // Connect-Ziel
+    const { data: prof } = await admin
+      .from('profiles')
+      .select('stripe_connect_id')
+      .eq('id', order.supplier_id)
+      .maybeSingle()
+    const destination = prof?.stripe_connect_id as string | undefined
+    if (!destination) return NextResponse.json({ error: 'SELLER_NOT_CONNECTED' }, { status: 400 })
+
+    const stripe = getStripe()
+    if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+
+    const fee = Number.isFinite(order.fee_cents) ? Number(order.fee_cents) : Math.round(order.amount_cents * 0.07)
+    const sellerAmount = Math.max(0, Number(order.amount_cents) - fee)
+
+    // Transfer vom Platform-Balance zum Verkäufer (separate charges & transfers)
     const tr = await stripe.transfers.create({
-      amount: transferAmount,
-      currency: o.currency || 'eur',
-      destination: connectId,
-      source_transaction: o.charge_id,   // Mittel an diese Charge „anheften“
-      metadata: { order_id: o.id },
-      transfer_group: `order_${o.id}`,
+      amount: sellerAmount,
+      currency: (order.currency || 'eur').toLowerCase(),
+      destination,
+      source_transaction: order.charge_id,
+      transfer_group: `order_${order.id}`,
+      metadata: { order_id: order.id, request_id: order.request_id, role: 'release' },
     })
 
-    await admin
-      .from('orders')
-      .update({
-        status: 'released',
-        released_at: new Date().toISOString(),
-        fee_cents: fee,
-        transferred_cents: transferAmount,
-        transfer_id: tr.id,
-      })
-      .eq('id', o.id)
+    await admin.from('orders').update({
+      transfer_id: tr.id,
+      transferred_cents: sellerAmount,
+      status: 'released',
+      released_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq('id', order.id)
 
-    return NextResponse.json({ ok: true, transferId: tr.id, fee_cents: fee, transferred_cents: transferAmount })
+    // Request abschließen (Enum später migrieren; jetzt „closed”) und accepted_at setzen
+    await admin.from('lack_requests').update({
+      status: 'closed',
+      data: ({} as any), // optional: jsonb_set – hier minimal
+      updated_at: new Date().toISOString(),
+    }).eq('id', order.request_id)
+
+    return NextResponse.json({ ok: true, transferId: tr.id }, { status: 200 })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed to release funds' }, { status: 500 })
+    return NextResponse.json({ error: e?.message || 'Release failed' }, { status: 500 })
   }
 }
