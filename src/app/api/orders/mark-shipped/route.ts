@@ -14,33 +14,57 @@ export async function POST(req: Request) {
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
     const admin = supabaseAdmin()
-    const { data: order } = await admin
+
+    const { data: order, error: oErr } = await admin
       .from('orders')
       .select('id, supplier_id, request_id, status')
       .eq('id', orderId)
       .maybeSingle()
+    if (oErr) return NextResponse.json({ error: oErr.message }, { status: 400 })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.supplier_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    if (order.status !== 'funds_held') return NextResponse.json({ error: 'Order not in funds_held' }, { status: 400 })
+    if (order.status !== 'funds_held') {
+      return NextResponse.json({ error: 'Order not in funds_held' }, { status: 400 })
+    }
 
     // auto_release in 28 Tagen
-    const autoReleaseAt = new Date(Date.now() + 28*24*60*60*1000).toISOString()
+    const now = Date.now()
+    const autoReleaseAt = new Date(now + 28 * 24 * 60 * 60 * 1000).toISOString()
+    const isoNow = new Date(now).toISOString()
 
-    await admin.from('orders').update({
-      auto_release_at: autoReleaseAt,
-      updated_at: new Date().toISOString(),
-    }).eq('id', orderId)
+    // Order markieren
+    const upd = await admin
+      .from('orders')
+      .update({ auto_release_at: autoReleaseAt, updated_at: isoNow })
+      .eq('id', orderId)
+    if (upd.error) return NextResponse.json({ error: upd.error.message }, { status: 400 })
 
-    // Markierung in Request.data (kein Enum-Wechsel nötig)
-    // jsonb_set(data,'{shipped_at}','"2025-...Z"', true)
-    await admin.rpc('jsonb_set_now_if_table_has_data', {  // Fallback ohne SQL-Fn:
-      // wenn du keine RPC hast, einfache UPDATE:
-    }).catch(async () => {
-      await admin.from('lack_requests').update({
-        data: { shipped_at: new Date().toISOString() } as any,
-        updated_at: new Date().toISOString(),
-      }).eq('id', order.request_id)
+    // Versuche optionales RPC (falls vorhanden), sonst Fallback
+    // HINWEIS: rpc() ist ein Builder – kein .catch() daran!
+    const rpcRes = await admin.rpc('jsonb_set_now_if_table_has_data', {
+      // falls deine Funktion Parameter erwartet, hier einsetzen
+      // z.B.: request_id: order.request_id
     })
+
+    if (rpcRes.error) {
+      // Fallback: JSON spalten-sicher updaten (vorher lesen, dann mergen)
+      const { data: reqRow, error: rErr } = await admin
+        .from('lack_requests')
+        .select('data')
+        .eq('id', order.request_id)
+        .maybeSingle()
+
+      if (rErr) return NextResponse.json({ error: rErr.message }, { status: 400 })
+
+      const mergedData = { ...(reqRow?.data ?? {}), shipped_at: isoNow }
+
+      const upReq = await admin
+        .from('lack_requests')
+        .update({ data: mergedData as any, updated_at: isoNow })
+        .eq('id', order.request_id)
+
+      if (upReq.error) return NextResponse.json({ error: upReq.error.message }, { status: 400 })
+    }
 
     return NextResponse.json({ ok: true }, { status: 200 })
   } catch (e: any) {
