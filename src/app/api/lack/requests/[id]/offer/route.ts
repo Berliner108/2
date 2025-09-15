@@ -54,13 +54,13 @@ function tzOffsetMsAt(utcMs: number, timeZone: string): number {
     +parts.minute,
     +parts.second
   )
-  return asUTC - utcMs // z.B. +7200000 bei UTC+2
+  return asUTC - utcMs // z. B. +7200000 bei UTC+2
 }
 
 /** Start des Tages 00:00:00.000 in TZ -> als UTC-Instant (DST-korrekt) */
 function zonedStartOfDayUTC(y: number, m: number, d: number, timeZone: string): Date {
   const utcMidnight = Date.UTC(y, m - 1, d, 0, 0, 0, 0)
-  let off1 = tzOffsetMsAt(utcMidnight, timeZone)
+  const off1 = tzOffsetMsAt(utcMidnight, timeZone)
   let inst = utcMidnight - off1 // Kandidat
   const off2 = tzOffsetMsAt(inst, timeZone)
   if (off2 !== off1) inst = utcMidnight - off2 // bei DST-Grenze korrigieren
@@ -68,12 +68,16 @@ function zonedStartOfDayUTC(y: number, m: number, d: number, timeZone: string): 
 }
 
 /* -------------------- Handler -------------------- */
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const stripe = getStripe()
     if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-    const requestId = params.id
+    // 🔧 Wichtig: params awaiten (Next.js 15)
+    const { id: requestId } = await params
     if (!requestId) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
 
     const sb = await supabaseServer()
@@ -106,7 +110,6 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
       )
     }
 
-    const amountCents = itemCents + shipCents
     const currency = String(body.currency || 'eur').toLowerCase()
     const message = typeof body.message === 'string' ? body.message : null
 
@@ -170,7 +173,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
        Wenn final <= now -> Angebot ablehnen (wäre sofort abgelaufen).
     */
     const nowMs = Date.now()
-    const plus72Ms = nowMs + 72 * 3600_000
+    const plus72Ms = nowMs + 72 * 3_600_000
 
     let capMs: number | null = null
     const ymd = toViennaYMD(reqRow.lieferdatum)
