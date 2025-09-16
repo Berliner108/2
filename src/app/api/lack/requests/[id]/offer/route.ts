@@ -217,16 +217,48 @@ export async function POST(
         { status: 409 }
       )
     } else {
-      const acct = await stripe.accounts.retrieve(connectId)
-      const ready = !!((acct as any)?.payouts_enabled && (acct as any)?.charges_enabled)
-      if (!ready) {
-        const url = await needsOnboard()
-        return NextResponse.json(
-          { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
-          { status: 409 }
-        )
-      }
+  const acct = await stripe.accounts.retrieve(connectId)
+  const ready = !!((acct as any)?.payouts_enabled && (acct as any)?.charges_enabled)
+  const countryNow = (acct as any)?.country as string | undefined
+
+  // Auto-Migration: falsches Land + noch nicht aktiviert -> neues Konto im Ziel-Land
+  if (!ready && countryNow && profileCountry && countryNow !== profileCountry) {
+    const newAcct = await stripe.accounts.create({
+      type: 'express',
+      country: profileCountry,      // AT/DE/CH/LI
+      business_type: businessType,  // 'company' | 'individual'
+      capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
+      metadata: { profile_id: user.id, replaced_account: String(connectId) },
+    })
+
+    connectId = newAcct.id
+    const { error: upErr2 } = await admin
+      .from('profiles')
+      .update({ stripe_connect_id: connectId })
+      .eq('id', user.id)
+    if (upErr2) {
+      return NextResponse.json({ error: `Fehler beim Aktualisieren der Stripe-ID: ${upErr2.message}` }, { status: 500 })
     }
+
+    const url = await needsOnboard()
+    return NextResponse.json(
+      { error: 'ONBOARDING_REQUIRED',
+        hinweis: `Es wurde ein neues Stripe-Konto im Land ${profileCountry} angelegt. Bitte Onboarding abschließen.`,
+        onboardUrl: url },
+      { status: 409 }
+    )
+  }
+
+  // sonst: normaler Onboarding-Hinweis
+  if (!ready) {
+    const url = await needsOnboard()
+    return NextResponse.json(
+      { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
+      { status: 409 }
+    )
+  }
+}
+
 
     /* -------- Angebotsexpiry korrekt berechnen --------
        Regel: expires_at = min(now+72h, Ende des Vortags des Lieferdatums in Europe/Vienna)
