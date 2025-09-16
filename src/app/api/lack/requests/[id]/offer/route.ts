@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs' // Node-Runtime sicherstellen (Stripe + fs etc.)
 
 /* -------------------- Utils -------------------- */
 function toInt(n: unknown, def = 0): number {
@@ -74,21 +75,21 @@ export async function POST(
 ) {
   try {
     const stripe = getStripe()
-    if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
+    if (!stripe) return NextResponse.json({ error: 'Stripe ist nicht konfiguriert' }, { status: 500 })
 
     // 🔧 Wichtig: params awaiten (Next.js 15)
     const { id: requestId } = await params
-    if (!requestId) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    if (!requestId) return NextResponse.json({ error: 'Ungültige Eingabe' }, { status: 400 })
 
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Nicht angemeldet' }, { status: 401 })
 
     let body: any = {}
     try {
       body = await _req.json()
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+      return NextResponse.json({ error: 'Ungültiges JSON' }, { status: 400 })
     }
 
     // beide Varianten akzeptieren
@@ -96,16 +97,16 @@ export async function POST(
     const shipCents = toInt((body.shipping_cents ?? body.shippingCents) ?? 0, NaN)
 
     if (!Number.isFinite(itemCents) || itemCents <= 0) {
-      return NextResponse.json({ error: 'itemAmountCents invalid', field: 'item_amount_cents' }, { status: 400 })
+      return NextResponse.json({ error: 'itemAmountCents ungültig', field: 'item_amount_cents' }, { status: 400 })
     }
     if (!Number.isFinite(shipCents) || shipCents < 0) {
-      return NextResponse.json({ error: 'shippingCents invalid', field: 'shipping_cents' }, { status: 400 })
+      return NextResponse.json({ error: 'shippingCents ungültig', field: 'shipping_cents' }, { status: 400 })
     }
 
     // 50%-Regel: Versand <= 50% vom Artikelpreis
     if (shipCents > Math.floor(itemCents * 0.5)) {
       return NextResponse.json(
-        { error: 'SHIPPING_TOO_HIGH', field: 'shipping_cents' },
+        { error: 'Versandkosten zu hoch', message: 'Versandkosten dürfen höchstens 50% des Artikelpreises betragen', field: 'shipping_cents' },
         { status: 400 }
       )
     }
@@ -122,21 +123,44 @@ export async function POST(
       .eq('id', requestId)
       .maybeSingle()
 
-    if (reqErr) return NextResponse.json({ error: reqErr.message }, { status: 400 })
-    if (!reqRow) return NextResponse.json({ error: 'Request not found' }, { status: 404 })
-    if (reqRow.owner_id === user.id) return NextResponse.json({ error: 'OWN_REQUEST' }, { status: 400 })
+    if (reqErr) return NextResponse.json({ error: `Abfragefehler: ${reqErr.message}` }, { status: 400 })
+    if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden' }, { status: 404 })
+    if (reqRow.owner_id === user.id) {
+      return NextResponse.json({ error: 'Du kannst keine Angebote zu deinen eigenen Anfragen abgeben' }, { status: 400 })
+    }
     if (reqRow.published === false || (reqRow.status && reqRow.status !== 'open')) {
-      return NextResponse.json({ error: 'Request not available' }, { status: 400 })
+      return NextResponse.json({ error: 'Anfrage ist derzeit nicht verfügbar' }, { status: 400 })
     }
 
-    // Connect-Gate
+    /* -------------------- Connect-Gate (mit AT/DE/CH/LI) -------------------- */
     const { data: prof } = await admin
       .from('profiles')
-      .select('stripe_connect_id')
+      .select('stripe_connect_id, address, account_type')
       .eq('id', user.id)
       .maybeSingle()
 
     let connectId = prof?.stripe_connect_id as string | undefined
+
+    // Helper: diverse Schreibweisen -> ISO-2 Code
+    function toCountryCode(v?: string): string | undefined {
+      if (!v) return undefined
+      const s = v.trim().toUpperCase()
+      const map: Record<string, string> = {
+        // Österreich
+        'ÖSTERREICH': 'AT', 'OESTERREICH': 'AT', 'AUSTRIA': 'AT', 'AT': 'AT',
+        // Deutschland
+        'DEUTSCHLAND': 'DE', 'GERMANY': 'DE', 'DE': 'DE',
+        // Schweiz
+        'SCHWEIZ': 'CH', 'SWITZERLAND': 'CH', 'SUISSE': 'CH', 'SVIZZERA': 'CH', 'CH': 'CH',
+        // Liechtenstein
+        'LIECHTENSTEIN': 'LI', 'FÜRSTENTUM LIECHTENSTEIN': 'LI', 'FUERSTENTUM LIECHTENSTEIN': 'LI', 'LI': 'LI',
+      }
+      return map[s] || (s.length === 2 ? s : undefined)
+    }
+
+    const profileCountry =
+      toCountryCode((prof as any)?.address?.country) || 'AT' // Default: AT
+    const businessType = prof?.account_type === 'business' ? 'company' : 'individual'
 
     const needsOnboard = async () => {
       const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '').replace(/\/$/, '')
@@ -150,21 +174,57 @@ export async function POST(
     }
 
     if (!connectId) {
-      const acct = await stripe.accounts.create({
-        type: 'express',
-        capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
-        metadata: { profile_id: user.id },
-      })
+      // Erstelle Express-Account mit Land aus Profil (AT/DE/CH/LI)
+      let acct
+      try {
+        acct = await stripe.accounts.create({
+          type: 'express',
+          country: profileCountry,      // <- wichtig: Land setzen
+          business_type: businessType,  // 'company' | 'individual'
+          capabilities: {
+            transfers: { requested: true },
+            card_payments: { requested: true },
+          },
+          metadata: { profile_id: user.id },
+        })
+      } catch (err: any) {
+        // Häufig: Land nicht für deine Connect-Einstellungen freigeschaltet
+        const msg = err?.message || 'Stripe-Fehler beim Erstellen des Kontos'
+        return NextResponse.json(
+          {
+            error: 'Stripe-Konto konnte nicht erstellt werden',
+            hinweis:
+              'Bitte prüfe in Stripe → Settings → Connect → Onboarding, ob das Land erlaubt ist (AT/DE/CH/LI).',
+            detail: msg,
+          },
+          { status: 400 }
+        )
+      }
+
       connectId = acct.id
-      await admin.from('profiles').update({ stripe_connect_id: connectId }).eq('id', user.id)
+
+      const { error: upErr } = await admin
+        .from('profiles')
+        .update({ stripe_connect_id: connectId })
+        .eq('id', user.id)
+      if (upErr) {
+        return NextResponse.json({ error: `Fehler beim Speichern der Stripe-ID: ${upErr.message}` }, { status: 500 })
+      }
+
       const url = await needsOnboard()
-      return NextResponse.json({ error: 'ONBOARDING_REQUIRED', onboardUrl: url }, { status: 409 })
+      return NextResponse.json(
+        { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
+        { status: 409 }
+      )
     } else {
       const acct = await stripe.accounts.retrieve(connectId)
       const ready = !!((acct as any)?.payouts_enabled && (acct as any)?.charges_enabled)
       if (!ready) {
         const url = await needsOnboard()
-        return NextResponse.json({ error: 'ONBOARDING_REQUIRED', onboardUrl: url }, { status: 409 })
+        return NextResponse.json(
+          { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
+          { status: 409 }
+        )
       }
     }
 
@@ -187,7 +247,10 @@ export async function POST(
 
     if (finalMs <= nowMs) {
       return NextResponse.json(
-        { error: 'Angebote können nur bis zum Vortag des Lieferdatums abgegeben werden', reason: 'Gültig nur bis zum Vortag des Lieferdatums.' },
+        {
+          error: 'Angebote können nur bis zum Vortag des Lieferdatums abgegeben werden',
+          reason: 'Gültig nur bis zum Vortag des Lieferdatums.',
+        },
         { status: 400 }
       )
     }
@@ -202,7 +265,7 @@ export async function POST(
         supplier_id: user.id,        // Verkäufer (auth.users.id)
         vendor_id: reqRow.owner_id,  // Käufer (profiles.id)
         status: 'active',
-        expires_at: expiresAt,       // <-- jetzt korrekt gekappt
+        expires_at: expiresAt,       // <-- korrekt gekappt
         currency,
         message,
 
@@ -216,13 +279,16 @@ export async function POST(
 
     if (ins.error) {
       if (String(ins.error.code) === '23505') {
-        return NextResponse.json({ error: 'ALREADY_OFFERED' }, { status: 409 })
+        return NextResponse.json(
+          { error: 'Bereits angeboten', hinweis: 'Du hast für diese Anfrage bereits ein Angebot abgegeben' },
+          { status: 409 }
+        )
       }
-      return NextResponse.json({ error: ins.error.message }, { status: 400 })
+      return NextResponse.json({ error: `Datenbankfehler: ${ins.error.message}` }, { status: 400 })
     }
 
     return NextResponse.json({ ok: true, offerId: ins.data.id }, { status: 200 })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Failed' }, { status: 500 })
+    return NextResponse.json({ error: e?.message || 'Unbekannter Fehler' }, { status: 500 })
   }
 }
