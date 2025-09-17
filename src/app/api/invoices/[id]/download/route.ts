@@ -1,12 +1,11 @@
 // src/app/api/invoices/[id]/download/route.ts
 import { NextResponse } from 'next/server'
-import PDFDocument from 'pdfkit'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { ensureInvoiceForOrder } from '@/server/invoices'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs' // wichtig für pdfkit
+export const runtime = 'nodejs' // wichtig: Serverless-Node für PDF/FS
 
 function isAdminEmail(email?: string | null) {
   const raw = process.env.ADMIN_EMAILS || ''
@@ -14,52 +13,7 @@ function isAdminEmail(email?: string | null) {
   return !!(email && list.includes(email.toLowerCase()))
 }
 
-function fmtCents(c?: number|null) {
-  if (c == null) return '—'
-  return (c / 100).toFixed(2)
-}
-function yyyymm(dateStr?: string|null) {
-  const d = dateStr ? new Date(dateStr) : new Date()
-  const y = d.getUTCFullYear()
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-  return { y, m }
-}
-
-async function buildInvoicePdfBuffer(inv: any): Promise<Buffer> {
-  const doc = new PDFDocument({ size: 'A4', margin: 48 })
-  const chunks: Buffer[] = []
-  doc.on('data', (c) => chunks.push(c))
-  const done = new Promise<Buffer>((resolve) => doc.on('end', () => resolve(Buffer.concat(chunks))))
-
-  const cur = String(inv.currency || 'EUR').toUpperCase()
-  doc.font('Helvetica')
-
-  doc.fontSize(18).text(`Rechnung ${inv.number ?? inv.id}`)
-  doc.moveDown()
-  doc.fontSize(12)
-  doc.text(`Ausgestellt: ${(inv.issued_at ?? inv.created_at ?? '').slice(0,10)}`)
-  doc.text(`Order-ID: ${inv.order_id}`)
-  doc.text(`Supplier: ${inv.supplier_id}`)
-  doc.text(`Buyer: ${inv.buyer_id}`)
-  if (inv.meta?.title) doc.text(`Titel: ${inv.meta.title}`)
-  doc.moveDown()
-  doc.text(`Gesamt (brutto): ${fmtCents(inv.total_gross_cents)} ${cur}`)
-  if (inv.fee_cents != null) doc.text(`Gebühr: ${fmtCents(inv.fee_cents)} ${cur}`)
-  if (inv.net_payout_cents != null) doc.text(`Auszahlung (netto): ${fmtCents(inv.net_payout_cents)} ${cur}`)
-  if (inv.payout_cents != null) doc.text(`Auszahlung: ${fmtCents(inv.payout_cents)} ${cur}`)
-  const fb = inv.meta?.fee_breakdown
-  if (fb) {
-    doc.moveDown().text('Gebührenaufschlüsselung:')
-    doc.text(`  MwSt-Satz: ${fb.vat_rate ?? '—'} %`)
-    doc.text(`  Netto: ${fmtCents(fb.net_cents)} ${cur}`)
-    doc.text(`  MwSt: ${fmtCents(fb.vat_cents)} ${cur}`)
-  }
-
-  doc.end()
-  return done
-}
-
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params
     if (!id) return NextResponse.json({ error: 'missing id' }, { status: 400 })
@@ -73,78 +27,100 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     const admin = supabaseAdmin()
     const isAdmin = isAdminEmail(user.email)
 
-    // 1) Rechnung per ID oder order_id holen
-    const byId = await admin.from('platform_invoices').select('*').eq('id', id).maybeSingle()
-    let invoice = !byId.error ? byId.data : null
-
+    // 1) Invoice per ID oder order_id holen
+    let invoice: any = null
+    {
+      const q = await admin.from('platform_invoices').select('*').eq('id', id).maybeSingle()
+      if (!q.error && q.data) invoice = q.data
+    }
     if (!invoice) {
-      const byOrder = await admin.from('platform_invoices').select('*').eq('order_id', id).maybeSingle()
-      if (!byOrder.error) invoice = byOrder.data
+      const q2 = await admin.from('platform_invoices').select('*').eq('order_id', id).maybeSingle()
+      if (!q2.error && q2.data) invoice = q2.data
     }
 
-    // 2) Falls nicht vorhanden: per Order erzeugen (idempotent)
+    // 2) Falls gar keine Invoice existiert -> Order prüfen & erzeugen
     if (!invoice) {
-      const ord = await admin.from('orders').select('id, supplier_id, released_at, kind').eq('id', id).maybeSingle()
+      const ord = await admin
+        .from('orders')
+        .select('id, supplier_id, released_at, kind')
+        .eq('id', id)
+        .maybeSingle()
       if (ord.error)  return NextResponse.json({ error: ord.error.message }, { status: 500 })
       const order = ord.data
       if (!order)     return NextResponse.json({ error: 'not found' }, { status: 404 })
+
       if (!isAdmin && order.supplier_id !== user.id) {
         return NextResponse.json({ error: 'forbidden' }, { status: 403 })
       }
       if (!order.released_at) {
         return NextResponse.json({ error: 'invoice not available yet' }, { status: 409 })
       }
+
       const gen = await ensureInvoiceForOrder(order.id)
       if ((gen as any)?.error) {
         return NextResponse.json({ error: (gen as any).error }, { status: 500 })
       }
-      const again = await admin.from('platform_invoices').select('*').eq('order_id', order.id).maybeSingle()
+
+      const again = await admin
+        .from('platform_invoices')
+        .select('*')
+        .eq('order_id', order.id)
+        .maybeSingle()
       if (again.error || !again.data) {
         return NextResponse.json({ error: again.error?.message || 'not found' }, { status: 404 })
       }
       invoice = again.data
     }
 
-    // Zugriff prüfen (Seller/Admin). Optional: buyer erlauben -> || invoice.buyer_id === user.id
+    // 3) Zugriff prüfen (Seller/Admin). Optional: Buyer erlauben -> || invoice.buyer_id === user.id
     const sellerId: string | undefined = invoice?.seller_id ?? invoice?.supplier_id
     if (!isAdmin && sellerId !== user.id) {
       return NextResponse.json({ error: 'forbidden' }, { status: 403 })
     }
 
-    // 3) Falls kein PDF: jetzt erzeugen, hochladen, pfad speichern
-    if (!invoice.pdf_path) {
-      const { y, m } = yyyymm(invoice.issued_at ?? invoice.created_at)
-      const base = sellerId || 'unknown-seller'
-      const fileName = `${invoice.number ?? invoice.id}.pdf`
-      const path = `${base}/${y}/${m}/${fileName}`
-
-      const pdfBuffer = await buildInvoicePdfBuffer(invoice)
-
-      const up = await admin.storage.from('invoices')
-        .upload(path, pdfBuffer, { contentType: 'application/pdf', upsert: true })
-      if (up.error) {
-        return NextResponse.json({ error: 'upload_failed', details: up.error.message }, { status: 500 })
+    // Helper zum Signieren + optionales Rebuild, wenn Objekt fehlt
+    async function signOrRebuildAndSign(inv: any): Promise<string> {
+      const trySign = async () => {
+        const r = await admin.storage
+          .from('invoices')
+          .createSignedUrl(inv.pdf_path, 600, { download: `${inv.number || 'invoice'}.pdf` })
+        if (r.error || !r.data?.signedUrl) throw new Error(r.error?.message || 'signing failed')
+        return r.data.signedUrl
       }
 
-      const upd = await admin.from('platform_invoices')
-        .update({ pdf_path: path })
-        .eq('id', invoice.id)
-        .select('pdf_path')
-        .single()
-      if (upd.error) {
-        return NextResponse.json({ error: 'db_update_failed', details: upd.error.message }, { status: 500 })
+      // a) Wenn Pfad vorhanden: versuchen zu signieren
+      if (inv.pdf_path) {
+        try {
+          return await trySign()
+        } catch (e: any) {
+          // Wenn Objekt fehlt (z. B. gelöscht), neu erzeugen
+          // -> ensureInvoiceForOrder liefert idempotent; danach pdf_path neu laden
+        }
       }
-      invoice.pdf_path = upd.data.pdf_path
+
+      // b) (Neu-)Erzeugen
+      const orderId = inv.order_id ?? id
+      const gen = await ensureInvoiceForOrder(orderId)
+      if ((gen as any)?.error) throw new Error((gen as any).error)
+
+      // c) pdf_path frisch laden
+      const ref = await admin
+        .from('platform_invoices')
+        .select('pdf_path, number')
+        .eq('id', inv.id)
+        .maybeSingle()
+      if (ref.error || !ref.data?.pdf_path) {
+        throw new Error(ref.error?.message || 'pdf_path_missing_after_generation')
+      }
+      inv.pdf_path = ref.data.pdf_path
+      inv.number = inv.number || ref.data.number
+
+      // d) signieren
+      return await trySign()
     }
 
-    // 4) Signierte URL liefern
-    const signed = await admin.storage.from('invoices').createSignedUrl(
-      invoice.pdf_path, 60, { download: `${invoice.number || 'invoice'}.pdf` }
-    )
-    if (signed.error || !signed.data?.signedUrl) {
-      return NextResponse.json({ error: signed.error?.message || 'signing failed' }, { status: 500 })
-    }
-    return NextResponse.redirect(signed.data.signedUrl)
+    const url = await signOrRebuildAndSign(invoice)
+    return NextResponse.redirect(url)
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'failed' }, { status: 500 })
   }

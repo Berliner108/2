@@ -17,14 +17,52 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const COMMISSION_RATE = 0.07 as const
 
+// ---------- Font-Ladung: FS -> HTTP (/public) -> Fallback ----------
 let _cachedFont: Buffer | null = null
-function getInvoiceFontBuffer(): Buffer {
-  if (_cachedFont) return _cachedFont
-  const rel = process.env.INVOICE_FONT_TTF || 'public/fonts/Inter-Regular.ttf'
-  const abs = path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel)
-  _cachedFont = fs.readFileSync(abs) // wirft, wenn Datei fehlt
-  return _cachedFont
+
+function publicUrlFromRel(rel: string): string | null {
+  // rel ist z. B. "public/fonts/Inter-Regular.ttf"
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')
+  if (!base) return null
+  const clean = rel.startsWith('public/') ? rel.slice('public'.length) : rel
+  const urlPath = clean.startsWith('/') ? clean : `/${clean}`
+  return `${base}${urlPath}`
 }
+
+async function loadInvoiceFontBuffer(): Promise<Buffer | null> {
+  if (_cachedFont) return _cachedFont
+
+  const rel = process.env.INVOICE_FONT_TTF || 'public/fonts/Inter-Regular.ttf'
+
+  // 1) Lokal/Dev: aus FS lesen (wirft in Lambda -> try/catch)
+  try {
+    const abs = path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel)
+    _cachedFont = fs.readFileSync(abs)
+    return _cachedFont
+  } catch {
+    // ignore, versuche HTTP
+  }
+
+  // 2) Prod/Lambda: per HTTP aus /public
+  try {
+    const url = publicUrlFromRel(rel)
+    if (url) {
+      const res = await fetch(url, { cache: 'no-store' })
+      if (res.ok) {
+        _cachedFont = Buffer.from(await res.arrayBuffer())
+        return _cachedFont
+      }
+    }
+  } catch {
+    // ignore, weiter zu Fallback
+  }
+
+  // 3) Fallback – keine eingebettete Schrift (nutze Helvetica)
+  return null
+}
+// -------------------------------------------------------------------
 
 function normalizeMultiline(v?: string) {
   return v ? v.replace(/\\n/g, '\n') : v
@@ -46,8 +84,12 @@ async function renderPdfBuffer(payload: {
   const doc = new PDFKit({ size: 'A4', margin: 56 }) // A4, ~2cm Rand
 
   // Schrift
-  const fontBuf = getInvoiceFontBuffer()
-  doc.registerFont('Body', fontBuf).font('Body')
+  const fontBuf = await loadInvoiceFontBuffer()
+  if (fontBuf) {
+    doc.registerFont('Body', fontBuf).font('Body')
+  } else {
+    doc.font('Helvetica')
+  }
 
   // Logo RECHTS OBEN (optional)
   const logoPath = process.env.INVOICE_LOGO_PATH
@@ -220,7 +262,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
   if (snap?.snapshot) {
     const s = snap.snapshot as any
     const displayName = s.display_name || s.full_name || s.name || null
-    sellerName = displayName || s.username || ''   // <<< FIX: displayName wirklich verwenden
+    sellerName = displayName || s.username || ''   // <<< displayName bevorzugen
     sellerCompany = s.company_name ?? null
     sellerVat = s.vat_number ?? null
     sellerAccountType = s.account_type ?? null
@@ -310,7 +352,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     meta: {
       request_id: order.request_id,
       offer_id:   order.offer_id,
-      title:      req?.title ?? null,
+      title:      (await admin.from('lack_requests').select('title').eq('id', order.request_id).maybeSingle()).data?.title ?? null,
       taxMode,
       fee_breakdown: { net_cents: net_amount_cents, vat_cents, vat_rate: applied_vat_rate },
     },
@@ -335,7 +377,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
       issuedAt,
       currency: (order.currency || 'eur'),
       orderId: order.id,
-      requestTitle: req?.title ?? null,
+      requestTitle: (await admin.from('lack_requests').select('title').eq('id', order.request_id).maybeSingle()).data?.title ?? null,
       offerId: offer?.id ?? null,
       grossCents: orderGrossCents,
       feeCents,
