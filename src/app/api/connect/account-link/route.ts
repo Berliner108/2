@@ -32,9 +32,9 @@ const normalizeCountry = (raw?: any): string => {
   if (/^[A-Za-z]{2}$/.test(t)) return t.toUpperCase()
   const s = t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const map: Record<string, string> = {
-    deutschland: 'DE', germany: 'DE', bundesrepublikdeutschland: 'DE',
-    oesterreich: 'AT', österreich: 'AT', austria: 'AT',
-    schweiz: 'CH', suisse: 'CH', switzerland: 'CH',
+    Deutschland: 'DE', germany: 'DE', bundesrepublikdeutschland: 'DE',
+    Österreich: 'AT', österreich: 'AT', austria: 'AT',
+    Schweiz: 'CH', suisse: 'CH', switzerland: 'CH',
     frankreich: 'FR', france: 'FR',
     italien: 'IT', italy: 'IT', italia: 'IT',
     niederlande: 'NL', netherlands: 'NL',
@@ -45,7 +45,7 @@ const normalizeCountry = (raw?: any): string => {
     vereinigtestaaten: 'US', unitedstates: 'US', usa: 'US',
     belgien: 'BE', belgium: 'BE',
     luxemburg: 'LU', luxembourg: 'LU',
-    liechtenstein: 'LI',
+    Liechtenstein: 'LI',
   }
   const key = s.replace(/[^a-z]/g, '')
   return map[key] || (process.env.STRIPE_DEFAULT_COUNTRY || 'DE').toUpperCase()
