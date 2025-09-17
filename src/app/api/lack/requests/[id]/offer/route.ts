@@ -132,133 +132,60 @@ export async function POST(
       return NextResponse.json({ error: 'Anfrage ist derzeit nicht verfügbar' }, { status: 400 })
     }
 
-    /* -------------------- Connect-Gate (mit AT/DE/CH/LI) -------------------- */
+    /* -------------------- Connect-Gate: nur PRÜFEN, nie ERSTELLEN -------------------- */
     const { data: prof } = await admin
       .from('profiles')
-      .select('stripe_connect_id, address, account_type')
+      .select('stripe_connect_id')
       .eq('id', user.id)
       .maybeSingle()
 
-    let connectId = prof?.stripe_connect_id as string | undefined
+    const connectId = prof?.stripe_connect_id as string | undefined
 
-    // Helper: diverse Schreibweisen -> ISO-2 Code
-    function toCountryCode(v?: string): string | undefined {
-      if (!v) return undefined
-      const s = v.trim().toUpperCase()
-      const map: Record<string, string> = {
-        // Österreich
-        'ÖSTERREICH': 'AT', 'OESTERREICH': 'AT', 'AUSTRIA': 'AT', 'AT': 'AT',
-        // Deutschland
-        'DEUTSCHLAND': 'DE', 'GERMANY': 'DE', 'DE': 'DE',
-        // Schweiz
-        'SCHWEIZ': 'CH', 'SWITZERLAND': 'CH', 'SUISSE': 'CH', 'SVIZZERA': 'CH', 'CH': 'CH',
-        // Liechtenstein
-        'LIECHTENSTEIN': 'LI', 'FÜRSTENTUM LIECHTENSTEIN': 'LI', 'FUERSTENTUM LIECHTENSTEIN': 'LI', 'LI': 'LI',
-      }
-      return map[s] || (s.length === 2 ? s : undefined)
-    }
-
-    const profileCountry =
-      toCountryCode((prof as any)?.address?.country) || 'AT' // Default: AT
-    const businessType = prof?.account_type === 'business' ? 'company' : 'individual'
-
-    const needsOnboard = async () => {
-      const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '').replace(/\/$/, '')
-      const link = await stripe.accountLinks.create({
-        account: connectId!,
-        type: 'account_onboarding',
-        refresh_url: `${base}/konto/einstellungen?connect=1`,
-        return_url: `${base}/konto/einstellungen?connect=1`,
-      })
-      return link.url
-    }
-
+    // 1) Kein Stripe-Account hinterlegt -> Client soll Onboarding/Erstellung starten
     if (!connectId) {
-      // Erstelle Express-Account mit Land aus Profil (AT/DE/CH/LI)
-      let acct
-      try {
-        acct = await stripe.accounts.create({
-          type: 'express',
-          country: profileCountry,      // <- wichtig: Land setzen
-          business_type: businessType,  // 'company' | 'individual'
-          capabilities: {
-            transfers: { requested: true },
-            card_payments: { requested: true },
-          },
-          metadata: { profile_id: user.id },
-        })
-      } catch (err: any) {
-        // Häufig: Land nicht für deine Connect-Einstellungen freigeschaltet
-        const msg = err?.message || 'Stripe-Fehler beim Erstellen des Kontos'
-        return NextResponse.json(
-          {
-            error: 'Stripe-Konto konnte nicht erstellt werden',
-            hinweis:
-              'Bitte prüfe in Stripe → Settings → Connect → Onboarding, ob das Land erlaubt ist (AT/DE/CH/LI).',
-            detail: msg,
-          },
-          { status: 400 }
-        )
-      }
-
-      connectId = acct.id
-
-      const { error: upErr } = await admin
-        .from('profiles')
-        .update({ stripe_connect_id: connectId })
-        .eq('id', user.id)
-      if (upErr) {
-        return NextResponse.json({ error: `Fehler beim Speichern der Stripe-ID: ${upErr.message}` }, { status: 500 })
-      }
-
-      const url = await needsOnboard()
       return NextResponse.json(
-        { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
+        {
+          error: 'ONBOARDING_REQUIRED',
+          action: 'CREATE_ACCOUNT',
+          endpoint: '/api/connect/account-link',
+          hinweis: 'Bitte Stripe-Onboarding starten.',
+        },
         { status: 409 }
       )
-    } else {
-  const acct = await stripe.accounts.retrieve(connectId)
-  const ready = !!((acct as any)?.payouts_enabled && (acct as any)?.charges_enabled)
-  const countryNow = (acct as any)?.country as string | undefined
-
-  // Auto-Migration: falsches Land + noch nicht aktiviert -> neues Konto im Ziel-Land
-  if (!ready && countryNow && profileCountry && countryNow !== profileCountry) {
-    const newAcct = await stripe.accounts.create({
-      type: 'express',
-      country: profileCountry,      // AT/DE/CH/LI
-      business_type: businessType,  // 'company' | 'individual'
-      capabilities: { transfers: { requested: true }, card_payments: { requested: true } },
-      metadata: { profile_id: user.id, replaced_account: String(connectId) },
-    })
-
-    connectId = newAcct.id
-    const { error: upErr2 } = await admin
-      .from('profiles')
-      .update({ stripe_connect_id: connectId })
-      .eq('id', user.id)
-    if (upErr2) {
-      return NextResponse.json({ error: `Fehler beim Aktualisieren der Stripe-ID: ${upErr2.message}` }, { status: 500 })
     }
 
-    const url = await needsOnboard()
-    return NextResponse.json(
-      { error: 'ONBOARDING_REQUIRED',
-        hinweis: `Es wurde ein neues Stripe-Konto im Land ${profileCountry} angelegt. Bitte Onboarding abschließen.`,
-        onboardUrl: url },
-      { status: 409 }
-    )
-  }
+    // 2) Konto existiert -> readiness prüfen
+    try {
+      const acct = await stripe.accounts.retrieve(connectId)
+      const transfersActive = acct.capabilities?.transfers === 'active'
+      const payoutsEnabled = !!acct.payouts_enabled
+      const ready = transfersActive && payoutsEnabled
 
-  // sonst: normaler Onboarding-Hinweis
-  if (!ready) {
-    const url = await needsOnboard()
-    return NextResponse.json(
-      { error: 'ONBOARDING_REQUIRED', hinweis: 'Bitte Stripe-Onboarding abschließen', onboardUrl: url },
-      { status: 409 }
-    )
-  }
-}
-
+      if (!ready) {
+        const base = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '').replace(/\/$/, '')
+        const link = await stripe.accountLinks.create({
+          account: connectId,
+          type: 'account_onboarding',
+          refresh_url: `${base}/konto/einstellungen?connect=1`,
+          return_url: `${base}/konto/einstellungen?connect=1`,
+        })
+        return NextResponse.json(
+          { error: 'ONBOARDING_REQUIRED', onboardUrl: link.url, hinweis: 'Bitte Onboarding abschließen.' },
+          { status: 409 }
+        )
+      }
+    } catch (e: any) {
+      // Konto ungültig/nicht zugreifbar -> zurück zum Erstellen per Onboarding-Route
+      return NextResponse.json(
+        {
+          error: 'CONNECT_ACCOUNT_INVALID',
+          action: 'CREATE_ACCOUNT',
+          endpoint: '/api/connect/account-link',
+          hinweis: 'Bitte Stripe-Onboarding neu starten.',
+        },
+        { status: 409 }
+      )
+    }
 
     /* -------- Angebotsexpiry korrekt berechnen --------
        Regel: expires_at = min(now+72h, Ende des Vortags des Lieferdatums in Europe/Vienna)

@@ -26,29 +26,43 @@ const baseUrl = (req: NextRequest) => {
   return origin || 'http://localhost:3000'
 }
 
+/**
+ * Mappt DB-Werte wie "Österreich", "Deutschland", "Schweiz", "Liechtenstein"
+ * sicher nach ISO-2 (AT/DE/CH/LI). Umlaute/Spaces werden entfernt.
+ */
 const normalizeCountry = (raw?: any): string => {
-  const t = String(raw || '').trim()
-  if (!t) return (process.env.STRIPE_DEFAULT_COUNTRY || 'DE').toUpperCase()
+  const t = String(raw ?? '').trim()
+  const fallback = (process.env.STRIPE_DEFAULT_COUNTRY || 'DE').toUpperCase()
+  if (!t) return fallback
+
+  // Akzeptiere bereits ISO-2
   if (/^[A-Za-z]{2}$/.test(t)) return t.toUpperCase()
+
+  // Diakritika entfernen, lowercasing, nur Buchstaben behalten
+  // "Österreich" -> "osterreich", "Liechtenstein" -> "liechtenstein"
   const s = t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  const map: Record<string, string> = {
-    Deutschland: 'DE', germany: 'DE', bundesrepublikdeutschland: 'DE',
-    Österreich: 'AT', österreich: 'AT', austria: 'AT',
-    Schweiz: 'CH', suisse: 'CH', switzerland: 'CH',
-    frankreich: 'FR', france: 'FR',
-    italien: 'IT', italy: 'IT', italia: 'IT',
-    niederlande: 'NL', netherlands: 'NL',
-    polen: 'PL', poland: 'PL',
-    spanien: 'ES', spain: 'ES',
-    portugal: 'PT',
-    tschechien: 'CZ', czechrepublic: 'CZ',
-    vereinigtestaaten: 'US', unitedstates: 'US', usa: 'US',
-    belgien: 'BE', belgium: 'BE',
-    luxemburg: 'LU', luxembourg: 'LU',
-    Liechtenstein: 'LI',
-  }
   const key = s.replace(/[^a-z]/g, '')
-  return map[key] || (process.env.STRIPE_DEFAULT_COUNTRY || 'DE').toUpperCase()
+
+  // Minimal nötiges Mapping (deine 4 Länder) + ein paar sinnvolle Aliase
+  const map: Record<string, string> = {
+    deutschand: 'DE', // Tippfehler-Fallschutz
+    deutschland: 'DE',
+    germany: 'DE',
+    bundesrepublikdeutschland: 'DE',
+
+    osterreich: 'AT',     // WICHTIG: "Österreich" -> "osterreich"
+    oesterreich: 'AT',
+    austria: 'AT',
+
+    schweiz: 'CH',
+    suisse: 'CH',
+    switzerland: 'CH',
+
+    liechtenstein: 'LI',
+    furstentumliechtenstein: 'LI',
+  }
+
+  return map[key] || fallback
 }
 
 const shouldNullOutAccount = (e: any): boolean => {
@@ -73,7 +87,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  // Body (nur für return_to relevant – Accounttyp ignorieren)
+  // Body (nur für return_to relevant)
   let body: any = {}
   try { body = await req.json() } catch {}
   const returnTo = typeof body?.return_to === 'string' ? body.return_to : null
@@ -89,7 +103,7 @@ export async function POST(req: NextRequest) {
     prof = up.data
   }
 
-  // Country bestimmen
+  // Country aus JSONB ziehen und normieren
   const rawCountry =
     (prof as any)?.address?.country ??
     (prof as any)?.address?.Country ??
@@ -119,12 +133,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Falls nötig: Konto neu anlegen (ohne business_type; Stripe fragt das im Onboarding)
+  // Falls nötig: Konto neu anlegen (Stripe fragt business_type im Onboarding)
   if (!accountId) {
     try {
       const acct = await stripe.accounts.create({
         type: 'express',
-        country,
+        country, // <-- hier kommt jetzt AT/DE/CH/LI korrekt an
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
