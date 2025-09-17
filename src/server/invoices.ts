@@ -340,8 +340,8 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
 
   // Plattform-Absender
   const platform = {
-    name:    process.env.INVOICE_ISSUER_NAME    || 'YourPlatform GmbH',
-    address: normalizeMultiline(process.env.INVOICE_ISSUER_ADDRESS || 'Musterstraße 1\n1010 Wien\nÖsterreich'),
+    name:    process.env.INVOICE_ISSUER_NAME    || 'Beschichter Scout GmbH',
+    address: normalizeMultiline(process.env.INVOICE_ISSUER_ADDRESS || 'Kärntnerstraße 1\n1010 Wien\nÖsterreich'),
     vatId:   process.env.INVOICE_ISSUER_VATID   || undefined,
   }
 
