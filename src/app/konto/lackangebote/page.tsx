@@ -667,9 +667,7 @@ const LackanfragenOrdersPage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-                <Link href={`/lackanfragen/artikel/${String(order.requestId)}`} className={styles.primaryBtn}>
-                  Zur Lackanfrage
-                </Link>
+                
                 {/* Verkäufer: Rechnung downloaden (sichtbar NACH Freigabe/Auto-Release) */}
                 {isVendor && order.status === 'confirmed' && (
                   <a
@@ -732,7 +730,7 @@ const LackanfragenOrdersPage: FC = () => {
                     onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
                     title="Gegenpartei bewerten"
                   >
-                    Gegenpartei bewerten
+                    Bewertung abgeben
                   </button>
                 )}
               </div>
