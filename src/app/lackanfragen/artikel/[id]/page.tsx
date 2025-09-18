@@ -327,7 +327,7 @@ function DeadlineBadge({ date }: { date: Date | null }) {
   if (!date) return null;
   const d = daysUntil(date);
   let text = '';
-  if (d < 0) text = `überfällig seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
+  if (d < 0) text = `abgeschlossen seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
   else if (d === 0) text = 'heute';
   else if (d === 1) text = 'morgen';
   else text = `in ${d} Tagen`;
