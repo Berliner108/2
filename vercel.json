@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "crons": [
+    { "path": "/api/cron/tick", "schedule": "*/3 * * * *" }
+  ]
+}
