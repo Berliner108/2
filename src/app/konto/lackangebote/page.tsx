@@ -575,7 +575,7 @@ const LackanfragenOrdersPage: FC = () => {
           const prodStatus = statusFromLiefer(liefer)
           const display =
             order.status === 'confirmed' ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const } :
-            order.status === 'disputed'  ? { key: 'fertig' as StatusKey, label: 'Reklamation offen' as const } :
+            order.status === 'disputed'  ? { key: 'fertig' as StatusKey, label: 'Reklamiert' as const } :
             order.status === 'reported'  ? { key: 'fertig' as StatusKey, label: 'Versandt' as const } :
             prodStatus
 
@@ -609,7 +609,7 @@ const LackanfragenOrdersPage: FC = () => {
                   display.label === 'Anlieferung geplant' ? styles.statusPending : '',
                   display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
                   display.label === 'Versandt' ? styles.statusPending : '',
-                  display.label === 'Reklamation offen' ? styles.statusPending : '',
+                  display.label === 'Reklamiert' ? styles.statusPending : '',
                   display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
                 ].join(' ').trim()}>
                   {display.label}
