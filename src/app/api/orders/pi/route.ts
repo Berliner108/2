@@ -1,4 +1,3 @@
-// /src/app/api/orders/pi/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { getStripe } from '@/lib/stripe'
@@ -23,21 +22,15 @@ export async function POST(req: Request) {
 
     if (ordErr)  return NextResponse.json({ error: ordErr.message }, { status: 400 })
     if (!ord)    return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-
     if (ord.buyer_id !== user.id && ord.supplier_id !== user.id) {
       return NextResponse.json({ error: 'No access' }, { status: 403 })
     }
-
     if (!ord.payment_intent_id) {
       return NextResponse.json({ error: 'PaymentIntent not yet created' }, { status: 400 })
     }
 
-    // Neu – erlaubt das Abholen des client_secret vor der Bestätigung
-const allowed = new Set([
-  'requires_confirmation',
-  'processing',
-])
-
+    // client_secret nur solange Checkout läuft / kurz danach
+    const allowed = new Set(['requires_confirmation','processing'])
     if (!allowed.has(String(ord.status))) {
       return NextResponse.json({ error: `Order is ${ord.status}, no client_secret available` }, { status: 400 })
     }
@@ -48,7 +41,7 @@ const allowed = new Set([
     // PI holen
     const pi = await stripe.paymentIntents.retrieve(ord.payment_intent_id)
 
-    // WICHTIG: Metadata-Backfill, damit der Webhook sicher mappen kann
+    // Metadata-Backfill, damit der Webhook sicher mappen kann
     const metaOrderId = (pi.metadata?.order_id ?? null)
     if (metaOrderId !== String(orderId)) {
       await stripe.paymentIntents.update(pi.id, {

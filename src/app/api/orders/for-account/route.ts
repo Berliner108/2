@@ -6,13 +6,21 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 type UiStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type UiKind   = 'vergeben' | 'angenommen'
 
-const uiStatus = (r: any): UiStatus =>
-  r.released_at ? 'confirmed'
-  : r.dispute_opened_at ? 'disputed'
-  : r.reported_at ? 'reported'
-  : 'in_progress'
+// UI-Status aus Order-Spalten ableiten (robust gegen neue Backend-Status)
+const uiStatus = (r: any): UiStatus => {
+  // bevorzugt harte Felder
+  if (r.released_at) return 'confirmed'
+  if (r.dispute_opened_at) return 'disputed'
+  if (r.reported_at) return 'reported'
+  // fallback: mappe orders.status, falls Felder leer
+  const s = String(r.status ?? '').toLowerCase()
+  if (s === 'released') return 'confirmed'
+  if (s === 'processing' || s === 'requires_confirmation' || s === 'funds_held') return 'in_progress'
+  if (s === 'canceled') return 'in_progress' // im UI nicht gesondert darstellen
+  return 'in_progress'
+}
 
-// aus lack_requests.data Menge in kg schätzen
+// Menge aus lack_requests.data best-effort schätzen
 function parseMenge(d?: Record<string, any> | null): number | undefined {
   if (!d) return undefined
   const cands = [d.menge, d.menge_kg, d.max_masse, d.gewicht, d.maxMasse, d.max_gewicht]
@@ -42,7 +50,7 @@ export async function GET() {
       .from('orders')
       .select(`
         id, created_at, buyer_id, supplier_id, kind, request_id, offer_id,
-        amount_cents, currency,
+        amount_cents, currency, status,
         reported_at, released_at, refunded_at, dispute_opened_at,
         auto_release_at, shipped_at, auto_refund_at
       `)
@@ -62,7 +70,7 @@ export async function GET() {
 
     const admin = supabaseAdmin()
 
-    // 2.5) Eigene Reviews zu diesen Orders holen → Button im FE ausblenden können
+    // 2.5) Eigene Reviews (damit FE "Bewerten"-Button ausblenden kann)
     let myReviewMap = new Map<string, { stars: number; comment: string }>()
     if (orderIds.length) {
       const { data: myRevs, error: myRevErr } = await admin
@@ -71,7 +79,6 @@ export async function GET() {
         .in('order_id', orderIds)
         .eq('rater_id', user.id)
       if (myRevErr) return NextResponse.json({ error: myRevErr.message }, { status: 500 })
-
       myReviewMap = new Map(
         (myRevs ?? []).map((r: any) => [
           String(r.order_id),
@@ -80,7 +87,7 @@ export async function GET() {
       )
     }
 
-    // 3) lack_offers -> item/shipping (optional)
+    // 3) lack_offers → item/shipping (optional)
     const offersById = new Map<string, { item_amount_cents: number | null; shipping_cents: number | null }>()
     if (offerIds.length) {
       const { data: ofs, error } = await admin
@@ -96,7 +103,7 @@ export async function GET() {
       }
     }
 
-    // 4) lack_requests -> Meta (optional)
+    // 4) lack_requests → Meta (optional)
     const reqById = new Map<string, any>()
     if (reqIds.length) {
       const { data: reqs, error } = await admin
@@ -107,7 +114,7 @@ export async function GET() {
       for (const r of reqs ?? []) reqById.set(String(r.id), r)
     }
 
-    // 5) profiles -> Anbieter (supplier) + optional Auftraggeber (owner)
+    // 5) profiles → Anbieter (supplier) + optional Auftraggeber (owner)
     const ownerIds = Array.from(new Set(
       Array.from(reqById.values()).map((r: any) => r.owner_id).filter(Boolean)
     )) as string[]
@@ -123,11 +130,11 @@ export async function GET() {
       for (const p of profs ?? []) profById.set(String(p.id), p as Prof)
     }
 
-    // 6) Mapper → UI-Objekt (inkl. myReview)
+    // 6) Mapper → UI-Objekt
     const toUi = (r: any) => {
       const kind: UiKind = r.buyer_id === user.id ? 'vergeben' : 'angenommen'
 
-      // Anbieter = profiles[supplier_id]
+      // Anbieter
       const vProf = r.supplier_id ? profById.get(String(r.supplier_id)) : undefined
       const vendorUsername = vProf?.username?.trim() || null
       const vendorDisplay  = vProf?.company_name?.trim() || null
@@ -142,17 +149,17 @@ export async function GET() {
       const ort   = req?.data?.ort ?? null
       const menge = parseMenge(req?.data ?? null)
 
-      // Auftraggeber-Profil (optional)
+      // Auftraggeber-Profil
       const oProf = req?.owner_id ? profById.get(String(req.owner_id)) : undefined
       const ownerHandle = oProf?.username?.trim() || null
       const ownerDisplay = oProf?.company_name?.trim() || null
-      const ownerRating = (typeof oProf?.rating_avg === 'number') ? oProf!.rating_avg : (oProf?.rating_avg != null ? Number(oProf.rating_avg) : null)
-      const ownerRatingCount = (typeof oProf?.rating_count === 'number') ? oProf!.rating_count : (oProf?.rating_count != null ? Number(oProf.rating_count) : null)
+      const ownerRating      = (typeof oProf?.rating_avg === 'number') ? oProf!.rating_avg : (oProf?.rating_avg != null ? Number(oProf.rating_avg) : null)
+      const ownerRatingCount = (typeof oProf?.rating_count === 'number') ? oProf!.rating_count : (oProf?.rating_count != null ? Number(oProf?.rating_count) : null)
 
       // Preisaufschlüsselung
       const off = r.offer_id ? offersById.get(String(r.offer_id)) : undefined
 
-      // Fallback-Deadlines
+      // Fallback-Deadlines (falls auto_* leer)
       const releaseAtUi =
         r.auto_release_at ??
         (r.reported_at ? addDaysIso(r.reported_at, 28) : null)
@@ -163,7 +170,7 @@ export async function GET() {
           ? new Date(new Date(req.lieferdatum).setHours(23, 59, 59, 999)).toISOString()
           : null)
 
-      // Eigene Bewertung zu dieser Order
+      // Eigene Bewertung
       const mine = myReviewMap.get(String(r.id))
       const myReview = mine
         ? { stars: Math.max(1, Math.min(5, Number(mine.stars))) as 1|2|3|4|5, text: String(mine.comment ?? '') }
@@ -173,10 +180,10 @@ export async function GET() {
         orderId: String(r.id),
         requestId: String(r.request_id),
         offerId: r.offer_id ?? undefined,
-        amountCents: r.amount_cents as number,
+        amountCents: Number(r.amount_cents),
         itemCents: (typeof off?.item_amount_cents === 'number') ? off!.item_amount_cents : undefined,
         shippingCents: (typeof off?.shipping_cents === 'number') ? off!.shipping_cents : undefined,
-        acceptedAt: r.created_at as string,
+        acceptedAt: String(r.created_at),
         kind,
 
         vendor: vendorName,
@@ -186,6 +193,8 @@ export async function GET() {
         vendorDisplay,
         vendorRating,
         vendorRatingCount,
+        vendorId: r.supplier_id ?? null,
+        ownerId : req?.owner_id ?? null,
 
         title,
         ort,
@@ -207,9 +216,7 @@ export async function GET() {
         autoRefundAt: refundAtUi ?? undefined,
         refundedAt: r.refunded_at ?? undefined,
 
-        // wichtig fürs FE
-        myReview,          // ← damit der Button verschwindet
-        // review: myReview // optionaler Fallback, falls altes FE noch 'review' liest
+        myReview,
       }
     }
 

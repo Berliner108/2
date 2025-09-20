@@ -1,4 +1,3 @@
-// /src/app/api/orders/create-payment-intent/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -7,9 +6,6 @@ import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
 
 type Body = { kind: 'lack' | 'auftrag'; requestId: string; offerId: string }
 const FOUR_WEEKS_MS = 28 * 24 * 60 * 60 * 1000
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
@@ -63,7 +59,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'SELLER_NOT_READY' }, { status: 400 })
     }
 
-    // --- Request gehört dem Käufer & ist offen? ---
+    // --- Request dem Käufer zuordnen & offen? ---
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id, status, published')
@@ -74,14 +70,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
     }
     if (reqRow.status !== 'open' || reqRow.published === false) {
-      // published bereits false → nicht re-öffnen
       return NextResponse.json({ error: 'REQUEST_NOT_OPEN' }, { status: 400 })
     }
 
     // --- Stripe Customer (Buyer) ---
     const customerId = await getOrCreateStripeCustomer(user.id, user.email || undefined)
 
-    // --- Order anlegen ---
+    // --- Order anlegen (noch nicht vergeben; keine Request-Änderung hier!) ---
     const feeCents = Math.round(amountCents * 0.07)
     const autoReleaseAt = new Date(Date.now() + FOUR_WEEKS_MS).toISOString()
     const { data: orderRow, error: insErr } = await admin
@@ -104,27 +99,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insErr?.message || 'Failed to create order' }, { status: 500 })
     }
 
-    // Request AUF "awarded" setzen & published=false (niemals wieder true)
-    const { error: reqUpdErr } = await admin
-      .from('lack_requests')
-      .update({
-        published: false,
-        status: 'awarded',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', requestId)
-      .eq('owner_id', user.id)
-      .eq('status', 'open')
-      .is('published', true)
-      .select('id')
-      .single()
-    if (reqUpdErr) {
-      // Aufräumen – keine „hängende“ Order ohne korrekt gesetztes Request
-      await admin.from('orders').delete().eq('id', orderRow.id)
-      return NextResponse.json({ error: 'REQUEST_UPDATE_FAILED' }, { status: 400 })
-    }
-
-    // --- PaymentIntent erstellen (separate charges/transfers) ---
+    // --- PaymentIntent erstellen ---
     const pi = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: (offer.currency || 'eur').toLowerCase(),
