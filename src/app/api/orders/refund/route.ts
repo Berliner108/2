@@ -1,3 +1,4 @@
+// /src/app/api/orders/refund/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -22,8 +23,8 @@ export async function POST(req: Request) {
       .maybeSingle()
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-    // Buyer darf reklamieren (oder Admin)
-    if (order.buyer_id !== user.id && process.env.NODE_ENV === 'production') {
+    // Nur Buyer darf reklamieren/erstatten (kein Admin-Bypass)
+    if (order.buyer_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     const stripe = getStripe()
     if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-    // Normalfall: noch kein Transfer erstellt → einfache Rückerstattung
+    // Noch kein Transfer → vollständige Rückerstattung an den Käufer
     const rf = await stripe.refunds.create({
       charge: order.charge_id,
       reason: reason && typeof reason === 'string' ? 'requested_by_customer' : undefined,
@@ -48,12 +49,12 @@ export async function POST(req: Request) {
       updated_at: new Date().toISOString(),
     }).eq('id', order.id)
 
-    // Anfrage zurücksetzen (wieder sichtbar machen)
+    // WICHTIG: Anfrage NICHT wieder veröffentlichen.
+    // published bleibt false; Status optional als 'cancelled' markieren.
     await admin.from('lack_requests').update({
-      status: 'open',
-      published: true,
+      status: 'cancelled',
+      // published NICHT ändern – bleibt false
       updated_at: new Date().toISOString(),
-      // optional: data->disputed_at setzen; weglassen für minimal
     }).eq('id', order.request_id)
 
     return NextResponse.json({ ok: true, refundId: rf.id }, { status: 200 })

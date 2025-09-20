@@ -1,10 +1,19 @@
 // /src/components/checkout/CheckoutModal.tsx
 'use client'
+
 import { useState } from 'react'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
 
-function Inner({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function Inner({
+  clientSecret,
+  onCloseAction,
+  onSuccessAction,
+}: {
+  clientSecret: string
+  onCloseAction: () => void
+  onSuccessAction: () => void
+}) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -13,17 +22,38 @@ function Inner({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => v
   const pay = async () => {
     if (!stripe || !elements) return
     setLoading(true); setError(null)
-    const { error, paymentIntent } = await stripe.confirmPayment({
+
+    // 1) Bestätigen (ohne Hard-Redirect)
+    const { error: confirmErr } = await stripe.confirmPayment({
       elements,
       redirect: 'if_required',
     })
-    setLoading(false)
-    if (error) {
-      setError(error.message || 'Zahlung fehlgeschlagen.')
+    if (confirmErr) {
+      setLoading(false)
+      setError(confirmErr.message || 'Zahlung fehlgeschlagen.')
       return
     }
-    onSuccess()
-    onClose()
+
+    // 2) Finalen Status verlässlich prüfen
+    const { paymentIntent, error: retrieveErr } = await stripe.retrievePaymentIntent(clientSecret)
+    setLoading(false)
+
+    if (retrieveErr || !paymentIntent) {
+      setError(retrieveErr?.message || 'Konnte Zahlungsstatus nicht ermitteln.')
+      return
+    }
+
+    const s = paymentIntent.status
+    if (s === 'succeeded' || s === 'processing') {
+      onSuccessAction()
+      onCloseAction()
+      return
+    }
+
+    if (s === 'requires_payment_method') setError('Zahlung abgebrochen oder andere Zahlungsmethode nötig.')
+    else if (s === 'requires_action')   setError('Zusätzliche Bestätigung erforderlich. Bitte erneut versuchen.')
+    else if (s === 'canceled')          setError('Zahlung abgebrochen.')
+    else                                setError(`Unbekannter Zahlungsstatus: ${s}`)
   }
 
   return (
@@ -31,7 +61,7 @@ function Inner({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => v
       <PaymentElement />
       {error && <div style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}
       <div style={{ display:'flex', gap:8, marginTop:12 }}>
-        <button onClick={onClose} disabled={loading} style={{ padding:'10px 12px', borderRadius:8, border:'1px solid #e5e7eb' }}>
+        <button onClick={onCloseAction} disabled={loading} style={{ padding:'10px 12px', borderRadius:8, border:'1px solid #e5e7eb' }}>
           Abbrechen
         </button>
         <button onClick={pay} disabled={loading} style={{ padding:'10px 12px', borderRadius:8, background:'#111827', color:'#fff' }}>
@@ -43,8 +73,16 @@ function Inner({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => v
 }
 
 export default function CheckoutModal({
-  clientSecret, open, onClose, onSuccess,
-}: { clientSecret: string | null; open: boolean; onClose: () => void; onSuccess: () => void }) {
+  clientSecret,
+  open,
+  onCloseAction,
+  onSuccessAction,
+}: {
+  clientSecret: string | null
+  open: boolean
+  onCloseAction: () => void
+  onSuccessAction: () => void
+}) {
   if (!open || !clientSecret) return null
   return (
     <div style={{
@@ -52,7 +90,7 @@ export default function CheckoutModal({
     }}>
       <div style={{ width: 'min(520px, 92vw)', borderRadius: 12, background:'#fff', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}>
         <Elements stripe={stripePromise!} options={{ clientSecret }}>
-          <Inner onClose={onClose} onSuccess={onSuccess} />
+          <Inner clientSecret={clientSecret} onCloseAction={onCloseAction} onSuccessAction={onSuccessAction} />
         </Elements>
       </div>
     </div>

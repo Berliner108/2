@@ -1,7 +1,9 @@
+// /src/app/api/orders/release/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
+import { ensureInvoiceForOrder } from '@/server/invoices'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,28 +19,34 @@ export async function POST(req: Request) {
     const admin = supabaseAdmin()
     const { data: order } = await admin
       .from('orders')
-      .select('id, buyer_id, supplier_id, amount_cents, fee_cents, currency, status, charge_id, transfer_id, request_id')
+      .select('id,buyer_id,supplier_id,amount_cents,fee_cents,currency,status,charge_id,transfer_id,request_id')
       .eq('id', orderId)
       .maybeSingle()
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-    // Nur Buyer (Freigeben) ODER Admin erlauben
-    if (order.buyer_id !== user.id && process.env.NODE_ENV === 'production') {
+    // Nur Buyer — KEIN Admin-Bypass
+    if (order.buyer_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     if (order.status !== 'funds_held') {
       return NextResponse.json({ error: 'Order not in releasable state' }, { status: 400 })
     }
-    if (!order.charge_id) {
-      return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
-    }
+    if (!order.charge_id) return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
+
+    // Idempotenz: Transfer existiert schon?
     if (order.transfer_id) {
-      // idempotent
-      return NextResponse.json({ ok: true, transferId: order.transfer_id }, { status: 200 })
+      // Rechnung sicherstellen (idempotent)
+      let invoiceUrl: string | undefined
+      try {
+        const { pdf_path } = await ensureInvoiceForOrder(order.id)
+        const signed = await admin.storage.from('invoices').createSignedUrl(pdf_path, 600)
+        if (!('error' in signed) || !signed.error) invoiceUrl = (signed as any).signedUrl
+      } catch {}
+      return NextResponse.json({ ok: true, transferId: order.transfer_id, invoiceUrl }, { status: 200 })
     }
 
-    // Connect-Ziel
+    // Ziel-Konto (Connect)
     const { data: prof } = await admin
       .from('profiles')
       .select('stripe_connect_id')
@@ -53,7 +61,7 @@ export async function POST(req: Request) {
     const fee = Number.isFinite(order.fee_cents) ? Number(order.fee_cents) : Math.round(order.amount_cents * 0.07)
     const sellerAmount = Math.max(0, Number(order.amount_cents) - fee)
 
-    // Transfer vom Platform-Balance zum Verkäufer (separate charges & transfers)
+    // Transfer (separate charges & transfers)
     const tr = await stripe.transfers.create({
       amount: sellerAmount,
       currency: (order.currency || 'eur').toLowerCase(),
@@ -71,14 +79,23 @@ export async function POST(req: Request) {
       updated_at: new Date().toISOString(),
     }).eq('id', order.id)
 
-    // Request abschließen (Enum später migrieren; jetzt „closed”) und accepted_at setzen
+    // Request final: paid (published bleibt false!)
     await admin.from('lack_requests').update({
-      status: 'closed',
-      data: ({} as any), // optional: jsonb_set – hier minimal
+      status: 'paid',
       updated_at: new Date().toISOString(),
     }).eq('id', order.request_id)
 
-    return NextResponse.json({ ok: true, transferId: tr.id }, { status: 200 })
+    // Rechnung erzeugen (idempotent)
+    let invoiceUrl: string | undefined
+    try {
+      const { pdf_path } = await ensureInvoiceForOrder(order.id)
+      const signed = await admin.storage.from('invoices').createSignedUrl(pdf_path, 600)
+      if (!('error' in signed) || !signed.error) invoiceUrl = (signed as any).signedUrl
+    } catch (err) {
+      console.error('[release] invoice generation failed:', err)
+    }
+
+    return NextResponse.json({ ok: true, transferId: tr.id, invoiceUrl }, { status: 200 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Release failed' }, { status: 500 })
   }

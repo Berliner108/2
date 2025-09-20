@@ -1,3 +1,4 @@
+// /src/app/api/orders/create-payment-intent/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -6,6 +7,9 @@ import { getOrCreateStripeCustomer } from '@/lib/stripe-customer'
 
 type Body = { kind: 'lack' | 'auftrag'; requestId: string; offerId: string }
 const FOUR_WEEKS_MS = 28 * 24 * 60 * 60 * 1000
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
@@ -59,7 +63,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'SELLER_NOT_READY' }, { status: 400 })
     }
 
-    // --- Request dem Käufer zuordnen & offen? (kurzer Guard, verhindert Fremd-Annahme) ---
+    // --- Request gehört dem Käufer & ist offen? ---
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id, status, published')
@@ -70,6 +74,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
     }
     if (reqRow.status !== 'open' || reqRow.published === false) {
+      // published bereits false → nicht re-öffnen
       return NextResponse.json({ error: 'REQUEST_NOT_OPEN' }, { status: 400 })
     }
 
@@ -99,12 +104,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: insErr?.message || 'Failed to create order' }, { status: 500 })
     }
 
-    // === MINI-PATCH: Request sofort schließen (published=false) ===
+    // Request AUF "awarded" setzen & published=false (niemals wieder true)
     const { error: reqUpdErr } = await admin
       .from('lack_requests')
       .update({
         published: false,
-        status: 'awarded', // falls du keinen Status pflegst, nimm diese Zeile raus
+        status: 'awarded',
         updated_at: new Date().toISOString(),
       })
       .eq('id', requestId)
@@ -114,20 +119,12 @@ export async function POST(req: Request) {
       .select('id')
       .single()
     if (reqUpdErr) {
-      // sauberes Aufräumen, damit keine Order ohne „geschlossenes“ Request bleibt
+      // Aufräumen – keine „hängende“ Order ohne korrekt gesetztes Request
       await admin.from('orders').delete().eq('id', orderRow.id)
       return NextResponse.json({ error: 'REQUEST_UPDATE_FAILED' }, { status: 400 })
     }
 
-    // (Optional) Offer-Status pflegen – nur wenn deine Enum/Strings das erlauben
-    // await admin.from('lack_offers')
-    //   .update({ status: 'accepted', updated_at: new Date().toISOString() })
-    //   .eq('id', offerId).eq('request_id', requestId)
-    // await admin.from('lack_offers')
-    //   .update({ status: 'declined', updated_at: new Date().toISOString() })
-    //   .eq('request_id', requestId).neq('id', offerId).in('status', ['active','accepted'])
-
-    // --- PaymentIntent erstellen ---
+    // --- PaymentIntent erstellen (separate charges/transfers) ---
     const pi = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: (offer.currency || 'eur').toLowerCase(),
@@ -147,10 +144,7 @@ export async function POST(req: Request) {
     })
 
     await admin.from('orders').update({ payment_intent_id: pi.id }).eq('id', orderRow.id)
-
-    if (!pi.client_secret) {
-      return NextResponse.json({ error: 'No client_secret' }, { status: 500 })
-    }
+    if (!pi.client_secret) return NextResponse.json({ error: 'No client_secret' }, { status: 500 })
 
     return NextResponse.json({ orderId: orderRow.id, clientSecret: pi.client_secret })
   } catch (e: any) {

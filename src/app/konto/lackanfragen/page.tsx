@@ -840,14 +840,15 @@ const LackanfragenAngebote: FC = () => {
       )}
 
       <CheckoutModal
-        clientSecret={clientSecret}
-        open={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        onSuccess={() => {
-          toastOk('Zahlung wurde gestartet.')
-          if (activeOrderId) router.push(`/konto/orders/${encodeURIComponent(activeOrderId)}`)
-        }}
-      />
+  clientSecret={clientSecret}
+  open={checkoutOpen}
+  onCloseAction={() => setCheckoutOpen(false)}
+  onSuccessAction={() => {
+    toastOk('Zahlung wurde gestartet.')
+    if (activeOrderId) router.push(`/konto/orders/${encodeURIComponent(activeOrderId)}`)
+  }}
+/>
+
 
       <Toast />
     </>
