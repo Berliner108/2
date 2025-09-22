@@ -196,7 +196,7 @@ const DEFAULTS = { q: '', sort: 'date_desc' as SortKey, tab: 'received' as TopSe
 const ALLOWED_SORTS: SortKey[] = ['date_desc','date_asc','price_desc','price_asc','delivery_asc','delivery_desc']
 
 const fetcher = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => {
+  fetch(url, { credentials: 'include', cache: 'no-store' }).then(r => {
     if (!r.ok) throw new Error('Laden fehlgeschlagen')
     return r.json()
   })
@@ -247,6 +247,11 @@ const LackanfragenAngebote: FC = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
+
+  // requestId, die nach ERFOLG lokal ausgeblendet werden sollen
+  const [hiddenAfterSuccess, setHiddenAfterSuccess] = useState<Set<string>>(new Set())
+  // merken, welche Request gerade bezahlt wird (zum späteren Hide)
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!confirmOffer) return
@@ -302,7 +307,7 @@ const LackanfragenAngebote: FC = () => {
     return toDateOrUndef(meta?.lieferdatum, meta?.delivery_at, meta?.data?.lieferdatum, meta?.data?.delivery_at)
   }
 
-  // Abgelaufene Angebote clientseitig herausfiltern (kein Interval mehr nötig)
+  // Abgelaufene Angebote clientseitig herausfiltern
   const receivedData = useMemo(() => {
     const now = Date.now()
     return receivedRaw.filter(o => {
@@ -359,7 +364,9 @@ const LackanfragenAngebote: FC = () => {
 
       return { requestId: String(id), title, offers, showNoOffersGroup, bestPrice, latest, deliveryTs }
     })
-    const visible = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
+    // Nur NACH Erfolg lokal ausblenden:
+    const visible0 = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
+    const visible = visible0.filter(g => !hiddenAfterSuccess.has(String(g.requestId)))
     visible.sort((a, b) => {
       if (sort === 'date_desc')      return b.latest - a.latest
       if (sort === 'date_asc')       return a.latest - b.latest
@@ -370,7 +377,7 @@ const LackanfragenAngebote: FC = () => {
       return 0
     })
     return visible
-  }, [OPEN_REQUEST_IDS, receivedData, query, sort, metaById])
+  }, [OPEN_REQUEST_IDS, receivedData, query, sort, metaById, hiddenAfterSuccess])
 
   const submitted = useMemo(() => {
     let arr = submittedData
@@ -449,7 +456,7 @@ const LackanfragenAngebote: FC = () => {
     } catch {}
   }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
 
-  // Badge „neu“ ausblenden wenn diese Seite geöffnet wird
+  // Badge „neu“
   useEffect(() => { try { localStorage.setItem('offers:lastSeen', String(Date.now())) } catch {} }, [])
 
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
@@ -490,17 +497,18 @@ const LackanfragenAngebote: FC = () => {
       }
       setConfirmOffer(null)
       setActiveOrderId(json.orderId || null)
-      // Nach Erfolg Daten neu holen
       await mutate()
       if (json.clientSecret) {
-  setClientSecret(json.clientSecret);
-  setCheckoutOpen(true);
-} else {
-  toastOk('Angebot angenommen.');
-  await mutate();   // optional: Liste aktualisieren
-  // KEIN router.push hier
-}
-
+        // NICHT ausblenden; erst nach Zahlungs-Erfolg
+        // Merke, welche Request wir nach Erfolg verstecken wollen
+        setPendingRequestId(String(confirmOffer.requestId))
+        setClientSecret(json.clientSecret)
+        setCheckoutOpen(true)
+      } else {
+        // (Fallback ohne PI/ClientSecret – sollte selten sein)
+        toastOk('Angebot angenommen.')
+        await mutate()
+      }
     } catch (e: any) {
       toastErr(e?.message || 'Konnte Angebot nicht annehmen.')
     } finally {
@@ -847,16 +855,29 @@ const LackanfragenAngebote: FC = () => {
       )}
 
       <CheckoutModal
-  clientSecret={clientSecret}
-  open={checkoutOpen}
-  onCloseAction={() => setCheckoutOpen(false)}
-  onSuccessAction={async () => {
-    toastOk('Zahlung gestartet.');
-    setCheckoutOpen(false);
-    await mutate();      // Daten neu laden
-    // KEIN router.push hier
-  }}
-/>
+        clientSecret={clientSecret}
+        open={checkoutOpen}
+        onCloseAction={() => setCheckoutOpen(false)}
+        onSuccessAction={async () => {
+          // Jetzt ERST (nach Erfolg) lokal ausblenden:
+          if (pendingRequestId) {
+            setHiddenAfterSuccess(prev => {
+              const n = new Set(prev); n.add(pendingRequestId); return n
+            })
+          }
+
+          toastOk('Zahlung erfolgreich.')
+          setCheckoutOpen(false)
+
+          // sanftes Polling, bis Webhook published=false gesetzt hat
+          for (let i = 0; i < 10; i++) {
+            await mutate()
+            const stillThere = OPEN_REQUEST_IDS.includes(String(pendingRequestId || ''))
+            if (!stillThere) break
+            await new Promise(r => setTimeout(r, 800))
+          }
+        }}
+      />
 
       <Toast />
     </>
