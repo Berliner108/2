@@ -492,8 +492,15 @@ const LackanfragenAngebote: FC = () => {
       setActiveOrderId(json.orderId || null)
       // Nach Erfolg Daten neu holen
       await mutate()
-      if (json.clientSecret) { setClientSecret(json.clientSecret); setCheckoutOpen(true) }
-      else { toastOk('Angebot angenommen.'); router.push(`/konto/orders/${encodeURIComponent(json.orderId)}`) }
+      if (json.clientSecret) {
+  setClientSecret(json.clientSecret);
+  setCheckoutOpen(true);
+} else {
+  toastOk('Angebot angenommen.');
+  await mutate();   // optional: Liste aktualisieren
+  // KEIN router.push hier
+}
+
     } catch (e: any) {
       toastErr(e?.message || 'Konnte Angebot nicht annehmen.')
     } finally {
@@ -843,12 +850,13 @@ const LackanfragenAngebote: FC = () => {
   clientSecret={clientSecret}
   open={checkoutOpen}
   onCloseAction={() => setCheckoutOpen(false)}
-  onSuccessAction={() => {
-    toastOk('Zahlung wurde gestartet.')
-    if (activeOrderId) router.push(`/konto/orders/${encodeURIComponent(activeOrderId)}`)
+  onSuccessAction={async () => {
+    toastOk('Zahlung gestartet.');
+    setCheckoutOpen(false);
+    await mutate();      // Daten neu laden
+    // KEIN router.push hier
   }}
 />
-
 
       <Toast />
     </>
