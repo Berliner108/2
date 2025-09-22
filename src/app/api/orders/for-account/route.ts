@@ -6,17 +6,15 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 type UiStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type UiKind   = 'vergeben' | 'angenommen'
 
-// UI-Status aus Order-Spalten ableiten (robust gegen neue Backend-Status)
+// UI-Status robust ableiten
 const uiStatus = (r: any): UiStatus => {
-  // bevorzugt harte Felder
-  if (r.released_at) return 'confirmed'
-  if (r.dispute_opened_at) return 'disputed'
-  if (r.reported_at) return 'reported'
-  // fallback: mappe orders.status, falls Felder leer
+  if (r.released_at)        return 'confirmed'
+  if (r.dispute_opened_at)  return 'disputed'
+  if (r.reported_at)        return 'reported'
   const s = String(r.status ?? '').toLowerCase()
-  if (s === 'released') return 'confirmed'
+  if (s === 'released')     return 'confirmed'
   if (s === 'processing' || s === 'requires_confirmation' || s === 'funds_held') return 'in_progress'
-  if (s === 'canceled') return 'in_progress' // im UI nicht gesondert darstellen
+  // 'canceled' etc. im UI nicht gesondert darstellen
   return 'in_progress'
 }
 
@@ -27,7 +25,7 @@ function parseMenge(d?: Record<string, any> | null): number | undefined {
   for (const c of cands) {
     const n = typeof c === 'string' ? parseFloat(c.replace(',', '.'))
             : typeof c === 'number' ? c : NaN
-    if (isFinite(n) && n > 0) return n
+    if (Number.isFinite(n) && n > 0) return n
   }
   return undefined
 }
@@ -38,12 +36,16 @@ const pickLiefer = (req: any) =>
 const addDaysIso = (iso: string, days: number) =>
   new Date(new Date(iso).getTime() + days * 86400_000).toISOString()
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
     if (!user)    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+    // Query-Flags
+    const url = new URL(req.url)
+    const includeCanceled = url.searchParams.get('includeCanceled') === '1'
 
     // 1) Alle Lack-Orders, wo du Buyer ODER Supplier bist
     const { data: orders, error: ordErr } = await sb
@@ -59,8 +61,16 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (ordErr) return NextResponse.json({ error: ordErr.message }, { status: 500 })
-    const rows = orders ?? []
-    if (rows.length === 0) return NextResponse.json({ vergeben: [], angenommen: [] })
+    let rows = orders ?? []
+
+    // Optional: stornierte/erstattete ausblenden (default)
+    if (!includeCanceled) {
+      rows = rows.filter(r => String(r.status).toLowerCase() !== 'canceled')
+    }
+
+    if (rows.length === 0) {
+      return NextResponse.json({ vergeben: [], angenommen: [] })
+    }
 
     // 2) IDs einsammeln
     const offerIds    = Array.from(new Set(rows.map(r => r.offer_id).filter(Boolean))) as string[]
@@ -70,7 +80,7 @@ export async function GET() {
 
     const admin = supabaseAdmin()
 
-    // 2.5) Eigene Reviews (damit FE "Bewerten"-Button ausblenden kann)
+    // 2.5) Eigene Reviews (damit FE "Bewerten"-Button ausblendet)
     let myReviewMap = new Map<string, { stars: number; comment: string }>()
     if (orderIds.length) {
       const { data: myRevs, error: myRevErr } = await admin
@@ -79,6 +89,7 @@ export async function GET() {
         .in('order_id', orderIds)
         .eq('rater_id', user.id)
       if (myRevErr) return NextResponse.json({ error: myRevErr.message }, { status: 500 })
+
       myReviewMap = new Map(
         (myRevs ?? []).map((r: any) => [
           String(r.order_id),
@@ -98,7 +109,7 @@ export async function GET() {
       for (const o of ofs ?? []) {
         offersById.set(String(o.id), {
           item_amount_cents: (o as any).item_amount_cents ?? null,
-          shipping_cents: (o as any).shipping_cents ?? null,
+          shipping_cents:    (o as any).shipping_cents ?? null,
         })
       }
     }
@@ -139,8 +150,8 @@ export async function GET() {
       const vendorUsername = vProf?.username?.trim() || null
       const vendorDisplay  = vProf?.company_name?.trim() || null
       const vendorName     = vendorDisplay || vendorUsername || 'Anbieter'
-      const vendorRating      = (typeof vProf?.rating_avg === 'number') ? vProf!.rating_avg : (vProf?.rating_avg != null ? Number(vProf.rating_avg) : null)
-      const vendorRatingCount = (typeof vProf?.rating_count === 'number') ? vProf!.rating_count : (vProf?.rating_count != null ? Number(vProf.rating_count) : null)
+      const vendorRating      = vProf?.rating_avg != null ? Number(vProf.rating_avg) : null
+      const vendorRatingCount = vProf?.rating_count != null ? Number(vProf.rating_count) : null
 
       // Request-Meta
       const req = reqById.get(String(r.request_id))
@@ -151,18 +162,17 @@ export async function GET() {
 
       // Auftraggeber-Profil
       const oProf = req?.owner_id ? profById.get(String(req.owner_id)) : undefined
-      const ownerHandle = oProf?.username?.trim() || null
-      const ownerDisplay = oProf?.company_name?.trim() || null
-      const ownerRating      = (typeof oProf?.rating_avg === 'number') ? oProf!.rating_avg : (oProf?.rating_avg != null ? Number(oProf.rating_avg) : null)
-      const ownerRatingCount = (typeof oProf?.rating_count === 'number') ? oProf!.rating_count : (oProf?.rating_count != null ? Number(oProf?.rating_count) : null)
+      const ownerHandle      = oProf?.username?.trim() || null
+      const ownerDisplay     = oProf?.company_name?.trim() || null
+      const ownerRating      = oProf?.rating_avg  != null ? Number(oProf.rating_avg) : null
+      const ownerRatingCount = oProf?.rating_count!= null ? Number(oProf.rating_count) : null
 
       // Preisaufschlüsselung
       const off = r.offer_id ? offersById.get(String(r.offer_id)) : undefined
 
       // Fallback-Deadlines (falls auto_* leer)
       const releaseAtUi =
-        r.auto_release_at ??
-        (r.reported_at ? addDaysIso(r.reported_at, 28) : null)
+        r.auto_release_at ?? (r.reported_at ? addDaysIso(r.reported_at, 28) : null)
 
       const refundAtUi =
         r.auto_refund_at ??
