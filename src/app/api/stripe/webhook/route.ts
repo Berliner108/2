@@ -139,26 +139,41 @@ export async function POST(req: Request) {
         const orderId   = pi.metadata?.order_id
         const offerId   = pi.metadata?.offer_id
         const requestId = pi.metadata?.lack_request_id || pi.metadata?.request_id
-        if (!orderId) break
+        if (!orderId || !offerId || !requestId) break
 
-        // Angebote finalisieren und Request auf 'awarded' (published bleibt false; NICHT wieder öffnen)
-        if (offerId && requestId) {
-          await admin.from('lack_offers')
-            .update({ status: 'accepted', updated_at: nowISO() })
-            .eq('id', offerId)
-            .eq('status', 'active')
+        // 1) Versuch, Request exklusiv zu vergeben (atomar + bedingt)
+        const { data: updatedReqs, error: reqUpdErr } = await admin
+          .from('lack_requests')
+          .update({ status: 'awarded', published: false, updated_at: nowISO() })
+          .eq('id', requestId)
+          .eq('status', 'open')
+          .is('published', true)
+          .select('id')
 
-          await admin.from('lack_offers')
-            .update({ status: 'declined', updated_at: nowISO() })
-            .eq('request_id', requestId)
-            .neq('id', offerId)
-            .eq('status', 'active')
+        if (reqUpdErr) throw reqUpdErr
 
-          await admin.from('lack_requests')
-            .update({ status: 'awarded', updated_at: nowISO() })
-            .eq('id', requestId)
+        const won = (updatedReqs ?? []).length === 1
+        if (!won) {
+          // Jemand war schneller → diese Order nicht finalisieren
+          await admin.from('orders')
+            .update({ status: 'canceled', updated_at: nowISO() })
+            .eq('id', orderId)
+          break
         }
 
+        // 2) Gewinner-Offer akzeptieren, andere ablehnen
+        await admin.from('lack_offers')
+          .update({ status: 'accepted', updated_at: nowISO() })
+          .eq('id', offerId)
+          .eq('status', 'active')
+
+        await admin.from('lack_offers')
+          .update({ status: 'declined', updated_at: nowISO() })
+          .eq('request_id', requestId)
+          .neq('id', offerId)
+          .eq('status', 'active')
+
+        // 3) Order fortschreiben
         const chargeId = getChargeIdFromPI(pi)
         await admin.from('orders').update({
           status: 'funds_held',
@@ -167,6 +182,7 @@ export async function POST(req: Request) {
           auto_release_at: addDaysISO(28),
           updated_at: nowISO(),
         }).eq('id', orderId)
+
         break
       }
 
@@ -178,7 +194,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ status: 'canceled', updated_at: nowISO() })
           .eq('id', orderId)
-        // lack_requests NICHT wieder öffnen
+        // lack_requests NICHT wieder öffnen (kein Re-Publish)
         break
       }
 
@@ -208,7 +224,6 @@ export async function POST(req: Request) {
 
       case 'transfer.failed':
       case 'transfer.reversed': {
-        // nur logging + Touch
         const tr = event.data.object as any
         console.warn('[stripe webhook]', event.type, tr.id)
         await admin.from('orders').update({ updated_at: nowISO() }).eq('transfer_id', tr.id)
