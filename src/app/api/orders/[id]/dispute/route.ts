@@ -1,9 +1,10 @@
+// /api/orders/[id]/dispute/route.ts  (kurz gehärtet)
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+export const runtime  = 'nodejs'
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
@@ -19,64 +20,37 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
     const nowIso = new Date().toISOString()
 
-    // Nur Käufer darf reklamieren; Bestellung darf noch nicht freigegeben sein
-    const payload: Record<string, any> = { dispute_opened_at: nowIso }
-    if (typeof reason === 'string' && reason.trim()) {
-      payload.dispute_reason = reason.trim()
-    }
-
+    // nur Käufer, nur solange funds_held, nicht released/refunded
     const { data: updated, error } = await sb
       .from('orders')
-      .update(payload)
+      .update({ dispute_opened_at: nowIso, updated_at: nowIso /* dispute_reason nur wenn Spalte existiert */ })
       .eq('id', id)
       .eq('kind', 'lack')
-      .eq('buyer_id', user.id)    // nur der Käufer
+      .eq('buyer_id', user.id)
+      .eq('status', 'funds_held')
       .is('released_at', null)
+      .is('refunded_at', null)
       .select('id, request_id')
       .limit(1)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     if (!updated || updated.length === 0) {
-      return NextResponse.json({ error: 'Reklamation unzulässig (evtl. schon freigegeben?)' }, { status: 409 })
+      return NextResponse.json({ error: 'Reklamation unzulässig' }, { status: 409 })
     }
 
-    // ---- lack_requests.data.disputed_at setzen (idempotent) ----
     const admin = supabaseAdmin()
     const reqId = updated[0].request_id
-    let rpcWorked = false
 
-    // A) Versuch via RPC
+    // Flag, damit cron/auto-release aussetzt
     try {
-      const { error: rpcErr } = await admin.rpc('jsonb_set_deep', {
-        table_name: 'lack_requests',
-        row_id: reqId,
-        path: ['data', 'disputed_at'],
-        value: nowIso,
-      })
-      if (rpcErr) throw rpcErr
-      rpcWorked = true
-    } catch {
-      // B) Fallback – klassisches Merge-Update
-      try {
-        const { data: reqRow, error: readErr } = await admin
-          .from('lack_requests')
-          .select('data')
-          .eq('id', reqId)
-          .maybeSingle()
-        if (readErr) throw readErr
-
-        const nextData = { ...(reqRow?.data || {}), disputed_at: nowIso }
-        const { error: upErr } = await admin
-          .from('lack_requests')
-          .update({ data: nextData })
-          .eq('id', reqId)
-        if (upErr) throw upErr
-      } catch (mergeErr) {
-        console.error('[orders/dispute] lack_requests.data Merge fehlgeschlagen:', (mergeErr as any)?.message)
-      }
+      const { data: reqRow } = await admin.from('lack_requests').select('data').eq('id', reqId).maybeSingle()
+      const nextData = { ...(reqRow?.data || {}), disputed_at: nowIso, dispute_reason: (reason || undefined) }
+      await admin.from('lack_requests').update({ data: nextData, status: 'mediated', updated_at: nowIso }).eq('id', reqId)
+    } catch (e) {
+      console.error('[orders/dispute] meta update failed', (e as any)?.message)
     }
 
-    return NextResponse.json({ ok: true, metaUpdatedVia: rpcWorked ? 'rpc' : 'merge' })
+    return NextResponse.json({ ok: true })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Fehlgeschlagen' }, { status: 500 })
   }

@@ -519,23 +519,16 @@ useEffect(() => {
   async function doDispute(o: LackOrder) {
     try {
       const reason = window.prompt('Problem melden (optional):') || ''
-      await apiPost(`/api/orders/${o.orderId}/dispute`, { reason })
+      await apiPost(`/api/orders/refund`, { orderId: o.orderId, reason })
       const nowIso = new Date().toISOString()
+const next = orders.map(x =>
+  x.orderId === o.orderId
+    ? { ...x, refundedAt: nowIso, status: 'in_progress' as const } // UI blendet canceled aus; refundedAt wird angezeigt
+    : x
+)
+persist(next)
+mutate()
 
-      const next: LackOrder[] = orders.map((x): LackOrder =>
-        x.orderId === o.orderId
-          ? {
-              ...x,
-              status: 'disputed' as OrderStatus,
-              disputeOpenedAt: nowIso,
-              disputeReason: reason || null,
-            }
-          : x
-      )
-
-      persist(next)
-      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
-      mutate()
     } catch (e: any) {
       alert(e?.message || 'Aktion fehlgeschlagen')
     }

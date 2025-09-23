@@ -1,3 +1,4 @@
+// /src/app/api/orders/[id]/ship/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -19,21 +20,25 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
     if (!user)   return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
     const now = new Date()
-    const autoRelease = new Date(now.getTime() + DAYS * 86400_000)
+    const nowIso = now.toISOString()
+    const autoRelease = new Date(now.getTime() + DAYS * 86400_000).toISOString()
 
-    // Verkäufer markiert „Versandt“ (nur wenn noch nicht gemeldet & nicht freigegeben)
+    // Verkäufer markiert „Versandt“
     const { data: updated, error } = await sb
       .from('orders')
       .update({
-        shipped_at: now.toISOString(),
-        reported_at: now.toISOString(),
-        auto_release_at: autoRelease.toISOString(),
+        shipped_at: nowIso,
+        reported_at: nowIso,
+        auto_release_at: autoRelease,
+        updated_at: nowIso,
       })
       .eq('id', id)
       .eq('kind', 'lack')
-      .eq('supplier_id', user.id)      // nur der Verkäufer
-      .is('released_at', null)
-      .is('reported_at', null)
+      .eq('supplier_id', user.id)      // nur der Verkäufer selbst
+      .eq('status', 'funds_held')      // nur solange Gelder gehalten werden
+      .is('released_at', null)         // nicht schon freigegeben
+      .is('refunded_at', null)         // nicht schon erstattet
+      .is('reported_at', null)         // nicht bereits gemeldet
       .select('id, request_id')
       .limit(1)
 
@@ -42,24 +47,28 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
       return NextResponse.json({ error: 'Bereits gemeldet oder unzulässig' }, { status: 409 })
     }
 
-    // ---- lack_requests.data.shipped_at setzen (idempotent) ----
+    // ---- lack_requests.data.{shipped_at,reported_at} setzen (idempotent) ----
     const admin = supabaseAdmin()
     const reqId = updated[0].request_id
-    const shippedIso = now.toISOString()
 
-    // A) Versuche RPC (falls du die Funktion jsonb_set_deep bereitgestellt hast)
     let rpcWorked = false
     try {
       const { error: rpcErr } = await admin.rpc('jsonb_set_deep', {
         table_name: 'lack_requests',
         row_id: reqId,
         path: ['data', 'shipped_at'],
-        value: shippedIso,
+        value: nowIso,
       })
       if (rpcErr) throw rpcErr
+      const { error: rpcErr2 } = await admin.rpc('jsonb_set_deep', {
+        table_name: 'lack_requests',
+        row_id: reqId,
+        path: ['data', 'reported_at'],
+        value: nowIso,
+      })
+      if (rpcErr2) throw rpcErr2
       rpcWorked = true
     } catch {
-      // B) Fallback – klassisches Merge-Update
       try {
         const { data: reqRow, error: readErr } = await admin
           .from('lack_requests')
@@ -68,14 +77,13 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
           .maybeSingle()
         if (readErr) throw readErr
 
-        const nextData = { ...(reqRow?.data || {}), shipped_at: shippedIso }
+        const nextData = { ...(reqRow?.data || {}), shipped_at: nowIso, reported_at: nowIso }
         const { error: upErr } = await admin
           .from('lack_requests')
-          .update({ data: nextData })
+          .update({ data: nextData, updated_at: nowIso })
           .eq('id', reqId)
         if (upErr) throw upErr
       } catch (mergeErr) {
-        // Fehler hier blockiert die Antwort nicht mehr (Versandmeldung ist schon gesetzt)
         console.error('[orders/ship] lack_requests.data Merge fehlgeschlagen:', (mergeErr as any)?.message)
       }
     }

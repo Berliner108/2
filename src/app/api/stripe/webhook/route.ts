@@ -131,6 +131,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ status: 'processing', payment_intent_id: pi.id, updated_at: nowISO() })
           .eq('id', orderId)
+          .eq('kind', 'lack') // 👈 nur lack-Orders anfassen
         break
       }
 
@@ -187,7 +188,7 @@ export async function POST(req: Request) {
                 payment_intent_id: pi.id,
                 charge_id: chargeId,
                 updated_at: nowISO(),
-              }).eq('id', orderId)
+              }).eq('id', orderId).eq('kind', 'lack') // 👈
             } catch (e: any) {
               console.error('[stripe webhook] refund on lost race failed', orderId, e?.message)
               // Fallback: zumindest als canceled markieren
@@ -196,7 +197,7 @@ export async function POST(req: Request) {
                 payment_intent_id: pi.id,
                 charge_id: chargeId,
                 updated_at: nowISO(),
-              }).eq('id', orderId)
+              }).eq('id', orderId).eq('kind', 'lack') // 👈
             }
           } else {
             // Kein chargeId? Dann nur Order abbrechen.
@@ -204,7 +205,7 @@ export async function POST(req: Request) {
               status: 'canceled',
               payment_intent_id: pi.id,
               updated_at: nowISO(),
-            }).eq('id', orderId)
+            }).eq('id', orderId).eq('kind', 'lack') // 👈
           }
           break
         }
@@ -227,9 +228,9 @@ export async function POST(req: Request) {
           payment_intent_id: pi.id,
           charge_id: chargeId,
           auto_release_at: addDaysISO(28),
-          auto_refund_at: autoRefundAt, // 👈 neu
+          auto_refund_at: autoRefundAt, // 👈
           updated_at: nowISO(),
-        }).eq('id', orderId)
+        }).eq('id', orderId).eq('kind', 'lack') // 👈
 
         break
       }
@@ -242,6 +243,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ status: 'canceled', updated_at: nowISO() })
           .eq('id', orderId)
+          .eq('kind', 'lack') // 👈
         // lack_requests NICHT wieder öffnen (kein Re-Publish)
         break
       }
@@ -251,6 +253,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ refunded_at: nowISO(), status: 'canceled', updated_at: nowISO() })
           .eq('charge_id', ch.id)
+          .eq('kind', 'lack') // 👈
         break
       }
 
@@ -259,6 +262,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ dispute_opened_at: nowISO(), updated_at: nowISO() })
           .eq('charge_id', ch.charge)
+          .eq('kind', 'lack') // 👈
         break
       }
 
@@ -267,6 +271,7 @@ export async function POST(req: Request) {
         await admin.from('orders')
           .update({ updated_at: nowISO() })
           .eq('charge_id', dp.charge)
+          .eq('kind', 'lack') // 👈
         break
       }
 
@@ -274,7 +279,10 @@ export async function POST(req: Request) {
       case 'transfer.reversed': {
         const tr = event.data.object as any
         console.warn('[stripe webhook]', event.type, tr.id)
-        await admin.from('orders').update({ updated_at: nowISO() }).eq('transfer_id', tr.id)
+        await admin.from('orders')
+          .update({ updated_at: nowISO() })
+          .eq('transfer_id', tr.id)
+          .eq('kind', 'lack') // 👈
         break
       }
 

@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
 import { ensureInvoiceForOrder } from '@/server/invoices'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
@@ -19,14 +20,29 @@ export async function POST(req: Request) {
     const admin = supabaseAdmin()
     const { data: order } = await admin
       .from('orders')
-      .select('id,buyer_id,supplier_id,amount_cents,fee_cents,currency,status,charge_id,transfer_id,request_id')
+      .select('id, kind, buyer_id, supplier_id, amount_cents, fee_cents, currency, status, charge_id, transfer_id, request_id')
       .eq('id', orderId)
       .maybeSingle()
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
+    // (1) Nur Lack-Bestellungen freigeben
+    if (order.kind !== 'lack') {
+      return NextResponse.json({ error: 'Wrong order kind' }, { status: 400 })
+    }
+
     // Nur Buyer — KEIN Admin-Bypass
     if (order.buyer_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // (2) Release blocken, falls Reklamation auf dem Request markiert ist
+    const { data: reqRow } = await admin
+      .from('lack_requests')
+      .select('data, status')
+      .eq('id', order.request_id)
+      .maybeSingle()
+    if (reqRow?.data?.disputed_at) {
+      return NextResponse.json({ error: 'Order is disputed' }, { status: 409 })
     }
 
     if (order.status !== 'funds_held') {
@@ -36,7 +52,6 @@ export async function POST(req: Request) {
 
     // Idempotenz: Transfer existiert schon?
     if (order.transfer_id) {
-      // Rechnung sicherstellen (idempotent)
       let invoiceUrl: string | undefined
       try {
         const { pdf_path } = await ensureInvoiceForOrder(order.id)
@@ -79,11 +94,13 @@ export async function POST(req: Request) {
       updated_at: new Date().toISOString(),
     }).eq('id', order.id)
 
-    // Request final: paid (published bleibt false!)
+    // (3) Request final auf paid – aber nur wenn noch nicht paid
     await admin.from('lack_requests').update({
       status: 'paid',
       updated_at: new Date().toISOString(),
-    }).eq('id', order.request_id)
+    })
+    .eq('id', order.request_id)
+    .neq('status', 'paid')
 
     // Rechnung erzeugen (idempotent)
     let invoiceUrl: string | undefined

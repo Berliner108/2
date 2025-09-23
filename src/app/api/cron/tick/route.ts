@@ -37,6 +37,7 @@ export async function GET(req: Request) {
         .select('id, created_at, charge_id, request_id, auto_refund_at')
         .eq('status', 'funds_held')
         .is('shipped_at', null)
+        .is('transfer_id', null)                 // 👈 NEU
         .not('charge_id', 'is', null)
         .lte('auto_refund_at', nowISO)
         .order('auto_refund_at', { ascending: true })
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
         .eq('status', 'funds_held')
         .is('auto_refund_at', null)
         .is('shipped_at', null)
+         .is('transfer_id', null)                 // 👈 NEU
         .not('charge_id', 'is', null)
         .lt('created_at', sevenDaysAgoISO)
         .order('created_at', { ascending: true })
@@ -111,6 +113,7 @@ export async function GET(req: Request) {
         .from('orders')
         .select('id, amount_cents, fee_cents, currency, charge_id, supplier_id, request_id, auto_release_at')
         .eq('status', 'funds_held')
+        .is('transfer_id', null)                 // 👈 NEU
         .not('charge_id', 'is', null)
         .lte('auto_release_at', nowISO)
         .order('auto_release_at', { ascending: true })

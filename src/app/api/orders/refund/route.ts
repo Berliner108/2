@@ -18,43 +18,57 @@ export async function POST(req: Request) {
     const admin = supabaseAdmin()
     const { data: order } = await admin
       .from('orders')
-      .select('id, buyer_id, supplier_id, status, charge_id, transfer_id, request_id')
+      .select('id,buyer_id,status,charge_id,transfer_id,request_id,refunded_at')
       .eq('id', orderId)
       .maybeSingle()
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-    // Nur Buyer darf reklamieren/erstatten (kein Admin-Bypass)
+    // Nur der Käufer
     if (order.buyer_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (order.status !== 'funds_held') {
+    // Idempotenz: schon storniert/erstattet?
+    const s = String(order.status || '').toLowerCase()
+    if (s === 'canceled' || order.refunded_at) {
+      return NextResponse.json({ ok: true, already: true }, { status: 200 })
+    }
+
+    // Nur solange Gelder noch bei der Plattform liegen
+    if (s !== 'funds_held') {
       return NextResponse.json({ error: 'Order not refundable' }, { status: 400 })
     }
-    if (!order.charge_id) return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
+    if (!order.charge_id) {
+      return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
+    }
+
+    // Wurde bereits an den Verkäufer transferiert? -> hier KEIN normaler Refund mehr möglich
+    if (order.transfer_id) {
+      return NextResponse.json({ error: 'Already transferred to seller' }, { status: 409 })
+    }
 
     const stripe = getStripe()
     if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-    // Noch kein Transfer → vollständige Rückerstattung an den Käufer
+    // Vollständige Rückerstattung
     const rf = await stripe.refunds.create({
       charge: order.charge_id,
-      reason: reason && typeof reason === 'string' ? 'requested_by_customer' : undefined,
-      metadata: { order_id: order.id, request_id: order.request_id },
+      reason: typeof reason === 'string' && reason.trim() ? 'requested_by_customer' : undefined,
+      metadata: { order_id: String(order.id), request_id: String(order.request_id) },
     })
 
+    const nowIso = new Date().toISOString()
+
     await admin.from('orders').update({
-      refunded_at: new Date().toISOString(),
+      refunded_at: nowIso,
       status: 'canceled',
-      updated_at: new Date().toISOString(),
+      updated_at: nowIso,
     }).eq('id', order.id)
 
-    // WICHTIG: Anfrage NICHT wieder veröffentlichen.
-    // published bleibt false; Status optional als 'cancelled' markieren.
+    // Anfrage NICHT neu veröffentlichen; nur Status setzen
     await admin.from('lack_requests').update({
       status: 'cancelled',
-      // published NICHT ändern – bleibt false
-      updated_at: new Date().toISOString(),
+      updated_at: nowIso,
     }).eq('id', order.request_id)
 
     return NextResponse.json({ ok: true, refundId: rf.id }, { status: 200 })
