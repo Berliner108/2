@@ -1,4 +1,4 @@
-// /api/orders/[id]/dispute/route.ts  (kurz gehärtet)
+// /src/app/api/orders/[id]/dispute/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -41,11 +41,24 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const admin = supabaseAdmin()
     const reqId = updated[0].request_id
 
-    // Flag, damit cron/auto-release aussetzt
+    // Flag + optionaler Grund in lack_requests.data (kein Schema-Change)
     try {
-      const { data: reqRow } = await admin.from('lack_requests').select('data').eq('id', reqId).maybeSingle()
-      const nextData = { ...(reqRow?.data || {}), disputed_at: nowIso, dispute_reason: (reason || undefined) }
-      await admin.from('lack_requests').update({ data: nextData, status: 'mediated', updated_at: nowIso }).eq('id', reqId)
+      const { data: reqRow } = await admin
+        .from('lack_requests')
+        .select('data')
+        .eq('id', reqId)
+        .maybeSingle()
+
+      const nextData = {
+        ...(reqRow?.data || {}),
+        disputed_at: nowIso,
+        ...(reason && reason.trim() ? { dispute_reason: reason.trim() } : {}),
+      }
+
+      await admin
+        .from('lack_requests')
+        .update({ data: nextData, status: 'mediated', updated_at: nowIso })
+        .eq('id', reqId)
     } catch (e) {
       console.error('[orders/dispute] meta update failed', (e as any)?.message)
     }
