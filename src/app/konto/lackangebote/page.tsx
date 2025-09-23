@@ -283,6 +283,10 @@ useEffect(() => {
   const [rateOrderId, setRateOrderId] = useState<string | null>(null)
   const [ratingText, setRatingText] = useState('')
   const [ratingStars, setRatingStars] = useState<1|2|3|4|5>(5)
+  // Dispute (Modal)
+  const [disputeOrder, setDisputeOrder] = useState<LackOrder | null>(null)
+  const [disputeText, setDisputeText] = useState('')
+
 
   // Ticker
   const [, setNowTick] = useState(Date.now())
@@ -293,11 +297,14 @@ useEffect(() => {
 
   // ESC schließt Modals
   useEffect(() => {
-    if (shipOrder == null && rateOrderId == null) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setShipOrder(null); setRateOrderId(null) } }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [shipOrder, rateOrderId])
+  if (shipOrder == null && rateOrderId == null && disputeOrder == null) return
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { setShipOrder(null); setRateOrderId(null); setDisputeOrder(null) }
+  }
+  window.addEventListener('keydown', onKey)
+  return () => window.removeEventListener('keydown', onKey)
+}, [shipOrder, rateOrderId, disputeOrder])
+
 
   /* ---------- Auto-Freigabe (Käufer inaktiv nach „Versandt“) ---------- */
   const runAutoRelease = () => {
@@ -516,23 +523,39 @@ useEffect(() => {
 }
 
 
-  async function doDispute(o: LackOrder) {
-    try {
-      const reason = window.prompt('Problem melden (optional):') || ''
-      await apiPost(`/api/orders/refund`, { orderId: o.orderId, reason })
-      const nowIso = new Date().toISOString()
-const next = orders.map(x =>
-  x.orderId === o.orderId
-    ? { ...x, refundedAt: nowIso, status: 'in_progress' as const } // UI blendet canceled aus; refundedAt wird angezeigt
-    : x
-)
-persist(next)
-mutate()
+  function openDispute(o: LackOrder) {
+  setDisputeOrder(o)
+  setDisputeText('')
+}
 
-    } catch (e: any) {
-      alert(e?.message || 'Aktion fehlgeschlagen')
-    }
+function cancelDispute() {
+  setDisputeOrder(null)
+  setDisputeText('')
+}
+
+async function confirmDispute() {
+  if (!disputeOrder) return
+  try {
+    const reason = disputeText.trim()
+    // WICHTIG: richtige API-Route
+    await apiPost(`/api/orders/${disputeOrder.orderId}/dispute`, { reason })
+
+    const nowIso = new Date().toISOString()
+    const next: LackOrder[] = orders.map((x): LackOrder =>
+      x.orderId === disputeOrder.orderId
+        ? { ...x, status: 'disputed' as const, disputeOpenedAt: nowIso, disputeReason: reason || null }
+        : x
+    )
+    persist(next)
+    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+    setDisputeOrder(null)
+    setDisputeText('')
+    mutate()
+  } catch (e: any) {
+    alert(e?.message || 'Aktion fehlgeschlagen')
   }
+}
+
 
   function remainingText(iso?: string) {
     if (!iso) return '–'
@@ -699,9 +722,14 @@ mutate()
                     >
                       Empfang bestätigen & Zahlung freigeben
                     </button>
-                    <button type="button" className={styles.btnGhost} onClick={() => doDispute(order)}>
-                      Problem melden
-                    </button>
+                    <button
+                        type="button"
+                        className={styles.btnGhost}
+                        onClick={() => openDispute(order)}
+                      >
+                        Problem melden
+                      </button>
+
                     <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
                   </div>
                 )}
@@ -888,6 +916,41 @@ mutate()
           </div>
         </div>
       )}
+      {/* Modal: Reklamation (Dispute) */}
+{disputeOrder !== null && (
+  <div
+    className={styles.modal}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="disputeTitle"
+    onClick={(e) => { if (e.target === e.currentTarget) cancelDispute() }}
+  >
+    <div className={styles.modalContent}>
+      <h3 id="disputeTitle" className={styles.modalTitle}>Problem melden</h3>
+      <p className={styles.modalText}>
+        Beschreibe kurz das Problem (optional). Wir informieren den Anbieter; die Auto-Freigabe pausiert.
+      </p>
+
+      <textarea
+        className={styles.reviewBox}
+        value={disputeText}
+        onChange={e => setDisputeText(e.target.value.slice(0, 800))}
+
+        placeholder="z. B. Menge/Qualität weicht ab…"
+        rows={4}
+      />
+      <div className={styles.btnHint} aria-live="polite">{disputeText.trim().length}/800</div>
+
+      <div className={styles.modalActions}>
+        <button type="button" className={styles.btnGhost} onClick={cancelDispute}>Abbrechen</button>
+        <button type="button" className={styles.btnDanger} onClick={confirmDispute}>
+          Reklamation senden
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Modal: Bewertung (beide Rollen, jederzeit, solange nicht bereits bewertet) */}
       {rateOrderId !== null && (
