@@ -36,6 +36,14 @@ const pickLiefer = (req: any) =>
 const addDaysIso = (iso: string, days: number) =>
   new Date(new Date(iso).getTime() + days * 86400_000).toISOString()
 
+const endOfDayIso = (iso?: string | null) => {
+  if (!iso) return undefined
+  const d = new Date(iso)
+  if (isNaN(+d)) return undefined
+  d.setHours(23, 59, 59, 999)
+  return d.toISOString()
+}
+
 export async function GET(req: Request) {
   try {
     const sb = await supabaseServer()
@@ -174,11 +182,14 @@ export async function GET(req: Request) {
       const releaseAtUi =
         r.auto_release_at ?? (r.reported_at ? addDaysIso(r.reported_at, 28) : null)
 
-      const refundAtUi =
-        r.auto_refund_at ??
-        (req?.lieferdatum
-          ? new Date(new Date(req.lieferdatum).setHours(23, 59, 59, 999)).toISOString()
-          : null)
+      // ⚠ Gleich wie Cron: min(created_at+7d, Ende Lieferdatum)
+      const sevenDaysAfter = addDaysIso(r.created_at, 7)
+      const eodLiefer      = endOfDayIso(lieferdatum)
+      const minAutoRefund  =
+        eodLiefer ? new Date(Math.min(+new Date(sevenDaysAfter), +new Date(eodLiefer))).toISOString()
+                  : sevenDaysAfter
+
+      const refundAtUi = r.auto_refund_at ?? minAutoRefund
 
       // Eigene Bewertung
       const mine = myReviewMap.get(String(r.id))

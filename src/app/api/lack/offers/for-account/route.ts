@@ -52,7 +52,7 @@ export async function GET() {
       .from('lack_requests')
       .select('id, title, lieferdatum, delivery_at, data, status, published')
       .eq('owner_id', user.id)
-      .in('status', ['open', 'awarded'])
+      .eq('status', 'open')
 
     if (reqErr) return NextResponse.json({ error: reqErr.message }, { status: 400 })
 

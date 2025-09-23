@@ -5,6 +5,8 @@ import { useState } from 'react'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
 
+type SuccessPayload = { status: string; paymentIntentId?: string }
+
 function Inner({
   clientSecret,
   onCloseAction,
@@ -12,7 +14,7 @@ function Inner({
 }: {
   clientSecret: string
   onCloseAction: () => void
-  onSuccessAction: () => void
+  onSuccessAction: (payload?: SuccessPayload) => void
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -34,7 +36,7 @@ function Inner({
       return
     }
 
-    // 2) Finalen Status verlässlich prüfen
+    // 2) Finalen Status prüfen (reliable)
     const { paymentIntent, error: retrieveErr } = await stripe.retrievePaymentIntent(clientSecret)
     setLoading(false)
 
@@ -45,7 +47,7 @@ function Inner({
 
     const s = paymentIntent.status
     if (s === 'succeeded' || s === 'processing') {
-      onSuccessAction()
+      onSuccessAction({ status: s, paymentIntentId: paymentIntent.id })
       onCloseAction()
       return
     }
@@ -81,7 +83,7 @@ export default function CheckoutModal({
   clientSecret: string | null
   open: boolean
   onCloseAction: () => void
-  onSuccessAction: () => void
+  onSuccessAction: (payload?: SuccessPayload) => void
 }) {
   if (!open || !clientSecret) return null
   return (

@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
+import { ensureInvoiceForOrder } from '@/server/invoices'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,6 @@ const BATCH = 200
 const SEVEN_D_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(req: Request) {
-  // Optional: nur von Vercel-Cron zulassen
   if (process.env.REQUIRE_CRON_HEADER === '1') {
     const isCron = req.headers.get('x-vercel-cron') === '1'
     if (!isCron) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
@@ -21,30 +21,45 @@ export async function GET(req: Request) {
   if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
   const now = Date.now()
+  const nowISO = new Date(now).toISOString()
   const sevenDaysAgoISO = new Date(now - SEVEN_D_MS).toISOString()
 
-  // ===== 1) AUTO-REFUND (kein Versand in 7 Tagen)
+  // ===== 1) AUTO-REFUND (kein Versand bis auto_refund_at; Fallback: 7 Tage)
   try {
     let page = 0
     while (true) {
       const from = page * BATCH
       const to = from + (BATCH - 1)
 
-      const { data: rows, error } = await admin
+      // Pass A: auto_refund_at überschritten
+      const { data: aRows, error: aErr } = await admin
         .from('orders')
-        .select('id, created_at, charge_id, request_id')
+        .select('id, created_at, charge_id, request_id, auto_refund_at')
         .eq('status', 'funds_held')
         .is('shipped_at', null)
         .not('charge_id', 'is', null)
-        .lt('created_at', sevenDaysAgoISO)
-        .order('created_at', { ascending: false })
+        .lte('auto_refund_at', nowISO)
+        .order('auto_refund_at', { ascending: true })
         .range(from, to)
 
-      if (error) {
-        console.error('[cron] auto-refund page error:', error.message)
-        break
-      }
-      if (!rows || rows.length === 0) break
+      if (aErr) { console.error('[cron] auto-refund A page error:', aErr.message); break }
+
+      // Pass B: alte Orders ohne auto_refund_at -> 7 Tage seit Erstellung
+      const { data: bRows, error: bErr } = await admin
+        .from('orders')
+        .select('id, created_at, charge_id, request_id, auto_refund_at')
+        .eq('status', 'funds_held')
+        .is('auto_refund_at', null)
+        .is('shipped_at', null)
+        .not('charge_id', 'is', null)
+        .lt('created_at', sevenDaysAgoISO)
+        .order('created_at', { ascending: true })
+        .range(from, to)
+
+      if (bErr) { console.error('[cron] auto-refund B page error:', bErr.message); break }
+
+      const rows = [...(aRows ?? []), ...(bRows ?? [])]
+      if (!rows.length) break
 
       const toCancelReqIds = new Set<string>()
 
@@ -85,7 +100,7 @@ export async function GET(req: Request) {
     console.error('[cron] auto-refund outer failed:', e?.message)
   }
 
-  // ===== 2) AUTO-RELEASE (Frist abgelaufen, kein Dispute)
+  // ===== 2) AUTO-RELEASE (Frist abgelaufen, kein Dispute) + Rechnung
   try {
     let page = 0
     while (true) {
@@ -97,17 +112,14 @@ export async function GET(req: Request) {
         .select('id, amount_cents, fee_cents, currency, charge_id, supplier_id, request_id, auto_release_at')
         .eq('status', 'funds_held')
         .not('charge_id', 'is', null)
-        .lte('auto_release_at', new Date().toISOString())
+        .lte('auto_release_at', nowISO)
         .order('auto_release_at', { ascending: true })
         .range(from, to)
 
-      if (error) {
-        console.error('[cron] auto-release page error:', error.message)
-        break
-      }
+      if (error) { console.error('[cron] auto-release page error:', error.message); break }
       if (!rows || rows.length === 0) break
 
-      // Dispute-Flags prefetchen
+      // Dispute-Flags prefetchen (lightweight)
       const reqIds = Array.from(new Set(rows.map(r => String(r.request_id)).filter(Boolean)))
       let disputedMap = new Map<string, boolean>()
       if (reqIds.length) {
@@ -158,9 +170,16 @@ export async function GET(req: Request) {
           }).eq('id', r.id)
 
           await admin.from('lack_requests').update({
-            status: 'paid',
+            status: 'paid', // published bleibt unverändert (false)
             updated_at: new Date().toISOString(),
           }).eq('id', r.request_id)
+
+          // Rechnung (idempotent)
+          try {
+            await ensureInvoiceForOrder(r.id)
+          } catch (invErr) {
+            console.error('[cron] ensureInvoiceForOrder failed', r.id, (invErr as any)?.message)
+          }
         } catch (e: any) {
           console.error('[cron] auto-release failed', r.id, e?.message)
         }

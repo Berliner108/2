@@ -141,10 +141,28 @@ export async function POST(req: Request) {
         const requestId = pi.metadata?.lack_request_id || pi.metadata?.request_id
         if (!orderId || !offerId || !requestId) break
 
-        // 1) Versuch, Request exklusiv zu vergeben (atomar + bedingt)
+        // --- 0) Request-Meta (Lieferdatum) für auto_refund_at vorbereiten ---
+        const { data: reqMeta } = await admin
+          .from('lack_requests')
+          .select('delivery_at, lieferdatum')
+          .eq('id', requestId)
+          .maybeSingle()
+
+        const endOfDay = (iso?: string | null) => {
+          if (!iso) return undefined
+          const d = new Date(iso); if (isNaN(+d)) return undefined
+          d.setHours(23,59,59,999); return d.toISOString()
+        }
+        const sevenDaysFromNow = addDaysISO(7)
+        const lieferEod = endOfDay((reqMeta?.delivery_at as string | undefined) || (reqMeta?.lieferdatum as string | undefined))
+        const autoRefundAt = lieferEod
+          ? new Date(Math.min(+new Date(sevenDaysFromNow), +new Date(lieferEod))).toISOString()
+          : sevenDaysFromNow
+
+        // --- 1) Versuch, Request exklusiv zu vergeben (atomar & bedingt) ---
         const { data: updatedReqs, error: reqUpdErr } = await admin
           .from('lack_requests')
-          .update({ status: 'awarded', published: false, updated_at: nowISO() })
+          .update({ status: 'awarded', updated_at: nowISO() }) // published NICHT anfassen
           .eq('id', requestId)
           .eq('status', 'open')
           .is('published', true)
@@ -153,15 +171,45 @@ export async function POST(req: Request) {
         if (reqUpdErr) throw reqUpdErr
 
         const won = (updatedReqs ?? []).length === 1
+        const chargeId = getChargeIdFromPI(pi)
+
         if (!won) {
-          // Jemand war schneller → diese Order nicht finalisieren
-          await admin.from('orders')
-            .update({ status: 'canceled', updated_at: nowISO() })
-            .eq('id', orderId)
+          // Jemand war schneller → sofortige Erstattung an diesen Käufer
+          if (chargeId) {
+            try {
+              await stripe.refunds.create({
+                charge: chargeId,
+                metadata: { order_id: orderId, request_id: requestId, reason: 'lost_race' },
+              })
+              await admin.from('orders').update({
+                refunded_at: nowISO(),
+                status: 'canceled',
+                payment_intent_id: pi.id,
+                charge_id: chargeId,
+                updated_at: nowISO(),
+              }).eq('id', orderId)
+            } catch (e: any) {
+              console.error('[stripe webhook] refund on lost race failed', orderId, e?.message)
+              // Fallback: zumindest als canceled markieren
+              await admin.from('orders').update({
+                status: 'canceled',
+                payment_intent_id: pi.id,
+                charge_id: chargeId,
+                updated_at: nowISO(),
+              }).eq('id', orderId)
+            }
+          } else {
+            // Kein chargeId? Dann nur Order abbrechen.
+            await admin.from('orders').update({
+              status: 'canceled',
+              payment_intent_id: pi.id,
+              updated_at: nowISO(),
+            }).eq('id', orderId)
+          }
           break
         }
 
-        // 2) Gewinner-Offer akzeptieren, andere ablehnen
+        // --- 2) Gewinner-Offer akzeptieren, andere ablehnen ---
         await admin.from('lack_offers')
           .update({ status: 'accepted', updated_at: nowISO() })
           .eq('id', offerId)
@@ -173,13 +221,13 @@ export async function POST(req: Request) {
           .neq('id', offerId)
           .eq('status', 'active')
 
-        // 3) Order fortschreiben
-        const chargeId = getChargeIdFromPI(pi)
+        // --- 3) Order fortschreiben ---
         await admin.from('orders').update({
           status: 'funds_held',
           payment_intent_id: pi.id,
           charge_id: chargeId,
           auto_release_at: addDaysISO(28),
+          auto_refund_at: autoRefundAt, // 👈 neu
           updated_at: nowISO(),
         }).eq('id', orderId)
 

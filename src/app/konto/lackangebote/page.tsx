@@ -253,28 +253,16 @@ const LackanfragenOrdersPage: FC = () => {
     notifyNavbarCount(merged.length)
   }, [apiOrders])
 
-  // Nach Payment-Return: Auto-Release + URL cleanup
-  useEffect(() => {
-    const accepted = params.get('accepted')
-    if (accepted) {
-      setOrders(prev => {
-        const now = Date.now()
-        let changed = false
-        const next: LackOrder[] = prev.map((o): LackOrder => {
-          if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
-            changed = true
-            return { ...o, status: 'confirmed' as OrderStatus, deliveredConfirmedAt: new Date().toISOString() }
-          }
-          return o
-        })
-        if (changed) try { localStorage.setItem(LS_KEY, JSON.stringify(next)) } catch {}
-        return next
-      })
-      const clean = new URL(window.location.href)
-      ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA'].forEach(k => clean.searchParams.delete(k))
-      router.replace(clean.pathname + clean.search)
-    }
-  }, [params, router])
+useEffect(() => {
+  const p = new URLSearchParams(window.location.search)
+  if (p.has('accepted')) {
+    const clean = new URL(window.location.href)
+    ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA']
+      .forEach(k => clean.searchParams.delete(k))
+    router.replace(clean.pathname + clean.search)
+  }
+}, [router])
+
 
   // Toolbar-State
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
@@ -503,27 +491,30 @@ const LackanfragenOrdersPage: FC = () => {
   }
 
   async function doRelease(o: LackOrder) {
-    try {
-      await apiPost(`/api/orders/${o.orderId}/release`)
-      const nowIso = new Date().toISOString()
+  try {
+    const res = await apiPost(`/api/orders/${o.orderId}/release`)
+    const nowIso = new Date().toISOString()
 
-      const next: LackOrder[] = orders.map((x): LackOrder =>
-        x.orderId === o.orderId
-          ? {
-              ...x,
-              status: 'confirmed' as OrderStatus,
-              deliveredConfirmedAt: nowIso,
-            }
-          : x
-      )
+    const next: LackOrder[] = orders.map((x): LackOrder =>
+      x.orderId === o.orderId ? { ...x, status: 'confirmed', deliveredConfirmedAt: nowIso } : x
+    )
+    persist(next)
+    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+    mutate()
 
-      persist(next)
-      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
-      mutate()
-    } catch (e: any) {
-      alert(e?.message || 'Aktion fehlgeschlagen')
+    if (res?.invoiceUrl) {
+      try { window.open(res.invoiceUrl, '_blank', 'noopener') } catch {}
+    }
+  } catch (e: any) {
+    const msg = e?.message || ''
+    if (msg.includes('SELLER_NOT_CONNECTED')) {
+      alert('Der Anbieter hat sein Auszahlungs­konto noch nicht verknüpft. Bitte kontaktiere ihn oder Support.')
+    } else {
+      alert(msg || 'Aktion fehlgeschlagen')
     }
   }
+}
+
 
   async function doDispute(o: LackOrder) {
     try {
