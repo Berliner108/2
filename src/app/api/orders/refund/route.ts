@@ -59,12 +59,15 @@ export async function POST(req: Request) {
 
 
      const nowIso = new Date().toISOString()
-      await admin.from('orders').update({
-      refunded_at: new Date().toISOString(),
-      status: 'canceled',
-      updated_at: new Date().toISOString(),
-      dispute_reason: (typeof reason === 'string' && reason.trim()) ? reason.trim() : null, // wenn Spalte existiert
-    }).eq('id', order.id)
+     // ... nach dem erfolgreichen Refund:
+await admin.from('orders').update({
+  refunded_at: new Date().toISOString(),
+  status: 'canceled',
+  dispute_opened_at: new Date().toISOString(),     // 👈 wichtig für "disputed"
+  dispute_reason: (typeof reason === 'string' && reason.trim()) ? reason.trim() : null, // 👈 damit der Verkäufer den Grund sieht
+  updated_at: new Date().toISOString(),
+}).eq('id', order.id)
+
 
 
     // Anfrage NICHT neu veröffentlichen; nur Status setzen

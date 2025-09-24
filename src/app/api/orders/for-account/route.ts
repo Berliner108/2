@@ -73,8 +73,12 @@ export async function GET(req: Request) {
 
     // Optional: stornierte/erstattete ausblenden (default)
     if (!includeCanceled) {
-      rows = rows.filter(r => String(r.status).toLowerCase() !== 'canceled')
-    }
+  rows = rows.filter(r => {
+    const canceled = String(r.status).toLowerCase() === 'canceled'
+    const hasDispute = !!r.dispute_opened_at
+    return !(canceled && !hasDispute) // nur "canceled OHNE Dispute" ausblenden
+  })
+}
 
     if (rows.length === 0) {
       return NextResponse.json({ vergeben: [], angenommen: [] })
