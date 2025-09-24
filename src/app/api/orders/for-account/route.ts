@@ -58,10 +58,10 @@ export async function GET(req: Request) {
     // 1) Alle Lack-Orders, wo du Buyer ODER Supplier bist
     const { data: orders, error: ordErr } = await sb
       .from('orders')
-      .select(`
+       .select(`
         id, created_at, buyer_id, supplier_id, kind, request_id, offer_id,
         amount_cents, currency, status,
-        reported_at, released_at, refunded_at, dispute_opened_at,
+        reported_at, released_at, refunded_at, dispute_opened_at, dispute_reason,
         auto_release_at, shipped_at, auto_refund_at
       `)
       .eq('kind', 'lack')
@@ -232,6 +232,7 @@ export async function GET(req: Request) {
         deliveredConfirmedAt: r.released_at ?? undefined,
         autoReleaseAt: releaseAtUi ?? undefined,
         disputeOpenedAt: r.dispute_opened_at ?? undefined,
+        disputeReason: r.dispute_reason ?? null,
 
         shippedAt: r.shipped_at ?? undefined,
         autoRefundAt: refundAtUi ?? undefined,

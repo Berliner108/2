@@ -11,6 +11,7 @@ const BATCH = 200
 const SEVEN_D_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(req: Request) {
+  // optional: nur Vercel-Cron zulassen
   if (process.env.REQUIRE_CRON_HEADER === '1') {
     const isCron = req.headers.get('x-vercel-cron') === '1'
     if (!isCron) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
         .select('id, created_at, charge_id, request_id, auto_refund_at')
         .eq('status', 'funds_held')
         .is('shipped_at', null)
-        .is('transfer_id', null)                 // 👈 NEU
+        .is('transfer_id', null)
         .not('charge_id', 'is', null)
         .lte('auto_refund_at', nowISO)
         .order('auto_refund_at', { ascending: true })
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
         .eq('status', 'funds_held')
         .is('auto_refund_at', null)
         .is('shipped_at', null)
-         .is('transfer_id', null)                 // 👈 NEU
+        .is('transfer_id', null)
         .not('charge_id', 'is', null)
         .lt('created_at', sevenDaysAgoISO)
         .order('created_at', { ascending: true })
@@ -113,37 +114,19 @@ export async function GET(req: Request) {
         .from('orders')
         .select('id, amount_cents, fee_cents, currency, charge_id, supplier_id, request_id, auto_release_at')
         .eq('status', 'funds_held')
-        .is('transfer_id', null)                 // 👈 NEU
+        .is('transfer_id', null)
         .not('charge_id', 'is', null)
         .lte('auto_release_at', nowISO)
+        .is('dispute_opened_at', null) // KEIN Dispute
         .order('auto_release_at', { ascending: true })
         .range(from, to)
 
       if (error) { console.error('[cron] auto-release page error:', error.message); break }
       if (!rows || rows.length === 0) break
 
-      // Dispute-Flags prefetchen (lightweight)
-      const reqIds = Array.from(new Set(rows.map(r => String(r.request_id)).filter(Boolean)))
-      let disputedMap = new Map<string, boolean>()
-      if (reqIds.length) {
-        const { data: reqs, error: reqErr } = await admin
-          .from('lack_requests')
-          .select('id, data')
-          .in('id', reqIds)
-        if (reqErr) {
-          console.error('[cron] auto-release req fetch error:', reqErr.message)
-        } else {
-          for (const r of reqs ?? []) {
-            const flag = !!((r?.data as any)?.disputed_at)
-            disputedMap.set(String(r.id), flag)
-          }
-        }
-      }
-
       for (const r of rows) {
         try {
-          if (disputedMap.get(String(r.request_id)) === true) continue
-
+          // Ziel-Konto (Connect)
           const { data: prof } = await admin
             .from('profiles')
             .select('stripe_connect_id')
