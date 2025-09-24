@@ -57,13 +57,15 @@ export async function POST(req: Request) {
       metadata: { order_id: String(order.id), request_id: String(order.request_id) },
     })
 
-    const nowIso = new Date().toISOString()
 
-    await admin.from('orders').update({
-      refunded_at: nowIso,
+     const nowIso = new Date().toISOString()
+      await admin.from('orders').update({
+      refunded_at: new Date().toISOString(),
       status: 'canceled',
-      updated_at: nowIso,
+      updated_at: new Date().toISOString(),
+      dispute_reason: (typeof reason === 'string' && reason.trim()) ? reason.trim() : null, // wenn Spalte existiert
     }).eq('id', order.id)
+
 
     // Anfrage NICHT neu veröffentlichen; nur Status setzen
     await admin.from('lack_requests').update({

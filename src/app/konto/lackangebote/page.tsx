@@ -253,16 +253,15 @@ const LackanfragenOrdersPage: FC = () => {
     notifyNavbarCount(merged.length)
   }, [apiOrders])
 
-useEffect(() => {
-  const p = new URLSearchParams(window.location.search)
-  if (p.has('accepted')) {
-    const clean = new URL(window.location.href)
-    ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA']
-      .forEach(k => clean.searchParams.delete(k))
-    router.replace(clean.pathname + clean.search)
-  }
-}, [router])
-
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (p.has('accepted')) {
+      const clean = new URL(window.location.href)
+      ;['accepted','offerId','vendor','amount','kind','role','side','requestId','cursorV','cursorA']
+        .forEach(k => clean.searchParams.delete(k))
+      router.replace(clean.pathname + clean.search)
+    }
+  }, [router])
 
   // Toolbar-State
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
@@ -283,10 +282,11 @@ useEffect(() => {
   const [rateOrderId, setRateOrderId] = useState<string | null>(null)
   const [ratingText, setRatingText] = useState('')
   const [ratingStars, setRatingStars] = useState<1|2|3|4|5>(5)
-  // Dispute (Modal)
-  const [disputeOrder, setDisputeOrder] = useState<LackOrder | null>(null)
-  const [disputeText, setDisputeText] = useState('')
 
+  // Reklamation (Modal)
+  const [disputeOrder, setDisputeOrder] = useState<LackOrder | null>(null)
+  const [disputeText, setDisputeText]   = useState('')
+  const [disputeBusy, setDisputeBusy]   = useState(false)
 
   // Ticker
   const [, setNowTick] = useState(Date.now())
@@ -297,14 +297,11 @@ useEffect(() => {
 
   // ESC schließt Modals
   useEffect(() => {
-  if (shipOrder == null && rateOrderId == null && disputeOrder == null) return
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { setShipOrder(null); setRateOrderId(null); setDisputeOrder(null) }
-  }
-  window.addEventListener('keydown', onKey)
-  return () => window.removeEventListener('keydown', onKey)
-}, [shipOrder, rateOrderId, disputeOrder])
-
+    if (shipOrder == null && rateOrderId == null && disputeOrder == null) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setShipOrder(null); setRateOrderId(null); setDisputeOrder(null) } }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [shipOrder, rateOrderId, disputeOrder])
 
   /* ---------- Auto-Freigabe (Käufer inaktiv nach „Versandt“) ---------- */
   const runAutoRelease = () => {
@@ -489,7 +486,6 @@ useEffect(() => {
       )
 
       persist(next)
-      // Nach Aktion: als gesehen stempeln
       try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
       mutate()
     } catch (e: any) {
@@ -498,64 +494,71 @@ useEffect(() => {
   }
 
   async function doRelease(o: LackOrder) {
-  try {
-    const res = await apiPost(`/api/orders/${o.orderId}/release`)
-    const nowIso = new Date().toISOString()
+    try {
+      const res = await apiPost(`/api/orders/${o.orderId}/release`)
+      const nowIso = new Date().toISOString()
 
-    const next: LackOrder[] = orders.map((x): LackOrder =>
-      x.orderId === o.orderId ? { ...x, status: 'confirmed', deliveredConfirmedAt: nowIso } : x
-    )
-    persist(next)
-    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
-    mutate()
+      const next: LackOrder[] = orders.map((x): LackOrder =>
+        x.orderId === o.orderId ? { ...x, status: 'confirmed', deliveredConfirmedAt: nowIso } : x
+      )
+      persist(next)
+      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+      mutate()
 
-    if (res?.invoiceUrl) {
-      try { window.open(res.invoiceUrl, '_blank', 'noopener') } catch {}
-    }
-  } catch (e: any) {
-    const msg = e?.message || ''
-    if (msg.includes('SELLER_NOT_CONNECTED')) {
-      alert('Der Anbieter hat sein Auszahlungs­konto noch nicht verknüpft. Bitte kontaktiere ihn oder Support.')
-    } else {
-      alert(msg || 'Aktion fehlgeschlagen')
+      if (res?.invoiceUrl) {
+        try { window.open(res.invoiceUrl, '_blank', 'noopener') } catch {}
+      }
+    } catch (e: any) {
+      const msg = e?.message || ''
+      if (msg.includes('SELLER_NOT_CONNECTED')) {
+        alert('Der Anbieter hat sein Auszahlungs­konto noch nicht verknüpft. Bitte kontaktiere ihn oder Support.')
+      } else {
+        alert(msg || 'Aktion fehlgeschlagen')
+      }
     }
   }
-}
 
-
+  // Reklamation – hübsches Modal + SOFORT-REFUND
   function openDispute(o: LackOrder) {
-  setDisputeOrder(o)
-  setDisputeText('')
-}
-
-function cancelDispute() {
-  setDisputeOrder(null)
-  setDisputeText('')
-}
-
-async function confirmDispute() {
-  if (!disputeOrder) return
-  try {
-    const reason = disputeText.trim()
-    // WICHTIG: richtige API-Route
-    await apiPost(`/api/orders/${disputeOrder.orderId}/dispute`, { reason })
-
-    const nowIso = new Date().toISOString()
-    const next: LackOrder[] = orders.map((x): LackOrder =>
-      x.orderId === disputeOrder.orderId
-        ? { ...x, status: 'disputed' as const, disputeOpenedAt: nowIso, disputeReason: reason || null }
-        : x
-    )
-    persist(next)
-    try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+    setDisputeOrder(o)
+    setDisputeText('')
+  }
+  function cancelDispute() {
+    if (disputeBusy) return
     setDisputeOrder(null)
     setDisputeText('')
-    mutate()
-  } catch (e: any) {
-    alert(e?.message || 'Aktion fehlgeschlagen')
   }
-}
+  async function confirmDispute() {
+    if (!disputeOrder || disputeBusy) return
+    try {
+      setDisputeBusy(true)
+      const reason = disputeText.trim()
+      // Refund auslösen (bestehende Route beibehalten)
+      await apiPost(`/api/orders/refund`, { orderId: disputeOrder.orderId, reason })
 
+      const nowIso = new Date().toISOString()
+      const next: LackOrder[] = orders.map((x): LackOrder =>
+        x.orderId === disputeOrder.orderId
+          ? {
+              ...x,
+              refundedAt: nowIso,
+              status: 'in_progress' as const, // UI bleibt sichtbar
+              disputeOpenedAt: nowIso,
+              disputeReason: reason || null,
+            }
+          : x
+      )
+      persist(next)
+      try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
+      setDisputeOrder(null)
+      setDisputeText('')
+      mutate()
+    } catch (e: any) {
+      alert(e?.message || 'Aktion fehlgeschlagen')
+    } finally {
+      setDisputeBusy(false)
+    }
+  }
 
   function remainingText(iso?: string) {
     if (!iso) return '–'
@@ -674,11 +677,10 @@ async function confirmDispute() {
               </div>
 
               <div className={styles.actions}>
-                
                 {/* Verkäufer: Rechnung downloaden (sichtbar NACH Freigabe/Auto-Release) */}
                 {isVendor && order.status === 'confirmed' && (
                   <a
-                     href={`/api/invoices/${order.orderId}/download`}
+                    href={`/api/invoices/${order.orderId}/download`}
                     className={styles.secondaryBtn}
                     target="_blank"
                     rel="noopener"
@@ -687,7 +689,6 @@ async function confirmDispute() {
                     Rechnung herunterladen (PDF)
                   </a>
                 )}
-
 
                 {/* Verkäufer: „Versandt melden“ */}
                 {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
@@ -711,6 +712,13 @@ async function confirmDispute() {
                   <div className={styles.btnHint}>{refundHint}</div>
                 )}
 
+                {/* Reklamationsgrund (falls vorhanden) */}
+                {order.disputeReason && (
+                  <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
+                    <strong>Reklamationsgrund:</strong> {order.disputeReason}
+                  </div>
+                )}
+
                 {/* Käufer: nach Meldung bestätigen / reklamieren */}
                 {isCustomer && order.status === 'reported' && (
                   <div className={styles.actionStack}>
@@ -723,13 +731,12 @@ async function confirmDispute() {
                       Empfang bestätigen & Zahlung freigeben
                     </button>
                     <button
-                        type="button"
-                        className={styles.btnGhost}
-                        onClick={() => openDispute(order)}
-                      >
-                        Problem melden
-                      </button>
-
+                      type="button"
+                      className={styles.btnGhost}
+                      onClick={() => openDispute(order)}
+                    >
+                      Problem melden
+                    </button>
                     <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
                   </div>
                 )}
@@ -916,43 +923,42 @@ async function confirmDispute() {
           </div>
         </div>
       )}
-      {/* Modal: Reklamation (Dispute) */}
-{disputeOrder !== null && (
-  <div
-    className={styles.modal}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="disputeTitle"
-    onClick={(e) => { if (e.target === e.currentTarget) cancelDispute() }}
-  >
-    <div className={styles.modalContent}>
-      <h3 id="disputeTitle" className={styles.modalTitle}>Problem melden</h3>
-      <p className={styles.modalText}>
-        Beschreibe kurz das Problem (optional). Wir informieren den Anbieter; die Auto-Freigabe pausiert.
-      </p>
 
-      <textarea
-        className={styles.reviewBox}
-        value={disputeText}
-        onChange={e => setDisputeText(e.target.value.slice(0, 800))}
+      {/* Modal: Reklamation (sofortiger Refund) */}
+      {disputeOrder !== null && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="disputeTitle"
+          onClick={(e) => { if (e.target === e.currentTarget) cancelDispute() }}
+        >
+          <div className={styles.modalContent}>
+            <h3 id="disputeTitle" className={styles.modalTitle}>Problem melden</h3>
+            <p className={styles.modalText}>
+              Beschreibe kurz das Problem (optional). Wir geben den Grund an den Anbieter weiter. 
+            </p>
 
-        placeholder="z. B. Menge/Qualität weicht ab…"
-        rows={4}
-      />
-      <div className={styles.btnHint} aria-live="polite">{disputeText.trim().length}/800</div>
+            <textarea
+              className={styles.reviewBox}
+              value={disputeText}
+              onChange={e => setDisputeText(e.target.value.slice(0, 800))}
+              placeholder="z. B. Menge/Qualität weicht ab, nicht geliefert…"
+              rows={4}
+            />
+            <div className={styles.btnHint} aria-live="polite">{disputeText.trim().length}/800</div>
 
-      <div className={styles.modalActions}>
-        <button type="button" className={styles.btnGhost} onClick={cancelDispute}>Abbrechen</button>
-        <button type="button" className={styles.btnDanger} onClick={confirmDispute}>
-          Reklamation senden
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnGhost} onClick={cancelDispute} disabled={disputeBusy}>Abbrechen</button>
+              <button type="button" className={styles.btnDanger} onClick={confirmDispute} disabled={disputeBusy}>
+                {disputeBusy ? 'Wird erstattet…' : 'Problem melden & erstatten'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-
-      {/* Modal: Bewertung (beide Rollen, jederzeit, solange nicht bereits bewertet) */}
+      {/* Modal: Bewertung */}
       {rateOrderId !== null && (
         <div
           className={styles.modal}
@@ -1017,13 +1023,11 @@ async function confirmDispute() {
                       throw new Error(json?.error || 'Speichern fehlgeschlagen')
                     }
 
-                    // lokal markieren → Button verschwindet sofort
                     const next: LackOrder[] = orders.map((o): LackOrder =>
                       o.orderId === orderId ? { ...o, myReview: { stars: ratingStars, text: comment } } as LackOrder : o
                     )
 
                     persist(next)
-                    // optional als gesehen
                     try { localStorage.setItem(LS_SEEN_ORDERS, String(Date.now())) } catch {}
                     setRateOrderId(null)
                     mutate()
