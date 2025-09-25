@@ -706,28 +706,7 @@ const LackanfragenOrdersPage: FC = () => {
                     )}
                   </div>
                 )}
-                {/* Verkäufer-Sicht: Liefer- & Rechnungsadresse einblenden */}
-{isVendor && (order as any).shippingAddressStr && (
-  <div className={styles.meta} style={{ marginTop: 8 }}>
-    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-      <div className={styles.metaLabel}>Lieferanschrift</div>
-      <pre className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
-        {(order as any).shippingAddressStr}
-      </pre>
-    </div>
-  </div>
-)}
 
-{isVendor && (order as any).billingAddressStr && (
-  <div className={styles.meta} style={{ marginTop: 4 }}>
-    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-      <div className={styles.metaLabel}>Rechnungsadresse</div>
-      <pre className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
-        {(order as any).billingAddressStr}
-      </pre>
-    </div>
-  </div>
-)}
 
 
                 {/* Käufer sieht Refund-Hinweis, wenn kein Versand */}
@@ -775,6 +754,28 @@ const LackanfragenOrdersPage: FC = () => {
                     Bewertung abgeben
                   </button>
                 )}
+                                {/* Verkäufer-Sicht: Liefer- & Rechnungsadresse einblenden */}
+{isVendor && (order as any).shippingAddressStr && (
+  <div className={styles.meta} style={{ marginTop: 8 }}>
+    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
+      <div className={styles.metaLabel}>Lieferanschrift</div>
+      <pre className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
+        {(order as any).shippingAddressStr}
+      </pre>
+    </div>
+  </div>
+)}
+
+{isVendor && (order as any).billingAddressStr && (
+  <div className={styles.meta} style={{ marginTop: 4 }}>
+    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
+      <div className={styles.metaLabel}>Rechnungsadresse</div>
+      <pre className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
+        {(order as any).billingAddressStr}
+      </pre>
+    </div>
+  </div>
+)}
               </div>
             </li>
           )
