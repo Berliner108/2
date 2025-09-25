@@ -445,7 +445,7 @@
   100% { background-position: 200% 0, 0 0; }
 }
 .addressBlock {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: 'Oswald', SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.95rem;
   line-height: 1.35;
   white-space: pre-wrap; /* Zeilenumbrüche im Text beibehalten */
