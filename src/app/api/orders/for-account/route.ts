@@ -14,7 +14,6 @@ const uiStatus = (r: any): UiStatus => {
   const s = String(r.status ?? '').toLowerCase()
   if (s === 'released')     return 'confirmed'
   if (s === 'processing' || s === 'requires_confirmation' || s === 'funds_held') return 'in_progress'
-  // 'canceled' etc. im UI nicht gesondert darstellen
   return 'in_progress'
 }
 
@@ -58,7 +57,7 @@ export async function GET(req: Request) {
     // 1) Alle Lack-Orders, wo du Buyer ODER Supplier bist
     const { data: orders, error: ordErr } = await sb
       .from('orders')
-       .select(`
+      .select(`
         id, created_at, buyer_id, supplier_id, kind, request_id, offer_id,
         amount_cents, currency, status,
         reported_at, released_at, refunded_at, dispute_opened_at, dispute_reason,
@@ -73,12 +72,12 @@ export async function GET(req: Request) {
 
     // Optional: stornierte/erstattete ausblenden (default)
     if (!includeCanceled) {
-  rows = rows.filter(r => {
-    const canceled = String(r.status).toLowerCase() === 'canceled'
-    const hasDispute = !!r.dispute_opened_at
-    return !(canceled && !hasDispute) // nur "canceled OHNE Dispute" ausblenden
-  })
-}
+      rows = rows.filter(r => {
+        const canceled = String(r.status).toLowerCase() === 'canceled'
+        const hasDispute = !!r.dispute_opened_at
+        return !(canceled && !hasDispute)
+      })
+    }
 
     if (rows.length === 0) {
       return NextResponse.json({ vergeben: [], angenommen: [] })
@@ -88,6 +87,7 @@ export async function GET(req: Request) {
     const offerIds    = Array.from(new Set(rows.map(r => r.offer_id).filter(Boolean))) as string[]
     const reqIds      = Array.from(new Set(rows.map(r => r.request_id).filter(Boolean))) as string[]
     const supplierIds = Array.from(new Set(rows.map(r => r.supplier_id).filter(Boolean))) as string[]
+    const buyerIds    = Array.from(new Set(rows.map(r => r.buyer_id).filter(Boolean))) as string[]
     const orderIds    = rows.map(r => String(r.id))
 
     const admin = supabaseAdmin()
@@ -137,20 +137,35 @@ export async function GET(req: Request) {
       for (const r of reqs ?? []) reqById.set(String(r.id), r)
     }
 
-    // 5) profiles → Anbieter (supplier) + optional Auftraggeber (owner)
+    // 5) profiles → Anbieter (supplier) + Auftraggeber (owner) + **Käufer (buyer)**
     const ownerIds = Array.from(new Set(
       Array.from(reqById.values()).map((r: any) => r.owner_id).filter(Boolean)
     )) as string[]
-    const profileIds = Array.from(new Set([...supplierIds, ...ownerIds]))
-    type Prof = { id: string; username: string | null; company_name: string | null; rating_avg: number | null; rating_count: number | null }
+
+    const profileIds = Array.from(new Set([
+      ...supplierIds,
+      ...ownerIds,
+      ...buyerIds, // <— hinzugefügt, damit Rechnungsadresse verfügbar ist
+    ]))
+
+    type Prof = {
+      id: string
+      username: string | null
+      company_name: string | null
+      rating_avg: number | null
+      rating_count: number | null
+      account_type?: 'private' | 'business' | string | null
+      address?: { street?: string|null; houseNumber?: string|null; zip?: string|null; city?: string|null; country?: string|null } | null
+    }
+
     const profById = new Map<string, Prof>()
     if (profileIds.length) {
       const { data: profs, error } = await admin
         .from('profiles')
-        .select('id, username, company_name, rating_avg, rating_count')
+        .select('id, username, company_name, rating_avg, rating_count, account_type, address')
         .in('id', profileIds)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      for (const p of profs ?? []) profById.set(String(p.id), p as Prof)
+      for (const p of profs ?? []) profById.set(String((p as any).id), p as Prof)
     }
 
     // 6) Mapper → UI-Objekt
@@ -186,7 +201,7 @@ export async function GET(req: Request) {
       const releaseAtUi =
         r.auto_release_at ?? (r.reported_at ? addDaysIso(r.reported_at, 28) : null)
 
-      // ⚠ Gleich wie Cron: min(created_at+7d, Ende Lieferdatum)
+      // Gleich wie Cron: min(created_at+7d, Ende Lieferdatum)
       const sevenDaysAfter = addDaysIso(r.created_at, 7)
       const eodLiefer      = endOfDayIso(lieferdatum)
       const minAutoRefund  =
@@ -200,6 +215,40 @@ export async function GET(req: Request) {
       const myReview = mine
         ? { stars: Math.max(1, Math.min(5, Number(mine.stars))) as 1|2|3|4|5, text: String(mine.comment ?? '') }
         : undefined
+
+      // === NEU: Adressen (nur wenn ich Verkäufer bin → 'angenommen')
+      let shippingAddressStr: string | undefined
+      let billingAddressStr:  string | undefined
+      if (kind === 'angenommen') {
+        const d = (req?.data ?? {}) as any
+
+        // Lieferadresse: bevorzugt fertiger String; sonst zusammensetzen
+        if (typeof d.lieferadresse === 'string' && d.lieferadresse.trim()) {
+          shippingAddressStr = d.lieferadresse.trim()
+        } else {
+          const top = [d.firma, [d.vorname, d.nachname].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
+          const line1 = [d.strasse, d.hausnummer].filter(Boolean).join(' ')
+          const line2 = [d.plz, (d.ort || d.lieferort)].filter(Boolean).join(' ')
+          const line3 = d.land
+          const parts = [top, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
+          shippingAddressStr = parts.length ? parts.join('\n') : undefined
+        }
+
+        // Rechnungsadresse: aus Buyer-Profil (address + company_name); Name-Fallback bei privaten Accounts
+        const buyerProf = r.buyer_id ? profById.get(String(r.buyer_id)) : undefined
+        if (buyerProf) {
+          const isBusiness = (buyerProf.account_type === 'business') || d.account_type === 'business' || d.istGewerblich === true
+          const name = !isBusiness ? [d.vorname, d.nachname].filter(Boolean).join(' ').trim() || null : null
+          const company = buyerProf.company_name || null
+          const addr = (buyerProf.address || {}) as any
+          const line1 = [addr.street, addr.houseNumber].filter(Boolean).join(' ')
+          const line2 = [addr.zip, addr.city].filter(Boolean).join(' ')
+          const line3 = addr.country
+          const top = [company, name].filter(Boolean).join(' · ')
+          const parts = [top, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
+          billingAddressStr = parts.length ? parts.join('\n') : undefined
+        }
+      }
 
       return {
         orderId: String(r.id),
@@ -243,6 +292,10 @@ export async function GET(req: Request) {
         refundedAt: r.refunded_at ?? undefined,
 
         myReview,
+
+        // >>> neue Felder für Verkäufer-Ansicht
+        shippingAddressStr,
+        billingAddressStr,
       }
     }
 
