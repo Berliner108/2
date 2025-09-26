@@ -451,3 +451,17 @@
   white-space: pre-wrap; /* Zeilenumbrüche im Text beibehalten */
 }
 
+.addrGrid {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 12px;
+  margin-top: 6px;
+  white-space: normal;
+}
+.addrLabel {
+  font-weight: 600;
+  color: var(--text-muted, #555);
+}
+.addrValue {
+  word-break: break-word;
+}

@@ -43,6 +43,42 @@ const endOfDayIso = (iso?: string | null) => {
   return d.toISOString()
 }
 
+/** Helfer: hübsch beschriftete Adresse als mehrzeiliger String */
+function prettyAddress(opts: {
+  company?: string | null
+  vat?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  street?: string | null
+  houseNumber?: string | null
+  zip?: string | null
+  city?: string | null
+  country?: string | null
+  includeNameLines?: boolean // z.B. bei Business zusätzlich Vor-/Nachname anzeigen
+}) {
+  const lines: string[] = []
+  const hasCompany = !!(opts.company && opts.company.trim())
+
+  if (hasCompany) lines.push(`Firma: ${opts.company!.trim()}`)
+  if (hasCompany && opts.vat && opts.vat.trim()) lines.push(`UID: ${opts.vat!.trim()}`)
+
+  // Name-Zeilen (optional – z.B. privat oder zusätzlich bei Firma)
+  if (opts.includeNameLines || !hasCompany) {
+    if (opts.firstName && opts.firstName.trim()) lines.push(`Vorname: ${opts.firstName.trim()}`)
+    if (opts.lastName  && opts.lastName.trim())  lines.push(`Nachname: ${opts.lastName.trim()}`)
+  }
+
+  const strasse = [opts.street?.trim(), opts.houseNumber?.trim()].filter(Boolean).join(' ')
+  if (strasse) lines.push(`Straße: ${strasse}`)
+
+  const plzOrt = [opts.zip?.trim(), opts.city?.trim()].filter(Boolean).join(' ')
+  if (plzOrt) lines.push(`PLZ/Ort: ${plzOrt}`)
+
+  if (opts.country && opts.country.trim()) lines.push(`Land: ${opts.country.trim()}`)
+
+  return lines.join('\n')
+}
+
 export async function GET(req: Request) {
   try {
     const sb = await supabaseServer()
@@ -145,7 +181,7 @@ export async function GET(req: Request) {
     const profileIds = Array.from(new Set([
       ...supplierIds,
       ...ownerIds,
-      ...buyerIds, // <— hinzugefügt, damit Rechnungsadresse verfügbar ist
+      ...buyerIds, // <— für Rechnungsadresse inkl. UID
     ]))
 
     type Prof = {
@@ -156,13 +192,14 @@ export async function GET(req: Request) {
       rating_count: number | null
       account_type?: 'private' | 'business' | string | null
       address?: { street?: string|null; houseNumber?: string|null; zip?: string|null; city?: string|null; country?: string|null } | null
+      vat_number?: string | null
     }
 
     const profById = new Map<string, Prof>()
     if (profileIds.length) {
       const { data: profs, error } = await admin
         .from('profiles')
-        .select('id, username, company_name, rating_avg, rating_count, account_type, address')
+        .select('id, username, company_name, rating_avg, rating_count, account_type, address, vat_number')
         .in('id', profileIds)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       for (const p of profs ?? []) profById.set(String((p as any).id), p as Prof)
@@ -216,41 +253,129 @@ export async function GET(req: Request) {
         ? { stars: Math.max(1, Math.min(5, Number(mine.stars))) as 1|2|3|4|5, text: String(mine.comment ?? '') }
         : undefined
 
-      // === NEU: Adressen (nur wenn ich Verkäufer bin → 'angenommen')
+      // === Adressen (nur wenn ich Verkäufer bin → 'angenommen')
       let shippingAddressStr: string | undefined
       let billingAddressStr:  string | undefined
+
+      // Zusätzlich als strukturierte Objekte zurückgeben
+      let shippingAddress: {
+        company?: string | null
+        firstName?: string | null
+        lastName?: string | null
+        street?: string | null
+        houseNumber?: string | null
+        zip?: string | null
+        city?: string | null
+        country?: string | null
+      } | undefined
+
+      let billingAddress: {
+        company?: string | null
+        vat?: string | null
+        firstName?: string | null
+        lastName?: string | null
+        street?: string | null
+        houseNumber?: string | null
+        zip?: string | null
+        city?: string | null
+        country?: string | null
+        isBusiness?: boolean
+      } | undefined
+
       if (kind === 'angenommen') {
         const d = (req?.data ?? {}) as any
 
-        // Top-Name: Firma oder "Vorname Nachname"
-        const nameTop =
-          (d.firma && String(d.firma).trim()) ||
-          [d.vorname, d.nachname].map((s: any) => (s ? String(s).trim() : '')).filter(Boolean).join(' ')
+        // ====== LIEFERADRESSE (aus Request-Daten) ======
+        const shipCompany   = (d.firma && String(d.firma).trim()) || null
+        const shipFirstName = (d.vorname && String(d.vorname).trim()) || null
+        const shipLastName  = (d.nachname && String(d.nachname).trim()) || null
+        const shipStreet    = (d.strasse && String(d.strasse).trim()) || null
+        const shipHNr       = (d.hausnummer && String(d.hausnummer).trim()) || null
+        const shipZip       = (d.plz && String(d.plz).trim()) || null
+        const shipCity      = ((d.ort || d.lieferort) && String(d.ort || d.lieferort).trim()) || null
+        const shipCountry   = (d.land && String(d.land).trim()) || null
 
-        // Lieferadresse: bevorzugt fertiger String; Name davor setzen
-        if (typeof d.lieferadresse === 'string' && d.lieferadresse.trim()) {
-          shippingAddressStr = [nameTop, d.lieferadresse.trim()].filter(Boolean).join('\n')
-        } else {
-          const line1 = [d.strasse, d.hausnummer].filter(Boolean).join(' ')
-          const line2 = [d.plz, (d.ort || d.lieferort)].filter(Boolean).join(' ')
-          const line3 = d.land
-          const parts = [nameTop, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
-          shippingAddressStr = parts.length ? parts.join('\n') : undefined
+        shippingAddress = {
+          company: shipCompany,
+          firstName: shipFirstName,
+          lastName: shipLastName,
+          street: shipStreet,
+          houseNumber: shipHNr,
+          zip: shipZip,
+          city: shipCity,
+          country: shipCountry,
         }
 
-        // Rechnungsadresse: aus Buyer-Profil (address + company_name); Name-Fallback bei privaten Accounts
+        // Falls bereits fertiger String existiert, trotzdem „schön“ mit Name/Firma ausgeben
+        if (typeof d.lieferadresse === 'string' && d.lieferadresse.trim()) {
+          // Ersetze durch beschriftete Version mit denselben Bausteinen
+          shippingAddressStr = prettyAddress({
+            company: shipCompany,
+            firstName: shipFirstName,
+            lastName: shipLastName,
+            street: shipStreet,
+            houseNumber: shipHNr,
+            zip: shipZip,
+            city: shipCity,
+            country: shipCountry,
+            includeNameLines: true,
+          })
+        } else {
+          shippingAddressStr = prettyAddress({
+            company: shipCompany,
+            firstName: shipFirstName,
+            lastName: shipLastName,
+            street: shipStreet,
+            houseNumber: shipHNr,
+            zip: shipZip,
+            city: shipCity,
+            country: shipCountry,
+            includeNameLines: true,
+          })
+        }
+
+        // ====== RECHNUNGSADRESSE (aus Buyer-Profil) ======
         const buyerProf = r.buyer_id ? profById.get(String(r.buyer_id)) : undefined
         if (buyerProf) {
           const isBusiness = (buyerProf.account_type === 'business') || d.account_type === 'business' || d.istGewerblich === true
-          const name = !isBusiness ? nameTop || null : null
-          const company = buyerProf.company_name || null
+          const billCompany   = (buyerProf.company_name && String(buyerProf.company_name).trim()) || null
+          const billVat       = (buyerProf.vat_number && String(buyerProf.vat_number).trim()) || null
+          // Für private Käufer: Namen aus Request-Daten nehmen
+          const billFirstName = !isBusiness ? shipFirstName : null
+          const billLastName  = !isBusiness ? shipLastName  : null
+
           const addr = (buyerProf.address || {}) as any
-          const line1 = [addr.street, addr.houseNumber].filter(Boolean).join(' ')
-          const line2 = [addr.zip, addr.city].filter(Boolean).join(' ')
-          const line3 = addr.country
-          const top = [company, name].filter(Boolean).join(' · ')
-          const parts = [top, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
-          billingAddressStr = parts.length ? parts.join('\n') : undefined
+          const billStreet  = (addr.street && String(addr.street).trim()) || null
+          const billHNr     = (addr.houseNumber && String(addr.houseNumber).trim()) || null
+          const billZip     = (addr.zip && String(addr.zip).trim()) || null
+          const billCity    = (addr.city && String(addr.city).trim()) || null
+          const billCountry = (addr.country && String(addr.country).trim()) || null
+
+          billingAddress = {
+            company: billCompany,
+            vat: billVat,
+            firstName: billFirstName,
+            lastName: billLastName,
+            street: billStreet,
+            houseNumber: billHNr,
+            zip: billZip,
+            city: billCity,
+            country: billCountry,
+            isBusiness,
+          }
+
+          billingAddressStr = prettyAddress({
+            company: billCompany,
+            vat: billVat,
+            firstName: billFirstName,
+            lastName: billLastName,
+            street: billStreet,
+            houseNumber: billHNr,
+            zip: billZip,
+            city: billCity,
+            country: billCountry,
+            includeNameLines: true, // auch bei Firma die Person anzeigen, falls vorhanden
+          })
         }
       }
 
@@ -300,6 +425,10 @@ export async function GET(req: Request) {
         // >>> neue Felder für Verkäufer-Ansicht
         shippingAddressStr,
         billingAddressStr,
+
+        // zusätzlich strukturiert:
+        shippingAddress,
+        billingAddress,
       }
     }
 

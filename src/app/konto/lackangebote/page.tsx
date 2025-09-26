@@ -755,28 +755,119 @@ const LackanfragenOrdersPage: FC = () => {
                     Bewertung abgeben
                   </button>
                 )}
-                {/* Verkäufer-Sicht: Liefer- & Rechnungsadresse */}
-              {isVendor && (order as any).shippingAddressStr && (
-                <div className={styles.meta} style={{ marginTop: 8 }}>
-                  <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-                    <div className={styles.metaLabel}>Lieferanschrift</div>
-                    <pre className={`${styles.metaValue} ${styles.addressBlock}`}>
-                      {(order as any).shippingAddressStr}
-                    </pre>
-                  </div>
-                </div>
-              )}
+               {/* Verkäufer-Sicht: Lieferadresse mit Labels */}
+{isVendor && (order as any).shippingAddress && (
+  <div className={styles.meta} style={{ marginTop: 8 }}>
+    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
+      <div className={styles.metaLabel}>Lieferanschrift</div>
+      <div className={styles.addrGrid}>
+        {(order as any).shippingAddress.company && (
+          <>
+            <div className={styles.addrLabel}>Firma</div>
+            <div className={styles.addrValue}>{(order as any).shippingAddress.company}</div>
+          </>
+        )}
+        {(order as any).shippingAddress.firstName && (
+          <>
+            <div className={styles.addrLabel}>Vorname</div>
+            <div className={styles.addrValue}>{(order as any).shippingAddress.firstName}</div>
+          </>
+        )}
+        {(order as any).shippingAddress.lastName && (
+          <>
+            <div className={styles.addrLabel}>Nachname</div>
+            <div className={styles.addrValue}>{(order as any).shippingAddress.lastName}</div>
+          </>
+        )}
+        {((order as any).shippingAddress.street || (order as any).shippingAddress.houseNumber) && (
+          <>
+            <div className={styles.addrLabel}>Straße</div>
+            <div className={styles.addrValue}>
+              {[(order as any).shippingAddress.street, (order as any).shippingAddress.houseNumber].filter(Boolean).join(' ')}
+            </div>
+          </>
+        )}
+        {((order as any).shippingAddress.zip || (order as any).shippingAddress.city) && (
+          <>
+            <div className={styles.addrLabel}>PLZ/Ort</div>
+            <div className={styles.addrValue}>
+              {[(order as any).shippingAddress.zip, (order as any).shippingAddress.city].filter(Boolean).join(' ')}
+            </div>
+          </>
+        )}
+        {(order as any).shippingAddress.country && (
+          <>
+            <div className={styles.addrLabel}>Land</div>
+            <div className={styles.addrValue}>{(order as any).shippingAddress.country}</div>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
-              {isVendor && (order as any).billingAddressStr && (
-                <div className={styles.meta} style={{ marginTop: 4 }}>
-                  <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-                    <div className={styles.metaLabel}>Rechnungsadresse</div>
-                    <pre className={`${styles.metaValue} ${styles.addressBlock}`}>
-                      {(order as any).billingAddressStr}
-                    </pre>
-                  </div>
-                </div>
-              )}
+{/* Verkäufer-Sicht: Rechnungsadresse mit Firma + UID + Labels */}
+{isVendor && (order as any).billingAddress && (
+  <div className={styles.meta} style={{ marginTop: 8 }}>
+    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
+      <div className={styles.metaLabel}>Rechnungsadresse</div>
+      <div className={styles.addrGrid}>
+        {(order as any).billingAddress.company && (
+          <>
+            <div className={styles.addrLabel}>Firma</div>
+            <div className={styles.addrValue}>{(order as any).billingAddress.company}</div>
+          </>
+        )}
+        {(order as any).billingAddress.vat && (
+          <>
+            <div className={styles.addrLabel}>UID</div>
+            <div className={styles.addrValue}>{(order as any).billingAddress.vat}</div>
+          </>
+        )}
+        {/* Bei Privatkunden zusätzlich Vor- und Nachname anzeigen */}
+        {!((order as any).billingAddress.isBusiness) && (
+          <>
+            {(order as any).billingAddress.firstName && (
+              <>
+                <div className={styles.addrLabel}>Vorname</div>
+                <div className={styles.addrValue}>{(order as any).billingAddress.firstName}</div>
+              </>
+            )}
+            {(order as any).billingAddress.lastName && (
+              <>
+                <div className={styles.addrLabel}>Nachname</div>
+                <div className={styles.addrValue}>{(order as any).billingAddress.lastName}</div>
+              </>
+            )}
+          </>
+        )}
+        {((order as any).billingAddress.street || (order as any).billingAddress.houseNumber) && (
+          <>
+            <div className={styles.addrLabel}>Straße</div>
+            <div className={styles.addrValue}>
+              {[(order as any).billingAddress.street, (order as any).billingAddress.houseNumber].filter(Boolean).join(' ')}
+            </div>
+          </>
+        )}
+        {((order as any).billingAddress.zip || (order as any).billingAddress.city) && (
+          <>
+            <div className={styles.addrLabel}>PLZ/Ort</div>
+            <div className={styles.addrValue}>
+              {[(order as any).billingAddress.zip, (order as any).billingAddress.city].filter(Boolean).join(' ')}
+            </div>
+          </>
+        )}
+        {(order as any).billingAddress.country && (
+          <>
+            <div className={styles.addrLabel}>Land</div>
+            <div className={styles.addrValue}>{(order as any).billingAddress.country}</div>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
 
               </div>
             </li>
