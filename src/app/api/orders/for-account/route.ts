@@ -222,15 +222,19 @@ export async function GET(req: Request) {
       if (kind === 'angenommen') {
         const d = (req?.data ?? {}) as any
 
-        // Lieferadresse: bevorzugt fertiger String; sonst zusammensetzen
+        // Top-Name: Firma oder "Vorname Nachname"
+        const nameTop =
+          (d.firma && String(d.firma).trim()) ||
+          [d.vorname, d.nachname].map((s: any) => (s ? String(s).trim() : '')).filter(Boolean).join(' ')
+
+        // Lieferadresse: bevorzugt fertiger String; Name davor setzen
         if (typeof d.lieferadresse === 'string' && d.lieferadresse.trim()) {
-          shippingAddressStr = d.lieferadresse.trim()
+          shippingAddressStr = [nameTop, d.lieferadresse.trim()].filter(Boolean).join('\n')
         } else {
-          const top = [d.firma, [d.vorname, d.nachname].filter(Boolean).join(' ')].filter(Boolean).join(' · ')
           const line1 = [d.strasse, d.hausnummer].filter(Boolean).join(' ')
           const line2 = [d.plz, (d.ort || d.lieferort)].filter(Boolean).join(' ')
           const line3 = d.land
-          const parts = [top, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
+          const parts = [nameTop, line1, line2, line3].map(s => (s && String(s).trim()) || '').filter(Boolean)
           shippingAddressStr = parts.length ? parts.join('\n') : undefined
         }
 
@@ -238,7 +242,7 @@ export async function GET(req: Request) {
         const buyerProf = r.buyer_id ? profById.get(String(r.buyer_id)) : undefined
         if (buyerProf) {
           const isBusiness = (buyerProf.account_type === 'business') || d.account_type === 'business' || d.istGewerblich === true
-          const name = !isBusiness ? [d.vorname, d.nachname].filter(Boolean).join(' ').trim() || null : null
+          const name = !isBusiness ? nameTop || null : null
           const company = buyerProf.company_name || null
           const addr = (buyerProf.address || {}) as any
           const line1 = [addr.street, addr.houseNumber].filter(Boolean).join(' ')
