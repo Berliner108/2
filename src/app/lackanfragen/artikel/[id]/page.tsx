@@ -321,7 +321,7 @@ function daysUntil(date: Date): number {
   today.setHours(0, 0, 0, 0);
   const end = new Date(date);
   end.setHours(0, 0, 0, 0);
-  return Math.ceil((end.getTime()) - (today.getTime())) / (1000 * 60 * 60 * 24);
+  return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 function DeadlineBadge({ date }: { date: Date | null }) {
   if (!date) return null;
@@ -1193,7 +1193,7 @@ function mapItem(it: ApiItem): ArtikelView {
     glanzgrad: d.glanzgrad || '',
     sondereigenschaft,
     beschreibung: d.beschreibung || '',
-    gesponsert: Boolean(d.gesponsert),
+    gesponsert: Boolean(d.gesponsert ?? (it as any).gesponsert),
     gewerblich: istGewerblich,
     privat: istGewerblich === false ? true : false,
     dateien: resolveDateien(d),

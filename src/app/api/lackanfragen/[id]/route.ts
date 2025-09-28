@@ -71,11 +71,11 @@ function normalizeZustand(z?: unknown): string {
 /* ---------------------- Route ---------------------- */
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }   // ← kein Promise nötig
 ) {
-  const { id } = await params
+  const { id } = params
 
-  // 0) Nur eingeloggte User erlauben (Middleware deckt das i.d.R. ab; hier trotzdem Guard)
+  // 0) Auth-Zwang beibehalten (wie bei dir): nur eingeloggte Nutzer
   const sb = await supabaseServer()
   const { data: { user }, error: userErr } = await sb.auth.getUser()
   if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
@@ -94,12 +94,11 @@ export async function GET(
     return NextResponse.json({ error: 'DB error' }, { status: 500 })
   }
 
-  // Nicht vorhanden/gelöscht?
   if (!data || data.status === 'deleted') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // 1b) Promo-Score ermitteln (nur bezahlte/succeeded Orders zählen)
+  // 1b) Promo-Score (nur paid/succeeded)
   let promo_score = 0
   try {
     const { data: promos, error: promoErr } = await admin
@@ -122,10 +121,11 @@ export async function GET(
     console.warn('[lackanfragen] promo_orders lookup crashed (non-fatal)', (e as any)?.message)
   }
 
-  // 2) Owner-Profile (Name/Rating) via Admin
+  // 2) Owner-Profile
   let userName: string | null = null
   let userRating: number | null = null
   let userRatingCount = 0
+  let userHandle: string | null = null
   try {
     const { data: prof } = await admin
       .from('profiles')
@@ -136,6 +136,7 @@ export async function GET(
     if (prof) {
       const handle  = (prof.username ?? '').toString().trim() || null
       const display = (prof.company_name ?? '').toString().trim() || null
+      userHandle = handle
       userName = display || handle
       userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
       userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : (prof.rating_count != null ? Number(prof.rating_count) : 0)
@@ -157,30 +158,37 @@ export async function GET(
     userRatingCount = d.user_rating_count
   }
 
-  // 3) Antwort im bestehenden Format (+ promo_score/gesponsert)
+  // 3) Antwort – jetzt inkl. *rohem* data für deinen Mapper
   const artikel = {
     id: data.id,
     titel: data.title || d.titel || 'Ohne Titel',
+    title: data.title ?? null,
+
+    // Rohdaten für deine mapItem-Logik:
+    data: d,                                      // ← WICHTIG: raw data mitgeben
+
+    // Normalisierte/abgeleitete Felder:
     bilder: normalizeBilder(d),
     lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
+    ort: computeOrtShort(d),
+    lieferadresse_full: (d.lieferadresse ?? '').toString(),
 
     zustand: normalizeZustand(d.zustand),
     hersteller: d.hersteller || '',
     menge: typeof d.menge === 'number' ? d.menge : (d.menge ? Number(d.menge) : null),
-
-    ort: computeOrtShort(d),
-    lieferadresse_full: (d.lieferadresse ?? '').toString(),
-
     kategorie:
       (d.kategorie || '').toString().toLowerCase() === 'pulverlack' ? 'Pulverlack'
       : (d.kategorie || '').toString().toLowerCase() === 'nasslack' ? 'Nasslack'
       : (d.kategorie || ''),
 
+    // User/Rating
     user_id: data.owner_id as string,
     user: userName,
+    user_handle: userHandle,                       // optional hilfreich für Reviews-Link
     user_rating: userRating,
     user_rating_count: userRatingCount,
 
+    // sonstige Felder
     farbcode: d.farbcode || '',
     effekt: Array.isArray(d.effekt) ? d.effekt.join(', ') : (d.effekt || ''),
     anwendung: d.anwendung || '',
@@ -189,24 +197,24 @@ export async function GET(
     sondereigenschaft: d.sondereigenschaft || '',
     beschreibung: d.beschreibung || '',
 
-    // NEU: Sponsoring aus promo_orders
-    promo_score,
-    gesponsert: promo_score > 0,
-
-    gewerblich: !!d.istGewerblich,
-    privat: d.istGewerblich === false,
-
     dateien: normalizeDateien(d),
-
     farbpalette: d.farbpalette || '',
     farbton: d.farbton || '',
     qualität: d.qualitaet || d.qualität || '',
     zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
     aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
 
-    // fürs FE (Banner etc.)
+    // Sponsoring
+    promo_score,
+    gesponsert: promo_score > 0,
+
+    // Flags/Meta
+    gewerblich: !!d.istGewerblich,
+    privat: d.istGewerblich === false,
     published: data.published,
     status: data.status,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
   }
 
   return NextResponse.json({ artikel })
