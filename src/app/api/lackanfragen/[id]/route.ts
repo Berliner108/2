@@ -1,3 +1,5 @@
+// /src/app/api/lackanfragen/[id]/route.ts
+import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -7,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 const PAID_STATUSES = new Set(['paid', 'succeeded'])
 
-/* ----- Helpers: Ort anonymisieren + PII strippen ----- */
+/* ----- Helpers (gekürzt) ----- */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
@@ -23,11 +25,7 @@ function extractZipCity(s?: unknown): string {
 function computeOrtPublic(d: any): string {
   const joined = joinPlzOrt(d?.plz, d?.ort)
   if (joined) return joined
-  const fromText =
-    extractZipCity(d?.lieferort) ||
-    extractZipCity(d?.lieferadresse) ||
-    extractZipCity(d?.address)
-  return fromText || '—'
+  return extractZipCity(d?.lieferort) || extractZipCity(d?.lieferadresse) || extractZipCity(d?.address) || '—'
 }
 function normalizeBilder(d: any): string[] {
   const b = d?.bilder
@@ -45,13 +43,10 @@ function normalizeZustand(z?: unknown): string {
   if (v.includes('geöffnet') || v.includes('geoeffnet') || v.includes('offen')) return 'Geöffnet und einwandfrei'
   return (z ?? '').toString()
 }
-
 const SENSITIVE_KEYS = new Set([
-  'email','e_mail','mail',
-  'telefon','phone','mobile','handy',
+  'email','e_mail','mail','telefon','phone','mobile','handy',
   'adresse','address','anschrift','lieferadresse','street','strasse','hausnummer',
-  'iban','bic','tax_id','ustid','vat',
-  'geo','lat','lng','longitude','latitude',
+  'iban','bic','tax_id','ustid','vat','geo','lat','lng','longitude','latitude',
   'firstName','lastName','vorname','nachname','geburtsdatum','birthday','national_id','ausweis',
 ])
 function stripSensitive(d: any) {
@@ -64,12 +59,12 @@ function stripSensitive(d: any) {
   return out
 }
 
-/* ---------------------- Route ---------------------- */
+/* ----- Route ----- */
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }   // ✅ Next 15 kompatibel
+  _req: NextRequest,
+  context: { params: Record<string, string> }   // ✅ Next 15 akzeptiert das
 ) {
-  const { id } = params
+  const { id } = context.params
 
   // nur eingeloggte Nutzer
   const sb = await supabaseServer()
@@ -92,7 +87,7 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // Unpublished nur Owner/Staff zeigen
+  // Unpublished nur Owner/Staff
   if (data.published === false && user.id !== data.owner_id) {
     const { data: me } = await admin.from('profiles').select('is_staff').eq('id', user.id).maybeSingle()
     if (!me?.is_staff) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -148,11 +143,11 @@ export async function GET(
     titel: data.title || dRaw.titel || 'Ohne Titel',
     title: data.title ?? null,
 
-    data: d,                                     // ← bereinigte Rohdaten
+    data: d,  // bereinigte Rohdaten
 
     bilder: normalizeBilder(dRaw),
     lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
-    ort: computeOrtPublic(dRaw),                 // ← nur PLZ+Ort
+    ort: computeOrtPublic(dRaw),
 
     zustand: normalizeZustand(dRaw.zustand),
     hersteller: dRaw.hersteller || '',
@@ -176,7 +171,6 @@ export async function GET(
     sondereigenschaft: dRaw.sondereigenschaft || '',
     beschreibung: dRaw.beschreibung || '',
 
-    // Falls du hier Dateien brauchst: vorher prüfen/filtern, sonst leer lassen
     dateien: Array.isArray(dRaw.dateien) ? dRaw.dateien : [],
 
     farbpalette: dRaw.farbpalette || '',
