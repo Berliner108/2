@@ -71,9 +71,9 @@ function normalizeZustand(z?: unknown): string {
 /* ---------------------- Route ---------------------- */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }   // ← kein Promise nötig
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
 
   // 0) Auth-Zwang beibehalten (wie bei dir): nur eingeloggte Nutzer
   const sb = await supabaseServer()

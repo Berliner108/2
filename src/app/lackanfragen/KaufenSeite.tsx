@@ -396,7 +396,7 @@ export default function KaufenSeite() {
             // ⚠️ Nur PLZ + Ort – nie komplette Adresse
             ort: resolveLieferort({ data: d, ...it }) || '—',
             bilder,
-            gesponsert: Boolean(d.gesponsert),
+            gesponsert: Boolean(d.gesponsert ?? (it as any).gesponsert),
             gewerblich: istGewerblich,
             privat: istGewerblich === false ? true : false,
 
