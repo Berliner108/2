@@ -1,4 +1,3 @@
-// /src/app/api/lackanfragen/[id]/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -6,17 +5,30 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/* ---------------------- Utils / Normalizer ---------------------- */
+const PAID_STATUSES = new Set(['paid', 'succeeded'])
+
+/* ----- Helpers: Ort anonymisieren + PII strippen ----- */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
-function computeOrtShort(d: any): string {
-  const direct = (d?.lieferort ?? '').toString().trim()
-  if (direct) return direct
-  const joined = joinPlzOrt(d?.plz, d?.ort)
-  return joined || '—'
+function extractZipCity(s?: unknown): string {
+  const text = (s ?? '').toString()
+  if (!text) return ''
+  const m = text.match(/(?:^|\b)(?:D[-\s])?(\d{4,5})\s+([A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß.\- ]{2,}?)(?=,|$|\n|\r)/)
+  if (!m) return ''
+  const zip = m[1].trim()
+  const city = m[2].trim().replace(/\s+/g, ' ')
+  return [zip, city].filter(Boolean).join(' ')
 }
-
+function computeOrtPublic(d: any): string {
+  const joined = joinPlzOrt(d?.plz, d?.ort)
+  if (joined) return joined
+  const fromText =
+    extractZipCity(d?.lieferort) ||
+    extractZipCity(d?.lieferadresse) ||
+    extractZipCity(d?.address)
+  return fromText || '—'
+}
 function normalizeBilder(d: any): string[] {
   const b = d?.bilder
   if (Array.isArray(b)) {
@@ -26,40 +38,6 @@ function normalizeBilder(d: any): string[] {
   if (typeof b === 'string' && b.trim()) return b.split(',').map((s: string) => s.trim()).filter(Boolean)
   return []
 }
-
-type DateiItem = { name: string; url: string }
-function getNameFromUrl(u: string): string {
-  try {
-    const p = new URL(u)
-    const last = p.pathname.split('/').filter(Boolean).pop() || 'datei'
-    return decodeURIComponent(last)
-  } catch {
-    const parts = u.split('/')
-    return decodeURIComponent(parts[parts.length - 1] || 'datei')
-  }
-}
-function normalizeDateien(d: any): DateiItem[] {
-  const arr = d?.dateien
-  if (!arr) return []
-  if (Array.isArray(arr)) {
-    if (arr.length === 0) return []
-    if (typeof arr[0] === 'string') {
-      return (arr as string[]).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }))
-    }
-    return (arr as any[])
-      .map((x) => {
-        const url: string | undefined = x?.url || x?.href
-        const name: string | undefined = x?.name || x?.filename || (url ? getNameFromUrl(url) : undefined)
-        return url ? { name: name || 'Datei', url } : null
-      })
-      .filter(Boolean) as DateiItem[]
-  }
-  if (typeof arr === 'string' && arr.trim()) {
-    return arr.split(',').map(s => s.trim()).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }))
-  }
-  return []
-}
-
 function normalizeZustand(z?: unknown): string {
   const v = (z ?? '').toString().toLowerCase()
   if (!v) return ''
@@ -68,20 +46,37 @@ function normalizeZustand(z?: unknown): string {
   return (z ?? '').toString()
 }
 
+const SENSITIVE_KEYS = new Set([
+  'email','e_mail','mail',
+  'telefon','phone','mobile','handy',
+  'adresse','address','anschrift','lieferadresse','street','strasse','hausnummer',
+  'iban','bic','tax_id','ustid','vat',
+  'geo','lat','lng','longitude','latitude',
+  'firstName','lastName','vorname','nachname','geburtsdatum','birthday','national_id','ausweis',
+])
+function stripSensitive(d: any) {
+  if (!d || typeof d !== 'object') return {}
+  const out: any = {}
+  for (const [k, v] of Object.entries(d)) {
+    if (SENSITIVE_KEYS.has(k.toLowerCase())) continue
+    out[k] = v
+  }
+  return out
+}
+
 /* ---------------------- Route ---------------------- */
 export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  _req: Request,
+  { params }: { params: { id: string } }   // ✅ Next 15 kompatibel
 ) {
-  const { id } = await params
+  const { id } = params
 
-  // 0) Auth-Zwang beibehalten (wie bei dir): nur eingeloggte Nutzer
+  // nur eingeloggte Nutzer
   const sb = await supabaseServer()
   const { data: { user }, error: userErr } = await sb.auth.getUser()
   if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
   if (!user)    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  // 1) Anfrage via Admin (RLS umgehen) holen
   const admin = supabaseAdmin()
   const { data, error } = await admin
     .from('lack_requests')
@@ -93,35 +88,34 @@ export async function GET(
     console.error('[lackanfragen] detail error', error.message)
     return NextResponse.json({ error: 'DB error' }, { status: 500 })
   }
-
   if (!data || data.status === 'deleted') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  // 1b) Promo-Score (nur paid/succeeded)
+  // Unpublished nur Owner/Staff zeigen
+  if (data.published === false && user.id !== data.owner_id) {
+    const { data: me } = await admin.from('profiles').select('is_staff').eq('id', user.id).maybeSingle()
+    if (!me?.is_staff) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // Promo-Score
   let promo_score = 0
   try {
-    const { data: promos, error: promoErr } = await admin
+    const { data: promos } = await admin
       .from('promo_orders')
       .select('score_delta,status')
       .eq('request_id', id)
-
-    if (promoErr) {
-      console.warn('[lackanfragen] promo_orders lookup failed (non-fatal)', promoErr.message ?? promoErr)
-    } else {
-      for (const p of promos ?? []) {
-        const st = (p?.status ?? '').toString().toLowerCase()
-        if (st === 'paid' || st === 'succeeded') {
-          const d = typeof p?.score_delta === 'number' ? p.score_delta : 0
-          promo_score += d
-        }
+    for (const p of (promos ?? [])) {
+      const st = (p?.status ?? '').toString().toLowerCase()
+      if (PAID_STATUSES.has(st)) {
+        promo_score += typeof p?.score_delta === 'number' ? p.score_delta : 0
       }
     }
   } catch (e) {
-    console.warn('[lackanfragen] promo_orders lookup crashed (non-fatal)', (e as any)?.message)
+    console.warn('[lackanfragen] promo_orders lookup failed (non-fatal)', (e as any)?.message)
   }
 
-  // 2) Owner-Profile
+  // Owner-Profil
   let userName: string | null = null
   let userRating: number | null = null
   let userRatingCount = 0
@@ -132,85 +126,71 @@ export async function GET(
       .select('id, username, company_name, rating_avg, rating_count')
       .eq('id', data.owner_id)
       .maybeSingle()
-
     if (prof) {
       const handle  = (prof.username ?? '').toString().trim() || null
       const display = (prof.company_name ?? '').toString().trim() || null
       userHandle = handle
       userName = display || handle
-      userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
-      userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : (prof.rating_count != null ? Number(prof.rating_count) : 0)
+      userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg
+                 : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
+      userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count
+                      : (prof.rating_count != null ? Number(prof.rating_count) : 0)
     }
   } catch (e) {
     console.warn('[lackanfragen] profile lookup failed (non-fatal)', (e as any)?.message)
   }
 
-  const d: any = data.data || {}
+  const dRaw: any = data.data || {}
+  const d = stripSensitive(dRaw)
 
-  if (!userName) {
-    const fromData = (d.user ?? d.username ?? d.user_name ?? '').toString().trim()
-    userName = fromData || null
-  }
-  if (userRating == null && typeof d.user_rating === 'number') {
-    userRating = d.user_rating
-  }
-  if (!userRatingCount && typeof d.user_rating_count === 'number') {
-    userRatingCount = d.user_rating_count
-  }
-
-  // 3) Antwort – jetzt inkl. *rohem* data für deinen Mapper
   const artikel = {
     id: data.id,
-    titel: data.title || d.titel || 'Ohne Titel',
+    titel: data.title || dRaw.titel || 'Ohne Titel',
     title: data.title ?? null,
 
-    // Rohdaten für deine mapItem-Logik:
-    data: d,                                      // ← WICHTIG: raw data mitgeben
+    data: d,                                     // ← bereinigte Rohdaten
 
-    // Normalisierte/abgeleitete Felder:
-    bilder: normalizeBilder(d),
+    bilder: normalizeBilder(dRaw),
     lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
-    ort: computeOrtShort(d),
-    lieferadresse_full: (d.lieferadresse ?? '').toString(),
+    ort: computeOrtPublic(dRaw),                 // ← nur PLZ+Ort
 
-    zustand: normalizeZustand(d.zustand),
-    hersteller: d.hersteller || '',
-    menge: typeof d.menge === 'number' ? d.menge : (d.menge ? Number(d.menge) : null),
+    zustand: normalizeZustand(dRaw.zustand),
+    hersteller: dRaw.hersteller || '',
+    menge: typeof dRaw.menge === 'number' ? dRaw.menge : (dRaw.menge ? Number(dRaw.menge) : null),
     kategorie:
-      (d.kategorie || '').toString().toLowerCase() === 'pulverlack' ? 'Pulverlack'
-      : (d.kategorie || '').toString().toLowerCase() === 'nasslack' ? 'Nasslack'
-      : (d.kategorie || ''),
+      (dRaw.kategorie || '').toString().toLowerCase() === 'pulverlack' ? 'Pulverlack'
+      : (dRaw.kategorie || '').toString().toLowerCase() === 'nasslack' ? 'Nasslack'
+      : (dRaw.kategorie || ''),
 
-    // User/Rating
     user_id: data.owner_id as string,
     user: userName,
-    user_handle: userHandle,                       // optional hilfreich für Reviews-Link
+    user_handle: userHandle,
     user_rating: userRating,
     user_rating_count: userRatingCount,
 
-    // sonstige Felder
-    farbcode: d.farbcode || '',
-    effekt: Array.isArray(d.effekt) ? d.effekt.join(', ') : (d.effekt || ''),
-    anwendung: d.anwendung || '',
-    oberfläche: d.oberflaeche || d.oberfläche || '',
-    glanzgrad: d.glanzgrad || '',
-    sondereigenschaft: d.sondereigenschaft || '',
-    beschreibung: d.beschreibung || '',
+    farbcode: dRaw.farbcode || '',
+    effekt: Array.isArray(dRaw.effekt) ? dRaw.effekt.join(', ') : (dRaw.effekt || ''),
+    anwendung: dRaw.anwendung || '',
+    oberfläche: dRaw.oberflaeche || dRaw.oberfläche || '',
+    glanzgrad: dRaw.glanzgrad || '',
+    sondereigenschaft: dRaw.sondereigenschaft || '',
+    beschreibung: dRaw.beschreibung || '',
 
-    dateien: normalizeDateien(d),
-    farbpalette: d.farbpalette || '',
-    farbton: d.farbton || '',
-    qualität: d.qualitaet || d.qualität || '',
-    zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
-    aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
+    // Falls du hier Dateien brauchst: vorher prüfen/filtern, sonst leer lassen
+    dateien: Array.isArray(dRaw.dateien) ? dRaw.dateien : [],
 
-    // Sponsoring
+    farbpalette: dRaw.farbpalette || '',
+    farbton: dRaw.farbton || '',
+    qualität: dRaw.qualitaet || dRaw.qualität || '',
+    zertifizierung: Array.isArray(dRaw.zertifizierungen) ? dRaw.zertifizierungen : [],
+    aufladung: Array.isArray(dRaw.aufladung) ? dRaw.aufladung : [],
+
     promo_score,
     gesponsert: promo_score > 0,
 
-    // Flags/Meta
-    gewerblich: !!d.istGewerblich,
-    privat: d.istGewerblich === false,
+    gewerblich: !!dRaw.istGewerblich,
+    privat: dRaw.istGewerblich === false,
+
     published: data.published,
     status: data.status,
     created_at: data.created_at,

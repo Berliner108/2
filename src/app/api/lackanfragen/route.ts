@@ -1,21 +1,35 @@
-// /src/app/api/lackanfragen/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseServer } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const PAID_STATUSES = new Set(['paid', 'succeeded'])
 
-/* ------------ Helpers ------------ */
+/* ------------ Helpers (nur PLZ+Ort) ------------ */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
-function computeOrtShort(d: any): string {
-  const direct = (d?.lieferort ?? '').toString().trim()
-  if (direct) return direct
+function extractZipCity(s?: unknown): string {
+  const text = (s ?? '').toString()
+  if (!text) return ''
+  const m = text.match(/(?:^|\b)(?:D[-\s])?(\d{4,5})\s+([A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß.\- ]{2,}?)(?=,|$|\n|\r)/)
+  if (!m) return ''
+  const zip = m[1].trim()
+  const city = m[2].trim().replace(/\s+/g, ' ')
+  return [zip, city].filter(Boolean).join(' ')
+}
+
+function computeOrtPublic(d: any): string {
   const joined = joinPlzOrt(d?.plz, d?.ort)
-  return joined || '—'
+  if (joined) return joined
+  // NICHT direkt d.lieferort durchreichen → erst PLZ/Ort extrahieren
+  const fromText =
+    extractZipCity(d?.lieferort) ||
+    extractZipCity(d?.lieferadresse) ||
+    extractZipCity(d?.address)
+  return fromText || '—'
 }
 
 function normalizeBilder(d: any): string[] {
@@ -44,9 +58,21 @@ export async function GET(req: Request) {
     const admin = supabaseAdmin()
     const url = new URL(req.url)
 
+    // optional: Staff bestimmen (für includeUnpublished)
+    let isStaff = false
+    try {
+      const sb = await supabaseServer()
+      const { data: { user } } = await sb.auth.getUser()
+      if (user) {
+        const { data: me } = await admin.from('profiles').select('is_staff').eq('id', user.id).maybeSingle()
+        isStaff = !!me?.is_staff
+      }
+    } catch {}
+
     const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200)
     const kategorie = url.searchParams.get('kategorie') ?? ''
-    const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
+    const includeUnpublishedReq = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
+    const includeUnpublished = isStaff && includeUnpublishedReq   // ← nur Staff darf
 
     const id = url.searchParams.get('id') ?? ''
     const idsRaw = url.searchParams.get('ids') ?? ''
@@ -57,7 +83,7 @@ export async function GET(req: Request) {
     const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
     const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
 
-    // Global Listing: keine Paginierung/IDs/Suche → für Startseite sinnvoll
+    // Global Listing (für Startseite)
     const isGlobal = !page && offset == null && !id && !(idsRaw || '').trim() && !search
     const fetchLimit = isGlobal ? Math.min(400, Math.max(limit * 3, 120)) : limit
 
@@ -66,6 +92,7 @@ export async function GET(req: Request) {
       .from('lack_requests')
       .select('id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id', { count: 'exact' })
       .neq('status', 'deleted')
+      .neq('status', 'draft')               // ← Drafts ausblenden
       .order('created_at', { ascending: false })
 
     if (!includeUnpublished) {
@@ -79,7 +106,6 @@ export async function GET(req: Request) {
     if (ids.length) q = q.in('id', ids)
 
     if (search) {
-      // einfache Volltextsuche über ID/Titel
       q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
     }
 
@@ -99,7 +125,6 @@ export async function GET(req: Request) {
     const { data, error } = await q
     if (error) {
       console.error('[lackanfragen] query failed:', error)
-      // fail-soft, damit die Seite nicht bricht
       return NextResponse.json({ items: [] })
     }
 
@@ -114,11 +139,10 @@ export async function GET(req: Request) {
         .from('profiles')
         .select('id, username, company_name, rating_avg, rating_count')
         .in('id', ownerIds)
-
       profilesById = new Map((profs ?? []).map((p: any) => [p.id, p]))
     }
 
-    // Promo-Scores aufsummieren (nur paid/succeeded)
+    // Promo-Scores (nur paid/succeeded)
     let scoreByReq = new Map<string, number>()
     if (reqIds.length) {
       const { data: promoRows } = await admin
@@ -135,7 +159,7 @@ export async function GET(req: Request) {
       }
     }
 
-    // Mapping → ACHTUNG: gesponsert auch in data spiegeln!
+    // Mapping – d.gesponsert befüllen, Ort „public only“, KEINE komplette Adresse
     const mapped = rows.map((row: any) => {
       const d = row.data || {}
       const prof = profilesById.get(row.owner_id)
@@ -152,11 +176,7 @@ export async function GET(req: Request) {
       const promo_score = scoreByReq.get(row.id) || 0
       const isSponsored = (promo_score | 0) > 0
 
-      // >>> wichtig für dein Frontend: d.gesponsert setzen/erhalten
-      const dataOut = {
-        ...d,
-        gesponsert: Boolean(d.gesponsert) || isSponsored,
-      }
+      const dataOut = { ...d, gesponsert: Boolean(d.gesponsert) || isSponsored }
 
       return {
         id: row.id,
@@ -167,17 +187,16 @@ export async function GET(req: Request) {
         created_at: row.created_at,
         published: row.published,
 
-        data: dataOut,                               // ← dein FE liest d.gesponsert hier raus
-        ort: computeOrtShort(d),
+        data: dataOut,
+        ort: computeOrtPublic(d),                 // ← nur PLZ+Ort
         bilder: normalizeBilder(d),
-        lieferadresse_full: (d.lieferadresse ?? '').toString(),
 
         user,
         user_rating,
         user_rating_count,
 
         promo_score,
-        gesponsert: isSponsored,                     // ← zusätzlich top-level
+        gesponsert: isSponsored,
       }
     })
 
@@ -189,16 +208,13 @@ export async function GET(req: Request) {
       const promoted = mapped
         .filter(it => (it.promo_score | 0) > 0)
         .sort((a, b) => (b.promo_score | 0) - (a.promo_score | 0) || byCreatedDesc(a, b))
-
       const organic = mapped
         .filter(it => (it.promo_score | 0) === 0)
         .sort(byCreatedDesc)
-
       const filled = promoted.concat(organic).slice(0, limit)
       return NextResponse.json({ items: filled })
     }
 
-    // Teilmenge: Promo zuerst, dann nach created_at
     mapped.sort((a, b) =>
       (b.promo_score | 0) - (a.promo_score | 0) ||
       (new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
