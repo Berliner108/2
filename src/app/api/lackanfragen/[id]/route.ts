@@ -99,6 +99,29 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  // 1b) Promo-Score ermitteln (nur bezahlte/succeeded Orders zählen)
+  let promo_score = 0
+  try {
+    const { data: promos, error: promoErr } = await admin
+      .from('promo_orders')
+      .select('score_delta,status')
+      .eq('request_id', id)
+
+    if (promoErr) {
+      console.warn('[lackanfragen] promo_orders lookup failed (non-fatal)', promoErr.message ?? promoErr)
+    } else {
+      for (const p of promos ?? []) {
+        const st = (p?.status ?? '').toString().toLowerCase()
+        if (st === 'paid' || st === 'succeeded') {
+          const d = typeof p?.score_delta === 'number' ? p.score_delta : 0
+          promo_score += d
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[lackanfragen] promo_orders lookup crashed (non-fatal)', (e as any)?.message)
+  }
+
   // 2) Owner-Profile (Name/Rating) via Admin
   let userName: string | null = null
   let userRating: number | null = null
@@ -134,7 +157,7 @@ export async function GET(
     userRatingCount = d.user_rating_count
   }
 
-  // 3) Antwort im bestehenden Format
+  // 3) Antwort im bestehenden Format (+ promo_score/gesponsert)
   const artikel = {
     id: data.id,
     titel: data.title || d.titel || 'Ohne Titel',
@@ -166,7 +189,10 @@ export async function GET(
     sondereigenschaft: d.sondereigenschaft || '',
     beschreibung: d.beschreibung || '',
 
-    gesponsert: Array.isArray(d.bewerbung) && d.bewerbung.length > 0,
+    // NEU: Sponsoring aus promo_orders
+    promo_score,
+    gesponsert: promo_score > 0,
+
     gewerblich: !!d.istGewerblich,
     privat: d.istGewerblich === false,
 
