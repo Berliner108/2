@@ -586,13 +586,19 @@ export default function KaufenSeite() {
         const res = await fetch('/api/promo/packages', { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const pkgs = (Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : [])).map((p: any) => ({
-          id: p.id ?? p.package_id ?? p.slug ?? String(p.name || 'paket'),
-          name: p.name ?? p.title ?? 'Paket',
-          price_total: Number(p.price_total ?? p.price ?? 0),
-          currency: p.currency ?? 'EUR',
-          description: p.description ?? null,
-        })) as PromoPackage[];
+        const list = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+const pkgs = list.map((p: any) => ({
+  id: String(p.id),
+  name: p.title ?? 'Paket',
+  description: p.subtitle ?? null,
+  // brutto in EUR aus price_cents
+  price_total: (Number(p.price_cents) || 0) / 100,
+  currency: 'EUR',
+  // optional: falls du ein Badge anzeigen willst
+  most_popular: !!p.most_popular,
+})) as PromoPackage[];
+if (active) setPromoPackages(pkgs);
+
         if (active) setPromoPackages(pkgs);
       } catch (e: any) {
         if (active) setPromoError(e?.message || 'Pakete konnten nicht geladen werden');
