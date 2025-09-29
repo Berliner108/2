@@ -41,12 +41,9 @@ type CardArtikel = {
   gewerblich?: boolean;
   privat?: boolean;
 
-  // Farbinfos
+  // Farbinfos für Anzeige/Suche
   farbton?: string;
   farbcode?: string;
-
-  // Ownership
-  ownerId?: string; // <-- neu: aus API owner_id gemappt
 
   // optional für Anbieter/Rating (falls genutzt)
   anbieterName?: string;
@@ -67,7 +64,6 @@ type ApiItem = {
   delivery_at?: string | null;
   status?: string;
   published?: boolean;
-  owner_id?: string | null;        // <-- neu/erwartet
   data?: Record<string, any> | null;
 };
 
@@ -126,8 +122,14 @@ function toDateOrNull(s?: string | null): Date | null {
 }
 
 function resolveLieferdatum(it: ApiItem): Date | null {
+  // erlaubt: Top-Level + data.* Varianten
   const d: any = it.data || {};
-  return toDateOrNull(it.lieferdatum || it.delivery_at || d.lieferdatum || d.delivery_at);
+  return toDateOrNull(
+    it.lieferdatum ||
+      it.delivery_at ||
+      d.lieferdatum ||
+      d.delivery_at
+  );
 }
 
 function resolveMenge(d: any): number {
@@ -145,7 +147,9 @@ function resolveBilder(d: any): string[] {
   if (Array.isArray(b) && b.length) {
     if (typeof b[0] === 'string') return b as string[];
     if (typeof b[0] === 'object' && (b[0] as any)?.url) {
-      return (b as Array<{ url?: string }>).map((x) => x.url).filter(Boolean) as string[];
+      return (b as Array<{ url?: string }>)
+        .map((x) => x.url)
+        .filter(Boolean) as string[];
     }
   }
   if (typeof b === 'string' && b.trim()) {
@@ -154,20 +158,35 @@ function resolveBilder(d: any): string[] {
   return ['/images/platzhalter.jpg'];
 }
 
+// --- Farbfelder auflösen ---
 function resolveFarbton(d: any): string | undefined {
   const candidates = [
-    d?.farbton, d?.farbtonbezeichnung, d?.farb_bezeichnung,
-    d?.farbname, d?.farbe, d?.color_name, d?.color, d?.ral, d?.ncs,
+    d?.farbton,
+    d?.farbtonbezeichnung,
+    d?.farb_bezeichnung,
+    d?.farbname,
+    d?.farbe,
+    d?.color_name,
+    d?.color,
+    d?.ral,
+    d?.ncs,
   ];
   const first = candidates.find((v) => typeof v === 'string' && v.trim());
   return first ? String(first).trim() : undefined;
 }
 
 function resolveFarbcode(d: any): string | undefined {
-  const candidates = [d?.farbcode, d?.color_code, d?.hex, d?.hex_code];
+  const candidates = [
+    d?.farbcode,
+    d?.color_code,
+    d?.hex,
+    d?.hex_code,
+  ];
   const first = candidates.find((v) => typeof v === 'string' && v.trim());
   return first ? String(first).trim() : undefined;
 }
+
+// --- tiefe Suche + Extraktion für Ort ---
 
 function joinPlzOrt(plz?: unknown, ort?: unknown): string {
   const p = (plz ?? '').toString().trim();
@@ -215,7 +234,10 @@ function deepGetLieferort(obj: any): string {
 }
 
 function deepGetAddressLike(obj: any): string {
-  const v = deepFindFirst(obj, (k) => /adresse|address|anschrift|lieferadresse|lieferAdresse/i.test(k));
+  const v = deepFindFirst(
+    obj,
+    (k) => /adresse|address|anschrift|lieferadresse|lieferAdresse/i.test(k)
+  );
   return typeof v === 'string' ? v : '';
 }
 
@@ -239,46 +261,17 @@ const toBool = (v: unknown): boolean =>
   : typeof v === 'number' ? v !== 0
   : !!v;
 
-/* ===== Menge-Utils ===== */
+/* ===== Menge-Utils (ein Slider + Textfeld ohne „0“-Bug) ===== */
 const MAX_MENGE = 10000;
 const clamp = (n: number) => Math.max(0, Math.min(MAX_MENGE, Math.round(n)));
 const stepFor = (v: number) => (v <= 100 ? 1 : v <= 1000 ? 5 : 50);
-
-/* ===== Promo-Helpers ===== */
-type PromoPackage = {
-  id: string;
-  name: string;
-  price_total: number; // brutto
-  currency: string;    // z.B. "EUR"
-  description?: string | null;
-};
-
-const fmtPrice = (value: number, currency = 'EUR') =>
-  new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(value);
-
-// robuste User-ID-Erkennung über verschiedene /api/me|profil|profile-Shapes
-function extractUserId(payload: any): string | null {
-  const candidates = [
-    payload?.id,
-    payload?.user?.id,
-    payload?.profile?.id,
-    payload?.data?.id,
-    payload?.me?.id,
-    payload?.user_id,
-    payload?.uid,
-  ];
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim()) return c.trim();
-  }
-  return null;
-}
 
 /* ===================== Seite ===================== */
 
 export default function KaufenSeite() {
   const [suchbegriff, setSuchbegriff] = useState('');
   const [maxMenge, setMaxMenge] = useState<number>(MAX_MENGE);
-  const [maxMengeInput, setMaxMengeInput] = useState<string>(String(MAX_MENGE));
+  const [maxMengeInput, setMaxMengeInput] = useState<string>(String(MAX_MENGE)); // String-State fürs Feld
   const [kategorie, setKategorie] = useState('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
@@ -288,24 +281,16 @@ export default function KaufenSeite() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
 
-  // loader + liste
+  // direkt mit true starten → Skeleton/TopLoader erscheint sofort
   const [loading, setLoading] = useState(true);
   const [liste, setListe] = useState<CardArtikel[]>([]);
-
-  // Ich/Owner
-  const [meId, setMeId] = useState<string | null>(null);
-
-  // Promo-UI
-  const [promoOpenFor, setPromoOpenFor] = useState<string | number | null>(null);
-  const [promoPackages, setPromoPackages] = useState<PromoPackage[] | null>(null);
-  const [promoLoading, setPromoLoading] = useState(false);
-  const [promoError, setPromoError] = useState<string | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const page = parseInt(searchParams.get('page') || '1', 10);
 
+  // Pagination-Parameter EINMAL definieren
   const seitenGroesse = 50;
   const startIndex = (page - 1) * seitenGroesse;
   const endIndex = page * seitenGroesse;
@@ -319,13 +304,17 @@ export default function KaufenSeite() {
     setMaxMenge(v);
     setMaxMengeInput(String(v));
   };
+
+  // Textfeld tippen (nur Ziffern, leer erlaubt)
   const onNumInputChange = (val: string) => {
     const clean = val.replace(/[^\d]/g, '');
     setMaxMengeInput(clean);
   };
+
+  // Textfeld committen (Blur/Enter)
   const commitNumInput = () => {
     if (maxMengeInput.trim() === '') {
-      setMaxMengeInput(String(maxMenge));
+      setMaxMengeInput(String(maxMenge)); // leer -> zurückformatieren
       return;
     }
     const parsed = parseInt(maxMengeInput, 10);
@@ -334,7 +323,7 @@ export default function KaufenSeite() {
     setMaxMengeInput(String(v));
   };
 
-  /* === Initialzustand einmalig aus URL übernehmen === */
+  /* === NEU: Initialzustand einmalig aus URL übernehmen (alle Filter) === */
   useEffect(() => {
     const arr = (s: string | null) => (s ? s.split(',').filter(Boolean) : []);
     setSuchbegriff(searchParams.get('q') || '');
@@ -350,29 +339,6 @@ export default function KaufenSeite() {
     setPrivat(searchParams.get('p') === '1');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // nur einmal beim Mount
-
-  // Eigenen User laden (robust: /api/me -> /api/profil -> /api/profile)
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const endpoints = ['/api/me', '/api/profil', '/api/profile'];
-      for (const ep of endpoints) {
-        try {
-          const res = await fetch(ep, { cache: 'no-store' });
-          if (!res.ok) continue;
-          const json = await res.json();
-          const id = extractUserId(json);
-          if (id && active) {
-            setMeId(id);
-            break;
-          }
-        } catch {
-          // next endpoint
-        }
-      }
-    })();
-    return () => { active = false; };
-  }, []);
 
   // Daten einmalig laden
   useEffect(() => {
@@ -404,6 +370,7 @@ export default function KaufenSeite() {
             : d.gewerblich != null ? toBool(d.gewerblich)
             : false;
 
+          // Optional: Anbieter/Rating (falls vorhanden)
           const anbieterName: string =
             (d.user && typeof d.user.name === 'string' && d.user.name) ||
             (typeof d.username === 'string' && d.username) ||
@@ -426,6 +393,7 @@ export default function KaufenSeite() {
             hersteller: (d.hersteller || '').toString(),
             zustand: normZustand(d.zustand),
             kategorie: normKategorie(d.kategorie),
+            // ⚠️ Nur PLZ + Ort – nie komplette Adresse
             ort: resolveLieferort({ data: d, ...it }) || '—',
             bilder,
             gesponsert: Boolean(d.gesponsert ?? (it as any).gesponsert),
@@ -436,10 +404,7 @@ export default function KaufenSeite() {
             farbton,
             farbcode,
 
-            // Owner (wichtig für "Bewerben")
-            ownerId: (it as any).owner_id || d.owner_id || undefined,
-
-            // Anbieter/Rating
+            // Anbieter/Rating, falls genutzt
             anbieterName,
             ratingAvg,
             ratingCount,
@@ -477,8 +442,8 @@ export default function KaufenSeite() {
         keys: [
           { name: 'titel', weight: 0.55 },
           { name: 'hersteller', weight: 0.2 },
-          { name: 'farbton', weight: 0.9 },
-          { name: 'farbcode', weight: 0.7 },
+          { name: 'farbton', weight: 0.9 },     // Suche nach Farbton
+          { name: 'farbcode', weight: 0.7 },    // optional: #Hex / Code
           { name: 'zustand', weight: 0.15 },
           { name: 'kategorie', weight: 0.15 },
           { name: 'ort', weight: 0.1 },
@@ -492,6 +457,7 @@ export default function KaufenSeite() {
     // Sortierung inkl. gesponsert zuerst
     const getTime = (x: CardArtikel) => (x.lieferdatum ? x.lieferdatum.getTime() : Number.MAX_SAFE_INTEGER);
     arr.sort((a, b) => {
+      // Gesponsert nach oben
       if (a.gesponsert && !b.gesponsert) return -1;
       if (!a.gesponsert && b.gesponsert) return 1;
 
@@ -516,7 +482,13 @@ export default function KaufenSeite() {
     return arr;
   }, [liste, kategorie, zustand, gewerblich, privat, hersteller, maxMenge, suchbegriff, sortierung]);
 
-  // Infinite-Scroll nur auf Seite 1
+  // Wenn Daten/Filter wechseln und wir auf Seite 1 sind → Infinite-Scroll-Zähler zurücksetzen
+  useEffect(() => {
+    if (page === 1) setAnzahlAnzeigen(50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liste, kategorie, zustand, hersteller, sortierung, gewerblich, privat, suchbegriff, maxMenge]);
+
+  // Infinite Scroll nur auf Seite 1
   useEffect(() => {
     if (page !== 1) return;
 
@@ -550,7 +522,7 @@ export default function KaufenSeite() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suchbegriff, maxMenge, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
 
-  // Filter/Sort Zustand in URL spiegeln
+  /* === NEU: Filter/Sortierzustand immer in der URL spiegeln === */
   useEffect(() => {
     const params = new URLSearchParams();
     if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
@@ -562,6 +534,7 @@ export default function KaufenSeite() {
     if (gewerblich) params.set('g', '1');
     if (privat) params.set('p', '1');
 
+    // 'page' bewusst NICHT setzen → bei Filterwechsel bleibt man auf Seite 1
     const next = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
     const current = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     if (next !== current) {
@@ -574,64 +547,6 @@ export default function KaufenSeite() {
 
   const totalPages = Math.max(1, Math.ceil(gefiltert.length / seitenGroesse));
   const seitenArtikel = gefiltert.slice(startIndex, endIndex);
-
-  // Promo: Packages lazy laden (beim Öffnen)
-  useEffect(() => {
-    let active = true;
-    if (!promoOpenFor || promoPackages) return;
-    (async () => {
-      setPromoLoading(true);
-      setPromoError(null);
-      try {
-        const res = await fetch('/api/promo/packages', { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const list = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
-const pkgs = list.map((p: any) => ({
-  id: String(p.id),
-  name: p.title ?? 'Paket',
-  description: p.subtitle ?? null,
-  // brutto in EUR aus price_cents
-  price_total: (Number(p.price_cents) || 0) / 100,
-  currency: 'EUR',
-  // optional: falls du ein Badge anzeigen willst
-  most_popular: !!p.most_popular,
-})) as PromoPackage[];
-if (active) setPromoPackages(pkgs);
-
-        if (active) setPromoPackages(pkgs);
-      } catch (e: any) {
-        if (active) setPromoError(e?.message || 'Pakete konnten nicht geladen werden');
-      } finally {
-        if (active) setPromoLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, [promoOpenFor, promoPackages]);
-
-  const startCheckout = async (requestId: string | number, packageId: string) => {
-    try {
-      setPromoLoading(true);
-      setPromoError(null);
-      const res = await fetch('/api/promo/checkout', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ request_id: String(requestId), package_id: packageId }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || `Checkout fehlgeschlagen (HTTP ${res.status})`);
-      }
-      const out = await res.json();
-      const url: string | undefined = out?.url || out?.session_url;
-      if (url) window.location.href = url;
-      else throw new Error('Keine Checkout-URL erhalten');
-    } catch (e: any) {
-      setPromoError(e?.message || 'Checkout fehlgeschlagen');
-    } finally {
-      setPromoLoading(false);
-    }
-  };
 
   // Nur während des ersten Loads → Skeleton + TopLoader
   const bootLoading = loading && liste.length === 0;
@@ -684,7 +599,7 @@ if (active) setPromoPackages(pkgs);
             <option value="menge-ab">Menge absteigend</option>
           </select>
 
-          {/* EIN Slider + Textfeld */}
+          {/* ===== EIN Slider (dynamische Schrittweite) + Textfeld ohne „0“-Bug ===== */}
           <div style={{ display: 'grid', gap: 8 }}>
             <input
               className={styles.range}
@@ -698,6 +613,7 @@ if (active) setPromoPackages(pkgs);
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div className={styles.mengeText}>Max. Menge:</div>
+              {/* Text statt number: verhindert automatische 0 beim Tippen */}
               <input
                 className={styles.input}
                 type="text"
@@ -791,63 +707,9 @@ if (active) setPromoPackages(pkgs);
           </h3>
 
           <div className={styles.grid}>
-            {(page === 1 ? gefiltert.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => {
-              const isOwner = meId && a.ownerId && String(meId) === String(a.ownerId);
-              const showPromote = !!isOwner && !a.gesponsert;
-
-              return (
-                <div key={a.id} style={{ position: 'relative' }}>
-                  {/* Gesponsert-Pill */}
-                  {a.gesponsert && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        zIndex: 2,
-                        background: '#fde68a',
-                        color: '#92400e',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        padding: '4px 8px',
-                        borderRadius: 8,
-                      }}
-                    >
-                      Gesponsert
-                    </span>
-                  )}
-
-                  {/* Karte */}
-                  <ArtikelCard artikel={a} />
-
-                  {/* Bewerben-Button (nur Owner + nicht gesponsert) */}
-                  {showPromote && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPromoOpenFor(a.id); }}
-                      style={{
-                        position: 'absolute',
-                        right: 8,
-                        bottom: 8,
-                        zIndex: 3,
-                        background: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '8px 10px',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-                      }}
-                      aria-label="Anfrage bewerben"
-                    >
-                      Anfrage bewerben
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {(page === 1 ? gefiltert.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => (
+              <ArtikelCard key={a.id} artikel={a} />
+            ))}
             {page === 1 && <div ref={loadMoreRef} />}
           </div>
 
@@ -897,77 +759,6 @@ if (active) setPromoPackages(pkgs);
           </div>
         </div>
       </div>
-
-      {/* Promo-Overlay */}
-      {promoOpenFor != null && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Anfrage bewerben"
-          onClick={() => setPromoOpenFor(null)}
-          style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: 'min(680px, 92vw)', background: 'white', borderRadius: 12, padding: 20,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.25)'
-            }}
-          >
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Anfrage bewerben</h3>
-              <button
-                onClick={() => setPromoOpenFor(null)}
-                style={{ border:'none', background:'transparent', fontSize:18, cursor:'pointer' }}
-                aria-label="Schließen"
-              >×</button>
-            </div>
-
-            {promoLoading && <div style={{ padding: 12 }}>Lade Pakete…</div>}
-            {promoError && <div style={{ padding: 12, color: '#b91c1c' }}>{promoError}</div>}
-
-            {!promoLoading && !promoError && (
-              <div style={{
-                display:'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: 12,
-                marginTop: 8
-              }}>
-                {(promoPackages ?? []).map((p) => (
-                  <div key={p.id} style={{
-                    border:'1px solid #e5e7eb', borderRadius: 10, padding: 14,
-                    display:'grid', gap: 8
-                  }}>
-                    <div style={{ fontWeight:700 }}>{p.name}</div>
-                    {p.description ? <div style={{ fontSize:12, color:'#6b7280' }}>{p.description}</div> : null}
-                    <div style={{ fontSize:16, fontWeight:800 }}>{fmtPrice(p.price_total, p.currency)}</div>
-                    <button
-                      onClick={() => startCheckout(promoOpenFor!, p.id)}
-                      style={{
-                        marginTop: 6,
-                        background:'#111827', color:'white', border:'none',
-                        borderRadius:8, padding:'8px 10px', fontWeight:700, cursor:'pointer'
-                      }}
-                    >
-                      Zur Kasse
-                    </button>
-                  </div>
-                ))}
-                {(promoPackages ?? []).length === 0 && (
-                  <div style={{ padding: 12 }}>Keine Pakete verfügbar.</div>
-                )}
-              </div>
-            )}
-
-            <div style={{ marginTop: 12, fontSize: 12, color:'#6b7280' }}>
-              Fixpreise brutto, Laufzeit nicht erforderlich.
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
