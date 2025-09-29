@@ -21,11 +21,13 @@ function extractZipCity(s?: unknown): string {
   const city = m[2].trim().replace(/\s+/g, ' ')
   return [zip, city].filter(Boolean).join(' ')
 }
+
 function computeOrtPublic(d: any): string {
   const joined = joinPlzOrt(d?.plz, d?.ort)
   if (joined) return joined
   return extractZipCity(d?.lieferort) || extractZipCity(d?.lieferadresse) || extractZipCity(d?.address) || '—'
 }
+
 function normalizeBilder(d: any): string[] {
   const b = d?.bilder
   if (Array.isArray(b)) {
@@ -35,6 +37,7 @@ function normalizeBilder(d: any): string[] {
   if (typeof b === 'string' && b.trim()) return b.split(',').map((s: string) => s.trim()).filter(Boolean)
   return []
 }
+
 function normalizeZustand(z?: unknown): string {
   const v = (z ?? '').toString().toLowerCase()
   if (!v) return ''
@@ -42,12 +45,14 @@ function normalizeZustand(z?: unknown): string {
   if (v.includes('geöffnet') || v.includes('geoeffnet') || v.includes('offen')) return 'Geöffnet und einwandfrei'
   return (z ?? '').toString()
 }
+
 const SENSITIVE_KEYS = new Set([
   'email','e_mail','mail','telefon','phone','mobile','handy',
   'adresse','address','anschrift','lieferadresse','street','strasse','hausnummer',
   'iban','bic','tax_id','ustid','vat','geo','lat','lng','longitude','latitude',
   'firstName','lastName','vorname','nachname','geburtsdatum','birthday','national_id','ausweis',
 ])
+
 function stripSensitive(d: any) {
   if (!d || typeof d !== 'object') return {}
   const out: any = {}
@@ -61,9 +66,11 @@ function stripSensitive(d: any) {
 /* ----- Route ----- */
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }   // ✅ so akzeptiert es Next 15
+  { params }: { params: Record<string, string | string[]> } // ✅ so akzeptiert es Next 15
 ) {
-  const { id } = params
+  const raw = params?.id
+  const id = Array.isArray(raw) ? raw[0] : raw
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
   // nur eingeloggte Nutzer
   const sb = await supabaseServer()
@@ -99,6 +106,7 @@ export async function GET(
       .from('promo_orders')
       .select('score_delta,status')
       .eq('request_id', id)
+
     for (const p of (promos ?? [])) {
       const st = (p?.status ?? '').toString().toLowerCase()
       if (PAID_STATUSES.has(st)) {
@@ -120,6 +128,7 @@ export async function GET(
       .select('id, username, company_name, rating_avg, rating_count')
       .eq('id', data.owner_id)
       .maybeSingle()
+
     if (prof) {
       const handle  = (prof.username ?? '').toString().trim() || null
       const display = (prof.company_name ?? '').toString().trim() || null
@@ -142,7 +151,7 @@ export async function GET(
     titel: data.title || dRaw.titel || 'Ohne Titel',
     title: data.title ?? null,
 
-    data: d,  // bereinigte Rohdaten
+    data: d,  // bereinigte Rohdaten (keine sensiblen Felder)
 
     bilder: normalizeBilder(dRaw),
     lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
