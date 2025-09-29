@@ -8,14 +8,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
-import { Star, Search, Crown, Loader2 } from 'lucide-react';
+import { Star, Loader2 } from 'lucide-react';
 
 import {
   gemeinsameFeiertageDEAT,
   isWeekend,
   toYMD,
   todayDate,
-  minSelectableDate, // ⬅️ neu
+  minSelectableDate,
 } from '../../lib/dateUtils';
 
 /* ---------------- Fancy Loader Components ---------------- */
@@ -118,7 +118,7 @@ function MiniCalendar({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
         {weeks.map((w, wi) => w.map((d, di) => {
           if (!d) return <div key={`${wi}-${di}`} />;
-          const disabled = isDisabled(d) || d < minDate; // ⬅️ heute + Vergangenheit gesperrt
+          const disabled = isDisabled(d) || d < minDate;
           const isSelected = !!selected && toYMD(selected) === toYMD(d);
           return (
             <button
@@ -171,7 +171,6 @@ function istGueltigeDatei(file: File): boolean {
 }
 
 type NutzerTyp = 'gewerblich' | 'privat' | '';
-type PromoKey = 'startseite' | 'suche' | 'premium';
 
 type Adresse = {
   vorname: string;
@@ -193,13 +192,26 @@ const glanzgradListe = [
   { name: 'Hochglanz', value: 'Hochglanz' },
 ];
 
-/** Hilfsfunktionen für Adressnormalisierung */
 const toAddressString = (a?: Partial<Adresse>) => {
   if (!a) return '';
   const zeile1 = [a.strasse, a.hausnummer].filter(Boolean).join(' ');
   const zeile2 = [a.plz, a.ort].filter(Boolean).join(' ');
   return [zeile1, zeile2, a.land].filter(Boolean).join(', ');
 };
+
+/* ---- Promo Pakete ---- */
+type PromoPackage = {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  price_cents: number;
+  score_delta: number;
+  most_popular?: boolean | null;
+  stripe_price_id?: string | null;
+};
+
+const formatEUR = (cents: number) =>
+  (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 
 /* ---------------- Seite ---------------- */
 
@@ -261,12 +273,13 @@ function ArtikelEinstellen() {
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState<boolean>(false);
   const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState<boolean>(false);
   const [vorschauAktiv, setVorschauAktiv] = useState<boolean>(false);
-  const [ladeStatus, setLadeStatus] = useState<boolean>(false); // ← zeigt auch das Popup
-  const [bewerbungOptionen, setBewerbungOptionen] = useState<PromoKey[] | string[]>([]);
-  const [menge, setMenge] = useState<number>(0);
-  const [agbAccepted, setAgbAccepted] = useState<boolean>(false);
-  const [agbError, setAgbError] = useState<boolean>(false);
+  const [ladeStatus, setLadeStatus] = useState<boolean>(false);
   const [formAbgesendet, setFormAbgesendet] = useState<boolean>(false);
+
+  // Promo
+  const [packages, setPackages] = useState<PromoPackage[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState<boolean>(false);
+  const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]); // package_ids
 
   // Warnungen
   const [warnungKategorie, setWarnungKategorie] = useState<string>('');
@@ -278,7 +291,6 @@ function ArtikelEinstellen() {
   const [WarnungOberflaeche, setWarnungOberflaeche] = useState<string>('');
   const [warnungAnwendung, setWarnungAnwendung] = useState<string>('');
   const [warnungZustand, setWarnungZustand] = useState<string>('');
-  const [warnungAufladung, setWarnungAufladung] = useState<string>('');
   const [warnungBeschreibung, setWarnungBeschreibung] = useState<string>('');
   const [warnungFarbton, setWarnungFarbton] = useState<string>('');
   const [warnung, setWarnung] = useState<string>('');
@@ -335,7 +347,6 @@ function ArtikelEinstellen() {
       setKategorie(vorausgewaehlt);
     }
   }, [searchParams]);
-  
 
   /* ===== Profil laden ===== */
   useEffect(() => {
@@ -426,6 +437,7 @@ function ArtikelEinstellen() {
   }, [bilder]);
 
   // Menge (nur Zahl, 1 Nachkommastelle)
+  const [menge, setMenge] = useState<number>(0);
   function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const val = e.target.value.replace(',', '.');
     if (val === '') setMenge(0);
@@ -441,7 +453,7 @@ function ArtikelEinstellen() {
 
   // Feiertags-/Werktag-Handling
   const today = useMemo<Date>(() => todayDate(), []);
-  const minDate = useMemo<Date>(() => minSelectableDate(), []); // ⬅️ morgen
+  const minDate = useMemo<Date>(() => minSelectableDate(), []);
   const holidaysSet = useMemo<Set<string>>(() => {
     const y = today.getFullYear();
     const s1 = gemeinsameFeiertageDEAT(y);
@@ -450,7 +462,7 @@ function ArtikelEinstellen() {
   }, [today]);
 
   const isDisabledDay = (d: Date): boolean => {
-    if (d < minDate) return true;              // ⬅️ heute + Vergangenheit sperren
+    if (d < minDate) return true;
     if (isWeekend(d)) return true;
     if (holidaysSet.has(toYMD(d))) return true;
     return false;
@@ -511,10 +523,7 @@ function ArtikelEinstellen() {
     setEffekt([]);
     setSondereffekte([]);
     setQualitaet('');
-    setBewerbungOptionen([]);
-    setBilder([]);
-    setDateien([]);
-    setFarbpaletteWert('');
+    setZertifizierungen([]);
     setAufladung([]);
     setWarnung('');
     setWarnungKategorie('');
@@ -536,9 +545,39 @@ function ArtikelEinstellen() {
     setFormAbgesendet(false);
     setAgbAccepted(false);
     setAgbError(false);
+    setBewerbungOptionen([]);
   };
 
+  /* ---------------- Promo-Pakete laden ---------------- */
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        setLoadingPackages(true);
+        const res = await fetch('/api/promo/packages', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+        const items: PromoPackage[] = Array.isArray(json?.items) ? json.items : [];
+        if (alive) setPackages(items);
+      } catch (e) {
+        console.warn('Promo-Pakete konnten nicht geladen werden:', e);
+        if (alive) setPackages([]);
+      } finally {
+        if (alive) setLoadingPackages(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const selectedPackageTitles = useMemo(() => {
+    const map = new Map(packages.map(p => [p.id, p.title]));
+    return bewerbungOptionen.map(id => map.get(id) || id);
+  }, [bewerbungOptionen, packages]);
+
   /* ---------------- Submit ---------------- */
+
+  const [agbAccepted, setAgbAccepted] = useState<boolean>(false);
+  const [agbError, setAgbError] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -591,10 +630,10 @@ function ArtikelEinstellen() {
       return;
     }
 
-    // AB HIER: Popup sofort zeigen
+    // Popup sofort zeigen
     setLadeStatus(true);
 
-    const gesponsert = (bewerbungOptionen as string[]).length > 0;
+    const hasPromo = bewerbungOptionen.length > 0;
 
     // Adresse für Anzeige
     const adr: Adresse = (lieferadresseOption === 'profil') ? profilAdresse : {
@@ -621,16 +660,13 @@ function ArtikelEinstellen() {
     formData.append('effekt', effekt.join(', '));
     formData.append('sondereffekte', sondereffekte.join(', '));
     formData.append('qualitaet', qualitaet);
-    formData.append('bewerbung', (bewerbungOptionen as string[]).join(','));
     formData.append('menge', menge.toString());
-    formData.append('lieferadresseOption', lieferadresseOption);
 
-    // Registrierung / Sponsoring / Lieferdatum
+    // Registrierung / Lieferdatum
     formData.append('account_type', accountType);
     formData.append('nutzerTyp', nutzerTyp);
     formData.append('istGewerblich', String(accountType === 'business'));
     formData.append('lieferdatum', toYMD(lieferDatum!));
-    formData.append('gesponsert', String(gesponsert));
 
     // Adresse (Einzelteile)
     formData.append('vorname', adr.vorname);
@@ -642,7 +678,7 @@ function ArtikelEinstellen() {
     formData.append('ort', adr.ort);
     formData.append('land', adr.land);
 
-    // Normalisierte Felder
+    // Normalisierte Felder (nur PLZ+Ort nach außen)
     formData.append('lieferort', lieferort);
     formData.append('lieferadresse', lieferadresseString);
 
@@ -653,48 +689,43 @@ function ArtikelEinstellen() {
     dateien.forEach((file: File) => formData.append('dateien', file));
 
     try {
-      if (gesponsert) {
-        const draftRes = await fetch('/api/angebot-einstellen/draft', { method: 'POST', body: formData });
-        if (!draftRes.ok) throw new Error('Draft konnte nicht erstellt werden.');
-        const draftJson = await draftRes.json();
-        const draftId: string = draftJson?.id || draftJson?.draftId;
+      // 1) Anzeige ganz normal veröffentlichen (bestehende Logik bleibt)
+      const resCreate = await fetch('/api/angebot-einstellen', { method: 'POST', body: formData });
+      if (!resCreate.ok) throw new Error('Fehler beim Hochladen');
+      const created = await resCreate.json().catch(() => ({} as any));
+      const requestId: string | undefined = created?.id || created?.insertedId || created?.angebotId;
+      if (!requestId) throw new Error('Anzeige erstellt, aber ohne ID zurückgegeben.');
 
-        const items = (bewerbungOptionen as string[]).map((k) => ({ key: k }));
-        const checkoutRes = await fetch('/api/checkout', {
+      // Best effort: In Börse publishen (wie gehabt)
+      try {
+        await fetch('/api/lackanfragen/publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ draftId, items }),
+          body: JSON.stringify({ id: requestId }),
+        });
+      } catch (err) {
+        console.warn('Veröffentlichen in Börse fehlgeschlagen:', err);
+      }
+
+      // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
+      if (hasPromo) {
+        const checkoutRes = await fetch('/api/promo/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            request_id: requestId,
+            package_ids: bewerbungOptionen,
+          }),
         });
         if (!checkoutRes.ok) throw new Error('Checkout konnte nicht gestartet werden.');
         const co = await checkoutRes.json();
         if (!co?.url) throw new Error('Keine Checkout-URL erhalten.');
 
-        // Overlay bleibt sichtbar, direkte Weiterleitung:
         window.location.assign(co.url as string);
         return;
       }
 
-      // Kostenlos veröffentlichen
-      const res = await fetch('/api/angebot-einstellen', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Fehler beim Hochladen');
-
-      const data = await res.json().catch(() => ({} as any));
-      const id: string | undefined = data?.id || data?.insertedId || data?.angebotId;
-
-      // In Börse veröffentlichen (best effort)
-      if (id) {
-        try {
-          await fetch('/api/lackanfragen/publish', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id }),
-          });
-        } catch (err) {
-          console.warn('Veröffentlichen in Börse fehlgeschlagen:', err);
-        }
-      }
-
-      // Sofortige Weiterleitung – Overlay bleibt bis zur Navigation sichtbar
+      // 3) Ohne Promo → wie bisher weiter ins Konto
       router.replace('/konto/lackanfragen');
     } catch (error) {
       console.error(error);
@@ -703,11 +734,9 @@ function ArtikelEinstellen() {
     }
   };
 
-  const toggleBewerbung = (option: PromoKey): void => {
+  const toggleBewerbung = (packageId: string): void => {
     setBewerbungOptionen(prev =>
-      (prev as string[]).includes(option)
-        ? (prev as string[]).filter(o => o !== option)
-        : [...(prev as string[]), option]
+      prev.includes(packageId) ? prev.filter(id => id !== packageId) : [...prev, packageId]
     );
   };
 
@@ -721,7 +750,7 @@ function ArtikelEinstellen() {
   useEffect(() => {
     if (calOpen) {
       if (lieferDatum) setCalMonth(new Date(lieferDatum.getFullYear(), lieferDatum.getMonth(), 1));
-      else setCalMonth(minDate); // ⬅️ öffne bei morgen statt heute
+      else setCalMonth(minDate);
     }
   }, [calOpen, lieferDatum, minDate]);
 
@@ -973,7 +1002,7 @@ function ArtikelEinstellen() {
                       maxLength={20}
                       value={farbton}
                       onChange={(e) => setFarbton(e.target.value)}
-                      placeholder="z. B. 9010 bei RAL oder S-8500 bei NCS "
+                      placeholder="z. B. 9010 (RAL) oder S-8500 (NCS)"
                       aria-invalid={Boolean(warnungFarbton)}
                     />
                     <div className={styles.counter}>{farbton.length} / 20 Zeichen</div>
@@ -1397,23 +1426,22 @@ function ArtikelEinstellen() {
               </div>
 
               {calOpen && (
-  <div
-    ref={popoverRef}
-    className={styles.calendarPopover}
-    role="dialog"
-    aria-label="Kalender"
-  >
-    <MiniCalendar
-      month={calMonth}
-      onMonthChange={setCalMonth}
-      selected={lieferDatum}
-      onSelect={(d: Date) => setLieferDatum(d)}
-      isDisabled={isDisabledDay}
-      minDate={minDate}
-    />
-  </div>
-)}
-
+                <div
+                  ref={popoverRef}
+                  className={styles.calendarPopover}
+                  role="dialog"
+                  aria-label="Kalender"
+                >
+                  <MiniCalendar
+                    month={calMonth}
+                    onMonthChange={setCalMonth}
+                    selected={lieferDatum}
+                    onSelect={(d: Date) => setLieferDatum(d)}
+                    isDisabled={isDisabledDay}
+                    minDate={minDate}
+                  />
+                </div>
+              )}
             </label>
 
             {/* Lieferadresse wählen */}
@@ -1495,7 +1523,7 @@ function ArtikelEinstellen() {
                   Hausnummer
                   <input
                     type="text"
-                    className={`${styles.input} ${formAbgesendet && (!hausnummer.trim() || !/\d/.test(hausnummer)) ? styles.inputError : ''}`}
+                    className={`${styles.input} ${formAbgesendet && (!hausnummer.trim() || !/\d/.test(hausnummer)) ? styles.inputError : ''}` }
                     maxLength={4}
                     value={hausnummer}
                     onChange={(e) => setHausnummer(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
@@ -1581,50 +1609,43 @@ function ArtikelEinstellen() {
             )}
           </div>
         </fieldset>
-        {/* Bewerbung – alles in einem Panel */}
-<div className={styles.bewerbungPanel} role="region" aria-label="Bewerbung deiner Anfrage">
-  <div className={styles.bewerbungHeader}>
-    <span className={styles.bewerbungIcon} aria-hidden></span>
-    <p className={styles.bewerbungText}>
-      Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
-    </p>
-  </div>
 
-  <div className={styles.bewerbungGruppe}>
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('startseite')}
-        checked={(bewerbungOptionen as string[]).includes('startseite')}
-      />
-      <Star size={18} color="#f5b400" />
-      Anzeige auf Startseite hervorheben (39,99 €)
-    </label>
+        {/* Bewerbung – dynamisch aus /api/promo/packages */}
+        <div className={styles.bewerbungPanel} role="region" aria-label="Bewerbung deiner Anfrage">
+          <div className={styles.bewerbungHeader}>
+            <span className={styles.bewerbungIcon} aria-hidden></span>
+            <p className={styles.bewerbungText}>
+              Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
+            </p>
+          </div>
 
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('suche')}
-        checked={(bewerbungOptionen as string[]).includes('suche')}
-      />
-      <Search size={18} color="#0070f3" />
-      Anzeige in Suche priorisieren (17,99 €)
-    </label>
-
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('premium')}
-        checked={(bewerbungOptionen as string[]).includes('premium')}
-      />
-      <Crown size={18} color="#9b59b6" />
-      Premium-Anzeige aktivieren (19,99 €)
-    </label>
-
-    <p className={styles.steuerHinweis}>Preise inkl. Ust. / MwSt.</p>
-  </div>
-</div>
-
+          {loadingPackages ? (
+            <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
+          ) : packages.length === 0 ? (
+            <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
+          ) : (
+            <div className={styles.bewerbungGruppe}>
+              {packages.map((p) => (
+                <label key={p.id} className={styles.bewerbungOption}>
+                  <input
+                    type="checkbox"
+                    onChange={() => toggleBewerbung(p.id)}
+                    checked={bewerbungOptionen.includes(p.id)}
+                  />
+                  <Star size={18} />
+                  <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                    <span>
+                      {p.title} — {formatEUR(p.price_cents)}
+                      {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
+                    </span>
+                    {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
+                  </span>
+                </label>
+              ))}
+              <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+            </div>
+          )}
+        </div>
 
         {/* AGB */}
         <div className={styles.agbContainer} ref={agbRef}>
@@ -1691,14 +1712,12 @@ function ArtikelEinstellen() {
               {kategorie === 'pulverlack' && (
                 <p><strong>Aufladung:</strong> {aufladung.join(', ') || '–'}</p>
               )}
-              <p><strong>Bewerbung:</strong> {(bewerbungOptionen as string[]).join(', ') || 'Keine ausgewählt'}</p>
+              <p><strong>Bewerbung:</strong> {selectedPackageTitles.join(', ') || 'Keine ausgewählt'}</p>
               <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
               <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
               <p><strong>Lieferdatum:</strong> {lieferDatum ? lieferDatum.toLocaleDateString('de-DE') : '–'}</p>
               <p><strong>Lieferort:</strong> {[plz, ort].filter(Boolean).join(' ') || ort || (lieferadresseOption === 'profil' ? [profilAdresse.plz, profilAdresse.ort].filter(Boolean).join(' ') || profilAdresse.ort : '–')}</p>
               <p><strong>Lieferadresse:</strong> {lieferadresseOption === 'profil' ? toAddressString(profilAdresse) : toAddressString({ vorname, nachname, firma, strasse, hausnummer, plz, ort, land }) || '–'}</p>
-              <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
-              <p><strong>Registrierung:</strong> {nutzerTyp || '–'}</p>
             </motion.div>
           )}
         </AnimatePresence>
