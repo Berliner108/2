@@ -1,10 +1,14 @@
 // /src/app/api/lackanfragen/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const PAID_STATUSES = new Set(['paid', 'succeeded'])
+
+/* ------------ Helpers ------------ */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
@@ -19,7 +23,7 @@ function normalizeBilder(d: any): string[] {
   const b = d?.bilder
   if (Array.isArray(b)) {
     if (typeof b[0] === 'string') return b as string[]
-    if (typeof b[0] === 'object' && b[0]?.url) return (b as any[]).map(x => x.url).filter(Boolean)
+    if (typeof b[0] === 'object' && (b[0] as any)?.url) return (b as any[]).map(x => x.url).filter(Boolean)
   }
   if (typeof b === 'string' && b.trim()) return b.split(',').map((s: string) => s.trim()).filter(Boolean)
   return []
@@ -30,9 +34,11 @@ function displayNameFromProfile(p?: any): string | undefined {
   return u || undefined
 }
 
+/* ------------ Route ------------ */
 export async function GET(req: Request) {
   try {
     const supabase = await supabaseServer()
+    const admin = supabaseAdmin()
     const url = new URL(req.url)
 
     const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200)
@@ -48,18 +54,17 @@ export async function GET(req: Request) {
     const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
     const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
 
+    // ===== Haupt-Query (wie bei dir) =====
     let q = supabase
       .from('lack_requests')
       .select('id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id', { count: 'exact' })
       .order('created_at', { ascending: false })
 
-    // Standard: nur veröffentlichte (oder alte mit NULL)
     if (!includeUnpublished) {
+      // nur veröffentlichte (oder alte mit NULL)
       q = q.or('published.eq.true,published.is.null')
     }
-
     if (kategorie) q = q.eq('data->>kategorie', kategorie)
-
     if (id) q = q.eq('id', id)
 
     const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
@@ -91,14 +96,15 @@ export async function GET(req: Request) {
 
     const rows = data ?? []
     const ownerIds = Array.from(new Set(rows.map((r: any) => r.owner_id).filter(Boolean)))
+    const reqIds   = rows.map((r: any) => r.id).filter(Boolean)
 
+    // ===== Profile (wie gehabt) =====
     let profilesById = new Map<string, any>()
     if (ownerIds.length) {
       const { data: profs, error: profErr } = await supabase
         .from('profiles')
         .select('id, username, rating_avg, rating_count')
         .in('id', ownerIds)
-
       if (profErr) {
         console.warn('[lackanfragen] profiles lookup failed:', profErr.message ?? profErr)
       } else {
@@ -106,6 +112,31 @@ export async function GET(req: Request) {
       }
     }
 
+    // ===== Promo-Scores (nur paid/succeeded) – separat über Admin, damit RLS nicht nervt =====
+    let scoreByReq = new Map<string, number>()
+    if (reqIds.length) {
+      try {
+        const { data: promoRows, error: promoErr } = await admin
+          .from('promo_orders')
+          .select('request_id, score_delta, status')
+          .in('request_id', reqIds)
+        if (promoErr) {
+          console.warn('[lackanfragen] promo_orders lookup failed:', promoErr.message ?? promoErr)
+        } else {
+          for (const p of (promoRows ?? [])) {
+            const st = (p?.status ?? '').toString().toLowerCase()
+            if (!PAID_STATUSES.has(st)) continue
+            const rid = (p?.request_id ?? '').toString()
+            const delta = typeof p?.score_delta === 'number' ? p.score_delta : 0
+            scoreByReq.set(rid, (scoreByReq.get(rid) || 0) + delta)
+          }
+        }
+      } catch (e) {
+        console.warn('[lackanfragen] promo_orders lookup crashed (non-fatal)', (e as any)?.message)
+      }
+    }
+
+    // ===== Mapping =====
     const items = rows.map((row: any) => {
       const d = row.data || {}
       const prof = profilesById.get(row.owner_id)
@@ -124,6 +155,15 @@ export async function GET(req: Request) {
         typeof prof?.rating_count === 'number' ? prof.rating_count
         : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
 
+      const promo_score = scoreByReq.get(row.id) || 0
+      const isSponsored = (promo_score | 0) > 0
+
+      // d.gesponsert im Payload setzen/erhalten, damit dein FE es zuverlässig sieht
+      const dataOut = {
+        ...d,
+        gesponsert: Boolean(d.gesponsert) || isSponsored,
+      }
+
       return {
         id: row.id,
         title: row.title,
@@ -132,8 +172,9 @@ export async function GET(req: Request) {
         lieferdatum: row.lieferdatum,
         created_at: row.created_at,
         published: row.published,
-        data: row.data,
+        owner_id: row.owner_id,          // <— für "Bewerben"-Button (Owner-Check)
 
+        data: dataOut,
         ort: computeOrtShort(d),
         bilder: normalizeBilder(d),
         lieferadresse_full: (d.lieferadresse ?? '').toString(),
@@ -141,6 +182,10 @@ export async function GET(req: Request) {
         user,
         user_rating,
         user_rating_count,
+
+        // Promo-Infos
+        promo_score,
+        gesponsert: isSponsored,         // <— zusätzlich top-level (auch für Sortierungen hilfreich)
       }
     })
 
