@@ -21,11 +21,8 @@ const toDate = (v: unknown): Date | undefined => {
   const d = new Date(v as any);
   return isNaN(d.getTime()) ? undefined : d;
 };
-const formatDate = (d?: Date | string) => {
-  if (!d) return '-';
-  const dd = d instanceof Date ? d : new Date(d);
-  return isNaN(dd.getTime()) ? '-' : dd.toLocaleDateString('de-AT');
-};
+const formatDate = (d?: Date) =>
+  d instanceof Date && !isNaN(d.getTime()) ? d.toLocaleDateString('de-AT') : '-';
 
 const parseNum = (v: any): number | undefined => {
   if (typeof v === 'number') return isFinite(v) ? v : undefined;
@@ -77,14 +74,14 @@ type Lackanfrage = {
   titel: string;
   bilder: string[];
   menge: number;
-  lieferdatum?: Date | string;
+  lieferdatum?: Date;
   hersteller: string;
   zustand: string;
   kategorie: string;
   ort: string;
   preis?: number;
   gesponsert?: boolean;
-  created_at?: Date | string;
+  created_at?: Date;
   farbton?: string;
 };
 
@@ -189,27 +186,91 @@ export default function Page() {
     return () => { active = false; };
   }, []);
 
-  /* ===== Lackanfragen (TOP 12 aus der Börse, serverseitig sortiert) ===== */
+  /* ===== Lackanfragen (TOP 12 aus der Börse) ===== */
   const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>([]);
   const [loadingLack, setLoadingLack] = useState(true);
 
   useEffect(() => {
     let active = true;
-    (async () => {
+    const fetchLack = async () => {
       try {
         setLoadingLack(true);
         const res = await fetch('/api/lackanfragen?limit=12', { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const payload = await res.json() as any;
-        const arr = Array.isArray(payload) ? payload : (Array.isArray(payload?.items) ? payload.items : []);
-        if (active) setLackanfragen(arr as Lackanfrage[]);
+
+        const json = await res.json();
+        const rawList: any[] = Array.isArray(json)
+          ? json
+          : (Array.isArray(json?.items) ? json.items : []);
+
+        const mapped: Lackanfrage[] = rawList.map((a: any) => {
+          const attrs = a?.attributes || a?.data || {};
+          const o = { ...attrs, ...a };
+
+          const ortKombi = [o.plz ?? o.zip, o.city ?? o.stadt].filter(Boolean).join(' ').trim();
+          const ort = strOrEmpty(o.ort, o.location, ortKombi);
+
+          let bilder: string[] = [];
+          if (Array.isArray(o.bilder) && o.bilder.length) bilder = o.bilder;
+          else if (Array.isArray(o.images) && o.images.length) bilder = o.images;
+          else if (typeof o.image === 'string') bilder = [o.image];
+          else if (typeof o.thumbnail === 'string') bilder = [o.thumbnail];
+          else bilder = ['/images/platzhalter.jpg'];
+
+          const createdAt = toDate(o.created_at ?? o.createdAt ?? o.created);
+          const lieferdatum = toDate(o.lieferdatum ?? o.delivery_at ?? o.date);
+
+          const menge =
+            parseNum(o.menge ?? o.quantity ?? o.amount ?? o.kg ?? o.mass_kg) ?? 0;
+
+          const farbton = strOrEmpty(
+            o.farbton,
+            o.farbtonbezeichnung,
+            o.farb_bezeichnung,
+            o.farb_name,
+            o.color_name,
+            o.color,
+            o.ral,
+            o.ncs
+          );
+
+          return {
+            id: o.id ?? o._id ?? o.uuid ?? `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
+            titel: strOrEmpty(o.titel, o.title, o.name, 'Unbenannt'),
+            bilder,
+            menge,
+            lieferdatum,
+            hersteller: strOrEmpty(o.hersteller, o.manufacturer, o.brand),
+            zustand: strOrEmpty(o.zustand, o.condition, o.state),
+            kategorie: normKategorie(strOrEmpty(o.kategorie, o.category, o.type)),
+            ort,
+            preis:
+              typeof o.preis === 'number'
+                ? o.preis
+                : (typeof o.min_price === 'number'
+                    ? o.min_price
+                    : (typeof o.price === 'number' ? o.price : undefined)),
+            gesponsert: Boolean(o.gesponsert ?? o.sponsored ?? o.is_sponsored),
+            created_at: createdAt,
+            farbton,
+          };
+        })
+        .sort((a, b) => {
+          const da = a.created_at ?? a.lieferdatum ?? new Date(0);
+          const db = b.created_at ?? b.lieferdatum ?? new Date(0);
+          return db.getTime() - da.getTime();
+        })
+        .slice(0, 12);
+
+        if (active) setLackanfragen(mapped);
       } catch (e) {
         console.warn('Lackanfragen konnten nicht geladen werden:', e);
         if (active) setLackanfragen([]);
       } finally {
         if (active) setLoadingLack(false);
       }
-    })();
+    };
+    fetchLack();
     return () => { active = false; };
   }, []);
 
