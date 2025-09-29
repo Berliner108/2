@@ -1,5 +1,4 @@
 // /src/app/api/lackanfragen/[id]/route.ts
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -61,10 +60,10 @@ function stripSensitive(d: any) {
 
 /* ----- Route ----- */
 export async function GET(
-  _req: NextRequest,
-  context: { params: Record<string, string> }   // ✅ Next 15 akzeptiert das
+  _req: Request,
+  { params }: { params: { id: string } }   // ✅ so akzeptiert es Next 15
 ) {
-  const { id } = context.params
+  const { id } = params
 
   // nur eingeloggte Nutzer
   const sb = await supabaseServer()
