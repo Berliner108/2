@@ -80,7 +80,7 @@ type Lackanfrage = {
   kategorie: string;
   ort: string;
   preis?: number;
-  gesponsert?: boolean;
+  gesponsert?: boolean;   // ← wichtig für Sortierung
   created_at?: Date;
   farbton?: string;
 };
@@ -204,12 +204,15 @@ export default function Page() {
           : (Array.isArray(json?.items) ? json.items : []);
 
         const mapped: Lackanfrage[] = rawList.map((a: any) => {
+          // === robustes Zusammenführen aus mehreren Backendshapes ===
           const attrs = a?.attributes || a?.data || {};
           const o = { ...attrs, ...a };
 
+          // Ort
           const ortKombi = [o.plz ?? o.zip, o.city ?? o.stadt].filter(Boolean).join(' ').trim();
           const ort = strOrEmpty(o.ort, o.location, ortKombi);
 
+          // Bilder
           let bilder: string[] = [];
           if (Array.isArray(o.bilder) && o.bilder.length) bilder = o.bilder;
           else if (Array.isArray(o.images) && o.images.length) bilder = o.images;
@@ -217,12 +220,15 @@ export default function Page() {
           else if (typeof o.thumbnail === 'string') bilder = [o.thumbnail];
           else bilder = ['/images/platzhalter.jpg'];
 
-          const createdAt = toDate(o.created_at ?? o.createdAt ?? o.created);
-          const lieferdatum = toDate(o.lieferdatum ?? o.delivery_at ?? o.date);
+          // Zeiten
+          const createdAt = toDate(a.created_at ?? o.created_at ?? o.createdAt ?? o.created);
+          const lieferdatum = toDate(a.lieferdatum ?? a.delivery_at ?? o.lieferdatum ?? o.delivery_at ?? o.date);
 
+          // Mengen
           const menge =
             parseNum(o.menge ?? o.quantity ?? o.amount ?? o.kg ?? o.mass_kg) ?? 0;
 
+          // Farbton
           const farbton = strOrEmpty(
             o.farbton,
             o.farbtonbezeichnung,
@@ -234,9 +240,16 @@ export default function Page() {
             o.ncs
           );
 
+          // Gesponsert (Promo) – mehrere Fallbacks
+          const gesponsert =
+            Boolean(a.gesponsert) ||
+            Boolean(o.gesponsert) ||
+            Boolean(a.is_sponsored) ||
+            (typeof a.promo_score === 'number' && a.promo_score > 0);
+
           return {
-            id: o.id ?? o._id ?? o.uuid ?? `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
-            titel: strOrEmpty(o.titel, o.title, o.name, 'Unbenannt'),
+            id: o.id ?? a.id ?? o._id ?? o.uuid ?? `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
+            titel: strOrEmpty(o.titel, a.title, o.title, o.name, 'Unbenannt'),
             bilder,
             menge,
             lieferdatum,
@@ -250,15 +263,19 @@ export default function Page() {
                 : (typeof o.min_price === 'number'
                     ? o.min_price
                     : (typeof o.price === 'number' ? o.price : undefined)),
-            gesponsert: Boolean(o.gesponsert ?? o.sponsored ?? o.is_sponsored),
+            gesponsert,
             created_at: createdAt,
             farbton,
           };
         })
+        // === Sortierung: Gesponsert zuerst, dann nach Neuheit (created_at > lieferdatum) ===
         .sort((a, b) => {
-          const da = a.created_at ?? a.lieferdatum ?? new Date(0);
-          const db = b.created_at ?? b.lieferdatum ?? new Date(0);
-          return db.getTime() - da.getTime();
+          const aS = a.gesponsert ? 1 : 0;
+          const bS = b.gesponsert ? 1 : 0;
+          if (aS !== bS) return bS - aS; // gesponsert nach oben
+          const da = (a.created_at ?? a.lieferdatum ?? new Date(0)).getTime();
+          const db = (b.created_at ?? b.lieferdatum ?? new Date(0)).getTime();
+          return db - da;
         })
         .slice(0, 12);
 
