@@ -558,7 +558,10 @@ function ArtikelEinstellen() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const json = await res.json();
         const items: PromoPackage[] = Array.isArray(json?.items) ? json.items : [];
-        if (alive) setPackages(items);
+const normalized = items.map(i => ({ ...i, id: String(i.id) })); // falls API nicht schon stringified
+if (alive) setPackages(normalized);
+
+        
       } catch (e) {
         console.warn('Promo-Pakete konnten nicht geladen werden:', e);
         if (alive) setPackages([]);
