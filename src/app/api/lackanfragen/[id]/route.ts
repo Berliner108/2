@@ -66,9 +66,9 @@ function stripSensitive(d: any) {
 /* ----- Route ----- */
 export async function GET(
   _req: Request,
-  { params }: { params: Record<string, string | string[]> } // ✅ so akzeptiert es Next 15
+  ctx: any               // <- ungetypt lassen (oder unknown)
 ) {
-  const raw = params?.id
+  const raw = ctx?.params?.id
   const id = Array.isArray(raw) ? raw[0] : raw
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
