@@ -596,10 +596,12 @@ function ArtikelEinstellen() {
     if (!anwendung) { setWarnungAnwendung('Bitte wähle eine Anwendung aus.'); fehler = true; } else { setWarnungAnwendung(''); }
     if (!zustand) { setWarnungZustand('Bitte wähle den Zustand aus.'); fehler = true; } else { setWarnungZustand(''); }
     if (!farbton.trim()) { setWarnungFarbton('Bitte gib den Farbton an.'); fehler = true; } else { setWarnungFarbton(''); }
-    if (kategorie === 'pulverlack') {
-      if (aufladung.length === 0) { setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.'); fehler = true; }
-      else { setWarnungAufladung(''); }
+
+    // Aufladung (Pulverlack) – minimaler Fix
+    if (kategorie === 'pulverlack' && aufladung.length === 0) {
+      fehler = true;
     }
+
     if (!beschreibung.trim()) { setWarnungBeschreibung('Bitte gib eine Beschreibung ein.'); fehler = true; } else { setWarnungBeschreibung(''); }
 
     // Lieferdatum prüfen
