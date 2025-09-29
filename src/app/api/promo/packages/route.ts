@@ -7,27 +7,28 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const sb = await supabaseServer()
+
+  // Achtung: Spalten heißen bei dir u. a. label, description, amount_cents, is_active
   const { data, error } = await sb
     .from('promo_packages')
-    .select('id, code, label, description, amount_cents, currency, score_delta, sort_order, active')
-    .eq('active', true)
+    .select('id, code, label, description, amount_cents, currency, score_delta, sort_order, is_active')
+    .eq('is_active', true)                  // <- richtige Spalte
     .order('sort_order', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const items = (data ?? []).map(r => ({
-    id: r.id,
+    id: String(r.id),
     code: r.code,
-    title: r.label,                // <- Frontend erwartet title
+    title: r.label,
     subtitle: r.description ?? '',
-    price_cents: r.amount_cents,   // <- Frontend erwartet price_cents
+    price_cents: r.amount_cents,
     currency: (r.currency ?? 'EUR').toUpperCase(),
     score_delta: r.score_delta ?? 0,
-    duration_days: null,
     most_popular: false,
     stripe_price_id: null,
     sort_order: r.sort_order ?? 999,
-    active: r.active === true,
+    active: r.is_active === true,
   }))
 
   return NextResponse.json({ items })
