@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     const admin = supabaseAdmin()
 
-    // Anfrage laden & Ownership prüfen
+    // Anfrage prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id, title')
@@ -43,23 +43,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nur der Besitzer der Anfrage kann sie bewerben.' }, { status: 403 })
     }
 
-    // Pakete holen (schema-robust)
-    const { data: rows, error: pkgErr } = await admin
-      .from('promo_packages')
-      .select(`
-        id, code,
-        label, description,
-        amount_cents, price_cents, currency,
-        score_delta, duration_days,
-        is_active, active,
-        most_popular, stripe_price_id
-      `)
-      .in('id', packageIds)
-    if (pkgErr) return NextResponse.json({ error: 'DB error (packages)' }, { status: 500 })
+    // ---- IDs trennen: numerische vs. Codes ----
+    const numericIds: number[] = []
+    const codeIds: string[] = []
+    for (const v of packageIds) {
+      if (/^\d+$/.test(String(v))) numericIds.push(Number(v))
+      else codeIds.push(String(v))
+    }
+
+    // Pakete laden (beide Varianten)
+    const selectCols = `
+      id, code, label, description,
+      amount_cents, price_cents, currency,
+      score_delta, duration_days,
+      is_active, active, most_popular, stripe_price_id
+    `
+
+    let rows: any[] = []
+    if (numericIds.length) {
+      const { data, error } = await admin.from('promo_packages').select(selectCols).in('id', numericIds)
+      if (error) return NextResponse.json({ error: 'DB error (packages by id)' }, { status: 500 })
+      rows = rows.concat(data ?? [])
+    }
+    if (codeIds.length) {
+      const { data, error } = await admin.from('promo_packages').select(selectCols).in('code', codeIds)
+      if (error) return NextResponse.json({ error: 'DB error (packages by code)' }, { status: 500 })
+      rows = rows.concat(data ?? [])
+    }
 
     const packages = (rows ?? [])
       .map((r: any) => ({
         id: String(r.id),
+        code: r.code,
         title: r.label ?? r.title,
         price_cents: (r.amount_cents ?? r.price_cents) ?? 0,
         currency: String(r.currency ?? 'EUR').toUpperCase(),
@@ -74,7 +89,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Keine gültigen/aktiven Pakete gefunden.' }, { status: 400 })
     }
 
-    // Bestellungen anlegen
+    // promo_orders anlegen
     const mode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ? 'test' : 'live'
     const toInsert = packages.map(p => ({
       request_id: requestId,
@@ -86,37 +101,33 @@ export async function POST(req: NextRequest) {
       status: 'created',
       mode,
     }))
-
-    const { data: orders, error: insErr } = await admin
-      .from('promo_orders')
-      .insert(toInsert)
-      .select('id, package_id')
+    const { data: orders, error: insErr } = await admin.from('promo_orders').insert(toInsert).select('id')
     if (insErr || !orders?.length) {
       return NextResponse.json({ error: 'Bestellung konnte nicht angelegt werden.' }, { status: 500 })
     }
 
-    // Stripe Checkout mit mehreren Line-Items
-    const line_items = packages.map((p, idx) => {
-      const name = `Bewerbung: ${p.title}`
-      return p.stripe_price_id
+    // Stripe Checkout
+    const line_items = packages.map(p =>
+      p.stripe_price_id
         ? { price: p.stripe_price_id, quantity: 1 }
         : {
             price_data: {
               currency: p.currency.toLowerCase(),
               unit_amount: p.price_cents,
-              product_data: { name },
+              product_data: { name: `Bewerbung: ${p.title}` },
             },
             quantity: 1,
           }
-    })
+    )
 
-    // Metadaten (für Webhook)
     const metadata = {
       promo_order_ids: orders.map(o => o.id).join(','),
       request_id: requestId,
       user_id: user.id,
     }
 
+    // Stripe ohne apiVersion (dein TS-Fix)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       success_url: `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -126,10 +137,7 @@ export async function POST(req: NextRequest) {
       metadata,
     })
 
-    // Session-ID auf alle Orders schreiben
-    await admin.from('promo_orders')
-      .update({ stripe_session_id: session.id })
-      .in('id', orders.map(o => o.id))
+    await admin.from('promo_orders').update({ stripe_session_id: session.id }).in('id', orders.map(o => o.id))
 
     return NextResponse.json({ url: session.url })
   } catch (e: any) {
