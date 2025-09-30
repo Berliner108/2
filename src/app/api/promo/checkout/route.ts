@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}))
     const requestId: string = body?.request_id
     const packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
-
     if (!requestId || packageIds.length === 0) {
       return NextResponse.json({ error: 'request_id und package_ids[] sind erforderlich.' }, { status: 400 })
     }
@@ -20,18 +19,16 @@ export async function POST(req: NextRequest) {
     const url = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
 
-    // Auth
+    // Auth + Owner-Check
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
     if (!user)    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
     const admin = supabaseAdmin()
-
-    // Anfrage prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
-      .select('id, owner_id, title')
+      .select('id, owner_id')
       .eq('id', requestId)
       .maybeSingle()
     if (reqErr) return NextResponse.json({ error: 'DB error (request)' }, { status: 500 })
@@ -40,60 +37,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nur der Besitzer der Anfrage kann sie bewerben.' }, { status: 403 })
     }
 
-    // Pakete laden NUR per code (kein id in Tabelle)
+    // Pakete per CODE laden (deine Tabelle hat keine id-Spalte)
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
-      .select(`
-        code, label, description,
-        amount_cents, price_cents, currency,
-        score_delta, duration_days,
-        is_active, active, most_popular, stripe_price_id
-      `)
+      .select('code,label,amount_cents,currency,score_delta,is_active,active,stripe_price_id')
       .in('code', packageIds)
-
-    if (pkgErr) return NextResponse.json({ error: 'DB error (packages by code)' }, { status: 500 })
+    if (pkgErr) return NextResponse.json({ error: 'DB error (packages)' }, { status: 500 })
 
     const packages = (rows ?? [])
-      .map((r: any) => ({
+      .map(r => ({
         code: r.code,
-        title: r.label ?? r.title,
-        price_cents: (r.amount_cents ?? r.price_cents) ?? 0,
-        currency: String(r.currency ?? 'EUR').toUpperCase(),
-        score_delta: Number(r.score_delta ?? 0),
-        duration_days: Number(r.duration_days ?? 0),
-        stripe_price_id: r.stripe_price_id ?? null,
-        active: (typeof r.is_active === 'boolean') ? r.is_active : !!r.active,
+        title: r.label ?? '',
+        price_cents: (r as any).amount_cents ?? 0,
+        currency: String((r as any).currency ?? 'EUR').toUpperCase(),
+        score_delta: Number((r as any).score_delta ?? 0),
+        stripe_price_id: (r as any).stripe_price_id ?? null,
+        active: typeof (r as any).is_active === 'boolean' ? (r as any).is_active : !!(r as any).active,
       }))
       .filter(p => p.active)
 
-    if (packages.length === 0) {
+    if (!packages.length) {
       return NextResponse.json({ error: 'Keine gültigen/aktiven Pakete gefunden.' }, { status: 400 })
     }
 
-    // promo_orders anlegen (package_id = code)
-    const mode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ? 'test' : 'live'
-    const toInsert = packages.map(p => ({
-      request_id: requestId,
-      package_id: p.code,             // <-- Code speichern
-      buyer_id: user.id,
-      amount_cents: p.price_cents,
-      score_delta: p.score_delta,
-      duration_days: p.duration_days,
-      status: 'created',
-      mode,
-    }))
-    const { data: orders, error: insErr } = await admin
-      .from('promo_orders')
-      .insert(toInsert)
-      .select('id')
-    if (insErr || !orders?.length) {
-      return NextResponse.json({ error: 'Bestellung konnte nicht angelegt werden.' }, { status: 500 })
-    }
-
-    // Stripe Checkout
     const line_items = packages.map(p =>
       p.stripe_price_id
-        ? { price: p.stripe_price_id, quantity: 1 }
+        ? { price: p.stripe_price_id!, quantity: 1 }
         : {
             price_data: {
               currency: p.currency.toLowerCase(),
@@ -104,11 +73,11 @@ export async function POST(req: NextRequest) {
           }
     )
 
+    // WICHTIG: Metadaten so, wie dein Webhook sie erwartet
     const metadata = {
-      promo_order_ids: orders.map(o => o.id).join(','),
       request_id: requestId,
+      package_ids: packageIds.join(','), // <-- genau dieser Key wird im Webhook gelesen
       user_id: user.id,
-      package_codes: packageIds.join(','),
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
@@ -120,11 +89,6 @@ export async function POST(req: NextRequest) {
       payment_intent_data: { metadata },
       metadata,
     })
-
-    await admin
-      .from('promo_orders')
-      .update({ stripe_session_id: session.id })
-      .in('id', orders.map(o => o.id))
 
     return NextResponse.json({ url: session.url })
   } catch (e: any) {
