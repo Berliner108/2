@@ -135,60 +135,85 @@ export async function GET(req: Request) {
         console.warn('[lackanfragen] promo_orders lookup crashed (non-fatal)', (e as any)?.message)
       }
     }
-
     // ===== Mapping =====
-    const items = rows.map((row: any) => {
-      const d = row.data || {}
-      const prof = profilesById.get(row.owner_id)
-      const nameFromProfile = displayNameFromProfile(prof)
+const items = rows.map((row: any) => {
+  const d = row.data || {}
+  const prof = profilesById.get(row.owner_id)
+  const nameFromProfile = displayNameFromProfile(prof)
 
-      const user =
-        nameFromProfile ||
-        (d.user ?? '').toString().trim() ||
-        undefined
+  const user =
+    nameFromProfile ||
+    (d.user ?? '').toString().trim() ||
+    undefined
 
-      const user_rating =
-        typeof prof?.rating_avg === 'number' ? prof.rating_avg
-        : (typeof d.user_rating === 'number' ? d.user_rating : null)
+  const user_rating =
+    typeof prof?.rating_avg === 'number' ? prof.rating_avg
+    : (typeof d.user_rating === 'number' ? d.user_rating : null)
 
-      const user_rating_count =
-        typeof prof?.rating_count === 'number' ? prof.rating_count
-        : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
+  const user_rating_count =
+    typeof prof?.rating_count === 'number' ? prof.rating_count
+    : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
 
-      const promo_score = scoreByReq.get(row.id) || 0
-      const isSponsored = (promo_score | 0) > 0
+  const promoScore = scoreByReq.get(row.id) || 0
+  const isSponsored = (promoScore | 0) > 0
 
-      // d.gesponsert im Payload setzen/erhalten, damit dein FE es zuverlässig sieht
-      const dataOut = {
-        ...d,
-        gesponsert: Boolean(d.gesponsert) || isSponsored,
-      }
+  const dataOut = {
+    ...d,
+    // Rückwärtskompatibel + robust: wenn irgendwo bereits gesponsert=true gesetzt wurde, bleibt es true
+    gesponsert: Boolean(d.gesponsert) || isSponsored,
+  }
 
-      return {
-        id: row.id,
-        title: row.title,
-        status: row.status,
-        delivery_at: row.delivery_at,
-        lieferdatum: row.lieferdatum,
-        created_at: row.created_at,
-        published: row.published,
-        owner_id: row.owner_id,          // <— für "Bewerben"-Button (Owner-Check)
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    delivery_at: row.delivery_at,
+    lieferdatum: row.lieferdatum,
+    created_at: row.created_at,
+    published: row.published,
+    owner_id: row.owner_id,
 
-        data: dataOut,
-        ort: computeOrtShort(d),
-        bilder: normalizeBilder(d),
-        lieferadresse_full: (d.lieferadresse ?? '').toString(),
+    data: dataOut,
+    ort: computeOrtShort(d),
+    bilder: normalizeBilder(d),
+    lieferadresse_full: (d.lieferadresse ?? '').toString(),
 
-        user,
-        user_rating,
-        user_rating_count,
+    user,
+    user_rating,
+    user_rating_count,
 
-        // Promo-Infos
-        promo_score,
-        gesponsert: isSponsored,         // <— zusätzlich top-level (auch für Sortierungen hilfreich)
-      }
-    })
+    // Promo-Infos (beide Schreibweisen)
+    promo_score: promoScore,
+    promoScore,
+    gesponsert: isSponsored,
+  }
+})
 
+// ===== Sortierung (ohne DB-Änderungen) =====
+// Defaults: promo desc, dann created_at desc
+const sortParam = (url.searchParams.get('sort') ?? 'promo').toLowerCase()
+const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase()
+const isAsc = orderParam === 'asc'
+
+items.sort((a, b) => {
+  const byPromo =
+    sortParam === 'promo'
+      ? ((b.promo_score | 0) - (a.promo_score | 0)) || (new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      : 0
+
+  if (sortParam === 'promo') {
+    return isAsc ? -byPromo : byPromo
+  }
+
+  // sort=created
+  const byCreated = new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  return isAsc ? -byCreated : byCreated
+})
+
+return NextResponse.json({ items })
+
+
+   
     return NextResponse.json({ items })
   } catch (e: any) {
     console.error('[lackanfragen] GET crashed:', e)
