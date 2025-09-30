@@ -30,7 +30,8 @@ export async function GET() {
     const { data, error } = await sb
       .from('promo_packages')
       .select(`
-        id, code, label, description,
+        code,              -- <-- kein id
+        label, description,
         amount_cents, price_cents, currency,
         score_delta, sort_order,
         is_active, active,
@@ -39,14 +40,15 @@ export async function GET() {
       .order('sort_order', { ascending: true })
 
     if (error) {
-      // DB down/Schema anders → Fallback
       return NextResponse.json({ items: fallbackItems(), note: 'fallback_due_to_error' })
     }
 
-    const rows = (data ?? []).filter(r => (typeof r.is_active === 'boolean' ? r.is_active : r.active) === true)
+    const rows = (data ?? []).filter(r =>
+      (typeof r.is_active === 'boolean' ? r.is_active : r.active) === true
+    )
 
     const items = rows.map((r: any) => ({
-      id: String(r.id ?? r.code),                 // robust
+      id: String(r.code),                 // <-- id = code
       code: r.code,
       title: r.label,
       subtitle: r.description ?? '',
@@ -59,14 +61,12 @@ export async function GET() {
       active: true,
     }))
 
-    // leere DB → Fallback mit deinen 3 Paketen
     if (!items.length) {
       return NextResponse.json({ items: fallbackItems(), note: 'fallback_no_rows' })
     }
 
     return NextResponse.json({ items })
   } catch {
-    // harte Fehler → Fallback
     return NextResponse.json({ items: fallbackItems(), note: 'fallback_exception' })
   }
 }
