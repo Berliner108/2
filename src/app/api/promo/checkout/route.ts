@@ -8,15 +8,16 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
     const requestId: string = body?.request_id
-    const packageId: string = body?.package_id
-    if (!requestId || !packageId) {
-      return NextResponse.json({ error: 'request_id und package_id sind erforderlich.' }, { status: 400 })
+    const packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
+
+    if (!requestId || packageIds.length === 0) {
+      return NextResponse.json({ error: 'request_id und package_ids[] sind erforderlich.' }, { status: 400 })
     }
 
     const url = new URL(req.url)
@@ -30,93 +31,105 @@ export async function POST(req: NextRequest) {
 
     const admin = supabaseAdmin()
 
-    // Request holen & Ownership prüfen
+    // Anfrage laden & Ownership prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id, title')
       .eq('id', requestId)
       .maybeSingle()
-
     if (reqErr) return NextResponse.json({ error: 'DB error (request)' }, { status: 500 })
     if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden.' }, { status: 404 })
     if (reqRow.owner_id !== user.id) {
       return NextResponse.json({ error: 'Nur der Besitzer der Anfrage kann sie bewerben.' }, { status: 403 })
     }
 
-    // Paket holen
-    const { data: pkg, error: pkgErr } = await admin
+    // Pakete holen (schema-robust)
+    const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
-      .select('id,title,price_cents,score_delta,duration_days,stripe_price_id,active')
-      .eq('id', packageId)
-      .maybeSingle()
+      .select(`
+        id, code,
+        label, description,
+        amount_cents, price_cents, currency,
+        score_delta, duration_days,
+        is_active, active,
+        most_popular, stripe_price_id
+      `)
+      .in('id', packageIds)
+    if (pkgErr) return NextResponse.json({ error: 'DB error (packages)' }, { status: 500 })
 
-    if (pkgErr) return NextResponse.json({ error: 'DB error (package)' }, { status: 500 })
-    if (!pkg || !pkg.active) return NextResponse.json({ error: 'Paket nicht verfügbar.' }, { status: 400 })
+    const packages = (rows ?? [])
+      .map((r: any) => ({
+        id: String(r.id),
+        title: r.label ?? r.title,
+        price_cents: (r.amount_cents ?? r.price_cents) ?? 0,
+        currency: String(r.currency ?? 'EUR').toUpperCase(),
+        score_delta: Number(r.score_delta ?? 0),
+        duration_days: Number(r.duration_days ?? 0),
+        stripe_price_id: r.stripe_price_id ?? null,
+        active: (typeof r.is_active === 'boolean') ? r.is_active : !!r.active,
+      }))
+      .filter(p => p.active)
 
-    const amount = Number(pkg.price_cents || 0)
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return NextResponse.json({ error: 'Ungültiger Paketpreis.' }, { status: 400 })
+    if (packages.length === 0) {
+      return NextResponse.json({ error: 'Keine gültigen/aktiven Pakete gefunden.' }, { status: 400 })
     }
 
-    // promo_order anlegen (status: created)
+    // Bestellungen anlegen
     const mode = process.env.STRIPE_SECRET_KEY?.startsWith('sk_test_') ? 'test' : 'live'
-    const insertPayload = {
+    const toInsert = packages.map(p => ({
       request_id: requestId,
-      package_id: pkg.id,
+      package_id: p.id,
       buyer_id: user.id,
-      amount_cents: amount,
-      score_delta: Number(pkg.score_delta || 0),
-      duration_days: Number(pkg.duration_days || 0),
+      amount_cents: p.price_cents,
+      score_delta: p.score_delta,
+      duration_days: p.duration_days,
       status: 'created',
       mode,
-    }
+    }))
 
-    const { data: orderRow, error: insErr } = await admin
+    const { data: orders, error: insErr } = await admin
       .from('promo_orders')
-      .insert(insertPayload)
-      .select('id')
-      .maybeSingle()
-
-    if (insErr || !orderRow) {
+      .insert(toInsert)
+      .select('id, package_id')
+    if (insErr || !orders?.length) {
       return NextResponse.json({ error: 'Bestellung konnte nicht angelegt werden.' }, { status: 500 })
     }
 
+    // Stripe Checkout mit mehreren Line-Items
+    const line_items = packages.map((p, idx) => {
+      const name = `Bewerbung: ${p.title}`
+      return p.stripe_price_id
+        ? { price: p.stripe_price_id, quantity: 1 }
+        : {
+            price_data: {
+              currency: p.currency.toLowerCase(),
+              unit_amount: p.price_cents,
+              product_data: { name },
+            },
+            quantity: 1,
+          }
+    })
+
+    // Metadaten (für Webhook)
     const metadata = {
-      promo_order_id: orderRow.id,
+      promo_order_ids: orders.map(o => o.id).join(','),
       request_id: requestId,
-      package_id: pkg.id,
       user_id: user.id,
-      score_delta: String(pkg.score_delta ?? 0),
-      duration_days: String(pkg.duration_days ?? 0),
     }
 
-    // Checkout-Session erstellen
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       success_url: `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=cancel`,
-      ...(pkg.stripe_price_id
-        ? { line_items: [{ price: pkg.stripe_price_id, quantity: 1 }] }
-        : {
-            line_items: [{
-              price_data: {
-                currency: 'eur',
-                unit_amount: amount,
-                product_data: { name: `Bewerbung: ${pkg.title} · Anfrage ${requestId}` },
-              },
-              quantity: 1,
-            }],
-          }),
-      // WICHTIG: Metadata auch in die PaymentIntent packen → Webhook kann es lesen
+      line_items,
       payment_intent_data: { metadata },
       metadata,
     })
 
-    // Session-ID speichern
-    await admin
-      .from('promo_orders')
+    // Session-ID auf alle Orders schreiben
+    await admin.from('promo_orders')
       .update({ stripe_session_id: session.id })
-      .eq('id', orderRow.id)
+      .in('id', orders.map(o => o.id))
 
     return NextResponse.json({ url: session.url })
   } catch (e: any) {
