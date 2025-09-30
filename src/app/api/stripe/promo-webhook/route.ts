@@ -1,6 +1,5 @@
-// /src/app/api/stripe/promo-webhook/route.ts
 import { NextResponse } from 'next/server'
-import { getStripe } from '@/lib/stripe'
+import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
@@ -8,7 +7,6 @@ export const dynamic = 'force-dynamic'
 
 function nowISO() { return new Date().toISOString() }
 
-// mehrere Secrets erlauben (z. B. live + test)
 function parseSecrets(...vars: (string | undefined)[]): string[] {
   const out: string[] = []
   for (const v of vars) {
@@ -18,8 +16,7 @@ function parseSecrets(...vars: (string | undefined)[]): string[] {
   return Array.from(new Set(out))
 }
 
-// probiere Secrets der Reihe nach, bis eins passt
-function constructEventWithFallback(stripe: any, rawBody: string, sig: string, secrets: string[]) {
+function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string, secrets: string[]) {
   let lastErr: any
   for (const sec of secrets) {
     try { return stripe.webhooks.constructEvent(rawBody, sig, sec) }
@@ -28,7 +25,7 @@ function constructEventWithFallback(stripe: any, rawBody: string, sig: string, s
   throw lastErr
 }
 
-// Idempotenz über Tabelle processed_events(id text primary key)
+// Idempotenz über processed_events(id text primary key)
 async function wasProcessed(id: string, admin: any) {
   const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
   return !!data
@@ -39,31 +36,23 @@ async function markProcessed(id: string, admin: any) {
 }
 
 export async function POST(req: Request) {
-  const stripe = getStripe()
-  if (!stripe) return NextResponse.json({ error: 'Stripe ist nicht konfiguriert' }, { status: 500 })
-
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const sig = req.headers.get('stripe-signature')
   const secrets = parseSecrets(
-    process.env.STRIPE_WEBHOOK_SECRET_PROMO, // eigener Secret für Promo
-    process.env.STRIPE_WEBHOOK_SECRET_TEST   // optional: Test
+    process.env.STRIPE_WEBHOOK_SECRET_PROMO,
+    process.env.STRIPE_WEBHOOK_SECRET_TEST
   )
   if (!sig || secrets.length === 0) {
     return NextResponse.json({ error: 'Fehlende Signatur oder Webhook-Secret' }, { status: 400 })
   }
 
-  // Roh-Body lesen (wichtig für Signatur)
   const rawBody = await req.text()
 
-  let event: any
-  try {
-    event = constructEventWithFallback(stripe, rawBody, sig, secrets)
-  } catch (err: any) {
+  let event: Stripe.Event
+  try { event = constructEventWithFallback(stripe, rawBody, sig, secrets) }
+  catch (err: any) {
     console.error('[promo webhook] ungültige Signatur', err?.message)
     return NextResponse.json({ error: 'Ungültige Signatur' }, { status: 400 })
-  }
-
-  if (process.env.LOG_STRIPE_EVENTS === '1') {
-    console.log('[promo webhook]', event.type, event.id)
   }
 
   let admin
@@ -75,8 +64,7 @@ export async function POST(req: Request) {
 
   // Dedup
   try {
-    if (await wasProcessed(event.id, admin)) {
-      if (process.env.LOG_STRIPE_EVENTS === '1') console.log('[promo webhook] dedup', event.id)
+    if (await wasProcessed((event as any).id, admin)) {
       return NextResponse.json({ ok: true, dedup: true })
     }
   } catch (e) {
@@ -84,110 +72,90 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Wir werten sowohl checkout.session.completed als auch payment_intent.succeeded aus.
-    // Primär nehmen wir checkout.session.completed, weil dort die Line Items verfügbar sind.
     if (event.type === 'checkout.session.completed') {
-      const sess = event.data.object as any
+      const sess = event.data.object as Stripe.Checkout.Session
 
-      // Erwartet: metadata.request_id + optional metadata.package_ids (CSV der Codes)
-      const requestId: string | undefined = sess.metadata?.request_id
-      const packageIdsCSV: string | undefined = sess.metadata?.package_ids
+      const requestId = (sess.metadata?.request_id ?? '') as string
+      const packageIdsCSV = (sess.metadata?.package_ids ?? '') as string
       if (!requestId) {
-        // ohne request_id keine Promotion-Zuordnung möglich
-        await markProcessed(event.id, admin)
+        await markProcessed((event as any).id, admin)
         return NextResponse.json({ ok: true, skipped: 'no_request_id' })
       }
 
-      // Line Items expanden, um Stripe-Price-IDs zu bekommen
+      // Line Items → Stripe price IDs
       const li = await stripe.checkout.sessions.listLineItems(sess.id, { expand: ['data.price.product'] })
-      const priceIds: string[] = (li?.data ?? [])
+      const priceIds = (li?.data ?? [])
         .map((l: any) => l?.price?.id)
         .filter((x: any): x is string => typeof x === 'string')
 
-      // Erstes Mapping: über stripe_price_id → promo_packages
+      // Pakete über stripe_price_id oder Codes auflösen
       let pkgs: any[] = []
       if (priceIds.length) {
-        const { data: byPrice, error: pkgErr } = await admin
+        const { data: byPrice, error } = await admin
           .from('promo_packages')
-          .select('code,label,amount_cents,score_delta,stripe_price_id,is_active,active')
+          .select('code,label,amount_cents,score_delta,is_active,active,stripe_price_id')
           .in('stripe_price_id', priceIds)
-        if (pkgErr) throw pkgErr
-        pkgs = (byPrice ?? []).filter(p =>
-          (typeof p.is_active === 'boolean' ? p.is_active : !!p.active)
-        )
+        if (error) throw error
+        pkgs = (byPrice ?? []).filter(p => (typeof p.is_active === 'boolean' ? p.is_active : !!p.active))
       }
-
-      // Fallback: wenn keine Stripe-Preise gemappt sind → per package_codes aus metadata nachladen
       if ((!pkgs || pkgs.length === 0) && packageIdsCSV) {
         const codes = packageIdsCSV.split(',').map(s => s.trim()).filter(Boolean)
         if (codes.length) {
-          const { data: byCode, error: pkgErr2 } = await admin
+          const { data: byCode, error } = await admin
             .from('promo_packages')
             .select('code,label,amount_cents,score_delta,is_active,active')
             .in('code', codes)
-          if (pkgErr2) throw pkgErr2
-          pkgs = (byCode ?? []).filter(p =>
-            (typeof p.is_active === 'boolean' ? p.is_active : !!p.active)
-          )
+          if (error) throw error
+          pkgs = (byCode ?? []).filter(p => (typeof p.is_active === 'boolean' ? p.is_active : !!p.active))
         }
       }
-
       if (!pkgs || pkgs.length === 0) {
-        // nichts anzuwenden
-        await markProcessed(event.id, admin)
+        await markProcessed((event as any).id, admin)
         return NextResponse.json({ ok: true, skipped: 'no_packages_resolved' })
       }
 
-      // Score + Badges berechnen
+      // Punkte + Badges
       const totalScore = pkgs.reduce((sum: number, p: any) => sum + (p.score_delta || 0), 0)
       const badgeTitles: string[] = pkgs.map((p: any) => p.label).filter(Boolean)
 
-      // Anfrage laden (für JSON-Merge)
+      // aktuelle Anfrage laden (Score + JSON)
       const { data: reqRow, error: reqErr } = await admin
         .from('lack_requests')
-        .select('id, data')
+        .select('id, promo_score, data')
         .eq('id', requestId)
         .maybeSingle()
       if (reqErr) throw reqErr
       if (!reqRow) {
-        await markProcessed(event.id, admin)
+        await markProcessed((event as any).id, admin)
         return NextResponse.json({ ok: true, skipped: 'request_not_found' })
       }
 
-      const data = (reqRow.data || {}) as any
-      const newBadges = Array.from(new Set([...(data.promo_badges ?? []), ...badgeTitles]))
-      const newScore = Number(data.promo_score ?? 0) + Number(totalScore || 0)
+      const curScore = Number(reqRow.promo_score ?? 0)
+      const curData = (reqRow.data || {}) as any
+      const curBadges: string[] = Array.isArray(curData.promo_badges) ? curData.promo_badges : []
+      const mergedBadges = Array.from(new Set([...curBadges, ...badgeTitles]))
 
-      // Anfrage aktualisieren
-      {
-        const { error } = await admin
-          .from('lack_requests')
-          .update({
-            data: {
-              ...data,
-              gesponsert: true,
-              promo_score: newScore,
-              promo_badges: newBadges,
-              promo_last_purchase_at: nowISO(),
-            },
-            updated_at: nowISO(),
-          })
-          .eq('id', requestId)
-        if (error) throw error
-      }
+      // Anfrage aktualisieren: Score + Badges (Hybrid)
+      const newData = { ...curData, promo_badges: mergedBadges, promo_last_purchase_at: nowISO(), gesponsert: true }
+      const { error: upErr } = await admin
+        .from('lack_requests')
+        .update({
+          promo_score: curScore + totalScore,
+          data: newData,
+          updated_at: nowISO(),
+        })
+        .eq('id', requestId)
+      if (upErr) throw upErr
 
-      // Optional: Zahlung protokollieren (best-effort; Schema-unabhängig halten)
+      // Best effort: Zahlung protokollieren (falls Schema passt)
       try {
-        const totalCents = typeof sess.amount_total === 'number' ? sess.amount_total : null
+        const totalCents = typeof (sess.amount_total) === 'number' ? sess.amount_total : null
         const currency = (sess.currency || 'eur').toString().toLowerCase()
-
-        // Falls du eine flexible Log-Tabelle hast, nutze sie hier (Beispiel: promo_payments)
-        // Wenn du nur promo_orders hast, kann das Insert scheitern → bewusst weggeloggt
         await admin.from('promo_orders').insert({
           request_id: requestId,
           checkout_session_id: sess.id,
           payment_intent_id: typeof sess.payment_intent === 'string' ? sess.payment_intent : null,
-          package_ids: (packageIdsCSV ?? '').split(',').map(x => x.trim()).filter(Boolean),
+          package_ids: packageIdsCSV ? packageIdsCSV.split(',').map(s => s.trim()).filter(Boolean) : null,
           price_ids: priceIds,
           total_cents: totalCents,
           currency,
@@ -201,68 +169,12 @@ export async function POST(req: Request) {
         console.warn('[promo webhook] logging skipped:', logErr?.message)
       }
 
-      await markProcessed(event.id, admin)
-      return NextResponse.json({ ok: true })
-    }
-
-    // Optionaler Zweig: falls dein Stripe-Setup nur payment_intent.succeeded sendet
-    if (event.type === 'payment_intent.succeeded') {
-      const pi = event.data.object as any
-      const requestId = pi.metadata?.request_id as string | undefined
-      const codesCSV = pi.metadata?.package_ids as string | undefined
-      if (!requestId || !codesCSV) {
-        await markProcessed(event.id, admin)
-        return NextResponse.json({ ok: true, skipped: 'no_request_or_packages_in_pi' })
-      }
-
-      const codes = codesCSV.split(',').map((s: string) => s.trim()).filter(Boolean)
-      const { data: pkgs, error: pkgErr } = await admin
-        .from('promo_packages')
-        .select('code,label,amount_cents,score_delta,is_active,active')
-        .in('code', codes)
-      if (pkgErr) throw pkgErr
-
-      const activePkgs = (pkgs ?? []).filter(p =>
-        (typeof p.is_active === 'boolean' ? p.is_active : !!p.active)
-      )
-      if (activePkgs.length === 0) {
-        await markProcessed(event.id, admin)
-        return NextResponse.json({ ok: true, skipped: 'no_active_packages' })
-      }
-
-      const totalScore = activePkgs.reduce((sum: number, p: any) => sum + (p.score_delta || 0), 0)
-      const badgeTitles: string[] = activePkgs.map((p: any) => p.label).filter(Boolean)
-
-      const { data: reqRow, error: reqErr } = await admin
-        .from('lack_requests')
-        .select('id, data')
-        .eq('id', requestId)
-        .maybeSingle()
-      if (reqErr) throw reqErr
-      if (!reqRow) {
-        await markProcessed(event.id, admin)
-        return NextResponse.json({ ok: true, skipped: 'request_not_found' })
-      }
-
-      const data = (reqRow.data || {}) as any
-      const newBadges = Array.from(new Set([...(data.promo_badges ?? []), ...badgeTitles]))
-      const newScore = Number(data.promo_score ?? 0) + Number(totalScore || 0)
-
-      const { error: upErr } = await admin
-        .from('lack_requests')
-        .update({
-          data: { ...data, gesponsert: true, promo_score: newScore, promo_badges: newBadges, promo_last_purchase_at: nowISO() },
-          updated_at: nowISO(),
-        })
-        .eq('id', requestId)
-      if (upErr) throw upErr
-
-      await markProcessed(event.id, admin)
+      await markProcessed((event as any).id, admin)
       return NextResponse.json({ ok: true })
     }
 
     // andere Events ignorieren
-    await markProcessed(event.id, admin)
+    await markProcessed((event as any).id, admin)
     return NextResponse.json({ ok: true, ignored: event.type })
   } catch (err: any) {
     console.error('[promo webhook] Handler fehlgeschlagen', err?.message)

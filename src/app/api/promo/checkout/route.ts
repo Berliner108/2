@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Nur der Besitzer der Anfrage kann sie bewerben.' }, { status: 403 })
     }
 
-    // Pakete per CODE laden (deine Tabelle hat keine id-Spalte)
+    // Pakete per CODE laden
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
       .select('code,label,amount_cents,currency,score_delta,is_active,active,stripe_price_id')
@@ -73,10 +73,10 @@ export async function POST(req: NextRequest) {
           }
     )
 
-    // WICHTIG: Metadaten so, wie dein Webhook sie erwartet
+    // Metadaten, wie vom Webhook erwartet
     const metadata = {
       request_id: requestId,
-      package_ids: packageIds.join(','), // <-- genau dieser Key wird im Webhook gelesen
+      package_ids: packageIds.join(','), // Codes
       user_id: user.id,
     }
 
