@@ -1,3 +1,4 @@
+// /src/app/api/promo/checkout/route.ts
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
@@ -7,62 +8,76 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Falls du die Owner-Prüfung vorübergehend abschalten willst: setze DISABLE_PROMO_OWNER_CHECK=1
+const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1'
+const DEV_VERBOSE = process.env.NODE_ENV !== 'production'
+
+function err(msg: string, status = 400, extra?: Record<string, any>) {
+  return NextResponse.json({ error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) }, { status })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
     const requestId: string = body?.request_id
-    const packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
+    let packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
+
     if (!requestId || packageIds.length === 0) {
-      return NextResponse.json({ error: 'request_id und package_ids[] sind erforderlich.' }, { status: 400 })
+      return err('request_id und package_ids[] sind erforderlich.', 400, { requestId, packageIds })
     }
+
+    // Deduplizieren & Strings erzwingen
+    packageIds = Array.from(new Set(packageIds.map(v => String(v))))
 
     const url = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
 
-    // Auth + Owner-Check
+    // ---------- Auth ----------
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
-    if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
-    if (!user)    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
+    if (!user)   return err('Not authenticated', 401)
 
+    // ---------- Anfrage (Owner) ----------
     const admin = supabaseAdmin()
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id')
       .eq('id', requestId)
       .maybeSingle()
-    if (reqErr) return NextResponse.json({ error: 'DB error (request)' }, { status: 500 })
-    if (!reqRow) return NextResponse.json({ error: 'Anfrage nicht gefunden.' }, { status: 404 })
-    if (reqRow.owner_id !== user.id) {
-      return NextResponse.json({ error: 'Nur der Besitzer der Anfrage kann sie bewerben.' }, { status: 403 })
+    if (reqErr)  return err('DB error (request)', 500, { db: reqErr.message })
+    if (!reqRow) return err('Anfrage nicht gefunden.', 404, { requestId })
+
+    if (!DISABLE_OWNER_CHECK && reqRow.owner_id !== user.id) {
+      return err('Nur der Besitzer der Anfrage kann sie bewerben.', 403, { owner_id: reqRow.owner_id, user_id: user.id })
     }
 
-    // Pakete per CODE laden
+    // ---------- Pakete laden (per CODE) ----------
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
       .select('code,label,amount_cents,currency,score_delta,is_active,active,stripe_price_id')
       .in('code', packageIds)
-    if (pkgErr) return NextResponse.json({ error: 'DB error (packages)' }, { status: 500 })
+    if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message, packageIds })
 
     const packages = (rows ?? [])
-      .map(r => ({
+      .map((r: any) => ({
         code: r.code,
         title: r.label ?? '',
-        price_cents: (r as any).amount_cents ?? 0,
-        currency: String((r as any).currency ?? 'EUR').toUpperCase(),
-        score_delta: Number((r as any).score_delta ?? 0),
-        stripe_price_id: (r as any).stripe_price_id ?? null,
-        active: typeof (r as any).is_active === 'boolean' ? (r as any).is_active : !!(r as any).active,
+        price_cents: Number(r.amount_cents ?? 0),
+        currency: String(r.currency ?? 'EUR').toUpperCase(),
+        score_delta: Number(r.score_delta ?? 0),
+        stripe_price_id: r.stripe_price_id ?? null,
+        active: (typeof r.is_active === 'boolean') ? r.is_active : !!r.active,
       }))
       .filter(p => p.active)
 
     if (!packages.length) {
-      return NextResponse.json({ error: 'Keine gültigen/aktiven Pakete gefunden.' }, { status: 400 })
+      return err('Keine gültigen/aktiven Pakete gefunden.', 400, { packageIds, resolved: rows })
     }
 
     const line_items = packages.map(p =>
       p.stripe_price_id
-        ? { price: p.stripe_price_id!, quantity: 1 }
+        ? { price: p.stripe_price_id as string, quantity: 1 }
         : {
             price_data: {
               currency: p.currency.toLowerCase(),
@@ -73,26 +88,39 @@ export async function POST(req: NextRequest) {
           }
     )
 
-    // Metadaten, wie vom Webhook erwartet
     const metadata = {
       request_id: requestId,
-      package_ids: packageIds.join(','), // Codes
+      package_ids: packageIds.join(','), // <- Codes, vom Webhook gelesen
       user_id: user.id,
     }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      success_url: `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=cancel`,
-      line_items,
-      payment_intent_data: { metadata },
-      metadata,
-    })
+    // ---------- Stripe ----------
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
+    }
 
-    return NextResponse.json({ url: session.url })
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+    let session
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        success_url: `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:  `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=cancel`,
+        line_items,
+        payment_intent_data: { metadata },
+        metadata,
+      })
+    } catch (se: any) {
+      return err('Stripe-Checkout konnte nicht erstellt werden.', 500, { stripe: se?.message })
+    }
+
+    if (!session?.url) {
+      return err('Stripe-Session ohne URL.', 500, { session })
+    }
+
+    return NextResponse.json({ url: session.url, debug: DEV_VERBOSE ? { requestId, packageIds } : undefined })
   } catch (e: any) {
     console.error('[promo/checkout] failed:', e?.message)
-    return NextResponse.json({ error: 'Checkout konnte nicht erstellt werden.' }, { status: 500 })
+    return err('Checkout konnte nicht erstellt werden.', 500, { reason: e?.message })
   }
 }
