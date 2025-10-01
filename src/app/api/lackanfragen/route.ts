@@ -54,16 +54,16 @@ export async function GET(req: Request) {
     const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
     const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
 
-    // Sortier-Parameter
+    // Sortier-Parameter (für finale JS-Sortierung)
     const sortParam = (url.searchParams.get('sort') ?? 'promo').toLowerCase() // 'promo' | 'created'
     const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase() // 'asc' | 'desc'
     const isAsc = orderParam === 'asc'
 
-    // ===== Haupt-Query =====
+    // ===== Basis-Query: wir holen enough rows (Overfetch bei promo) =====
     let q = supabase
       .from('lack_requests')
       .select('id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id', { count: 'exact' })
-      .order('created_at', { ascending: false }) // Basis; finale Sortierung ggf. in JS
+      .order('created_at', { ascending: false })
 
     if (!includeUnpublished) {
       q = q.or('published.eq.true,published.is.null')
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
       q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
     }
 
-    // ===== Pagination / Overfetch =====
+    // Pagination-Berechnung
     let from = 0
     let to = limit - 1
     if (page) {
@@ -90,7 +90,7 @@ export async function GET(req: Request) {
     }
 
     if (sortParam === 'promo') {
-      // Overfetch, damit die promo-Sortierung über Seiten korrekt bleibt
+      // Overfetch für korrekte Sortierung über Seiten
       const factor = 3
       const overTo = page
         ? (page * limit * factor) - 1
@@ -117,21 +117,21 @@ export async function GET(req: Request) {
         .from('profiles')
         .select('id, username, rating_avg, rating_count')
         .in('id', ownerIds)
-      if (!profErr && profs) {
-        profilesById = new Map((profs as any[]).map((p: any) => [p.id, p]))
-      } else if (profErr) {
+      if (profErr) {
         console.warn('[lackanfragen] profiles lookup failed:', profErr.message ?? profErr)
+      } else if (profs) {
+        profilesById = new Map((profs as any[]).map((p: any) => [p.id, p]))
       }
     }
 
-    // ===== Promo-Scores (JS-seitig nach Status filtern; keine SQL-Status-Filter wegen Case) =====
+    // ===== Promo-Scores (aus promo_orders aggregieren; Status in JS filtern) =====
     const scoreByReq = new Map<string, number>()
     if (reqIds.length) {
       try {
         const { data: promoRows, error: promoErr } = await admin
           .from('promo_orders')
           .select('request_id, score_delta, status')
-          .in('request_id', reqIds)                // <-- KEINE status-Filter hier!
+          .in('request_id', reqIds)
         if (promoErr) {
           console.warn('[lackanfragen] promo_orders lookup failed:', promoErr.message ?? promoErr)
         } else {
@@ -139,12 +139,13 @@ export async function GET(req: Request) {
             const st = (p?.status ?? '').toString().toLowerCase()
             if (!PAID_STATUSES.has(st)) continue
             const rid = (p?.request_id ?? '').toString()
-            const delta =
-              typeof p?.score_delta === 'number'
-                ? p.score_delta
-                : (p?.score_delta != null ? Number(p.score_delta) : 0)
             if (!rid) continue
-            scoreByReq.set(rid, (scoreByReq.get(rid) || 0) + (isFinite(delta) ? delta : 0))
+            const deltaRaw = (p as any).score_delta
+            const delta =
+              typeof deltaRaw === 'number' ? deltaRaw :
+              (deltaRaw != null ? Number(deltaRaw) : 0)
+            if (!isFinite(delta)) continue
+            scoreByReq.set(rid, (scoreByReq.get(rid) || 0) + delta)
           }
         }
       } catch (e) {
@@ -152,7 +153,7 @@ export async function GET(req: Request) {
       }
     }
 
-    // ===== Mapping =====
+    // ===== Mapping: gesponsert sowohl in data als auch top-level setzen =====
     let items = rows.map((row: any) => {
       const d = row.data || {}
       const prof = profilesById.get(row.owner_id)
@@ -171,7 +172,7 @@ export async function GET(req: Request) {
         typeof prof?.rating_count === 'number' ? prof.rating_count
         : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
 
-      const promoScore = (scoreByReq.get(row.id) || 0) | 0
+      const promoScore = ((scoreByReq.get(row.id) || 0) as number) | 0
       const isSponsored = promoScore > 0
 
       const dataOut = {
@@ -198,13 +199,13 @@ export async function GET(req: Request) {
         user_rating,
         user_rating_count,
 
-        promo_score: promoScore, // Summe aus promo_orders (paid/succeeded)
+        promo_score: promoScore,
         promoScore,
         gesponsert: isSponsored,
       }
     })
 
-    // ===== Finale Sortierung (promoScore -> created_at) =====
+    // ===== Finale Sortierung: promo_score -> created_at =====
     items.sort((a, b) => {
       if (sortParam === 'promo') {
         const ps = (b.promo_score | 0) - (a.promo_score | 0)
@@ -217,7 +218,7 @@ export async function GET(req: Request) {
       }
     })
 
-    // ===== Slice bei Overfetch =====
+    // ===== Slice nach Overfetch =====
     if (sortParam === 'promo') {
       const start = page ? (page - 1) * limit : (offset ?? 0)
       const end = start + limit
