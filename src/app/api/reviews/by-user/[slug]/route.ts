@@ -130,35 +130,36 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     }
 
     const items = (rows ?? []).map(r => {
-      const orderId = String(r.order_id)
-      const requestId = ordersById.get(orderId)?.request_id ?? null
-      const req = requestId ? reqById.get(String(requestId)) : null
-      return {
-        id: r.id,
-        createdAt: r.created_at,
-        comment: r.comment || '',
-        stars: toStars(r),
-        rater: (() => {
-          const p = raters.get(String(r.rater_id))
-          return p ? { id: p.id, username: p.username || null, display: p.company_name || null }
-                   : { id: r.rater_id, username: null, display: null }
-        })(),
-        orderId,
-        requestId: requestId ? String(requestId) : null,
-        requestTitle: pickRequestTitle(req),
-      }
-    })
+  const orderId = String(r.order_id)
+  const requestId = ordersById.get(orderId)?.request_id ?? null
+  const req = requestId ? reqById.get(String(requestId)) : null
 
-    return NextResponse.json({
-      profile: {
-        id: rateeProfile.id,
-        username: rateeProfile.username || null,
-        display: rateeProfile.company_name || null,
-        ratingAvg: rateeProfile.rating_avg,
-        ratingCount: rateeProfile.rating_count,
-      },
-      page, pageSize, total: count ?? 0, items
-    })
+  const p = raters.get(String(r.rater_id))
+
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    comment: r.comment || '',
+    stars: toStars(r),
+    rater: p
+      ? { id: p.id, username: p.username || null, companyName: p.company_name || null }
+      : { id: r.rater_id, username: null, companyName: null },
+    orderId,
+    requestId: requestId ? String(requestId) : null,
+    requestTitle: pickRequestTitle(req),
+  }
+})
+
+return NextResponse.json({
+  profile: {
+    id: rateeProfile.id,
+    username: rateeProfile.username || null,
+    companyName: rateeProfile.company_name || null,
+    ratingAvg: rateeProfile.rating_avg,
+    ratingCount: rateeProfile.rating_count,
+  },
+  page, pageSize, total: count ?? 0, items
+})
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to list reviews' }, { status: 500 })
   }

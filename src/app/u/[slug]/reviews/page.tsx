@@ -11,13 +11,14 @@ type ReviewItem = {
   createdAt: string
   comment: string
   stars: number
-  rater: { id: string, username: string|null, display: string|null }
+  rater: { id: string, username: string | null, companyName: string | null }
   orderId: string
   requestId: string | null
   requestTitle: string | null
 }
+
 type ApiResp = {
-  profile: { id: string, username: string|null, display: string|null, ratingAvg: number|null, ratingCount: number|null }
+  profile: { id: string, username: string | null, companyName: string | null, ratingAvg: number | null, ratingCount: number | null }
   page: number
   pageSize: number
   total: number
@@ -28,12 +29,12 @@ const fetcher = async (u: string) => {
   const r = await fetch(u, { credentials: 'include' })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(j?.error || 'Laden fehlgeschlagen')
-  return j
+  return j as ApiResp
 }
 
 function Stars({ n }: { n: number }) {
   const full = Math.max(1, Math.min(5, Math.round(n)))
-  return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5-full)}</span>
+  return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
 export default function UserReviewsPage() {
@@ -41,7 +42,7 @@ export default function UserReviewsPage() {
   const search = useSearchParams()
   const router = useRouter()
 
-  const page     = Math.max(1, parseInt(search.get('page') || '1', 10))
+  const page = Math.max(1, parseInt(search.get('page') || '1', 10))
   const pageSize = Math.max(1, Math.min(50, parseInt(search.get('pageSize') || '10', 10)))
 
   const { data, error, isLoading } = useSWR<ApiResp>(
@@ -60,19 +61,31 @@ export default function UserReviewsPage() {
     router.replace(qs ? `?${qs}` : '?', { scroll: false })
   }
 
+  const renderProfileTitle = () => {
+    if (!data) return 'Nutzer'
+    const u = data.profile.username
+    const c = data.profile.companyName
+    if (u) return `@${u}${c ? ` (${c})` : ''}`
+    return c || 'Nutzer'
+  }
+
   return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
         {isLoading && <div className={styles.emptyState}>Lade Reviews…</div>}
-        {error && <div className={styles.emptyState}><strong>Fehler:</strong> {(error as any)?.message || 'Konnte Reviews nicht laden.'}</div>}
+        {error && (
+          <div className={styles.emptyState}>
+            <strong>Fehler:</strong> {(error as any)?.message || 'Konnte Reviews nicht laden.'}
+          </div>
+        )}
         {data && (
           <>
             {/* Header */}
             <div className={styles.card} style={{ marginBottom: 16 }}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
-                  Bewertungen für {data.profile.display || data.profile.username || 'Nutzer'}
+                  Bewertungen für {renderProfileTitle()}
                 </div>
               </div>
               <div className={styles.meta} style={{ alignItems: 'center' }}>
@@ -96,7 +109,7 @@ export default function UserReviewsPage() {
               <div className={styles.emptyState}>Noch keine Bewertungen.</div>
             ) : (
               <ul className={styles.list}>
-                {data.items.map(it => {
+                {data.items.map((it) => {
                   const titleEl = it.requestId ? (
                     <Link className={styles.titleLink} href={`/lackanfragen/artikel/${it.requestId}`}>
                       {it.requestTitle ?? `Anfrage #${it.requestId}`}
@@ -105,15 +118,23 @@ export default function UserReviewsPage() {
                     <span className={styles.titleLink}>Anfrage nicht mehr verfügbar</span>
                   )
 
+                  const r = it.rater
+                  const raterLabel = r.username
+                    ? `@${r.username}${r.companyName ? ` (${r.companyName})` : ''}`
+                    : (r.companyName || '—')
+
+                  const raterHref = `/u/${encodeURIComponent(r.username || r.id)}/reviews`
+
                   return (
                     <li key={it.id} className={styles.card}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>{titleEl}</div>
                         <div>
                           <Stars n={it.stars} /> ·{' '}
-                          <span style={{ opacity: .8 }}>
-                            {new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                              .format(new Date(it.createdAt))}
+                          <span style={{ opacity: 0.8 }}>
+                            {new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
+                              new Date(it.createdAt)
+                            )}
                           </span>
                         </div>
                       </div>
@@ -121,18 +142,21 @@ export default function UserReviewsPage() {
                       <div className={styles.meta}>
                         <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
                           <div className={styles.metaLabel}>Kommentar</div>
-                          <div className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>{it.comment}</div>
+                          <div className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
+                            {it.comment}
+                          </div>
                         </div>
                       </div>
 
                       <div style={{ marginTop: 8 }}>
                         von{' '}
-                        {(it.rater.username || it.rater.display) ? (
-                          <Link className={styles.titleLink}
-                                href={`/u/${encodeURIComponent(it.rater.username || it.rater.id)}/reviews`}>
-                            {it.rater.display || it.rater.username}
+                        {(r.username || r.companyName) ? (
+                          <Link className={styles.titleLink} href={raterHref}>
+                            {raterLabel}
                           </Link>
-                        ) : '—'}
+                        ) : (
+                          '—'
+                        )}
                       </div>
                     </li>
                   )
@@ -143,15 +167,28 @@ export default function UserReviewsPage() {
             {/* Pagination */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
-                {total === 0 ? 'Keine Einträge'
-                  : <>Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews</>}
+                {total === 0 ? (
+                  'Keine Einträge'
+                ) : (
+                  <>
+                    Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews
+                  </>
+                )}
               </div>
               <div className={styles.pageButtons}>
-                <button className={styles.pageBtn} onClick={() => go(1)} disabled={page<=1}>«</button>
-                <button className={styles.pageBtn} onClick={() => go(page-1)} disabled={page<=1}>‹</button>
+                <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>
+                  «
+                </button>
+                <button className={styles.pageBtn} onClick={() => go(page - 1)} disabled={page <= 1}>
+                  ‹
+                </button>
                 <span className={styles.pageNow}>Seite {page} / {pages}</span>
-                <button className={styles.pageBtn} onClick={() => go(page+1)} disabled={page>=pages}>›</button>
-                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page>=pages}>»</button>
+                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= pages}>
+                  ›
+                </button>
+                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page >= pages}>
+                  »
+                </button>
               </div>
             </div>
           </>
