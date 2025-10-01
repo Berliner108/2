@@ -66,7 +66,7 @@ function stripSensitive(d: any) {
 /* ----- Route ----- */
 export async function GET(
   _req: Request,
-  ctx: any               // ungetypt gelassen
+  ctx: any               // <- ungetypt lassen (oder unknown)
 ) {
   const raw = ctx?.params?.id
   const id = Array.isArray(raw) ? raw[0] : raw
@@ -144,22 +144,14 @@ export async function GET(
   }
 
   const dRaw: any = data.data || {}
-  const dSanitized = stripSensitive(dRaw)
-
-  // WICHTIG: promo_score/gesponsert zusätzlich in data mitschicken,
-  // damit das FE sie beim Mapping sicher findet.
-  const dataForClient = {
-    ...dSanitized,
-    promo_score,
-    gesponsert: promo_score > 0,
-  }
+  const d = stripSensitive(dRaw)
 
   const artikel = {
     id: data.id,
     titel: data.title || dRaw.titel || 'Ohne Titel',
     title: data.title ?? null,
 
-    data: dataForClient, // <- enthält promo_score & gesponsert
+    data: d,  // bereinigte Rohdaten (keine sensiblen Felder)
 
     bilder: normalizeBilder(dRaw),
     lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
