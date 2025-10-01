@@ -55,7 +55,7 @@ export async function GET(req: Request) {
     const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase() // 'asc' | 'desc'
     const isAsc = orderParam === 'asc'
 
-    // ===== Haupt-Query (promo_score kommt als Spaltenwert, kann aber Text sein)
+    // Basis-Query
     let q = supabase
       .from('lack_requests')
       .select(
@@ -63,40 +63,29 @@ export async function GET(req: Request) {
         { count: 'exact' }
       )
 
-    if (!includeUnpublished) {
-      q = q.or('published.eq.true,published.is.null')
-    }
+    if (!includeUnpublished) q = q.or('published.eq.true,published.is.null')
     if (kategorie) q = q.eq('data->>kategorie', kategorie)
     if (id) q = q.eq('id', id)
 
     const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
     if (ids.length) q = q.in('id', ids)
 
-    if (search) {
-      q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
-    }
+    if (search) q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
 
-    // ===== Pagination-Fenster
-    let from = 0
-    let to = limit - 1
-    if (page) {
-      from = (page - 1) * limit
-      to = from + limit - 1
-    } else if (offset != null) {
-      from = offset
-      to = from + limit - 1
-    }
+    // Fenster berechnen
+    let from = 0, to = limit - 1
+    if (page) { from = (page - 1) * limit; to = from + limit - 1 }
+    else if (offset != null) { from = offset; to = from + limit - 1 }
 
-    // ===== DB-Order & Overfetch
     if (sortParam === 'promo') {
-      // NICHT nach promo_score in SQL sortieren (könnte lexikographisch sein) – wir sortieren in JS numerisch.
+      // Overfetch + stabile Basis-Order; finale Sortierung numerisch in JS
       const factor = 4
       const overTo = page
         ? (page * limit * factor) - 1
         : (offset != null ? (offset + limit * factor) - 1 : (limit * factor) - 1)
-      // stabile Basis (neueste zuerst), aber finaler Sort in JS
       q = q.order('created_at', { ascending: false }).range(0, overTo)
     } else {
+      // einfache created_at-Sortierung direkt in SQL
       q = q.order('created_at', { ascending: isAsc }).range(from, to)
     }
 
@@ -109,26 +98,23 @@ export async function GET(req: Request) {
     const rows = data ?? []
     const ownerIds = Array.from(new Set(rows.map((r: any) => r.owner_id).filter(Boolean)))
 
-    // ===== Profile laden (optional)
+    // Profile (optional)
     let profilesById = new Map<string, any>()
     if (ownerIds.length) {
       const { data: profs, error: profErr } = await supabase
         .from('profiles')
         .select('id, username, rating_avg, rating_count')
         .in('id', ownerIds)
-      if (profErr) {
-        console.warn('[lackanfragen] profiles lookup failed:', profErr.message ?? profErr)
-      } else if (profs) {
-        profilesById = new Map((profs as any[]).map((p: any) => [p.id, p]))
-      }
+      if (!profErr && profs) profilesById = new Map((profs as any[]).map((p: any) => [p.id, p]))
+      else if (profErr) console.warn('[lackanfragen] profiles lookup failed:', profErr.message ?? profErr)
     }
 
-    // ===== JS-Sort nach promo_score (NUMERISCH), dann created_at – und danach slicen
+    // Final sortieren (nur bei sort=promo): numerisch nach promo_score, dann created_at
     let sortedRows = rows
     if (sortParam === 'promo') {
       sortedRows = [...rows].sort((a: any, b: any) => {
-        const pa = Number(a?.promo_score ?? 0)
-        const pb = Number(b?.promo_score ?? 0)
+        const pa = Number.parseInt(String(a?.promo_score ?? 0), 10) || 0
+        const pb = Number.parseInt(String(b?.promo_score ?? 0), 10) || 0
         const byPromo = pb - pa
         if (byPromo !== 0) return isAsc ? -byPromo : byPromo
         const ta = new Date(a?.created_at ?? 0).getTime()
@@ -141,7 +127,7 @@ export async function GET(req: Request) {
       sortedRows = sortedRows.slice(start, end)
     }
 
-    // ===== Mapping (Badge-Logik bleibt exakt wie bei dir)
+    // Mapping (Badge-Logik unverändert!)
     const items = sortedRows.map((row: any) => {
       const d = row.data || {}
       const prof = profilesById.get(row.owner_id)
@@ -160,12 +146,11 @@ export async function GET(req: Request) {
         typeof prof?.rating_count === 'number' ? prof.rating_count
         : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
 
-      const promoScore = (Number(row.promo_score) || 0) | 0
+      const promoScore = (Number.parseInt(String(row.promo_score ?? 0), 10) || 0)
       const isSponsored = promoScore > 0
 
       const dataOut = {
         ...d,
-        // unverändert: Badge bleibt gesetzt, wenn promoScore > 0 oder schon vorhanden
         gesponsert: Boolean(d.gesponsert) || isSponsored,
       }
 
