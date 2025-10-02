@@ -535,7 +535,16 @@ function PageBody() {
         let view: ArtikelView | null = null;
         let vermitteltFlag = false;
 
-        // Detail laden (inkl. unveröffentlicht)
+        // Detail laden (robust: unterstützt item|artikel|request|items[])
+        const extractOne = (j: any, wantedId: string) => {
+          const direct = j?.artikel ?? j?.request ?? j?.item;
+          if (direct && (direct.id || direct.data)) return direct;
+          if (Array.isArray(j?.items)) {
+            return j.items.find((x: any) => String(x?.id) === wantedId) || j.items[0] || null;
+          }
+          if (j && (j.id || j.data)) return j;
+          return null;
+        };
         try {
           const res = await fetch(`/api/lackanfragen?id=${encodeURIComponent(id)}&includeUnpublished=1`, {
             cache: 'no-store',
@@ -543,14 +552,32 @@ function PageBody() {
           });
           if (res.ok) {
             const j = await res.json().catch(() => null as any);
-            const a = j?.artikel ?? j?.request ?? j?.item ?? j;
-            if (a && (a.id || a.data)) {
+            const a = extractOne(j, id);
+            if (a) {
               const apiItem = toApiItemFromDetail(a, id);
               vermitteltFlag = apiItem.published != null ? !toBool(apiItem.published) : false;
               view = mapItem(apiItem);
             }
           }
         } catch {}
+        // optional: zweiter Versuch, falls es doch eine [id]-Route gibt
+        if (!view) {
+          try {
+            const res2 = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, {
+              cache: 'no-store',
+              credentials: 'include',
+            });
+            if (res2.ok) {
+              const j2 = await res2.json().catch(() => null as any);
+              const a2 = extractOne(j2, id);
+              if (a2) {
+                const apiItem = toApiItemFromDetail(a2, id);
+                vermitteltFlag = apiItem.published != null ? !toBool(apiItem.published) : false;
+                view = mapItem(apiItem);
+              }
+            }
+          } catch {}
+        }
 
         // Fallback: Liste durchsuchen
         if (!view) {
