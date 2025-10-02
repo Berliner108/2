@@ -13,8 +13,6 @@ type LackOffer = {
   id: string
   requestId: string | number
   vendorName: string
-  vendorUsername?: string | null
-  vendorDisplay?: string | null
   vendorRating: number | null
   vendorRatingCount: number | null
   priceCents: number
@@ -36,7 +34,6 @@ type RequestMeta = {
   data?: Record<string, any> | null
   ownerId?: string | null
   ownerHandle?: string | null
-  ownerDisplay?: string | null
   ownerRating?: number | null
   ownerRatingCount?: number | null
 }
@@ -348,13 +345,12 @@ const LackanfragenAngebote: FC = () => {
       const titleLC = title.toLowerCase()
       const offersForItem = receivedData.filter(o => String(o.requestId) === String(id))
       const offers = offersForItem.filter(o =>
-        !q ||
-        String(o.requestId).toLowerCase().includes(q) ||
-        o.vendorName.toLowerCase().includes(q) ||
-        (o.vendorUsername && o.vendorUsername.toLowerCase().includes(q)) ||
-        (o.vendorDisplay && o.vendorDisplay.toLowerCase().includes(q)) ||
-        titleLC.includes(q)
-      )
+  !q ||
+  String(o.requestId).toLowerCase().includes(q) ||
+  o.vendorName.toLowerCase().includes(q) ||
+  titleLC.includes(q)
+)
+
       const showNoOffersGroup = offersForItem.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
