@@ -64,9 +64,7 @@ export default function UserReviewsPage() {
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
     const u = data.profile.username
-    // neu
-  return u ? u : 'Nutzer'
-
+    return u ? u : 'Nutzer'
   }
 
   return (
@@ -110,18 +108,19 @@ export default function UserReviewsPage() {
             ) : (
               <ul className={styles.list}>
                 {data.items.map((it) => {
-                  const titleEl = it.requestId ? (
-                    <Link className={styles.titleLink} href={`/lackanfragen/artikel/${it.requestId}`}>
-                      {it.requestTitle ?? `Anfrage #${it.requestId}`}
+                  const titleEl = (it.requestId && it.requestTitle) ? (
+                    <Link
+                      className={styles.titleLink}
+                      href={`/lackanfragen/artikel/${encodeURIComponent(it.requestId)}`}
+                    >
+                      {it.requestTitle}
                     </Link>
                   ) : (
                     <span className={styles.titleLink}>Anfrage nicht mehr verfügbar</span>
                   )
 
                   const r = it.rater
-                  // neu
                   const raterLabel = r.username ? r.username : '—'
-
                   const raterHref = `/u/${encodeURIComponent(r.username || r.id)}/reviews`
 
                   return (
