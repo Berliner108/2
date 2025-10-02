@@ -587,9 +587,7 @@ const LackanfragenAngebote: FC = () => {
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
                                   <span className={styles.vendor}>{o.vendorName}</span>
-                                  {o.vendorUsername && o.vendorDisplay ? (
-                                    <span className={styles.vendorHandle}> · {o.vendorDisplay}</span>
-                                  ) : null}
+                                  
                                   <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                                   {o.priceCents === bestPrice && offers.length > 1 && (
                                     <span className={styles.tagBest}>Bester Preis</span>
@@ -679,7 +677,7 @@ const LackanfragenAngebote: FC = () => {
                 const remaining  = formatRemaining(validUntil)
                 const reqExpires = endOfDay(liefer)
 
-                const askerName = meta?.ownerHandle || meta?.ownerDisplay || 'Anfragesteller'
+                const askerName = meta?.ownerHandle ||  'Anfragesteller'
                 const ratingTxt =
                   (typeof meta?.ownerRating === 'number' && isFinite(meta.ownerRating) && meta?.ownerRatingCount && meta.ownerRatingCount > 0)
                     ? `${meta.ownerRating.toFixed(1)}/5 · ${meta.ownerRatingCount}`
@@ -704,7 +702,7 @@ const LackanfragenAngebote: FC = () => {
                       <span className={styles.metaItem}>Anfrage-Nr.: <strong>{o.requestId}</strong></span>
                       <span className={styles.metaItem}>
                         Anfragesteller: <strong>{askerName}</strong>
-                        {meta?.ownerDisplay && meta?.ownerHandle ? <span> · {meta.ownerDisplay}</span> : null}
+                       
                         <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                       </span>
                       <span className={styles.metaItem}>
