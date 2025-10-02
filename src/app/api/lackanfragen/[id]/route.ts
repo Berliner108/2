@@ -113,7 +113,8 @@ export async function GET(
     if (prof) {
       const handle  = (prof.username ?? '').toString().trim() || null
       const display = (prof.company_name ?? '').toString().trim() || null
-      userName = display || handle
+      const userHandle = handle
+      userName = handle || null // kein Fallback auf company_name
       userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
       userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : (prof.rating_count != null ? Number(prof.rating_count) : 0)
     }
@@ -123,10 +124,7 @@ export async function GET(
 
   const d: any = data.data || {}
 
-  if (!userName) {
-    const fromData = (d.user ?? d.username ?? d.user_name ?? '').toString().trim()
-    userName = fromData || null
-  }
+  
   if (userRating == null && typeof d.user_rating === 'number') {
     userRating = d.user_rating
   }
