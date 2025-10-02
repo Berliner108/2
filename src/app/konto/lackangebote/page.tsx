@@ -139,6 +139,12 @@ function asDateLike(v: unknown): Date | undefined {
   const d = new Date(v as any)
   return isNaN(+d) ? undefined : d
 }
+// Nur echte Usernames zulassen (2–32, alnum + . _ - , nicht am Rand)
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
+const asHandleOrNull = (v?: unknown) => {
+  const s = typeof v === 'string' ? v.trim() : '';
+  return HANDLE_RE.test(s) ? s : null;
+};
 
 const formatEUR = (c?: number) =>
   typeof c === 'number' ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' }) : '—'
@@ -338,15 +344,25 @@ const LackanfragenOrdersPage: FC = () => {
     }
     return `Anfrage #${String(order.requestId).slice(0, 8)}`
   }
-  const pickCounterpartyName = (order: LackOrder) =>
-    order.kind === 'vergeben'
-      ? (order.vendorDisplay || order.vendorName || order.vendorUsername || '—')
-      : (order.ownerDisplay || order.ownerHandle || '—')
-  const pickCounterpartyRatingTxt = (order: LackOrder) => {
-    const rating   = order.kind === 'vergeben' ? order.vendorRating : order.ownerRating
-    const ratingCt = order.kind === 'vergeben' ? order.vendorRatingCount : order.ownerRatingCount
-    return (typeof rating === 'number' && (ratingCt ?? 0) > 0) ? `${rating.toFixed(1)}/5 · ${ratingCt}` : 'keine Bewertungen'
-  }
+  // ⬇️ Diese beiden Funktionen ersetzen
+const pickCounterpartyName = (order: LackOrder) =>
+  order.kind === 'vergeben'
+    // ich (Käufer) sehe Anbieter → nur Handle/Username erlauben
+    ? (asHandleOrNull(order.vendorUsername) ||
+       asHandleOrNull((order as any).vendorHandle) ||
+       'Anbieter')
+    // ich (Anbieter) sehe Käufer → nur Handle erlauben
+    : (asHandleOrNull(order.ownerHandle) ||
+       asHandleOrNull((order as any).ownerUsername) ||
+       'Auftraggeber');
+
+const pickCounterpartyRatingTxt = (order: LackOrder) => {
+  const rating   = order.kind === 'vergeben' ? order.vendorRating : order.ownerRating;
+  const ratingCt = order.kind === 'vergeben' ? order.vendorRatingCount : order.ownerRatingCount;
+  return (typeof rating === 'number' && isFinite(rating) && (ratingCt ?? 0) > 0)
+    ? `${rating.toFixed(1)}/5 · ${ratingCt}`
+    : 'keine Bewertungen';
+};
   function getStatusKeyFor(order: LackOrder, liefer?: Date): StatusKey {
     if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
     return statusFromLiefer(liefer).key
