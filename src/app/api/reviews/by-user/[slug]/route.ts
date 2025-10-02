@@ -46,7 +46,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     if (isUuid(slug)) {
       const { data, error } = await admin
         .from('profiles')
-        .select('id, username, company_name, rating_avg, rating_count')
+        .select('id, username, rating_avg, rating_count')
         .eq('id', slug)
         .limit(1)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -54,7 +54,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     } else {
       const { data, error } = await admin
         .from('profiles')
-        .select('id, username, company_name, rating_avg, rating_count')
+        .select('id, username, rating_avg, rating_count')
         .eq('username', slug)
         .limit(1)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -71,7 +71,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     // wenn Nutzer unbekannt: leere Antwort (200)
     if (!rateeId) {
       return NextResponse.json({
-        profile: { id: slug, username: null, display: null, ratingAvg: null, ratingCount: 0 },
+        profile: { id: slug, username: null, ratingAvg: null, ratingCount: 0 },
         page, pageSize, total: 0, items: []
       })
     }
@@ -85,13 +85,13 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
       .range(from, to)
     if (revErr) return NextResponse.json({ error: revErr.message }, { status: 500 })
 
-    // Rater-Profile
+    // Rater-Profile (nur id + username)
     const raterIds = Array.from(new Set((rows ?? []).map(r => r.rater_id).filter(Boolean))) as string[]
     const raters = new Map<string, any>()
     if (raterIds.length) {
       const { data: profs, error } = await admin
         .from('profiles')
-        .select('id, username, company_name')
+        .select('id, username')
         .in('id', raterIds)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       for (const p of profs ?? []) raters.set(String(p.id), p)
@@ -130,36 +130,35 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     }
 
     const items = (rows ?? []).map(r => {
-  const orderId = String(r.order_id)
-  const requestId = ordersById.get(orderId)?.request_id ?? null
-  const req = requestId ? reqById.get(String(requestId)) : null
+      const orderId = String(r.order_id)
+      const requestId = ordersById.get(orderId)?.request_id ?? null
+      const req = requestId ? reqById.get(String(requestId)) : null
 
-  const p = raters.get(String(r.rater_id))
+      const p = raters.get(String(r.rater_id))
 
-  return {
-    id: r.id,
-    createdAt: r.created_at,
-    comment: r.comment || '',
-    stars: toStars(r),
-    rater: p
-      ? { id: p.id, username: p.username || null, companyName: p.company_name || null }
-      : { id: r.rater_id, username: null, companyName: null },
-    orderId,
-    requestId: requestId ? String(requestId) : null,
-    requestTitle: pickRequestTitle(req),
-  }
-})
+      return {
+        id: r.id,
+        createdAt: r.created_at,
+        comment: r.comment || '',
+        stars: toStars(r),
+        rater: p
+          ? { id: p.id, username: p.username || null }
+          : { id: r.rater_id, username: null },
+        orderId,
+        requestId: requestId ? String(requestId) : null,
+        requestTitle: pickRequestTitle(req),
+      }
+    })
 
-return NextResponse.json({
-  profile: {
-    id: rateeProfile.id,
-    username: rateeProfile.username || null,
-    companyName: rateeProfile.company_name || null,
-    ratingAvg: rateeProfile.rating_avg,
-    ratingCount: rateeProfile.rating_count,
-  },
-  page, pageSize, total: count ?? 0, items
-})
+    return NextResponse.json({
+      profile: {
+        id: rateeProfile.id,
+        username: rateeProfile.username || null,
+        ratingAvg: rateeProfile.rating_avg,
+        ratingCount: rateeProfile.rating_count,
+      },
+      page, pageSize, total: count ?? 0, items
+    })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to list reviews' }, { status: 500 })
   }

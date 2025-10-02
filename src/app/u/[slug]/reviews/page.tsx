@@ -64,7 +64,9 @@ export default function UserReviewsPage() {
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
     const u = data.profile.username
-    return u ? `${u}` : 'Nutzer'
+    // neu
+  return u ? u : 'Nutzer'
+
   }
 
   return (
@@ -117,7 +119,9 @@ export default function UserReviewsPage() {
                   )
 
                   const r = it.rater
-                  const raterLabel = r.username ? `@${r.username}` : '—'
+                  // neu
+                  const raterLabel = r.username ? r.username : '—'
+
                   const raterHref = `/u/${encodeURIComponent(r.username || r.id)}/reviews`
 
                   return (
