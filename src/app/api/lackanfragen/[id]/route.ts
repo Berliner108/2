@@ -1,11 +1,12 @@
-// /src/app/api/lackanfragen/route.ts
+// /src/app/api/lackanfragen/[id]/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/* ------------ Helpers ------------ */
+/* ---------------------- Utils / Normalizer ---------------------- */
 const joinPlzOrt = (plz?: unknown, ort?: unknown) =>
   [plz, ort].map(v => (v ?? '').toString().trim()).filter(Boolean).join(' ') || ''
 
@@ -20,156 +21,167 @@ function normalizeBilder(d: any): string[] {
   const b = d?.bilder
   if (Array.isArray(b)) {
     if (typeof b[0] === 'string') return b as string[]
-    if (typeof b[0] === 'object' && (b[0] as any)?.url) return (b as any[]).map(x => x.url).filter(Boolean)
+    if (typeof b[0] === 'object' && b[0]?.url) return (b as any[]).map(x => x.url).filter(Boolean)
   }
   if (typeof b === 'string' && b.trim()) return b.split(',').map((s: string) => s.trim()).filter(Boolean)
   return []
 }
 
-function displayNameFromProfile(p?: any): string | undefined {
-  const u = (p?.username ?? '').toString().trim()
-  return u || undefined
+type DateiItem = { name: string; url: string }
+function getNameFromUrl(u: string): string {
+  try {
+    const p = new URL(u)
+    const last = p.pathname.split('/').filter(Boolean).pop() || 'datei'
+    return decodeURIComponent(last)
+  } catch {
+    const parts = u.split('/')
+    return decodeURIComponent(parts[parts.length - 1] || 'datei')
+  }
+}
+function normalizeDateien(d: any): DateiItem[] {
+  const arr = d?.dateien
+  if (!arr) return []
+  if (Array.isArray(arr)) {
+    if (arr.length === 0) return []
+    if (typeof arr[0] === 'string') {
+      return (arr as string[]).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }))
+    }
+    return (arr as any[])
+      .map((x) => {
+        const url: string | undefined = x?.url || x?.href
+        const name: string | undefined = x?.name || x?.filename || (url ? getNameFromUrl(url) : undefined)
+        return url ? { name: name || 'Datei', url } : null
+      })
+      .filter(Boolean) as DateiItem[]
+  }
+  if (typeof arr === 'string' && arr.trim()) {
+    return arr.split(',').map(s => s.trim()).filter(Boolean).map(url => ({ name: getNameFromUrl(url), url }))
+  }
+  return []
 }
 
-/* ------------ Route ------------ */
-export async function GET(req: Request) {
-  try {
-    const supabase = await supabaseServer()
-    const url = new URL(req.url)
+function normalizeZustand(z?: unknown): string {
+  const v = (z ?? '').toString().toLowerCase()
+  if (!v) return ''
+  if (v.includes('neu')) return 'Neu und ungeöffnet'
+  if (v.includes('geöffnet') || v.includes('geoeffnet') || v.includes('offen')) return 'Geöffnet und einwandfrei'
+  return (z ?? '').toString()
+}
 
-    const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200)
-    const kategorie = url.searchParams.get('kategorie') ?? ''
-    const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
+/* ---------------------- Route ---------------------- */
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
 
-    const id = url.searchParams.get('id') ?? ''
-    const idsRaw = url.searchParams.get('ids') ?? ''
-    const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
+  // 0) Nur eingeloggte User erlauben (Middleware deckt das i.d.R. ab; hier trotzdem Guard)
+  const sb = await supabaseServer()
+  const { data: { user }, error: userErr } = await sb.auth.getUser()
+  if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
+  if (!user)    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    const offsetParam = url.searchParams.get('offset') ?? url.searchParams.get('skip') ?? url.searchParams.get('start')
-    const pageParam = url.searchParams.get('page')
-    const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
-    const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
+  // 1) Anfrage via Admin (RLS umgehen) holen
+  const admin = supabaseAdmin()
+  const { data, error } = await admin
+    .from('lack_requests')
+    .select('id,title,lieferdatum,delivery_at,created_at,updated_at,status,owner_id,data,published')
+    .eq('id', id)
+    .maybeSingle()
 
-    // Sortier-Parameter (DB-seitig)
-    const sortParam = (url.searchParams.get('sort') ?? 'promo').toLowerCase() // 'promo' | 'created'
-    const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase() // 'asc' | 'desc'
-    const asc = orderParam === 'asc'
-
-    // ===== Haupt-Query (promo_score ist Spaltenwert) =====
-    let q = supabase
-      .from('lack_requests')
-      .select(
-        'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score',
-        { count: 'exact' }
-      )
-
-    if (!includeUnpublished) {
-      // nur veröffentlichte (oder alte mit NULL)
-      q = q.or('published.eq.true,published.is.null')
-    }
-    if (kategorie) q = q.eq('data->>kategorie', kategorie)
-    if (id) q = q.eq('id', id)
-
-    const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
-    if (ids.length) q = q.in('id', ids)
-
-    if (search) {
-      // einfache Suche: ID oder Titel
-      q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
-    }
-
-    // ===== DB-seitige Sortierung =====
-    if (sortParam === 'promo') {
-      q = q.order('promo_score', { ascending: asc, nullsFirst: false })
-           .order('created_at',  { ascending: asc })
-    } else {
-      q = q.order('created_at', { ascending: asc })
-    }
-
-    // ===== Pagination =====
-    const from = page ? (page - 1) * limit : (offset ?? 0)
-    const to   = from + limit - 1
-    q = q.range(from, to)
-
-    const { data, error } = await q
-    if (error) {
-      console.error('[lackanfragen] query failed:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    const rows = data ?? []
-    const ownerIds = Array.from(new Set(rows.map((r: any) => r.owner_id).filter(Boolean)))
-
-    // ===== Profile laden (optional) =====
-    let profilesById = new Map<string, any>()
-    if (ownerIds.length) {
-      const { data: profs, error: profErr } = await supabase
-        .from('profiles')
-        .select('id, username, rating_avg, rating_count')
-        .in('id', ownerIds)
-      if (profErr) {
-        console.warn('[lackanfragen] profiles lookup failed:', profErr.message ?? profErr)
-      } else {
-        profilesById = new Map((profs ?? []).map((p: any) => [p.id, p]))
-      }
-    }
-
-    // ===== Mapping =====
-    const items = rows.map((row: any) => {
-      const d = row.data || {}
-      const prof = profilesById.get(row.owner_id)
-      const nameFromProfile = displayNameFromProfile(prof)
-
-      const user =
-        nameFromProfile ||
-        (d.user ?? '').toString().trim() ||
-        undefined
-
-      const user_rating =
-        typeof prof?.rating_avg === 'number' ? prof.rating_avg
-        : (typeof d.user_rating === 'number' ? d.user_rating : null)
-
-      const user_rating_count =
-        typeof prof?.rating_count === 'number' ? prof.rating_count
-        : (typeof d.user_rating_count === 'number' ? d.user_rating_count : 0)
-
-      const promoScore = (row.promo_score ?? 0) | 0
-      const isSponsored = promoScore > 0
-
-      const dataOut = {
-        ...d,
-        // FE-freundlich: Flag auch im data-Objekt
-        gesponsert: Boolean(d.gesponsert) || isSponsored,
-      }
-
-      return {
-        id: row.id,
-        title: row.title,
-        status: row.status,
-        delivery_at: row.delivery_at,
-        lieferdatum: row.lieferdatum,
-        created_at: row.created_at,
-        published: row.published,
-        owner_id: row.owner_id,
-
-        data: dataOut,
-        ort: computeOrtShort(d),
-        bilder: normalizeBilder(d),
-        lieferadresse_full: (d.lieferadresse ?? '').toString(),
-
-        user,
-        user_rating,
-        user_rating_count,
-
-        promo_score: promoScore,
-        promoScore,
-        gesponsert: isSponsored,
-      }
-    })
-
-    return NextResponse.json({ items })
-  } catch (e: any) {
-    console.error('[lackanfragen] GET crashed:', e)
-    return NextResponse.json({ error: e?.message ?? 'Server error' }, { status: 500 })
+  if (error) {
+    console.error('[lackanfragen] detail error', error.message)
+    return NextResponse.json({ error: 'DB error' }, { status: 500 })
   }
+
+  // Nicht vorhanden/gelöscht?
+  if (!data || data.status === 'deleted') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // 2) Owner-Profile (Name/Rating) via Admin
+  let userName: string | null = null
+  let userRating: number | null = null
+  let userRatingCount = 0
+  try {
+    const { data: prof } = await admin
+      .from('profiles')
+      .select('id, username, company_name, rating_avg, rating_count')
+      .eq('id', data.owner_id)
+      .maybeSingle()
+
+    if (prof) {
+      const handle  = (prof.username ?? '').toString().trim() || null
+      const display = (prof.company_name ?? '').toString().trim() || null
+      userName = display || handle
+      userRating = typeof prof.rating_avg === 'number' ? prof.rating_avg : (prof.rating_avg != null ? Number(prof.rating_avg) : null)
+      userRatingCount = typeof prof.rating_count === 'number' ? prof.rating_count : (prof.rating_count != null ? Number(prof.rating_count) : 0)
+    }
+  } catch (e) {
+    console.warn('[lackanfragen] profile lookup failed (non-fatal)', (e as any)?.message)
+  }
+
+  const d: any = data.data || {}
+
+  if (!userName) {
+    const fromData = (d.user ?? d.username ?? d.user_name ?? '').toString().trim()
+    userName = fromData || null
+  }
+  if (userRating == null && typeof d.user_rating === 'number') {
+    userRating = d.user_rating
+  }
+  if (!userRatingCount && typeof d.user_rating_count === 'number') {
+    userRatingCount = d.user_rating_count
+  }
+
+  // 3) Antwort im bestehenden Format
+  const artikel = {
+    id: data.id,
+    titel: data.title || d.titel || 'Ohne Titel',
+    bilder: normalizeBilder(d),
+    lieferdatum: (data.lieferdatum || data.delivery_at || null) as string | null,
+
+    zustand: normalizeZustand(d.zustand),
+    hersteller: d.hersteller || '',
+    menge: typeof d.menge === 'number' ? d.menge : (d.menge ? Number(d.menge) : null),
+
+    ort: computeOrtShort(d),
+    lieferadresse_full: (d.lieferadresse ?? '').toString(),
+
+    kategorie:
+      (d.kategorie || '').toString().toLowerCase() === 'pulverlack' ? 'Pulverlack'
+      : (d.kategorie || '').toString().toLowerCase() === 'nasslack' ? 'Nasslack'
+      : (d.kategorie || ''),
+
+    user_id: data.owner_id as string,
+    user: userName,
+    user_rating: userRating,
+    user_rating_count: userRatingCount,
+
+    farbcode: d.farbcode || '',
+    effekt: Array.isArray(d.effekt) ? d.effekt.join(', ') : (d.effekt || ''),
+    anwendung: d.anwendung || '',
+    oberfläche: d.oberflaeche || d.oberfläche || '',
+    glanzgrad: d.glanzgrad || '',
+    sondereigenschaft: d.sondereigenschaft || '',
+    beschreibung: d.beschreibung || '',
+
+    gesponsert: Array.isArray(d.bewerbung) && d.bewerbung.length > 0,
+    gewerblich: !!d.istGewerblich,
+    privat: d.istGewerblich === false,
+
+    dateien: normalizeDateien(d),
+
+    farbpalette: d.farbpalette || '',
+    farbton: d.farbton || '',
+    qualität: d.qualitaet || d.qualität || '',
+    zertifizierung: Array.isArray(d.zertifizierungen) ? d.zertifizierungen : [],
+    aufladung: Array.isArray(d.aufladung) ? d.aufladung : [],
+
+    // fürs FE (Banner etc.)
+    published: data.published,
+    status: data.status,
+  }
+
+  return NextResponse.json({ artikel })
 }
