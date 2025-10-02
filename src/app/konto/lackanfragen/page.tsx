@@ -63,6 +63,13 @@ const itemPathBy = (id: string | number) => `/lackanfragen/artikel/${encodeURICo
 const formatEUR = (c: number) => (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
 const formatDate = (d?: Date) => (d ? d.toLocaleDateString('de-AT') : '—')
 const formatDateTime = (d?: Date) => (d ? d.toLocaleString('de-AT') : '—')
+// Username = 2–32 Zeichen, alphanumerisch, . _ - erlaubt (nicht am Rand)
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
+const asHandleOrNull = (v?: unknown) => {
+  const s = typeof v === 'string' ? v.trim() : '';
+  return HANDLE_RE.test(s) ? s : null;
+};
+
 
 /** Gültig bis: min(created+72h, (lieferdatum - 1 Tag, 23:59)) */
 function computeValidUntil(offer: LackOffer, lieferdatum?: Date): Date | undefined {
@@ -215,16 +222,33 @@ const LackanfragenAngebote: FC = () => {
   )
 
   // Normalisierung (falls Backend item_amount_cents/shipping_cents liefert)
-  const normalizeOffer = (o: any): LackOffer => {
-    const item = Number.isFinite(o.itemCents) ? o.itemCents
-              : Number.isFinite(o.item_amount_cents) ? o.item_amount_cents
-              : Number.isFinite(o.priceCents) ? o.priceCents : 0
-    const ship = Number.isFinite(o.shippingCents) ? o.shippingCents
-              : Number.isFinite(o.shipping_cents) ? o.shipping_cents
-              : 0
-    const total = Number.isFinite(o.priceCents) ? o.priceCents : (item + ship)
-    return { ...o, itemCents: item, shippingCents: ship, priceCents: total } as LackOffer
-  }
+ const normalizeOffer = (o: any): LackOffer => {
+  const item = Number.isFinite(o.itemCents) ? o.itemCents
+            : Number.isFinite(o.item_amount_cents) ? o.item_amount_cents
+            : Number.isFinite(o.priceCents) ? o.priceCents : 0;
+
+  const ship = Number.isFinite(o.shippingCents) ? o.shippingCents
+            : Number.isFinite(o.shipping_cents) ? o.shipping_cents
+            : 0;
+
+  const total = Number.isFinite(o.priceCents) ? o.priceCents : (item + ship);
+
+  // ⛔️ Niemals Firmenname anzeigen – nur Username (Handle) zulassen
+  // falls Backend vendorName fälschlich company_name enthält, wird es hier verworfen
+  const handle =
+    asHandleOrNull(o.vendorName)        // falls schon korrekt
+    || asHandleOrNull(o.vendorUsername) // falls Backend zusätzlich liefert
+    || null;
+
+  return {
+    ...o,
+    vendorName: handle || 'Anbieter', // UI zeigt nur Handle oder "Anbieter"
+    itemCents: item,
+    shippingCents: ship,
+    priceCents: total,
+  } as LackOffer;
+};
+
 
   const requestIds   = useMemo(() => (data?.requestIds ?? []).map(String), [data])
   const requestMeta  = data?.requests ?? []
