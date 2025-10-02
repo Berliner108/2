@@ -537,7 +537,7 @@ function PageBody() {
 
         // Detail laden (inkl. unveröffentlicht)
         try {
-          const res = await fetch(`/api/lackanfragen/${encodeURIComponent(id)}?includeUnpublished=1`, {
+          const res = await fetch(`/api/lackanfragen?id=${encodeURIComponent(id)}&includeUnpublished=1`, {
             cache: 'no-store',
             credentials: 'include',
           });
