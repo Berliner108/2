@@ -11,7 +11,7 @@ type ReviewItem = {
   createdAt: string
   comment: string
   stars: number
-  rater: { id: string, username: string | null, companyName?: string | null } // companyName optional, wird NICHT angezeigt
+  rater: { id: string, username: string | null, companyName?: string | null }
   orderId: string
   requestId: string | null
   requestTitle: string | null
@@ -63,8 +63,8 @@ export default function UserReviewsPage() {
 
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
-    const u = data.profile.username
-    return u ? u : 'Nutzer'
+    const u = data.profile.username?.replace(/^@+/, '')
+    return u || 'Nutzer'
   }
 
   return (
@@ -108,20 +108,24 @@ export default function UserReviewsPage() {
             ) : (
               <ul className={styles.list}>
                 {data.items.map((it) => {
-                  const titleEl = (it.requestId && it.requestTitle) ? (
+                  const r = it.rater
+                  const name = r.username?.replace(/^@+/, '') || null
+                  const raterHref = `/u/${encodeURIComponent(name || r.id)}/reviews`
+
+                  const id = it.requestId ? String(it.requestId).trim() : ''
+                  const title = it.requestTitle?.trim() || (id ? `Anfrage #${id}` : null)
+
+                  const titleEl = id ? (
                     <Link
                       className={styles.titleLink}
-                      href={`/lackanfragen/artikel/${encodeURIComponent(it.requestId)}`}
+                      href={`/lackanfragen/artikel/${encodeURIComponent(id)}`}
+                      prefetch={false}
                     >
-                      {it.requestTitle}
+                      {title}
                     </Link>
                   ) : (
                     <span className={styles.titleLink}>Anfrage nicht mehr verfügbar</span>
                   )
-
-                  const r = it.rater
-                  const raterLabel = r.username ? r.username : '—'
-                  const raterHref = `/u/${encodeURIComponent(r.username || r.id)}/reviews`
 
                   return (
                     <li key={it.id} className={styles.card}>
@@ -148,9 +152,9 @@ export default function UserReviewsPage() {
 
                       <div style={{ marginTop: 8 }}>
                         von{' '}
-                        {r.username ? (
-                          <Link className={styles.titleLink} href={raterHref}>
-                            {raterLabel}
+                        {name ? (
+                          <Link className={styles.titleLink} href={raterHref} prefetch={false}>
+                            {name}
                           </Link>
                         ) : (
                           '—'
