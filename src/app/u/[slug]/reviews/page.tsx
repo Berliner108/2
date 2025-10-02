@@ -64,7 +64,7 @@ export default function UserReviewsPage() {
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
     const u = data.profile.username
-    return u ? `@${u}` : 'Nutzer'
+    return u ? `${u}` : 'Nutzer'
   }
 
   return (
