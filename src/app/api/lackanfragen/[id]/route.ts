@@ -39,23 +39,31 @@ export async function GET(req: Request) {
 
     const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 200)
     const kategorie = url.searchParams.get('kategorie') ?? ''
-    const includeUnpublished = ['1','true','yes'].includes((url.searchParams.get('includeUnpublished') ?? '').toLowerCase())
 
+    // Flags/Filter aus Query
     const id = url.searchParams.get('id') ?? ''
     const idsRaw = url.searchParams.get('ids') ?? ''
     const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
-
     const offsetParam = url.searchParams.get('offset') ?? url.searchParams.get('skip') ?? url.searchParams.get('start')
     const pageParam = url.searchParams.get('page')
     const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : null
     const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null
 
-    // Sortier-Parameter (DB-seitig)
+    // Sortierung
     const sortParam = (url.searchParams.get('sort') ?? 'promo').toLowerCase() // 'promo' | 'created'
     const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase() // 'asc' | 'desc'
     const asc = orderParam === 'asc'
 
-    // ===== Haupt-Query (promo_score ist Spaltenwert) =====
+    // IDs aufbereiten
+    const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
+
+    // includeUnpublished:
+    // - expliziter Query-Param (1/true/yes) ODER
+    // - automatisch TRUE, wenn eine konkrete id/ids angefragt wird
+    const includeParam = (url.searchParams.get('includeUnpublished') ?? '').toLowerCase()
+    const includeUnpublished = ['1','true','yes'].includes(includeParam) || !!id || ids.length > 0
+
+    // ===== Haupt-Query =====
     let q = supabase
       .from('lack_requests')
       .select(
@@ -69,8 +77,6 @@ export async function GET(req: Request) {
     }
     if (kategorie) q = q.eq('data->>kategorie', kategorie)
     if (id) q = q.eq('id', id)
-
-    const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
     if (ids.length) q = q.in('id', ids)
 
     if (search) {
@@ -138,7 +144,6 @@ export async function GET(req: Request) {
 
       const dataOut = {
         ...d,
-        // FE-freundlich: Flag auch im data-Objekt
         gesponsert: Boolean(d.gesponsert) || isSponsored,
       }
 
