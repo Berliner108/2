@@ -11,14 +11,14 @@ type ReviewItem = {
   createdAt: string
   comment: string
   stars: number
-  rater: { id: string, username: string | null, companyName: string | null }
+  rater: { id: string, username: string | null, companyName?: string | null } // companyName optional, wird NICHT angezeigt
   orderId: string
   requestId: string | null
   requestTitle: string | null
 }
 
 type ApiResp = {
-  profile: { id: string, username: string | null, companyName: string | null, ratingAvg: number | null, ratingCount: number | null }
+  profile: { id: string, username: string | null, companyName?: string | null, ratingAvg: number | null, ratingCount: number | null }
   page: number
   pageSize: number
   total: number
@@ -64,9 +64,7 @@ export default function UserReviewsPage() {
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
     const u = data.profile.username
-    const c = data.profile.companyName
-    if (u) return `@${u}${c ? ` (${c})` : ''}`
-    return c || 'Nutzer'
+    return u ? `@${u}` : 'Nutzer'
   }
 
   return (
@@ -119,10 +117,7 @@ export default function UserReviewsPage() {
                   )
 
                   const r = it.rater
-                  const raterLabel = r.username
-                    ? `@${r.username}${r.companyName ? ` (${r.companyName})` : ''}`
-                    : (r.companyName || '—')
-
+                  const raterLabel = r.username ? `@${r.username}` : '—'
                   const raterHref = `/u/${encodeURIComponent(r.username || r.id)}/reviews`
 
                   return (
@@ -150,7 +145,7 @@ export default function UserReviewsPage() {
 
                       <div style={{ marginTop: 8 }}>
                         von{' '}
-                        {(r.username || r.companyName) ? (
+                        {r.username ? (
                           <Link className={styles.titleLink} href={raterHref}>
                             {raterLabel}
                           </Link>
