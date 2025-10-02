@@ -121,12 +121,14 @@ export async function GET() {
       }
     }
 
+    // === Username-only für Anbieter ausliefern (Company NICHT mehr verwenden) ===
     const receivedOut = received.map(o => {
       const v = o.supplier_id ? vendors.get(o.supplier_id) : undefined
-      // Anzeige: erst Firmenname, dann Handle
-      const vendorDisplay  = v?.display ?? null
       const vendorUsername = v?.handle ?? null
-      const vendorName     = vendorDisplay || vendorUsername || 'Anbieter'
+      // Username als angezeigter Name; KEIN Company-Fallback
+      const vendorName     = vendorUsername || 'Anbieter'
+      // Company bewusst nicht mehr nach außen geben (oder als null)
+      const vendorDisplay  = null as string | null
 
       const vendorRating = (typeof v?.rating === 'number' && isFinite(v.rating)) ? v.rating : null
       const vendorRatingCount = (typeof v?.rating_count === 'number' && isFinite(v.rating_count)) ? v.rating_count : null
@@ -218,7 +220,7 @@ export async function GET() {
       for (const p of (ownerProfs ?? []) as any[]) {
         owners.set(p.id, {
           handle: (p.username && String(p.username).trim()) || null,
-          display: (p.company_name && String(p.company_name).trim()) || null,
+          display: null, // Company NICHT mehr exportieren
           rating: typeof p.rating_avg === 'number' ? p.rating_avg : (p.rating_avg != null ? Number(p.rating_avg) : null),
           rating_count: typeof p.rating_count === 'number' ? p.rating_count : (p.rating_count != null ? Number(p.rating_count) : null),
         })
@@ -244,7 +246,7 @@ export async function GET() {
           data: r.data ?? null,
           ownerId: r.owner_id ?? null,
           ownerHandle: owner?.handle ?? null,
-          ownerDisplay: owner?.display ?? null,
+          ownerDisplay: null as string | null, // Company unterdrücken
           ownerRating: (typeof owner?.rating === 'number' && isFinite(owner.rating!)) ? owner!.rating : null,
           ownerRatingCount: (typeof owner?.rating_count === 'number' && isFinite(owner.rating_count!)) ? owner!.rating_count : null,
         }
@@ -254,7 +256,7 @@ export async function GET() {
       received: receivedOut,
       submitted: submittedOut,
       requestIds: myReqIds,   // nur DEINE (bereits published)
-      requests: requestsOut,  // eigene + veröffentlichte der submitted
+      requests: requestsOut,  // eigene + veröffentlichte der submitted (ohne Company-Namen)
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to list offers' }, { status: 500 })
