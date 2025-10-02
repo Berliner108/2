@@ -222,7 +222,8 @@ const LackanfragenAngebote: FC = () => {
   )
 
   // Normalisierung (falls Backend item_amount_cents/shipping_cents liefert)
- const normalizeOffer = (o: any): LackOffer => {
+ // Normalisierung (KEIN Firmenname mehr durchlassen)
+const normalizeOffer = (o: any): LackOffer => {
   const item = Number.isFinite(o.itemCents) ? o.itemCents
             : Number.isFinite(o.item_amount_cents) ? o.item_amount_cents
             : Number.isFinite(o.priceCents) ? o.priceCents : 0;
@@ -233,21 +234,28 @@ const LackanfragenAngebote: FC = () => {
 
   const total = Number.isFinite(o.priceCents) ? o.priceCents : (item + ship);
 
-  // ⛔️ Niemals Firmenname anzeigen – nur Username (Handle) zulassen
-  // falls Backend vendorName fälschlich company_name enthält, wird es hier verworfen
+  // 🔒 Nur echte Handles/ Usernames aus eindeutig benannten Feldern akzeptieren
   const handle =
-    asHandleOrNull(o.vendorName)        // falls schon korrekt
-    || asHandleOrNull(o.vendorUsername) // falls Backend zusätzlich liefert
-    || null;
+    asHandleOrNull(o.vendorHandle) ||
+    asHandleOrNull(o.vendor_username) ||
+    asHandleOrNull(o.vendorUsername) ||
+    asHandleOrNull(o.user?.handle) ||
+    asHandleOrNull(o.vendor?.handle) ||
+    asHandleOrNull(o.seller?.handle) ||
+    asHandleOrNull(o.account?.handle) ||
+    asHandleOrNull(o.ownerHandle) ||
+    null;
 
   return {
     ...o,
-    vendorName: handle || 'Anbieter', // UI zeigt nur Handle oder "Anbieter"
+    // UI verwendet dieses Feld – hier steht ab jetzt NUR noch der Handle oder "Anbieter"
+    vendorName: handle || 'Anbieter',
     itemCents: item,
     shippingCents: ship,
     priceCents: total,
   } as LackOffer;
 };
+
 
 
   const requestIds   = useMemo(() => (data?.requestIds ?? []).map(String), [data])
@@ -368,12 +376,16 @@ const LackanfragenAngebote: FC = () => {
       const title = buildGroupTitle(id)
       const titleLC = title.toLowerCase()
       const offersForItem = receivedData.filter(o => String(o.requestId) === String(id))
-      const offers = offersForItem.filter(o =>
-  !q ||
-  String(o.requestId).toLowerCase().includes(q) ||
-  o.vendorName.toLowerCase().includes(q) ||
-  titleLC.includes(q)
-)
+      const offers = offersForItem.filter(o => {
+  const h = (o.vendorName || '').toLowerCase(); // bereits bereinigt durch normalizeOffer
+  return (
+    !q ||
+    String(o.requestId).toLowerCase().includes(q) ||
+    h.includes(q) ||
+    titleLC.includes(q)
+  );
+});
+
 
       const showNoOffersGroup = offersForItem.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
