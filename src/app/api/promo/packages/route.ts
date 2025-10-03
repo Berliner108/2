@@ -7,26 +7,30 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const admin = supabaseAdmin()
-    // Wir nehmen ALLE Pakete, kein active-Flag nötig
+
+    // Keine Filter (kein "active"), wir nehmen alles was in promo_packages liegt
     const { data, error } = await admin
       .from('promo_packages')
-      .select('code,label,amount_cents,currency,score_delta,subtitle,most_popular')
-      .order('amount_cents', { ascending: true })
+      .select('*') // robust: falls Spalten leicht abweichen
 
     if (error) throw error
 
+    // Auf das vom Frontend erwartete Schema normalisieren
     const items = (data ?? []).map((r: any) => ({
-      id: String(r.code),              // <- wichtig: id = code
-      title: r.label ?? r.code,
+      id: String(r.code ?? r.id),        // wichtig: id = code
+      code: r.code ?? null,
+      title: r.title ?? '',
       subtitle: r.subtitle ?? null,
-      price_cents: Number(r.amount_cents ?? 0),
-      currency: String(r.currency ?? 'EUR').toUpperCase(),
-      score_delta: Number(r.score_delta ?? 0),
-      most_popular: !!r.most_popular,
+      price_cents: Number(r.price_cents ?? r.priceCents ?? 0),
+      score_delta: Number(r.score_delta ?? r.scoreDelta ?? 0),
+      most_popular: Boolean(r.most_popular ?? r.mostPopular ?? false),
+      stripe_price_id: r.stripe_price_id ?? r.stripePriceId ?? null,
     }))
 
     return NextResponse.json({ items })
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Load failed' }, { status: 500 })
+    console.error('[promo/packages] failed:', e?.message)
+    // Lieber leeres Array zurückgeben, damit das UI sauber bleibt
+    return NextResponse.json({ items: [] }, { status: 200 })
   }
 }

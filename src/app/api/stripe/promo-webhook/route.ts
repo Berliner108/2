@@ -10,7 +10,7 @@ const nowISO = () => new Date().toISOString()
 const parseSecrets = (...vars: (string | undefined)[]) =>
   Array.from(new Set(vars.flatMap(v => (v ? v.split(',').map(s => s.trim()).filter(Boolean) : []))))
 
-// Idempotenz: falls du die Tabelle nicht hast, setze beide Funktionen unten auf No-Op
+// Idempotenz: Wenn du keine processed_events-Tabelle hast, kannst du beide Funktionen notfalls zu No-Op machen.
 async function wasProcessed(id: string, admin: any) {
   try {
     const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
@@ -34,7 +34,7 @@ function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string
 }
 
 export async function POST(req: Request) {
-  // 1) Stripe + Signatur prüfen
+  // 1) Stripe initialisieren + Signatur-Header prüfen
   const secretKey = process.env.STRIPE_SECRET_KEY
   if (!secretKey) return NextResponse.json({ error: 'Stripe Secret fehlt' }, { status: 500 })
   const stripe = new Stripe(secretKey)
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Fehlende Signatur oder Webhook-Secret' }, { status: 400 })
   }
 
-  // 2) RAW body (wichtig für Signatur-Verifizierung)
+  // 2) RAW body lesen (wichtig für Signatur-Verifizierung)
   const rawBody = await req.text()
 
   // 3) Event verifizieren
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
     if (event.type === 'checkout.session.completed') {
       const sess = event.data.object as Stripe.Checkout.Session
 
-      // Wir erwarten: request_id + package_ids (CSV Codes: z.B. homepage,premium,search_boost)
+      // Erwartet in metadata: request_id + package_ids (CSV mit Codes)
       const requestId = (sess.metadata?.request_id ?? '') as string
       const packageIdsCSV = (sess.metadata?.package_ids ?? '') as string
 
@@ -95,23 +95,22 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true, skipped: 'empty_codes' })
       }
 
-      // Pakete laden – OHNE active-Flag
+      // Pakete aus promo_packages laden (ohne active-Flag)
       const { data: pkgs, error: pkgErr } = await admin
         .from('promo_packages')
-        .select('code,label,score_delta')
+        .select('code,title,score_delta')
         .in('code', codes)
 
       if (pkgErr) throw pkgErr
-
       const usedPkgs = pkgs ?? []
       if (!usedPkgs.length) {
         await markProcessed(event.id as string, admin)
         return NextResponse.json({ ok: true, skipped: 'packages_not_found' })
       }
 
-      // Gesamt-Score & Badges
+      // Score summieren + Badges aus den Titeln ableiten
       const totalScore = usedPkgs.reduce((sum: number, p: any) => sum + Number(p.score_delta || 0), 0)
-      const badgeTitles: string[] = usedPkgs.map((p: any) => p.label || p.code).filter(Boolean)
+      const badgeTitles: string[] = usedPkgs.map((p: any) => p.title || p.code).filter(Boolean)
 
       // Anfrage lesen
       const { data: reqRow, error: reqErr } = await admin
@@ -130,7 +129,7 @@ export async function POST(req: Request) {
       const curBadges: string[] = Array.isArray(curData.promo_badges) ? curData.promo_badges : []
       const mergedBadges = Array.from(new Set([...curBadges, ...badgeTitles]))
 
-      // Update: nur promo_score + Flags
+      // Update auf lack_requests: promo_score erhöhen + Flags setzen
       const { error: upErr } = await admin
         .from('lack_requests')
         .update({
@@ -147,7 +146,7 @@ export async function POST(req: Request) {
 
       if (upErr) throw upErr
 
-      // (Optionales) Logging, falls Tabelle existiert – best effort
+      // (Optional) Logging – nur wenn Tabelle existiert
       try {
         await admin.from('promo_orders').insert({
           request_id: requestId,

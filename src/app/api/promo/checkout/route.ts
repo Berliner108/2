@@ -56,17 +56,17 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Pakete (aus vorhandener Tabelle) laden
+    // Pakete laden (Spalten an deine Tabelle angepasst)
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
-      .select('code,label,amount_cents,currency,score_delta')
+      .select('code,title,price_cents,currency,score_delta')
       .in('code', packageIds)
     if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message, packageIds })
 
     const packages = (rows ?? []).map((r: any) => ({
       code: String(r.code),
-      title: String(r.label ?? r.code),
-      price_cents: Number(r.amount_cents ?? 0),
+      title: String(r.title ?? r.code),
+      price_cents: Number(r.price_cents ?? 0),
       currency: String(r.currency ?? 'EUR').toLowerCase(),
       score_delta: Number(r.score_delta ?? 0),
     }))
@@ -75,13 +75,18 @@ export async function POST(req: NextRequest) {
       return err('Keine passenden Pakete gefunden.', 400, { packageIds, resolved: rows })
     }
 
+    // Sicherstellen, dass Preise > 0 sind (Stripe verlangt integer >= 0; 0 wäre „kostenlos“ – meist nicht gewünscht)
+    if (packages.some(p => !Number.isFinite(p.price_cents) || p.price_cents <= 0)) {
+      return err('Ungültiger Paketpreis (price_cents) in promo_packages.', 500, { packages })
+    }
+
     // Stripe
     if (!process.env.STRIPE_SECRET_KEY) {
       return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
     }
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-    // Line Items (immer price_data)
+    // Line Items (price_data)
     const line_items = packages.map(p => ({
       price_data: {
         currency: p.currency,

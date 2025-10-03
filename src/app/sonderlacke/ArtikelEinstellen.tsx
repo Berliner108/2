@@ -200,9 +200,10 @@ const toAddressString = (a?: Partial<Adresse>) => {
 };
 
 /* ---- Promo Pakete ---- */
+// Typ vorne ergänzen:
 type PromoPackage = {
-  id: string;               // bleibt fürs UI
-  code?: string | null;     // neu: kommt von der API
+  id: string;                // fürs UI (wir setzen es auf den CODE)
+  code?: string | null;      // optional: Backend-Code
   title: string;
   subtitle?: string | null;
   price_cents: number;
@@ -210,6 +211,8 @@ type PromoPackage = {
   most_popular?: boolean | null;
   stripe_price_id?: string | null;
 };
+
+
 
 
 const formatEUR = (cents: number) =>
@@ -552,33 +555,43 @@ function ArtikelEinstellen() {
 
   /* ---------------- Promo-Pakete laden ---------------- */
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoadingPackages(true);
-        const res = await fetch('/api/promo/packages', { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const json = await res.json();
-        const items: PromoPackage[] = Array.isArray(json?.items) ? json.items : [];
-        const normalized = items.map((i) => ({
-          ...i,
-          // WICHTIG: Checkboxen arbeiten mit p.id – wir setzen sie auf den CODE,
-          // damit bewerbungOptionen direkt die Codes enthalten.
-          id: String(i.code ?? i.id),
-        }));
-        if (alive) setPackages(normalized);
+  let alive = true;
+  (async () => {
+    try {
+      setLoadingPackages(true);
+      const res = await fetch('/api/promo/packages', { cache: 'no-store', credentials: 'same-origin' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const json = await res.json();
 
+      // Robust gegen verschiedene Response-Shapes
+      const raw: any[] =
+        Array.isArray(json) ? json
+      : Array.isArray(json?.items) ? json.items
+      : Array.isArray(json?.data)  ? json.data
+      : [];
 
-        
-      } catch (e) {
-        console.warn('Promo-Pakete konnten nicht geladen werden:', e);
-        if (alive) setPackages([]);
-      } finally {
-        if (alive) setLoadingPackages(false);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
+      const normalized: PromoPackage[] = raw.map((i: any) => ({
+        // WICHTIG: id = code, damit bewerbungOptionen direkt Codes enthalten (für den Webhook)
+        id: String(i.code ?? i.id),
+        code: i.code ?? null,
+        title: i.title,
+        subtitle: i.subtitle ?? null,
+        price_cents: Number(i.price_cents ?? i.priceCents ?? 0),
+        score_delta: Number(i.score_delta ?? i.scoreDelta ?? 0),
+        most_popular: Boolean(i.most_popular ?? i.mostPopular ?? false),
+        stripe_price_id: i.stripe_price_id ?? i.stripePriceId ?? null,
+      }));
+
+      if (alive) setPackages(normalized);
+    } catch (e) {
+      console.warn('Promo-Pakete konnten nicht geladen werden:', e);
+      if (alive) setPackages([]);
+    } finally {
+      if (alive) setLoadingPackages(false);
+    }
+  })();
+  return () => { alive = false; };
+}, []);
 
   const selectedPackageTitles = useMemo(() => {
     const map = new Map(packages.map(p => [p.id, p.title]));
