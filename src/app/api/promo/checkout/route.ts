@@ -55,19 +55,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Pakete aus promo_packages lesen
-    const { data: rows, error: pkgErr } = await admin
-      .from('promo_packages')
-      .select('code,title,price_cents,currency,score_delta')
-      .in('code', packageIds)
-    if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message, packageIds })
+    // in src/app/api/promo/checkout/route.ts
+const { data: rows, error: pkgErr } = await admin
+  .from('promo_packages')
+  .select('code,label,amount_cents,currency,score_delta')
+  .in('code', packageIds)
 
-    const packages = (rows ?? []).map((r: any) => ({
-      code: String(r.code),
-      title: String(r.title ?? r.code),
-      price_cents: Number(r.price_cents ?? 0),
-      currency: String(r.currency ?? 'eur').toLowerCase(),
-      score_delta: Number(r.score_delta ?? 0),
-    }))
+const packages = (rows ?? []).map((r: any) => ({
+  code: String(r.code),
+  title: String(r.label ?? r.code),
+  price_cents: Number(r.amount_cents ?? 0),
+  currency: String(r.currency ?? 'eur').toLowerCase(),
+  score_delta: Number(r.score_delta ?? 0),
+}))
+
     if (!packages.length) return err('Keine passenden Pakete gefunden.', 400, { packageIds })
 
     // Validierung Preise/Währung
