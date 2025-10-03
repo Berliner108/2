@@ -11,7 +11,10 @@ const DEV_VERBOSE = process.env.NODE_ENV !== 'production'
 const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1'
 
 function err(msg: string, status = 400, extra?: Record<string, any>) {
-  return NextResponse.json({ error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) }, { status })
+  return NextResponse.json(
+    { error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) },
+    { status }
+  )
 }
 
 export async function POST(req: NextRequest) {
@@ -24,8 +27,10 @@ export async function POST(req: NextRequest) {
       return err('request_id und package_ids[] sind erforderlich.', 400, { requestId, packageIds })
     }
 
+    // unique + string
     packageIds = Array.from(new Set(packageIds.map(String)))
 
+    // Origin bauen
     const url = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
 
@@ -37,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     const admin = supabaseAdmin()
 
-    // Anfrage + Owner verifizieren
+    // Anfrage holen + optional Besitzer prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id')
@@ -46,55 +51,56 @@ export async function POST(req: NextRequest) {
     if (reqErr)  return err('DB error (request)', 500, { db: reqErr.message })
     if (!reqRow) return err('Anfrage nicht gefunden.', 404, { requestId })
     if (!DISABLE_OWNER_CHECK && reqRow.owner_id !== user.id) {
-      return err('Nur der Besitzer der Anfrage kann sie bewerben.', 403, { owner_id: reqRow.owner_id, user_id: user.id })
+      return err('Nur der Besitzer der Anfrage kann sie bewerben.', 403, {
+        owner_id: reqRow.owner_id, user_id: user.id
+      })
     }
 
-    // Pakete laden
+    // Pakete (aus vorhandener Tabelle) laden
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
-      .select('code,title,amount_cents,currency,score_delta,active')
+      .select('code,label,amount_cents,currency,score_delta')
       .in('code', packageIds)
     if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message, packageIds })
 
-    const packages = (rows ?? [])
-      .filter((r: any) => !!r.active)
-      .map((r: any) => ({
-        code: r.code as string,
-        title: (r.title ?? '') as string,
-        price_cents: Number(r.amount_cents ?? 0),
-        currency: String(r.currency ?? 'EUR').toUpperCase(),
-        score_delta: Number(r.score_delta ?? 0),
-      }))
+    const packages = (rows ?? []).map((r: any) => ({
+      code: String(r.code),
+      title: String(r.label ?? r.code),
+      price_cents: Number(r.amount_cents ?? 0),
+      currency: String(r.currency ?? 'EUR').toLowerCase(),
+      score_delta: Number(r.score_delta ?? 0),
+    }))
 
     if (!packages.length) {
-      return err('Keine gültigen/aktiven Pakete gefunden.', 400, { packageIds, resolved: rows })
+      return err('Keine passenden Pakete gefunden.', 400, { packageIds, resolved: rows })
     }
 
-    // Stripe line items
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = packages.map(p => ({
+    // Stripe
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+
+    // Line Items (immer price_data)
+    const line_items = packages.map(p => ({
       price_data: {
-        currency: p.currency.toLowerCase(),
+        currency: p.currency,
         unit_amount: p.price_cents,
         product_data: { name: `Bewerbung: ${p.title}` },
       },
       quantity: 1,
     }))
 
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
-    }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
-    // Metadaten für PI + Session (Strings!)
-    const metadata: Record<string, string> = {
-      request_id: String(requestId),
-      package_ids: packageIds.join(','), // wird im Webhook ausgewertet
-      user_id: String(user.id),
+    // Meta für Webhook
+    const metadata = {
+      request_id: requestId,
+      package_ids: packageIds.join(','), // CSV
+      user_id: user.id,
     }
 
-    // ✅ Erfolg/Abbruch-URLs VOR dem create() bauen
+    // Ziel-URLs
     const successUrl = new URL(`${origin}/konto/lackanfragen`)
-    successUrl.searchParams.set('published', '1')       // wurde bereits veröffentlicht
+    successUrl.searchParams.set('published', '1')
     successUrl.searchParams.set('promo', 'success')
     successUrl.searchParams.set('requestId', requestId)
 
@@ -103,13 +109,13 @@ export async function POST(req: NextRequest) {
     cancelUrl.searchParams.set('promo', 'cancel')
     cancelUrl.searchParams.set('requestId', requestId)
 
-    // Stripe Checkout-Session erstellen
-    let session: Stripe.Checkout.Session
+    // Session erstellen
+    let session
     try {
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
         success_url: successUrl.toString(),
-        cancel_url:  cancelUrl.toString(),
+        cancel_url: cancelUrl.toString(),
         line_items,
         payment_intent_data: { metadata },
         metadata,
@@ -119,7 +125,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!session?.url) return err('Stripe-Session ohne URL.', 500, { session })
-    return NextResponse.json({ url: session.url, debug: DEV_VERBOSE ? { requestId, packageIds } : undefined })
+    return NextResponse.json({
+      url: session.url,
+      debug: DEV_VERBOSE ? { requestId, packageIds } : undefined
+    })
   } catch (e: any) {
     return err('Checkout konnte nicht erstellt werden.', 500, { reason: e?.message })
   }

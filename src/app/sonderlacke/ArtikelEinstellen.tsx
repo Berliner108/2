@@ -201,7 +201,8 @@ const toAddressString = (a?: Partial<Adresse>) => {
 
 /* ---- Promo Pakete ---- */
 type PromoPackage = {
-  id: string;
+  id: string;               // bleibt fürs UI
+  code?: string | null;     // neu: kommt von der API
   title: string;
   subtitle?: string | null;
   price_cents: number;
@@ -209,6 +210,7 @@ type PromoPackage = {
   most_popular?: boolean | null;
   stripe_price_id?: string | null;
 };
+
 
 const formatEUR = (cents: number) =>
   (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
@@ -558,8 +560,14 @@ function ArtikelEinstellen() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const json = await res.json();
         const items: PromoPackage[] = Array.isArray(json?.items) ? json.items : [];
-const normalized = items.map(i => ({ ...i, id: String(i.id) })); // falls API nicht schon stringified
-if (alive) setPackages(normalized);
+        const normalized = items.map((i) => ({
+          ...i,
+          // WICHTIG: Checkboxen arbeiten mit p.id – wir setzen sie auf den CODE,
+          // damit bewerbungOptionen direkt die Codes enthalten.
+          id: String(i.code ?? i.id),
+        }));
+        if (alive) setPackages(normalized);
+
 
         
       } catch (e) {

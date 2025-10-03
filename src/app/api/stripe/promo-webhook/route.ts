@@ -10,13 +10,18 @@ const nowISO = () => new Date().toISOString()
 const parseSecrets = (...vars: (string | undefined)[]) =>
   Array.from(new Set(vars.flatMap(v => (v ? v.split(',').map(s => s.trim()).filter(Boolean) : []))))
 
+// Idempotenz: falls du die Tabelle nicht hast, setze beide Funktionen unten auf No-Op
 async function wasProcessed(id: string, admin: any) {
-  const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
-  return !!data
+  try {
+    const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
+    return !!data
+  } catch { return false }
 }
 async function markProcessed(id: string, admin: any) {
-  const { error } = await admin.from('processed_events').insert({ id })
-  if (error && (error as any).code !== '23505') throw error
+  try {
+    const { error } = await admin.from('processed_events').insert({ id })
+    if (error && (error as any).code !== '23505') throw error
+  } catch { /* best effort */ }
 }
 
 function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string, secrets: string[]) {
@@ -40,7 +45,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Fehlende Signatur oder Webhook-Secret' }, { status: 400 })
   }
 
-  // 2) RAW body lesen (wichtig für Signatur)
+  // 2) RAW body (wichtig für Signatur-Verifizierung)
   const rawBody = await req.text()
 
   // 3) Event verifizieren
@@ -69,11 +74,12 @@ export async function POST(req: Request) {
     console.error('[promo-webhook] dedup check failed:', (e as any)?.message)
   }
 
+  // 6) Event behandeln
   try {
     if (event.type === 'checkout.session.completed') {
       const sess = event.data.object as Stripe.Checkout.Session
 
-      // Metadaten: request_id + package_ids (CSV)
+      // Wir erwarten: request_id + package_ids (CSV Codes: z.B. homepage,premium,search_boost)
       const requestId = (sess.metadata?.request_id ?? '') as string
       const packageIdsCSV = (sess.metadata?.package_ids ?? '') as string
 
@@ -89,21 +95,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true, skipped: 'empty_codes' })
       }
 
-      // Aktive Pakete laden (nur nötig: score_delta)
+      // Pakete laden – OHNE active-Flag
       const { data: pkgs, error: pkgErr } = await admin
         .from('promo_packages')
-        .select('code,score_delta,active')
+        .select('code,label,score_delta')
         .in('code', codes)
 
       if (pkgErr) throw pkgErr
-      const activePkgs = (pkgs ?? []).filter((p: any) => !!p.active)
-      if (!activePkgs.length) {
+
+      const usedPkgs = pkgs ?? []
+      if (!usedPkgs.length) {
         await markProcessed(event.id as string, admin)
-        return NextResponse.json({ ok: true, skipped: 'no_active_packages' })
+        return NextResponse.json({ ok: true, skipped: 'packages_not_found' })
       }
 
-      // Gesamt-Score berechnen
-      const totalScore = activePkgs.reduce((sum: number, p: any) => sum + Number(p.score_delta || 0), 0)
+      // Gesamt-Score & Badges
+      const totalScore = usedPkgs.reduce((sum: number, p: any) => sum + Number(p.score_delta || 0), 0)
+      const badgeTitles: string[] = usedPkgs.map((p: any) => p.label || p.code).filter(Boolean)
 
       // Anfrage lesen
       const { data: reqRow, error: reqErr } = await admin
@@ -111,7 +119,6 @@ export async function POST(req: Request) {
         .select('id,promo_score,data')
         .eq('id', requestId)
         .maybeSingle()
-
       if (reqErr) throw reqErr
       if (!reqRow) {
         await markProcessed(event.id as string, admin)
@@ -120,19 +127,27 @@ export async function POST(req: Request) {
 
       const curScore = Number(reqRow.promo_score ?? 0)
       const curData  = (reqRow.data ?? {}) as any
+      const curBadges: string[] = Array.isArray(curData.promo_badges) ? curData.promo_badges : []
+      const mergedBadges = Array.from(new Set([...curBadges, ...badgeTitles]))
 
-      // ✅ Nur promo_score erhöhen + gesponsert flag
+      // Update: nur promo_score + Flags
       const { error: upErr } = await admin
         .from('lack_requests')
         .update({
           promo_score: curScore + totalScore,
-          data: { ...curData, gesponsert: true, promo_last_purchase_at: nowISO() },
+          data: {
+            ...curData,
+            gesponsert: true,
+            promo_badges: mergedBadges,
+            promo_last_purchase_at: nowISO(),
+          },
           updated_at: nowISO(),
         })
         .eq('id', requestId)
+
       if (upErr) throw upErr
 
-      // (Optional) Logging
+      // (Optionales) Logging, falls Tabelle existiert – best effort
       try {
         await admin.from('promo_orders').insert({
           request_id: requestId,
