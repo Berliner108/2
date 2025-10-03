@@ -581,6 +581,7 @@ if (alive) setPackages(normalized);
 
   const [agbAccepted, setAgbAccepted] = useState<boolean>(false);
   const [agbError, setAgbError] = useState<boolean>(false);
+  
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -722,16 +723,20 @@ if (alive) setPackages(normalized);
             package_ids: bewerbungOptionen,
           }),
         });
-        if (!checkoutRes.ok) throw new Error('Checkout konnte nicht gestartet werden.');
-        const co = await checkoutRes.json();
-        if (!co?.url) throw new Error('Keine Checkout-URL erhalten.');
-
-        window.location.assign(co.url as string);
+        if (checkoutRes.ok) {
+          const co = await checkoutRes.json();
+          if (co?.url) {
+            window.location.assign(co.url as string);
+            return; // verlässt die Seite Richtung Stripe
+          }
+        }
+        // Fallback: Checkout NICHT startbar → trotzdem zur Konto-Seite mit Status
+        router.replace(`/konto/lackanfragen?published=1&promo=failed${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ''}`);
         return;
-      }
+       }
 
       // 3) Ohne Promo → wie bisher weiter ins Konto
-      router.replace('/konto/lackanfragen');
+      router.replace(`/konto/lackanfragen?published=1${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ''}`);
     } catch (error) {
       console.error(error);
       setLadeStatus(false);

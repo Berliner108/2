@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const admin = supabaseAdmin()
 
-    // Anfrage + Owner
+    // Anfrage + Owner verifizieren
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id')
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return err('Nur der Besitzer der Anfrage kann sie bewerben.', 403, { owner_id: reqRow.owner_id, user_id: user.id })
     }
 
-    // Pakete nach Code laden
+    // Pakete laden
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
       .select('code,title,amount_cents,currency,score_delta,active')
@@ -70,8 +70,8 @@ export async function POST(req: NextRequest) {
       return err('Keine gültigen/aktiven Pakete gefunden.', 400, { packageIds, resolved: rows })
     }
 
-    // Stripe Line Items (immer price_data)
-    const line_items = packages.map(p => ({
+    // Stripe line items
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = packages.map(p => ({
       price_data: {
         currency: p.currency.toLowerCase(),
         unit_amount: p.price_cents,
@@ -83,20 +83,33 @@ export async function POST(req: NextRequest) {
     if (!process.env.STRIPE_SECRET_KEY) {
       return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
     }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-    const metadata = {
-      request_id: requestId,
-      package_ids: packageIds.join(','), // Codes (vom Webhook gelesen)
-      user_id: user.id,
+    // Metadaten für PI + Session (Strings!)
+    const metadata: Record<string, string> = {
+      request_id: String(requestId),
+      package_ids: packageIds.join(','), // wird im Webhook ausgewertet
+      user_id: String(user.id),
     }
 
-    let session
+    // ✅ Erfolg/Abbruch-URLs VOR dem create() bauen
+    const successUrl = new URL(`${origin}/konto/lackanfragen`)
+    successUrl.searchParams.set('published', '1')       // wurde bereits veröffentlicht
+    successUrl.searchParams.set('promo', 'success')
+    successUrl.searchParams.set('requestId', requestId)
+
+    const cancelUrl = new URL(`${origin}/konto/lackanfragen`)
+    cancelUrl.searchParams.set('published', '1')
+    cancelUrl.searchParams.set('promo', 'cancel')
+    cancelUrl.searchParams.set('requestId', requestId)
+
+    // Stripe Checkout-Session erstellen
+    let session: Stripe.Checkout.Session
     try {
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
-        success_url: `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url:  `${origin}/lackanfragen/artikel/${encodeURIComponent(requestId)}?promo=cancel`,
+        success_url: successUrl.toString(),
+        cancel_url:  cancelUrl.toString(),
         line_items,
         payment_intent_data: { metadata },
         metadata,

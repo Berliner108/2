@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import Link from 'next/link'
@@ -208,6 +208,27 @@ const fetcher = (url: string) =>
 const LackanfragenAngebote: FC = () => {
   const router = useRouter()
   const { ok: toastOk, err: toastErr, View: Toast } = useToast()
+ // Einmalige Erfolgs-/Statusmeldung nach Veröffentlichen / Promo-Checkout
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href)
+      const sp  = url.searchParams
+      const published = ['1','true','yes'].includes((sp.get('published') ?? '').toLowerCase())
+      const promo     = sp.get('promo') // 'success' | 'cancel' | 'failed' | null
+
+      if (published || promo) {
+        if (published)          toastOk('Lackanfrage erfolgreich veröffentlicht.')
+        if (promo === 'success') toastOk('Bewerbung aktiviert.')
+        if (promo === 'cancel')  toastErr('Bewerbung abgebrochen.')
+        if (promo === 'failed')  toastErr('Bewerbung konnte nicht gestartet werden.')
+
+        // Flags entfernen (inkl. Stripe session_id), damit Meldung nur 1x kommt
+        const clean = new URL(url.toString())
+        ;['published','promo','requestId','session_id'].forEach(k => clean.searchParams.delete(k))
+        router.replace(clean.pathname + (clean.search ? clean.search : ''), { scroll: false })
+      }
+    } catch {}
+  }, [router, toastOk, toastErr])
 
   // Backend laden (SWR)
   const { data, error, isLoading, mutate } = useSWR<{
@@ -275,7 +296,6 @@ const normalizeOffer = (o: any): LackOffer => {
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
 
   // requestId, die nach ERFOLG lokal ausgeblendet werden sollen
   const [hiddenAfterSuccess, setHiddenAfterSuccess] = useState<Set<string>>(new Set())
@@ -306,6 +326,9 @@ const normalizeOffer = (o: any): LackOffer => {
     receivedRaw.forEach(o => s.add(String(o.requestId)))
     return Array.from(s)
   }, [requestIds, receivedRaw])
+   // Aktuelle OPEN_REQUEST_IDS während Polling verwendbar halten
+  const idsRef = useRef<string[]>(OPEN_REQUEST_IDS)
+  useEffect(() => { idsRef.current = OPEN_REQUEST_IDS }, [OPEN_REQUEST_IDS])
 
   function parseMaxMasse(d?: Record<string, any> | null): number | undefined {
     if (!d) return undefined
@@ -527,9 +550,6 @@ const normalizeOffer = (o: any): LackOffer => {
         if (json.error === 'OFFER_NOT_FOUND')      throw new Error('Das Angebot existiert nicht mehr oder ist abgelaufen.')
         throw new Error(json.error || 'Annahme fehlgeschlagen.')
       }
-      setConfirmOffer(null)
-      setActiveOrderId(json.orderId || null)
-      await mutate()
       if (json.clientSecret) {
         // NICHT ausblenden; erst nach Zahlungs-Erfolg
         // Merke, welche Request wir nach Erfolg verstecken wollen

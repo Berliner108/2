@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     if (event.type === 'checkout.session.completed') {
       const sess = event.data.object as Stripe.Checkout.Session
 
-      // Wir erwarten: request_id + package_ids (CSV Codes: homepage,search_boost,premium)
+      // Metadaten: request_id + package_ids (CSV)
       const requestId = (sess.metadata?.request_id ?? '') as string
       const packageIdsCSV = (sess.metadata?.package_ids ?? '') as string
 
@@ -89,10 +89,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true, skipped: 'empty_codes' })
       }
 
-      // Pakete laden (aktiv)
+      // Aktive Pakete laden (nur nötig: score_delta)
       const { data: pkgs, error: pkgErr } = await admin
         .from('promo_packages')
-        .select('code,title,score_delta,active')
+        .select('code,score_delta,active')
         .in('code', codes)
 
       if (pkgErr) throw pkgErr
@@ -102,9 +102,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: true, skipped: 'no_active_packages' })
       }
 
-      // Score/Badges berechnen
+      // Gesamt-Score berechnen
       const totalScore = activePkgs.reduce((sum: number, p: any) => sum + Number(p.score_delta || 0), 0)
-      const badgeTitles: string[] = activePkgs.map((p: any) => p.title).filter(Boolean)
 
       // Anfrage lesen
       const { data: reqRow, error: reqErr } = await admin
@@ -121,27 +120,19 @@ export async function POST(req: Request) {
 
       const curScore = Number(reqRow.promo_score ?? 0)
       const curData  = (reqRow.data ?? {}) as any
-      const curBadges: string[] = Array.isArray(curData.promo_badges) ? curData.promo_badges : []
-      const mergedBadges = Array.from(new Set([...curBadges, ...badgeTitles]))
 
-      // Update: Score + Gesponsert + Badges
+      // ✅ Nur promo_score erhöhen + gesponsert flag
       const { error: upErr } = await admin
         .from('lack_requests')
         .update({
           promo_score: curScore + totalScore,
-          data: {
-            ...curData,
-            gesponsert: true,
-            promo_badges: mergedBadges,
-            promo_last_purchase_at: nowISO(),
-          },
+          data: { ...curData, gesponsert: true, promo_last_purchase_at: nowISO() },
           updated_at: nowISO(),
         })
         .eq('id', requestId)
-
       if (upErr) throw upErr
 
-      // (Optional) Logging (best effort)
+      // (Optional) Logging
       try {
         await admin.from('promo_orders').insert({
           request_id: requestId,
