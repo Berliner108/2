@@ -871,19 +871,25 @@
 .iconSearch { color: #0ea5e9; } /* Blau */
 .iconCrown { color: #a78bfa; }  /* Violett */
 /* sonderlacke.module.css */
-.bewerbungText {
-  position: relative;
-  padding-right: 18px; /* Platz für das Icon, kein Reflow */
+.promoHinweis {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.45;
 }
 
-.bewerbungText::after {
-  content: "ℹ︎";
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-52%);
-  font-size: 14px;
-  color: #64748b;
-  opacity: .8;
-  pointer-events: none; /* rein dekorativ */
+.promoHinweisRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.promoScore,
+.promoSumme {
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
 }

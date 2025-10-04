@@ -610,6 +610,17 @@ function ArtikelEinstellen() {
     return bewerbungOptionen.map(id => map.get(id) || id);
   }, [bewerbungOptionen, packages]);
 
+  // ▼▼ NEU: Summen für Score und Preis der ausgewählten Pakete
+  const selectedPromoScore = useMemo(() => {
+    const scoreById = new Map(packages.map(p => [p.id, Number(p.score_delta || 0)]));
+    return bewerbungOptionen.reduce((sum, id) => sum + (scoreById.get(id) ?? 0), 0);
+  }, [bewerbungOptionen, packages]);
+
+  const selectedTotalCents = useMemo(() => {
+    const priceById = new Map(packages.map(p => [p.id, Number(p.price_cents || 0)]));
+    return bewerbungOptionen.reduce((sum, id) => sum + (priceById.get(id) ?? 0), 0);
+  }, [bewerbungOptionen, packages]);
+
   /* ---------------- Submit ---------------- */
 
   const [agbAccepted, setAgbAccepted] = useState<boolean>(false);
@@ -1666,29 +1677,46 @@ function ArtikelEinstellen() {
               <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
             ) : packages.length === 0 ? (
               <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
-            ) : (
-              <div className={styles.bewerbungGruppe}>
-                {packages.map((p) => (
-                  <label key={p.id} className={styles.bewerbungOption}>
-                    <input
-                      type="checkbox"
-                      onChange={() => toggleBewerbung(p.id)}
-                      checked={bewerbungOptionen.includes(p.id)}
-                    />
-                    {iconForPackage(p.code)}
-                    <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                      <span>
-                        {p.title} — {formatEUR(p.price_cents)}
-                        {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
-                      </span>
-                      {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
-                    </span>
-                  </label>
-                ))}
-                <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
-              </div>
-            )}
+           ) : (
+  <>
+    <div className={styles.bewerbungGruppe}>
+      {packages.map((p) => (
+        <label key={p.id} className={styles.bewerbungOption}>
+          <input
+            type="checkbox"
+            onChange={() => toggleBewerbung(p.id)}
+            checked={bewerbungOptionen.includes(p.id)}
+          />
+          {iconForPackage(p.code)}
+          <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+            <span>
+              {p.title} — {formatEUR(p.price_cents)}
+              {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
+            </span>
+            {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
+          </span>
+        </label>
+      ))}
+      <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+    </div>
+
+    {/* NEU: Info unterhalb der drei Optionen */}
+    <div className={styles.promoHinweis} role="note" aria-live="polite">
+      <div className={styles.promoHinweisRow}>
+        <span className={styles.promoScore}>Deine Auswahl: +{selectedPromoScore} Promo-Punkte</span>
+        <span className={styles.promoSumme}>Gesamt: {formatEUR(selectedTotalCents)}</span>
+      </div>
+      <small>
+        Pakete addieren sich. Die Sortierung der Anzeigen erfolgt nach dem Promo-Score.
+        Eine Startseiten-Platzierung ist <em>nicht garantiert</em> – wenn andere zeitgleich
+        einen höheren Gesamtwert haben, erscheinen deren Anzeigen zuerst.
+      </small>
+    </div>
+  </>
+)}
+
             </div>
+            
 
 
         {/* AGB */}
