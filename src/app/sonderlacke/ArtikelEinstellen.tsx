@@ -1688,6 +1688,7 @@ function ArtikelEinstellen() {
                 <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
               </div>
             )}
+            </div>
 
 
         {/* AGB */}

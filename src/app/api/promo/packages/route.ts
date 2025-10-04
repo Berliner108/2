@@ -18,17 +18,20 @@ export async function GET() {
     if (error) throw error
 
     // Auf das vom Frontend erwartete Schema normalisieren
-    const items = (data ?? []).map((r: any) => ({
-      id: String(r.code),                            // UI erwartet string
-      code: String(r.code),
-      title: String(r.label ?? r.code),              // label -> title
-      subtitle: null,                                // nicht in Tabelle
-      price_cents: Number(r.amount_cents ?? 0),      // amount_cents -> price_cents
-      currency: String(r.currency ?? 'EUR').toUpperCase(),
-      score_delta: Number(r.score_delta ?? 0),
-      most_popular: false,                           // nicht in Tabelle
-      stripe_price_id: null,                         // wir nutzen price_data im Checkout
-    }))
+    const items = (data ?? [])
+  .map((r: any) => ({
+    id: String(r.code ?? ''),                      // UI erwartet string
+    code: r.code != null ? String(r.code) : null,  // optional lassen → Icons: iconForPackage(p.code)
+    title: String(r.label ?? r.code ?? ''),
+    subtitle: r.subtitle ?? null,
+    price_cents: Number(r.amount_cents ?? 0),
+    currency: String(r.currency ?? 'EUR').toUpperCase(), // wird im UI nicht genutzt – ist ok
+    score_delta: Number(r.score_delta ?? 0),
+    most_popular: Boolean(r.most_popular ?? false),
+    stripe_price_id: r.stripe_price_id ?? null,
+  }))
+  .filter(i => i.id !== ''); // Reihen ohne code rauswerfen
+
 
     return NextResponse.json({ items })
   } catch (e: any) {
