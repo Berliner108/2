@@ -34,7 +34,7 @@ function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string
   throw lastErr
 }
 
-/** Promo-Score erhöhen + Badges mergen */
+/** Promo-Score erhöhen + Badges mergen (nur bei erfolgreicher Zahlung) */
 async function applyPromoForRequest(
   admin: any,
   requestId: string,
@@ -42,7 +42,7 @@ async function applyPromoForRequest(
 ) {
   if (!requestId || packageCodes.length === 0) return
 
-  // Pakete laden (deine Spaltennamen!)
+  // Pakete laden (deine Spaltennamen)
   const { data: pkgs, error: pkgErr } = await admin
     .from('promo_packages')
     .select('code,label,score_delta')
@@ -85,13 +85,14 @@ async function applyPromoForRequest(
   if (upErr) throw upErr
 }
 
-/** promo_orders auf "paid" setzen oder (falls nicht vorhanden) anlegen */
-async function upsertOrderPaidFromSession(
+/** promo_orders auf "paid"/"failed" setzen oder (falls nicht vorhanden) anlegen */
+async function upsertOrderFromSession(
   admin: any,
   sess: Stripe.Checkout.Session,
-  requestId: string | null,
-  buyerId: string | null,
-  packageCodesCsv: string | null,
+  status: 'paid' | 'failed',
+  requestId?: string | null,
+  buyerId?: string | null,
+  packageCodesCsv?: string | null,
 ) {
   const piId =
     typeof sess.payment_intent === 'string'
@@ -101,24 +102,32 @@ async function upsertOrderPaidFromSession(
   const amountTotal = typeof sess.amount_total === 'number' ? sess.amount_total : null
   const currency = (sess.currency || 'eur').toString().toLowerCase()
 
-  // 1) Wenn es bereits eine Zeile mit dieser Session gibt → auf paid updaten
+  // 1) Wenn es bereits eine Zeile mit dieser Session gibt → aktualisieren
   const { data: existing, error: findErr } = await admin
     .from('promo_orders')
-    .select('id')
+    .select('id,status')
     .eq('stripe_session_id', sess.id)
     .maybeSingle()
   if (findErr) throw findErr
 
   if (existing?.id) {
+    const next: any = {
+      status,
+      stripe_payment_intent: piId,
+      updated_at: nowISO(),
+    }
+    if (amountTotal != null) next.amount_cents = amountTotal
+    next.currency = currency
+
+    // Nicht von paid auf failed zurückfallen lassen
+    if (existing.status === 'paid' && status === 'failed') {
+      // lediglich PaymentIntent/Currency/Amount aktualisieren
+      delete next.status
+    }
+
     const { error: upErr } = await admin
       .from('promo_orders')
-      .update({
-        status: 'paid',
-        stripe_payment_intent: piId,
-        amount_cents: amountTotal ?? undefined,
-        currency,
-        updated_at: nowISO(),
-      })
+      .update(next)
       .eq('id', existing.id)
     if (upErr) throw upErr
     return
@@ -127,7 +136,7 @@ async function upsertOrderPaidFromSession(
   // 2) Sonst neue Zeile anlegen (Fallback – wenn beim Checkout keine Row erzeugt wurde)
   if (!requestId || !buyerId || !packageCodesCsv) return
 
-  // Summen zur Sicherheit aus Paketen berechnen (falls amount_total null ist)
+  // Summen aus Paketen berechnen, falls amount_total null ist
   const codes = packageCodesCsv.split(',').map(s => s.trim()).filter(Boolean)
   const { data: pkgs2, error: pkgErr2 } = await admin
     .from('promo_packages')
@@ -147,11 +156,46 @@ async function upsertOrderPaidFromSession(
     currency,
     stripe_session_id: sess.id,
     stripe_payment_intent: piId,
-    status: 'paid',
+    status,
     created_at: nowISO(),
     updated_at: nowISO(),
   } as any)
   if (insErr) throw insErr
+}
+
+/** Nur PaymentIntent → Order-Insert (falls nötig) */
+async function insertOrderFromPaymentIntent(
+  admin: any,
+  pi: Stripe.PaymentIntent,
+  status: 'paid' | 'failed',
+) {
+  const requestId = (pi.metadata?.request_id ?? '') as string
+  const codesCsv  = (pi.metadata?.package_ids ?? '') as string
+  const buyerId   = (pi.metadata?.user_id ?? '') as string
+  if (!requestId || !buyerId || !codesCsv) return
+
+  const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
+  const { data: pkgs } = await admin
+    .from('promo_packages')
+    .select('code,score_delta,amount_cents')
+    .in('code', codes)
+
+  const totalScore = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
+  const totalCents = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+
+  await admin.from('promo_orders').insert({
+    request_id: requestId,
+    buyer_id: buyerId,
+    package_code: codesCsv,
+    score_delta: totalScore,
+    amount_cents: typeof pi.amount_received === 'number' ? pi.amount_received : totalCents ?? 0,
+    currency: (pi.currency || 'eur').toString().toLowerCase(),
+    stripe_session_id: null,
+    stripe_payment_intent: pi.id,
+    status,
+    created_at: nowISO(),
+    updated_at: nowISO(),
+  } as any)
 }
 
 export async function POST(req: Request) {
@@ -197,6 +241,7 @@ export async function POST(req: Request) {
 
   // 6) Handler
   try {
+    // ✅ Erfolg (synchron & async)
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const sess = event.data.object as Stripe.Checkout.Session
 
@@ -210,52 +255,44 @@ export async function POST(req: Request) {
         await applyPromoForRequest(admin, requestId, codes)
       }
 
-      // promo_orders auf paid
-      await upsertOrderPaidFromSession(admin, sess, requestId || null, buyerId || null, codesCsv || null)
+      // promo_orders → paid
+      await upsertOrderFromSession(admin, sess, 'paid', requestId || null, buyerId || null, codesCsv || null)
 
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
     }
 
-    // Optional: falls nur payment_intent-Events ankommen
+    // ❌ Fehlgeschlagen / Timeout
+    if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
+      const sess = event.data.object as Stripe.Checkout.Session
+      await upsertOrderFromSession(admin, sess, 'failed')
+      await markProcessed(event.id as string, admin)
+      return NextResponse.json({ ok: true })
+    }
+
+    // ✅ Nur PaymentIntent (falls konfiguriert)
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object as Stripe.PaymentIntent
+
       const requestId = (pi.metadata?.request_id ?? '') as string
       const codesCsv  = (pi.metadata?.package_ids ?? '') as string
-      const buyerId   = (pi.metadata?.user_id ?? '') as string
 
+      // promo_score erhöhen
       if (requestId && codesCsv) {
         const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
         await applyPromoForRequest(admin, requestId, codes)
       }
 
-      // promo_orders: hier haben wir keine Session-ID, aber die Intent-ID
-      // Wir legen – wenn nötig – einen Datensatz mit Intent an.
-      if (requestId && buyerId && codesCsv) {
-        const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
-        const { data: pkgs } = await admin
-          .from('promo_packages')
-          .select('code,score_delta,amount_cents')
-          .in('code', codes)
+      // Order anlegen (Intent-basiert), falls keine Session
+      await insertOrderFromPaymentIntent(admin, pi, 'paid')
 
-        const totalScore = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
-        const totalCents = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+      await markProcessed(event.id as string, admin)
+      return NextResponse.json({ ok: true })
+    }
 
-        await admin.from('promo_orders').insert({
-          request_id: requestId,
-          buyer_id: buyerId,
-          package_code: codesCsv,
-          score_delta: totalScore,
-          amount_cents: typeof pi.amount_received === 'number' ? pi.amount_received : totalCents ?? 0,
-          currency: (pi.currency || 'eur').toString().toLowerCase(),
-          stripe_session_id: null,
-          stripe_payment_intent: pi.id,
-          status: 'paid',
-          created_at: nowISO(),
-          updated_at: nowISO(),
-        } as any)
-      }
-
+    if (event.type === 'payment_intent.payment_failed') {
+      const pi = event.data.object as Stripe.PaymentIntent
+      await insertOrderFromPaymentIntent(admin, pi, 'failed')
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
     }
