@@ -609,6 +609,21 @@ function ArtikelEinstellen() {
     const map = new Map(packages.map(p => [p.id, p.title]));
     return bewerbungOptionen.map(id => map.get(id) || id);
   }, [bewerbungOptionen, packages]);
+  // additiv berechneter Promo-Score
+const selectedScore = useMemo(() => {
+  return bewerbungOptionen.reduce((sum, id) => {
+    const s = packages.find(p => p.id === id)?.score_delta ?? 0
+    return sum + s
+  }, 0)
+}, [bewerbungOptionen, packages])
+
+// schöne Darstellung "+30 +15" usw.
+const scoreParts = useMemo(() => {
+  return bewerbungOptionen
+    .map(id => `+${packages.find(p => p.id === id)?.score_delta ?? 0}`)
+    .join(' + ')
+}, [bewerbungOptionen, packages])
+
 
   /* ---------------- Submit ---------------- */
 
@@ -1656,38 +1671,72 @@ function ArtikelEinstellen() {
         {/* Bewerbung – dynamisch aus /api/promo/packages */}
         <div className={styles.bewerbungPanel} role="region" aria-label="Bewerbung deiner Anfrage">
           <div className={styles.bewerbungHeader}>
-            <span className={styles.bewerbungIcon} aria-hidden></span>
-            <p className={styles.bewerbungText}>
-              Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
-            </p>
-          </div>
+  <span className={styles.bewerbungIcon} aria-hidden></span>
+  <p className={styles.bewerbungText}>
+    Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
+    <button
+      type="button"
+      title="Wir sortieren nach Promo-Score. Pakete addieren sich. Startseite ist nicht garantiert."
+      style={{ marginLeft: 8, border: 0, background: 'transparent', cursor: 'help' }}
+      aria-label="Info zu Boosts"
+    >
+      ℹ️
+    </button>
+  </p>
+</div>
+
 
           {loadingPackages ? (
-              <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
-            ) : packages.length === 0 ? (
-              <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
-            ) : (
-              <div className={styles.bewerbungGruppe}>
-                {packages.map((p) => (
-                  <label key={p.id} className={styles.bewerbungOption}>
-                    <input
-                      type="checkbox"
-                      onChange={() => toggleBewerbung(p.id)}
-                      checked={bewerbungOptionen.includes(p.id)}
-                    />
-                    {iconForPackage(p.code)}
-                    <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                      <span>
-                        {p.title} — {formatEUR(p.price_cents)}
-                        {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
-                      </span>
-                      {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
-                    </span>
-                  </label>
-                ))}
-                <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+            <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
+          ) : packages.length === 0 ? (
+            <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
+          ) : (
+            <div className={styles.bewerbungGruppe}>
+              {/* kurzer Header-Hinweis */}
+              <div style={{fontSize: 13, color:'#64748b', marginBottom: 8}}>
+                Boosts sind <strong>kombinierbar</strong>. Dein Promo-Score ist die <strong>Summe</strong> aller ausgewählten Pakete.
+                Eine Platzierung auf der Startseite ist <strong>nicht garantiert</strong> – je höher dein Score im Vergleich zu anderen,
+                desto prominenter die Anzeige.
               </div>
-            )}
+
+              {packages.map((p) => (
+                <label key={p.id} className={styles.bewerbungOption} title="Pakete addieren sich">
+                  <input
+                    type="checkbox"
+                    onChange={() => toggleBewerbung(p.id)}
+                    checked={bewerbungOptionen.includes(p.id)}
+                  />
+                  {iconForPackage(p.code)}
+                  <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                    <span>
+                      {p.title} — {formatEUR(p.price_cents)}
+                      {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
+                    </span>
+                    {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
+                  </span>
+                </label>
+              ))}
+
+              {/* Live-Vorschau des Scores nur wenn etwas gewählt ist */}
+              {bewerbungOptionen.length > 0 && (
+                <div role="note" aria-live="polite" style={{
+                  marginTop: 10, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, background: '#f8fafc'
+                }}>
+                  <div style={{fontSize: 14}}>
+                    <strong>Dein Boost:</strong>{' '}
+                    {scoreParts ? `${scoreParts} = ` : null}
+                    <strong>+{selectedScore}</strong> Promo-Score
+                  </div>
+                  <div style={{fontSize: 12, color:'#64748b', marginTop: 4}}>
+                    Reihenfolge ist relativ zum Score anderer Anfragen. Keine Startseiten-Garantie.
+                  </div>
+                </div>
+              )}
+
+              <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+            </div>
+          )}
+
             </div>
 
 
