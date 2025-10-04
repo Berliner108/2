@@ -11,7 +11,7 @@ const nowISO = () => new Date().toISOString()
 const parseSecrets = (...vars: (string | undefined)[]) =>
   Array.from(new Set(vars.flatMap(v => (v ? v.split(',').map(s => s.trim()).filter(Boolean) : []))))
 
-// Idempotenz – wenn du die Tabelle nicht hast, sind das "best effort" No-Ops
+// Idempotenz – best-effort, falls Tabelle fehlt
 async function wasProcessed(id: string, admin: any) {
   try {
     const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
@@ -34,7 +34,7 @@ function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string
   throw lastErr
 }
 
-/** Promo-Score erhöhen + Badges mergen (nur bei erfolgreicher Zahlung) */
+/** Promo-Score erhöhen + Badges mergen (nur einmal pro Zahlung) */
 async function applyPromoForRequest(
   admin: any,
   requestId: string,
@@ -42,7 +42,6 @@ async function applyPromoForRequest(
 ) {
   if (!requestId || packageCodes.length === 0) return
 
-  // Pakete laden (deine Spaltennamen)
   const { data: pkgs, error: pkgErr } = await admin
     .from('promo_packages')
     .select('code,label,score_delta')
@@ -55,7 +54,6 @@ async function applyPromoForRequest(
 
   if (totalScore <= 0 && badgeTitles.length === 0) return
 
-  // Anfrage lesen
   const { data: reqRow, error: reqErr } = await admin
     .from('lack_requests')
     .select('id,promo_score,data')
@@ -73,19 +71,14 @@ async function applyPromoForRequest(
     .from('lack_requests')
     .update({
       promo_score: curScore + totalScore,
-      data: {
-        ...curData,
-        gesponsert: true,
-        promo_badges: mergedBadges,
-        promo_last_purchase_at: nowISO(),
-      },
+      data: { ...curData, gesponsert: true, promo_badges: mergedBadges, promo_last_purchase_at: nowISO() },
       updated_at: nowISO(),
     })
     .eq('id', requestId)
   if (upErr) throw upErr
 }
 
-/** promo_orders auf "paid"/"failed" setzen oder (falls nicht vorhanden) anlegen */
+/** Upsert über Checkout-Session. Liefert true zurück, wenn der Status neu auf "paid" gewechselt hat. */
 async function upsertOrderFromSession(
   admin: any,
   sess: Stripe.Checkout.Session,
@@ -93,7 +86,7 @@ async function upsertOrderFromSession(
   requestId?: string | null,
   buyerId?: string | null,
   packageCodesCsv?: string | null,
-) {
+): Promise<{ justPaid: boolean }> {
   const piId =
     typeof sess.payment_intent === 'string'
       ? sess.payment_intent
@@ -102,57 +95,85 @@ async function upsertOrderFromSession(
   const amountTotal = typeof sess.amount_total === 'number' ? sess.amount_total : null
   const currency = (sess.currency || 'eur').toString().toLowerCase()
 
-  // 1) Wenn es bereits eine Zeile mit dieser Session gibt → aktualisieren
-  const { data: existing, error: findErr } = await admin
+  // 1) versuchen per Session zu finden
+  const { data: existingBySession, error: findSessErr } = await admin
     .from('promo_orders')
     .select('id,status')
     .eq('stripe_session_id', sess.id)
     .maybeSingle()
-  if (findErr) throw findErr
+  if (findSessErr) throw findSessErr
 
-  if (existing?.id) {
+  if (existingBySession?.id) {
+    const wasPaid = existingBySession.status === 'paid'
     const next: any = {
-      status,
       stripe_payment_intent: piId,
       updated_at: nowISO(),
+      currency,
     }
     if (amountTotal != null) next.amount_cents = amountTotal
-    next.currency = currency
-
-    // Nicht von paid auf failed zurückfallen lassen
-    if (existing.status === 'paid' && status === 'failed') {
-      // lediglich PaymentIntent/Currency/Amount aktualisieren
-      delete next.status
-    }
+    if (!wasPaid) next.status = status  // nur upgraden, paid bleibt paid
 
     const { error: upErr } = await admin
       .from('promo_orders')
       .update(next)
-      .eq('id', existing.id)
+      .eq('id', existingBySession.id)
     if (upErr) throw upErr
-    return
+
+    return { justPaid: !wasPaid && status === 'paid' }
   }
 
-  // 2) Sonst neue Zeile anlegen (Fallback – wenn beim Checkout keine Row erzeugt wurde)
-  if (!requestId || !buyerId || !packageCodesCsv) return
+  // 2) sonst per PaymentIntent versuchen (duplikate vermeiden)
+  if (piId) {
+    const { data: existingByPi, error: findPiErr } = await admin
+      .from('promo_orders')
+      .select('id,status')
+      .eq('stripe_payment_intent', piId)
+      .maybeSingle()
+    if (findPiErr) throw findPiErr
 
-  // Summen aus Paketen berechnen, falls amount_total null ist
-  const codes = packageCodesCsv.split(',').map(s => s.trim()).filter(Boolean)
-  const { data: pkgs2, error: pkgErr2 } = await admin
-    .from('promo_packages')
-    .select('code,score_delta,amount_cents')
-    .in('code', codes)
-  if (pkgErr2) throw pkgErr2
+    if (existingByPi?.id) {
+      const wasPaid = existingByPi.status === 'paid'
+      const next: any = {
+        updated_at: nowISO(),
+        currency,
+      }
+      if (amountTotal != null) next.amount_cents = amountTotal
+      if (!wasPaid) next.status = status
 
-  const totalScore = (pkgs2 ?? []).reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
-  const totalCents = (pkgs2 ?? []).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+      const { error: upErr } = await admin
+        .from('promo_orders')
+        .update(next)
+        .eq('id', existingByPi.id)
+      if (upErr) throw upErr
+
+      return { justPaid: !wasPaid && status === 'paid' }
+    }
+  }
+
+  // 3) Einfügen, wenn wir genug Metadaten haben
+  if (!requestId || !buyerId || !packageCodesCsv) return { justPaid: false }
+
+  // Fallback-Beträge aus Paketen, falls amount_total fehlt
+  let amount = amountTotal ?? 0
+  let score = 0
+  if (amountTotal == null || status === 'paid') {
+    const codes = packageCodesCsv.split(',').map(s => s.trim()).filter(Boolean)
+    const { data: pkgs, error: pkgErr } = await admin
+      .from('promo_packages')
+      .select('amount_cents,score_delta')
+      .in('code', codes)
+    if (pkgErr) throw pkgErr
+    const list = pkgs ?? []
+    if (amountTotal == null) amount = list.reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+    score = list.reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
+  }
 
   const { error: insErr } = await admin.from('promo_orders').insert({
     request_id: requestId,
     buyer_id: buyerId,
-    package_code: packageCodesCsv,         // CSV (passt zu deiner Spalte)
-    score_delta: totalScore,
-    amount_cents: amountTotal ?? totalCents ?? 0,
+    package_code: packageCodesCsv,
+    score_delta: score,
+    amount_cents: amount,
     currency,
     stripe_session_id: sess.id,
     stripe_payment_intent: piId,
@@ -161,45 +182,79 @@ async function upsertOrderFromSession(
     updated_at: nowISO(),
   } as any)
   if (insErr) throw insErr
+
+  return { justPaid: status === 'paid' }
 }
 
-/** Nur PaymentIntent → Order-Insert (falls nötig) */
-async function insertOrderFromPaymentIntent(
+/** Upsert nur über PaymentIntent. Liefert true zurück, wenn neu auf "paid" gewechselt. */
+async function upsertOrderFromPaymentIntent(
   admin: any,
   pi: Stripe.PaymentIntent,
   status: 'paid' | 'failed',
-) {
+): Promise<{ justPaid: boolean, requestId: string | null, codesCsv: string | null }> {
   const requestId = (pi.metadata?.request_id ?? '') as string
   const codesCsv  = (pi.metadata?.package_ids ?? '') as string
   const buyerId   = (pi.metadata?.user_id ?? '') as string
-  if (!requestId || !buyerId || !codesCsv) return
+  const currency  = (pi.currency || 'eur').toString().toLowerCase()
+  const amount    = typeof pi.amount_received === 'number' ? pi.amount_received : null
 
+  // vorhandene Order per PI?
+  const { data: existing, error: findErr } = await admin
+    .from('promo_orders')
+    .select('id,status')
+    .eq('stripe_payment_intent', pi.id)
+    .maybeSingle()
+  if (findErr) throw findErr
+
+  if (existing?.id) {
+    const wasPaid = existing.status === 'paid'
+    const next: any = { updated_at: nowISO(), currency }
+    if (amount != null) next.amount_cents = amount
+    if (!wasPaid) next.status = status
+
+    const { error: upErr } = await admin
+      .from('promo_orders')
+      .update(next)
+      .eq('id', existing.id)
+    if (upErr) throw upErr
+
+    return { justPaid: !wasPaid && status === 'paid', requestId: requestId || null, codesCsv: codesCsv || null }
+  }
+
+  // Neu anlegen (falls genug Metadaten)
+  if (!requestId || !buyerId || !codesCsv) {
+    return { justPaid: false, requestId: null, codesCsv: null }
+  }
+
+  // Fallbacks aus Paketen
   const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
   const { data: pkgs } = await admin
     .from('promo_packages')
-    .select('code,score_delta,amount_cents')
+    .select('amount_cents,score_delta')
     .in('code', codes)
-
-  const totalScore = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
-  const totalCents = (pkgs ?? []).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+  const list = pkgs ?? []
+  const fallbackAmount = list.reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
+  const totalScore     = list.reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
 
   await admin.from('promo_orders').insert({
     request_id: requestId,
     buyer_id: buyerId,
     package_code: codesCsv,
     score_delta: totalScore,
-    amount_cents: typeof pi.amount_received === 'number' ? pi.amount_received : totalCents ?? 0,
-    currency: (pi.currency || 'eur').toString().toLowerCase(),
+    amount_cents: amount ?? fallbackAmount ?? 0,
+    currency,
     stripe_session_id: null,
     stripe_payment_intent: pi.id,
     status,
     created_at: nowISO(),
     updated_at: nowISO(),
   } as any)
+
+  return { justPaid: status === 'paid', requestId, codesCsv }
 }
 
 export async function POST(req: Request) {
-  // 1) Stripe + Signatur prüfen
+  // 1) Stripe + Signatur
   const secretKey = process.env.STRIPE_SECRET_KEY
   if (!secretKey) return NextResponse.json({ error: 'Stripe Secret fehlt' }, { status: 500 })
   const stripe = new Stripe(secretKey)
@@ -210,10 +265,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Fehlende Signatur oder Webhook-Secret' }, { status: 400 })
   }
 
-  // 2) RAW body lesen (wichtig für Signatur)
   const rawBody = await req.text()
 
-  // 3) Event verifizieren
+  // 2) Event verifizieren
   let event: Stripe.Event
   try {
     event = constructEventWithFallback(stripe, rawBody, sig, secrets)
@@ -222,7 +276,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Ungültige Signatur' }, { status: 400 })
   }
 
-  // 4) Supabase Admin
+  // 3) Supabase
   let admin: any
   try { admin = supabaseAdmin() }
   catch (e) {
@@ -230,7 +284,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'DB nicht verfügbar' }, { status: 500 })
   }
 
-  // 5) Idempotenz
+  // 4) Idempotenz per Event-ID
   try {
     if (await wasProcessed(event.id as string, admin)) {
       return NextResponse.json({ ok: true, dedup: true })
@@ -239,30 +293,25 @@ export async function POST(req: Request) {
     console.error('[promo-webhook] dedup check failed:', (e as any)?.message)
   }
 
-  // 6) Handler
+  // 5) Handler – Score nur beim Übergang auf "paid"
   try {
-    // ✅ Erfolg (synchron & async)
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const sess = event.data.object as Stripe.Checkout.Session
-
       const requestId = (sess.metadata?.request_id ?? '') as string
       const codesCsv  = (sess.metadata?.package_ids ?? '') as string
       const buyerId   = (sess.metadata?.user_id ?? '') as string
 
-      // promo_score erhöhen
-      if (requestId && codesCsv) {
+      const { justPaid } = await upsertOrderFromSession(admin, sess, 'paid', requestId || null, buyerId || null, codesCsv || null)
+
+      if (justPaid && requestId && codesCsv) {
         const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
         await applyPromoForRequest(admin, requestId, codes)
       }
-
-      // promo_orders → paid
-      await upsertOrderFromSession(admin, sess, 'paid', requestId || null, buyerId || null, codesCsv || null)
 
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
     }
 
-    // ❌ Fehlgeschlagen / Timeout
     if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
       const sess = event.data.object as Stripe.Checkout.Session
       await upsertOrderFromSession(admin, sess, 'failed')
@@ -270,21 +319,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    // ✅ Nur PaymentIntent (falls konfiguriert)
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object as Stripe.PaymentIntent
+      const { justPaid, requestId, codesCsv } = await upsertOrderFromPaymentIntent(admin, pi, 'paid')
 
-      const requestId = (pi.metadata?.request_id ?? '') as string
-      const codesCsv  = (pi.metadata?.package_ids ?? '') as string
-
-      // promo_score erhöhen
-      if (requestId && codesCsv) {
+      if (justPaid && requestId && codesCsv) {
         const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
         await applyPromoForRequest(admin, requestId, codes)
       }
-
-      // Order anlegen (Intent-basiert), falls keine Session
-      await insertOrderFromPaymentIntent(admin, pi, 'paid')
 
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
@@ -292,12 +334,12 @@ export async function POST(req: Request) {
 
     if (event.type === 'payment_intent.payment_failed') {
       const pi = event.data.object as Stripe.PaymentIntent
-      await insertOrderFromPaymentIntent(admin, pi, 'failed')
+      await upsertOrderFromPaymentIntent(admin, pi, 'failed')
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
     }
 
-    // andere Events ignorieren – aber als verarbeitet markieren
+    // alles andere ignorieren
     await markProcessed(event.id as string, admin)
     return NextResponse.json({ ok: true, ignored: event.type })
   } catch (err: any) {
