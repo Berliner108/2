@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
-import { Star, Loader2 } from 'lucide-react';
+import { Star, Search, Crown, Loader2 } from 'lucide-react';
 
 import {
   gemeinsameFeiertageDEAT,
@@ -27,6 +27,18 @@ function TopLoader() {
     </div>
   );
 }
+// oben importieren:
+
+
+// null/undef-sicher
+function iconForPackage(code?: string | null) {
+  const c = (typeof code === 'string' ? code : '').toLowerCase();
+  if (c === 'homepage')     return <Star size={18} className={styles.iconStar} aria-hidden />;
+  if (c === 'search_boost') return <Search size={18} className={styles.iconSearch} aria-hidden />;
+  if (c === 'premium')      return <Crown size={18} className={styles.iconCrown} aria-hidden />;
+  return <Star size={18} aria-hidden />; // Fallback
+}
+
 
 function FormSkeleton() {
   return (
@@ -1651,32 +1663,32 @@ function ArtikelEinstellen() {
           </div>
 
           {loadingPackages ? (
-            <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
-          ) : packages.length === 0 ? (
-            <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
-          ) : (
-            <div className={styles.bewerbungGruppe}>
-              {packages.map((p) => (
-                <label key={p.id} className={styles.bewerbungOption}>
-                  <input
-                    type="checkbox"
-                    onChange={() => toggleBewerbung(p.id)}
-                    checked={bewerbungOptionen.includes(p.id)}
-                  />
-                  <Star size={18} />
-                  <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-                    <span>
-                      {p.title} — {formatEUR(p.price_cents)}
-                      {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
+              <div style={{ fontSize: 14, color: '#64748b' }}>Pakete werden geladen …</div>
+            ) : packages.length === 0 ? (
+              <div style={{ fontSize: 14, color: '#64748b' }}>Derzeit keine Promotion-Pakete verfügbar.</div>
+            ) : (
+              <div className={styles.bewerbungGruppe}>
+                {packages.map((p) => (
+                  <label key={p.id} className={styles.bewerbungOption}>
+                    <input
+                      type="checkbox"
+                      onChange={() => toggleBewerbung(p.id)}
+                      checked={bewerbungOptionen.includes(p.id)}
+                    />
+                    {iconForPackage(p.code)}
+                    <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                      <span>
+                        {p.title} — {formatEUR(p.price_cents)}
+                        {p.most_popular ? <span style={{ marginLeft: 6, fontWeight: 600 }}>(Beliebt)</span> : null}
+                      </span>
+                      {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
                     </span>
-                    {p.subtitle ? <small style={{ color: '#64748b' }}>{p.subtitle}</small> : null}
-                  </span>
-                </label>
-              ))}
-              <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
-            </div>
-          )}
-        </div>
+                  </label>
+                ))}
+                <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+              </div>
+            )}
+
 
         {/* AGB */}
         <div className={styles.agbContainer} ref={agbRef}>

@@ -867,3 +867,6 @@
 
 /* Falls irgendwo gesetzt: sicherstellen, dass nichts abgeschnitten wird */
 .radioGroupliefercontainer { overflow: visible; }
+.iconStar { color: #f59e0b; }   /* Gold */
+.iconSearch { color: #0ea5e9; } /* Blau */
+.iconCrown { color: #a78bfa; }  /* Violett */
