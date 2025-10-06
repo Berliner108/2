@@ -8,25 +8,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** ----------------------------------------------------------------
- * Flags & Konfiguration (Option B)
- * -----------------------------------------------------------------*/
-
-// interpretiert 1/0, true/false, yes/no, on/off (case-insensitive)
-const flag = (v?: string) => /^(1|true|yes|on)$/i.test(String(v ?? '').trim())
-
 const DEV_VERBOSE = process.env.NODE_ENV !== 'production'
-const DISABLE_OWNER_CHECK = flag(process.env.DISABLE_PROMO_OWNER_CHECK) // ← 1 = Owner-Check aus
-const USE_TAX = flag(process.env.PROMO_USE_AUTOMATIC_TAX)              // ← 1 = Stripe Tax an
+const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1'
+const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true'
 
-// Mapping Promo-Code -> Stripe Price-ID (in Vercel als ENV setzen)
-const PRICE_MAP: Record<string, string | undefined> = {
-  homepage:     process.env.PROMO_PRICE_ID_HOMEPAGE,
-  search_boost: process.env.PROMO_PRICE_ID_SEARCH_BOOST,
-  premium:      process.env.PROMO_PRICE_ID_PREMIUM,
-}
-
-/** kleine Error-Utility */
 function err(msg: string, status = 400, extra?: Record<string, any>) {
   return NextResponse.json(
     { error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) },
@@ -43,21 +28,19 @@ export async function POST(req: NextRequest) {
     if (!requestId || packageIds.length === 0) {
       return err('request_id und package_ids[] sind erforderlich.', 400, { requestId, packageIds })
     }
-    packageIds = Array.from(new Set(packageIds.map(String)))
+    packageIds = Array.from(new Set(packageIds.map((s: any) => String(s).toLowerCase())))
 
-    // Basis-URL bestimmen (APP_ORIGIN überschreibt Host)
     const url = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
 
-    // ---- Auth
+    // Auth
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
     if (!user)   return err('Not authenticated', 401)
 
+    // Besitzercheck
     const admin = supabaseAdmin()
-
-    // ---- Anfrage holen + optional Besitzer prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id')
@@ -71,66 +54,61 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // ---- Pakete aus deiner DB (Fallback-Preise & score)
-    const { data: rows, error: pkgErr } = await admin
-      .from('promo_packages')
-      .select('code,label,amount_cents,currency,score_delta')
-      .in('code', packageIds)
-    if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message })
+    // Stripe init
+    const sk = process.env.STRIPE_SECRET_KEY
+    if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
+    const stripe = new Stripe(sk)
 
-    const packages = (rows ?? []).map((r: any) => ({
-      code: String(r.code),
-      title: String(r.label ?? r.code),
-      price_cents: Number(r.amount_cents ?? 0),
-      currency: String(r.currency ?? 'eur').toLowerCase(),
-      score_delta: Number(r.score_delta ?? 0),
-    }))
-    if (!packages.length) return err('Keine passenden Pakete gefunden.', 400, { packageIds })
-
-    // Validierung Preise/Währung
-    if (packages.some(p => !Number.isFinite(p.price_cents) || p.price_cents <= 0)) {
-      return err('Ungültiger Paketpreis (amount_cents) in promo_packages.', 500, { packages })
-    }
-    const currencies = new Set(packages.map(p => p.currency))
-    if (currencies.size > 1) {
-      return err('Pakete müssen dieselbe Währung haben.', 400, { currencies: Array.from(currencies) })
-    }
-    const currency = packages[0].currency
-
-    const totalCents  = packages.reduce((s, p) => s + p.price_cents, 0)
-    const totalScore  = packages.reduce((s, p) => s + p.score_delta, 0)
-    const codesCsv    = packages.map(p => p.code).join(',')
-
-    // ---- Stripe
-    const secret = process.env.STRIPE_SECRET_KEY
-    if (!secret) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
-    const stripe = new Stripe(secret)
-
-    // Bevorzugt Stripe-Preise aus dem Dashboard (PRICE_MAP),
-    // sonst Fallback auf deine DB-Preise (price_data).
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = packages.map(p => {
-      const codeKey = p.code.toLowerCase()
-      const priceId = PRICE_MAP[codeKey]
-      return priceId
-        ? { price: priceId, quantity: 1 }
-        : {
-            price_data: {
-              currency,
-              unit_amount: p.price_cents,
-              product_data: { name: `Bewerbung: ${p.title}` },
-            },
-            quantity: 1,
-          }
+    // 1) Alle aktiven Produkte aus Stripe holen und per metadata.code mappen
+    const products = await stripe.products.list({
+      active: true,
+      limit: 100,
+      expand: ['data.default_price'],
     })
 
-    // Metadaten für Webhook/Postprocessing
+    const priceByCode = new Map<string, Stripe.Price>()
+    for (const prod of products.data as Stripe.Product[]) {
+      const code = String(prod.metadata?.code ?? '').toLowerCase()
+      if (!code) continue
+      const price = prod.default_price as Stripe.Price | null
+      if (!price || typeof price !== 'object') continue
+      priceByCode.set(code, price)
+    }
+
+    // 2) Gewählte Codes → Price-IDs
+    const notFound: string[] = []
+    const prices: Stripe.Price[] = []
+    for (const code of packageIds) {
+      const price = priceByCode.get(code)
+      if (!price) notFound.push(code)
+      else prices.push(price)
+    }
+    if (notFound.length) {
+      return err('Für folgende Pakete fehlt der Stripe-Preis (metadata.code / default price): ' + notFound.join(', '), 400)
+    }
+
+    // 3) Währungs-Kohärenz prüfen (Stripe verlangt pro Session nur eine Currency)
+    const currSet = new Set(prices.map(p => String(p.currency).toLowerCase()))
+    if (currSet.size > 1) {
+      return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies: Array.from(currSet) })
+    }
+    const currency = prices[0].currency
+
+    // 4) Line items nur mit price IDs (kein DB-Fallback)
+    const line_items = prices.map((pr) => ({ price: pr.id, quantity: 1 }))
+
+    // Summen rein informativ (für deine promo_orders)
+    const totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
+    const codesCsv   = packageIds.join(',')
+
+    // Metadata
     const metadata = {
       request_id: requestId,
       package_ids: codesCsv,
       user_id: user.id,
     }
 
-    // Redirect-URLs
+    // Ziel-URLs
     const successUrl = new URL(`${origin}/konto/lackanfragen`)
     successUrl.searchParams.set('published', '1')
     successUrl.searchParams.set('promo', 'success')
@@ -141,8 +119,8 @@ export async function POST(req: NextRequest) {
     cancelUrl.searchParams.set('promo', 'cancel')
     cancelUrl.searchParams.set('requestId', requestId)
 
-    // ---- Stripe-Checkout-Session
-    let session: Stripe.Checkout.Session
+    // 5) Session erzeugen – Stripe sammelt Adresse; Steuer später per ENV einschaltbar
+    let session
     try {
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
@@ -150,12 +128,9 @@ export async function POST(req: NextRequest) {
         cancel_url: cancelUrl.toString(),
         line_items,
 
-        // Stripe sammelt Rechnungsadresse (und später USt-ID) automatisch
         billing_address_collection: 'required',
         customer_creation: 'always',
         customer_update: { address: 'auto' },
-
-        // per ENV zuschaltbar, wenn du später Stripe Tax aktivierst
         automatic_tax: { enabled: USE_TAX },
         tax_id_collection: USE_TAX ? { enabled: true } : undefined,
 
@@ -167,20 +142,18 @@ export async function POST(req: NextRequest) {
     }
     if (!session?.id || !session?.url) return err('Stripe-Session fehlerhaft.', 500, { session })
 
-    // ---- Order anlegen (status=created) – eine Zeile pro Session
+    // 6) Order als "created" speichern (Beträge rein informativ)
     const { error: insErr } = await admin.from('promo_orders').insert({
       request_id: requestId,
       buyer_id: user.id,
-      package_code: codesCsv,     // CSV der Pakete
-      score_delta: totalScore,    // Summe Score
-      amount_cents: totalCents,   // Summe aus DB (Webhook korrigiert später bei Bedarf)
-      currency,
+      package_code: codesCsv,
+      score_delta: null,        // Score ermittelst du im Webhook (aus Code → DB/Mapping)
+      amount_cents: totalCents, // Info – Abrechnung macht Stripe
+      currency: String(currency).toLowerCase(),
       stripe_session_id: session.id,
       status: 'created',
     } as any)
-    if (insErr) {
-      return err('Order konnte nicht gespeichert werden.', 500, { db: insErr.message })
-    }
+    if (insErr) return err('Order konnte nicht gespeichert werden.', 500, { db: insErr.message })
 
     return NextResponse.json({
       url: session.url,

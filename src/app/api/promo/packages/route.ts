@@ -5,82 +5,69 @@ import Stripe from 'stripe'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/* ---------- helpers ---------- */
-const flag = (v?: string) => /^(1|true|yes|on)$/i.test(String(v ?? '').trim())
-const toBool = (v?: string | null) => flag(v ?? '')
-const toInt = (v?: string | null, d = 0) => {
-  const n = Number.parseInt(String(v ?? ''), 10)
-  return Number.isFinite(n) ? n : d
+// wenn du später andere Scores willst, hier anpassen (oder in Stripe-Produkt-Metadaten ablegen)
+const SCORE_BY_CODE: Record<string, number> = {
+  homepage: 30,
+  search_boost: 15,
+  premium: 12,
 }
 
-/* ---------- route ---------- */
 export async function GET() {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('[promo/packages] STRIPE_SECRET_KEY fehlt')
-    return NextResponse.json({ items: [] }, { status: 200 })
-  }
-
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-
-  // Optional: nur bestimmte Produkte zulassen (kommaseparierte IDs)
-  const allowIds = (process.env.PROMO_PRODUCT_IDS ?? '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-
-  // Optional: nur Produkte mit metadata.promo=true/1
-  const REQUIRE_PROMO_FLAG = flag(process.env.PROMO_REQUIRE_FLAG ?? 'false')
-
   try {
+    const sk = process.env.STRIPE_SECRET_KEY
+    if (!sk) throw new Error('STRIPE_SECRET_KEY fehlt')
+    const stripe = new Stripe(sk)
+
+    // optional: ?allow=homepage,search_boost,premium
+    const allowParam = (typeof globalThis?.URL !== 'undefined') ? null : null // noop in edge
+    // Next 14: Request-Objekt bekommst du in GET nicht, daher filtern wir gleich unten per Set:
+    const allow = new Set<string>(
+      (typeof process !== 'undefined' && process?.env?.PROMO_ALLOW_CODES)
+        ? process.env.PROMO_ALLOW_CODES.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+        : [] // leer => keine Filterung
+    )
+
     const products = await stripe.products.list({
       active: true,
       limit: 100,
       expand: ['data.default_price'],
     })
 
-    const items = (products.data ?? [])
+    const items = (products.data as Stripe.Product[])
       .filter((p: Stripe.Product) => {
-        if (allowIds.length && !allowIds.includes(p.id)) return false
-        const md = p.metadata ?? {}
-        const code = (md.code ?? '').toLowerCase()
+        const code = String(p.metadata?.code ?? '').toLowerCase()
         if (!code) return false
-        if (REQUIRE_PROMO_FLAG && !flag(md.promo)) return false
-        // nur wenn Default Price existiert
-        const price = typeof p.default_price === 'object' ? (p.default_price as Stripe.Price) : null
-        if (!price || typeof price.unit_amount !== 'number' || price.unit_amount <= 0) return false
+        if (allow.size && !allow.has(code)) return false
         return true
       })
       .map((p: Stripe.Product) => {
-        const md = p.metadata ?? {}
-        const code = String(md.code ?? '').toLowerCase()
-        const priceObj = typeof p.default_price === 'object' ? (p.default_price as Stripe.Price) : null
-        const unit = priceObj?.unit_amount ?? 0
-        const curr = (priceObj?.currency ?? 'eur').toUpperCase()
+        const code = String(p.metadata?.code ?? '').toLowerCase()
+        // Default-Preis bevorzugen, andernfalls first active price (falls vorhanden)
+        let price = p.default_price as Stripe.Price | null
+        if (!price || typeof price !== 'object') {
+          // keine weitere API-Call-Schleife – in der Praxis: lege einen Default Price im Dashboard fest
+          return null
+        }
+        const unit = Number(price.unit_amount ?? 0)
+        const curr = String(price.currency ?? 'eur').toUpperCase()
 
         return {
-          id: code,                              // UI erwartet string
-          code,                                  // für Icons & Checkout
-          title: p.name || code,                 // Produktname
-          subtitle: md.subtitle ?? null,
-          price_cents: unit,                     // aus Default Price
-          currency: curr,
-          score_delta: toInt(md.score_delta, 0),
-          most_popular: toBool(md.most_popular),
-          stripe_price_id: priceObj?.id ?? null, // für Checkout per { price }
+          id: code,                // fürs UI
+          code,
+          title: p.name,
+          subtitle: p.description || null,
+          price_cents: unit,       // aus Stripe
+          currency: curr,          // aus Stripe
+          score_delta: SCORE_BY_CODE[code] ?? 0,
+          most_popular: p.metadata?.most_popular === 'true',
+          stripe_price_id: price.id,
         }
       })
-      .filter(i => i.id && i.price_cents > 0)
-
-    // Optional sortieren: most_popular zuerst, dann nach Titel
-    items.sort((a, b) => {
-      if (a.most_popular && !b.most_popular) return -1
-      if (!a.most_popular && b.most_popular) return 1
-      return a.title.localeCompare(b.title, 'de')
-    })
+      .filter((x): x is NonNullable<typeof x> => !!x)
 
     return NextResponse.json({ items })
   } catch (e: any) {
-    console.error('[promo/packages] Stripe error:', e?.message)
-    return NextResponse.json({ items: [] }, { status: 200, headers: { 'x-promo-error': e?.message ?? 'stripe' } })
+    console.error('[promo/packages] stripe failed:', e?.message)
+    return NextResponse.json({ items: [] }, { status: 200 })
   }
 }
