@@ -35,10 +35,7 @@ export async function POST(req: NextRequest) {
     // Besitzer-Check
     const admin = supabaseAdmin()
     const { data: reqRow, error: reqErr } = await admin
-      .from('lack_requests')
-      .select('id, owner_id')
-      .eq('id', requestId)
-      .maybeSingle()
+      .from('lack_requests').select('id,owner_id').eq('id', requestId).maybeSingle()
     if (reqErr)  return err('DB error (request)', 500, { db: reqErr.message })
     if (!reqRow) return err('Anfrage nicht gefunden.', 404, { requestId })
     if (!DISABLE_OWNER_CHECK && reqRow.owner_id !== user.id) {
@@ -50,10 +47,10 @@ export async function POST(req: NextRequest) {
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
     const stripe = new Stripe(sk)
 
-    // *** WICHTIGER TEIL: Codes -> Price-IDs aus DB ***
+    // Codes → DB → stripe_price_id
     const { data: pkgs, error: pkgErr } = await admin
       .from('promo_packages')
-      .select('code, active, stripe_price_id')
+      .select('code,active,stripe_price_id')
       .in('code', packageIds)
     if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message })
 
@@ -63,7 +60,7 @@ export async function POST(req: NextRequest) {
       return err('Für folgende Pakete fehlt eine aktive Zuordnung: ' + missing.join(', '), 400)
     }
 
-    // Preise aus Stripe validieren + Currency-Kohärenz
+    // Stripe-Preise validieren + Currency-Kohärenz
     const prices: Stripe.Price[] = []
     for (const p of activePkgs) {
       const pr = await stripe.prices.retrieve(p.stripe_price_id as string)
@@ -76,23 +73,18 @@ export async function POST(req: NextRequest) {
     if (currencies.length > 1) {
       return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
     }
-    const currency = prices[0].currency
 
-    // Line items aus Price-IDs
     const line_items = prices.map(pr => ({ price: pr.id, quantity: 1 }))
-
-    // Summen rein informativ
     const totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
     const codesCsv   = packageIds.join(',')
 
     // URLs
-    const url = new URL(req.url)
-    const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
+    const u = new URL(req.url)
+    const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`
     const successUrl = new URL(`${origin}/konto/lackanfragen`)
     successUrl.searchParams.set('published', '1')
     successUrl.searchParams.set('promo', 'success')
     successUrl.searchParams.set('requestId', requestId)
-
     const cancelUrl = new URL(`${origin}/konto/lackanfragen`)
     cancelUrl.searchParams.set('published', '1')
     cancelUrl.searchParams.set('promo', 'cancel')
@@ -100,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user.id }
 
-    // Checkout-Session
+    // Checkout-Session (Stripe Tax optional via ENV)
     let session: Stripe.Checkout.Session
     try {
       session = await stripe.checkout.sessions.create({
@@ -108,13 +100,11 @@ export async function POST(req: NextRequest) {
         success_url: successUrl.toString(),
         cancel_url: cancelUrl.toString(),
         line_items,
-
         billing_address_collection: 'required',
         customer_creation: 'always',
         customer_update: { address: 'auto' },
         automatic_tax: { enabled: USE_TAX },
         tax_id_collection: USE_TAX ? { enabled: true } : undefined,
-
         payment_intent_data: { metadata },
         metadata,
       })
@@ -123,14 +113,14 @@ export async function POST(req: NextRequest) {
     }
     if (!session?.id || !session?.url) return err('Stripe-Session fehlerhaft.', 500, { session })
 
-    // Order als "created" speichern (Info)
+    // Order protokollieren
     const { error: insErr } = await admin.from('promo_orders').insert({
       request_id: requestId,
       buyer_id: user.id,
       package_code: codesCsv,
       score_delta: null,
       amount_cents: totalCents,
-      currency: String(currency).toLowerCase(),
+      currency: String(prices[0].currency).toLowerCase(),
       stripe_session_id: session.id,
       status: 'created',
     } as any)
