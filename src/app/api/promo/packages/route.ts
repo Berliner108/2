@@ -1,16 +1,10 @@
 // src/app/api/promo/packages/route.ts
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-// Fallback-Score, falls kein metadata.score_delta gesetzt ist
-const SCORE_BY_CODE: Record<string, number> = {
-  homepage: 30,
-  search_boost: 15,
-  premium: 12,
-}
 
 export async function GET() {
   try {
@@ -18,70 +12,47 @@ export async function GET() {
     if (!sk) throw new Error('STRIPE_SECRET_KEY fehlt')
     const stripe = new Stripe(sk)
 
-    // Optionales Whitelisting via ENV: PROMO_ALLOW_CODES=homepage,search_boost,premium
-    const allow = new Set<string>(
-      (process.env.PROMO_ALLOW_CODES ?? '')
-        .split(',')
-        .map(s => s.trim().toLowerCase())
-        .filter(Boolean)
-    )
+    const admin = supabaseAdmin()
+    const { data, error } = await admin
+      .from('promo_packages')
+      .select('code,label,score_delta,sort_order,active,stripe_price_id,description,title')
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
 
-    // 1) Produkte laden (+ default_price mit expand)
-    const products = await stripe.products.list({
-      active: true,
-      limit: 100,
-      expand: ['data.default_price'],
-    })
+    if (error) throw error
+    const rows = (data ?? []).filter(p => !!p.stripe_price_id)
 
-    const items = []
-    for (const p of products.data as Stripe.Product[]) {
-      const code = String(p.metadata?.code ?? '').toLowerCase()
-      if (!code) continue
-      if (allow.size && !allow.has(code)) continue
+    const items: any[] = []
+    for (const p of rows) {
+      try {
+        const price = await stripe.prices.retrieve(p.stripe_price_id as string, { expand: ['product'] })
+        if (!price || typeof price !== 'object' || !price.active) continue
 
-      // 2) Preis besorgen: bevorzugt default_price, sonst 1. aktiven Preis nachladen
-      let price = p.default_price as Stripe.Price | null
-      if (!price || typeof price !== 'object') {
-        const prices = await stripe.prices.list({ product: p.id, active: true, limit: 1 })
-        price = prices.data[0] ?? null
+        const prod = price.product && typeof price.product === 'object' ? (price.product as Stripe.Product) : null
+
+        items.push({
+          id: p.code,                             // Frontend erwartet id=code
+          code: p.code,
+          title: p.title ?? p.label ?? prod?.name ?? p.code,
+          subtitle: p.description ?? prod?.description ?? null,
+          price_cents: Number(price.unit_amount ?? 0),     // Betrag kommt aus STRIPE
+          currency: String(price.currency ?? 'eur').toUpperCase(),
+          tax_behavior: price.tax_behavior ?? 'unspecified', // Info fürs UI, Steuer selbst im Checkout
+          score_delta: Number(p.score_delta ?? 0),          // Ranking-Logik bleibt bei dir
+          most_popular: false,
+          stripe_price_id: price.id,
+          sort_order: Number(p.sort_order ?? 999),
+        })
+      } catch (e) {
+        // Kaputte/gelöschte Price-ID ignorieren, Rest liefern
+        continue
       }
-      if (!price || typeof price !== 'object') continue // ohne Preis nicht anzeigen
-
-      const unit = Number(price.unit_amount ?? 0)
-      const curr = String(price.currency ?? 'eur').toUpperCase()
-
-      // 3) Score/Popular aus Metadaten oder Fallback
-      const score =
-        Number(p.metadata?.score_delta ?? '') ||
-        SCORE_BY_CODE[code] ||
-        0
-      const mostPopular =
-        String(p.metadata?.most_popular ?? '').toLowerCase() === 'true'
-
-      items.push({
-        id: code,                 // <- Frontend erwartet id = code
-        code,
-        title: p.name,
-        subtitle: p.description || null,
-        price_cents: unit,
-        currency: curr,
-        score_delta: score,
-        most_popular: mostPopular,
-        stripe_price_id: price.id,
-      })
     }
 
-    // Optional: sortieren (erst sort_order aus metadata, sonst Preis/Code)
-    items.sort((a, b) => {
-      const sa = Number((products.data.find(pr => (pr.metadata?.code ?? '').toLowerCase() === a.code)?.metadata?.sort_order) ?? NaN)
-      const sb = Number((products.data.find(pr => (pr.metadata?.code ?? '').toLowerCase() === b.code)?.metadata?.sort_order) ?? NaN)
-      if (!Number.isNaN(sa) && !Number.isNaN(sb)) return sa - sb
-      return a.code.localeCompare(b.code)
-    })
-
+    items.sort((a, b) => a.sort_order - b.sort_order || a.code.localeCompare(b.code))
     return NextResponse.json({ items })
   } catch (e: any) {
-    console.error('[promo/packages] stripe failed:', e?.message)
+    console.error('[promo/packages] failed:', e?.message)
     return NextResponse.json({ items: [] }, { status: 200 })
   }
 }

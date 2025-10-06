@@ -1697,7 +1697,8 @@ function ArtikelEinstellen() {
           </span>
         </label>
       ))}
-      <p className={styles.steuerHinweis}>Preise inkl. USt./MwSt.</p>
+      <p className={styles.steuerHinweis}>Steuern werden im Checkout berechnet.</p>
+
     </div>
 
     {/* NEU: Info unterhalb der drei Optionen */}
