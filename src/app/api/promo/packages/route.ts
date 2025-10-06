@@ -29,7 +29,7 @@ export async function GET() {
     .filter(Boolean)
 
   // Optional: nur Produkte mit metadata.promo=true/1
-  const REQUIRE_PROMO_FLAG = flag(process.env.PROMO_REQUIRE_FLAG ?? 'true')
+  const REQUIRE_PROMO_FLAG = flag(process.env.PROMO_REQUIRE_FLAG ?? 'false')
 
   try {
     const products = await stripe.products.list({
