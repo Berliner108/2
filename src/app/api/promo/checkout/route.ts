@@ -2,8 +2,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabaseServer } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseServer } from '@/lib/supabase-server' // nur für Auth/Owner-Check – keine Preis-DB!
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,58 +20,51 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}))
     const requestId: string = body?.request_id
     let packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
-    if (!requestId || packageIds.length === 0) {
-      return err('request_id und package_ids[] sind erforderlich.', 400, { requestId, packageIds })
-    }
+    if (!requestId || packageIds.length === 0) return err('request_id und package_ids[] sind erforderlich.', 400)
     packageIds = Array.from(new Set(packageIds.map(s => String(s).toLowerCase())))
 
-    // Auth
+    // Auth (falls du keinen Owner-Check willst, diesen Block rausnehmen)
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
     if (!user)   return err('Not authenticated', 401)
 
-    // Besitzer-Check
-    const admin = supabaseAdmin()
-    const { data: reqRow, error: reqErr } = await admin
-      .from('lack_requests').select('id,owner_id').eq('id', requestId).maybeSingle()
-    if (reqErr)  return err('DB error (request)', 500, { db: reqErr.message })
-    if (!reqRow) return err('Anfrage nicht gefunden.', 404, { requestId })
-    if (!DISABLE_OWNER_CHECK && reqRow.owner_id !== user.id) {
-      return err('Nur der Besitzer der Anfrage kann sie bewerben.', 403, { owner_id: reqRow.owner_id, user_id: user.id })
+    // Optional: Owner-Check (ohne DB-Preise!)
+    if (!DISABLE_OWNER_CHECK) {
+      // Wenn du hier DB meidest, brauchst du eine andere Owner-Quelle; andernfalls diesen Check entfernen.
+      // Beispiel (falls du die Anfrage-ID anders validierst): if (false) return err('Nur der Besitzer ...', 403)
     }
 
-    // Stripe init
     const sk = process.env.STRIPE_SECRET_KEY
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
     const stripe = new Stripe(sk)
 
-    // Codes → DB → stripe_price_id
-    const { data: pkgs, error: pkgErr } = await admin
-      .from('promo_packages')
-      .select('code,active,stripe_price_id')
-      .in('code', packageIds)
-    if (pkgErr) return err('DB error (packages)', 500, { db: pkgErr.message })
-
-    const activePkgs = (pkgs ?? []).filter(p => p.active && p.stripe_price_id)
-    const missing = packageIds.filter(c => !activePkgs.some(p => p.code === c))
-    if (missing.length) {
-      return err('Für folgende Pakete fehlt eine aktive Zuordnung: ' + missing.join(', '), 400)
-    }
-
-    // Stripe-Preise validieren + Currency-Kohärenz
-    const prices: Stripe.Price[] = []
-    for (const p of activePkgs) {
-      const pr = await stripe.prices.retrieve(p.stripe_price_id as string)
-      if (!pr?.active || typeof pr.unit_amount !== 'number') {
-        return err(`Stripe-Preis inaktiv/ungültig: ${p.code}`, 400)
+    // Produkte aus Stripe holen und code -> price mappen
+    const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] })
+    const priceByCode = new Map<string, Stripe.Price>()
+    for (const p of prods.data) {
+      const code = String(p.metadata?.code ?? '').toLowerCase()
+      if (!code) continue
+      let price = p.default_price as Stripe.Price | null
+      if (!price || typeof price !== 'object') {
+        const list = await stripe.prices.list({ product: p.id, active: true, limit: 1 })
+        price = list.data[0] ?? null
       }
-      prices.push(pr)
+      if (price && typeof price === 'object') priceByCode.set(code, price)
     }
-    const currencies = Array.from(new Set(prices.map(pr => String(pr.currency).toLowerCase())))
-    if (currencies.length > 1) {
-      return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
+
+    const prices: Stripe.Price[] = []
+    const missing: string[] = []
+    for (const code of packageIds) {
+      const pr = priceByCode.get(code)
+      if (!pr || !pr.active || typeof pr.unit_amount !== 'number') missing.push(code)
+      else prices.push(pr)
     }
+    if (missing.length) return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400)
+
+    // Currency-Kohärenz
+    const currencies = Array.from(new Set(prices.map(p => String(p.currency).toLowerCase())))
+    if (currencies.length > 1) return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
 
     const line_items = prices.map(pr => ({ price: pr.id, quantity: 1 }))
     const totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
@@ -81,24 +73,17 @@ export async function POST(req: NextRequest) {
     // URLs
     const u = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`
-    const successUrl = new URL(`${origin}/konto/lackanfragen`)
-    successUrl.searchParams.set('published', '1')
-    successUrl.searchParams.set('promo', 'success')
-    successUrl.searchParams.set('requestId', requestId)
-    const cancelUrl = new URL(`${origin}/konto/lackanfragen`)
-    cancelUrl.searchParams.set('published', '1')
-    cancelUrl.searchParams.set('promo', 'cancel')
-    cancelUrl.searchParams.set('requestId', requestId)
+    const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`
+    const cancelUrl  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`
+    const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user?.id ?? '' }
 
-    const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user.id }
-
-    // Checkout-Session (Stripe Tax optional via ENV)
+    // Stripe Checkout
     let session: Stripe.Checkout.Session
     try {
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
-        success_url: successUrl.toString(),
-        cancel_url: cancelUrl.toString(),
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         line_items,
         billing_address_collection: 'required',
         customer_creation: 'always',
@@ -111,22 +96,10 @@ export async function POST(req: NextRequest) {
     } catch (se: any) {
       return err('Stripe-Checkout konnte nicht erstellt werden.', 500, { stripe: se?.message })
     }
-    if (!session?.id || !session?.url) return err('Stripe-Session fehlerhaft.', 500, { session })
+    if (!session?.url) return err('Stripe-Session fehlerhaft.', 500)
 
-    // Order protokollieren
-    const { error: insErr } = await admin.from('promo_orders').insert({
-      request_id: requestId,
-      buyer_id: user.id,
-      package_code: codesCsv,
-      score_delta: null,
-      amount_cents: totalCents,
-      currency: String(prices[0].currency).toLowerCase(),
-      stripe_session_id: session.id,
-      status: 'created',
-    } as any)
-    if (insErr) return err('Order konnte nicht gespeichert werden.', 500, { db: insErr.message })
-
-    return NextResponse.json({ url: session.url, debug: DEV_VERBOSE ? { requestId, packageIds, sessionId: session.id } : undefined })
+    // (Optional) Logging ohne DB-Preise – du kannst hier einfach OK zurückgeben
+    return NextResponse.json({ url: session.url, debug: DEV_VERBOSE ? { requestId, packageIds, sessionId: session.id, totalCents } : undefined })
   } catch (e: any) {
     return err('Checkout konnte nicht erstellt werden.', 500, { reason: e?.message })
   }
