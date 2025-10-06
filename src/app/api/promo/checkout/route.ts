@@ -8,19 +8,25 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+/** ----------------------------------------------------------------
+ * Flags & Konfiguration (Option B)
+ * -----------------------------------------------------------------*/
+
+// interpretiert 1/0, true/false, yes/no, on/off (case-insensitive)
+const flag = (v?: string) => /^(1|true|yes|on)$/i.test(String(v ?? '').trim())
+
 const DEV_VERBOSE = process.env.NODE_ENV !== 'production'
-const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1'
+const DISABLE_OWNER_CHECK = flag(process.env.DISABLE_PROMO_OWNER_CHECK) // ← 1 = Owner-Check aus
+const USE_TAX = flag(process.env.PROMO_USE_AUTOMATIC_TAX)              // ← 1 = Stripe Tax an
 
-// NEU: Umschalter für Stripe Tax (später einfach ENV auf true setzen)
-const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true'
-
-// NEU: Mapping Code -> Stripe Price-ID (ENV in Vercel setzen)
+// Mapping Promo-Code -> Stripe Price-ID (in Vercel als ENV setzen)
 const PRICE_MAP: Record<string, string | undefined> = {
-  homepage:      process.env.PROMO_PRICE_ID_HOMEPAGE,
-  search_boost:  process.env.PROMO_PRICE_ID_SEARCH_BOOST,
-  premium:       process.env.PROMO_PRICE_ID_PREMIUM,
+  homepage:     process.env.PROMO_PRICE_ID_HOMEPAGE,
+  search_boost: process.env.PROMO_PRICE_ID_SEARCH_BOOST,
+  premium:      process.env.PROMO_PRICE_ID_PREMIUM,
 }
 
+/** kleine Error-Utility */
 function err(msg: string, status = 400, extra?: Record<string, any>) {
   return NextResponse.json(
     { error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) },
@@ -37,13 +43,13 @@ export async function POST(req: NextRequest) {
     if (!requestId || packageIds.length === 0) {
       return err('request_id und package_ids[] sind erforderlich.', 400, { requestId, packageIds })
     }
-
     packageIds = Array.from(new Set(packageIds.map(String)))
 
+    // Basis-URL bestimmen (APP_ORIGIN überschreibt Host)
     const url = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${url.protocol}//${url.host}`
 
-    // Auth
+    // ---- Auth
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const admin = supabaseAdmin()
 
-    // Anfrage holen + optional Besitzer prüfen
+    // ---- Anfrage holen + optional Besitzer prüfen
     const { data: reqRow, error: reqErr } = await admin
       .from('lack_requests')
       .select('id, owner_id')
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Pakete lesen (wie gehabt)
+    // ---- Pakete aus deiner DB (Fallback-Preise & score)
     const { data: rows, error: pkgErr } = await admin
       .from('promo_packages')
       .select('code,label,amount_cents,currency,score_delta')
@@ -83,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     // Validierung Preise/Währung
     if (packages.some(p => !Number.isFinite(p.price_cents) || p.price_cents <= 0)) {
-      return err('Ungültiger Paketpreis (price_cents) in promo_packages.', 500, { packages })
+      return err('Ungültiger Paketpreis (amount_cents) in promo_packages.', 500, { packages })
     }
     const currencies = new Set(packages.map(p => p.currency))
     if (currencies.size > 1) {
@@ -95,19 +101,20 @@ export async function POST(req: NextRequest) {
     const totalScore  = packages.reduce((s, p) => s + p.score_delta, 0)
     const codesCsv    = packages.map(p => p.code).join(',')
 
-    // Stripe
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
-    }
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+    // ---- Stripe
+    const secret = process.env.STRIPE_SECRET_KEY
+    if (!secret) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
+    const stripe = new Stripe(secret)
 
-    // NEU: line_items – bevorzugt mit Stripe Price-ID (ENV), sonst Fallback zu deinen DB-Preisen
-    const line_items = packages.map(p => {
-      const priceId = PRICE_MAP[p.code.toLowerCase()]
+    // Bevorzugt Stripe-Preise aus dem Dashboard (PRICE_MAP),
+    // sonst Fallback auf deine DB-Preise (price_data).
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = packages.map(p => {
+      const codeKey = p.code.toLowerCase()
+      const priceId = PRICE_MAP[codeKey]
       return priceId
-        ? { price: priceId, quantity: 1 } // ← Stripe-Preis aus Dashboard
+        ? { price: priceId, quantity: 1 }
         : {
-            price_data: {                // ← Fallback: deine DB-Werte
+            price_data: {
               currency,
               unit_amount: p.price_cents,
               product_data: { name: `Bewerbung: ${p.title}` },
@@ -116,14 +123,14 @@ export async function POST(req: NextRequest) {
           }
     })
 
-    // Metadata (für Webhook/Postprocessing)
+    // Metadaten für Webhook/Postprocessing
     const metadata = {
       request_id: requestId,
       package_ids: codesCsv,
       user_id: user.id,
     }
 
-    // Ziel-URLs
+    // Redirect-URLs
     const successUrl = new URL(`${origin}/konto/lackanfragen`)
     successUrl.searchParams.set('published', '1')
     successUrl.searchParams.set('promo', 'success')
@@ -134,8 +141,8 @@ export async function POST(req: NextRequest) {
     cancelUrl.searchParams.set('promo', 'cancel')
     cancelUrl.searchParams.set('requestId', requestId)
 
-    // NEU: Address-/Tax-Setup -> Stripe sammelt Adresse & (später) USt-IDs automatisch
-    let session
+    // ---- Stripe-Checkout-Session
+    let session: Stripe.Checkout.Session
     try {
       session = await stripe.checkout.sessions.create({
         mode: 'payment',
@@ -143,10 +150,12 @@ export async function POST(req: NextRequest) {
         cancel_url: cancelUrl.toString(),
         line_items,
 
-        // ▼ diese 4 Zeilen sind der Schlüssel für "später einfach umschalten"
+        // Stripe sammelt Rechnungsadresse (und später USt-ID) automatisch
         billing_address_collection: 'required',
         customer_creation: 'always',
         customer_update: { address: 'auto' },
+
+        // per ENV zuschaltbar, wenn du später Stripe Tax aktivierst
         automatic_tax: { enabled: USE_TAX },
         tax_id_collection: USE_TAX ? { enabled: true } : undefined,
 
@@ -158,13 +167,13 @@ export async function POST(req: NextRequest) {
     }
     if (!session?.id || !session?.url) return err('Stripe-Session fehlerhaft.', 500, { session })
 
-    // Order anlegen (wie gehabt)
+    // ---- Order anlegen (status=created) – eine Zeile pro Session
     const { error: insErr } = await admin.from('promo_orders').insert({
       request_id: requestId,
       buyer_id: user.id,
-      package_code: codesCsv,
-      score_delta: totalScore,
-      amount_cents: totalCents,
+      package_code: codesCsv,     // CSV der Pakete
+      score_delta: totalScore,    // Summe Score
+      amount_cents: totalCents,   // Summe aus DB (Webhook korrigiert später bei Bedarf)
       currency,
       stripe_session_id: session.id,
       status: 'created',
