@@ -7,13 +7,7 @@ import { supabaseServer } from '@/lib/supabase-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/**
- * DEBUG-MODUS: IMMER VERBOSE (auch in Production).
- * Dadurch siehst du im Frontend-Alert die echten Stripe-Fehlerdetails.
- */
 const VERBOSE = true;
-
-// '1' = Owner-Check AUS, sonst AN
 const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1';
 const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true';
 
@@ -26,13 +20,12 @@ function err(msg: string, status = 400, extra?: Record<string, any>) {
   );
 }
 
-/* ------------------- GET: Diagnose ------------------- */
+/* Diagnose */
 export async function GET() {
   try {
     const sk = process.env.STRIPE_SECRET_KEY;
     if (!sk) return NextResponse.json({ ok: false, error: 'STRIPE_SECRET_KEY fehlt' }, { status: 500 });
     const stripe = new Stripe(sk);
-
     const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] });
 
     const items = prods.data.map((p) => {
@@ -67,7 +60,7 @@ export async function GET() {
   }
 }
 
-/* ------------------- POST: Checkout erstellen ------------------- */
+/* Checkout */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as any));
@@ -79,32 +72,28 @@ export async function POST(req: NextRequest) {
       return err('request_id und (package_ids[] ODER price_ids[]) sind erforderlich.', 400, { body });
     }
 
-    // Codes normalisieren (nur für Metadaten)
-    packageIds = Array.from(new Set(packageIds.map((s: string) => String(s).toLowerCase())));
-
-    // Auth
+    // Supabase-Auth
     const sb = await supabaseServer();
     const { data: { user }, error: userErr } = await sb.auth.getUser();
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message });
     if (!user)   return err('Not authenticated', 401);
 
-    // Optionaler Owner-Check (derzeit no-op)
     if (!DISABLE_OWNER_CHECK) {
       // TODO: requestId -> gehört zu user.id?
     }
 
     const sk = process.env.STRIPE_SECRET_KEY;
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500);
-    const stripe = new Stripe(sk); // apiVersion nicht festnageln
+    const stripe = new Stripe(sk);
 
-    // Line Items bauen
+    // Line Items nur über Price-IDs ODER über Codes (default_price)
     let line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
     let totalCents = 0;
 
     if (priceIds.length > 0) {
       const seen = new Set<string>();
-      for (const pidRaw of priceIds) {
-        const pid = String(pidRaw);
+      for (const raw of priceIds) {
+        const pid = String(raw);
         if (!pid || seen.has(pid)) continue;
         seen.add(pid);
 
@@ -117,7 +106,6 @@ export async function POST(req: NextRequest) {
             stripe: { message: e?.message, code: e?.code, type: e?.type },
           });
         }
-
         if (!pr?.active || typeof pr.unit_amount !== 'number') {
           return err(`Stripe-Preis ungültig/inaktiv: ${pid}`, 400, { pid, active: pr?.active, unit_amount: pr?.unit_amount });
         }
@@ -128,14 +116,11 @@ export async function POST(req: NextRequest) {
         totalCents += pr.unit_amount;
       }
     } else {
-      // Mapping über product.metadata.code
       const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] });
-
       const priceByCode = new Map<string, Stripe.Price>();
       for (const p of prods.data) {
         const code = String(p.metadata?.code ?? '').toLowerCase();
         if (!code) continue;
-
         let price = p.default_price as Stripe.Price | null;
         if (!price || typeof price !== 'object') {
           const list = await stripe.prices.list({ product: p.id, active: true, limit: 1 });
@@ -148,78 +133,53 @@ export async function POST(req: NextRequest) {
       const missing: string[] = [];
       const recurring: string[] = [];
 
-      for (const code of packageIds) {
+      for (const code of Array.from(new Set(packageIds.map((s: string) => String(s).toLowerCase())))) {
         const pr = priceByCode.get(code);
-        if (!pr || !pr.active || typeof pr.unit_amount !== 'number') {
-          missing.push(code);
-        } else if (pr.type === 'recurring') {
-          recurring.push(code);
-        } else {
-          prices.push(pr);
-        }
+        if (!pr || !pr.active || typeof pr.unit_amount !== 'number') missing.push(code);
+        else if (pr.type === 'recurring') recurring.push(code);
+        else prices.push(pr);
       }
 
-      if (missing.length) {
-        return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400, { missing });
-      }
-      if (recurring.length) {
-        return err(
-          'Diese Pakete sind als wiederkehrender Preis (subscription) angelegt: ' + recurring.join(', ') +
-          '. Entweder in Stripe auf one-time umstellen oder Checkout-Mode ändern.',
-          400,
-          { recurring }
-        );
-      }
+      if (missing.length)   return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400, { missing });
+      if (recurring.length) return err('Folgende Codes sind recurring: ' + recurring.join(', '), 400, { recurring });
 
       const currencies = Array.from(new Set(prices.map((p) => String(p.currency).toLowerCase())));
-      if (currencies.length > 1) {
-        return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies });
-      }
+      if (currencies.length > 1) return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies });
 
       line_items = prices.map((pr) => ({ price: pr.id, quantity: 1 }));
       totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0);
     }
 
-    if (line_items.length === 0) {
-      return err('Keine gültigen line_items.', 400);
-    }
+    if (line_items.length === 0) return err('Keine gültigen line_items.', 400);
 
-    // Redirect-URLs & Metadaten
+    // Redirects & Meta
     const u = new URL(req.url);
     const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`;
-    const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`;
-    const cancelUrl  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`;
-    const codesCsv = packageIds.join(',');
-    const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user?.id ?? '' };
+    const success_url = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`;
+    const cancel_url  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`;
+    const metadata = {
+      request_id: requestId,
+      package_ids: Array.isArray(packageIds) ? packageIds.join(',') : '',
+      user_id: user?.id ?? '',
+    };
 
-    // Session erstellen
+    // ⚠️ MINIMALER CHECKOUT-AUFRUF (nur das Nötigste!)
     try {
-      const session = await stripe.checkout.sessions.create({
+      const params: Stripe.Checkout.SessionCreateParams = {
         mode: 'payment',
-        success_url: successUrl,
-        cancel_url: cancelUrl,
+        success_url,
+        cancel_url,
         line_items,
-        billing_address_collection: 'required',
-        customer_creation: 'always',
-        customer_update: { address: 'auto' },
-        automatic_tax: { enabled: !!USE_TAX },
-        tax_id_collection: USE_TAX ? { enabled: true } : undefined,
-        payment_intent_data: { metadata },
-        metadata,
-      });
+        // NIX weiter – alles andere erstmal raus!
+      };
+
+      const session = await stripe.checkout.sessions.create(params);
 
       if (!session?.url) return err('Stripe-Session fehlerhaft (keine URL).', 500, { session });
 
-      if (VERBOSE) {
-        console.log('[promo/checkout:ok]', { requestId, packageIds, priceIds, sessionId: session.id, totalCents });
-      }
-
-      return NextResponse.json({
-        url: session.url,
-        debug: VERBOSE ? { requestId, packageIds, priceIds, sessionId: session.id, totalCents } : undefined,
-      });
+      if (VERBOSE) console.log('[promo/checkout:ok]', { requestId, sessionId: session.id, totalCents, params });
+      return NextResponse.json({ url: session.url, debug: VERBOSE ? { sessionId: session.id, totalCents } : undefined });
     } catch (se: any) {
-      // Stripe-Fehler ausführlich zurückgeben
       const forClient = {
         type: se?.type,
         code: se?.code,
