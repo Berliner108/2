@@ -13,9 +13,9 @@ const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true'
 
 function err(msg: string, status = 400, extra?: Record<string, any>) {
   if (DEV_VERBOSE && extra) {
-    console.error('[checkout:error]', msg, extra)
+    console.error('[promo/checkout:error]', msg, extra)
   } else {
-    console.error('[checkout:error]', msg)
+    console.error('[promo/checkout:error]', msg)
   }
   return NextResponse.json(
     { error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) },
@@ -25,100 +25,152 @@ function err(msg: string, status = 400, extra?: Record<string, any>) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}))
+    const body = await req.json().catch(() => ({} as any))
+
     const requestId: string = body?.request_id
     let packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : []
+    let priceIds: string[]   = Array.isArray(body?.price_ids)   ? body.price_ids   : []
 
-    if (!requestId || packageIds.length === 0) {
-      return err('request_id und package_ids[] sind erforderlich.', 400, { body })
+    if (!requestId || (packageIds.length === 0 && priceIds.length === 0)) {
+      return err('request_id und (package_ids[] ODER price_ids[]) sind erforderlich.', 400, { body })
     }
+
+    // Normalisiere Codes nur zur Sicherheit/Metadaten
     packageIds = Array.from(new Set(packageIds.map((s: string) => String(s).toLowerCase())))
 
-    // Auth
+    // -------- Auth ----------
     const sb = await supabaseServer()
-    const { data: { user }, error: userErr } = await sb.auth.getUser()
+    const {
+      data: { user },
+      error: userErr,
+    } = await sb.auth.getUser()
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
     if (!user)   return err('Not authenticated', 401)
 
-    // Optional: Owner-Check
+    // -------- Optionaler Owner-Check ----------
     if (!DISABLE_OWNER_CHECK) {
-      // TODO: prüfen, ob requestId dem user gehört
+      // TODO: Prüfen, ob requestId zu user.id gehört (falls nötig)
     }
 
     const sk = process.env.STRIPE_SECRET_KEY
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
 
-    // Hinweis: apiVersion weglassen, damit Typen nicht meckern
+    // apiVersion absichtlich NICHT festnageln (hält Typsystem ruhig)
     const stripe = new Stripe(sk)
 
-    // 1) Stripe-Produkte laden und priceByCode aufbauen
-    const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] })
+    // -------- Line-Items aufbauen ----------
+    let line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = []
+    let totalCents = 0
 
-    const priceByCode = new Map<string, Stripe.Price>()
-    for (const p of prods.data) {
-      const code = String(p.metadata?.code ?? '').toLowerCase()
-      if (!code) continue
+    if (priceIds.length > 0) {
+      // ✅ Bevorzugt: direkt über übermittelte Price-IDs
+      const seen = new Set<string>()
+      for (const pidRaw of priceIds) {
+        const pid = String(pidRaw)
+        if (!pid || seen.has(pid)) continue
+        seen.add(pid)
 
-      let price = p.default_price as Stripe.Price | null
-      if (!price || typeof price !== 'object') {
-        const list = await stripe.prices.list({ product: p.id, active: true, limit: 1 })
-        price = list.data[0] ?? null
+        let pr: Stripe.Price
+        try {
+          pr = await stripe.prices.retrieve(pid)
+        } catch (e: any) {
+          return err(`Stripe-Preis ${pid} konnte nicht geladen werden.`, 400, {
+            pid,
+            stripe: { message: e?.message, code: e?.code, type: e?.type },
+          })
+        }
+
+        if (!pr?.active || typeof pr.unit_amount !== 'number') {
+          return err(`Stripe-Preis ungültig/inaktiv: ${pid}`, 400, { pid })
+        }
+        if (pr.type === 'recurring') {
+          return err(`Preis ${pid} ist als subscription angelegt. Verwende one_time.`, 400, {
+            pid,
+            type: pr.type,
+          })
+        }
+        line_items.push({ price: pr.id, quantity: 1 })
+        totalCents += pr.unit_amount
       }
-      if (price && typeof price === 'object') {
-        priceByCode.set(code, price)
+    } else {
+      // 🔎 Fallback: Mapping über product.metadata.code (z.B. "homepage", "premium", ...)
+      const prods = await stripe.products.list({
+        active: true,
+        limit: 100,
+        expand: ['data.default_price'],
+      })
+
+      const priceByCode = new Map<string, Stripe.Price>()
+      for (const p of prods.data) {
+        const code = String(p.metadata?.code ?? '').toLowerCase()
+        if (!code) continue
+
+        let price = p.default_price as Stripe.Price | null
+        if (!price || typeof price !== 'object') {
+          const list = await stripe.prices.list({ product: p.id, active: true, limit: 1 })
+          price = list.data[0] ?? null
+        }
+        if (price && typeof price === 'object') priceByCode.set(code, price)
       }
-    }
 
-    // 2) Ausgewählte Preise einsammeln + prüfen
-    const prices: Stripe.Price[] = []
-    const missing: string[] = []
-    const recurring: string[] = []
+      const prices: Stripe.Price[] = []
+      const missing: string[] = []
+      const recurring: string[] = []
 
-    for (const code of packageIds) {
-      const pr = priceByCode.get(code)
-      if (!pr || !pr.active || typeof pr.unit_amount !== 'number') {
-        missing.push(code)
-      } else {
-        if (pr.type === 'recurring') recurring.push(code) // Checkout-Mode payment != subscription
-        prices.push(pr)
+      for (const code of packageIds) {
+        const pr = priceByCode.get(code)
+        if (!pr || !pr.active || typeof pr.unit_amount !== 'number') {
+          missing.push(code)
+        } else if (pr.type === 'recurring') {
+          recurring.push(code)
+        } else {
+          prices.push(pr)
+        }
       }
-    }
 
-    if (missing.length) {
-      return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400, { missing })
-    }
-    if (recurring.length) {
-      return err(
-        'Diese Pakete sind als wiederkehrender Preis (subscription) angelegt: ' + recurring.join(', ') +
-        '. Entweder in Stripe auf one-time umstellen oder Checkout-Mode ändern.',
-        400,
-        { recurring }
-      )
-    }
+      if (missing.length) {
+        return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400, { missing })
+      }
+      if (recurring.length) {
+        return err(
+          'Diese Pakete sind als wiederkehrender Preis (subscription) angelegt: ' +
+            recurring.join(', ') +
+            '. Entweder in Stripe auf one-time umstellen oder Checkout-Mode ändern.',
+          400,
+          { recurring }
+        )
+      }
 
-    const currencies = Array.from(new Set(prices.map(p => String(p.currency).toLowerCase())))
-    if (currencies.length > 1) {
-      return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
-    }
+      const currencies = Array.from(new Set(prices.map((p) => String(p.currency).toLowerCase())))
+      if (currencies.length > 1) {
+        return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
+      }
 
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] =
-      prices.map(pr => ({ price: pr.id, quantity: 1 }))
+      line_items = prices.map((pr) => ({ price: pr.id, quantity: 1 }))
+      totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
+    }
 
     if (line_items.length === 0) {
       return err('Keine gültigen line_items.', 400)
     }
 
-    const totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
-    const codesCsv   = packageIds.join(',')
-
-    // 3) Redirect-URLs
+    // -------- Redirect-URLs & Meta ----------
     const u = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`
-    const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`
-    const cancelUrl  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`
-    const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user?.id ?? '' }
+    const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(
+      requestId
+    )}`
+    const cancelUrl = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(
+      requestId
+    )}`
+    const codesCsv = packageIds.join(',')
+    const metadata = {
+      request_id: requestId,
+      package_ids: codesCsv,
+      user_id: user?.id ?? '',
+    }
 
-    // 4) Session erstellen
+    // -------- Session erstellen ----------
     try {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
@@ -128,7 +180,6 @@ export async function POST(req: NextRequest) {
         billing_address_collection: 'required',
         customer_creation: 'always',
         customer_update: { address: 'auto' },
-        // falls du AutoTax wirklich aus hast, ist das false:
         automatic_tax: { enabled: !!USE_TAX },
         tax_id_collection: USE_TAX ? { enabled: true } : undefined,
         payment_intent_data: { metadata },
@@ -140,24 +191,44 @@ export async function POST(req: NextRequest) {
       }
 
       if (DEV_VERBOSE) {
-        console.log('[checkout:ok]', { requestId, packageIds, sessionId: session.id, totalCents })
+        console.log('[promo/checkout:ok]', {
+          requestId,
+          packageIds,
+          priceIds,
+          sessionId: session.id,
+          totalCents,
+        })
       }
 
       return NextResponse.json({
         url: session.url,
-        debug: DEV_VERBOSE ? { requestId, packageIds, sessionId: session.id, totalCents } : undefined
+        debug: DEV_VERBOSE
+          ? { requestId, packageIds, priceIds, sessionId: session.id, totalCents }
+          : undefined,
       })
     } catch (se: any) {
-      // Vollständiges Stripe-Fehlerobjekt rausgeben (nur in DEV)
+      // Stripe-Fehler ausführlich loggen
+      console.error('Stripe checkout.sessions.create error:', {
+        type: se?.type,
+        code: se?.code,
+        message: se?.message,
+        param: se?.param,
+        decline_code: se?.decline_code,
+        statusCode: se?.statusCode,
+        requestId: se?.requestId,
+        raw: se?.raw,
+      })
+
       return err('Stripe-Checkout konnte nicht erstellt werden.', 500, {
         stripe: {
           type: se?.type,
           code: se?.code,
           message: se?.message,
           param: se?.param,
+          decline_code: se?.decline_code,
           statusCode: se?.statusCode,
           requestId: se?.requestId,
-        }
+        },
       })
     }
   } catch (e: any) {
