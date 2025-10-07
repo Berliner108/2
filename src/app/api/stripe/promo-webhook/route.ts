@@ -81,82 +81,94 @@ async function applyPromoForRequestOnce(admin: any, opts: {
   if (upErr) throw upErr
 }
 
+// REPLACE your current upsertOrderFromSession with this version
 async function upsertOrderFromSession(
   admin: any,
   sess: Stripe.Checkout.Session,
   status: 'paid' | 'failed',
-  requestId?: string | null,
-  buyerId?: string | null,
-  packageCodesCsv?: string | null,
+  requestIdArg?: string | null,
+  buyerIdArg?: string | null,
+  packageCodesCsvArg?: string | null,
 ): Promise<{ justPaid: boolean }> {
+  // 1) Immer aus der Session lesen (robust gegen fehlende Args)
+  const requestId = (requestIdArg || (sess.metadata?.request_id as string) || '').trim();
+  const packageCodesCsv = (packageCodesCsvArg || (sess.metadata?.package_ids as string) || '').trim();
+  const buyerId = (buyerIdArg || (sess.metadata?.user_id as string) || '').trim();
+
   const piId =
     typeof sess.payment_intent === 'string'
       ? sess.payment_intent
-      : (sess.payment_intent as any)?.id ?? null
+      : (sess.payment_intent as any)?.id ?? null;
 
-  const amountTotal = typeof sess.amount_total === 'number' ? sess.amount_total : null
-  const currency = (sess.currency || 'eur').toString().toLowerCase()
+  const amountTotal = typeof sess.amount_total === 'number' ? sess.amount_total : null;
+  const currency = (sess.currency || 'eur').toString().toLowerCase();
 
+  // 2) Bereits vorhandene Order aktualisieren (per session_id)
   const { data: existing, error: findErr } = await admin
     .from('promo_orders')
     .select('id,status')
     .eq('stripe_session_id', sess.id)
-    .maybeSingle()
-  if (findErr) throw findErr
+    .maybeSingle();
+  if (findErr) throw findErr;
 
   if (existing?.id) {
-    const wasPaid = existing.status === 'paid'
-    const patch: any = { updated_at: nowISO(), currency }
-    if (piId) patch.stripe_payment_intent = piId
-    if (amountTotal != null) patch.amount_cents = amountTotal
-    if (!wasPaid) patch.status = status
+    const wasPaid = existing.status === 'paid';
+    const patch: any = { updated_at: nowISO(), currency };
+    if (piId) patch.stripe_payment_intent = piId;
+    if (amountTotal != null) patch.amount_cents = amountTotal;
+    if (!wasPaid) patch.status = status;
 
-    const { error: upErr } = await admin
-      .from('promo_orders')
-      .update(patch)
-      .eq('id', existing.id)
-    if (upErr) throw upErr
+    const { error: upErr } = await admin.from('promo_orders').update(patch).eq('id', existing.id);
+    if (upErr) throw upErr;
 
-    return { justPaid: !wasPaid && status === 'paid' }
+    return { justPaid: !wasPaid && status === 'paid' };
   }
 
+  // 3) Oder per PaymentIntent
   if (piId) {
     const { data: byPi, error: findPiErr } = await admin
       .from('promo_orders')
       .select('id,status')
       .eq('stripe_payment_intent', piId)
-      .maybeSingle()
-    if (findPiErr) throw findPiErr
+      .maybeSingle();
+    if (findPiErr) throw findPiErr;
 
     if (byPi?.id) {
-      const wasPaid = byPi.status === 'paid'
-      const patch: any = { updated_at: nowISO(), currency }
-      if (amountTotal != null) patch.amount_cents = amountTotal
-      if (!wasPaid) patch.status = status
+      const wasPaid = byPi.status === 'paid';
+      const patch: any = { updated_at: nowISO(), currency };
+      if (amountTotal != null) patch.amount_cents = amountTotal;
+      if (!wasPaid) patch.status = status;
 
-      const { error: upErr } = await admin
-        .from('promo_orders')
-        .update(patch)
-        .eq('id', byPi.id)
-      if (upErr) throw upErr
+      const { error: upErr } = await admin.from('promo_orders').update(patch).eq('id', byPi.id);
+      if (upErr) throw upErr;
 
-      return { justPaid: !wasPaid && status === 'paid' }
+      return { justPaid: !wasPaid && status === 'paid' };
     }
   }
 
-  if (!requestId || !buyerId || !packageCodesCsv) return { justPaid: false }
+  // 4) Neu anlegen – nur wenn wir die Metadaten haben
+  if (!requestId || !buyerId || !packageCodesCsv) {
+    // <<< WICHTIG: hier NICHT mehr silent returnen, sondern loggen
+    console.error('[promo-webhook] missing metadata on session insert', {
+      requestId, buyerId, packageCodesCsv, sessId: sess.id
+    });
+    return { justPaid: false };
+  }
 
-  let score = 0
-  let amount = amountTotal ?? 0
+  let score = 0;
+  let amount = amountTotal ?? 0;
+
   if (amountTotal == null || status === 'paid') {
-    const codes = packageCodesCsv.split(',').map(s => s.trim()).filter(Boolean)
-    const { data: pkgs } = await admin
+    const codes = packageCodesCsv.split(',').map(s => s.trim()).filter(Boolean);
+    const { data: pkgs, error: pkgErr } = await admin
       .from('promo_packages')
       .select('amount_cents,score_delta')
-      .in('code', codes)
-    const list = pkgs ?? []
-    if (amountTotal == null) amount = list.reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0)
-    score = list.reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
+      .in('code', codes);
+    if (pkgErr) throw pkgErr;
+
+    const list = pkgs ?? [];
+    if (amountTotal == null) amount = list.reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0);
+    score = list.reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0);
   }
 
   const { error: insErr } = await admin.from('promo_orders').insert({
@@ -171,11 +183,12 @@ async function upsertOrderFromSession(
     status,
     created_at: nowISO(),
     updated_at: nowISO(),
-  } as any)
-  if (insErr) throw insErr
+  } as any);
+  if (insErr) throw insErr;
 
-  return { justPaid: status === 'paid' }
+  return { justPaid: status === 'paid' };
 }
+
 
 async function upsertOrderFromPaymentIntent(
   admin: any,
