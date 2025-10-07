@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     // Stripe initialisieren (API-Version explizit setzen)
     const sk = process.env.STRIPE_SECRET_KEY
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
-    const stripe = new Stripe(sk, { apiVersion: '2024-06-20' })
+    const stripe = new Stripe(sk)
 
     // Stripe Products/Prices anhand metadata.code einsammeln
     const prods = await stripe.products.list({
