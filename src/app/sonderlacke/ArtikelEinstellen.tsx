@@ -821,11 +821,13 @@ if (hasPromo) {
         });
         setLadeStatus(false);
         alert(
-          payload?.error ||
-          payload?.details?.stripe?.message ||
-          payload?.details?.reason ||
-          `Checkout-Start fehlgeschlagen (HTTP ${checkoutRes.status}).`
-        );
+  JSON.stringify(
+    payload?.details?.stripe ?? payload ?? { error: 'Unbekannter Fehler' },
+    null,
+    2
+  )
+);
+
         router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
         return;
       }
