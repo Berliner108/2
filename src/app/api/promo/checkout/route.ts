@@ -7,7 +7,7 @@ import { supabaseServer } from '@/lib/supabase-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const VERBOSE = true;
+const VERBOSE = process.env.NODE_ENV !== 'production';
 const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1';
 const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true';
 
@@ -20,7 +20,7 @@ function err(msg: string, status = 400, extra?: Record<string, any>) {
   );
 }
 
-/* Diagnose */
+/** Diagnose: listet deine Stripe-Produkte (mit metadata.code + default_price) */
 export async function GET() {
   try {
     const sk = process.env.STRIPE_SECRET_KEY;
@@ -49,7 +49,6 @@ export async function GET() {
         USE_TAX,
         DISABLE_OWNER_CHECK,
         APP_ORIGIN: process.env.APP_ORIGIN ?? null,
-        VERBOSE,
       },
       count: items.length,
       items,
@@ -60,7 +59,6 @@ export async function GET() {
   }
 }
 
-/* Checkout */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as any));
@@ -79,17 +77,15 @@ export async function POST(req: NextRequest) {
     if (!user)   return err('Not authenticated', 401);
 
     if (!DISABLE_OWNER_CHECK) {
-      // TODO: requestId -> gehört zu user.id?
+      // Optional: prüfen, ob requestId zu user.id gehört
     }
 
     const sk = process.env.STRIPE_SECRET_KEY;
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500);
     const stripe = new Stripe(sk);
 
-    // Line Items nur über Price-IDs ODER über Codes (default_price)
+    // Line Items via price_ids ODER via product.metadata.code → default_price
     let line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-    let totalCents = 0;
-
     if (priceIds.length > 0) {
       const seen = new Set<string>();
       for (const raw of priceIds) {
@@ -113,7 +109,6 @@ export async function POST(req: NextRequest) {
           return err(`Preis ${pid} ist als subscription angelegt. Verwende one_time.`, 400, { pid, type: pr.type });
         }
         line_items.push({ price: pr.id, quantity: 1 });
-        totalCents += pr.unit_amount;
       }
     } else {
       const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] });
@@ -147,38 +142,50 @@ export async function POST(req: NextRequest) {
       if (currencies.length > 1) return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies });
 
       line_items = prices.map((pr) => ({ price: pr.id, quantity: 1 }));
-      totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0);
     }
 
     if (line_items.length === 0) return err('Keine gültigen line_items.', 400);
 
-    // Redirects & Meta
+    // Redirects & Meta — WICHTIG für den Webhook!
     const u = new URL(req.url);
     const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`;
     const success_url = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`;
     const cancel_url  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`;
-    const metadata = {
+    const packageCodesCsv = Array.isArray(packageIds) ? packageIds.join(',') : '';
+
+    const sharedMetadata = {
       request_id: requestId,
-      package_ids: Array.isArray(packageIds) ? packageIds.join(',') : '',
+      package_ids: packageCodesCsv,
       user_id: user?.id ?? '',
     };
 
-    // ⚠️ MINIMALER CHECKOUT-AUFRUF (nur das Nötigste!)
     try {
-      const params: Stripe.Checkout.SessionCreateParams = {
+      const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         success_url,
         cancel_url,
         line_items,
-        // NIX weiter – alles andere erstmal raus!
-      };
 
-      const session = await stripe.checkout.sessions.create(params);
+        // ▼▼▼ Das war bei dir zuletzt entfernt – jetzt wieder aktiv:
+        metadata: sharedMetadata,
+        payment_intent_data: { metadata: sharedMetadata },
+
+        // Steuerdaten (optional)
+        ...(USE_TAX
+          ? {
+              automatic_tax: { enabled: true },
+              tax_id_collection: { enabled: true },
+              billing_address_collection: 'required',
+              customer_creation: 'always',
+              customer_update: { address: 'auto' as const },
+            }
+          : {}),
+      });
 
       if (!session?.url) return err('Stripe-Session fehlerhaft (keine URL).', 500, { session });
 
-      if (VERBOSE) console.log('[promo/checkout:ok]', { requestId, sessionId: session.id, totalCents, params });
-      return NextResponse.json({ url: session.url, debug: VERBOSE ? { sessionId: session.id, totalCents } : undefined });
+      if (VERBOSE) console.log('[promo/checkout:ok]', { requestId, sessionId: session.id, line_items });
+      return NextResponse.json({ url: session.url });
     } catch (se: any) {
       const forClient = {
         type: se?.type,
