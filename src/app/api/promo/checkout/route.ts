@@ -7,40 +7,33 @@ import { supabaseServer } from '@/lib/supabase-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const DEV_VERBOSE = process.env.NODE_ENV !== 'production';
-// WICHTIG: '1' = Owner-Check ausschalten, '0' oder leer = einschalten
+// ── Flags / Env ────────────────────────────────────────────────────────────────
+const PROMO_VERBOSE = process.env.PROMO_VERBOSE === '1'; // ← zeigt Details auch in Prod
+const DEV_VERBOSE   = process.env.NODE_ENV !== 'production';
+const VERBOSE       = PROMO_VERBOSE || DEV_VERBOSE;
+
+// '1' = Owner-Check AUS, '0' oder leer = AN
 const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1';
 const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true';
 
+// Einheitliche Fehlerantwort
 function err(msg: string, status = 400, extra?: Record<string, any>) {
-  if (DEV_VERBOSE && extra) {
-    console.error('[promo/checkout:error]', msg, extra);
-  } else {
-    console.error('[promo/checkout:error]', msg);
-  }
-  return NextResponse.json(
-    { error: msg, ...(DEV_VERBOSE && extra ? { details: extra } : {}) },
-    { status }
-  );
+  if (extra) console.error('[promo/checkout:error]', msg, extra);
+  else       console.error('[promo/checkout:error]', msg);
+
+  const body: any = { error: msg };
+  if (VERBOSE && extra) body.details = extra; // ← Details in Prod anzeigen, wenn PROMO_VERBOSE=1
+  return NextResponse.json(body, { status });
 }
 
-/* ------------------- GET: Diagnose ------------------- */
+/* ------------------- GET: Diagnose (keine Erstellung) ------------------- */
 export async function GET() {
   try {
     const sk = process.env.STRIPE_SECRET_KEY;
-    if (!sk) {
-      return NextResponse.json(
-        { ok: false, error: 'STRIPE_SECRET_KEY fehlt' },
-        { status: 500 }
-      );
-    }
+    if (!sk) return NextResponse.json({ ok: false, error: 'STRIPE_SECRET_KEY fehlt' }, { status: 500 });
     const stripe = new Stripe(sk);
 
-    const prods = await stripe.products.list({
-      active: true,
-      limit: 100,
-      expand: ['data.default_price'],
-    });
+    const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] });
 
     const items = prods.data.map((p) => {
       const price = p.default_price as Stripe.Price | null;
@@ -77,27 +70,24 @@ export async function GET() {
         USE_TAX,
         DISABLE_OWNER_CHECK,
         APP_ORIGIN: process.env.APP_ORIGIN ?? null,
+        PROMO_VERBOSE: PROMO_VERBOSE,
       },
       count: items.length,
       items,
     });
   } catch (e: any) {
     console.error('[promo/checkout:GET error]', e?.message || e);
-    return NextResponse.json(
-      { ok: false, error: e?.message || 'GET failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: e?.message || 'GET failed' }, { status: 500 });
   }
 }
 
-/* ------------------- POST: Checkout ------------------- */
+/* ------------------- POST: Checkout erstellen ------------------- */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({} as any));
-
     const requestId: string = body?.request_id;
     let packageIds: string[] = Array.isArray(body?.package_ids) ? body.package_ids : [];
-    let priceIds: string[] = Array.isArray(body?.price_ids) ? body.price_ids : [];
+    let priceIds:   string[] = Array.isArray(body?.price_ids)   ? body.price_ids   : [];
 
     if (!requestId || (packageIds.length === 0 && priceIds.length === 0)) {
       return err('request_id und (package_ids[] ODER price_ids[]) sind erforderlich.', 400, { body });
@@ -112,9 +102,9 @@ export async function POST(req: NextRequest) {
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message });
     if (!user)   return err('Not authenticated', 401);
 
-    // Optionaler Owner-Check
+    // Optionaler Owner-Check (derzeit no-op)
     if (!DISABLE_OWNER_CHECK) {
-      // TODO: prüfen, ob requestId dem user.id gehört – abhängig von deiner DB
+      // TODO: requestId gehört zu user.id?
     }
 
     const sk = process.env.STRIPE_SECRET_KEY;
@@ -126,7 +116,6 @@ export async function POST(req: NextRequest) {
     let totalCents = 0;
 
     if (priceIds.length > 0) {
-      // Direkt mit Price-IDs
       const seen = new Set<string>();
       for (const pidRaw of priceIds) {
         const pid = String(pidRaw);
@@ -144,24 +133,17 @@ export async function POST(req: NextRequest) {
         }
 
         if (!pr?.active || typeof pr.unit_amount !== 'number') {
-          return err(`Stripe-Preis ungültig/inaktiv: ${pid}`, 400, { pid });
+          return err(`Stripe-Preis ungültig/inaktiv: ${pid}`, 400, { pid, active: pr?.active, unit_amount: pr?.unit_amount });
         }
         if (pr.type === 'recurring') {
-          return err(`Preis ${pid} ist als subscription angelegt. Verwende one_time.`, 400, {
-            pid,
-            type: pr.type,
-          });
+          return err(`Preis ${pid} ist als subscription angelegt. Verwende one_time.`, 400, { pid, type: pr.type });
         }
         line_items.push({ price: pr.id, quantity: 1 });
         totalCents += pr.unit_amount;
       }
     } else {
       // Mapping über product.metadata.code
-      const prods = await stripe.products.list({
-        active: true,
-        limit: 100,
-        expand: ['data.default_price'],
-      });
+      const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] });
 
       const priceByCode = new Map<string, Stripe.Price>();
       for (const p of prods.data) {
@@ -196,9 +178,8 @@ export async function POST(req: NextRequest) {
       }
       if (recurring.length) {
         return err(
-          'Diese Pakete sind als wiederkehrender Preis (subscription) angelegt: ' +
-            recurring.join(', ') +
-            '. Entweder in Stripe auf one-time umstellen oder Checkout-Mode ändern.',
+          'Diese Pakete sind als wiederkehrender Preis (subscription) angelegt: ' + recurring.join(', ') +
+          '. Entweder in Stripe auf one-time umstellen oder Checkout-Mode ändern.',
           400,
           { recurring }
         );
@@ -223,11 +204,7 @@ export async function POST(req: NextRequest) {
     const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`;
     const cancelUrl  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`;
     const codesCsv = packageIds.join(',');
-    const metadata = {
-      request_id: requestId,
-      package_ids: codesCsv,
-      user_id: user?.id ?? '',
-    };
+    const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user?.id ?? '' };
 
     // Session erstellen
     try {
@@ -245,28 +222,19 @@ export async function POST(req: NextRequest) {
         metadata,
       });
 
-      if (!session?.url) {
-        return err('Stripe-Session fehlerhaft (keine URL).', 500, { session });
-      }
+      if (!session?.url) return err('Stripe-Session fehlerhaft (keine URL).', 500, { session });
 
-      if (DEV_VERBOSE) {
-        console.log('[promo/checkout:ok]', {
-          requestId,
-          packageIds,
-          priceIds,
-          sessionId: session.id,
-          totalCents,
-        });
+      if (VERBOSE) {
+        console.log('[promo/checkout:ok]', { requestId, packageIds, priceIds, sessionId: session.id, totalCents });
       }
 
       return NextResponse.json({
         url: session.url,
-        debug: DEV_VERBOSE
-          ? { requestId, packageIds, priceIds, sessionId: session.id, totalCents }
-          : undefined,
+        debug: VERBOSE ? { requestId, packageIds, priceIds, sessionId: session.id, totalCents } : undefined,
       });
     } catch (se: any) {
-      console.error('Stripe checkout.sessions.create error:', {
+      // Stripe-Fehler ausführlich loggen & (bei PROMO_VERBOSE) zurückgeben
+      const forClient = {
         type: se?.type,
         code: se?.code,
         message: se?.message,
@@ -274,19 +242,11 @@ export async function POST(req: NextRequest) {
         decline_code: se?.decline_code,
         statusCode: se?.statusCode,
         requestId: se?.requestId,
-        raw: se?.raw,
-      });
+      };
+      console.error('Stripe checkout.sessions.create error:', { ...forClient });
 
       return err('Stripe-Checkout konnte nicht erstellt werden.', 500, {
-        stripe: {
-          type: se?.type,
-          code: se?.code,
-          message: se?.message,
-          param: se?.param,
-          decline_code: se?.decline_code,
-          statusCode: se?.statusCode,
-          requestId: se?.requestId,
-        },
+        stripe: forClient,
       });
     }
   } catch (e: any) {
