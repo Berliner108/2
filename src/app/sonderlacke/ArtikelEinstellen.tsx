@@ -777,51 +777,75 @@ if (!requestId) {
 
       // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
 if (hasPromo) {
-  const checkoutRes = await fetch('/api/promo/checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    // redirect: 'manual', // optional: aktivieren, wenn Backend 302/303 sendet und du NICHT automatisch folgen willst
-    body: JSON.stringify({
-      request_id: requestId,
-      package_ids: bewerbungOptionen,
-    }),
-  });
+  try {
+    const checkoutRes = await fetch('/api/promo/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      // redirect: 'manual', // optional, falls dein Backend 302/303 liefert und du nicht automatisch folgen willst
+      body: JSON.stringify({
+        request_id: requestId,
+        package_ids: bewerbungOptionen,
+      }),
+    });
 
-  let checkoutUrl: string | null = null;
+    let checkoutUrl: string | null = null;
+    const ct = (checkoutRes.headers.get('content-type') || '').toLowerCase();
+    let payload: any = null;
 
-  // a) JSON versuchen (falls geliefert)
-  const ct = checkoutRes.headers.get('content-type') || '';
-  if (ct.includes('application/json')) {
-    const payload = await checkoutRes.json().catch(() => null);
+    // a) JSON-Antwort auswerten (bevorzugt)
+    if (ct.includes('application/json')) {
+      payload = await checkoutRes.json().catch(() => null);
 
-    if (payload?.url) checkoutUrl = String(payload.url);
+      if (checkoutRes.ok && payload?.url) {
+        checkoutUrl = String(payload.url);
+      }
 
-    if (!checkoutRes.ok && payload?.error) {
-      setLadeStatus(false);
-      alert(payload.error);
-      router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+      if (!checkoutRes.ok) {
+        console.error('Promo checkout error (json)', {
+          status: checkoutRes.status,
+          payload,
+        });
+        setLadeStatus(false);
+        alert(
+          payload?.error ||
+          payload?.details?.stripe?.message ||
+          `Checkout-Start fehlgeschlagen (HTTP ${checkoutRes.status}).`
+        );
+        router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+        return;
+      }
+    } else {
+      // b) Nicht-JSON: versuche Location-Header
+      const loc = checkoutRes.headers.get('location');
+      if (loc) checkoutUrl = loc;
+    }
+
+    // c) Weiterleiten oder Fehler melden
+    if (checkoutUrl) {
+      window.location.assign(checkoutUrl);
       return;
     }
-  }
 
-  // b) Fallback: Redirect-Ziel aus Location-Header
-  if (!checkoutUrl) {
-    const loc = checkoutRes.headers.get('location');
-    if (loc) checkoutUrl = loc;
-  }
+    console.error('Promo checkout error (no url)', {
+      status: checkoutRes.status,
+      headers: Object.fromEntries(checkoutRes.headers.entries()),
+      payload,
+    });
 
-  // c) Weiterleiten oder Fehler
-  if (checkoutUrl) {
-    window.location.href = checkoutUrl; // weiter zu Stripe
+    setLadeStatus(false);
+    alert(`Checkout-Start fehlgeschlagen (keine URL; HTTP ${checkoutRes.status}).`);
+    router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+    return;
+  } catch (err: any) {
+    console.error('Promo checkout request failed', err);
+    setLadeStatus(false);
+    alert(err?.message || 'Netzwerkfehler beim Checkout.');
+    router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
     return;
   }
-
-  setLadeStatus(false);
-  alert(`Checkout-Start fehlgeschlagen (HTTP ${checkoutRes.status}).`);
-  router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
-  return;
 }
+
 
 
       // 3) Ohne Promo → wie bisher weiter ins Konto
