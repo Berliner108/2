@@ -583,16 +583,16 @@ function ArtikelEinstellen() {
       : [];
 
       const normalized: PromoPackage[] = raw.map((i: any) => ({
-        // WICHTIG: id = code, damit bewerbungOptionen direkt Codes enthalten (für den Webhook)
-        id: String(i.code ?? i.id),
-        code: i.code ?? null,
-        title: i.title,
-        subtitle: i.subtitle ?? null,
-        price_cents: Number(i.price_cents ?? i.priceCents ?? 0),
-        score_delta: Number(i.score_delta ?? i.scoreDelta ?? 0),
-        most_popular: Boolean(i.most_popular ?? i.mostPopular ?? false),
-        stripe_price_id: i.stripe_price_id ?? i.stripePriceId ?? null,
-      }));
+    id: String(i.id ?? i._id ?? i.code),
+    code: i.code ?? null,
+    title: i.title,
+    subtitle: i.subtitle ?? null,
+    price_cents: Number(i.price_cents ?? i.priceCents ?? 0),
+    score_delta: Number(i.score_delta ?? i.scoreDelta ?? 0),
+    most_popular: Boolean(i.most_popular ?? i.mostPopular ?? false),
+    stripe_price_id: i.stripe_price_id ?? i.stripePriceId ?? null,
+  }));
+
 
       if (alive) setPackages(normalized);
     } catch (e) {
@@ -740,44 +740,89 @@ function ArtikelEinstellen() {
 
     try {
       // 1) Anzeige ganz normal veröffentlichen (bestehende Logik bleibt)
-      const resCreate = await fetch('/api/angebot-einstellen', { method: 'POST', body: formData });
+      const resCreate = await fetch('/api/angebot-einstellen', {
+  method: 'POST',
+  body: formData,
+  credentials: 'include', // ← NEU: Session-Cookies mitschicken
+});
+if (resCreate.status === 401 || resCreate.status === 403) {
+  setLadeStatus(false);
+  router.replace('/login?next=/sonderlacke'); // Zielroute ggf. anpassen
+  return;
+}
+
+
       if (!resCreate.ok) throw new Error('Fehler beim Hochladen');
       const created = await resCreate.json().catch(() => ({} as any));
-      const requestId: string | undefined = created?.id || created?.insertedId || created?.angebotId;
-      if (!requestId) throw new Error('Anzeige erstellt, aber ohne ID zurückgegeben.');
+const requestId: string | undefined = created?.id || created?.insertedId || created?.angebotId;
+if (!requestId) {
+  setLadeStatus(false);
+  alert('Anzeige erstellt, aber ohne ID zurückgegeben. Bitte erneut versuchen.');
+  return;
+}
+
 
       // Best effort: In Börse publishen (wie gehabt)
       try {
         await fetch('/api/lackanfragen/publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: requestId }),
-        });
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // ← NEU
+        body: JSON.stringify({ id: requestId }),
+      });
+
       } catch (err) {
         console.warn('Veröffentlichen in Börse fehlgeschlagen:', err);
       }
 
       // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
-      if (hasPromo) {
-        const checkoutRes = await fetch('/api/promo/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            request_id: requestId,
-            package_ids: bewerbungOptionen,
-          }),
-        });
-        if (checkoutRes.ok) {
-          const co = await checkoutRes.json();
-          if (co?.url) {
-            window.location.assign(co.url as string);
-            return; // verlässt die Seite Richtung Stripe
-          }
-        }
-        // Fallback: Checkout NICHT startbar → trotzdem zur Konto-Seite mit Status
-        router.replace(`/konto/lackanfragen?published=1&promo=failed${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ''}`);
-        return;
-       }
+if (hasPromo) {
+  const checkoutRes = await fetch('/api/promo/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    // redirect: 'manual', // optional: aktivieren, wenn Backend 302/303 sendet und du NICHT automatisch folgen willst
+    body: JSON.stringify({
+      request_id: requestId,
+      package_ids: bewerbungOptionen,
+    }),
+  });
+
+  let checkoutUrl: string | null = null;
+
+  // a) JSON versuchen (falls geliefert)
+  const ct = checkoutRes.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    const payload = await checkoutRes.json().catch(() => null);
+
+    if (payload?.url) checkoutUrl = String(payload.url);
+
+    if (!checkoutRes.ok && payload?.error) {
+      setLadeStatus(false);
+      alert(payload.error);
+      router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+      return;
+    }
+  }
+
+  // b) Fallback: Redirect-Ziel aus Location-Header
+  if (!checkoutUrl) {
+    const loc = checkoutRes.headers.get('location');
+    if (loc) checkoutUrl = loc;
+  }
+
+  // c) Weiterleiten oder Fehler
+  if (checkoutUrl) {
+    window.location.href = checkoutUrl; // weiter zu Stripe
+    return;
+  }
+
+  setLadeStatus(false);
+  alert(`Checkout-Start fehlgeschlagen (HTTP ${checkoutRes.status}).`);
+  router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+  return;
+}
+
 
       // 3) Ohne Promo → wie bisher weiter ins Konto
       router.replace(`/konto/lackanfragen?published=1${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ''}`);

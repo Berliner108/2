@@ -1,3 +1,4 @@
+// src/app/api/promo/webhook/route.ts
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -5,12 +6,10 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** utils */
 const nowISO = () => new Date().toISOString()
 const parseSecrets = (...vars: (string | undefined)[]) =>
   Array.from(new Set(vars.flatMap(v => (v ? v.split(',').map(s => s.trim()).filter(Boolean) : []))))
 
-// Best-effort Idempotenz per Event-ID (falls Tabelle vorhanden)
 async function wasProcessed(id: string, admin: any) {
   try {
     const { data } = await admin.from('processed_events').select('id').eq('id', id).maybeSingle()
@@ -23,7 +22,6 @@ async function markProcessed(id: string, admin: any) {
     if (error && (error as any).code !== '23505') throw error
   } catch {}
 }
-
 function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string, secrets: string[]) {
   let lastErr: any
   for (const sec of secrets) {
@@ -33,19 +31,12 @@ function constructEventWithFallback(stripe: Stripe, rawBody: string, sig: string
   throw lastErr
 }
 
-/** Promo-Score erhöhen + Badges mergen – ABER nur, wenn der Fingerprint noch nicht angewendet wurde */
-async function applyPromoForRequestOnce(
-  admin: any,
-  opts: {
-    requestId: string
-    packageCodes: string[]
-    fingerprint: string // checkout_session_id ODER payment_intent_id
-  },
-) {
+async function applyPromoForRequestOnce(admin: any, opts: {
+  requestId: string; packageCodes: string[]; fingerprint: string
+}) {
   const { requestId, packageCodes, fingerprint } = opts
   if (!requestId || packageCodes.length === 0 || !fingerprint) return
 
-  // Anfrage laden
   const { data: reqRow, error: reqErr } = await admin
     .from('lack_requests')
     .select('id,promo_score,data')
@@ -56,13 +47,9 @@ async function applyPromoForRequestOnce(
 
   const curData  = (reqRow.data ?? {}) as any
   const applied: string[] = Array.isArray(curData.promo_applied_fingerprints)
-    ? curData.promo_applied_fingerprints
-    : []
-
-  // Schon angewendet? -> raus
+    ? curData.promo_applied_fingerprints : []
   if (applied.includes(fingerprint)) return
 
-  // Pakete lesen (deine Spaltennamen!)
   const { data: pkgs, error: pkgErr } = await admin
     .from('promo_packages')
     .select('code,label,score_delta')
@@ -70,21 +57,8 @@ async function applyPromoForRequestOnce(
   if (pkgErr) throw pkgErr
 
   const list = pkgs ?? []
-  const totalScore = list.reduce((sum: number, p: any) => sum + Number(p.score_delta || 0), 0)
+  const totalScore = list.reduce((s: number, p: any) => s + Number(p.score_delta || 0), 0)
   const badgeTitles = list.map((p: any) => p.label || p.code).filter(Boolean)
-
-  if (totalScore <= 0 && badgeTitles.length === 0) {
-    // Trotzdem Fingerprint merken, damit nicht später doppelt gezählt wird
-    const { error: upErr } = await admin
-      .from('lack_requests')
-      .update({
-        data: { ...curData, promo_applied_fingerprints: [...applied, fingerprint] },
-        updated_at: nowISO(),
-      })
-      .eq('id', requestId)
-    if (upErr) throw upErr
-    return
-  }
 
   const curScore = Number(reqRow.promo_score ?? 0)
   const curBadges: string[] = Array.isArray(curData.promo_badges) ? curData.promo_badges : []
@@ -107,7 +81,6 @@ async function applyPromoForRequestOnce(
   if (upErr) throw upErr
 }
 
-/** promo_orders auf Status upserten – liefert true, wenn Status JETZT auf "paid" gewechselt ist */
 async function upsertOrderFromSession(
   admin: any,
   sess: Stripe.Checkout.Session,
@@ -124,7 +97,6 @@ async function upsertOrderFromSession(
   const amountTotal = typeof sess.amount_total === 'number' ? sess.amount_total : null
   const currency = (sess.currency || 'eur').toString().toLowerCase()
 
-  // 1) nach Session
   const { data: existing, error: findErr } = await admin
     .from('promo_orders')
     .select('id,status')
@@ -148,7 +120,6 @@ async function upsertOrderFromSession(
     return { justPaid: !wasPaid && status === 'paid' }
   }
 
-  // 2) sonst per PaymentIntent
   if (piId) {
     const { data: byPi, error: findPiErr } = await admin
       .from('promo_orders')
@@ -173,10 +144,8 @@ async function upsertOrderFromSession(
     }
   }
 
-  // 3) neu anlegen (Fallback)
   if (!requestId || !buyerId || !packageCodesCsv) return { justPaid: false }
 
-  // Fallback-Werte aus Paketen, falls amount_total fehlt
   let score = 0
   let amount = amountTotal ?? 0
   if (amountTotal == null || status === 'paid') {
@@ -219,7 +188,6 @@ async function upsertOrderFromPaymentIntent(
   const currency  = (pi.currency || 'eur').toString().toLowerCase()
   const amount    = typeof pi.amount_received === 'number' ? pi.amount_received : null
 
-  // per PI suchen
   const { data: existing, error: findErr } = await admin
     .from('promo_orders')
     .select('id,status')
@@ -237,7 +205,6 @@ async function upsertOrderFromPaymentIntent(
     return { justPaid: !wasPaid && status === 'paid', requestId: requestId || null, codesCsv: codesCsv || null }
   }
 
-  // neu anlegen, wenn genügend Metadaten
   if (!requestId || !buyerId || !codesCsv) {
     return { justPaid: false, requestId: null, codesCsv: null }
   }
@@ -305,7 +272,6 @@ export async function POST(req: Request) {
   }
 
   try {
-    // === SUCCESS-Events über Checkout-Session ===
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const sess = event.data.object as Stripe.Checkout.Session
       const requestId = (sess.metadata?.request_id ?? '') as string
@@ -314,21 +280,15 @@ export async function POST(req: Request) {
 
       const { justPaid } = await upsertOrderFromSession(admin, sess, 'paid', requestId || null, buyerId || null, codesCsv || null)
 
-      // Score nur EINMAL – per Fingerprint = Session-ID
       if (justPaid && requestId && codesCsv) {
         const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
-        await applyPromoForRequestOnce(admin, {
-          requestId,
-          packageCodes: codes,
-          fingerprint: sess.id, // <- schützt vor Doppelzählungen
-        })
+        await applyPromoForRequestOnce(admin, { requestId, packageCodes: codes, fingerprint: sess.id })
       }
 
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
     }
 
-    // === FAILURE/EXPIRED der Session ===
     if (event.type === 'checkout.session.async_payment_failed' || event.type === 'checkout.session.expired') {
       const sess = event.data.object as Stripe.Checkout.Session
       await upsertOrderFromSession(admin, sess, 'failed')
@@ -336,17 +296,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    // === Optional: PaymentIntent-Fallback ===
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object as Stripe.PaymentIntent
       const { justPaid, requestId, codesCsv } = await upsertOrderFromPaymentIntent(admin, pi, 'paid')
       if (justPaid && requestId && codesCsv) {
         const codes = codesCsv.split(',').map(s => s.trim()).filter(Boolean)
-        await applyPromoForRequestOnce(admin, {
-          requestId,
-          packageCodes: codes,
-          fingerprint: pi.id, // <- zweiter Fingerprint-Typ
-        })
+        await applyPromoForRequestOnce(admin, { requestId, packageCodes: codes, fingerprint: pi.id })
       }
       await markProcessed(event.id as string, admin)
       return NextResponse.json({ ok: true })
@@ -359,7 +314,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    // andere Events ignorieren
     await markProcessed(event.id as string, admin)
     return NextResponse.json({ ok: true, ignored: event.type })
   } catch (err: any) {

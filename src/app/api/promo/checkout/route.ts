@@ -2,7 +2,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabaseServer } from '@/lib/supabase-server' // nur für Auth/Owner-Check – keine Preis-DB!
+import { supabaseServer } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -23,23 +23,22 @@ export async function POST(req: NextRequest) {
     if (!requestId || packageIds.length === 0) return err('request_id und package_ids[] sind erforderlich.', 400)
     packageIds = Array.from(new Set(packageIds.map(s => String(s).toLowerCase())))
 
-    // Auth (falls du keinen Owner-Check willst, diesen Block rausnehmen)
+    // Auth
     const sb = await supabaseServer()
     const { data: { user }, error: userErr } = await sb.auth.getUser()
     if (userErr) return err('Auth-Fehler', 500, { userErr: userErr.message })
     if (!user)   return err('Not authenticated', 401)
 
-    // Optional: Owner-Check (ohne DB-Preise!)
+    // Optional: Owner-Check (falls du willst; sonst DISABLE_PROMO_OWNER_CHECK=1)
     if (!DISABLE_OWNER_CHECK) {
-      // Wenn du hier DB meidest, brauchst du eine andere Owner-Quelle; andernfalls diesen Check entfernen.
-      // Beispiel (falls du die Anfrage-ID anders validierst): if (false) return err('Nur der Besitzer ...', 403)
+      // hier ggf. Request-Besitz checken – weggelassen, um DB-Preise nicht zu brauchen
     }
 
     const sk = process.env.STRIPE_SECRET_KEY
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500)
     const stripe = new Stripe(sk)
 
-    // Produkte aus Stripe holen und code -> price mappen
+    // Stripe Products/Prices anhand metadata.code sammeln
     const prods = await stripe.products.list({ active: true, limit: 100, expand: ['data.default_price'] })
     const priceByCode = new Map<string, Stripe.Price>()
     for (const p of prods.data) {
@@ -62,7 +61,6 @@ export async function POST(req: NextRequest) {
     }
     if (missing.length) return err('Stripe-Preis fehlt/ungültig für: ' + missing.join(', '), 400)
 
-    // Currency-Kohärenz
     const currencies = Array.from(new Set(prices.map(p => String(p.currency).toLowerCase())))
     if (currencies.length > 1) return err('Alle Pakete müssen dieselbe Währung haben.', 400, { currencies })
 
@@ -70,14 +68,13 @@ export async function POST(req: NextRequest) {
     const totalCents = prices.reduce((s, pr) => s + Number(pr.unit_amount ?? 0), 0)
     const codesCsv   = packageIds.join(',')
 
-    // URLs
+    // Redirect-URLs
     const u = new URL(req.url)
     const origin = process.env.APP_ORIGIN ?? `${u.protocol}//${u.host}`
     const successUrl = `${origin}/konto/lackanfragen?published=1&promo=success&requestId=${encodeURIComponent(requestId)}`
     const cancelUrl  = `${origin}/konto/lackanfragen?published=1&promo=cancel&requestId=${encodeURIComponent(requestId)}`
     const metadata = { request_id: requestId, package_ids: codesCsv, user_id: user?.id ?? '' }
 
-    // Stripe Checkout
     let session: Stripe.Checkout.Session
     try {
       session = await stripe.checkout.sessions.create({
@@ -98,8 +95,10 @@ export async function POST(req: NextRequest) {
     }
     if (!session?.url) return err('Stripe-Session fehlerhaft.', 500)
 
-    // (Optional) Logging ohne DB-Preise – du kannst hier einfach OK zurückgeben
-    return NextResponse.json({ url: session.url, debug: DEV_VERBOSE ? { requestId, packageIds, sessionId: session.id, totalCents } : undefined })
+    return NextResponse.json({
+      url: session.url,
+      debug: DEV_VERBOSE ? { requestId, packageIds, sessionId: session.id, totalCents } : undefined
+    })
   } catch (e: any) {
     return err('Checkout konnte nicht erstellt werden.', 500, { reason: e?.message })
   }
