@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const DEV_VERBOSE = process.env.NODE_ENV !== 'production'
-const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1'
+const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '0'
 const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true'
 
 function err(msg: string, status = 400, extra?: Record<string, any>) {

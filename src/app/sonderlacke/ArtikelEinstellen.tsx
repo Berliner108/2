@@ -775,17 +775,30 @@ if (!requestId) {
         console.warn('Veröffentlichen in Börse fehlgeschlagen:', err);
       }
 
-      // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
+     // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
 if (hasPromo) {
   try {
+    // Gewählte Pakete auflösen (aus deiner packages-Liste)
+    const selected = bewerbungOptionen
+      .map(id => packages.find(p => p.id === id))
+      .filter(Boolean) as PromoPackage[];
+
+    // → Stripe-Codes (aus product.metadata.code); Fallback: id
+    const packageCodes = selected.map(p => (p.code || p.id).toLowerCase());
+
+    // → optional: direkte Stripe Price-IDs, falls gepflegt
+    const priceIds = selected
+      .map(p => p.stripe_price_id || null)
+      .filter(Boolean) as string[];
+
     const checkoutRes = await fetch('/api/promo/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      // redirect: 'manual', // optional, falls dein Backend 302/303 liefert und du nicht automatisch folgen willst
       body: JSON.stringify({
         request_id: requestId,
-        package_ids: bewerbungOptionen,
+        package_ids: packageCodes, // <— WICHTIG: Codes schicken, nicht UI-IDs
+        price_ids: priceIds,       // <— optional; wenn vorhanden, spart Mapping im Backend
       }),
     });
 
@@ -793,7 +806,7 @@ if (hasPromo) {
     const ct = (checkoutRes.headers.get('content-type') || '').toLowerCase();
     let payload: any = null;
 
-    // a) JSON-Antwort auswerten (bevorzugt)
+    // a) JSON-Antwort bevorzugt lesen
     if (ct.includes('application/json')) {
       payload = await checkoutRes.json().catch(() => null);
 
@@ -810,18 +823,19 @@ if (hasPromo) {
         alert(
           payload?.error ||
           payload?.details?.stripe?.message ||
+          payload?.details?.reason ||
           `Checkout-Start fehlgeschlagen (HTTP ${checkoutRes.status}).`
         );
         router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
         return;
       }
     } else {
-      // b) Nicht-JSON: versuche Location-Header
+      // b) Nicht-JSON → Location-Header probieren
       const loc = checkoutRes.headers.get('location');
       if (loc) checkoutUrl = loc;
     }
 
-    // c) Weiterleiten oder Fehler melden
+    // c) Weiterleiten oder Fehler
     if (checkoutUrl) {
       window.location.assign(checkoutUrl);
       return;
