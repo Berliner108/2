@@ -6,27 +6,27 @@ import { supabaseServer } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// src/app/api/promo/checkout/route.ts
-// ── Flags / Env ────────────────────────────────────────────────────────────────
-const PROMO_VERBOSE = process.env.PROMO_VERBOSE === '1'; // ← zeigt Details auch in Prod
-const DEV_VERBOSE   = process.env.NODE_ENV !== 'production';
-const VERBOSE       = PROMO_VERBOSE || DEV_VERBOSE;
 
-// '1' = Owner-Check AUS, '0' oder leer = AN
+/**
+ * DEBUG-MODUS: IMMER VERBOSE (auch in Production).
+ * Dadurch siehst du im Frontend-Alert die echten Stripe-Fehlerdetails.
+ */
+const VERBOSE = true;
+
+// '1' = Owner-Check AUS, sonst AN
 const DISABLE_OWNER_CHECK = process.env.DISABLE_PROMO_OWNER_CHECK === '1';
 const USE_TAX = process.env.PROMO_USE_AUTOMATIC_TAX === 'true';
 
-// Einheitliche Fehlerantwort
 function err(msg: string, status = 400, extra?: Record<string, any>) {
   if (extra) console.error('[promo/checkout:error]', msg, extra);
   else       console.error('[promo/checkout:error]', msg);
-
-  const body: any = { error: msg };
-  if (VERBOSE && extra) body.details = extra; // ← Details in Prod anzeigen, wenn PROMO_VERBOSE=1
-  return NextResponse.json(body, { status });
+  return NextResponse.json(
+    { error: msg, ...(VERBOSE && extra ? { details: extra } : {}) },
+    { status }
+  );
 }
 
-/* ------------------- GET: Diagnose (keine Erstellung) ------------------- */
+/* ------------------- GET: Diagnose ------------------- */
 export async function GET() {
   try {
     const sk = process.env.STRIPE_SECRET_KEY;
@@ -37,29 +37,15 @@ export async function GET() {
 
     const items = prods.data.map((p) => {
       const price = p.default_price as Stripe.Price | null;
-      let type: 'one_time' | 'recurring' | 'unknown' = 'unknown';
-      let unit_amount: number | null = null;
-      let currency: string | null = null;
-      let default_price_id: string | null = null;
-      let default_price_active: boolean | null = null;
-
-      if (price && typeof price === 'object') {
-        type = (price.type as any) || 'unknown';
-        unit_amount = typeof price.unit_amount === 'number' ? price.unit_amount : null;
-        currency = price.currency ?? null;
-        default_price_id = price.id;
-        default_price_active = !!price.active;
-      }
-
       return {
         code: String(p.metadata?.code ?? '').toLowerCase() || null,
         product_id: p.id,
         product_name: p.name,
-        default_price_id,
-        default_price_active,
-        type,
-        unit_amount,
-        currency,
+        default_price_id: price && typeof price === 'object' ? price.id : null,
+        default_price_active: !!(price && typeof price === 'object' && price.active),
+        type: (price && typeof price === 'object' ? price.type : 'unknown') as 'one_time' | 'recurring' | 'unknown',
+        unit_amount: price && typeof price === 'object' ? (typeof price.unit_amount === 'number' ? price.unit_amount : null) : null,
+        currency: price && typeof price === 'object' ? (price.currency ?? null) : null,
       };
     });
 
@@ -70,7 +56,7 @@ export async function GET() {
         USE_TAX,
         DISABLE_OWNER_CHECK,
         APP_ORIGIN: process.env.APP_ORIGIN ?? null,
-        PROMO_VERBOSE: PROMO_VERBOSE,
+        VERBOSE,
       },
       count: items.length,
       items,
@@ -104,12 +90,12 @@ export async function POST(req: NextRequest) {
 
     // Optionaler Owner-Check (derzeit no-op)
     if (!DISABLE_OWNER_CHECK) {
-      // TODO: requestId gehört zu user.id?
+      // TODO: requestId -> gehört zu user.id?
     }
 
     const sk = process.env.STRIPE_SECRET_KEY;
     if (!sk) return err('Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt).', 500);
-    const stripe = new Stripe(sk); // apiVersion absichtlich nicht hart gesetzt
+    const stripe = new Stripe(sk); // apiVersion nicht festnageln
 
     // Line Items bauen
     let line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
@@ -233,7 +219,7 @@ export async function POST(req: NextRequest) {
         debug: VERBOSE ? { requestId, packageIds, priceIds, sessionId: session.id, totalCents } : undefined,
       });
     } catch (se: any) {
-      // Stripe-Fehler ausführlich loggen & (bei PROMO_VERBOSE) zurückgeben
+      // Stripe-Fehler ausführlich zurückgeben
       const forClient = {
         type: se?.type,
         code: se?.code,
@@ -244,10 +230,7 @@ export async function POST(req: NextRequest) {
         requestId: se?.requestId,
       };
       console.error('Stripe checkout.sessions.create error:', { ...forClient });
-
-      return err('Stripe-Checkout konnte nicht erstellt werden.', 500, {
-        stripe: forClient,
-      });
+      return err('Stripe-Checkout konnte nicht erstellt werden.', 500, { stripe: forClient });
     }
   } catch (e: any) {
     return err('Checkout konnte nicht erstellt werden.', 500, { reason: e?.message });
