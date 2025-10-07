@@ -6,7 +6,7 @@ import { supabaseServer } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
+// src/app/api/promo/checkout/route.ts
 // ── Flags / Env ────────────────────────────────────────────────────────────────
 const PROMO_VERBOSE = process.env.PROMO_VERBOSE === '1'; // ← zeigt Details auch in Prod
 const DEV_VERBOSE   = process.env.NODE_ENV !== 'production';
