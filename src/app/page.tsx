@@ -80,7 +80,7 @@ type Lackanfrage = {
   kategorie: string;
   ort: string;
   preis?: number;
-  gesponsert?: boolean;   // ← wichtig für Sortierung
+  gesponsert?: boolean;
   created_at?: Date;
   farbton?: string;
 };
@@ -195,7 +195,8 @@ export default function Page() {
     const fetchLack = async () => {
       try {
         setLoadingLack(true);
-        const res = await fetch('/api/lackanfragen?limit=12', { cache: 'no-store' });
+        // >>> Änderung 1: exakt wie Börse (promo + desc + page=1 + limit=12)
+        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=12', { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const json = await res.json();
@@ -203,6 +204,7 @@ export default function Page() {
           ? json
           : (Array.isArray(json?.items) ? json.items : []);
 
+        // >>> Änderung 2: nur mappen – KEINE Sortierung/Slice im Client
         const mapped: Lackanfrage[] = rawList.map((a: any) => {
           // === robustes Zusammenführen aus mehreren Backendshapes ===
           const attrs = a?.attributes || a?.data || {};
@@ -267,17 +269,7 @@ export default function Page() {
             created_at: createdAt,
             farbton,
           };
-        })
-        // === Sortierung: Gesponsert zuerst, dann nach Neuheit (created_at > lieferdatum) ===
-        .sort((a, b) => {
-          const aS = a.gesponsert ? 1 : 0;
-          const bS = b.gesponsert ? 1 : 0;
-          if (aS !== bS) return bS - aS; // gesponsert nach oben
-          const da = (a.created_at ?? a.lieferdatum ?? new Date(0)).getTime();
-          const db = (b.created_at ?? b.lieferdatum ?? new Date(0)).getTime();
-          return db - da;
-        })
-        .slice(0, 12);
+        }); // ← keine .sort() / .slice()
 
         if (active) setLackanfragen(mapped);
       } catch (e) {
