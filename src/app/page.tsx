@@ -195,7 +195,7 @@ export default function Page() {
     const fetchLack = async () => {
       try {
         setLoadingLack(true);
-        const res = await fetch('/api/lackanfragen?limit=12', { cache: 'no-store' });
+        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=12', { cache: 'no-store' })
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const json = await res.json();
