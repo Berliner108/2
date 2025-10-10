@@ -1,19 +1,14 @@
-// src/app/layout.tsx
 import '../styles/layout.css'
-import Header from './Header'
 import React, { Suspense } from 'react'
-import Footer from './Footer'
 import { Oswald } from 'next/font/google'
-import PageviewPing from './components/PageviewPing' // Client
+import Chrome from './Chrome' // ⬅️ neu
 
 const oswald = Oswald({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
 })
 
-export const metadata = {
-  title: 'Beschichter Scout',
-}
+export const metadata = { title: 'Beschichter Scout' }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,11 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className={oswald.className}>
         <Suspense fallback={null}>
-          <Header />
-          {/* Tracker schickt Pageviews an /api/track */}
-          <PageviewPing />
-          <main>{children}</main>
-          <Footer />
+          <Chrome>{children}</Chrome>
         </Suspense>
       </body>
     </html>
