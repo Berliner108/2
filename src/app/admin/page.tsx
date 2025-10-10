@@ -157,10 +157,14 @@ export default async function AdminDashboardPage() {
         <div className={styles.heroBlurB}></div>
       </section>
       {/* Aktionen */}
+{/* Aktionen */}
 <div className={styles.actions}>
   <a href="/admin/users" className={styles.linkBtn}>Nutzer verwalten</a>
   <a href="/admin/lackanfragen" className={styles.linkBtn}>Lackanfragen verwalten</a>
+  {/* ⬇️ Neu: Besuche/Analytics */}
+  <a href="/admin/analytics" className={styles.linkBtn}>Analytics (Besuche)</a>
 </div>
+
 
 
       {/* Neu registriert */}
