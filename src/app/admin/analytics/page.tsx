@@ -1,5 +1,6 @@
-// app/admin/analytics/page.tsx /
+// app/admin/analytics/page.tsx
 import { createClient } from '@supabase/supabase-js'
+import VisitsChart from './VisitsChart'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -34,12 +35,12 @@ export default async function AdminAnalytics({
     new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
   )
 
-  // Daten mit Filtern
+  // Daten mit Filtern (mehr Zeilen für den Chart)
   let query = db
     .from('visits')
     .select('ts, path, ref, ip_hash, country, city, ua')
     .order('ts', { ascending: false })
-    .limit(500)
+    .limit(2000)
 
   if (from) query = query.gte('ts', new Date(from).toISOString())
   if (to)   query = query.lte('ts', new Date(new Date(to).getTime() + 24*60*60*1000).toISOString())
@@ -50,9 +51,36 @@ export default async function AdminAnalytics({
     return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
   }
 
+  // --- Chart-Serie: Tagesbuckets (letzte 30 Tage oder Filterbereich) ---
+  const end = to ? new Date(to) : new Date()
+  const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
+
+  // Buckets initialisieren
+  const seriesMap = new Map<string, number>()
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24*60*60*1000)) {
+    const key = d.toISOString().slice(0,10) // YYYY-MM-DD
+    seriesMap.set(key, 0)
+  }
+  // Visits einsortieren
+  for (const r of data || []) {
+    const key = new Date(r.ts as any).toISOString().slice(0,10)
+    if (seriesMap.has(key)) seriesMap.set(key, (seriesMap.get(key) || 0) + 1)
+  }
+  const chartData = Array.from(seriesMap.entries())
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([k,v]) => ({
+      date: new Date(k).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' }),
+      count: v
+    }))
+
   return (
     <div style={{ padding: 16 }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
+
+      {/* Chart */}
+      <div style={{ marginBottom: 12 }}>
+        <VisitsChart data={chartData} />
+      </div>
 
       {/* Filterleiste */}
       <form method="get" style={{ display: 'flex', gap: 8, alignItems: 'end', marginBottom: 12 }}>
