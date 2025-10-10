@@ -1,4 +1,3 @@
-// /src/app/api/track/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import crypto from 'crypto'
@@ -7,6 +6,12 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // ---- Secret prüfen (Schutz vor externen POSTs) ----
+  const hdr = req.headers.get('x-track-secret')
+  if (!process.env.TRACK_SECRET || hdr !== process.env.TRACK_SECRET) {
+    return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
+  }
+
   const admin = supabaseAdmin()
 
   // Body (sendBeacon schickt oft text/plain)
@@ -28,7 +33,11 @@ export async function POST(req: NextRequest) {
     || req.headers.get('cf-ipcountry')
     || req.headers.get('x-geo-country')
     || null
-  const city = req.headers.get('x-vercel-ip-city') || null
+
+  // City kann URL-kodiert kommen → sicher dekodieren
+  const rawCity = req.headers.get('x-vercel-ip-city') || null
+  let city: string | null = rawCity
+  try { city = rawCity ? decodeURIComponent(rawCity) : null } catch {}
 
   const isBot = /bot|crawler|spider|crawl|curl|httpx|node-fetch|axios|headless|preview|uptime/i.test(ua)
   const salt = process.env.IP_HASH_SALT || 'change-me'
@@ -56,11 +65,11 @@ export async function POST(req: NextRequest) {
     }),
     admin.from('visits').insert({
       path,
-      ref: ref,          // Spaltenname in visits: "ref"
+      ref: ref,              // Spaltenname in visits: "ref"
       ip_hash,
       country,
       city,
-      ua: ua.slice(0, 500) // etwas limitieren
+      ua: ua.slice(0, 500),  // etwas limitieren
       // ts kommt per DEFAULT now()
     })
   ])

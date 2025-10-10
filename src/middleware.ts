@@ -1,4 +1,3 @@
-// src/middleware.ts
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
@@ -12,18 +11,26 @@ function isPublic(path: string) {
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
 
-  /* --- Tracking (auch vor Redirect) --- */
-  try {
-    await fetch(new URL('/api/track', req.url), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        path: req.nextUrl.pathname + req.nextUrl.search,
-        referrer: req.headers.get('referer') || null,
-      }),
-      keepalive: true,
-    })
-  } catch { /* Tracking darf nie blockieren */ }
+  /* --- Tracking (auch vor Redirect) | /admin NICHT tracken --- */
+  const p = pathname
+  const skipTrack = p.startsWith('/admin') || p.startsWith('/_next') || p.startsWith('/api')
+  if (!skipTrack) {
+    try {
+      await fetch(new URL('/api/track', req.url), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Secret mitsenden – muss zu route.ts passen
+          ...(process.env.TRACK_SECRET ? { 'x-track-secret': process.env.TRACK_SECRET } : {})
+        },
+        body: JSON.stringify({
+          path: p + req.nextUrl.search,
+          referrer: req.headers.get('referer') || null,
+        }),
+        keepalive: true,
+      })
+    } catch { /* Tracking darf nie blockieren */ }
+  }
 
   // Öffentliche Pfade freigeben
   if (isPublic(pathname)) {
