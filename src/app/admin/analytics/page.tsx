@@ -1,4 +1,4 @@
-// app/admin/analytics/page.tsx
+// app/admin/analytics/page.tsx /
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
