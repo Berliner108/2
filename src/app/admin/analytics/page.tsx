@@ -54,7 +54,7 @@ export default async function AdminAnalytics({
   // Daten (paged)
   let dataQ = db
     .from('visits')
-    .select('ts, path, ref, ip_hash, country, city, ua', { count: 'exact' }) // count hier optional
+    .select('ts, path, ref, ip_hash, country, city, ua', { count: 'exact' })
     .order('ts', { ascending: false })
     .range(offset, toIndex)
 
@@ -65,7 +65,7 @@ export default async function AdminAnalytics({
     return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
   }
 
-  // Fallback: wenn count hier nicht geliefert wurde, separat zählen (head: true)
+  // Fallback-Count
   let total = typeof countMeta === 'number' ? countMeta : 0
   if (!total) {
     let countQ = db.from('visits').select('*', { count: 'exact', head: true })
@@ -76,8 +76,7 @@ export default async function AdminAnalytics({
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
-  // --- Chart-Serie (Tagesbuckets aus "data" ODER (wenn Filter leer) Zeitraum 30 Tage) ---
-  // Für bessere Charts können wir ggf. mehr Zeilen holen – hier bleiben wir bei den geladenen.
+  // --- Chart-Serie (Tagesbuckets) ---
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
@@ -104,11 +103,12 @@ export default async function AdminAnalytics({
     if (to) params.set('to', to)
     if (country) params.set('country', country)
     if (p > 1) params.set('page', String(p))
-    return `/admin/analytics?${params.toString()}`
+    const qs = params.toString()
+    return `/admin/analytics${qs ? `?${qs}` : ''}`
   }
 
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ padding: 16, width:'100%', maxWidth:'100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
 
       {/* Chart */}
@@ -156,27 +156,52 @@ export default async function AdminAnalytics({
       </form>
 
       {/* Tabelle */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <div style={{ width:'100%', maxWidth:'100%', overflowX: 'auto' }}>
+        <table
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            borderCollapse: 'collapse',
+            fontSize: 13,
+            tableLayout: 'fixed' // ⬅ wichtig für feste Spaltenbreiten + Ellipsis
+          }}
+        >
+          {/* feste Spaltenbreiten */}
+          <colgroup>
+            <col style={{ width: 160 }} />     {/* Zeit */}
+            <col style={{ width: '30%' }} />   {/* Pfad (schmaler) */}
+            <col style={{ width: 220 }} />     {/* IP */}
+            <col style={{ width: 90 }} />      {/* Land */}
+            <col style={{ width: 160 }} />     {/* Stadt */}
+            <col />                             {/* Referrer (Restbreite) */}
+          </colgroup>
+
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>Zeit</th>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>Pfad</th>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>IP (Hash)</th>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>Land</th>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>Stadt</th>
-              <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb' }}>Referrer</th>
+              {['Zeit','Pfad','IP (Hash)','Land','Stadt','Referrer'].map((h) => (
+                <th key={h} style={{ textAlign:'left', padding:8, borderBottom:'1px solid #e5e7eb', whiteSpace:'nowrap' }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {data?.map((r: any, i: number) => (
               <tr key={i}>
-                <td style={{ padding: 8 }}>{new Date(r.ts).toLocaleString()}</td>
-                <td style={{ padding: 8 }}>{r.path}</td>
-                <td style={{ padding: 8 }}>{r.ip_hash ? r.ip_hash.slice(0, 16) + '…' : ''}</td>
-                <td style={{ padding: 8 }}>{r.country || ''}</td>
-                <td style={{ padding: 8 }}>{safeDecode(r.city)}</td>
-                <td style={{ padding: 8, maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {new Date(r.ts).toLocaleString()}
+                </td>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {r.path}
+                </td>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {r.ip_hash ? r.ip_hash.slice(0, 16) + '…' : ''}
+                </td>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {r.country || ''}
+                </td>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                  {safeDecode(r.city)}
+                </td>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                   {safeDecode(r.ref)}
                 </td>
               </tr>

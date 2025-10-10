@@ -1,0 +1,64 @@
+.wrap {
+  width: 100%;
+  max-width: 100%;
+  padding: 16px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Fixe Layout-Breite + Ellipsis */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* wichtig für Spaltenbreiten */
+  font-size: 13px;
+}
+
+.th, .td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Spaltenbreiten */
+.colTime   { width: 160px; }
+.colPath   { width: 32%; }      /* Pfad schmaler erzwingen */
+.colIP     { width: 220px; }
+.colCountry{ width: 90px; }
+.colCity   { width: 160px; }
+.colRef    { width: auto; }     /* Rest bekommt Referrer */
+
+.actionsRight {
+  margin-left: auto;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.btn[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: .5;
+}
