@@ -29,6 +29,12 @@ const DatenschutzPage = () => {
         Sie können unsere Webseiten besuchen, ohne Angaben zu Ihrer Person zu machen. Bei jedem Aufruf einer Webseite speichert der Webserver 
         lediglich automatisch ein sogenanntes Server-Logfile, das z.B. den Namen der angeforderten Datei, Ihre IP-Adresse, Datum und Uhrzeit des Abrufs, 
         übertragene Datenmenge und den anfragenden Provider (Zugriffsdaten) enthält und den Abruf dokumentiert.
+        Wir verarbeiten zu Sicherheits- und Betriebszwecken pseudonyme Nutzungsdaten (Seitenpfad, Zeitpunkt, Referrer, Land/Stadt, gekürzte & gehashte IP, User-Agent) 
+        ohne Cookies. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (sichere, stabile und missbrauchsfreie Bereitstellung der Website). 
+        Eine Identifizierung einzelner Personen ist nicht möglich, es findet kein Profiling statt. Die Daten werden nach 30 Tagen gelöscht. 
+        Hosting und Verarbeitung erfolgen über unsere Dienstleister Vercel (Hosting/Edge) und Supabase (Datenbank). Mit beiden bestehen Auftragsverarbeitungsverträge 
+        gemäß Art. 28 DSGVO; die Verarbeitung erfolgt innerhalb der EU bzw. des EWR. Sie können der Verarbeitung aus Gründen, die sich aus Ihrer besonderen Situation 
+        ergeben, jederzeit widersprechen (Art. 21 DSGVO).
         </p>
       </section>
 
