@@ -392,7 +392,7 @@ export default function Page() {
           <section className={styles.sectionWrapper}>
             <div className={styles.articleLinkContainer}>
               <Link href="/kaufen" className={styles.articleLink}>
-                Top Deals aus unserem <span className={styles.colored}>Shop</span>
+                Top Deals aus dem Beschichter <span className={styles.colored}>Shop</span>
               </Link>
             </div>
 
