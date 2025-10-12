@@ -1,13 +1,16 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import styles from './newpassword.module.css';
 import { Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
+const MIN_LEN = 12;
+const MAX_LEN = 256;
+
 export default function NewPasswordPage() {
-  // WICHTIG: Hook-Nutzung in ein Suspense-Child auslagern
   return (
     <Suspense fallback={<p className={styles.info}>Lade…</p>}>
       <NewPasswordInner />
@@ -22,15 +25,14 @@ function NewPasswordInner() {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false); // Guard
+  const [ready, setReady] = useState(false);
   const [caps, setCaps] = useState(false);
-
-  // Wie bei Registrieren
-  const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
 
   const router = useRouter();
   const params = useSearchParams();
   const supabase = supabaseBrowser();
+
+  const isAcceptable = (s: string) => s.length >= MIN_LEN && s.length <= MAX_LEN;
 
   // Nur mit aktiver Recovery-Session erlauben
   useEffect(() => {
@@ -40,36 +42,38 @@ function NewPasswordInner() {
     });
   }, [supabase]);
 
-  // Live-Checks & Stärke
+  // Live-Checks & Stärke (ohne Zwangsmuster)
   const checks = useMemo(() => {
     const hasLower = /[a-z]/.test(pw);
     const hasUpper = /[A-Z]/.test(pw);
+    const hasDigit = /\d/.test(pw);
     const hasSpecial = /[^A-Za-z0-9]/.test(pw);
-    const long8 = pw.length >= 8;
     const long12 = pw.length >= 12;
+    const long16 = pw.length >= 16;
+    const long24 = pw.length >= 24;
 
-    const baseScore = [hasLower, hasUpper, hasSpecial].filter(Boolean).length;
-    const lenScore = long12 ? 2 : long8 ? 1 : 0;
-    const score = baseScore + lenScore; // 0–5
+    const baseScore = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length; // 0–4
+    const lenScore = long24 ? 3 : long16 ? 2 : long12 ? 1 : 0; // 0–3
+    const score = Math.min(7, baseScore + lenScore); // 0–7
 
     const label =
-      score >= 5 ? 'Sehr stark' :
-      score >= 4 ? 'Stark' :
-      score >= 3 ? 'Okay' :
-      score >= 2 ? 'Schwach' : 'Sehr schwach';
+      score >= 6 ? 'Sehr stark' :
+      score >= 5 ? 'Stark' :
+      score >= 4 ? 'Okay' :
+      score >= 3 ? 'Schwach' : 'Sehr schwach';
 
-    const pct = Math.min(100, Math.max(0, (score / 5) * 100));
+    const pct = Math.min(100, Math.max(0, (score / 7) * 100));
 
-    return { hasLower, hasUpper, hasSpecial, long8, long12, score, label, pct };
+    return { hasLower, hasUpper, hasDigit, hasSpecial, long12, long16, long24, score, label, pct };
   }, [pw]);
 
-  const save = async (e: React.FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
     setOk(null);
 
-    if (!PASSWORD_RE.test(pw)) {
-      setErr('Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.');
+    if (!isAcceptable(pw)) {
+      setErr(`Passwort muss zwischen ${MIN_LEN} und ${MAX_LEN} Zeichen lang sein.`);
       return;
     }
     if (pw !== pw2) {
@@ -117,20 +121,21 @@ function NewPasswordInner() {
             value={pw}
             onChange={(e) => setPw(e.target.value)}
             onKeyUp={(e) => setCaps((e as any).getModifierState?.('CapsLock'))}
-            minLength={8}
-            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-            title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
+            minLength={MIN_LEN}
+            maxLength={MAX_LEN}
             required
             autoComplete="new-password"
             className={styles.input}
             placeholder="••••••••"
             aria-describedby="pw-req"
+            aria-invalid={!!err}
           />
           <button
             type="button"
             onClick={() => setShow(!show)}
             className={styles.toggle}
             aria-label={show ? 'Passwort verbergen' : 'Passwort anzeigen'}
+            aria-pressed={show}
           >
             {show ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -144,27 +149,30 @@ function NewPasswordInner() {
         </div>
 
         <ul id="pw-req" className={styles.requirements}>
-          <Req ok={checks.hasLower}>Mind. ein Kleinbuchstabe (a–z)</Req>
-          <Req ok={checks.hasUpper}>Mind. ein Großbuchstabe (A–Z)</Req>
-          <Req ok={checks.hasSpecial}>Mind. ein Sonderzeichen (!@#$…)</Req>
-          <Req ok={checks.long8}>Mindestens 8 Zeichen</Req>
-          <Req ok={checks.long12} subtle>Empfehlung: 12+ Zeichen</Req>
+          <Req ok={checks.long12}>Mindestens {MIN_LEN} Zeichen</Req>
+          <Req ok={checks.long16} subtle>Empfehlung: 16+ Zeichen (Passphrase)</Req>
+          <Req ok={checks.hasLower}>Optional: Kleinbuchstaben (a–z)</Req>
+          <Req ok={checks.hasUpper}>Optional: Großbuchstaben (A–Z)</Req>
+          <Req ok={checks.hasDigit}>Optional: Zahl (0–9)</Req>
+          <Req ok={checks.hasSpecial}>Optional: Sonderzeichen (!@#$…)</Req>
         </ul>
 
         <label className={styles.label} htmlFor="new-password2">Passwort bestätigen</label>
-        <input
-          id="new-password2"
-          type={show ? 'text' : 'password'}
-          value={pw2}
-          onChange={(e) => setPw2(e.target.value)}
-          minLength={8}
-          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-          title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
-          required
-          autoComplete="new-password"
-          className={styles.input}
-          placeholder="••••••••"
-        />
+        <div className={styles.inputWrap}>
+          <input
+            id="new-password2"
+            type={show ? 'text' : 'password'}
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            minLength={MIN_LEN}
+            maxLength={MAX_LEN}
+            required
+            autoComplete="new-password"
+            className={styles.input}
+            placeholder="••••••••"
+            onKeyUp={(e) => setCaps((e as any).getModifierState?.('CapsLock'))}
+          />
+          </div>
 
         {err && (
           <p className={styles.error} aria-live="polite">
@@ -179,7 +187,7 @@ function NewPasswordInner() {
 
         <button
           className={styles.button}
-          disabled={loading || !PASSWORD_RE.test(pw) || pw !== pw2}
+          disabled={loading || !isAcceptable(pw) || pw !== pw2}
           type="submit"
         >
           {loading ? 'Speichere…' : 'Speichern'}
