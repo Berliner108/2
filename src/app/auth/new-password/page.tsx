@@ -7,8 +7,8 @@ import { supabaseBrowser } from '@/lib/supabase-browser';
 import styles from './newpassword.module.css';
 import { Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const MIN_LEN = 12;
-const MAX_LEN = 256;
+const MIN_LEN = 8;   // Option A
+const MAX_LEN = 24;  // Option A
 
 export default function NewPasswordPage() {
   return (
@@ -48,12 +48,15 @@ function NewPasswordInner() {
     const hasUpper = /[A-Z]/.test(pw);
     const hasDigit = /\d/.test(pw);
     const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+
+    const long8  = pw.length >= 8;
     const long12 = pw.length >= 12;
     const long16 = pw.length >= 16;
     const long24 = pw.length >= 24;
+    const withinMax = pw.length <= MAX_LEN;
 
     const baseScore = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length; // 0–4
-    const lenScore = long24 ? 3 : long16 ? 2 : long12 ? 1 : 0; // 0–3
+    const lenScore = long24 ? 3 : long16 ? 2 : long12 ? 1 : long8 ? 0.5 : 0;             // 0–3
     const score = Math.min(7, baseScore + lenScore); // 0–7
 
     const label =
@@ -64,7 +67,7 @@ function NewPasswordInner() {
 
     const pct = Math.min(100, Math.max(0, (score / 7) * 100));
 
-    return { hasLower, hasUpper, hasDigit, hasSpecial, long12, long16, long24, score, label, pct };
+    return { hasLower, hasUpper, hasDigit, hasSpecial, long8, long12, long16, long24, withinMax, score, label, pct };
   }, [pw]);
 
   const save = async (e: FormEvent) => {
@@ -148,13 +151,12 @@ function NewPasswordInner() {
           <span className={styles.meterLabel}>{checks.label}</span>
         </div>
 
+        {/* Sichtbare Anforderungen für Option A */}
         <ul id="pw-req" className={styles.requirements}>
-          <Req ok={checks.long12}>Mindestens {MIN_LEN} Zeichen</Req>
-          <Req ok={checks.long16} subtle>Empfehlung: 16+ Zeichen (Passphrase)</Req>
-          <Req ok={checks.hasLower}>Optional: Kleinbuchstaben (a–z)</Req>
-          <Req ok={checks.hasUpper}>Optional: Großbuchstaben (A–Z)</Req>
-          <Req ok={checks.hasDigit}>Optional: Zahl (0–9)</Req>
-          <Req ok={checks.hasSpecial}>Optional: Sonderzeichen (!@#$…)</Req>
+          <Req ok={checks.long8}>Mindestens {MIN_LEN} Zeichen</Req>
+          <Req ok={checks.withinMax}>Maximal {MAX_LEN} Zeichen</Req>
+          <Req ok={checks.long12} subtle>Empfehlung: 12+ Zeichen (Passphrase)</Req>
+          <Req ok>Alle Zeichen erlaubt (inkl. Leerzeichen/Unicode)</Req>
         </ul>
 
         <label className={styles.label} htmlFor="new-password2">Passwort bestätigen</label>
@@ -172,7 +174,7 @@ function NewPasswordInner() {
             placeholder="••••••••"
             onKeyUp={(e) => setCaps((e as any).getModifierState?.('CapsLock'))}
           />
-          </div>
+        </div>
 
         {err && (
           <p className={styles.error} aria-live="polite">
