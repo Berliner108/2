@@ -7,8 +7,50 @@ import { supabaseBrowser } from '@/lib/supabase-browser';
 import styles from './newpassword.module.css';
 import { Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const MIN_LEN = 8;   // Option A
-const MAX_LEN = 24;  // Option A
+const MIN_LEN = 8;
+const MAX_LEN = 24;
+
+// 🔎 Übersetzer für Supabase-Auth-Fehler
+function translateAuthError(msg?: string): string {
+  const m = (msg || '').toLowerCase();
+
+  if (/new password should be different/.test(m)) {
+    return 'Das neue Passwort muss sich vom alten unterscheiden.';
+  }
+  if (/password should be at least|password must be at least|minimum password length/.test(m)) {
+    return `Passwort zu kurz. Mindestens ${MIN_LEN} Zeichen.`;
+  }
+  if (/email link is invalid|expired|token.*invalid|session not found|invalid token/.test(m)) {
+    return 'Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.';
+  }
+  if (/invalid login credentials|invalid credentials/.test(m)) {
+    return 'Anmeldedaten ungültig.';
+  }
+  if (/rate limit|too many requests|too many attempts/.test(m)) {
+    return 'Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.';
+  }
+  if (/password.*too weak/.test(m)) {
+    return 'Passwort zu schwach.';
+  }
+  if (/network|fetch|timeout/.test(m)) {
+    return 'Netzwerkproblem. Bitte später erneut versuchen.';
+  }
+  // Fallback
+  return 'Speichern fehlgeschlagen. Bitte versuche es erneut.';
+}
+
+function safeRedirect(input: string | null, origin: string) {
+  const fallback = '/login?changed=1';
+  if (!input) return fallback;
+  try {
+    const url = new URL(input, origin);
+    if (url.origin !== origin) return fallback;
+    const path = url.pathname + url.search + url.hash;
+    return path || fallback;
+  } catch {
+    return input.startsWith('/') ? input : fallback;
+  }
+}
 
 export default function NewPasswordPage() {
   return (
@@ -34,7 +76,6 @@ function NewPasswordInner() {
 
   const isAcceptable = (s: string) => s.length >= MIN_LEN && s.length <= MAX_LEN;
 
-  // Nur mit aktiver Recovery-Session erlauben
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) setErr('Sitzung abgelaufen. Bitte fordere den Link erneut an.');
@@ -42,7 +83,6 @@ function NewPasswordInner() {
     });
   }, [supabase]);
 
-  // Live-Checks & Stärke (ohne Zwangsmuster)
   const checks = useMemo(() => {
     const hasLower = /[a-z]/.test(pw);
     const hasUpper = /[A-Z]/.test(pw);
@@ -55,9 +95,9 @@ function NewPasswordInner() {
     const long24 = pw.length >= 24;
     const withinMax = pw.length <= MAX_LEN;
 
-    const baseScore = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length; // 0–4
-    const lenScore = long24 ? 3 : long16 ? 2 : long12 ? 1 : long8 ? 0.5 : 0;             // 0–3
-    const score = Math.min(7, baseScore + lenScore); // 0–7
+    const baseScore = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+    const lenScore = long24 ? 3 : long16 ? 2 : long12 ? 1 : long8 ? 0.5 : 0;
+    const score = Math.min(7, baseScore + lenScore);
 
     const label =
       score >= 6 ? 'Sehr stark' :
@@ -89,15 +129,13 @@ function NewPasswordInner() {
     setLoading(false);
 
     if (error) {
-      setErr(error.message);
+      setErr(translateAuthError(error.message));
       return;
     }
 
     setOk('Passwort aktualisiert.');
-    // Sicherheit: Recovery-Session beenden & zum Login
     await supabase.auth.signOut();
-    const to = params.get('redirect') ?? '/login?changed=1';
-    const next = to.includes('/login') ? to : '/login?changed=1';
+    const next = safeRedirect(params.get('redirect'), window.location.origin);
     router.replace(next);
   };
 
@@ -151,7 +189,6 @@ function NewPasswordInner() {
           <span className={styles.meterLabel}>{checks.label}</span>
         </div>
 
-        {/* Sichtbare Anforderungen für Option A */}
         <ul id="pw-req" className={styles.requirements}>
           <Req ok={checks.long8}>Mindestens {MIN_LEN} Zeichen</Req>
           <Req ok={checks.withinMax}>Maximal {MAX_LEN} Zeichen</Req>
