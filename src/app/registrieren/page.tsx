@@ -498,7 +498,7 @@ const Register = () => {
                 onChange={handleInputChange}
                 required
                 inputMode="text"
-                pattern="\d{1,3}[a-z]?"
+                pattern="\\d{1,3}[a-z]?"
                 title="z. B. 12a (max. 3 Ziffern + optional 1 Kleinbuchstabe)"
                 autoComplete="address-line2"
               />
@@ -518,7 +518,7 @@ const Register = () => {
                   onChange={handleInputChange}
                   required
                   inputMode="numeric"
-                  pattern="\d{1,5}"
+                  pattern="\\d{1,5}"
                   maxLength={5}
                 />
                 {errors.zip && <p className={styles.error}>{errors.zip}</p>}
@@ -569,7 +569,7 @@ const Register = () => {
                     onChange={handleInputChange}
                     required
                     inputMode="numeric"
-                    pattern="\d{1,5}"
+                    pattern="\\d{1,5}"
                     maxLength={5}
                   />
                   {errors.zip && <p className={styles.error}>{errors.zip}</p>}
