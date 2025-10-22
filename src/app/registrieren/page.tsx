@@ -443,6 +443,7 @@ const Register = () => {
               autoComplete="new-password"
               minLength={MIN_PW}
               maxLength={MAX_PW}
+              aria-describedby="pw-hint"
             />
             <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
               {/* 🔙 Sichtbare Regeln */}
