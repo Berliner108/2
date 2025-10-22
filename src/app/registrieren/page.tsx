@@ -447,6 +447,28 @@ const Register = () => {
             <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
             {errors.password && <p className={styles.error}>{errors.password}</p>}
           </div>
+          <div className={styles.inputContainer} style={{ position: 'relative' }}>
+  <label>Passwort</label>
+  <input
+    type={showPassword ? 'text' : 'password'}
+    name="password"
+    value={formData.password}
+    onChange={handleInputChange}
+    required
+    autoComplete="new-password"
+    minLength={MIN_PW}
+    maxLength={MAX_PW}
+  />
+  <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
+
+  {/* 🔙 Sichtbare Regeln */}
+  <p className={styles.hint} style={{ marginTop: 6 }}>
+    {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
+  </p>
+
+  {errors.password && <p className={styles.error}>{errors.password}</p>}
+</div>
+
 
           <div className={styles.inputContainer} style={{ position: 'relative' }}>
             <label>Passwort bestätigen</label>
