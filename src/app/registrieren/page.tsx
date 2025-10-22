@@ -7,6 +7,9 @@ import Image from 'next/image';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
+const MIN_PW = 8;
+const MAX_PW = 24;
+
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <div onClick={onClick} style={{ position: 'absolute', right: '0px', top: '38px', cursor: 'pointer' }}>
     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -61,14 +64,21 @@ const STREET_MAX = 48;
 // Nur Buchstaben (inkl. Umlaute) + Leerzeichen
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g;
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/;
-// Passwort: mind. 8, mind. 1 Groß-, 1 Kleinbuchstabe, 1 Sonderzeichen
-const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
-// Hausnummer (nur kleinbuchstaben als Suffix)
+// ⚠️ Passwort-Regex entfernt (Option A: keine Zwangszeichen)
 const HNR_RE = /^\d{1,3}[a-z]?$/;
-// PLZ: nur Ziffern, max. 5
 const ZIP_RE = /^\d{1,5}$/;
-// USt-ID grob
 const VAT_RE = /^[A-Z0-9-]{8,14}$/;
+
+// 🔎 Lokale Übersetzung häufiger Supabase/Auth-Fehler
+function translateAuthError(msg?: string): string {
+  const m = (msg || '').toLowerCase();
+  if (/new password should be different/.test(m)) return 'Das neue Passwort muss sich vom alten unterscheiden.';
+  if (/password.*at least|minimum password length/.test(m)) return `Passwort zu kurz. Mindestens ${MIN_PW} Zeichen.`;
+  if (/email.*exist|already.*registered|duplicate/.test(m)) return 'Diese E-Mail ist bereits registriert.';
+  if (/rate limit|too many/.test(m)) return 'Zu viele Versuche. Bitte kurz warten und erneut versuchen.';
+  if (/invalid|expired|token/.test(m)) return 'Der Bestätigungslink ist ungültig oder abgelaufen.';
+  return 'Vorgang fehlgeschlagen. Bitte später erneut versuchen.';
+}
 
 const Register = () => {
   const [isPrivatePerson, setIsPrivatePerson] = useState(false);
@@ -152,7 +162,7 @@ const Register = () => {
     setFormData((s) => ({ ...s, [name]: value }));
   };
 
-  /** Validierung beim Submit */
+  /** Validierung beim Submit (Passwort nur auf Länge) */
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -171,12 +181,15 @@ const Register = () => {
     if (!/^[a-z0-9_-]{3,24}$/.test(formData.username)) {
       newErrors.username = 'Benutzername: nur a–z, 0–9, _-, 3–24 Zeichen.';
     }
-    if (!PASSWORD_RE.test(formData.password)) {
-      newErrors.password = 'Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.';
+
+    // ⬇️ nur Länge, kein Pattern
+    if (formData.password.length < MIN_PW || formData.password.length > MAX_PW) {
+      newErrors.password = `Passwort: ${MIN_PW}–${MAX_PW} Zeichen.`;
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwörter stimmen nicht überein.';
     }
+
     if (!HNR_RE.test(formData.houseNumber)) {
       newErrors.houseNumber = 'Hausnr.: max. 3 Ziffern + optional 1 Kleinbuchstabe (z. B. 12a).';
     }
@@ -281,18 +294,8 @@ const Register = () => {
 
       if (error) {
         console.error('[signUp error]', { message: error.message, status: (error as any)?.status, code: (error as any)?.code });
-        const msg = (error.message || '').trim();
-        const alreadyExists =
-          /already|exist|registered|duplicate/i.test(msg) ||
-          (error as any)?.status === 400 ||
-          (error as any)?.code === 'user_already_exists' ||
-          (error as any)?.code === 'email_exists';
-
-        setErrors({
-          email: alreadyExists
-            ? 'Diese E-Mail ist bereits registriert.'
-            : (msg || 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.'),
-        });
+        const msg = translateAuthError(error.message);
+        setErrors({ email: msg });
         return;
       }
 
@@ -432,11 +435,14 @@ const Register = () => {
               onChange={handleInputChange}
               required
               autoComplete="new-password"
-              minLength={8}
-              pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-              title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
+              minLength={MIN_PW}
+              maxLength={MAX_PW}
             />
             <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
+            {/* Sichtbare Regeln */}
+            <p className={styles.hint} style={{ marginTop: 6 }}>
+              {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
+            </p>
             {errors.password && <p className={styles.error}>{errors.password}</p>}
           </div>
 
@@ -448,7 +454,8 @@ const Register = () => {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               required
-              minLength={8}
+              minLength={MIN_PW}
+              maxLength={MAX_PW}
               autoComplete="new-password"
             />
             <EyeIcon
