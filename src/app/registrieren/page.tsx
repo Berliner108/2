@@ -7,9 +7,6 @@ import Image from 'next/image';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
-const MIN_PW = 8;
-const MAX_PW = 24;
-
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <div onClick={onClick} style={{ position: 'absolute', right: '0px', top: '38px', cursor: 'pointer' }}>
     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -22,7 +19,6 @@ function safeRedirect(input: string | undefined | null): string {
   try {
     const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
     const url = new URL(input, base);
-    // nur gleiche Origin erlauben
     if (typeof window !== 'undefined' && url.origin !== window.location.origin) return '/';
     return url.pathname + url.search + url.hash || '/';
   } catch {
@@ -55,30 +51,29 @@ const COUNTRY_OPTIONS = [
 /** Regeln / Limits */
 const NAME_MAX = 32;
 const CITY_MAX = 24;
+const USERNAME_MIN = 3;
 const USERNAME_MAX = 24;
+// Ein String für HTML pattern + eine RegExp für JS:
+const USERNAME_PATTERN = `[a-z0-9_-]{${USERNAME_MIN},${USERNAME_MAX}}`;
+const USERNAME_RE = new RegExp(`^${USERNAME_PATTERN}$`);
+
 const ZIP_MAX = 5;
 const COMPANY_MAX = 80;
 const EMAIL_MAX = 70;
 const STREET_MAX = 48;
 
+const MIN_PW = 8;
+const MAX_PW = 24;
+
 // Nur Buchstaben (inkl. Umlaute) + Leerzeichen
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g;
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/;
-// ⚠️ Passwort-Regex entfernt (Option A: keine Zwangszeichen)
+// Hausnummer (nur kleinbuchstaben als Suffix)
 const HNR_RE = /^\d{1,3}[a-z]?$/;
+// PLZ: nur Ziffern, max. 5
 const ZIP_RE = /^\d{1,5}$/;
+// USt-ID grob
 const VAT_RE = /^[A-Z0-9-]{8,14}$/;
-
-// 🔎 Lokale Übersetzung häufiger Supabase/Auth-Fehler
-function translateAuthError(msg?: string): string {
-  const m = (msg || '').toLowerCase();
-  if (/new password should be different/.test(m)) return 'Das neue Passwort muss sich vom alten unterscheiden.';
-  if (/password.*at least|minimum password length/.test(m)) return `Passwort zu kurz. Mindestens ${MIN_PW} Zeichen.`;
-  if (/email.*exist|already.*registered|duplicate/.test(m)) return 'Diese E-Mail ist bereits registriert.';
-  if (/rate limit|too many/.test(m)) return 'Zu viele Versuche. Bitte kurz warten und erneut versuchen.';
-  if (/invalid|expired|token/.test(m)) return 'Der Bestätigungslink ist ungültig oder abgelaufen.';
-  return 'Vorgang fehlgeschlagen. Bitte später erneut versuchen.';
-}
 
 const Register = () => {
   const [isPrivatePerson, setIsPrivatePerson] = useState(false);
@@ -109,7 +104,6 @@ const Register = () => {
   const [resendDone, setResendDone] = useState(false);
 
   const invitedByRaw = useQueryParam('invited_by');
-  // ✨ redirect sicher normalisieren
   const redirectParam = safeRedirect(useQueryParam('redirect') || '/');
 
   /** Optional: invited_by nur weitergeben, wenn es wie eine UUID aussieht */
@@ -130,9 +124,9 @@ const Register = () => {
         break;
       case 'username': {
         value = value
-          .replace(/[^a-z0-9_-]/gi, '') // nur a-z, 0-9, _-
-          .toLowerCase()                // lowercase erzwingen
-          .slice(0, 24);                // Länge begrenzen
+          .replace(/[^a-z0-9_-]/gi, '')
+          .toLowerCase()
+          .slice(0, USERNAME_MAX);
         break;
       }
       case 'email':
@@ -162,7 +156,7 @@ const Register = () => {
     setFormData((s) => ({ ...s, [name]: value }));
   };
 
-  /** Validierung beim Submit (Passwort nur auf Länge) */
+  /** Validierung beim Submit (Passwort nur Länge, Username per Pattern) */
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -178,11 +172,11 @@ const Register = () => {
     if (formData.email.length > EMAIL_MAX || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(formData.email)) {
       newErrors.email = 'Bitte eine gültige E-Mail eingeben.';
     }
-    if (!/^[a-z0-9_-]{3,24}$/.test(formData.username)) {
-      newErrors.username = 'Benutzername: nur a–z, 0–9, _-, 3–24 Zeichen.';
+    if (!USERNAME_RE.test(formData.username)) {
+      newErrors.username = `Benutzername: nur a–z, 0–9, _-, ${USERNAME_MIN}–${USERNAME_MAX} Zeichen.`;
     }
 
-    // ⬇️ nur Länge, kein Pattern
+    // Passwort nur auf Länge prüfen (Option A)
     if (formData.password.length < MIN_PW || formData.password.length > MAX_PW) {
       newErrors.password = `Passwort: ${MIN_PW}–${MAX_PW} Zeichen.`;
     }
@@ -287,15 +281,24 @@ const Register = () => {
         password: formData.password,
         options: {
           data: meta,
-          /** Absoluter Callback + redirect (wird in /auth/callback serverseitig ausgetauscht) */
           emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectParam)}`,
         },
       });
 
       if (error) {
         console.error('[signUp error]', { message: error.message, status: (error as any)?.status, code: (error as any)?.code });
-        const msg = translateAuthError(error.message);
-        setErrors({ email: msg });
+        const msg = (error.message || '').trim();
+        const alreadyExists =
+          /already|exist|registered|duplicate/i.test(msg) ||
+          (error as any)?.status === 400 ||
+          (error as any)?.code === 'user_already_exists' ||
+          (error as any)?.code === 'email_exists';
+
+        setErrors({
+          email: alreadyExists
+            ? 'Diese E-Mail ist bereits registriert.'
+            : (msg || 'Registrierung fehlgeschlagen. Bitte später erneut versuchen.'),
+        });
         return;
       }
 
@@ -313,7 +316,7 @@ const Register = () => {
       }
 
       setConfirmationLink('Bitte bestätige deine E-Mail, dann kannst du dich einloggen.');
-      setResendDone(false); // bei neuer Registrierung erneut erlauben
+      setResendDone(false);
     } finally {
       setIsLoading(false);
     }
@@ -418,7 +421,10 @@ const Register = () => {
               value={formData.username}
               onChange={handleInputChange}
               required
+              minLength={USERNAME_MIN}
               maxLength={USERNAME_MAX}
+              pattern={USERNAME_PATTERN}
+              title={`Nur a–z, 0–9, _-, ${USERNAME_MIN}–${USERNAME_MAX} Zeichen.`}
               inputMode="text"
               autoCapitalize="none"
               autoComplete="username"
@@ -439,10 +445,6 @@ const Register = () => {
               maxLength={MAX_PW}
             />
             <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
-            {/* Sichtbare Regeln */}
-            <p className={styles.hint} style={{ marginTop: 6 }}>
-              {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
-            </p>
             {errors.password && <p className={styles.error}>{errors.password}</p>}
           </div>
 

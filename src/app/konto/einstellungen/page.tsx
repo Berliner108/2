@@ -6,10 +6,14 @@ import Navbar from '../../components/navbar/Navbar';
 import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link' // <-- NEU
+import Link from 'next/link'
 
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
+
+/* ---------- Password rules (Option A) ---------- */
+const MIN_PW = 8
+const MAX_PW = 24
 
 /* ---------- Validation ---------- */
 const CITY_MAX = 24
@@ -23,7 +27,7 @@ const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-
 const HNR_RE = /^\d{1,3}[a-z]?$/
 const ZIP_RE = /^\d{1,5}$/
 const VAT_RE = /^[A-Z0-9-]{8,14}$/
-const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/
+// HINWEIS: Das alte PASSWORD_RE wird NICHT mehr benutzt (Option A = nur Länge).
 
 /* ---------- Country dropdown ---------- */
 const COUNTRY_OPTIONS = [
@@ -51,6 +55,16 @@ type ApiGetResponse = {
 /* ---------- (NEU) Reviews-Helpers ---------- */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
 const looksLikeHandle = (s?: string | null) => !!(s && HANDLE_RE.test(s.trim()))
+
+/* ---------- Supabase-Fehler grob auf DE mappen ---------- */
+function mapPwError(msg?: string) {
+  const m = (msg || '').toLowerCase()
+  if (/new password should be different|same as old/.test(m)) return 'Neues Passwort muss sich vom alten unterscheiden.'
+  if (/password should be at least|too short|minimum/.test(m)) return `Passwort zu kurz. Mindestens ${MIN_PW} Zeichen.`
+  if (/too long|max/.test(m)) return `Passwort zu lang. Maximal ${MAX_PW} Zeichen.`
+  if (/invalid/.test(m)) return 'Ungültiges Passwort.'
+  return msg || 'Passwort konnte nicht geändert werden.'
+}
 
 /* ---------- Toast ---------- */
 const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose }) => {
@@ -324,8 +338,11 @@ const Einstellungen = (): JSX.Element => {
     try {
       setToast(null)
       if (!password) return setToast({ type: 'error', message: 'Bitte aktuelles Passwort eingeben.' })
-      if (!PASSWORD_RE.test(newPassword))
-        return setToast({ type: 'error', message: 'Passwort zu schwach: mind. 8 Zeichen, Groß-/Kleinbuchstaben & ein Sonderzeichen.' })
+
+      // Option A: nur Länge prüfen
+      if (newPassword.length < MIN_PW || newPassword.length > MAX_PW)
+        return setToast({ type: 'error', message: `Neues Passwort: ${MIN_PW}–${MAX_PW} Zeichen.` })
+
       if (newPassword !== confirmPassword)
         return setToast({ type: 'error', message: 'Die neuen Passwörter stimmen nicht überein.' })
 
@@ -334,11 +351,16 @@ const Einstellungen = (): JSX.Element => {
       const { data: { user } } = await sb.auth.getUser()
       if (!user?.email) { setPwSaving(false); return setToast({ type: 'error', message: 'Sitzung abgelaufen. Bitte erneut einloggen.' }) }
 
+      // Reauth mit altem Passwort
       const { error: reauthErr } = await sb.auth.signInWithPassword({ email: user.email, password })
       if (reauthErr) { setPwSaving(false); return setToast({ type: 'error', message: 'Aktuelles Passwort ist falsch.' }) }
 
+      // Update
       const { error: updErr } = await sb.auth.updateUser({ password: newPassword })
-      if (updErr) { setPwSaving(false); return setToast({ type: 'error', message: updErr.message || 'Passwort konnte nicht geändert werden.' }) }
+      if (updErr) {
+        setPwSaving(false)
+        return setToast({ type: 'error', message: mapPwError(updErr.message) })
+      }
 
       setPassword(''); setNewPassword(''); setConfirmPassword('')
       setPwSaving(false)
@@ -396,7 +418,7 @@ const Einstellungen = (): JSX.Element => {
       <Navbar />
       <h2 className={styles.title}>Kontoeinstellungen</h2>
       <div className={styles.wrapper}>
-        
+
         <div className={styles.kontoContainer}>
           <p className={styles.description}>
             Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.
@@ -586,14 +608,17 @@ const Einstellungen = (): JSX.Element => {
                 type={showPw ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Neues Passwort (min. 8 Zeichen)"
+                placeholder={`Neues Passwort (${MIN_PW}–${MAX_PW} Zeichen)`}
                 className={styles.input}
                 autoComplete="new-password"
-                minLength={8}
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-                title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
+                minLength={MIN_PW}
+                maxLength={MAX_PW}
                 required
               />
+              {/* Kleiner Hinweis, sichtbar */}
+              <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
+                Länge: {MIN_PW}–{MAX_PW} Zeichen. Alle Zeichen erlaubt. Empfehlung: 12+ Zeichen (Passphrase).
+              </p>
             </div>
 
             <div className={styles.inputGroup}>
@@ -606,9 +631,8 @@ const Einstellungen = (): JSX.Element => {
                 placeholder="Bestätige neues Passwort"
                 className={styles.input}
                 autoComplete="new-password"
-                minLength={8}
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}"
-                title="Mind. 8 Zeichen, Groß- und Kleinbuchstaben sowie ein Sonderzeichen."
+                minLength={MIN_PW}
+                maxLength={MAX_PW}
                 required
               />
             </div>
@@ -625,7 +649,12 @@ const Einstellungen = (): JSX.Element => {
                 type="button"
                 onClick={async () => await handleChangePassword()}
                 className={styles.saveButton}
-                disabled={pwSaving || !PASSWORD_RE.test(newPassword) || newPassword !== confirmPassword}
+                disabled={
+                  pwSaving ||
+                  newPassword.length < MIN_PW ||
+                  newPassword.length > MAX_PW ||
+                  newPassword !== confirmPassword
+                }
               >
                 {pwSaving ? 'Ändere…' : 'Passwort ändern'}
               </button>
