@@ -1,7 +1,7 @@
 import '../styles/layout.css'
 import React, { Suspense } from 'react'
 import { Oswald } from 'next/font/google'
-import Chrome from './Chrome' // ⬅️ neu
+import Chrome from './Chrome'
 
 const oswald = Oswald({
   subsets: ['latin'],
@@ -25,6 +25,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Suspense fallback={null}>
           <Chrome>{children}</Chrome>
         </Suspense>
+
+        {/* Tracking auf ALLEN Seiten – schickt Secret im Body (sendBeacon) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              try{
+                var payload = {
+                  path: location.pathname + location.search,
+                  referrer: document.referrer || null,
+                  secret: ${JSON.stringify(process.env.NEXT_PUBLIC_TRACK_SECRET || '')}
+                };
+                var blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+                if (navigator.sendBeacon) {
+                  navigator.sendBeacon('/api/track', blob);
+                } else {
+                  fetch('/api/track', {
+                    method:'POST',
+                    headers:{'content-type':'application/json'},
+                    body: JSON.stringify(payload),
+                    keepalive:true
+                  });
+                }
+              }catch(e){}
+            })();`,
+          }}
+        />
       </body>
     </html>
   )
