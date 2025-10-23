@@ -128,24 +128,35 @@ export default async function AdminAnalytics({
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   // --- Chart (einfach): auf Basis der aktuellen Seite – schnell & ok für einen Überblick
+    // --- Chart via SQL-Aggregation (alle passenden Zeilen, nicht nur aktuelle Page)
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
-  const seriesMap = new Map<string, number>()
+  const { data: agg, error: aggErr } = await db.rpc('visits_daily_agg', {
+    from_ts: from ? new Date(from).toISOString() : null,
+    to_ts: to ? new Date(to).toISOString() : null,
+    p_country: country || null,
+    ip_prefix: (ip || null),
+    include_bots: includeBots,
+  })
+  if (aggErr) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>{aggErr.message}</pre>
+  }
+
+  // Map für schnelle Lookups + Lücken mit 0 füllen
+  const m = new Map<string, number>((agg || []).map((r: any) => [
+    new Date(r.day).toISOString().slice(0,10), Number(r.cnt)
+  ]))
+
+  const chartData = []
   for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24*60*60*1000)) {
     const key = d.toISOString().slice(0,10)
-    seriesMap.set(key, 0)
+    chartData.push({
+      date: d.toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' }),
+      count: m.get(key) ?? 0,
+    })
   }
-  for (const r of data || []) {
-    const key = new Date(r.ts as any).toISOString().slice(0,10)
-    if (seriesMap.has(key)) seriesMap.set(key, (seriesMap.get(key) || 0) + 1)
-  }
-  const chartData = Array.from(seriesMap.entries())
-    .sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([k,v]) => ({
-      date: new Date(k).toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' }),
-      count: v
-    }))
+
 
   // Helper: URL mit aktualisierten Params
   const makeUrl = (p: number) => {
