@@ -1,4 +1,3 @@
-// app/admin/analytics/page.tsx
 import { createClient } from '@supabase/supabase-js'
 import VisitsChart from './VisitsChart'
 
@@ -6,10 +5,52 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type SearchParams = { from?: string; to?: string; country?: string; page?: string }
+type SearchParams = {
+  from?: string
+  to?: string
+  country?: string
+  page?: string
+  ip?: string
+  bots?: string // "1" = Bots einschließen
+}
 
 function safeDecode(s?: string | null) {
   try { return s ? decodeURIComponent(s) : '' } catch { return s || '' }
+}
+
+/** Referrer schön anzeigen:
+ *  - Vercel-Preview-Hosts: nur Pfad+Query (Host verwirrt)
+ *  - Interne gleiche-Origin-Hosts (z. B. www.deine-domain.tld): ebenfalls nur Pfad+Query
+ *  - Externe: host + pfad (ohne Protokoll)
+ */
+function prettyRef(ref?: string | null) {
+  if (!ref) return ''
+  try {
+    const u = new URL(ref)
+    const host = u.hostname
+    const isVercelPreview = /\.vercel\.app$/i.test(host)
+    // interne Hosts optional erweitern: eigene Domains hier ergänzen
+    const isLikelyInternal = isVercelPreview
+    if (isLikelyInternal) {
+      return u.pathname + u.search
+    }
+    return host + u.pathname + u.search
+  } catch {
+    // kein absolute URL? Dann ggf. URL-encoding bereinigen
+    return safeDecode(ref)
+  }
+}
+
+/** Einfache Bot-Heuristik (muss mit /api/track deckungsgleich sein) */
+const BOT_PATTERNS = [
+  'bot', 'crawler', 'spider', 'crawl', 'curl', 'httpx', 'node-fetch',
+  'axios', 'headless', 'preview', 'uptime',
+  'vercel-screenshot', 'vercel edge functions',
+]
+function botLike(ua?: string | null) {
+  if (!ua) return false
+  const s = ua.toLowerCase()
+  return BOT_PATTERNS.some(p => s.includes(p))
 }
 
 export default async function AdminAnalytics({
@@ -20,7 +61,10 @@ export default async function AdminAnalytics({
   const sp = await searchParams
   const from = sp?.from || ''
   const to = sp?.to || ''
+  const ip = (sp?.ip || '').trim().toLowerCase()
+  const includeBots = sp?.bots === '1'
   const country = (sp?.country || '').toUpperCase()
+
   const pageSize = 50
   const page = Math.max(1, parseInt(sp?.page || '1', 10) || 1)
   const offset = (page - 1) * pageSize
@@ -48,6 +92,13 @@ export default async function AdminAnalytics({
     if (from) q = q.gte('ts', new Date(from).toISOString())
     if (to)   q = q.lte('ts', new Date(new Date(to).getTime() + 24*60*60*1000).toISOString())
     if (country) q = q.eq('country', country)
+    if (ip) q = q.ilike('ip_hash', `${ip}%`) // Prefix-Suche (hex)
+    if (!includeBots) {
+      // mehrere "not ilike" Filter nacheinander
+      for (const p of BOT_PATTERNS) {
+        q = q.not('ua', 'ilike', `%${p}%`)
+      }
+    }
     return q
   }
 
@@ -76,7 +127,7 @@ export default async function AdminAnalytics({
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
-  // --- Chart-Serie (Tagesbuckets) ---
+  // --- Chart (einfach): auf Basis der aktuellen Seite – schnell & ok für einen Überblick
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
@@ -102,6 +153,8 @@ export default async function AdminAnalytics({
     if (from) params.set('from', from)
     if (to) params.set('to', to)
     if (country) params.set('country', country)
+    if (ip) params.set('ip', ip)
+    if (includeBots) params.set('bots', '1')
     if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     return `/admin/analytics${qs ? `?${qs}` : ''}`
@@ -117,7 +170,7 @@ export default async function AdminAnalytics({
       </div>
 
       {/* Filterleiste */}
-      <form method="get" style={{ display: 'flex', gap: 8, alignItems: 'end', marginBottom: 12 }}>
+      <form method="get" style={{ display: 'flex', gap: 8, alignItems: 'end', marginBottom: 12, flexWrap: 'wrap' }}>
         <div>
           <label style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>Von</label>
           <input type="date" name="from" defaultValue={from} />
@@ -135,6 +188,21 @@ export default async function AdminAnalytics({
             ))}
           </select>
         </div>
+        <div>
+          <label style={{ display: 'block', fontSize: 12, color: '#6b7280' }}>IP (Hash-Prefix)</label>
+          <input
+            type="text"
+            name="ip"
+            placeholder="z. B. a3c89c7b…"
+            defaultValue={ip}
+            style={{ width: 180 }}
+          />
+        </div>
+        <label style={{ display:'inline-flex', gap:6, alignItems:'center', marginLeft: 6 }}>
+          <input type="checkbox" name="bots" value="1" defaultChecked={includeBots} />
+          Bots zeigen
+        </label>
+
         <button type="submit" style={{ padding: '6px 10px', borderRadius: 8 }}>Filtern</button>
 
         {/* Manuelles Aufräumen */}
@@ -163,17 +231,16 @@ export default async function AdminAnalytics({
             maxWidth: '100%',
             borderCollapse: 'collapse',
             fontSize: 13,
-            tableLayout: 'fixed' // ⬅ wichtig für feste Spaltenbreiten + Ellipsis
+            tableLayout: 'fixed'
           }}
         >
-          {/* feste Spaltenbreiten */}
           <colgroup>
             <col style={{ width: 160 }} />     {/* Zeit */}
-            <col style={{ width: '30%' }} />   {/* Pfad (schmaler) */}
+            <col style={{ width: '26%' }} />   {/* Pfad */}
             <col style={{ width: 220 }} />     {/* IP */}
             <col style={{ width: 90 }} />      {/* Land */}
             <col style={{ width: 160 }} />     {/* Stadt */}
-            <col />                             {/* Referrer (Restbreite) */}
+            <col />                             {/* Referrer */}
           </colgroup>
 
           <thead>
@@ -185,14 +252,14 @@ export default async function AdminAnalytics({
           </thead>
           <tbody>
             {data?.map((r: any, i: number) => (
-              <tr key={i}>
+              <tr key={i} style={{ background: botLike(r.ua) ? '#fff7ed' : undefined }}>
                 <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                   {new Date(r.ts).toLocaleString()}
                 </td>
                 <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                   {r.path}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }} title={r.ua || ''}>
                   {r.ip_hash ? r.ip_hash.slice(0, 16) + '…' : ''}
                 </td>
                 <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
@@ -202,7 +269,7 @@ export default async function AdminAnalytics({
                   {safeDecode(r.city)}
                 </td>
                 <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
-                  {safeDecode(r.ref)}
+                  {prettyRef(r.ref)}
                 </td>
               </tr>
             ))}
