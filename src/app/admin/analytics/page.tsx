@@ -1,3 +1,4 @@
+// app/admin/analytics/page.tsx
 import { createClient } from '@supabase/supabase-js'
 import VisitsChart from './VisitsChart'
 
@@ -18,10 +19,10 @@ function safeDecode(s?: string | null) {
   try { return s ? decodeURIComponent(s) : '' } catch { return s || '' }
 }
 
-/** Referrer schön anzeigen:
- *  - Vercel-Preview-Hosts: nur Pfad+Query (Host verwirrt)
- *  - Interne gleiche-Origin-Hosts (z. B. www.deine-domain.tld): ebenfalls nur Pfad+Query
- *  - Externe: host + pfad (ohne Protokoll)
+/** Referrer hübsch:
+ * - Vercel-Preview-Hosts: nur Pfad+Query
+ * - interne Hosts (eigene Domains könntest du ergänzen): ebenfalls nur Pfad+Query
+ * - externe: host + pfad (ohne Protokoll)
  */
 function prettyRef(ref?: string | null) {
   if (!ref) return ''
@@ -29,19 +30,14 @@ function prettyRef(ref?: string | null) {
     const u = new URL(ref)
     const host = u.hostname
     const isVercelPreview = /\.vercel\.app$/i.test(host)
-    // interne Hosts optional erweitern: eigene Domains hier ergänzen
     const isLikelyInternal = isVercelPreview
-    if (isLikelyInternal) {
-      return u.pathname + u.search
-    }
-    return host + u.pathname + u.search
+    return isLikelyInternal ? (u.pathname + u.search) : (host + u.pathname + u.search)
   } catch {
-    // kein absolute URL? Dann ggf. URL-encoding bereinigen
     return safeDecode(ref)
   }
 }
 
-/** Einfache Bot-Heuristik (muss mit /api/track deckungsgleich sein) */
+/** Bot-Heuristik – gleiche Muster wie im /api/track */
 const BOT_PATTERNS = [
   'bot', 'crawler', 'spider', 'crawl', 'curl', 'httpx', 'node-fetch',
   'axios', 'headless', 'preview', 'uptime',
@@ -94,10 +90,7 @@ export default async function AdminAnalytics({
     if (country) q = q.eq('country', country)
     if (ip) q = q.ilike('ip_hash', `${ip}%`) // Prefix-Suche (hex)
     if (!includeBots) {
-      // mehrere "not ilike" Filter nacheinander
-      for (const p of BOT_PATTERNS) {
-        q = q.not('ua', 'ilike', `%${p}%`)
-      }
+      for (const p of BOT_PATTERNS) q = q.not('ua', 'ilike', `%${p}%`)
     }
     return q
   }
@@ -111,12 +104,9 @@ export default async function AdminAnalytics({
 
   dataQ = baseFilters(dataQ)
   const { data, count: countMeta, error } = await dataQ
+  if (error) return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
 
-  if (error) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
-  }
-
-  // Fallback-Count
+  // Fallback-Count (wenn countMeta fehlt)
   let total = typeof countMeta === 'number' ? countMeta : 0
   if (!total) {
     let countQ = db.from('visits').select('*', { count: 'exact', head: true })
@@ -124,39 +114,33 @@ export default async function AdminAnalytics({
     const { count } = await countQ
     total = count || 0
   }
-
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
-  // --- Chart (einfach): auf Basis der aktuellen Seite – schnell & ok für einen Überblick
-    // --- Chart via SQL-Aggregation (alle passenden Zeilen, nicht nur aktuelle Page)
+  // --- Chart via RPC (alle passenden Zeilen, nicht nur aktuelle Page)
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
   const { data: agg, error: aggErr } = await db.rpc('visits_daily_agg', {
-    from_ts: from ? new Date(from).toISOString() : null,
-    to_ts: to ? new Date(to).toISOString() : null,
+    from_ts: start.toISOString(),
+    to_ts: end.toISOString(),
     p_country: country || null,
-    ip_prefix: (ip || null),
+    ip_prefix: ip || null,
     include_bots: includeBots,
   })
-  if (aggErr) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>{aggErr.message}</pre>
-  }
+  if (aggErr) return <pre style={{ padding: 16, color: 'crimson' }}>{aggErr.message}</pre>
 
-  // Map für schnelle Lookups + Lücken mit 0 füllen
-  const m = new Map<string, number>((agg || []).map((r: any) => [
-    new Date(r.day).toISOString().slice(0,10), Number(r.cnt)
-  ]))
+  const bucketMap = new Map<string, number>(
+    (agg || []).map((r: any) => [String(r.day).slice(0, 10), Number(r.cnt)])
+  )
 
-  const chartData = []
-  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24*60*60*1000)) {
-    const key = d.toISOString().slice(0,10)
+  const chartData: { date: string; count: number }[] = []
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
+    const key = d.toISOString().slice(0, 10)
     chartData.push({
-      date: d.toLocaleDateString('de-AT', { day:'2-digit', month:'2-digit' }),
-      count: m.get(key) ?? 0,
+      date: d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' }),
+      count: bucketMap.get(key) ?? 0,
     })
   }
-
 
   // Helper: URL mit aktualisierten Params
   const makeUrl = (p: number) => {
@@ -172,7 +156,7 @@ export default async function AdminAnalytics({
   }
 
   return (
-    <div style={{ padding: 16, width:'100%', maxWidth:'100%' }}>
+    <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
 
       {/* Chart */}
@@ -209,7 +193,7 @@ export default async function AdminAnalytics({
             style={{ width: 180 }}
           />
         </div>
-        <label style={{ display:'inline-flex', gap:6, alignItems:'center', marginLeft: 6 }}>
+        <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center', marginLeft: 6 }}>
           <input type="checkbox" name="bots" value="1" defaultChecked={includeBots} />
           Bots zeigen
         </label>
@@ -235,7 +219,7 @@ export default async function AdminAnalytics({
       </form>
 
       {/* Tabelle */}
-      <div style={{ width:'100%', maxWidth:'100%', overflowX: 'auto' }}>
+      <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
         <table
           style={{
             width: '100%',
@@ -256,30 +240,30 @@ export default async function AdminAnalytics({
 
           <thead>
             <tr>
-              {['Zeit','Pfad','IP (Hash)','Land','Stadt','Referrer'].map((h) => (
-                <th key={h} style={{ textAlign:'left', padding:8, borderBottom:'1px solid #e5e7eb', whiteSpace:'nowrap' }}>{h}</th>
+              {['Zeit', 'Pfad', 'IP (Hash)', 'Land', 'Stadt', 'Referrer'].map((h) => (
+                <th key={h} style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {data?.map((r: any, i: number) => (
               <tr key={i} style={{ background: botLike(r.ua) ? '#fff7ed' : undefined }}>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {new Date(r.ts).toLocaleString()}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {r.path}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }} title={r.ua || ''}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={r.ua || ''}>
                   {r.ip_hash ? r.ip_hash.slice(0, 16) + '…' : ''}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {r.country || ''}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {safeDecode(r.city)}
                 </td>
-                <td style={{ padding: 8, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                <td style={{ padding: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {prettyRef(r.ref)}
                 </td>
               </tr>
@@ -296,19 +280,19 @@ export default async function AdminAnalytics({
       </div>
 
       {/* Pagination */}
-      <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
         <a
           href={makeUrl(Math.max(1, page - 1))}
           aria-disabled={page <= 1}
           style={{
             pointerEvents: page <= 1 ? 'none' : 'auto',
             opacity: page <= 1 ? 0.5 : 1,
-            padding:'6px 10px', border:'1px solid #e5e7eb', borderRadius:8
+            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
           ← Zurück
         </a>
-        <span style={{ fontSize:12, color:'#6b7280' }}>
+        <span style={{ fontSize: 12, color: '#6b7280' }}>
           Seite {page} von {totalPages} (gesamt {total})
         </span>
         <a
@@ -317,7 +301,7 @@ export default async function AdminAnalytics({
           style={{
             pointerEvents: page >= totalPages ? 'none' : 'auto',
             opacity: page >= totalPages ? 0.5 : 1,
-            padding:'6px 10px', border:'1px solid #e5e7eb', borderRadius:8
+            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
           Weiter →
