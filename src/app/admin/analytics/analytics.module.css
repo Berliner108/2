@@ -2,10 +2,10 @@
   width: 100%;
   max-width: 100%;
   padding: 16px;
-  
-  
 }
-
+.pager {
+    margin-top: 0px;
+}
 .toolbar {
   display: flex;
   gap: 8px;
