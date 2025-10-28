@@ -1,4 +1,5 @@
 // /src/components/checkout/CheckoutModal.tsx
+// /src/components/checkout/CheckoutModal.tsx
 'use client'
 
 import { useState } from 'react'
