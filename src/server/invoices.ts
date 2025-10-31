@@ -1,15 +1,10 @@
 // /src/server/invoices.ts
 // Server-Helper für Plattform-Rechnungen (Provision 7%)
-// Install: npm i pdfkit && npm i -D @types/pdfkit
-//
 // ENV (optional):
-//   INVOICE_ISSUER_NAME=YourPlatform GmbH
-//   INVOICE_ISSUER_ADDRESS=Musterstraße 1\n1010 Wien\nÖsterreich
-//   INVOICE_ISSUER_VATID=ATU12345678
-//   INVOICE_FONT_TTF=public/fonts/Inter-Regular.ttf  // kann auch https://... sein
+//   INVOICE_ISSUER_NAME, INVOICE_ISSUER_ADDRESS, INVOICE_ISSUER_VATID
+//   INVOICE_FONT_TTF, INVOICE_LOGO_PATH
 //   INVOICE_ENABLE_REVERSE_CHARGE=0|1
 //   INVOICE_VAT_RATE=20
-//   INVOICE_LOGO_PATH=public/logo.png                // kann auch https://... sein
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -34,28 +29,21 @@ async function fetchAsBuffer(url: string): Promise<Buffer | null> {
   return Buffer.from(await res.arrayBuffer())
 }
 
-// Font: FS -> absolute URL -> public URL -> Fallback
 let _cachedFont: Buffer | null = null
 async function loadInvoiceFontBuffer(): Promise<Buffer | null> {
   if (_cachedFont) return _cachedFont
   const rel = process.env.INVOICE_FONT_TTF || 'public/fonts/Inter-Regular.ttf'
-
-  // a) FS
   try {
     const abs = path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel)
     _cachedFont = fs.readFileSync(abs)
     return _cachedFont
   } catch {}
-
-  // b) absolute URL in ENV
-  if (rel.startsWith('http://') || rel.startsWith('https://')) {
+  if (rel.startsWith('http')) {
     try {
       const buf = await fetchAsBuffer(rel)
       if (buf) { _cachedFont = buf; return buf }
     } catch {}
   }
-
-  // c) /public via Basis-URL
   try {
     const url = publicUrlFromRel(rel)
     if (url) {
@@ -63,32 +51,24 @@ async function loadInvoiceFontBuffer(): Promise<Buffer | null> {
       if (buf) { _cachedFont = buf; return buf }
     }
   } catch {}
-
-  return null // Fallback: Helvetica
+  return null
 }
 
-// Logo: FS -> absolute URL -> public URL -> optional
 let _cachedLogo: Buffer | null = null
 async function loadInvoiceLogoBuffer(): Promise<Buffer | null> {
   if (_cachedLogo) return _cachedLogo
   const rel = process.env.INVOICE_LOGO_PATH || 'public/logo.png'
-
-  // a) FS
   try {
     const abs = path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel)
     _cachedLogo = fs.readFileSync(abs)
     return _cachedLogo
   } catch {}
-
-  // b) absolute URL
-  if (rel.startsWith('http://') || rel.startsWith('https://')) {
+  if (rel.startsWith('http')) {
     try {
       const buf = await fetchAsBuffer(rel)
       if (buf) { _cachedLogo = buf; return buf }
     } catch {}
   }
-
-  // c) /public via Basis-URL
   try {
     const url = publicUrlFromRel(rel)
     if (url) {
@@ -96,8 +76,7 @@ async function loadInvoiceLogoBuffer(): Promise<Buffer | null> {
       if (buf) { _cachedLogo = buf; return buf }
     }
   } catch {}
-
-  return null // optional
+  return null
 }
 // -----------------------------------------------------------------------
 
@@ -107,7 +86,7 @@ function normalizeMultiline(v?: string) {
 
 type TaxMode = 'VAT_INCLUDED' | 'REVERSE_CHARGE'
 
-async function renderPdfBuffer(payload: {
+type RenderPayload = {
   platform: { name: string; address?: string; vatId?: string }
   seller:   { name: string; company?: string | null; vatId?: string | null; addressText?: string | null }
   invoice:  {
@@ -115,12 +94,18 @@ async function renderPdfBuffer(payload: {
     orderId: string; requestTitle?: string | null; offerId?: string | number | null
     grossCents: number; feeCents: number; payoutCents: number
     taxMode: TaxMode
+    // Neu: für Zusammenfassung
+    feeNetCents?: number
+    feeVatCents?: number
+    feeVatRate?: number
+    feeVatLabel?: 'USt' | 'MwSt'
   }
-}): Promise<Buffer> {
-  const PDFKit = (await import('pdfkit')).default
-  const doc = new PDFKit({ size: 'A4', margin: 56 }) // A4, ~2cm Rand
+}
 
-  // Schrift
+async function renderPdfBuffer(payload: RenderPayload): Promise<Buffer> {
+  const PDFKit = (await import('pdfkit')).default
+  const doc = new PDFKit({ size: 'A4', margin: 56 })
+
   const fontBuf = await loadInvoiceFontBuffer()
   if (fontBuf) {
     doc.registerFont('Body', fontBuf).font('Body')
@@ -128,7 +113,6 @@ async function renderPdfBuffer(payload: {
     doc.font('Helvetica')
   }
 
-  // Logo (optional, rechts oben)
   try {
     const logoBuf = await loadInvoiceLogoBuffer()
     if (logoBuf) {
@@ -142,9 +126,7 @@ async function renderPdfBuffer(payload: {
       if (doc.y < afterLogoY) doc.y = afterLogoY
       doc.moveDown(0.5)
     }
-  } catch {
-    // Logo ist optional
-  }
+  } catch {}
 
   const chunks: Uint8Array[] = []
   const done = new Promise<Buffer>((resolve, reject) => {
@@ -157,9 +139,9 @@ async function renderPdfBuffer(payload: {
   const fmtMoney = (cents: number) =>
     (cents / 100).toLocaleString('de-AT', { style: 'currency', currency: invoice.currency.toUpperCase() })
 
-  // Layout-Konstanten (zweispaltig, rechtsbündige Zahlen)
+  // Layout
   const PAGE_LEFT = 56
-  const PAGE_RIGHT = 56 + 483 // A4(595) - 2*56 ≈ 483 nutzbare Breite
+  const PAGE_RIGHT = 56 + 483
   const LABEL_X = PAGE_LEFT
   const LABEL_W = 340
   const VALUE_X = LABEL_X + LABEL_W + 12
@@ -189,20 +171,18 @@ async function renderPdfBuffer(payload: {
   doc.fontSize(12).text('Leistungsempfänger (Verkäufer):', { underline: true })
   doc.moveDown(0.2)
   if (seller.company) doc.fontSize(11).text(seller.company)
-  if (seller.name && (!seller.company || seller.name !== seller.company)) {
-    doc.fontSize(11).text(seller.name)
-  }
+  if (seller.name && (!seller.company || seller.name !== seller.company)) doc.fontSize(11).text(seller.name)
   if (seller.addressText) doc.text(seller.addressText)
   if (seller.vatId)       doc.text(`UID: ${seller.vatId}`)
   doc.moveDown(1.0)
 
-  // Beschreibung
-  const provLabel =
-    invoice.taxMode === 'REVERSE_CHARGE'
-      ? 'Vermittlungsprovision 7% (Reverse-Charge)'
-      : 'Vermittlungsprovision 7% (inkl. USt)'
+  // Beschreibung mit korrektem Steuerlabel
+  const label = invoice.taxMode === 'REVERSE_CHARGE'
+    ? 'Vermittlungsprovision 7% (Reverse-Charge)'
+    : `Vermittlungsprovision 7% (inkl. ${invoice.feeVatLabel || 'USt'})`
+
   const descr = [
-    provLabel,
+    label,
     invoice.requestTitle ? `Bezug: ${invoice.requestTitle}` : null,
     invoice.offerId ? `Angebot #${invoice.offerId}` : null,
     `Order #${invoice.orderId}`,
@@ -210,19 +190,29 @@ async function renderPdfBuffer(payload: {
   doc.fontSize(12).text(descr)
   doc.moveDown(0.8)
 
-  // Beträge
+  // Beträge – Hauptblock
   row('Auftragswert (brutto):', fmtMoney(invoice.grossCents))
   row('Provision 7%:',         '– ' + fmtMoney(invoice.feeCents))
   doc.moveDown(0.2)
   doc.fontSize(12)
   row('Auszahlung an Verkäufer:', fmtMoney(invoice.payoutCents))
 
+  // Gebühren-Zusammenfassung (Netto/Steuer/Brutto) – nur wenn keine RC
+  if (invoice.taxMode === 'VAT_INCLUDED' && Number.isFinite(invoice.feeNetCents ?? NaN)) {
+    doc.moveDown(0.8)
+    doc.fontSize(12).text('Zusammenfassung Provision')
+    doc.moveDown(0.2); doc.fontSize(11)
+    row('Provision (netto):', fmtMoney(invoice.feeNetCents!))
+    row(`${invoice.feeVatLabel || 'USt'} (${(invoice.feeVatRate ?? 0).toFixed(2)}%):`, fmtMoney(invoice.feeVatCents || 0))
+    row('Provision (brutto):', fmtMoney(invoice.feeCents))
+  }
+
   // Fußnote
   doc.moveDown(1.2).fontSize(9).fillColor('#666')
   if (invoice.taxMode === 'REVERSE_CHARGE') {
-    doc.text('Hinweis: Reverse-Charge (Art. 44, 196 MwStSystRL / §3a UStG). USt-Schuld geht auf den Leistungsempfänger über.')
+    doc.text('Hinweis: Reverse-Charge (Art. 44, 196 MwStSystRL / §3a UStG). Die Steuerschuld geht auf den Leistungsempfänger über.')
   } else {
-    doc.text('Hinweis: Die 7% Provision enthalten sämtliche ggf. anfallende USt der Plattform.')
+    doc.text('Hinweis: Die 7% Provision enthalten sämtliche ggf. anfallende Umsatzsteuer der Plattform.')
   }
   doc.end()
 
@@ -230,8 +220,7 @@ async function renderPdfBuffer(payload: {
 }
 
 /**
- * Idempotent: erstellt/holt/rekonstruiert Rechnungs-Datensatz (public.platform_invoices),
- * rendert PDF mit der DB-Nummer, lädt es in den Storage und updatet pdf_path.
+ * Idempotent: erstellt/holt/rekonstruiert platform_invoices, rendert PDF, lädt es hoch.
  */
 export async function createCommissionInvoiceForOrder(orderId: string) {
   const admin = supabaseAdmin()
@@ -250,7 +239,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
   if (!order) throw new Error('order not found')
   if (order.kind !== 'lack') return { skipped: true, reason: 'non-lack order' }
 
-  // Offer + Snapshot + Request (Titel)
+  // Offer + Snapshot + Request
   const [{ data: offer }, { data: offerSnap }, { data: req }] = await Promise.all([
     admin.from('lack_offers').select('id, item_amount_cents, shipping_cents, amount_cents').eq('id', order.offer_id).maybeSingle(),
     admin.from('lack_offer_snapshots').select('amount_cents, item_amount_cents, shipping_cents').eq('offer_id', order.offer_id).limit(1).maybeSingle(),
@@ -301,7 +290,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     ].filter(Boolean).join('\n') || null : null
   }
 
-  // Auftrags-Brutto bevorzugt aus Snapshot
+  // Auftrags-Brutto
   const orderGrossCents =
     Number.isInteger(offerSnap?.amount_cents) ? offerSnap!.amount_cents! :
     Number.isInteger(order.amount_cents)      ? order.amount_cents! :
@@ -312,49 +301,44 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
   const feeCents    = Math.round(orderGrossCents * COMMISSION_RATE)
   const payoutCents = Math.max(0, orderGrossCents - feeCents)
 
-  // Steuer-Mode
+  // Steuer-Mode + Label (MwSt/USt)
   const rcEnabled  = process.env.INVOICE_ENABLE_REVERSE_CHARGE === '1'
   const vatRateEnv = Number(process.env.INVOICE_VAT_RATE || '20')
   const vatRate    = Number.isFinite(vatRateEnv) ? Math.max(0, vatRateEnv) : 20
-  let taxMode: TaxMode = 'VAT_INCLUDED'
-  const vat = (sellerVat || '').toUpperCase().trim()
+
+  const vatId = (sellerVat || '').toUpperCase().trim()
   const isBusiness = (sellerAccountType || '').toLowerCase() === 'business'
-  if (rcEnabled && isBusiness && vat && !vat.startsWith('AT')) {
+  let taxMode: TaxMode = 'VAT_INCLUDED'
+  if (rcEnabled && isBusiness && vatId && !vatId.startsWith('AT')) {
     taxMode = 'REVERSE_CHARGE'
   }
+  const vatLabel: 'USt' | 'MwSt' = vatId ? 'USt' : 'MwSt'
 
-  // Netto/USt der 7%-Gebühr (nur Info)
-  let net_amount_cents: number
-  let vat_cents: number
-  let applied_vat_rate: number
-  if (taxMode === 'REVERSE_CHARGE') {
-    net_amount_cents = feeCents
-    vat_cents = 0
-    applied_vat_rate = 0
-  } else {
+  // Netto/Umsatzsteuer der Provision (nur Info/Ausweis)
+  let feeNetCents: number | undefined
+  let feeVatCents: number | undefined
+  if (taxMode === 'VAT_INCLUDED') {
     const divisor = 1 + (vatRate / 100)
-    net_amount_cents = Math.round(feeCents / divisor)
-    vat_cents = feeCents - net_amount_cents
-    applied_vat_rate = vatRate
+    feeNetCents = Math.round(feeCents / divisor)
+    feeVatCents = feeCents - feeNetCents
   }
 
   // Plattform-Absender
   const platform = {
     name:    process.env.INVOICE_ISSUER_NAME    || 'Beschichter Scout GmbH',
-    address: normalizeMultiline(process.env.INVOICE_ISSUER_ADDRESS || 'Kärntnerstraße 1\n1010 Wien\nÖsterreich'),
+    address: normalizeMultiline(process.env.INVOICE_ISSUER_ADDRESS || 'Kärntner Straße 1\n1010 Wien\nÖsterreich'),
     vatId:   process.env.INVOICE_ISSUER_VATID   || undefined,
   }
 
   const issuedAt = new Date(order.released_at || new Date().toISOString())
 
-  // Bereits vorhandene Rechnung? -> evtl. direkt nutzen, sonst rekonstruieren
+  // Bestehende platform_invoices?
   const { data: existing } = await admin
     .from('platform_invoices')
-    .select('id, number, pdf_path, issued_at')
+    .select('id, number, pdf_path')
     .eq('order_id', order.id)
     .maybeSingle()
 
-  // Wenn pdf vorhanden & Datei existiert -> fertig
   if (existing?.pdf_path) {
     const probe = await admin.storage.from('invoices').download(existing.pdf_path)
     if (!('error' in probe) || !probe.error) {
@@ -362,48 +346,43 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     }
   }
 
-  // Wir brauchen eine Rechnungsnummer/Row:
+  // Nummer besorgen/erstellen
   let dbId: string
   let dbNumber: string
-
   if (existing) {
     dbId = existing.id
     dbNumber = existing.number as string
   } else {
-    // 1) INSERT in platform_invoices (DB generiert number)
-    const insertPayload: any = {
-      order_id:           order.id,
-      supplier_id:        order.supplier_id,
-      buyer_id:           order.buyer_id,
-      seller_id:          order.supplier_id,   // legacy-kompatibel
-      total_gross_cents:  orderGrossCents,
-      fee_cents:          feeCents,
-      net_payout_cents:   payoutCents,
-      currency:           (order.currency || 'eur').toLowerCase(),
-      issued_at:          issuedAt.toISOString(),
-      gross_cents:        feeCents,
-      payout_cents:       payoutCents,
-      meta: {
-        request_id: order.request_id,
-        offer_id:   order.offer_id,
-        title:      req?.title ?? null,
-        taxMode,
-        fee_breakdown: { net_cents: net_amount_cents, vat_cents, vat_rate: applied_vat_rate },
-      },
-    }
-
     const ins = await admin
       .from('platform_invoices')
-      .insert(insertPayload)
+      .insert({
+        order_id:           order.id,
+        supplier_id:        order.supplier_id,
+        buyer_id:           order.buyer_id,
+        seller_id:          order.supplier_id,
+        total_gross_cents:  orderGrossCents,
+        fee_cents:          feeCents,
+        net_payout_cents:   payoutCents,
+        currency:           (order.currency || 'eur').toLowerCase(),
+        issued_at:          issuedAt.toISOString(),
+        gross_cents:        feeCents,
+        payout_cents:       payoutCents,
+        meta: {
+          request_id: order.request_id,
+          offer_id:   order.offer_id,
+          title:      req?.title ?? null,
+          taxMode,
+          fee_breakdown: { net_cents: feeNetCents ?? feeCents, vat_cents: feeVatCents ?? 0, vat_rate: taxMode === 'VAT_INCLUDED' ? vatRate : 0, vat_label: vatLabel },
+        },
+      })
       .select('id, number')
       .maybeSingle()
     if (ins.error || !ins.data) throw new Error(`invoice insert failed: ${ins.error?.message || 'insert returned no row'}`)
-
     dbId = ins.data.id
     dbNumber = ins.data.number as string
   }
 
-  // 2) PDF erzeugen (mit vorhandener ODER neuer Nummer)
+  // PDF erzeugen
   const pdf = await renderPdfBuffer({
     platform,
     seller: { name: sellerName, company: sellerCompany, vatId: sellerVat, addressText: sellerAddressText },
@@ -418,30 +397,25 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
       feeCents,
       payoutCents,
       taxMode,
+      feeNetCents: taxMode === 'VAT_INCLUDED' ? (feeNetCents ?? 0) : undefined,
+      feeVatCents: taxMode === 'VAT_INCLUDED' ? (feeVatCents ?? 0) : undefined,
+      feeVatRate: taxMode === 'VAT_INCLUDED' ? vatRate : undefined,
+      feeVatLabel: taxMode === 'VAT_INCLUDED' ? vatLabel : undefined,
     },
   })
 
-  // 3) Upload
+  // Upload
   const year  = issuedAt.getFullYear()
   const month = String(issuedAt.getMonth() + 1).padStart(2, '0')
   const pathOnStorage = `${order.supplier_id}/${year}/${month}/${dbNumber}.pdf`
 
-  const up = await admin.storage
-    .from('invoices')
+  const up = await admin.storage.from('invoices')
     .upload(pathOnStorage, pdf, { contentType: 'application/pdf', upsert: true })
-  if (up.error) {
-    const code = (up.error as any)?.statusCode
-    if (code !== 409 && code !== '409') {
-      throw new Error(`invoice upload failed: ${up.error.message}`)
-    }
+  if (up.error && (up.error as any)?.statusCode !== 409) {
+    throw new Error(`invoice upload failed: ${up.error.message}`)
   }
 
-  // 4) pdf_path nachtragen (falls neu oder korrigiert)
-  const upd = await admin
-    .from('platform_invoices')
-    .update({ pdf_path: pathOnStorage })
-    .eq('id', dbId)
-  if (upd.error) throw new Error(`invoice update failed: ${upd.error.message}`)
+  await admin.from('platform_invoices').update({ pdf_path: pathOnStorage }).eq('id', dbId)
 
   return { ok: true, id: dbId, pdf_path: pathOnStorage }
 }
