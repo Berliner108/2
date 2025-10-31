@@ -1,248 +1,162 @@
+// /src/lib/invoices.ts
 'use server'
 
-import PDFDocument from 'pdfkit'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { renderInvoicePdfBuffer } from '@/lib/invoices/pdf'
 
-function pdfBuffer(build: (doc: PDFKit.PDFDocument) => void): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 })
-    const chunks: Buffer[] = []
-    doc.on('data', (c) => chunks.push(c as Buffer))
-    doc.on('end', () => resolve(Buffer.concat(chunks)))
-    doc.on('error', reject)
-    build(doc as any)
-    doc.end()
-  })
-}
+const FEE_PCT = 7.0 // fix
+const DEFAULT_VAT_RATE = parseFloat(process.env.INVOICE_VAT_RATE || '20.00') // AT-Standard
+const ISSUER_NAME = process.env.INVOICE_ISSUER_NAME || (process.env.NEXT_PUBLIC_APP_NAME || 'Plattform')
+const ISSUER_VAT  = process.env.INVOICE_ISSUER_VAT_ID || process.env.APP_VAT_NUMBER || ''
+const ISSUER_ADDR = (() => {
+  try { return JSON.parse(process.env.INVOICE_ISSUER_ADDRESS || process.env.APP_ADDRESS_JSON || '{}') } catch { return {} as any }
+})()
 
-const fmt = (cents: number, currency = 'EUR', locale = 'de-AT') =>
-  (cents / 100).toLocaleString(locale, { style: 'currency', currency })
-
-// Minimal: erweitere bei Bedarf.
-const VAT_RATE_BY_CC: Record<string, number> = {
-  AT: 20,
-  DE: 19,
-  // add more: FR: 20, IT: 22, ES: 21, NL: 21, ...
-}
-
-const EU_CC = new Set([
-  'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR',
-  'HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'
-])
-
-type TaxMode = 'AT'|'OSS'|'RC'|'NON_EU'
-
-function splitGrossIntoNetVat(grossCents: number, vatRatePct: number) {
-  if (vatRatePct <= 0) return { net: grossCents, vat: 0 }
-  const vatPart = Math.round(grossCents * (vatRatePct / (100 + vatRatePct)))
-  return { net: grossCents - vatPart, vat: vatPart }
+function cents(n: number) { return Math.round(n) }
+function splitGrossInclusive(gross: number, ratePct: number) {
+  const net = Math.round(gross / (1 + ratePct / 100))
+  const vat = gross - net
+  return { net, vat }
 }
 
 export async function generatePlatformInvoice(orderId: string) {
-  const sb = supabaseAdmin()
+  const admin = supabaseAdmin()
 
-  // idempotent
-  const { data: existing } = await sb
-    .from('platform_invoices')
-    .select('id, number, pdf_path')
-    .eq('order_id', orderId)
-    .maybeSingle()
-  if (existing) return existing
-
-  // Order + Offer + Snapshot + Request
-  const { data: order } = await sb
+  // ---- 0) Order laden & Sanity
+  const { data: ord, error: ordErr } = await admin
     .from('orders')
-    .select('id, kind, buyer_id, supplier_id, offer_id, request_id, amount_cents, currency, created_at')
+    .select('id, kind, buyer_id, supplier_id, offer_id, request_id, amount_cents, currency, released_at, created_at')
     .eq('id', orderId)
-    .eq('kind', 'lack')
     .maybeSingle()
-  if (!order) throw new Error('Order not found')
+  if (ordErr) throw new Error(ordErr.message)
+  if (!ord) throw new Error('Order not found')
+  if (ord.kind !== 'lack') throw new Error('Unsupported order kind')
+  if (!ord.released_at) throw new Error('Order not released')
 
-  const { data: offer } = await sb
-    .from('lack_offers')
-    .select('item_amount_cents, shipping_cents')
-    .eq('id', order.offer_id)
-    .maybeSingle()
-
-  const { data: snap } = await sb
-    .from('offer_profile_snapshots')
-    .select('snapshot')
-    .eq('offer_id', order.offer_id)
+  // ---- 1) Idempotenz: existierende Rechnungszeile?
+  const { data: existing } = await admin
+    .from('invoices')
+    .select('id, pdf_path, meta')
+    .eq('order_id', ord.id)
+    .eq('kind', 'platform_fee')
     .maybeSingle()
 
-  const { data: req } = await sb
-    .from('lack_requests')
-    .select('id, title, lieferdatum, data')
-    .eq('id', order.request_id)
-    .maybeSingle()
-
-  const itemCents = Number(offer?.item_amount_cents ?? order.amount_cents ?? 0)
-  const shipCents = Number(offer?.shipping_cents ?? 0)
-  const totalCents = Number(order.amount_cents ?? itemCents + shipCents)
-
-  // --- 7% Plattformgebühr: immer fix (brutto)
-  const feeGrossCents = Math.round(totalCents * 0.07)
-  const netPayoutCents = totalCents - feeGrossCents
-
-  // --- Steuerlogik basierend auf Verkäufer (Leistungsempfänger der Plattform)
-  const supplierSnap = (snap?.snapshot ?? {}) as any
-  const addr = supplierSnap.address || {}
-  const ccRaw: string =
-    (supplierSnap.country_code || addr.country_code || addr.country || 'AT') + ''
-  const cc = ccRaw.trim().toUpperCase()
-  const vatNumber: string | null = supplierSnap.vat_number || null
-  const isBusiness: boolean = !!vatNumber || supplierSnap.is_business === true
-
-  let taxMode: TaxMode
-  let vatRate = 0
-
-  if (cc === 'AT') {
-    // Inlandsfall – AT USt
-    taxMode = 'AT'
-    vatRate = VAT_RATE_BY_CC.AT ?? 20
-  } else if (EU_CC.has(cc)) {
-    if (isBusiness && vatNumber) {
-      // EU B2B mit UID → Reverse-Charge
-      taxMode = 'RC'
-      vatRate = 0
-    } else {
-      // EU B2C → OSS, USt des Kundenlandes
-      taxMode = 'OSS'
-      vatRate = VAT_RATE_BY_CC[cc] ?? VAT_RATE_BY_CC.AT ?? 20
-    }
-  } else {
-    // Drittland (z. B. CH)
-    taxMode = 'NON_EU'
-    vatRate = 0
+  if (existing?.pdf_path) {
+    const { data: signed, error: sErr } = await admin.storage
+      .from('invoices')
+      .createSignedUrl(existing.pdf_path, 600)
+    if (sErr) throw new Error(sErr.message)
+    return { id: existing.id, number: existing.meta?.invoiceNumber, pdf_path: existing.pdf_path, url: signed!.signedUrl }
   }
 
-  const { net: feeNetCents, vat: feeVatCents } = splitGrossIntoNetVat(feeGrossCents, vatRate)
+  // ---- 2) Offer-/Profil-Snapshot & Request
+  const [{ data: snapRow }, { data: reqRow }, { data: offerRow }] = await Promise.all([
+    admin.from('offer_profile_snapshots').select('snapshot').eq('offer_id', ord.offer_id).maybeSingle(),
+    admin.from('lack_requests').select('id, title, data, lieferdatum').eq('id', ord.request_id).maybeSingle(),
+    admin.from('lack_offers').select('item_amount_cents, shipping_cents').eq('id', ord.offer_id).maybeSingle(),
+  ])
 
-  // DB-Rechnung anlegen (Rechnungsnummer via DEFAULT)
-  const { data: inv, error: insErr } = await sb
-    .from('platform_invoices')
-    .insert({
-      order_id: order.id,
-      supplier_id: order.supplier_id,
-      buyer_id: order.buyer_id,
-      total_gross_cents: totalCents,
-      fee_cents: feeGrossCents,
-      net_payout_cents: netPayoutCents,
-      currency: order.currency || 'eur',
-      // optional: speichere Steuerdetails für Admin/Export
-      fee_net_cents: feeNetCents,
-      fee_vat_cents: feeVatCents,
-      fee_vat_rate: vatRate,
-      tax_mode: taxMode,
-      country_code: cc,
-      supplier_vat_number: vatNumber,
-    })
-    .select('id, number')
-    .single()
-  if (insErr) throw new Error(insErr.message)
+  // Lieferantenanzeige aus Snapshot (fallback: aktuelles Profil)
+  let vendorDisplay = 'Verkäufer'
+  let vendorVat: string | null = null
+  let vendorAddr: any = null
 
-  const suppName =
-    supplierSnap.company_name || supplierSnap.username || 'Anbieter'
-  const suppVat  = vatNumber || '—'
-  const suppAddrLines = [
-    addr.street && `${addr.street} ${addr.houseNumber || ''}`.trim(),
-    addr.zip && `${addr.zip} ${addr.city || ''}`.trim(),
-    cc,
-  ].filter(Boolean).join('\n')
+  if (snapRow?.snapshot) {
+    vendorDisplay = snapRow.snapshot.company_name || snapRow.snapshot.username || 'Verkäufer'
+    vendorVat     = snapRow.snapshot.vat_number ?? null
+    vendorAddr    = snapRow.snapshot.address ?? null
+  } else {
+    const { data: vProf } = await admin
+      .from('profiles')
+      .select('company_name, username, vat_number, address')
+      .eq('id', ord.supplier_id)
+      .maybeSingle()
+    vendorDisplay = vProf?.company_name || vProf?.username || 'Verkäufer'
+    vendorVat     = vProf?.vat_number ?? null
+    vendorAddr    = vProf?.address ?? null
+  }
 
-  const reqTitle =
-    req?.title || req?.data?.verfahrenstitel || req?.data?.verfahrenTitel || 'Lack-Anfrage'
-  const reqMeta  = [
-    req?.data?.ort && `Ort: ${req.data.ort}`,
-    typeof req?.data?.menge === 'number' && `Menge: ${req.data.menge} kg`,
-    req?.lieferdatum && `Lieferdatum: ${new Date(req.lieferdatum).toLocaleDateString('de-AT')}`
-  ].filter(Boolean).join(' · ')
+  // >>> VAT-Label je nach Vorhandensein einer UID: Gewerblich = USt, Privat = MwSt
+  const hasVatId = !!(vendorVat && String(vendorVat).trim().length > 0)
+  const vatLabel = hasVatId ? 'USt' : 'MwSt'
 
-  const issuerName = process.env.NEXT_PUBLIC_APP_NAME || 'Plattform'
-  const issuerAddr = process.env.APP_ADDRESS || 'Adresse der Plattform'
-  const issuerVat  = process.env.APP_VAT_NUMBER || 'ATU00000000'
-  const currency = (order.currency || 'eur').toUpperCase()
+  // ---- 3) Beträge (7% immer brutto vom Orderbetrag)
+  const currency = (ord.currency || 'eur').toUpperCase()
+  const itemCents = Number(offerRow?.item_amount_cents ?? ord.amount_cents ?? 0)
+  const shipCents = Number(offerRow?.shipping_cents ?? 0)
+  const orderGrossCents = Number(ord.amount_cents ?? itemCents + shipCents)
 
-  const note =
-    taxMode === 'RC'
-      ? 'Reverse-Charge – Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / § 19 UStG).'
-      : taxMode === 'NON_EU'
-        ? 'Leistung nicht steuerbar in Österreich (§ 3a UStG).'
-        : (taxMode === 'OSS'
-            ? `USt nach OSS des Bestimmungslandes (${cc})`
-            : `USt Österreich (${vatRate.toFixed(0)} %)`)
+  const feeGrossCents = cents(orderGrossCents * (FEE_PCT / 100)) // 7% vom Brutto
+  const vatRate       = DEFAULT_VAT_RATE                         // ggf. später dynamisch (AT/DE/CH etc.)
+  const { net: feeNetCents, vat: feeVatCents } = splitGrossInclusive(feeGrossCents, vatRate)
 
-  const pdfBuf = await pdfBuffer((doc) => {
-    // Kopf
-    doc.fontSize(16).text(issuerName)
-    doc.fontSize(10).text(issuerAddr)
-    doc.text(`UID: ${issuerVat}`)
-    doc.moveDown()
+  const payoutCents = orderGrossCents - feeGrossCents
 
-    doc.fontSize(20).text('Rechnung', { align: 'right' })
-    doc.fontSize(10).text(`Rechnungsnr.: ${inv.number}`, { align: 'right' })
-    doc.text(`Datum: ${new Date().toLocaleDateString('de-AT')}`, { align: 'right' })
-    doc.moveDown()
+  // ---- 4) PDF bauen
+  const invId = crypto.randomUUID()
+  const invNo = `INV-${new Date().getFullYear()}-${invId.slice(0,8).toUpperCase()}`
 
-    // Verkäufer (Leistungsempfänger)
-    doc.fontSize(12).text('Leistungsempfänger (Verkäufer):')
-    doc.fontSize(10).text(suppName)
-    if (suppAddrLines) doc.text(suppAddrLines)
-    doc.text(`UID: ${suppVat}`)
-    doc.moveDown()
-
-    // Bezug
-    doc.fontSize(12).text('Vermittelte Leistung:')
-    doc.fontSize(10).text(reqTitle)
-    if (reqMeta) doc.text(reqMeta)
-    doc.moveDown()
-
-    // Beträge (Auftrag)
-    doc.fontSize(12).text('Auftrag')
-    doc.moveDown(0.5)
-    doc.fontSize(10)
-    doc.text(`Auftragswert (brutto): ${fmt(totalCents, currency)}`)
-    doc.moveDown()
-
-    // Plattformgebühr 7% (mit Steuer-Ausweis)
-    doc.fontSize(12).text('Plattformgebühr (7% der Auftrags­summe)')
-    doc.moveDown(0.5)
-    doc.fontSize(10)
-    doc.text(`Netto: ${fmt(feeNetCents, currency)}`)
-    doc.text(`USt (${vatRate.toFixed(2)}%): ${fmt(feeVatCents, currency)}`)
-    doc.text(`Brutto: ${fmt(feeGrossCents, currency)}`)
-    doc.moveDown()
-
-    // Auszahlung
-    doc.fontSize(12).text('Auszahlung an Verkäufer')
-    doc.moveDown(0.5)
-    doc.fontSize(10)
-    doc.text(`Auszahlungsbetrag: ${fmt(netPayoutCents, currency)}`)
-    doc.moveDown()
-
-    // Hinweis
-    doc.fontSize(9).fillColor('#666').text(
-      `Hinweis: ${note}. Die 7% Vermittlungsprovision ist fix und enthält – sofern anwendbar – die USt.`
-    )
+  const pdfBuf = await renderInvoicePdfBuffer({
+    invoiceNumber: invNo,
+    issueDate: new Date(),
+    currency,
+    platform: { name: ISSUER_NAME, vatId: ISSUER_VAT, address: ISSUER_ADDR as any },
+    vendor: { displayName: vendorDisplay, vatId: vendorVat, address: vendorAddr || null },
+    line: {
+      title: `Vermittlungsprovision ${FEE_PCT}% auf Auftrag #${ord.id}${reqRow?.title ? ` – ${reqRow.title}` : ''}`,
+      qty: 1,
+      unitPriceGrossCents: feeGrossCents,
+    },
+    totals: {
+      vatRate,
+      grossCents: feeGrossCents,
+      netCents: feeNetCents,
+      vatCents: feeVatCents,
+    },
+    meta: {
+      orderId: ord.id,
+      requestId: ord.request_id,
+      offerId: ord.offer_id,
+      requestTitle: reqRow?.title || reqRow?.data?.verfahrenstitel || null,
+      orderGrossCents,
+      payoutCents,
+      vatLabel, // <<< wichtig für MwSt/USt im PDF
+    },
   })
 
-  const pdfPath = `invoices/${order.supplier_id}/${inv.number}.pdf`
-  const up = await sb.storage.from('invoices').upload(pdfPath, pdfBuf, {
+  // ---- 5) Upload (Storage)
+  const yyyy = new Date().getFullYear()
+  const objectPath = `vendor/${ord.supplier_id}/${yyyy}/${invId}.pdf`
+  const up = await admin.storage.from('invoices').upload(objectPath, pdfBuf, {
     contentType: 'application/pdf',
     upsert: true,
   })
   if (up.error) throw new Error(up.error.message)
 
-  await sb.from('platform_invoices').update({
-    pdf_path: pdfPath,
-    // für spätere Exporte praktisch:
-    fee_net_cents: feeNetCents,
-    fee_vat_cents: feeVatCents,
-    fee_vat_rate: vatRate,
-    tax_mode: taxMode,
-    country_code: cc,
-    supplier_vat_number: vatNumber,
-  }).eq('id', inv.id)
+  // ---- 6) DB schreiben
+  const { data: ins, error: insErr } = await admin.from('invoices').insert({
+    id: invId,
+    order_id: ord.id,
+    vendor_id: ord.supplier_id,
+    buyer_id: ord.buyer_id,
+    kind: 'platform_fee',
+    currency: currency.toLowerCase(),
+    net_amount_cents: feeNetCents,
+    vat_rate: vatRate,
+    vat_cents: feeVatCents,
+    gross_cents: feeGrossCents,
+    fee_base_cents: orderGrossCents,
+    fee_pct: FEE_PCT,
+    pdf_path: objectPath,
+    meta: { invoiceNumber: invNo, orderGrossCents, payoutCents, vatLabel }, // <<< mit speichern
+  }).select('id').single()
+  if (insErr) throw new Error(insErr.message)
 
-  return { id: inv.id, number: inv.number, pdf_path: pdfPath }
+  // ---- 7) Signed URL zurückgeben
+  const { data: signed, error: sErr } = await admin.storage
+    .from('invoices')
+    .createSignedUrl(objectPath, 600)
+  if (sErr) throw new Error(sErr.message)
+
+  return { id: ins.id, number: invNo, pdf_path: objectPath, url: signed!.signedUrl }
 }
