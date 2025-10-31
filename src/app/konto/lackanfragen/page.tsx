@@ -560,6 +560,8 @@ const normalizeOffer = (o: any): LackOffer => {
         // (Fallback ohne PI/ClientSecret – sollte selten sein)
         toastOk('Angebot angenommen.')
         await mutate()
+        router.push('/konto/lackangebote') // ✅ nach Liste weiterleiten
+
       }
     } catch (e: any) {
       toastErr(e?.message || 'Konnte Angebot nicht annehmen.')
@@ -922,10 +924,13 @@ const normalizeOffer = (o: any): LackOffer => {
           // sanftes Polling, bis Webhook published=false gesetzt hat
           for (let i = 0; i < 10; i++) {
             await mutate()
-            const stillThere = OPEN_REQUEST_IDS.includes(String(pendingRequestId || ''))
+            const target = String(pendingRequestId || '')
+            const stillThere = idsRef.current.includes(target)
             if (!stillThere) break
             await new Promise(r => setTimeout(r, 800))
           }
+          // ✅ IMMER zur Angebotsliste
+          router.push('/konto/lackangebote')
         }}
       />
 
