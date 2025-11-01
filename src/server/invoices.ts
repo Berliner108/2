@@ -11,7 +11,7 @@ const AT_STANDARD_VAT = Number(process.env.INVOICE_VAT_RATE || '20')
 type Jurisdiction = 'AT' | 'DE' | 'CH' | 'LI' | 'EU_OTHER' | 'NON_EU'
 type TaxMode = 'B2C_AT_VAT' | 'B2B_AT_VAT' | 'B2B_EU_RC' | 'B2B_NON_EU_OUT'
 type AccountType = 'business' | 'private' | '' | null
-type TaxLabel = NonNullable<InvoiceRenderData['meta']>['taxLabel'] // 'MwSt' | 'USt' | 'MWST' | 'VAT'
+type vatLabel = NonNullable<InvoiceRenderData['meta']>['vatLabel'] // 'MwSt' | 'USt' | 'MWST' | 'VAT'
 
 function normStr(v?: string | null) { return (v || '').trim() }
 function isBusiness(accountType?: string | null, vat?: string | null) {
@@ -40,7 +40,7 @@ function decideTaxMode(isBiz: boolean, jurisdiction: Jurisdiction): TaxMode {
 }
 
 // 🔧 exakt auf den Union-Typ einschränken:
-function taxLabelFor(j: Jurisdiction, isBiz: boolean): TaxLabel {
+function taxLabelFor(j: Jurisdiction, isBiz: boolean): vatLabel {
   if (!isBiz && j !== 'CH' && j !== 'LI') return 'MwSt'
   if (j === 'AT') return isBiz ? 'USt' : 'MwSt'
   if (j === 'DE') return 'USt'
@@ -163,7 +163,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
   }
 
   // ---- PDF bauen
-  const label: TaxLabel = taxLabelFor(sellerJur, biz)
+  const label: vatLabel = taxLabelFor(sellerJur, biz)
   const notes: string[] = []
   if (taxMode === 'B2B_EU_RC') {
     notes.push('Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / §3a UStG).')
@@ -208,7 +208,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     meta: {
       orderId: order.id,
       requestTitle: requestTitle || null,
-      taxLabel: label,
+      vatLabel: label,
       notes,
     },
   })
