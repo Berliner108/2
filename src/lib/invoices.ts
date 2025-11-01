@@ -1,181 +1,141 @@
-'use server'
+// Server-only util to render an invoice PDF into a Buffer
+// Requires: npm i pdfkit  (+ @types/pdfkit for TS)
 
-import { supabaseAdmin } from '@/lib/supabase-admin'
-import { renderInvoicePdfBuffer } from '@/lib/invoices/pdf'
+import PDFDocument from 'pdfkit'
 
-const FEE_PCT = 7.0; // fix
-const DEFAULT_VAT_RATE = parseFloat(process.env.INVOICE_VAT_RATE || '20.00'); // AT-Standard
-const ISSUER_NAME = process.env.INVOICE_ISSUER_NAME || (process.env.NEXT_PUBLIC_APP_NAME || 'Plattform');
-const ISSUER_VAT  = process.env.INVOICE_ISSUER_VAT_ID || process.env.APP_VAT_NUMBER || '';
-const ISSUER_ADDR = (() => {
-  try { return JSON.parse(process.env.INVOICE_ISSUER_ADDRESS || process.env.APP_ADDRESS_JSON || '{}') } catch { return {} as any }
-})();
-
-function cents(n: number) { return Math.round(n) }
-function splitGrossInclusive(gross: number, ratePct: number) {
-  const net = Math.round(gross / (1 + ratePct / 100));
-  const vat = gross - net;
-  return { net, vat };
+type Address = {
+  street?: string
+  houseNumber?: string
+  zip?: string
+  city?: string
+  country?: string
 }
 
-function normCountry(raw?: string | null): 'AT'|'DE'|'CH'|'LI'|'OTHER' {
-  const s = (raw || '').trim().toLowerCase();
-  if (!s) return 'OTHER';
-  if (['at','aut','österreich','austria'].includes(s)) return 'AT';
-  if (['de','deu','deutschland','germany'].includes(s)) return 'DE';
-  if (['ch','che','schweiz','suisse','svizzera','switzerland'].includes(s)) return 'CH';
-  if (['li','lie','liechtenstein'].includes(s)) return 'LI';
-  return 'OTHER';
-}
-function resolveTaxLabel(isBusiness: boolean, country: 'AT'|'DE'|'CH'|'LI'|'OTHER'): 'MwSt'|'USt'|'MWST'|'VAT' {
-  if (!isBusiness) return 'MwSt';           // Private immer „MwSt“
-  if (country === 'AT' || country === 'DE') return 'USt';
-  if (country === 'CH' || country === 'LI') return 'MWST';
-  return 'VAT';
-}
-
-export async function generatePlatformInvoice(orderId: string) {
-  const admin = supabaseAdmin();
-
-  // ---- 0) Order laden & Sanity
-  const { data: ord, error: ordErr } = await admin
-    .from('orders')
-    .select('id, kind, buyer_id, supplier_id, offer_id, request_id, amount_cents, currency, released_at, created_at')
-    .eq('id', orderId)
-    .maybeSingle();
-  if (ordErr) throw new Error(ordErr.message);
-  if (!ord) throw new Error('Order not found');
-  if (ord.kind !== 'lack') throw new Error('Unsupported order kind');
-
-  // ---- 1) Idempotenz
-  const { data: existing } = await admin
-    .from('invoices')
-    .select('id, pdf_path, meta')
-    .eq('order_id', ord.id)
-    .eq('kind', 'platform_fee')
-    .maybeSingle();
-
-  if (existing?.pdf_path) {
-    const { data: signed, error: sErr } = await admin.storage
-      .from('invoices')
-      .createSignedUrl(existing.pdf_path, 600);
-    if (sErr) throw new Error(sErr.message);
-    return { id: existing.id, number: existing.meta?.invoiceNumber, pdf_path: existing.pdf_path, url: signed!.signedUrl };
+export type InvoiceRenderData = {
+  invoiceNumber: string
+  issueDate: Date
+  currency: string
+  platform: {
+    name: string
+    vatId?: string
+    address?: Address | any
   }
-
-  // ---- 2) Offer-/Profil-Snapshot & Request
-  const [{ data: snapRow }, { data: reqRow }, { data: offerRow }] = await Promise.all([
-    admin.from('offer_profile_snapshots').select('snapshot').eq('offer_id', ord.offer_id).maybeSingle(),
-    admin.from('lack_requests').select('id, title, data, lieferdatum').eq('id', ord.request_id).maybeSingle(),
-    admin.from('lack_offers').select('item_amount_cents, shipping_cents').eq('id', ord.offer_id).maybeSingle(),
-  ]);
-
-  // Lieferantenanzeige + Steuer-Kontext
-  let vendorDisplay = 'Verkäufer';
-  let vendorVat: string | null = null;
-  let vendorAddr: any = null;
-  let accountType: string | null = null;
-  let countryCode: 'AT'|'DE'|'CH'|'LI'|'OTHER' = 'OTHER';
-
-  if (snapRow?.snapshot) {
-    const s = snapRow.snapshot as any;
-    vendorDisplay = s.company_name || s.username || 'Verkäufer';
-    vendorVat     = s.vat_number ?? null;
-    vendorAddr    = s.address ?? null;
-    accountType   = s.account_type ?? null;
-    countryCode   = normCountry(s.address?.country);
-  } else {
-    const { data: vProf } = await admin
-      .from('profiles')
-      .select('company_name, username, vat_number, address, account_type')
-      .eq('id', ord.supplier_id)
-      .maybeSingle();
-    vendorDisplay = vProf?.company_name || vProf?.username || 'Verkäufer';
-    vendorVat     = vProf?.vat_number ?? null;
-    vendorAddr    = (vProf as any)?.address ?? null;
-    accountType   = (vProf as any)?.account_type ?? null;
-    countryCode   = normCountry((vProf as any)?.address?.country);
+  vendor: {
+    displayName: string
+    vatId?: string | null
+    address?: Address | any | null
   }
+  line: {
+    title: string
+    qty: number
+    unitPriceGrossCents: number
+  }
+  totals: {
+    vatRate: number
+    grossCents: number
+    netCents: number
+    vatCents: number
+  }
+  meta?: {
+    orderId?: string
+    requestId?: string | number          // <-- hinzugefügt
+    offerId?: string | number
+    requestTitle?: string | null
+    orderGrossCents?: number
+    payoutCents?: number
+    taxLabel?: 'MwSt' | 'USt' | 'MWST' | 'VAT'
+    notes?: string[]
+  }
+}
 
-  const isBusiness = (accountType || '').toLowerCase() === 'business';
-  const taxLabel   = resolveTaxLabel(isBusiness, countryCode);
+function formatMoney(cents: number, currency = 'EUR') {
+  return (cents / 100).toLocaleString('de-AT', { style: 'currency', currency })
+}
 
-  // ---- 3) Beträge (7% immer brutto vom Orderbetrag)
-  const currency = (ord.currency || 'eur').toUpperCase();
-  const itemCents = Number(offerRow?.item_amount_cents ?? ord.amount_cents ?? 0);
-  const shipCents = Number(offerRow?.shipping_cents ?? 0);
-  const orderGrossCents = Number(ord.amount_cents ?? itemCents + shipCents);
+function addrToLines(a?: Address | any | null): string[] {
+  if (!a) return []
+  if (typeof a === 'string') {
+    return a.split('\n').map((s: string) => s.trim()).filter(Boolean)
+  }
+  const line1 = [a.street, a.houseNumber].filter(Boolean).join(' ')
+  const line2 = [a.zip, a.city].filter(Boolean).join(' ')
+  const line3 = a.country || ''
+  return [line1, line2, line3].filter(s => s && s.trim().length > 0)
+}
 
-  const feeGrossCents = cents(orderGrossCents * (FEE_PCT / 100)); // 7% vom Brutto
-  const vatRate       = DEFAULT_VAT_RATE;
-  const { net: feeNetCents, vat: feeVatCents } = splitGrossInclusive(feeGrossCents, vatRate);
-  const payoutCents = orderGrossCents - feeGrossCents;
+export async function renderInvoicePdfBuffer(data: InvoiceRenderData): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 56 })
+    const chunks: Uint8Array[] = []
+    doc.on('data', (c) => chunks.push(c))
+    doc.on('error', reject)
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
 
-  // ---- 4) PDF bauen
-  const invId = crypto.randomUUID();
-  const invNo = `INV-${new Date().getFullYear()}-${invId.slice(0,8).toUpperCase()}`;
+    // Header: Absender/Plattform
+    doc.fontSize(18).text(data.platform.name)
+    if (data.platform.vatId) doc.fontSize(10).text(`UID: ${data.platform.vatId}`)
+    const platAddr = addrToLines(data.platform.address)
+    platAddr.forEach(l => doc.text(l))
+    doc.moveDown(1.2)
 
-  const pdfBuf = await renderInvoicePdfBuffer({
-    invoiceNumber: invNo,
-    issueDate: new Date(),
-    currency,
-    platform: { name: ISSUER_NAME, vatId: ISSUER_VAT, address: ISSUER_ADDR as any },
-    vendor: { displayName: vendorDisplay, vatId: vendorVat, address: vendorAddr || null },
-    line: {
-      title: `Vermittlungsprovision ${FEE_PCT}% auf Auftrag #${ord.id}${reqRow?.title ? ` – ${reqRow.title}` : ''}`,
-      qty: 1,
-      unitPriceGrossCents: feeGrossCents,
-    },
-    totals: {
-      vatRate,
-      grossCents: feeGrossCents,
-      netCents: feeNetCents,
-      vatCents: feeVatCents,
-    },
-    meta: {
-      orderId: ord.id,
-      requestId: ord.request_id,
-      offerId: ord.offer_id,
-      requestTitle: reqRow?.title || reqRow?.data?.verfahrenstitel || null,
-      orderGrossCents,
-      payoutCents,
-      taxLabel, // explizites Label
-    },
-  });
+    // Empfänger
+    doc.fontSize(12).text('Rechnung an:', { underline: true })
+    doc.fontSize(11).text(data.vendor.displayName)
+    if (data.vendor.vatId) doc.text(`UID: ${data.vendor.vatId}`)
+    const vendAddr = addrToLines(data.vendor.address)
+    vendAddr.forEach(l => doc.text(l))
+    doc.moveDown(1.0)
 
-  // ---- 5) Upload
-  const yyyy = new Date().getFullYear();
-  const objectPath = `vendor/${ord.supplier_id}/${yyyy}/${invId}.pdf`;
-  const up = await admin.storage.from('invoices').upload(objectPath, pdfBuf, {
-    contentType: 'application/pdf',
-    upsert: true,
-  });
-  if (up.error) throw new Error(up.error.message);
+    // Meta
+    const dt = new Intl.DateTimeFormat('de-AT').format(data.issueDate)
+    doc.fontSize(12).text(`Rechnungsnummer: ${data.invoiceNumber}`)
+    doc.text(`Rechnungsdatum: ${dt}`)
+    if (data.meta?.orderId)    doc.text(`Auftrag: ${data.meta.orderId}`)
+    if (data.meta?.requestId)  doc.text(`Request-ID: ${String(data.meta.requestId)}`) // optional ausgegeben
+    if (data.meta?.requestTitle) doc.text(`Referenz: ${data.meta.requestTitle}`)
+    doc.moveDown(1.0)
 
-  // ---- 6) DB schreiben
-  const { data: ins, error: insErr } = await admin.from('invoices').insert({
-    id: invId,
-    order_id: ord.id,
-    vendor_id: ord.supplier_id,
-    buyer_id: ord.buyer_id,
-    kind: 'platform_fee',
-    currency: currency.toLowerCase(),
-    net_amount_cents: feeNetCents,
-    vat_rate: vatRate,
-    vat_cents: feeVatCents,
-    gross_cents: feeGrossCents,
-    fee_base_cents: orderGrossCents,
-    fee_pct: FEE_PCT,
-    pdf_path: objectPath,
-    meta: { invoiceNumber: invNo, orderGrossCents, payoutCents, taxLabel },
-  }).select('id').single();
-  if (insErr) throw new Error(insErr.message);
+    // Leistungsbeschreibung
+    doc.fontSize(13).text('Leistungsbeschreibung')
+    doc.moveDown(0.5)
+    doc.fontSize(11).text(`${data.line.title}`)
+    doc.text(`Menge: ${data.line.qty}`)
+    doc.text(`Einzelpreis (brutto): ${formatMoney(data.line.unitPriceGrossCents, data.currency)}`)
+    doc.moveDown(0.8)
 
-  // ---- 7) Signed URL
-  const { data: signed, error: sErr } = await admin.storage
-    .from('invoices')
-    .createSignedUrl(objectPath, 600);
-  if (sErr) throw new Error(sErr.message);
+    // Auftrag & Auszahlung (falls vorhanden)
+    if (Number.isFinite(data.meta?.orderGrossCents) || Number.isFinite(data.meta?.payoutCents)) {
+      doc.fontSize(12).text('Auftrag & Auszahlung')
+      doc.fontSize(11)
+      if (Number.isFinite(data.meta?.orderGrossCents)) {
+        doc.text(`Auftragswert (brutto): ${formatMoney(data.meta!.orderGrossCents!, data.currency)}`)
+      }
+      if (Number.isFinite(data.meta?.payoutCents)) {
+        doc.text(`Auszahlung an Verkäufer: ${formatMoney(data.meta!.payoutCents!, data.currency)}`)
+      }
+      doc.moveDown(0.8)
+    }
 
-  return { id: ins.id, number: invNo, pdf_path: objectPath, url: signed!.signedUrl };
+    // Summen (Gebühr)
+    const label = data.meta?.taxLabel || 'USt'
+    doc.fontSize(13).text('Summen')
+    doc.fontSize(11)
+    doc.text(`Zwischensumme (netto): ${formatMoney(data.totals.netCents, data.currency)}`)
+    doc.text(`${label} (${data.totals.vatRate.toFixed(2)}%): ${formatMoney(data.totals.vatCents, data.currency)}`)
+    doc.text(`Gesamt (brutto): ${formatMoney(data.totals.grossCents, data.currency)}`)
+
+    // Hinweise
+    const notes = data.meta?.notes ?? []
+    doc.moveDown(1.2)
+    if (notes.length > 0) {
+      doc.fontSize(9).fillColor('#666').text('Hinweis:')
+      doc.moveDown(0.2)
+      doc.fontSize(9).fillColor('#666')
+      notes.forEach(n => doc.text(`• ${n}`))
+    } else {
+      doc.fontSize(9).fillColor('#666').text('Hinweis: Vermittlungsprovision der Plattform.')
+    }
+
+    doc.end()
+  })
 }
