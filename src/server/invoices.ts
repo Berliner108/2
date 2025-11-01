@@ -226,3 +226,4 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
 
   return { ok: true, id: dbId!, number: invNumber, pdf_path: path, url: signed!.signedUrl }
 }
+export { createCommissionInvoiceForOrder as ensureInvoiceForOrder }
