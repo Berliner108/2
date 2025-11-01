@@ -211,7 +211,7 @@ export async function POST(req: Request) {
       gross_cents: feeGross,
       fee_base_cents: feeBase,
       fee_pct: FEE_PCT,
-      pdf_path: objectPath,
+      pdf_path: objectPath, // nur Felder, die es in dieser Tabelle sicher gibt
       meta: { invoiceNumber: invNo }, // nur Felder, die es in dieser Tabelle sicher gibt
     }).select('id').maybeSingle()
     if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
