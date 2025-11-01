@@ -6,18 +6,14 @@ import { ensureInvoiceForOrder } from '@/server/invoices'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: any) {
   try {
-    const id = params?.id
-    if (!id) {
-      return NextResponse.json({ error: 'missing_id' }, { status: 400 })
-    }
+    const id = params?.id as string | undefined
+    if (!id) return NextResponse.json({ error: 'missing_id' }, { status: 400 })
 
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
     const admin = supabaseAdmin()
     const { data: order, error } = await admin
@@ -34,26 +30,21 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
     // Rechnung erzeugen/finden (idempotent)
     const result = await ensureInvoiceForOrder(order.id)
-    const pdfPath = result?.pdf_path
-    if (!pdfPath) {
-      return NextResponse.json({ error: 'pdf_path_missing' }, { status: 500 })
-    }
+    const pdfPath = (result as any)?.pdf_path as string | undefined
+    if (!pdfPath) return NextResponse.json({ error: 'pdf_path_missing' }, { status: 500 })
 
     // signierte URL (10 Minuten)
     const { data: signed, error: sErr } = await admin.storage
       .from('invoices')
       .createSignedUrl(pdfPath, 600)
-
     if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 })
-    if (!signed?.signedUrl) {
-      return NextResponse.json({ error: 'signed_url_failed' }, { status: 500 })
-    }
+    if (!signed?.signedUrl) return NextResponse.json({ error: 'signed_url_failed' }, { status: 500 })
 
     return NextResponse.json({
       ok: true,
       orderId: order.id,
-      invoiceId: result.id,
-      number: result.number,
+      invoiceId: (result as any).id,
+      number: (result as any).number,
       pdf_path: pdfPath,
       url: signed.signedUrl,
     })
