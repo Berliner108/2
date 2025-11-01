@@ -1,5 +1,6 @@
 // Server-only util to render an invoice PDF into a Buffer
 // Requires: npm i pdfkit  (+ @types/pdfkit for TS)
+// Requires: npm i pdfkit  (+ @types/pdfkit for TS)
 
 import PDFDocument from 'pdfkit'
 
