@@ -6,11 +6,9 @@ import { ensureInvoiceForOrder } from '@/server/invoices'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-type RouteContext = { params: { id: string } }
-
-export async function GET(_req: Request, ctx: RouteContext) {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const id = ctx?.params?.id
+    const id = params?.id
     if (!id) {
       return NextResponse.json({ error: 'missing_id' }, { status: 400 })
     }
@@ -28,11 +26,11 @@ export async function GET(_req: Request, ctx: RouteContext) {
       .eq('id', id)
       .maybeSingle()
 
-    if (error)        return NextResponse.json({ error: error.message }, { status: 400 })
-    if (!order)       return NextResponse.json({ error: 'not_found' }, { status: 404 })
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    if (!order) return NextResponse.json({ error: 'not_found' }, { status: 404 })
     if (order.kind !== 'lack') return NextResponse.json({ error: 'wrong_kind' }, { status: 400 })
     if (order.supplier_id !== user.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-    if (!order.released_at)   return NextResponse.json({ error: 'not_released' }, { status: 409 })
+    if (!order.released_at) return NextResponse.json({ error: 'not_released' }, { status: 409 })
 
     // Rechnung erzeugen/finden (idempotent)
     const result = await ensureInvoiceForOrder(order.id)
@@ -46,9 +44,7 @@ export async function GET(_req: Request, ctx: RouteContext) {
       .from('invoices')
       .createSignedUrl(pdfPath, 600)
 
-    if (sErr) {
-      return NextResponse.json({ error: sErr.message }, { status: 500 })
-    }
+    if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 })
     if (!signed?.signedUrl) {
       return NextResponse.json({ error: 'signed_url_failed' }, { status: 500 })
     }
