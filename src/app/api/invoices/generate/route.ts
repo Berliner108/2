@@ -1,3 +1,4 @@
+// /src/app/api/invoices/generate/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabaseServer } from '@/lib/supabase-server'
@@ -5,44 +6,72 @@ import { renderInvoicePdfBuffer } from '@/lib/invoices/pdf'
 
 export const runtime = 'nodejs'
 
-// Fixe Plattformgebühr: immer 7 % (brutto) auf den Orderbetrag
+// --- Konstanten ---
 const FEE_PCT = 7.0
-
-// Standard-USt-Satz (in %), z. B. AT 20.00 – über ENV konfigurierbar
-const DEFAULT_VAT_RATE = parseFloat(process.env.INVOICE_VAT_RATE || '20.00')
-
-// Absender/Plattform-Angaben (für den Rechnungs-Kopf)
-const ISSUER_NAME = process.env.INVOICE_ISSUER_NAME || 'Deine Plattform'
-const ISSUER_VAT  = process.env.INVOICE_ISSUER_VAT_ID || ''
+const AT_VAT_RATE = Number(process.env.INVOICE_VAT_RATE || '20') // AT-Standardsatz (B2C + AT-B2B)
+const ISSUER_NAME = process.env.INVOICE_ISSUER_NAME || process.env.NEXT_PUBLIC_APP_NAME || 'Plattform'
+const ISSUER_VAT  = process.env.INVOICE_ISSUER_VAT_ID || process.env.APP_VAT_NUMBER || ''
 const ISSUER_ADDR = (() => {
-  try { return JSON.parse(process.env.INVOICE_ISSUER_ADDRESS || '{}') } catch { return {} }
+  try {
+    // akzeptiert JSON (z. B. {"street":"...","zip":"...","city":"...","country":"Austria"})
+    return JSON.parse(process.env.INVOICE_ISSUER_ADDRESS || '{}')
+  } catch {
+    return {}
+  }
 })()
 
-/** Rundung auf Cent */
+// --- Helpers ---
 function cents(n: number) { return Math.round(n) }
-
-/** Netto/USt aus einem Bruttobetrag bei inkl. Steuer (satz in %) */
-function divInclusive(gross: number, ratePct: number) {
+function splitGrossInclusive(gross: number, ratePct: number) {
   const net = Math.round(gross / (1 + ratePct / 100))
   const vat = gross - net
   return { net, vat }
 }
 
+type Jurisdiction = 'AT' | 'DE' | 'CH' | 'LI' | 'EU_OTHER' | 'NON_EU'
+function countryToJurisdiction(country?: string | null): Jurisdiction {
+  const c = (country || '').trim().toUpperCase()
+  if (c === 'AT') return 'AT'
+  if (c === 'DE') return 'DE'
+  if (c === 'CH') return 'CH'
+  if (c === 'LI') return 'LI'
+  const EU = new Set([
+    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT',
+    'LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'
+  ])
+  if (EU.has(c)) return 'EU_OTHER'
+  return 'NON_EU'
+}
+
+function isBusiness(accountType?: string | null, vat?: string | null) {
+  const t = (accountType || '').toLowerCase()
+  return t === 'business' || !!(vat || '').trim()
+}
+
+// Label-Regeln (nur Anzeige):
+// - Privat immer "MwSt" (Wunsch).
+// - Gewerblich AT/DE: "USt"; CH/LI: "MWST"; sonst: "VAT".
+function taxLabelFor(isBiz: boolean, jur: Jurisdiction): 'MwSt' | 'USt' | 'MWST' | 'VAT' {
+  if (!isBiz) return 'MwSt'
+  if (jur === 'AT' || jur === 'DE') return 'USt'
+  if (jur === 'CH' || jur === 'LI') return 'MWST'
+  return 'VAT'
+}
+
 export async function POST(req: Request) {
   try {
-    // Auth
+    // Auth: nur eingeloggte Buyer/Supplier/Admins
     const sbUser = await supabaseServer()
     const { data: { user } } = await sbUser.auth.getUser()
     if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-    // Input
     const body = await req.json().catch(() => ({}))
     const orderId = String(body.orderId || '')
     if (!orderId) return NextResponse.json({ error: 'orderId missing' }, { status: 400 })
 
     const admin = supabaseAdmin()
 
-    // 1) Order laden + Prüfen
+    // 1) Order laden
     const { data: ord, error: ordErr } = await admin
       .from('orders')
       .select('id, kind, buyer_id, supplier_id, offer_id, request_id, amount_cents, currency, released_at')
@@ -53,67 +82,93 @@ export async function POST(req: Request) {
     if (ord.kind !== 'lack') return NextResponse.json({ error: 'unsupported kind' }, { status: 400 })
     if (!ord.released_at)    return NextResponse.json({ error: 'order not released' }, { status: 409 })
 
-    // Zugriff: nur Admin/Moderator oder beteiligte Parteien
+    // Access: Admin oder Beteiligte
     const { data: meProf } = await admin.from('profiles').select('id, role').eq('id', user.id).maybeSingle()
     const isAdmin = meProf?.role === 'admin' || meProf?.role === 'moderator'
     const isParty = user.id === ord.supplier_id || user.id === ord.buyer_id
     if (!isAdmin && !isParty) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
 
-    // 2) Kontext (Request-Titel) & Anbieter-Snapshot zur Angebotsabgabe
+    // 2) Request & Snapshot (für Vendor-Daten/Adresse)
     const [{ data: reqRow }, { data: snapRow }] = await Promise.all([
       admin.from('lack_requests').select('id, title, data').eq('id', ord.request_id).maybeSingle(),
       admin.from('offer_profile_snapshots').select('snapshot').eq('offer_id', ord.offer_id).maybeSingle(),
     ])
 
-    // 3) Vendor-Daten (für Rechnungsadresse & B2B/B2C)
-    let vendorDisplay = ''
+    // Vendor-Firmendaten
+    let vendorDisplay = 'Verkäufer'
     let vendorVat: string | null = null
     let vendorAddr: any = null
+    let accountType: string | null = null
 
     if (snapRow?.snapshot) {
-      vendorDisplay = snapRow.snapshot.company_name || snapRow.snapshot.username || 'Verkäufer'
-      vendorVat = snapRow.snapshot.vat_number ?? null
-      vendorAddr = snapRow.snapshot.address ?? null
+      const s = snapRow.snapshot as any
+      vendorDisplay = s.company_name || s.username || 'Verkäufer'
+      vendorVat     = s.vat_number ?? null
+      vendorAddr    = s.address ?? null
+      accountType   = s.account_type ?? null
     } else {
-      const { data: vProf } = await admin.from('profiles')
-        .select('company_name, username, vat_number, address')
-        .eq('id', ord.supplier_id).maybeSingle()
-      vendorDisplay = (vProf?.company_name || vProf?.username || 'Verkäufer')
-      vendorVat = (vProf?.vat_number ?? null)
-      vendorAddr = (vProf?.address ?? null)
+      const { data: vProf } = await admin
+        .from('profiles')
+        .select('company_name, username, vat_number, address, account_type')
+        .eq('id', ord.supplier_id)
+        .maybeSingle()
+      vendorDisplay = vProf?.company_name || vProf?.username || 'Verkäufer'
+      vendorVat     = vProf?.vat_number ?? null
+      vendorAddr    = (vProf as any)?.address ?? null
+      accountType   = (vProf as any)?.account_type ?? null
     }
 
-    // 4) 7% Plattformgebühr (immer brutto auf den Orderbetrag)
     const currency = (ord.currency || 'eur').toUpperCase()
+    const isBiz = isBusiness(accountType, vendorVat)
+    const jur   = countryToJurisdiction(vendorAddr?.country)
+    const taxLabel = taxLabelFor(isBiz, jur)
+
+    // 3) 7% Fee – immer brutto vom Orderbetrag
     const feeBase  = Number(ord.amount_cents || 0)
     const feeGross = cents(feeBase * (FEE_PCT / 100))
 
-    // Steuerlogik:
-    //  - Label NUR abhängig von B2B/B2C:
-    //      • Privat (ohne USt-ID) => "MwSt"
-    //      • Gewerblich (mit USt-ID) => "USt"
-    //  - Steuersatz bleibt via ENV konfigurierbar (DEFAULT_VAT_RATE)
-    const hasVatId = !!(vendorVat && String(vendorVat).trim().length > 0)
-    const vatLabel = hasVatId ? 'USt' : 'MwSt'
-    const vatRate  = DEFAULT_VAT_RATE
+    // Steuerberechnung:
+    // - Privat ODER B2B in AT: AT-VAT 20% inkl.
+    // - B2B in EU (≠ AT): RC 0% (Netto = Brutto)
+    // - B2B CH/LI/NON_EU: 0% (i. d. R. nicht steuerbar in AT)
+    let vatRate = 0
+    let feeNet = feeGross
+    let feeVat = 0
+    const EU_RC = (isBiz && (jur === 'DE' || jur === 'EU_OTHER'))
+    const AT_VAT = (!isBiz) || (isBiz && jur === 'AT')
+    if (AT_VAT) {
+      vatRate = AT_VAT_RATE
+      const parts = splitGrossInclusive(feeGross, vatRate)
+      feeNet = parts.net
+      feeVat = parts.vat
+    } else if (EU_RC) {
+      vatRate = 0
+      feeNet = feeGross
+      feeVat = 0
+    } else {
+      // CH/LI/NON_EU B2B
+      vatRate = 0
+      feeNet = feeGross
+      feeVat = 0
+    }
 
-    const { net: feeNet, vat: feeVat } = divInclusive(feeGross, vatRate)
-
-    // 5) PDF erstellen
+    // 4) PDF erstellen
     const invId = crypto.randomUUID()
     const invNo = `INV-${new Date().getFullYear()}-${invId.slice(0,8).toUpperCase()}`
+    const requestTitle = reqRow?.title || (reqRow?.data as any)?.verfahrenstitel || null
+
     const pdfBuf = await renderInvoicePdfBuffer({
       invoiceNumber: invNo,
       issueDate: new Date(),
       currency,
-      platform: { name: ISSUER_NAME, vatId: ISSUER_VAT, address: ISSUER_ADDR },
+      platform: { name: ISSUER_NAME, vatId: ISSUER_VAT, address: ISSUER_ADDR as any },
       vendor: {
         displayName: vendorDisplay,
         vatId: vendorVat,
         address: vendorAddr || null,
       },
       line: {
-        title: `Vermittlungsprovision ${FEE_PCT}% auf Auftrag #${ord.id}${reqRow?.title ? ` – ${reqRow.title}` : ''}`,
+        title: `Vermittlungsprovision ${FEE_PCT}% auf Auftrag #${ord.id}${requestTitle ? ` – ${requestTitle}` : ''}`,
         qty: 1,
         unitPriceGrossCents: feeGross,
       },
@@ -125,21 +180,24 @@ export async function POST(req: Request) {
       },
       meta: {
         orderId: ord.id,
-        offerId: ord.offer_id,
-        requestId: ord.request_id,
-        requestTitle: reqRow?.title || reqRow?.data?.verfahrenstitel || null,
-        vatLabel, // <<--- WICHTIG: Label an das PDF weitergeben
+        requestTitle,
+        taxLabel,                 // << richtiges Feld im Typ
+        notes: EU_RC
+          ? ['Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / §3a UStG).']
+          : (vatRate === 0
+              ? ['Leistung außerhalb des Anwendungsbereichs der österreichischen USt.']
+              : ['Die 7% Provision enthält die gesetzliche österreichische Steuer.']),
       },
     })
 
-    // 6) Upload nach Storage
+    // 5) Upload
     const yyyy = new Date().getFullYear()
     const objectPath = `vendor/${ord.supplier_id}/${yyyy}/${invId}.pdf`
     const { error: upErr } = await admin.storage.from('invoices')
       .upload(objectPath, pdfBuf, { contentType: 'application/pdf', upsert: true })
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
 
-    // 7) DB-Zeile anlegen (für Auflistung/Download)
+    // 6) DB-Zeile (vereinfachte Ablage in public.invoices)
     const { data: ins, error: insErr } = await admin.from('invoices').insert({
       id: invId,
       order_id: ord.id,
@@ -154,11 +212,11 @@ export async function POST(req: Request) {
       fee_base_cents: feeBase,
       fee_pct: FEE_PCT,
       pdf_path: objectPath,
-      meta: { invoiceNumber: invNo, vatLabel },
-    }).select('id, pdf_path').maybeSingle()
+      meta: { invoiceNumber: invNo }, // nur Felder, die es in dieser Tabelle sicher gibt
+    }).select('id').maybeSingle()
     if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
 
-    // 8) Signed URL (10 Min)
+    // 7) Signed URL zurück
     const { data: signed, error: sErr } = await admin.storage
       .from('invoices')
       .createSignedUrl(objectPath, 600)
