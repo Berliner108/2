@@ -507,3 +507,27 @@
 .addrDl { display:grid; grid-template-columns:130px 1fr; gap:6px 12px; margin:0; }
 .addrDl dt { font-weight:700; color:#6b7280; }
 .addrDl dd { margin:0; color:#111; word-break:break-word; }
+/* Card in 2 Spalten – Inhalt links, Buttons rechts */
+.card{
+  display: grid;
+  grid-template-columns: 1fr;           /* mobile: einspaltig */
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 1100px){
+  .card{
+    grid-template-columns: 1fr 360px;   /* links Inhalt, rechts Side */
+  }
+  .side{
+    grid-column: 2;                     /* Buttons rechts-Spalte */
+  }
+  .addresses{
+    grid-column: 1 / -1;                /* Adressen über volle Breite */
+  }
+}
+
+/* Abstand zwischen Buttons in .side */
+.side > * + *{
+  margin-top: 10px;
+}
