@@ -465,29 +465,13 @@
 .addrValue {
   word-break: break-word;
 }
-/* === Card in 2 Spalten auf Desktop: Inhalt links, Actions rechts === */
-.card {
-  display: grid;
-  grid-template-columns: 1fr;         /* mobil: 1 Spalte */
-  gap: 12px 16px;
-  align-items: start;
-}
+/* --- Actions/Buttons: gleiche Breite, kein Überlauf --- */
+.side > * { align-self: stretch; }
 
-.side { grid-column: 1; }
-.addresses { grid-column: 1; }
-
-@media (min-width: 1024px) {
-  .card {
-    grid-template-columns: 1fr 360px; /* Inhalt | Actions */
-  }
-  .side { grid-column: 2; }
-  .addresses { grid-column: 1; }
-}
-
-/* === Actions-Spalte: Buttons gleich breit & kein Overflow === */
 .side .primaryBtn,
 .side .secondaryBtn,
-.side .btnGhost {
+.side .btnGhost,
+.side a.secondaryBtn {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -497,51 +481,29 @@
   min-height: 40px;
 }
 
-.side .actionStack { display: flex; flex-direction: column; gap: 8px; }
-.side .btnHint { margin-top: 4px; font-size: .9rem; color: #777; }
+/* Falls noch alte .actions-Regeln drin sind, neutralisieren */
+.actions { display: contents; }
 
-/* === Adress-Panels: nebeneinander auf Desktop, darunter mobil === */
-.addresses {
-  display: grid;
-  grid-template-columns: 1fr;   /* mobil */
-  gap: 12px;
-}
+/* --- Card 2-Spalten Layout (Inhalt | Actions) --- */
+.card { display: grid; grid-template-columns: 1fr; gap: 12px 16px; align-items: start; }
+.side { grid-column: 1; }
+.addresses { grid-column: 1; }
 
 @media (min-width: 1024px) {
-  .addresses {
-    grid-template-columns: 1fr 1fr; /* zwei Spalten */
-  }
+  .card { grid-template-columns: 1fr 360px; }
+  .side { grid-column: 2; }
+  .addresses { grid-column: 1; }
 }
 
-/* Panel-Optik für Liefer-/Rechnungsadresse */
-.addrPanel {
-  border: 1px solid var(--border, #e8eef3);
-  border-radius: 12px;
-  background: var(--panel, #fff);
-  padding: 12px;
+/* --- Liefer-/Rechnungsadresse nebeneinander ab 1024px --- */
+.addresses { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 1024px) {
+  .addresses { grid-template-columns: 1fr 1fr; }
 }
 
-.addrTitle {
-  margin: 0 0 8px 0;
-  font-weight: 800;
-  font-size: 1rem;
-}
-
-/* Definition List im Panel: Label/Value Raster */
-.addrDl {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 6px 12px;
-  margin: 0;
-}
-
-.addrDl dt {
-  font-weight: 700;
-  color: #6b7280;
-}
-
-.addrDl dd {
-  margin: 0;
-  color: #111;
-  word-break: break-word;
-}
+/* Panel & DL im Adressbereich (falls noch nicht drin) */
+.addrPanel { border: 1px solid #e8eef3; border-radius: 12px; background:#fff; padding:12px; }
+.addrTitle { margin:0 0 8px; font-weight:800; font-size:1rem; }
+.addrDl { display:grid; grid-template-columns:130px 1fr; gap:6px 12px; margin:0; }
+.addrDl dt { font-weight:700; color:#6b7280; }
+.addrDl dd { margin:0; color:#111; word-break:break-word; }
