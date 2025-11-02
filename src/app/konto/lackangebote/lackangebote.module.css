@@ -451,3 +451,89 @@
   white-space: pre-wrap; /* Zeilenumbrüche im Text beibehalten */
 }
 
+/* 3-Spalten-Zeile unter der Meta: Lieferadresse | Rechnungsadresse | Actions */
+.detailsRow{
+  display: grid;
+  grid-template-columns: 1fr 1fr 360px; /* rechts feste Spalte */
+  gap: 16px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+/* Panels/DLs (du hast Teile davon schon, belasse sie oder nutze diese Version) */
+.addrPanel{ border:1px solid #e8eef3; border-radius:12px; background:#fff; padding:12px; }
+.addrTitle{ margin:0 0 8px; font-weight:800; font-size:1rem; }
+.addrDl{ display:grid; grid-template-columns:130px 1fr; gap:6px 12px; margin:0; }
+.addrDl dt{ font-weight:700; color:#6b7280; }
+.addrDl dd{ margin:0; color:#111; word-break:break-word; }
+
+/* Actions rechts: rechtsbündig, Buttons volle Breite, vertikaler Abstand */
+.sideCol{
+  justify-self: end;          /* rechtsbündig in der Gridzeile */
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Einheitliche CTA-Buttons: gleiche Schrift, Größe, Breite */
+.ctaBtn{
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;                /* gleiche Breite */
+  min-height: 44px;           /* gleiche Höhe */
+  padding: 12px 16px;
+  border-radius: 12px;
+  font: inherit;              /* gleiche Schriftart/-größe überall */
+  font-weight: 800;
+  line-height: 1.15;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+/* Varianten */
+.ctaPrimary{
+  background: #00b5d8;
+  color: #fff;
+}
+.ctaPrimary:hover{ filter: brightness(.95); }
+
+.ctaSecondary{
+  background: linear-gradient(90deg, #b91c1c, #ef4444, #f97316, #ef4444, #b91c1c);
+  background-size: 300% 300%;
+  color: #fff;
+  border: 1px solid rgba(0,0,0,.06);
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  animation: btnGradientMove 6s linear infinite;
+}
+.ctaSecondary:hover{ animation-duration: 3s; }
+
+.ctaGhost{
+  background: #fff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+.ctaGhost:hover{ background:#f9fafb; }
+
+/* Hinweistext unter Buttons */
+.btnHint{ font-size:.9rem; color:#777; }
+
+/* Responsiv: unter 1024px zwei Zeilen, unter 700px stapeln */
+@media (max-width: 1024px){
+  .detailsRow{
+    grid-template-columns: 1fr; /* alles untereinander */
+  }
+  .sideCol{ justify-self: stretch; max-width: none; }
+}
+
+/* --- kleine Angleichungen an bestehende Buttons --- */
+/* Sorge dafür, dass sekundäre/primäre alte Klassen nicht stören */
+.primaryBtn, .secondaryBtn, .btnGhost{
+  font: inherit;              /* gleiche Schriftart/größe */
+  min-height: 44px;
+}

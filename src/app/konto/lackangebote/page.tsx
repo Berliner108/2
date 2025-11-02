@@ -693,199 +693,118 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
                 )}
               </div>
 
-              <div className={styles.actions}>
-                {/* Verkäufer: Rechnung downloaden (sichtbar NACH Freigabe/Auto-Release) */}
-                {isVendor && order.status === 'confirmed' && (
-                  <a
-                    href={`/api/invoices/${order.orderId}/download`}
-                    className={styles.secondaryBtn}
-                    target="_blank"
-                    rel="noopener"
-                    title="Plattformrechnung (PDF) herunterladen"
-                  >
-                    Rechnung herunterladen (PDF)
-                  </a>
-                )}
-
-                {/* Verkäufer: „Versandt melden“ */}
-                {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
-                  <div className={styles.actionStack}>
-                    <button
-                      type="button"
-                      className={styles.secondaryBtn}
-                      onClick={() => setShipOrder(order)}
-                      title="Versand an Käufer melden"
-                    >
-                      Versandt melden
-                    </button>
-                    {refundHint && (
-                      <div className={styles.btnHint}>{refundHint}</div>
-                    )}
-                  </div>
-                )}
-
-
-
-                {/* Käufer sieht Refund-Hinweis, wenn kein Versand */}
-                {isCustomer && refundHint && (!order.shippedAt) && (
-                  <div className={styles.btnHint}>{refundHint}</div>
-                )}
-
-                {/* Reklamationsgrund (falls vorhanden) */}
-                {order.disputeReason && (
-                  <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
-                    <strong>Reklamationsgrund:</strong> {order.disputeReason}
-                  </div>
-                )}
-
-                {/* Käufer: nach Meldung bestätigen / reklamieren */}
-                {isCustomer && order.status === 'reported' && (
-                  <div className={styles.actionStack}>
-                    <button
-                      type="button"
-                      className={styles.primaryBtn}
-                      onClick={() => doRelease(order)}
-                      title="Empfang bestätigen & Zahlung freigeben"
-                    >
-                      Empfang bestätigen & Zahlung freigeben
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.btnGhost}
-                      onClick={() => openDispute(order)}
-                    >
-                      Problem melden
-                    </button>
-                    <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
-                  </div>
-                )}
-
-                {/* IMMER: Gegenpartei bewerten (wenn ich noch nicht bewertet habe) */}
-                {canRateNow(order) && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
-                    title="Gegenpartei bewerten"
-                  >
-                    Bewertung abgeben
-                  </button>
-                )}
-               {/* Verkäufer-Sicht: Lieferadresse mit Labels */}
-{isVendor && (order as any).shippingAddress && (
-  <div className={styles.meta} style={{ marginTop: 8 }}>
-    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-      <div className={styles.metaLabel}>Lieferanschrift</div>
-      <div className={styles.addrGrid}>
-        {(order as any).shippingAddress.company && (
-          <>
-            <div className={styles.addrLabel}>Firma</div>
-            <div className={styles.addrValue}>{(order as any).shippingAddress.company}</div>
-          </>
-        )}
-        {(order as any).shippingAddress.firstName && (
-          <>
-            <div className={styles.addrLabel}>Vorname</div>
-            <div className={styles.addrValue}>{(order as any).shippingAddress.firstName}</div>
-          </>
-        )}
-        {(order as any).shippingAddress.lastName && (
-          <>
-            <div className={styles.addrLabel}>Nachname</div>
-            <div className={styles.addrValue}>{(order as any).shippingAddress.lastName}</div>
-          </>
-        )}
+              {/* 3-Spalten-Zeile: Lieferadresse | Rechnungsadresse | Actions (rechts) */}
+<div className={styles.detailsRow}>
+  {/* Lieferanschrift */}
+  {isVendor && (order as any).shippingAddress ? (
+    <section className={styles.addrPanel}>
+      <h3 className={styles.addrTitle}>Lieferanschrift</h3>
+      <dl className={styles.addrDl}>
+        {(order as any).shippingAddress.company && (<><dt>Firma</dt><dd>{(order as any).shippingAddress.company}</dd></>)}
+        {(order as any).shippingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).shippingAddress.firstName}</dd></>)}
+        {(order as any).shippingAddress.lastName && (<><dt>Nachname</dt><dd>{(order as any).shippingAddress.lastName}</dd></>)}
         {((order as any).shippingAddress.street || (order as any).shippingAddress.houseNumber) && (
-          <>
-            <div className={styles.addrLabel}>Straße</div>
-            <div className={styles.addrValue}>
-              {[(order as any).shippingAddress.street, (order as any).shippingAddress.houseNumber].filter(Boolean).join(' ')}
-            </div>
-          </>
+          <><dt>Straße</dt><dd>{[(order as any).shippingAddress.street,(order as any).shippingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
         )}
         {((order as any).shippingAddress.zip || (order as any).shippingAddress.city) && (
-          <>
-            <div className={styles.addrLabel}>PLZ/Ort</div>
-            <div className={styles.addrValue}>
-              {[(order as any).shippingAddress.zip, (order as any).shippingAddress.city].filter(Boolean).join(' ')}
-            </div>
-          </>
+          <><dt>PLZ/Ort</dt><dd>{[(order as any).shippingAddress.zip,(order as any).shippingAddress.city].filter(Boolean).join(' ')}</dd></>
         )}
-        {(order as any).shippingAddress.country && (
-          <>
-            <div className={styles.addrLabel}>Land</div>
-            <div className={styles.addrValue}>{(order as any).shippingAddress.country}</div>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+        {(order as any).shippingAddress.country && (<><dt>Land</dt><dd>{(order as any).shippingAddress.country}</dd></>)}
+      </dl>
+    </section>
+  ) : <div />}
 
-{/* Verkäufer-Sicht: Rechnungsadresse mit Firma + UID + Labels */}
-{isVendor && (order as any).billingAddress && (
-  <div className={styles.meta} style={{ marginTop: 8 }}>
-    <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-      <div className={styles.metaLabel}>Rechnungsadresse</div>
-      <div className={styles.addrGrid}>
-        {(order as any).billingAddress.company && (
-          <>
-            <div className={styles.addrLabel}>Firma</div>
-            <div className={styles.addrValue}>{(order as any).billingAddress.company}</div>
-          </>
-        )}
-        {(order as any).billingAddress.vat && (
-          <>
-            <div className={styles.addrLabel}>UID</div>
-            <div className={styles.addrValue}>{(order as any).billingAddress.vat}</div>
-          </>
-        )}
-        {/* Bei Privatkunden zusätzlich Vor- und Nachname anzeigen */}
+  {/* Rechnungsadresse */}
+  {isVendor && (order as any).billingAddress ? (
+    <section className={styles.addrPanel}>
+      <h3 className={styles.addrTitle}>Rechnungsadresse</h3>
+      <dl className={styles.addrDl}>
+        {(order as any).billingAddress.company && (<><dt>Firma</dt><dd>{(order as any).billingAddress.company}</dd></>)}
+        {(order as any).billingAddress.vat && (<><dt>UID</dt><dd>{(order as any).billingAddress.vat}</dd></>)}
         {!((order as any).billingAddress.isBusiness) && (
           <>
-            {(order as any).billingAddress.firstName && (
-              <>
-                <div className={styles.addrLabel}>Vorname</div>
-                <div className={styles.addrValue}>{(order as any).billingAddress.firstName}</div>
-              </>
-            )}
-            {(order as any).billingAddress.lastName && (
-              <>
-                <div className={styles.addrLabel}>Nachname</div>
-                <div className={styles.addrValue}>{(order as any).billingAddress.lastName}</div>
-              </>
-            )}
+            {(order as any).billingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).billingAddress.firstName}</dd></>)}
+            {(order as any).billingAddress.lastName &&  (<><dt>Nachname</dt><dd>{(order as any).billingAddress.lastName}</dd></>)}
           </>
         )}
         {((order as any).billingAddress.street || (order as any).billingAddress.houseNumber) && (
-          <>
-            <div className={styles.addrLabel}>Straße</div>
-            <div className={styles.addrValue}>
-              {[(order as any).billingAddress.street, (order as any).billingAddress.houseNumber].filter(Boolean).join(' ')}
-            </div>
-          </>
+          <><dt>Straße</dt><dd>{[(order as any).billingAddress.street,(order as any).billingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
         )}
         {((order as any).billingAddress.zip || (order as any).billingAddress.city) && (
-          <>
-            <div className={styles.addrLabel}>PLZ/Ort</div>
-            <div className={styles.addrValue}>
-              {[(order as any).billingAddress.zip, (order as any).billingAddress.city].filter(Boolean).join(' ')}
-            </div>
-          </>
+          <><dt>PLZ/Ort</dt><dd>{[(order as any).billingAddress.zip,(order as any).billingAddress.city].filter(Boolean).join(' ')}</dd></>
         )}
-        {(order as any).billingAddress.country && (
-          <>
-            <div className={styles.addrLabel}>Land</div>
-            <div className={styles.addrValue}>{(order as any).billingAddress.country}</div>
-          </>
-        )}
+        {(order as any).billingAddress.country && (<><dt>Land</dt><dd>{(order as any).billingAddress.country}</dd></>)}
+      </dl>
+    </section>
+  ) : <div />}
+
+  {/* Actions rechts (Buttons gleich groß, rechtsbündig) */}
+  <aside className={styles.sideCol}>
+    {isVendor && order.status === 'confirmed' && (
+      <a
+        href={`/api/invoices/${order.orderId}/download`}
+        className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+        target="_blank" rel="noopener"
+      >
+        Rechnung herunterladen (PDF)
+      </a>
+    )}
+
+    {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
+      <>
+        <button
+          type="button"
+          className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+          onClick={() => setShipOrder(order)}
+        >
+          Versandt melden
+        </button>
+        {refundHint && <div className={styles.btnHint}>{refundHint}</div>}
+      </>
+    )}
+
+    {isCustomer && order.status === 'reported' && (
+      <>
+        <button
+          type="button"
+          className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+          onClick={() => doRelease(order)}
+        >
+          Empfang bestätigen & Zahlung freigeben
+        </button>
+        <button
+          type="button"
+          className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+          onClick={() => openDispute(order)}
+        >
+          Problem melden
+        </button>
+        <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
+      </>
+    )}
+
+    {isCustomer && refundHint && !order.shippedAt && (
+      <div className={styles.btnHint}>{refundHint}</div>
+    )}
+
+    {order.disputeReason && (
+      <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
+        <strong>Reklamationsgrund:</strong> {order.disputeReason}
       </div>
-    </div>
-  </div>
-)}
+    )}
 
+    {canRateNow(order) && (
+      <button
+        type="button"
+        className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+        onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
+      >
+        Bewertung abgeben
+      </button>
+    )}
+  </aside>
+</div>
 
-              </div>
             </li>
           )
         })}
