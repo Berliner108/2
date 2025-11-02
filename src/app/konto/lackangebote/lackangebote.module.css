@@ -465,3 +465,45 @@
 .addrValue {
   word-break: break-word;
 }
+/* === Actions-Spalte: Buttons gleich breit, Adressen nebeneinander (Desktop) === */
+.actions{
+  margin-top:.9rem;
+  display:flex;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+/* Buttons gleiche Breite und kein Überlaufen */
+.actions > .primaryBtn,
+.actions > .secondaryBtn,
+.actions > .btnGhost,
+.actions > .actionStack{
+  flex: 1 1 280px;
+  max-width: 360px;
+  box-sizing: border-box;
+}
+
+.actions .secondaryBtn,
+.actions .primaryBtn{
+  width: 100%;
+  overflow-wrap: anywhere;  /* lange Texte umbrechen */
+  white-space: normal;
+}
+
+/* Adress-Panels */
+.actions .meta{
+  flex: 1 1 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border, #e8eef3);
+  border-radius: 12px;
+  background: var(--panel, #fff);
+  padding: 12px;
+}
+
+@media (min-width: 1024px){
+  .actions .meta{
+    flex: 1 1 calc(50% - 6px); /* zwei Spalten */
+    margin-top: 0 !important;
+  }
+}
