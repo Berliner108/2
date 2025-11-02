@@ -25,17 +25,17 @@ export async function POST(req: Request) {
       .maybeSingle()
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-    // (1) Nur Lack-Bestellungen freigeben
+    // (1) Nur Lack-Bestellungen
     if (order.kind !== 'lack') {
       return NextResponse.json({ error: 'Wrong order kind' }, { status: 400 })
     }
 
-    // Nur Buyer — KEIN Admin-Bypass
+    // Nur der Käufer darf freigeben
     if (order.buyer_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // (2) Release blocken, falls Reklamation auf dem Request markiert ist
+    // (2) Blockieren, wenn Request reklamiert
     const { data: reqRow } = await admin
       .from('lack_requests')
       .select('data, status')
@@ -45,24 +45,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Order is disputed' }, { status: 409 })
     }
 
+    // Idempotent-Zweig: Transfer existiert schon
+    if (order.transfer_id) {
+      try {
+        // Rechnung sicherstellen (idempotent), aber KEINE URL an den Käufer zurückgeben
+        await ensureInvoiceForOrder(order.id)
+      } catch {}
+      return NextResponse.json({ ok: true, transferId: order.transfer_id, invoiceReady: true }, { status: 200 })
+    }
+
     if (order.status !== 'funds_held') {
       return NextResponse.json({ error: 'Order not in releasable state' }, { status: 400 })
     }
     if (!order.charge_id) return NextResponse.json({ error: 'Missing charge' }, { status: 400 })
-
-    // Idempotenz: Transfer existiert schon?
-    if (order.transfer_id) {
-      let invoiceUrl: string | undefined
-      try {
-        const result = await ensureInvoiceForOrder(order.id)
-        const pdfPath = (result as any)?.pdf_path as string | undefined
-        if (pdfPath) {
-          const { data: signed, error: sErr } = await admin.storage.from('invoices').createSignedUrl(pdfPath, 600)
-          if (!sErr && signed?.signedUrl) invoiceUrl = signed.signedUrl
-        }
-      } catch { /* still ok, release already done */ }
-      return NextResponse.json({ ok: true, transferId: order.transfer_id, invoiceUrl }, { status: 200 })
-    }
 
     // Ziel-Konto (Connect)
     const { data: prof } = await admin
@@ -97,7 +92,7 @@ export async function POST(req: Request) {
       updated_at: new Date().toISOString(),
     }).eq('id', order.id)
 
-    // (3) Request final auf paid – aber nur wenn noch nicht paid
+    // (3) Request final auf paid – nur wenn noch nicht paid
     await admin.from('lack_requests').update({
       status: 'paid',
       updated_at: new Date().toISOString(),
@@ -105,20 +100,15 @@ export async function POST(req: Request) {
     .eq('id', order.request_id)
     .neq('status', 'paid')
 
-    // Rechnung erzeugen (idempotent)
-    let invoiceUrl: string | undefined
+    // Rechnung serverseitig erzeugen (idempotent), aber NICHT an den Käufer zurückgeben
     try {
-      const result = await ensureInvoiceForOrder(order.id)
-      const pdfPath = (result as any)?.pdf_path as string | undefined
-      if (pdfPath) {
-        const { data: signed, error: sErr } = await admin.storage.from('invoices').createSignedUrl(pdfPath, 600)
-        if (!sErr && signed?.signedUrl) invoiceUrl = signed.signedUrl
-      }
+      await ensureInvoiceForOrder(order.id)
     } catch (err) {
       console.error('[release] invoice generation failed:', err)
     }
 
-    return NextResponse.json({ ok: true, transferId: tr.id, invoiceUrl }, { status: 200 })
+    // Wichtig: KEINE invoiceUrl mehr im Response!
+    return NextResponse.json({ ok: true, transferId: tr.id, invoiceReady: true }, { status: 200 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Release failed' }, { status: 500 })
   }
