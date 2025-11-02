@@ -531,80 +531,73 @@
   .sideCol{ justify-self: stretch; max-width: none; }
 }
 
-/* --- kleine Angleichungen an bestehende Buttons --- */
-/* Sorge dafür, dass sekundäre/primäre alte Klassen nicht stören */
-/* --- Gemeinsame Basis für ALLE Buttons (auch <a>) --- */
-.primaryBtn,
-.secondaryBtn,
-.btnGhost,
-.actions a.secondaryBtn {
+/* ====== UNIFY CTAs (Alias der alten Klassen) – GANZ ANS ENDE SETZEN ====== */
+
+/* 1) Gemeinsame Basis: gleiche Größe, Typo, Schatten, Hover-Lift */
+:is(.ctaBtn, .primaryBtn, .secondaryBtn, .btnGhost, .actions a.secondaryBtn) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-
   width: 100%;
   min-height: 44px;
-  padding: 10px 14px;
-
+  padding: 12px 16px;
   border-radius: 12px;
-  font-weight: 700;
-  font-family: 'Oswald', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font: inherit;            /* gleiche Schriftart/-größe */
+  font-weight: 800;
   line-height: 1.15;
   text-decoration: none;
   cursor: pointer;
+  box-sizing: border-box;
 
   border: 1px solid rgba(0,0,0,.08);
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
-  transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease, filter .15s ease;
+  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease, color .15s ease;
 }
 
-.primaryBtn:hover,
-.secondaryBtn:hover,
-.btnGhost:hover,
-.actions a.secondaryBtn:hover {
+:is(.ctaBtn, .primaryBtn, .secondaryBtn, .btnGhost, .actions a.secondaryBtn):hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0,0,0,.18);
 }
 
-.primaryBtn:active,
-.secondaryBtn:active,
-.btnGhost:active,
-.actions a.secondaryBtn:active {
-  transform: translateY(0);
-}
+/* 2) Varianten angleichen (alte Klassen -> neue Looks) */
 
-/* --- Varianten (Farben bleiben unterschiedlich) --- */
-
-/* dein Rechnungsbutton-Look (Gradient + Animation) */
-.secondaryBtn,
-.actions a.secondaryBtn {
+/* Sekundär = dein Rechnungsbutton-Look (Gradient + schnellere Animation beim Hover).
+   Gilt für .secondaryBtn (alt), .ctaSecondary (neu) und <a>.secondaryBtn in .actions */
+:is(.secondaryBtn, .ctaSecondary, .actions a.secondaryBtn) {
   color: #fff;
   background: linear-gradient(90deg, #b91c1c, #ef4444, #f97316, #ef4444, #b91c1c);
   background-size: 300% 300%;
   animation: btnGradientMove 6s linear infinite;
+  border-color: rgba(0,0,0,.08);
 }
-.secondaryBtn:hover,
-.actions a.secondaryBtn:hover { animation-duration: 3s; }
+:is(.secondaryBtn, .ctaSecondary, .actions a.secondaryBtn):hover {
+  color: #fff;                 /* ⬅ Text bleibt/wirkt heller wie beim Rechnungsbutton */
+  animation-duration: 3s;      /* Hover-Boost wie beim PDF-Button */
+}
 
-/* Primär-CTA: gleicher Effekt, fester Farbton */
-.primaryBtn {
-  color: #fff !important;
+/* Primär = Türkis */
+:is(.primaryBtn, .ctaPrimary) {
   background: #00b5d8;
+  color: #fff;
   border: 0;
 }
-.primaryBtn:hover { filter: brightness(.95); }
-
-/* Ghost-Variante: gleicher Hover/Active-Lift, heller Look */
-.btnGhost {
-  background: #fff;
-  color: #111827;
+:is(.primaryBtn, .ctaPrimary):hover {
+  color: #fff;                 /* ⬅ gleiche „helle Schrift beim Hover“-Wahrnehmung */
+  filter: brightness(.95);
 }
 
-/* Abstand zwischen Buttons in der rechten Spalte (falls nötig) */
-.side > * + * { margin-top: 10px; }
+/* Ghost = heller Button */
+:is(.btnGhost, .ctaGhost) {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+:is(.btnGhost, .ctaGhost):hover {
+  background: #f9fafb;
+}
 
-/* vorhandene Keyframes beibehalten */
+/* (Keyframes beibehalten) */
 @keyframes btnGradientMove {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
