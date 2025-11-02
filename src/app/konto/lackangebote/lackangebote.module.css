@@ -465,33 +465,35 @@
 .addrValue {
   word-break: break-word;
 }
-/* === Actions-Spalte: Buttons gleich breit, Adressen nebeneinander (Desktop) === */
+/* === FIX: Buttons gleich breit + Adress-Panels nebeneinander === */
 .actions{
-  margin-top:.9rem;
-  display:flex;
-  align-items:flex-start;
-  flex-wrap:wrap;
-  gap:12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
 }
 
-/* Buttons gleiche Breite und kein Überlaufen */
-.actions > .primaryBtn,
-.actions > .secondaryBtn,
-.actions > .btnGhost,
-.actions > .actionStack{
-  flex: 1 1 280px;
-  max-width: 360px;
-  box-sizing: border-box;
-}
-
-.actions .secondaryBtn,
-.actions .primaryBtn{
+/* Buttons: gleiche Breite, kein Überlaufen */
+.actions .primaryBtn,
+.actions .secondaryBtn{
+  min-width: 280px;
+  max-width: 320px;
   width: 100%;
-  overflow-wrap: anywhere;  /* lange Texte umbrechen */
-  white-space: normal;
+  box-sizing: border-box;
+  white-space: normal;           /* darf umbrechen */
+  overflow-wrap: anywhere;       /* lange Texte umbrechen */
+  line-height: 1.1;
 }
 
-/* Adress-Panels */
+/* Sicherheit: Links in Actions verhalten sich wie Buttons */
+.actions a.primaryBtn,
+.actions a.secondaryBtn{
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Adress-Panels (nur die in der Actions-Zeile!) */
 .actions .meta{
   flex: 1 1 100%;
   box-sizing: border-box;
@@ -499,11 +501,12 @@
   border-radius: 12px;
   background: var(--panel, #fff);
   padding: 12px;
+  margin-top: 0 !important;
 }
 
+/* Ab Desktop: zwei Spalten für die beiden Adressen */
 @media (min-width: 1024px){
   .actions .meta{
-    flex: 1 1 calc(50% - 6px); /* zwei Spalten */
-    margin-top: 0 !important;
+    flex: 1 1 calc(50% - 6px);
   }
 }
