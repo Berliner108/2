@@ -533,7 +533,80 @@
 
 /* --- kleine Angleichungen an bestehende Buttons --- */
 /* Sorge dafür, dass sekundäre/primäre alte Klassen nicht stören */
-.primaryBtn, .secondaryBtn, .btnGhost{
-  font: inherit;              /* gleiche Schriftart/größe */
+/* --- Gemeinsame Basis für ALLE Buttons (auch <a>) --- */
+.primaryBtn,
+.secondaryBtn,
+.btnGhost,
+.actions a.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: 100%;
   min-height: 44px;
+  padding: 10px 14px;
+
+  border-radius: 12px;
+  font-weight: 700;
+  font-family: 'Oswald', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.15;
+  text-decoration: none;
+  cursor: pointer;
+
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  transition: transform .06s ease, box-shadow .15s ease, border-color .15s ease, filter .15s ease;
+}
+
+.primaryBtn:hover,
+.secondaryBtn:hover,
+.btnGhost:hover,
+.actions a.secondaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+}
+
+.primaryBtn:active,
+.secondaryBtn:active,
+.btnGhost:active,
+.actions a.secondaryBtn:active {
+  transform: translateY(0);
+}
+
+/* --- Varianten (Farben bleiben unterschiedlich) --- */
+
+/* dein Rechnungsbutton-Look (Gradient + Animation) */
+.secondaryBtn,
+.actions a.secondaryBtn {
+  color: #fff;
+  background: linear-gradient(90deg, #b91c1c, #ef4444, #f97316, #ef4444, #b91c1c);
+  background-size: 300% 300%;
+  animation: btnGradientMove 6s linear infinite;
+}
+.secondaryBtn:hover,
+.actions a.secondaryBtn:hover { animation-duration: 3s; }
+
+/* Primär-CTA: gleicher Effekt, fester Farbton */
+.primaryBtn {
+  color: #fff !important;
+  background: #00b5d8;
+  border: 0;
+}
+.primaryBtn:hover { filter: brightness(.95); }
+
+/* Ghost-Variante: gleicher Hover/Active-Lift, heller Look */
+.btnGhost {
+  background: #fff;
+  color: #111827;
+}
+
+/* Abstand zwischen Buttons in der rechten Spalte (falls nötig) */
+.side > * + * { margin-top: 10px; }
+
+/* vorhandene Keyframes beibehalten */
+@keyframes btnGradientMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 200% 50%; }
 }
