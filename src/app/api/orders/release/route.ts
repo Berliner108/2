@@ -54,10 +54,13 @@ export async function POST(req: Request) {
     if (order.transfer_id) {
       let invoiceUrl: string | undefined
       try {
-        const { pdf_path } = await ensureInvoiceForOrder(order.id)
-        const signed = await admin.storage.from('invoices').createSignedUrl(pdf_path, 600)
-        if (!('error' in signed) || !signed.error) invoiceUrl = (signed as any).signedUrl
-      } catch {}
+        const result = await ensureInvoiceForOrder(order.id)
+        const pdfPath = (result as any)?.pdf_path as string | undefined
+        if (pdfPath) {
+          const { data: signed, error: sErr } = await admin.storage.from('invoices').createSignedUrl(pdfPath, 600)
+          if (!sErr && signed?.signedUrl) invoiceUrl = signed.signedUrl
+        }
+      } catch { /* still ok, release already done */ }
       return NextResponse.json({ ok: true, transferId: order.transfer_id, invoiceUrl }, { status: 200 })
     }
 
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
     const stripe = getStripe()
     if (!stripe) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
 
-    const fee = Number.isFinite(order.fee_cents) ? Number(order.fee_cents) : Math.round(order.amount_cents * 0.07)
+    const fee = Number.isFinite(order.fee_cents) ? Number(order.fee_cents) : Math.round(Number(order.amount_cents) * 0.07)
     const sellerAmount = Math.max(0, Number(order.amount_cents) - fee)
 
     // Transfer (separate charges & transfers)
@@ -105,9 +108,12 @@ export async function POST(req: Request) {
     // Rechnung erzeugen (idempotent)
     let invoiceUrl: string | undefined
     try {
-      const { pdf_path } = await ensureInvoiceForOrder(order.id)
-      const signed = await admin.storage.from('invoices').createSignedUrl(pdf_path, 600)
-      if (!('error' in signed) || !signed.error) invoiceUrl = (signed as any).signedUrl
+      const result = await ensureInvoiceForOrder(order.id)
+      const pdfPath = (result as any)?.pdf_path as string | undefined
+      if (pdfPath) {
+        const { data: signed, error: sErr } = await admin.storage.from('invoices').createSignedUrl(pdfPath, 600)
+        if (!sErr && signed?.signedUrl) invoiceUrl = signed.signedUrl
+      }
     } catch (err) {
       console.error('[release] invoice generation failed:', err)
     }
