@@ -600,9 +600,17 @@
   .stars     { gap: 8px; }
   .starBtn   { font-size: 20px; }        /* etwas kleiner auf Mobile */
 
-  .reviewBox {
-    min-height: 120px;
-    font-size: .95rem;
+  .reviewBox{
+    min-height: 240px;   /* vorher z.B. 120px */
+    max-height: 60vh;    /* falls jemand extrem viel tippt */
+    overflow: auto;      /* scrollt erst ab der Obergrenze */
+    box-sizing: border-box;
+  }
+
+  /* falls nötig, Modal etwas höher scrollfähig lassen */
+  .modalContent{
+    max-height: calc(100vh - 32px);
+    overflow: auto;
   }
 
   /* Buttons untereinander, volle Breite */
