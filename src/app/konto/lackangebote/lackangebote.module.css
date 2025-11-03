@@ -613,3 +613,32 @@
   }
   .modalActions > * { width: 100%; }
 }
+/* --- Modal: sichere Breite + Randabstand --- */
+.modalContent {
+  box-sizing: border-box;                 /* Padding in die Breite einrechnen */
+  width: 100%;
+  max-width: 520px;                       /* Desktop-Limit */
+  margin-inline: auto;                    /* immer zentriert */
+}
+
+/* Mobile: 16px Rand links/rechts, kein Überlaufen */
+@media (max-width: 520px) {
+  .modal { padding: 16px; }               /* Abstand zum Viewportrand */
+  .modalContent {
+    max-width: none;
+    width: calc(100vw - 32px);            /* 16px links + 16px rechts */
+    margin: 0;                            /* kein Auto-Margin nötig */
+    border-radius: 12px;
+    padding: 16px;                        /* bleibt innen, läuft nicht über */
+  }
+}
+
+/* Falls irgendwo horizontales Scrollen bleibt (sicherheitsnetz) */
+@media (max-width: 520px) {
+  html, body { overflow-x: hidden; }
+}
+.reviewBox,
+.modalActions > * {
+  width: 100%;
+  box-sizing: border-box;
+}
