@@ -243,7 +243,11 @@
   padding: 22px 20px;
   transform: translateY(4px);
   animation: modalUp .18s ease-out;
+  overflow: hidden;
+  
 }
+.modalContent textarea { width: 100%; max-width: 100%; box-sizing: border-box; }
+
 @keyframes modalUp { from { transform: translateY(12px); opacity: .9; } to { transform: translateY(0); opacity: 1; } }
 .modalTitle { margin: 0 0 8px; font-size: 20px; font-weight: 800; color: #111827; }
 .modalText  { margin: 0 0 18px; color: #374151; line-height: 1.45; }
@@ -364,6 +368,7 @@
   padding: 10px 12px;
   font: inherit;
   resize: vertical;
+  box-sizing: border-box; /* wichtig */
 }
 /* ===== Fancy Top Loader (farbig) ===== */
 .topLoader {
