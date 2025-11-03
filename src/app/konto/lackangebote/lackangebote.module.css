@@ -569,3 +569,8 @@
 @media (prefers-reduced-motion: reduce){
   .ctaPrimary{ animation: none; background-position: 50% 50%; }
 }
+.ctaSecondary:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  animation-duration: 3s;
+}

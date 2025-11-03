@@ -1088,7 +1088,7 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
                   }
                 }}
               >
-                Abschicken
+                Bewerten
               </button>
             </div>
           </div>
