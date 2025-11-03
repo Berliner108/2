@@ -496,12 +496,6 @@
   box-sizing: border-box;
 }
 
-/* Varianten */
-.ctaPrimary{
-  background: #00b5d8;
-  color: #fff;
-}
-.ctaPrimary:hover{ filter: brightness(.95); }
 
 .ctaSecondary{
   background: linear-gradient(90deg, #b91c1c, #ef4444, #f97316, #ef4444, #b91c1c);
@@ -537,9 +531,18 @@
   font: inherit;              /* gleiche Schriftart/größe */
   min-height: 44px;
 }
-/* Bewertungsbutton = blau/türkis (wie vorher), kein Farbwechsel */
-.ctaPrimary {
-  background: #00b5d8;              /* dein Türkis/Blau */
+
+.ctaPrimary:active,
+.ctaSecondary:active { transform: translateY(0); }
+/* Bewertungsbutton: Text auf Hover bläulich einfärben */
+
+
+/* (Optional) auch die ältere Klasse angleichen, falls irgendwo noch verwendet: */
+.primaryBtn:hover { color: #e0f2fe; }
+/* Bewertungsbutton (türkis) mit Verlauf + bläulicher Schrift beim Hover */
+.ctaPrimary{
+  background: linear-gradient(90deg, #00b5d8, #06b6d4, #22d3ee, #06b6d4, #00b5d8);
+  background-size: 300% 300%;
   color: #fff;
   border: 1px solid rgba(0,0,0,.08);
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
@@ -552,21 +555,17 @@
   line-height: 1.15;
   cursor: pointer;
   text-decoration: none;
-  transition: transform .06s ease, box-shadow .15s ease; /* kein filter */
+  transition: color .15s ease, transform .06s ease, box-shadow .15s ease;
+  animation: btnGradientMove 6s linear infinite;
 }
 
-.ctaPrimary:hover {
-  /* gleiche „Lift“-Haptik wie Rechnungsbutton, aber Farbe bleibt gleich */
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0,0,0,.18);
-}
-
-/* Falls alte Regeln noch reinfunken, hart überschreiben: */
-.ctaPrimary, .ctaPrimary:hover { filter: none !important; }
-.ctaSecondary:hover{
+.ctaPrimary:hover{
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(0,0,0,.18);
   animation-duration: 3s;
+  color: #e0f2fe; /* Text wird bläulich beim Hover */
 }
-.ctaPrimary:active,
-.ctaSecondary:active { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce){
+  .ctaPrimary{ animation: none; background-position: 50% 50%; }
+}
