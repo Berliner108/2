@@ -1045,14 +1045,18 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
             </div>
 
             <textarea
-              className={styles.reviewBox}
-              value={ratingText}
-              onChange={e => setRatingText(e.target.value)}
-              placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
-              rows={4}
-              required
-            />
-            <div className={styles.btnHint} aria-live="polite">{ratingText.trim().length}/800</div>
+            className={styles.reviewBox}
+            value={ratingText}
+            onChange={(e) => setRatingText(e.target.value)}   // unverändert
+            placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
+            rows={4}
+            maxLength={800}                                    // ⬅️ harte 800-Grenze
+            required
+          />
+          <div className={styles.counter} aria-live="polite">
+            {ratingText.trim().length}/800
+          </div>
+
 
             <div className={styles.modalActions}>
               <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
