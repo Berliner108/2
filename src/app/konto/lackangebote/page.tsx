@@ -7,7 +7,6 @@ import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './lackangebote.module.css'
 
-
 /* ---------- Fancy Loader Components ---------- */
 function TopLoader() {
   return (
@@ -96,7 +95,9 @@ type LackOrder = {
 }
 
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
-type StatusKey = 'wartet' | 'aktiv' | 'fertig'
+
+// ✅ Neue Status/Filter-Keys
+type StatusKey = 'wartet' | 'offen' | 'reported' | 'disputed' | 'confirmed'
 type FilterKey = 'alle' | StatusKey
 
 const LS_KEY       = 'myLackOrdersV1'
@@ -152,7 +153,8 @@ const formatEUR = (c?: number) =>
 const formatDate = (d?: Date) =>
   d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
 
-function statusFromLiefer(d?: Date): { key: StatusKey; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
+// (darf bleiben, wird für Anzeige nicht mehr verwendet)
+function statusFromLiefer(d?: Date): { key: 'wartet' | 'aktiv' | 'fertig'; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
   if (!d) return { key: 'aktiv', label: 'In Bearbeitung' }
   return Date.now() < +d
     ? { key: 'wartet', label: 'Anlieferung geplant' }
@@ -192,6 +194,17 @@ async function apiPost(path: string, body?: any) {
   const json = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(json?.error || 'Aktion fehlgeschlagen')
   return json
+}
+
+/* ===== Display-Status aus Serverstatus + Lieferdatum ableiten ===== */
+function getDisplayStatus(order: LackOrder): { key: StatusKey; label: string } {
+  if (order.status === 'confirmed') return { key: 'confirmed', label: 'Geliefert (bestätigt)' }
+  if (order.status === 'disputed')  return { key: 'disputed',  label: 'Reklamiert' }
+  if (order.status === 'reported')  return { key: 'reported',  label: 'Versandt' }
+  // in_progress → wartet/offen per Lieferdatum
+  const liefer = asDateLike(order.lieferdatum)
+  if (liefer && Date.now() < +liefer) return { key: 'wartet', label: 'Anlieferung geplant' }
+  return { key: 'offen', label: 'Offen' }
 }
 
 /* ============ Pagination-UI ============ */
@@ -277,6 +290,8 @@ const LackanfragenOrdersPage: FC = () => {
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 300)
   const [sort,  setSort]  = useState<SortKey>('date_desc')
+
+  // ✅ Neuer Status-Filter-State
   const [statusFilter, setStatusFilter] = useState<FilterKey>('alle')
 
   // Seitennummern & PageSizes (pro Sektion)
@@ -344,39 +359,33 @@ const LackanfragenOrdersPage: FC = () => {
     }
     return `Anfrage #${String(order.requestId).slice(0, 8)}`
   }
-  // ⬇️ Diese beiden Funktionen ersetzen
-const pickCounterpartyName = (order: LackOrder) =>
-  order.kind === 'vergeben'
-    // ich (Käufer) sehe Anbieter → nur Handle/Username erlauben
-    ? (asHandleOrNull(order.vendorUsername) ||
-       asHandleOrNull((order as any).vendorHandle) ||
-       'Anbieter')
-    // ich (Anbieter) sehe Käufer → nur Handle erlauben
-    : (asHandleOrNull(order.ownerHandle) ||
-       asHandleOrNull((order as any).ownerUsername) ||
-       'Auftraggeber');
 
-const pickCounterpartyRatingTxt = (order: LackOrder) => {
-  const rating   = order.kind === 'vergeben' ? order.vendorRating : order.ownerRating;
-  const ratingCt = order.kind === 'vergeben' ? order.vendorRatingCount : order.ownerRatingCount;
-  return (typeof rating === 'number' && isFinite(rating) && (ratingCt ?? 0) > 0)
-    ? `${rating.toFixed(1)}/5 · ${ratingCt}`
-    : 'keine Bewertungen';
-};
-  function getStatusKeyFor(order: LackOrder, liefer?: Date): StatusKey {
-    if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
-    return statusFromLiefer(liefer).key
+  const pickCounterpartyName = (order: LackOrder) =>
+    order.kind === 'vergeben'
+      ? (asHandleOrNull(order.vendorUsername) ||
+         asHandleOrNull((order as any).vendorHandle) ||
+         'Anbieter')
+      : (asHandleOrNull(order.ownerHandle) ||
+         asHandleOrNull((order as any).ownerUsername) ||
+         'Auftraggeber')
+
+  const pickCounterpartyRatingTxt = (order: LackOrder) => {
+    const rating   = order.kind === 'vergeben' ? order.vendorRating : order.ownerRating
+    const ratingCt = order.kind === 'vergeben' ? order.vendorRatingCount : order.ownerRatingCount
+    return (typeof rating === 'number' && isFinite(rating) && (ratingCt ?? 0) > 0)
+      ? `${rating.toFixed(1)}/5 · ${ratingCt}`
+      : 'keine Bewertungen'
   }
 
   const allVergeben   = useMemo(() => orders.filter(o => o.kind === 'vergeben'),   [orders])
   const allAngenommen = useMemo(() => orders.filter(o => o.kind === 'angenommen'), [orders])
 
+  // ✅ Filter nutzt jetzt getDisplayStatus()
   const applySearchAndFilter = (items: LackOrder[], qStr: string) => {
     const q = qStr.trim().toLowerCase()
     return items.filter((order) => {
-      const liefer = pickLiefer(order)
       if (statusFilter !== 'alle') {
-        const key = getStatusKeyFor(order, liefer)
+        const key = getDisplayStatus(order).key
         if (key !== statusFilter) return false
       }
       if (!q) return true
@@ -415,8 +424,9 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
       const s = p.get('sort') as SortKey | null
       if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
 
+      // ✅ erlaubte Statuswerte aktualisiert
       const st = p.get('status') as FilterKey | null
-      if (st && ['alle','wartet','aktiv','fertig'].includes(st)) setStatusFilter(st)
+      if (st && ['alle','wartet','offen','reported','disputed','confirmed'].includes(st)) setStatusFilter(st)
 
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
@@ -599,12 +609,9 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
       <ul className={styles.list}>
         {slice.pageItems.map((order) => {
           const liefer = pickLiefer(order)
-          const prodStatus = statusFromLiefer(liefer)
-          const display =
-            order.status === 'confirmed' ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const } :
-            order.status === 'disputed'  ? { key: 'fertig' as StatusKey, label: 'Reklamiert' as const } :
-            order.status === 'reported'  ? { key: 'fertig' as StatusKey, label: 'Versandt' as const } :
-            prodStatus
+
+          // ✅ Neue Anzeige
+          const display = getDisplayStatus(order)
 
           const contactLabel = order.kind === 'vergeben' ? 'Anbieter' : 'Auftraggeber'
           const contactName  = pickCounterpartyName(order)
@@ -632,12 +639,11 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
                 </div>
                 <span className={[
                   styles.statusBadge,
-                  display.label === 'In Bearbeitung' ? styles.statusActive : '',
-                  display.label === 'Anlieferung geplant' ? styles.statusPending : '',
-                  display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
-                  display.label === 'Versandt' ? styles.statusPending : '',
-                  display.label === 'Reklamiert' ? styles.statusPending : '',
-                  display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
+                  display.key === 'offen'     ? styles.statusActive  : '',
+                  display.key === 'wartet'    ? styles.statusPending : '',
+                  display.key === 'reported'  ? styles.statusPending : '',
+                  display.key === 'disputed'  ? styles.statusPending : '',
+                  display.key === 'confirmed' ? styles.statusDone    : '',
                 ].join(' ').trim()}>
                   {display.label}
                 </span>
@@ -694,116 +700,116 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
               </div>
 
               {/* 3-Spalten-Zeile: Lieferadresse | Rechnungsadresse | Actions (rechts) */}
-<div className={styles.detailsRow}>
-  {/* Lieferanschrift */}
-  {isVendor && (order as any).shippingAddress ? (
-    <section className={styles.addrPanel}>
-      <h3 className={styles.addrTitle}>Lieferanschrift</h3>
-      <dl className={styles.addrDl}>
-        {(order as any).shippingAddress.company && (<><dt>Firma</dt><dd>{(order as any).shippingAddress.company}</dd></>)}
-        {(order as any).shippingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).shippingAddress.firstName}</dd></>)}
-        {(order as any).shippingAddress.lastName && (<><dt>Nachname</dt><dd>{(order as any).shippingAddress.lastName}</dd></>)}
-        {((order as any).shippingAddress.street || (order as any).shippingAddress.houseNumber) && (
-          <><dt>Straße</dt><dd>{[(order as any).shippingAddress.street,(order as any).shippingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
-        )}
-        {((order as any).shippingAddress.zip || (order as any).shippingAddress.city) && (
-          <><dt>PLZ/Ort</dt><dd>{[(order as any).shippingAddress.zip,(order as any).shippingAddress.city].filter(Boolean).join(' ')}</dd></>
-        )}
-        {(order as any).shippingAddress.country && (<><dt>Land</dt><dd>{(order as any).shippingAddress.country}</dd></>)}
-      </dl>
-    </section>
-  ) : <div />}
+              <div className={styles.detailsRow}>
+                {/* Lieferanschrift */}
+                {isVendor && (order as any).shippingAddress ? (
+                  <section className={styles.addrPanel}>
+                    <h3 className={styles.addrTitle}>Lieferanschrift</h3>
+                    <dl className={styles.addrDl}>
+                      {(order as any).shippingAddress.company && (<><dt>Firma</dt><dd>{(order as any).shippingAddress.company}</dd></>)}
+                      {(order as any).shippingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).shippingAddress.firstName}</dd></>)}
+                      {(order as any).shippingAddress.lastName && (<><dt>Nachname</dt><dd>{(order as any).shippingAddress.lastName}</dd></>)}
+                      {((order as any).shippingAddress.street || (order as any).shippingAddress.houseNumber) && (
+                        <><dt>Straße</dt><dd>{[(order as any).shippingAddress.street,(order as any).shippingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
+                      )}
+                      {((order as any).shippingAddress.zip || (order as any).shippingAddress.city) && (
+                        <><dt>PLZ/Ort</dt><dd>{[(order as any).shippingAddress.zip,(order as any).shippingAddress.city].filter(Boolean).join(' ')}</dd></>
+                      )}
+                      {(order as any).shippingAddress.country && (<><dt>Land</dt><dd>{(order as any).shippingAddress.country}</dd></>)}
+                    </dl>
+                  </section>
+                ) : <div />}
 
-  {/* Rechnungsadresse */}
-  {isVendor && (order as any).billingAddress ? (
-    <section className={styles.addrPanel}>
-      <h3 className={styles.addrTitle}>Rechnungsadresse</h3>
-      <dl className={styles.addrDl}>
-        {(order as any).billingAddress.company && (<><dt>Firma</dt><dd>{(order as any).billingAddress.company}</dd></>)}
-        {(order as any).billingAddress.vat && (<><dt>UID</dt><dd>{(order as any).billingAddress.vat}</dd></>)}
-        {!((order as any).billingAddress.isBusiness) && (
-          <>
-            {(order as any).billingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).billingAddress.firstName}</dd></>)}
-            {(order as any).billingAddress.lastName &&  (<><dt>Nachname</dt><dd>{(order as any).billingAddress.lastName}</dd></>)}
-          </>
-        )}
-        {((order as any).billingAddress.street || (order as any).billingAddress.houseNumber) && (
-          <><dt>Straße</dt><dd>{[(order as any).billingAddress.street,(order as any).billingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
-        )}
-        {((order as any).billingAddress.zip || (order as any).billingAddress.city) && (
-          <><dt>PLZ/Ort</dt><dd>{[(order as any).billingAddress.zip,(order as any).billingAddress.city].filter(Boolean).join(' ')}</dd></>
-        )}
-        {(order as any).billingAddress.country && (<><dt>Land</dt><dd>{(order as any).billingAddress.country}</dd></>)}
-      </dl>
-    </section>
-  ) : <div />}
+                {/* Rechnungsadresse */}
+                {isVendor && (order as any).billingAddress ? (
+                  <section className={styles.addrPanel}>
+                    <h3 className={styles.addrTitle}>Rechnungsadresse</h3>
+                    <dl className={styles.addrDl}>
+                      {(order as any).billingAddress.company && (<><dt>Firma</dt><dd>{(order as any).billingAddress.company}</dd></>)}
+                      {(order as any).billingAddress.vat && (<><dt>UID</dt><dd>{(order as any).billingAddress.vat}</dd></>)}
+                      {!((order as any).billingAddress.isBusiness) && (
+                        <>
+                          {(order as any).billingAddress.firstName && (<><dt>Vorname</dt><dd>{(order as any).billingAddress.firstName}</dd></>)}
+                          {(order as any).billingAddress.lastName &&  (<><dt>Nachname</dt><dd>{(order as any).billingAddress.lastName}</dd></>)}
+                        </>
+                      )}
+                      {((order as any).billingAddress.street || (order as any).billingAddress.houseNumber) && (
+                        <><dt>Straße</dt><dd>{[(order as any).billingAddress.street,(order as any).billingAddress.houseNumber].filter(Boolean).join(' ')}</dd></>
+                      )}
+                      {((order as any).billingAddress.zip || (order as any).billingAddress.city) && (
+                        <><dt>PLZ/Ort</dt><dd>{[(order as any).billingAddress.zip,(order as any).billingAddress.city].filter(Boolean).join(' ')}</dd></>
+                      )}
+                      {(order as any).billingAddress.country && (<><dt>Land</dt><dd>{(order as any).billingAddress.country}</dd></>)}
+                    </dl>
+                  </section>
+                ) : <div />}
 
-  {/* Actions rechts (Buttons gleich groß, rechtsbündig) */}
-  <aside className={styles.sideCol}>
-    {isVendor && order.status === 'confirmed' && (
-      <a
-        href={`/api/invoices/${order.orderId}/download`}
-        className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-        target="_blank" rel="noopener"
-      >
-        Rechnung herunterladen (PDF)
-      </a>
-    )}
+                {/* Actions rechts */}
+                <aside className={styles.sideCol}>
+                  {isVendor && order.status === 'confirmed' && (
+                    <a
+                      href={`/api/invoices/${order.orderId}/download`}
+                      className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                      target="_blank" rel="noopener"
+                    >
+                      Rechnung herunterladen (PDF)
+                    </a>
+                  )}
 
-    {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
-      <>
-        <button
-          type="button"
-          className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-          onClick={() => setShipOrder(order)}
-        >
-          Versandt melden
-        </button>
-        {refundHint && <div className={styles.btnHint}>{refundHint}</div>}
-      </>
-    )}
+                  {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
+                    <>
+                      <button
+                        type="button"
+                        className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                        onClick={() => setShipOrder(order)}
+                      >
+                        Versandt melden
+                      </button>
+                      {refundHint && <div className={styles.btnHint}>{refundHint}</div>}
+                    </>
+                  )}
 
-    {isCustomer && order.status === 'reported' && (
-      <>
-        <button
-          type="button"
-          className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-          onClick={() => doRelease(order)}
-        >
-          Empfang bestätigen & Zahlung freigeben
-        </button>
-        <button
-          type="button"
-          className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-          onClick={() => openDispute(order)}
-        >
-          Problem melden
-        </button>
-        <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
-      </>
-    )}
+                  {isCustomer && order.status === 'reported' && (
+                    <>
+                      <button
+                        type="button"
+                        className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                        onClick={() => doRelease(order)}
+                      >
+                        Empfang bestätigen & Zahlung freigeben
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+                        onClick={() => openDispute(order)}
+                      >
+                        Problem melden
+                      </button>
+                      <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
+                    </>
+                  )}
 
-    {isCustomer && refundHint && !order.shippedAt && (
-      <div className={styles.btnHint}>{refundHint}</div>
-    )}
+                  {isCustomer && refundHint && !order.shippedAt && (
+                    <div className={styles.btnHint}>{refundHint}</div>
+                  )}
 
-    {order.disputeReason && (
-      <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
-        <strong>Reklamationsgrund:</strong> {order.disputeReason}
-      </div>
-    )}
+                  {order.disputeReason && (
+                    <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
+                      <strong>Reklamationsgrund:</strong> {order.disputeReason}
+                    </div>
+                  )}
 
-    {canRateNow(order) && (
-      <button
-        type="button"
-        className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-        onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
-      >
-        Bewertung abgeben
-      </button>
-    )}
-  </aside>
-</div>
+                  {canRateNow(order) && (
+                    <button
+                      type="button"
+                      className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                      onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
+                    >
+                      Bewertung abgeben
+                    </button>
+                  )}
+                </aside>
+              </div>
 
             </li>
           )
@@ -871,7 +877,7 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
 
-          {/* Status-Filter */}
+          {/* ✅ Neuer Status-Filter */}
           <label className={styles.visuallyHidden} htmlFor="status">Status</label>
           <select
             id="status"
@@ -882,8 +888,10 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
           >
             <option value="alle">Alle</option>
             <option value="wartet">Anlieferung geplant</option>
-            <option value="aktiv">In Bearbeitung</option>
-            <option value="fertig">Abholbereit/Versandt</option>
+            <option value="offen">Offen</option>
+            <option value="reported">Versandt</option>
+            <option value="disputed">Reklamiert</option>
+            <option value="confirmed">Geliefert (bestätigt)</option>
           </select>
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
@@ -994,11 +1002,15 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
             <textarea
               className={styles.reviewBox}
               value={disputeText}
-              onChange={e => setDisputeText(e.target.value.slice(0, 800))}
+              onChange={(e) => setDisputeText(e.target.value.slice(0, 800))}
+              maxLength={800}
               placeholder="z. B. Menge/Qualität weicht ab, nicht geliefert…"
               rows={4}
+              required
             />
-            <div className={styles.btnHint} aria-live="polite">{disputeText.trim().length}/800</div>
+            <div className={styles.btnHint} aria-live="polite">
+              {disputeText.length}/800
+            </div>
 
             <div className={styles.modalActions}>
               <button type="button" className={styles.btnGhost} onClick={cancelDispute} disabled={disputeBusy}>Abbrechen</button>
@@ -1045,18 +1057,17 @@ const pickCounterpartyRatingTxt = (order: LackOrder) => {
             </div>
 
             <textarea
-            className={styles.reviewBox}
-            value={ratingText}
-            onChange={(e) => setRatingText(e.target.value)}   // unverändert
-            placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
-            rows={4}
-            maxLength={800}                                    // ⬅️ harte 800-Grenze
-            required
-          />
-          <div className={styles.counter} aria-live="polite">
-            {ratingText.trim().length}/800
-          </div>
-
+              className={styles.reviewBox}
+              value={ratingText}
+              onChange={(e) => setRatingText(e.target.value)}
+              placeholder="Kurz beschreiben, wie die Lieferung/Qualität war…"
+              rows={4}
+              maxLength={800}
+              required
+            />
+            <div className={styles.counter} aria-live="polite">
+              {ratingText.trim().length}/800
+            </div>
 
             <div className={styles.modalActions}>
               <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
