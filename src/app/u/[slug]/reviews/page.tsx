@@ -1,10 +1,11 @@
 'use client'
 
+import React, { useState } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import Navbar from '@/app/components/navbar/Navbar'
-import styles from '../../../konto/lackangebote/lackangebote.module.css'
+import styles from './user-reviews.module.css'
 
 type ReviewItem = {
   id: string
@@ -67,6 +68,9 @@ export default function UserReviewsPage() {
     return u || 'Nutzer'
   }
 
+  // State: welche Kommentare sind aufgeklappt
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
   return (
     <>
       <Navbar />
@@ -127,6 +131,8 @@ export default function UserReviewsPage() {
                     <span className={styles.titleLink}>Anfrage nicht mehr verfügbar</span>
                   )
 
+                  const isOpen = !!expanded[it.id]
+
                   return (
                     <li key={it.id} className={styles.card}>
                       <div className={styles.cardHeader}>
@@ -144,9 +150,25 @@ export default function UserReviewsPage() {
                       <div className={styles.meta}>
                         <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
                           <div className={styles.metaLabel}>Kommentar</div>
-                          <div className={styles.metaValue} style={{ whiteSpace: 'pre-wrap' }}>
+
+                          {/* Kommentar mit Clamp */}
+                          <p className={`${styles.comment} ${!isOpen ? styles.clamp : ''}`}>
                             {it.comment}
-                          </div>
+                          </p>
+
+                          {/* Toggle */}
+                          {it.comment?.length > 220 && (
+                            <button
+                              type="button"
+                              className={styles.titleLink}
+                              onClick={() => setExpanded(s => ({ ...s, [it.id]: !s[it.id] }))}
+                              aria-expanded={isOpen}
+                              aria-controls={`c_${it.id}`}
+                              style={{ marginTop: 6 }}
+                            >
+                              {!isOpen ? 'Mehr lesen' : 'Weniger'}
+                            </button>
+                          )}
                         </div>
                       </div>
 
