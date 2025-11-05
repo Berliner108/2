@@ -38,6 +38,38 @@ function Stars({ n }: { n: number }) {
   return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
+/** Skeletons ------------------------------------------------------------- */
+function HeaderSkeleton() {
+  return (
+    <div className={`${styles.card} ${styles.skeletonCard}`}>
+      <div className={styles.skelTitle} />
+      <div className={styles.skelMetaRow}>
+        <div className={styles.skelMetaBox}><div className={styles.skelLine} /></div>
+        <div className={styles.skelMetaBox}><div className={styles.skelLine} /></div>
+      </div>
+    </div>
+  )
+}
+function ListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <ul className={styles.list}>
+      {Array.from({ length: count }).map((_, i) => (
+        <li key={i} className={`${styles.card} ${styles.skeletonCard}`}>
+          <div className={styles.skelHeaderRow}>
+            <div className={styles.skelTitleSm} />
+            <div className={styles.skelStars} />
+          </div>
+          <div className={styles.skelLines}>
+            <div className={styles.skelLine} />
+            <div className={styles.skelLine} />
+            <div className={styles.skelLineShort} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
   const search = useSearchParams()
@@ -68,40 +100,52 @@ export default function UserReviewsPage() {
     return u || 'Nutzer'
   }
 
-  // State: welche Kommentare sind aufgeklappt
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        {isLoading && <div className={styles.emptyState}>Lade Reviews…</div>}
+
+        {/* Loading nicer */}
+        {isLoading && (
+          <>
+            <HeaderSkeleton />
+            <ListSkeleton count={4} />
+          </>
+        )}
+
         {error && (
           <div className={styles.emptyState}>
-            <strong>Fehler:</strong> {(error as any)?.message || 'Konnte Reviews nicht laden.'}
+            <div className={styles.errorBadge}>⚠︎</div>
+            <div>
+              <strong>Fehler beim Laden.</strong><br />
+              {(error as any)?.message || 'Bitte später erneut versuchen.'}
+            </div>
           </div>
         )}
-        {data && (
+
+        {data && !isLoading && (
           <>
-            {/* Header */}
-            <div className={styles.card} style={{ marginBottom: 16 }}>
-              <div className={styles.cardHeader}>
-                <div className={styles.cardTitle}>
-                  Bewertungen für {renderProfileTitle()}
-                </div>
+            {/* Header / Overview */}
+            <div className={`${styles.card} ${styles.headerCard}`}>
+              <div className={styles.headerTop}>
+                <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
+                <div className={styles.headerBadge}><Stars n={Math.round(data.profile.ratingAvg ?? 5)} /></div>
               </div>
-              <div className={styles.meta} style={{ alignItems: 'center' }}>
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Durchschnitt</div>
-                  <div className={styles.metaValue}>
+
+              <div className={styles.headerStats}>
+                <div className={styles.statBox}>
+                  <div className={styles.statLabel}>Durchschnitt</div>
+                  <div className={styles.statValue}>
                     {typeof data.profile.ratingAvg === 'number'
-                      ? `${data.profile.ratingAvg.toFixed(1)} / 5`
-                      : '—'}
+                      ? data.profile.ratingAvg.toFixed(1)
+                      : '—'}<span>/5</span>
                   </div>
                 </div>
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Anzahl</div>
-                  <div className={styles.metaValue}>{data.profile.ratingCount ?? 0}</div>
+                <div className={styles.statBox}>
+                  <div className={styles.statLabel}>Anzahl</div>
+                  <div className={styles.statValue}>{data.profile.ratingCount ?? 0}</div>
                 </div>
               </div>
             </div>
@@ -137,9 +181,10 @@ export default function UserReviewsPage() {
                     <li key={it.id} className={styles.card}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>{titleEl}</div>
-                        <div>
-                          <Stars n={it.stars} /> ·{' '}
-                          <span style={{ opacity: 0.8 }}>
+                        <div className={styles.cardMetaRight}>
+                          <span className={styles.stars}><Stars n={it.stars} /></span>
+                          <span className={styles.dot}>·</span>
+                          <span className={styles.date}>
                             {new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
                               new Date(it.createdAt)
                             )}
@@ -150,21 +195,15 @@ export default function UserReviewsPage() {
                       <div className={styles.meta}>
                         <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
                           <div className={styles.metaLabel}>Kommentar</div>
-
-                          {/* Kommentar mit Clamp */}
                           <p className={`${styles.comment} ${!isOpen ? styles.clamp : ''}`}>
                             {it.comment}
                           </p>
-
-                          {/* Toggle */}
                           {it.comment?.length > 220 && (
                             <button
                               type="button"
-                              className={styles.titleLink}
+                              className={styles.readMore}
                               onClick={() => setExpanded(s => ({ ...s, [it.id]: !s[it.id] }))}
                               aria-expanded={isOpen}
-                              aria-controls={`c_${it.id}`}
-                              style={{ marginTop: 6 }}
                             >
                               {!isOpen ? 'Mehr lesen' : 'Weniger'}
                             </button>
@@ -172,7 +211,7 @@ export default function UserReviewsPage() {
                         </div>
                       </div>
 
-                      <div style={{ marginTop: 8 }}>
+                      <div className={styles.byline}>
                         von{' '}
                         {name ? (
                           <Link className={styles.titleLink} href={raterHref} prefetch={false}>
@@ -200,19 +239,11 @@ export default function UserReviewsPage() {
                 )}
               </div>
               <div className={styles.pageButtons}>
-                <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>
-                  «
-                </button>
-                <button className={styles.pageBtn} onClick={() => go(page - 1)} disabled={page <= 1}>
-                  ‹
-                </button>
+                <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>«</button>
+                <button className={styles.pageBtn} onClick={() => go(page - 1)} disabled={page <= 1}>‹</button>
                 <span className={styles.pageNow}>Seite {page} / {pages}</span>
-                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= pages}>
-                  ›
-                </button>
-                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page >= pages}>
-                  »
-                </button>
+                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= pages}>›</button>
+                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page >= pages}>»</button>
               </div>
             </div>
           </>
