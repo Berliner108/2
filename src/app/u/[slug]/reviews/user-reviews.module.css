@@ -1,37 +1,77 @@
-/* --- Layout -------------------------------------------------------------- */
+/* Farb-Setup lokal (keine :root) */
 .wrapper{
-  max-width:1100px;
-  margin:0 auto;
-  padding:16px;
-  color:#111827;
-  background:#fafafa;
+  --accent: #2563eb;          /* Akzent (dezent blau) */
+  --accent-weak: rgba(37,99,235,.08);
+  --border: #e5e7eb;
+  --text:   #0f172a;
+  --muted:  #6b7280;
+
+  width:100%;
+  margin:0;
+  padding: clamp(12px, 2vw, 24px);
+  color: var(--text);
+  background: transparent;    /* neutraler Hintergrund */
 }
 
-.emptyState{
-  padding:24px;
-  border:1px dashed #ddd;
-  border-radius:14px;
-  text-align:center;
-  color:#555;
-  background:#fff;
-}
-
-/* --- Karten -------------------------------------------------------------- */
+/* Karten nehmen fast volle Breite ein */
 .card{
-  padding:16px;
-  border:1px solid #eee;
-  border-radius:16px;
+  width:100%;
+  padding: clamp(14px, 1.6vw, 20px);
+  border:1px solid var(--border);
+  border-radius:14px;
   background:#fff;
-  box-shadow:0 1px 10px rgba(0,0,0,.06);
+  box-shadow: 0 2px 18px rgba(0,0,0,.06);
 }
 
+/* Liste mit Luft zwischen Karten */
 .list{
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap: clamp(10px, 1.2vw, 16px);
 }
 
-/* --- Kopf der Karte ------------------------------------------------------ */
+/* ---------------- Header / Overview ---------------- */
+.headerCard{ overflow:hidden; }
+.headerTop{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding-bottom:12px; margin-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.headerTitle{
+  font-weight:800;
+  font-size: clamp(22px, 3vw, 34px);
+}
+
+/* Farbige Sterne-Badge */
+.headerBadge{
+  padding:6px 12px;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--accent-weak), transparent);
+  color:var(--text);
+  font-weight:700;
+}
+
+/* Stats nebeneinander */
+.headerStats{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(10px, 1.2vw, 16px);
+}
+.statBox{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px 14px;
+  background: linear-gradient(180deg, var(--accent-weak), #fff 90%);
+}
+.statLabel{
+  font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px;
+}
+.statValue{
+  font-size: clamp(22px, 3vw, 32px); font-weight:800;
+}
+.statValue span{ font-size:16px; font-weight:600; color:var(--muted); margin-left:4px; }
+
+/* ---------------- Karten-Header ---------------- */
 .cardHeader{
   display:flex;
   justify-content:space-between;
@@ -39,117 +79,112 @@
   gap:12px;
   margin-bottom:8px;
 }
-
 .cardTitle{
+  display:flex; align-items:center; gap:10px;
   font-weight:700;
-  font-size:clamp(16px, 2.2vw, 20px);
+  font-size: clamp(16px, 2.2vw, 22px);
 }
+.badge{
+  padding:4px 10px;
+  border-radius:999px;
+  background:var(--accent-weak);
+  color:var(--text);
+  font-size:12px;
+  font-weight:700;
+  border:1px solid var(--border);
+}
+.cardMetaRight{ display:flex; align-items:center; gap:8px; }
+.stars{ color:var(--text); }
+.dot{ opacity:.5; }
+.date{ opacity:.8; }
 
-/* --- Meta-Bereiche ------------------------------------------------------- */
-.meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-}
-
-.metaCol{
-  min-width:180px;
-  flex:1 1 auto;
-}
+/* ---------------- Kommentar ---------------- */
+.meta{ display:flex; flex-wrap:wrap; gap:16px; }
+.metaCol{ flex:1 1 0; min-width: 280px; }
 
 .metaLabel{
-  font-size:12px;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-  color:#6b7280;
-  margin-bottom:4px;
+  font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px;
 }
 
-.metaValue{
-  font-size:16px;
-}
-
-/* --- Links & Buttons ----------------------------------------------------- */
-.titleLink{
-  color:#111827;
-  text-decoration:none;
-  border-bottom:1px solid transparent;
-  transition:border-color .15s ease;
-}
-.titleLink:hover,
-.titleLink:focus-visible{
-  border-color:#111827;
-  outline:0;
-}
-
-.pageButtons button.titleLink{
-  border:none;
-  background:none;
-}
-
-/* --- Kommentar + Clamp (Auf-/Zuklappen) --------------------------------- */
 .comment{
-  white-space:pre-wrap;         /* respektiert \n */
-  overflow-wrap:anywhere;       /* bricht endlose Wörter */
-  word-break:break-word;        /* Fallback */
-  hyphens:auto;
-  line-height:1.6;
-  max-width:75ch;               /* bessere Lesbarkeit */
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  line-height:1.65;
+  /* fast volle Breite → kein max-width */
   margin:6px 0 0;
 }
 
-/* -> Startzustand: eingeklappt (z. B. 5 Zeilen) */
 .clamp{
   display:-webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp:5;
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
 
-/* --- Pagination ---------------------------------------------------------- */
-.pagination{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-
-.pageInfo{ color:#4b5563; }
-
-.pageButtons{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-
-.pageBtn{
-  padding:6px 10px;
-  border:1px solid #e5e7eb;
+/* schöner „Mehr lesen“-Button (Pill) */
+.readMore{
+  display:inline-flex; align-items:center; gap:6px;
+  margin-top:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid var(--border);
   background:#fff;
-  border-radius:10px;
+  color:var(--text);
+  font-weight:600;
   cursor:pointer;
+  transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease;
+}
+.readMore:hover{ box-shadow:0 2px 10px rgba(0,0,0,.08); border-color:#d1d5db; }
+.readMore:active{ transform:translateY(1px); }
+.readMoreIcon{ transform: translateY(1px); }
+
+.byline{ margin-top:8px; color:#374151; }
+
+/* ---------------- Links ---------------- */
+.titleLink{
+  color:var(--text);
+  text-decoration:none;
+  border-bottom:1px solid transparent;
+  transition:border-color .15s ease;
+}
+.titleLink:hover, .titleLink:focus-visible{ border-color:var(--text); outline:0; }
+
+/* ---------------- Pagination ---------------- */
+.pagination{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.pageInfo{ color:#4b5563; }
+.pageButtons{ display:flex; align-items:center; gap:6px; }
+.pageBtn{
+  padding:6px 10px; border:1px solid var(--border); background:#fff; border-radius:10px; cursor:pointer;
   transition:box-shadow .15s ease, transform .05s ease;
 }
-.pageBtn:hover:not(:disabled){
-  box-shadow:0 1px 6px rgba(0,0,0,.08);
-}
-.pageBtn:active:not(:disabled){
-  transform:translateY(1px);
-}
-.pageBtn:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
+.pageBtn:hover:not(:disabled){ box-shadow:0 1px 6px rgba(0,0,0,.08); }
+.pageBtn:active:not(:disabled){ transform:translateY(1px); }
+.pageBtn:disabled{ opacity:.5; cursor:not-allowed; }
+.pageNow{ padding:6px 10px; color:var(--text); }
 
-.pageNow{
-  padding:6px 10px;
-  color:#111827;
+/* ---------------- Skeleton ---------------- */
+@keyframes shimmer{ 0%{background-position:-400px 0;} 100%{background-position:400px 0;} }
+.skeletonCard{ position:relative; overflow:hidden; }
+.skelHeaderRow{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.skelTitle, .skelTitleSm, .skelStars, .skelLine, .skelLineShort, .skelMetaRow, .skelMetaBox{
+  background-image: linear-gradient(90deg, #eee 0px, #f5f5f5 40px, #eee 80px);
+  background-size: 600px 100%;
+  animation: shimmer 1.3s infinite linear;
+  border-radius: 10px;
 }
+.skelTitle{ height:32px; width:60%; margin-bottom:14px; }
+.skelTitleSm{ height:20px; width:40%; }
+.skelStars{ height:16px; width:120px; }
+.skelLines{ margin-top:12px; display:grid; gap:8px; }
+.skelLine{ height:14px; width:100%; }
+.skelLineShort{ height:14px; width:60%; }
+.skelMetaRow{ display:flex; gap:12px; }
+.skelMetaBox{ height:56px; width:260px; }
 
-/* --- Responsiv ----------------------------------------------------------- */
-@media (max-width:640px){
-  .wrapper{ padding:12px; }
-  .card{ padding:14px; }
-  .metaCol{ min-width:140px; }
-  .pageInfo{ font-size:14px; }
+/* ---------------- Responsive ---------------- */
+@media (max-width: 720px){
+  .headerTop{ align-items:flex-start; }
+  .cardHeader{ flex-direction:column; align-items:flex-start; gap:6px; }
+  .cardMetaRight{ font-size:14px; }
 }

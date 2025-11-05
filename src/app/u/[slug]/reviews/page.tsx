@@ -38,7 +38,7 @@ function Stars({ n }: { n: number }) {
   return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
-/** Skeletons ------------------------------------------------------------- */
+/** Skeletons */
 function HeaderSkeleton() {
   return (
     <div className={`${styles.card} ${styles.skeletonCard}`}>
@@ -50,7 +50,7 @@ function HeaderSkeleton() {
     </div>
   )
 }
-function ListSkeleton({ count = 3 }: { count?: number }) {
+function ListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <ul className={styles.list}>
       {Array.from({ length: count }).map((_, i) => (
@@ -106,12 +106,10 @@ export default function UserReviewsPage() {
     <>
       <Navbar />
       <div className={styles.wrapper}>
-
-        {/* Loading nicer */}
         {isLoading && (
           <>
             <HeaderSkeleton />
-            <ListSkeleton count={4} />
+            <ListSkeleton />
           </>
         )}
 
@@ -138,9 +136,7 @@ export default function UserReviewsPage() {
                 <div className={styles.statBox}>
                   <div className={styles.statLabel}>Durchschnitt</div>
                   <div className={styles.statValue}>
-                    {typeof data.profile.ratingAvg === 'number'
-                      ? data.profile.ratingAvg.toFixed(1)
-                      : '—'}<span>/5</span>
+                    {typeof data.profile.ratingAvg === 'number' ? data.profile.ratingAvg.toFixed(1) : '—'}<span>/5</span>
                   </div>
                 </div>
                 <div className={styles.statBox}>
@@ -161,14 +157,10 @@ export default function UserReviewsPage() {
                   const raterHref = `/u/${encodeURIComponent(name || r.id)}/reviews`
 
                   const id = it.requestId ? String(it.requestId).trim() : ''
-                  const title = it.requestTitle?.trim() || (id ? `Anfrage #${id}` : null)
+                  const title = it.requestTitle?.trim() || (id ? `Anfrage #${id}` : 'Lackanfrage')
 
                   const titleEl = id ? (
-                    <Link
-                      className={styles.titleLink}
-                      href={`/lackanfragen/artikel/${encodeURIComponent(id)}`}
-                      prefetch={false}
-                    >
+                    <Link className={styles.titleLink} href={`/lackanfragen/artikel/${encodeURIComponent(id)}`} prefetch={false}>
                       {title}
                     </Link>
                   ) : (
@@ -180,7 +172,10 @@ export default function UserReviewsPage() {
                   return (
                     <li key={it.id} className={styles.card}>
                       <div className={styles.cardHeader}>
-                        <div className={styles.cardTitle}>{titleEl}</div>
+                        <div className={styles.cardTitle}>
+                          <span className={styles.badge}>Lackanfrage</span>
+                          {titleEl}
+                        </div>
                         <div className={styles.cardMetaRight}>
                           <span className={styles.stars}><Stars n={it.stars} /></span>
                           <span className={styles.dot}>·</span>
@@ -194,10 +189,11 @@ export default function UserReviewsPage() {
 
                       <div className={styles.meta}>
                         <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-                          <div className={styles.metaLabel}>Kommentar</div>
+                          <div className={styles.metaLabel}>Kommentar zu Lackanfrage</div>
                           <p className={`${styles.comment} ${!isOpen ? styles.clamp : ''}`}>
                             {it.comment}
                           </p>
+
                           {it.comment?.length > 220 && (
                             <button
                               type="button"
@@ -206,6 +202,9 @@ export default function UserReviewsPage() {
                               aria-expanded={isOpen}
                             >
                               {!isOpen ? 'Mehr lesen' : 'Weniger'}
+                              <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
+                                <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
                             </button>
                           )}
                         </div>
@@ -230,13 +229,7 @@ export default function UserReviewsPage() {
             {/* Pagination */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
-                {total === 0 ? (
-                  'Keine Einträge'
-                ) : (
-                  <>
-                    Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews
-                  </>
-                )}
+                {total === 0 ? 'Keine Einträge' : <>Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews</>}
               </div>
               <div className={styles.pageButtons}>
                 <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>«</button>
