@@ -118,17 +118,43 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
   const [open, setOpen] = React.useState(false)
   const [canToggle, setCanToggle] = React.useState(false)
 
-  // Beim Textwechsel: erst schließen, dann im geschlossenen Zustand messen
+  // Zwei rAFs warten => nach Layout/Paint messen
+  const afterPaint = (cb: () => void) =>
+    requestAnimationFrame(() => requestAnimationFrame(cb))
+
+  const measure = React.useCallback(() => {
+    const el = ref.current
+    if (!el) return
+    // im geschlossenen Zustand ist clamp aktiv
+    const diff = el.scrollHeight - el.clientHeight
+    // Mobile/WebKit rundet gerne; kleine Toleranz verwenden
+    setCanToggle(diff > 0.5)
+  }, [])
+
+  // Beim Textwechsel: schließen & nach Paint + Fonts messen
   React.useEffect(() => {
     setOpen(false)
-    requestAnimationFrame(() => {
-      const el = ref.current
-      if (!el) return
-      // nur im "zu"-Zustand (mit Clamp) messen:
-      const hasOverflow = el.scrollHeight > el.clientHeight + 1
-      setCanToggle(hasOverflow)
+    afterPaint(() => {
+      measure()
+      // wenn Fonts async laden (Oswald), danach nochmal messen
+      // (nicht in allen Browsern vorhanden – darum optional)
+      ;(document as any).fonts?.ready?.then?.(() => {
+        // nochmal nach Paint, damit die neue Höhe sicher ist
+        afterPaint(measure)
+      })
     })
-  }, [text, lines])
+  }, [text, lines, measure])
+
+  // Bei Resize/Rotation neu messen (debounced per afterPaint)
+  React.useEffect(() => {
+    const onResize = () => afterPaint(measure)
+    window.addEventListener('resize', onResize)
+    window.addEventListener('orientationchange', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('orientationchange', onResize)
+    }
+  }, [measure])
 
   const cls = !open ? `${styles.comment} ${styles.clamp}` : styles.comment
   const clampStyle = { ['--clampLines' as any]: String(lines) }
@@ -153,6 +179,7 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
     </>
   )
 }
+
 
 
 
