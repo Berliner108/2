@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
@@ -16,6 +16,10 @@ type ReviewItem = {
   orderId: string | null
   requestId: string | null
   requestTitle: string | null
+  // optional – falls du Shop einbindest
+  productId?: string | null
+  productTitle?: string | null
+  shopOrderId?: string | null
 }
 
 type ApiResp = {
@@ -44,7 +48,7 @@ function Stars({ n }: { n: number }) {
   return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
-/* ---------------- Skeletons ---------------- */
+/* ---------- Skeletons ---------- */
 function HeaderSkeleton() {
   return (
     <div className={`${styles.card} ${styles.skeletonCard}`}>
@@ -76,32 +80,73 @@ function ListSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-/* ---------------- Kontext-Erkennung ---------------- */
-function getContext(it: ReviewItem) {
+/* ---------- Kontext-Erkennung ---------- */
+type Ctx =
+  | { kind: 'lackanfrage'; label: string; title: string; href: string }
+  | { kind: 'auftrag'; label: string; title: string; href: string }
+  | { kind: 'shop'; label: string; title: string; href?: string }
+  | { kind: 'sonstiges'; label: string; title: string; href?: string }
+
+function getContext(it: ReviewItem): Ctx {
   if (it.requestId) {
     const id = String(it.requestId).trim()
-    return {
-      kind: 'lackanfrage' as const,
-      label: 'Lackanfrage',
-      title: it.requestTitle?.trim() || `Anfrage #${id}`,
-      href: `/lackanfragen/artikel/${encodeURIComponent(id)}`
-    }
+    return { kind: 'lackanfrage', label: 'Lackanfrage', title: it.requestTitle?.trim() || `Anfrage #${id}`, href: `/lackanfragen/artikel/${encodeURIComponent(id)}` }
   }
   if (it.orderId) {
     const id = String(it.orderId).trim()
-    return {
-      kind: 'auftrag' as const,
-      label: 'Auftrag',
-      title: `Auftrag #${id}`,
-      href: `/auftraege/${encodeURIComponent(id)}`
-    }
+    return { kind: 'auftrag', label: 'Auftrag', title: `Auftrag #${id}`, href: `/auftraege/${encodeURIComponent(id)}` }
   }
-  return {
-    kind: 'sonstiges' as const,
-    label: 'Bewertung',
-    title: 'Bewertung',
-    href: undefined
+  if (it.productId || it.shopOrderId) {
+    const pid = (it.productId || it.shopOrderId || '').toString()
+    return { kind: 'shop', label: 'Shop', title: it.productTitle?.trim() || (pid ? `Shop-Artikel #${pid}` : 'Shop-Bewertung') }
   }
+  return { kind: 'sonstiges', label: 'Bewertung', title: 'Bewertung' }
+}
+
+/* ---------- Collapsible Kommentar (funktioniert immer) ---------- */
+function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
+  const ref = useRef<HTMLParagraphElement | null>(null)
+  const [open, setOpen] = useState(false)
+  const [clampNeeded, setClampNeeded] = useState(false)
+
+  // messen, ob Clamp nötig ist
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    // kurz öffnen, messen, dann schließen
+    setOpen(false)
+    requestAnimationFrame(() => {
+      const lh = parseFloat(getComputedStyle(el).lineHeight || '24')
+      const maxH = lh * lines
+      setClampNeeded(el.scrollHeight > maxH + 2) // Toleranz
+    })
+  }, [text, lines])
+
+  // nach Toggle smooth scrollen
+  useEffect(() => {
+    if (!ref.current) return
+    ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [open])
+
+  const cls = useMemo(() => {
+    const base = styles.comment
+    if (!clampNeeded) return base
+    return open ? base : `${base} ${styles.clamp}`
+  }, [clampNeeded, open])
+
+  return (
+    <>
+      <p ref={ref} className={cls}>{text}</p>
+      {clampNeeded && (
+        <button type="button" className={styles.readMore} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+          {open ? 'Weniger' : 'Mehr lesen'}
+          <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
+            <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+    </>
+  )
 }
 
 export default function UserReviewsPage() {
@@ -134,45 +179,33 @@ export default function UserReviewsPage() {
     return u || 'Nutzer'
   }
 
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-
   return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        {isLoading && (
-          <>
-            <HeaderSkeleton />
-            <ListSkeleton />
-          </>
-        )}
+
+        {isLoading && (<><HeaderSkeleton /><ListSkeleton /></>)}
 
         {error && (
           <div className={styles.emptyState}>
             <div className={styles.errorBadge}>⚠︎</div>
-            <div>
-              <strong>Fehler beim Laden.</strong><br />
-              {(error as any)?.message || 'Bitte später erneut versuchen.'}
-            </div>
+            <div><strong>Fehler beim Laden.</strong><br />{(error as any)?.message || 'Bitte später erneut versuchen.'}</div>
           </div>
         )}
 
         {data && !isLoading && (
           <>
-            {/* Header / Overview */}
+            {/* Header */}
             <div className={`${styles.card} ${styles.headerCard}`}>
               <div className={styles.headerTop}>
                 <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
                 <div className={styles.headerBadge}><Stars n={Math.round(data.profile.ratingAvg ?? 5)} /></div>
               </div>
-
               <div className={styles.headerStats}>
                 <div className={styles.statBox}>
                   <div className={styles.statLabel}>Durchschnitt</div>
                   <div className={styles.statValue}>
-                    {typeof data.profile.ratingAvg === 'number'
-                      ? data.profile.ratingAvg.toFixed(1)
-                      : '—'}<span>/5</span>
+                    {typeof data.profile.ratingAvg === 'number' ? data.profile.ratingAvg.toFixed(1) : '—'}<span>/5</span>
                   </div>
                 </div>
                 <div className={styles.statBox}>
@@ -193,15 +226,9 @@ export default function UserReviewsPage() {
                   const raterHref = `/u/${encodeURIComponent(name || r.id)}/reviews`
 
                   const ctx = getContext(it)
-                  const titleEl = ctx.href ? (
-                    <Link className={styles.titleLink} href={ctx.href} prefetch={false}>
-                      {ctx.title}
-                    </Link>
-                  ) : (
-                    <span className={styles.titleLink}>{ctx.title}</span>
-                  )
-
-                  const isOpen = !!expanded[it.id]
+                  const titleEl = ctx.href
+                    ? <Link className={styles.titleLink} href={ctx.href} prefetch={false}>{ctx.title}</Link>
+                    : <span className={styles.titleLink}>{ctx.title}</span>
 
                   return (
                     <li key={it.id} className={styles.card}>
@@ -214,9 +241,8 @@ export default function UserReviewsPage() {
                           <span className={styles.stars}><Stars n={it.stars} /></span>
                           <span className={styles.dot}>·</span>
                           <span className={styles.date}>
-                            {new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(
-                              new Date(it.createdAt)
-                            )}
+                            {new Intl.DateTimeFormat('de-AT', { day:'2-digit', month:'2-digit', year:'numeric' })
+                              .format(new Date(it.createdAt))}
                           </span>
                         </div>
                       </div>
@@ -226,38 +252,16 @@ export default function UserReviewsPage() {
                           <div className={styles.metaLabel}>
                             {ctx.kind === 'lackanfrage' ? 'Kommentar zu Lackanfrage'
                               : ctx.kind === 'auftrag' ? 'Kommentar zu Auftrag'
+                              : ctx.kind === 'shop' ? 'Kommentar zum Shop-Artikel'
                               : 'Kommentar'}
                           </div>
 
-                          <p className={`${styles.comment} ${!isOpen ? styles.clamp : ''}`}>
-                            {it.comment}
-                          </p>
-
-                          {it.comment?.length > 220 && (
-                            <button
-                              type="button"
-                              className={styles.readMore}
-                              onClick={() => setExpanded(s => ({ ...s, [it.id]: !s[it.id] }))}
-                              aria-expanded={isOpen}
-                            >
-                              {!isOpen ? 'Mehr lesen' : 'Weniger'}
-                              <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
-                                <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </button>
-                          )}
+                          <CollapsibleText text={it.comment} lines={5} />
                         </div>
                       </div>
 
                       <div className={styles.byline}>
-                        von{' '}
-                        {name ? (
-                          <Link className={styles.titleLink} href={raterHref} prefetch={false}>
-                            {name}
-                          </Link>
-                        ) : (
-                          '—'
-                        )}
+                        von {name ? <Link className={styles.titleLink} href={raterHref} prefetch={false}>{name}</Link> : '—'}
                       </div>
                     </li>
                   )
@@ -268,20 +272,14 @@ export default function UserReviewsPage() {
             {/* Pagination */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
-                {total === 0 ? (
-                  'Keine Einträge'
-                ) : (
-                  <>
-                    Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews
-                  </>
-                )}
+                {data.total === 0 ? 'Keine Einträge' : <>Seite <strong>{data.page}</strong> / <strong>{Math.max(1, Math.ceil((data.total ?? 0) / (data.pageSize || 10)))}</strong> – {data.total} Reviews</>}
               </div>
               <div className={styles.pageButtons}>
                 <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>«</button>
                 <button className={styles.pageBtn} onClick={() => go(page - 1)} disabled={page <= 1}>‹</button>
-                <span className={styles.pageNow}>Seite {page} / {pages}</span>
-                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= pages}>›</button>
-                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page >= pages}>»</button>
+                <span className={styles.pageNow}>Seite {page}</span>
+                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= Math.max(1, Math.ceil(total / pageSize))}>›</button>
+                <button className={styles.pageBtn} onClick={() => go(Math.max(1, Math.ceil(total / pageSize)))} disabled={page >= Math.max(1, Math.ceil(total / pageSize))}>»</button>
               </div>
             </div>
           </>
