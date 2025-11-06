@@ -16,7 +16,7 @@ type ReviewItem = {
   orderId: string | null
   requestId: string | null
   requestTitle: string | null
-  // optional – falls du Shop einbindest
+  // optional – für Shop-Bewertungen
   productId?: string | null
   productTitle?: string | null
   shopOrderId?: string | null
@@ -43,15 +43,16 @@ const fetcher = async (u: string) => {
   return j as ApiResp
 }
 
-function Stars({ n }: { n: number }) {
+/** Sterne mit optionaler Klasse (für gelb im Header/Karten) */
+function Stars({ n, className }: { n: number; className?: string }) {
   const full = Math.max(1, Math.min(5, Math.round(n)))
-  return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
+  return <span className={className} aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
-/* ---------- Skeletons ---------- */
+/* ---------------- Skeletons ---------------- */
 function HeaderSkeleton() {
   return (
-    <div className={`${styles.card} ${styles.skeletonCard}`}>
+    <div className={`${styles.card} ${styles.headerCard} ${styles.skeletonCard}`}>
       <div className={styles.skelTitle} />
       <div className={styles.skelMetaRow}>
         <div className={styles.skelMetaBox}><div className={styles.skelLine} /></div>
@@ -80,7 +81,7 @@ function ListSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-/* ---------- Kontext-Erkennung ---------- */
+/* ---------------- Kontext-Erkennung ---------------- */
 type Ctx =
   | { kind: 'lackanfrage'; label: string; title: string; href: string }
   | { kind: 'auftrag'; label: string; title: string; href: string }
@@ -103,26 +104,23 @@ function getContext(it: ReviewItem): Ctx {
   return { kind: 'sonstiges', label: 'Bewertung', title: 'Bewertung' }
 }
 
-/* ---------- Collapsible Kommentar (funktioniert immer) ---------- */
+/* ---------------- Collapsible Kommentar (messend + smooth scroll) ---------------- */
 function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
   const ref = useRef<HTMLParagraphElement | null>(null)
   const [open, setOpen] = useState(false)
   const [clampNeeded, setClampNeeded] = useState(false)
 
-  // messen, ob Clamp nötig ist
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    // kurz öffnen, messen, dann schließen
     setOpen(false)
     requestAnimationFrame(() => {
       const lh = parseFloat(getComputedStyle(el).lineHeight || '24')
       const maxH = lh * lines
-      setClampNeeded(el.scrollHeight > maxH + 2) // Toleranz
+      setClampNeeded(el.scrollHeight > maxH + 2)
     })
   }, [text, lines])
 
-  // nach Toggle smooth scrollen
   useEffect(() => {
     if (!ref.current) return
     ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -195,11 +193,13 @@ export default function UserReviewsPage() {
 
         {data && !isLoading && (
           <>
-            {/* Header */}
+            {/* HEADER */}
             <div className={`${styles.card} ${styles.headerCard}`}>
               <div className={styles.headerTop}>
                 <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
-                <div className={styles.headerBadge}><Stars n={Math.round(data.profile.ratingAvg ?? 5)} /></div>
+                <div className={styles.headerBadge}>
+                  <Stars n={Math.round(data.profile.ratingAvg ?? 5)} className={styles.starsYellow} />
+                </div>
               </div>
               <div className={styles.headerStats}>
                 <div className={styles.statBox}>
@@ -215,7 +215,7 @@ export default function UserReviewsPage() {
               </div>
             </div>
 
-            {/* Liste */}
+            {/* LISTE */}
             {data.items.length === 0 ? (
               <div className={styles.emptyState}>Noch keine Bewertungen.</div>
             ) : (
@@ -238,11 +238,10 @@ export default function UserReviewsPage() {
                           {titleEl}
                         </div>
                         <div className={styles.cardMetaRight}>
-                          <span className={styles.stars}><Stars n={it.stars} /></span>
+                          <span className={styles.stars}><Stars n={it.stars} className={styles.starsYellow} /></span>
                           <span className={styles.dot}>·</span>
                           <span className={styles.date}>
-                            {new Intl.DateTimeFormat('de-AT', { day:'2-digit', month:'2-digit', year:'numeric' })
-                              .format(new Date(it.createdAt))}
+                            {new Intl.DateTimeFormat('de-AT', { day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date(it.createdAt))}
                           </span>
                         </div>
                       </div>
@@ -269,7 +268,7 @@ export default function UserReviewsPage() {
               </ul>
             )}
 
-            {/* Pagination */}
+            {/* PAGINATION */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
                 {data.total === 0 ? 'Keine Einträge' : <>Seite <strong>{data.page}</strong> / <strong>{Math.max(1, Math.ceil((data.total ?? 0) / (data.pageSize || 10)))}</strong> – {data.total} Reviews</>}
@@ -278,8 +277,8 @@ export default function UserReviewsPage() {
                 <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>«</button>
                 <button className={styles.pageBtn} onClick={() => go(page - 1)} disabled={page <= 1}>‹</button>
                 <span className={styles.pageNow}>Seite {page}</span>
-                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= Math.max(1, Math.ceil(total / pageSize))}>›</button>
-                <button className={styles.pageBtn} onClick={() => go(Math.max(1, Math.ceil(total / pageSize)))} disabled={page >= Math.max(1, Math.ceil(total / pageSize))}>»</button>
+                <button className={styles.pageBtn} onClick={() => go(page + 1)} disabled={page >= pages}>›</button>
+                <button className={styles.pageBtn} onClick={() => go(pages)} disabled={page >= pages}>»</button>
               </div>
             </div>
           </>
