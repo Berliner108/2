@@ -174,6 +174,71 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
     </>
   )
 }
+/* Schönes, rundes Sortier-Dropdown mit Oswald */
+function SortDropdown({
+  value,
+  onChange,
+  options = [
+    { value: 'neueste', label: 'Neueste zuerst' },
+    { value: 'älteste', label: 'Älteste zuerst' },
+    { value: 'beste', label: 'Beste zuerst' },
+    { value: 'schlechteste', label: 'Schlechteste zuerst' },
+  ],
+}: {
+  value: 'neueste'|'älteste'|'beste'|'schlechteste'
+  onChange: (v: 'neueste'|'älteste'|'beste'|'schlechteste') => void
+  options?: { value:any; label:string }[]
+}) {
+  const [open, setOpen] = React.useState(false)
+  const ref = React.useRef<HTMLDivElement|null>(null)
+
+  React.useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current) return
+      if (!ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [])
+
+  const current = options.find(o => o.value === value)?.label || ''
+
+  return (
+    <div className={styles.sortWrap} ref={ref}>
+      <span className={styles.sortLabelFancy}>Sortieren:</span>
+      <button
+        type="button"
+        className={`${styles.sortBtn} ${styles.hit}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span>{current}</span>
+        <svg className={styles.sortCaret} width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {open && (
+        <ul className={styles.sortMenu} role="listbox">
+          {options.map(o => (
+            <li key={o.value}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={o.value === value}
+                className={`${styles.sortItem} ${o.value===value ? styles.isActive : ''}`}
+                onClick={() => { onChange(o.value as any); setOpen(false) }}
+              >
+                {o.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
@@ -273,20 +338,9 @@ export default function UserReviewsPage() {
               </div>
 
               <div className={styles.controls}>
-                <label className={styles.sortLabel}>
-                  Sortieren:
-                  <select
-                    className={`${styles.sortSelect} ${styles.hit}`}
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value as any)}
-                  >
-                    <option value="neueste">Neueste zuerst</option>
-                    <option value="älteste">Älteste zuerst</option>
-                    <option value="beste">Beste zuerst</option>
-                    <option value="schlechteste">Schlechteste zuerst</option>
-                  </select>
-                </label>
+                <SortDropdown value={sortBy} onChange={setSortBy} />
               </div>
+
             </div>
 
             {/* LISTE */}

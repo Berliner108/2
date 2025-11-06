@@ -242,3 +242,78 @@
   /* Buttons/Text etwas größer für Touch */
   .readMore, .sortSelect, .pageBtn{ font-size:16px; }
 }
+/* === Fancy Sort Dropdown === */
+.sortWrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  position:relative;
+  font-family:'Oswald', system-ui, sans-serif;
+}
+
+.sortLabelFancy{
+  font-size:14px;
+  color:#374151;
+  letter-spacing:.02em;
+}
+
+.sortBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width: 220px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+  font-weight:700;
+  cursor:pointer;
+  transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease, background .15s ease;
+}
+.sortBtn:hover{ background:#fafafa; border-color:#d1d5db; }
+.sortBtn:focus-visible{ outline:3px solid rgba(37,99,235,.35); outline-offset:2px; border-color:#93c5fd; }
+.sortCaret{ opacity:.7; transition: transform .15s ease; }
+.sortBtn[aria-expanded="true"] .sortCaret{ transform:rotate(180deg); }
+
+/* Dropdown-Liste */
+.sortMenu{
+  position:absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 260px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;           /* RUND beim Ausfahren */
+  box-shadow:0 20px 60px rgba(0,0,0,.18);
+  padding:6px;
+  z-index:10;
+}
+
+.sortItem{
+  display:block;
+  width:100%;
+  text-align:left;
+  padding:12px 12px;
+  border-radius:10px;
+  font-weight:600;
+  color:var(--text);
+  background:#fff;
+  cursor:pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.sortItem:hover{ background:#f3f4f6; }
+.sortItem.isActive{ background:rgba(37,99,235,.08); color:#1e40af; }
+
+/* Mobile: zentrieren & volle Breite */
+@media (max-width:640px){
+  .sortWrap{ justify-content:center; width:100%; }
+  .sortBtn{ width: min(100%, 360px); }
+  .sortMenu{
+    left:50%;
+    right:auto;
+    transform: translateX(-50%);
+    width: min(92vw, 360px);
+  }
+}
