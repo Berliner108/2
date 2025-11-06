@@ -1,17 +1,20 @@
-/* Farb-Setup lokal (keine :root) */
+/* Seite füllt die ganze Breite des Viewports aus (aber nicht mehr) */
 .wrapper{
-  --accent: #2563eb;          /* Akzent (dezent blau) */
-  --accent-weak: rgba(37,99,235,.08);
-  --border: #e5e7eb;
-  --text:   #0f172a;
-  --muted:  #6b7280;
+  --accent:#2563eb;
+  --accent-weak:rgba(37,99,235,.08);
+  --border:#e5e7eb;
+  --text:#0f172a;
+  --muted:#6b7280;
 
-  width:100%;
+  width:100%;                  /* volle Breite */
+  max-width:100%;              /* kein künstliches Limit */
   margin:0;
-  padding: clamp(12px, 2vw, 24px);
-  color: var(--text);
-  background: transparent;    /* neutraler Hintergrund */
+  padding:clamp(12px,1.5vw,24px);
+  color:var(--text);
+  background:transparent;
+  box-sizing:border-box;       /* verhindert horizontales Scrollen */
 }
+
 
 /* Karten nehmen fast volle Breite ein */
 .card{
@@ -111,8 +114,8 @@
   overflow-wrap:anywhere;
   word-break:break-word;
   line-height:1.65;
-  /* fast volle Breite → kein max-width */
   margin:6px 0 0;
+  max-width:none;              /* *kein* 75ch-Limit mehr */
 }
 
 .clamp{

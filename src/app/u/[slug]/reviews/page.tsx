@@ -13,13 +13,19 @@ type ReviewItem = {
   comment: string
   stars: number
   rater: { id: string, username: string | null, companyName?: string | null }
-  orderId: string
+  orderId: string | null
   requestId: string | null
   requestTitle: string | null
 }
 
 type ApiResp = {
-  profile: { id: string, username: string | null, companyName?: string | null, ratingAvg: number | null, ratingCount: number | null }
+  profile: {
+    id: string
+    username: string | null
+    companyName?: string | null
+    ratingAvg: number | null
+    ratingCount: number | null
+  }
   page: number
   pageSize: number
   total: number
@@ -38,7 +44,7 @@ function Stars({ n }: { n: number }) {
   return <span aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
 }
 
-/** Skeletons */
+/* ---------------- Skeletons ---------------- */
 function HeaderSkeleton() {
   return (
     <div className={`${styles.card} ${styles.skeletonCard}`}>
@@ -68,6 +74,34 @@ function ListSkeleton({ count = 4 }: { count?: number }) {
       ))}
     </ul>
   )
+}
+
+/* ---------------- Kontext-Erkennung ---------------- */
+function getContext(it: ReviewItem) {
+  if (it.requestId) {
+    const id = String(it.requestId).trim()
+    return {
+      kind: 'lackanfrage' as const,
+      label: 'Lackanfrage',
+      title: it.requestTitle?.trim() || `Anfrage #${id}`,
+      href: `/lackanfragen/artikel/${encodeURIComponent(id)}`
+    }
+  }
+  if (it.orderId) {
+    const id = String(it.orderId).trim()
+    return {
+      kind: 'auftrag' as const,
+      label: 'Auftrag',
+      title: `Auftrag #${id}`,
+      href: `/auftraege/${encodeURIComponent(id)}`
+    }
+  }
+  return {
+    kind: 'sonstiges' as const,
+    label: 'Bewertung',
+    title: 'Bewertung',
+    href: undefined
+  }
 }
 
 export default function UserReviewsPage() {
@@ -136,7 +170,9 @@ export default function UserReviewsPage() {
                 <div className={styles.statBox}>
                   <div className={styles.statLabel}>Durchschnitt</div>
                   <div className={styles.statValue}>
-                    {typeof data.profile.ratingAvg === 'number' ? data.profile.ratingAvg.toFixed(1) : '—'}<span>/5</span>
+                    {typeof data.profile.ratingAvg === 'number'
+                      ? data.profile.ratingAvg.toFixed(1)
+                      : '—'}<span>/5</span>
                   </div>
                 </div>
                 <div className={styles.statBox}>
@@ -156,15 +192,13 @@ export default function UserReviewsPage() {
                   const name = r.username?.replace(/^@+/, '') || null
                   const raterHref = `/u/${encodeURIComponent(name || r.id)}/reviews`
 
-                  const id = it.requestId ? String(it.requestId).trim() : ''
-                  const title = it.requestTitle?.trim() || (id ? `Anfrage #${id}` : 'Lackanfrage')
-
-                  const titleEl = id ? (
-                    <Link className={styles.titleLink} href={`/lackanfragen/artikel/${encodeURIComponent(id)}`} prefetch={false}>
-                      {title}
+                  const ctx = getContext(it)
+                  const titleEl = ctx.href ? (
+                    <Link className={styles.titleLink} href={ctx.href} prefetch={false}>
+                      {ctx.title}
                     </Link>
                   ) : (
-                    <span className={styles.titleLink}>Anfrage nicht mehr verfügbar</span>
+                    <span className={styles.titleLink}>{ctx.title}</span>
                   )
 
                   const isOpen = !!expanded[it.id]
@@ -173,7 +207,7 @@ export default function UserReviewsPage() {
                     <li key={it.id} className={styles.card}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
-                          <span className={styles.badge}>Lackanfrage</span>
+                          {ctx.kind !== 'sonstiges' && <span className={styles.badge}>{ctx.label}</span>}
                           {titleEl}
                         </div>
                         <div className={styles.cardMetaRight}>
@@ -189,7 +223,12 @@ export default function UserReviewsPage() {
 
                       <div className={styles.meta}>
                         <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
-                          <div className={styles.metaLabel}>Kommentar zu Lackanfrage</div>
+                          <div className={styles.metaLabel}>
+                            {ctx.kind === 'lackanfrage' ? 'Kommentar zu Lackanfrage'
+                              : ctx.kind === 'auftrag' ? 'Kommentar zu Auftrag'
+                              : 'Kommentar'}
+                          </div>
+
                           <p className={`${styles.comment} ${!isOpen ? styles.clamp : ''}`}>
                             {it.comment}
                           </p>
@@ -229,7 +268,13 @@ export default function UserReviewsPage() {
             {/* Pagination */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
-                {total === 0 ? 'Keine Einträge' : <>Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews</>}
+                {total === 0 ? (
+                  'Keine Einträge'
+                ) : (
+                  <>
+                    Seite <strong>{page}</strong> / <strong>{pages}</strong> – {total} Reviews
+                  </>
+                )}
               </div>
               <div className={styles.pageButtons}>
                 <button className={styles.pageBtn} onClick={() => go(1)} disabled={page <= 1}>«</button>
