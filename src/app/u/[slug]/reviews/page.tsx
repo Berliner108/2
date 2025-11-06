@@ -165,16 +165,31 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
 
       {canToggle && (
         <button
-          type="button"
-          className={`${styles.readMore} ${styles.hit}`}
-          onClick={() => setOpen(v => !v)}
-          aria-expanded={open}
-        >
-          {open ? 'Weniger' : 'Mehr lesen'}
-          <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
-            <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+  type="button"
+  className={`${styles.readMore} ${styles.hit}`}
+  onClick={() => setOpen(v => !v)}
+  aria-expanded={open}
+>
+  {open ? 'Weniger' : 'Mehr lesen'}
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    className={`${styles.readMoreIcon} ${open ? styles.iconUp : styles.iconDown}`}
+    aria-hidden
+  >
+    {/* Chevron-Rechts – wir drehen ihn über CSS */}
+    <path
+      d="M8 5l8 7-8 7"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+</button>
+
       )}
     </>
   )

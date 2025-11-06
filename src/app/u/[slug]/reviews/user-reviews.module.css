@@ -337,3 +337,14 @@
   }
   .readMoreIcon{ width:14px; height:14px; }
 }
+/* Icon-Drehung je nach Zustand */
+.readMoreIcon{
+  transition: transform .2s ease;
+  transform-origin: 50% 50%;
+}
+
+/* geschlossen: Pfeil nach UNTEN (rechts → um 90°) */
+.iconDown{ transform: rotate(90deg); }
+
+/* offen: Pfeil nach OBEN (rechts → um -90°) */
+.iconUp{ transform: rotate(-90deg); }
