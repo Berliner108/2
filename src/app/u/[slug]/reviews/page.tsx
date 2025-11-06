@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
@@ -42,20 +42,8 @@ const fetcher = async (u: string) => {
   return j as ApiResp
 }
 
-/* ---------- Half-Star Sterne (0.5 Schritte) ---------- */
-function Stars({
-  value,
-  max = 5,
-  className,
-  size = 18,
-  ariaLabel,
-}: {
-  value: number
-  max?: number
-  className?: string
-  size?: number
-  ariaLabel?: string
-}) {
+/* ---------- Sterne mit Half-Fill ---------- */
+function Stars({ value, max = 5, className, size = 18 }: { value: number; max?: number; className?: string; size?: number }) {
   const stars = []
   for (let i = 1; i <= max; i++) {
     const fill = Math.max(0, Math.min(1, value - (i - 1))) // 0..1
@@ -67,12 +55,7 @@ function Stars({
       </span>
     )
   }
-  const label = ariaLabel ?? `${value.toFixed(1)} von ${max} Sternen`
-  return (
-    <span className={`${styles.starsWrap} ${className || ''}`} role="img" aria-label={label}>
-      {stars}
-    </span>
-  )
+  return <span className={`${styles.starsWrap} ${className || ''}`}>{stars}</span>
 }
 
 /* ---------- Skeletons ---------- */
@@ -107,64 +90,60 @@ function ListSkeleton({ count = 4 }: { count?: number }) {
   )
 }
 
-/* ---------- Kontext-Erkennung ---------- */
+/* ---------- Kontext ---------- */
 type Ctx =
-  | { kind: 'lackanfrage'; label: string; title: string; href: string }
-  | { kind: 'auftrag'; label: string; title: string; href: string }
-  | { kind: 'shop'; label: string; title: string; href?: string }
-  | { kind: 'sonstiges'; label: string; title: string; href?: string }
+  | { kind:'lackanfrage'; label:string; title:string; href:string }
+  | { kind:'auftrag';     label:string; title:string; href:string }
+  | { kind:'shop';        label:string; title:string; href?:string }
+  | { kind:'sonstiges';   label:string; title:string; href?:string }
 
 function getContext(it: ReviewItem): Ctx {
   if (it.requestId) {
     const id = String(it.requestId).trim()
-    return { kind: 'lackanfrage', label: 'Lackanfrage', title: it.requestTitle?.trim() || `Anfrage #${id}`, href: `/lackanfragen/artikel/${encodeURIComponent(id)}` }
+    return { kind:'lackanfrage', label:'Lackanfrage', title: it.requestTitle?.trim() || `Anfrage #${id}`, href: `/lackanfragen/artikel/${encodeURIComponent(id)}` }
   }
   if (it.orderId) {
     const id = String(it.orderId).trim()
-    return { kind: 'auftrag', label: 'Auftrag', title: `Auftrag #${id}`, href: `/auftraege/${encodeURIComponent(id)}` }
+    return { kind:'auftrag', label:'Auftrag', title:`Auftrag #${id}`, href:`/auftraege/${encodeURIComponent(id)}` }
   }
   if (it.productId || it.shopOrderId) {
     const pid = (it.productId || it.shopOrderId || '').toString()
-    return { kind: 'shop', label: 'Shop', title: it.productTitle?.trim() || (pid ? `Shop-Artikel #${pid}` : 'Shop-Bewertung') }
+    return { kind:'shop', label:'Shop', title: it.productTitle?.trim() || (pid ? `Shop-Artikel #${pid}` : 'Shop-Bewertung') }
   }
-  return { kind: 'sonstiges', label: 'Bewertung', title: 'Bewertung' }
+  return { kind:'sonstiges', label:'Bewertung', title:'Bewertung' }
 }
 
-/* ---------- Collapsible Kommentar (scrollt nur beim Toggle) ---------- */
-function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
-  const ref = useRef<HTMLParagraphElement | null>(null)
-  const [open, setOpen] = useState(false)
-  const [clampNeeded, setClampNeeded] = useState(false)
+/* ---------- CollapsibleText (zuverlässig) ---------- */
+function CollapsibleText({ text, lines = 5 }: { text:string; lines?:number }) {
+  const ref = React.useRef<HTMLParagraphElement|null>(null)
+  const [open, setOpen] = React.useState(false)
+  const [clampNeeded, setClampNeeded] = React.useState(false)
 
-  useEffect(() => {
+  const measure = React.useCallback(() => {
     const el = ref.current
     if (!el) return
-    const lh = parseFloat(getComputedStyle(el).lineHeight || '24')
-    const maxH = lh * lines
-    setClampNeeded(el.scrollHeight > maxH + 2)
-  }, [text, lines])
+    const clamped = el.scrollHeight > el.clientHeight + 1
+    setClampNeeded(clamped)
+  }, [])
 
-  const cls = useMemo(() => {
-    const base = styles.comment
-    if (!clampNeeded) return base
-    return open ? base : `${base} ${styles.clamp}`
-  }, [clampNeeded, open])
+  React.useEffect(() => {
+    // immer zuerst mit Clamp rendern, dann messen
+    requestAnimationFrame(measure)
+  }, [text, lines, measure])
 
-  const onToggle = () => {
-    setOpen(prev => {
-      const next = !prev
-      requestAnimationFrame(() => {
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      })
-      return next
-    })
-  }
+  React.useEffect(() => {
+    requestAnimationFrame(measure)
+    if (open) ref.current?.scrollIntoView({ behavior:'smooth', block:'nearest' })
+  }, [open, measure])
+
+  const cls = !open ? `${styles.comment} ${styles.clamp}` : styles.comment
+  const clampStyle = { ['--clampLines' as any]: String(lines) }
 
   return (
     <>
-      <p ref={ref} className={cls}>{text}</p>
+      <p ref={ref} className={cls} style={clampStyle}>{text}</p>
       {clampNeeded && (
-        <button type="button" className={`${styles.readMore} ${styles.hit}`} onClick={onToggle} aria-expanded={open}>
+        <button type="button" className={`${styles.readMore} ${styles.hit}`} onClick={() => setOpen(v=>!v)} aria-expanded={open}>
           {open ? 'Weniger' : 'Mehr lesen'}
           <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
             <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -174,28 +153,29 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
     </>
   )
 }
-/* Schönes, rundes Sortier-Dropdown mit Oswald */
+
+/* ---------- Fancy Sort Dropdown (ohne sichtbare Umrandung) ---------- */
 function SortDropdown({
   value,
   onChange,
   options = [
-    { value: 'neueste', label: 'Neueste zuerst' },
-    { value: 'älteste', label: 'Älteste zuerst' },
-    { value: 'beste', label: 'Beste zuerst' },
+    { value: 'neueste',      label: 'Neueste zuerst' },
+    { value: 'älteste',      label: 'Älteste zuerst' },
+    { value: 'beste',        label: 'Beste zuerst' },
     { value: 'schlechteste', label: 'Schlechteste zuerst' },
   ],
 }: {
-  value: 'neueste'|'älteste'|'beste'|'schlechteste'
-  onChange: (v: 'neueste'|'älteste'|'beste'|'schlechteste') => void
-  options?: { value:any; label:string }[]
+  value:'neueste'|'älteste'|'beste'|'schlechteste'
+  onChange:(v:'neueste'|'älteste'|'beste'|'schlechteste')=>void
+  options?:{value:any; label:string}[]
 }) {
   const [open, setOpen] = React.useState(false)
-  const ref = React.useRef<HTMLDivElement|null>(null)
+  const boxRef = React.useRef<HTMLDivElement|null>(null)
 
   React.useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (!ref.current) return
-      if (!ref.current.contains(e.target as Node)) setOpen(false)
+      if (!boxRef.current) return
+      if (!boxRef.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
@@ -204,14 +184,14 @@ function SortDropdown({
   const current = options.find(o => o.value === value)?.label || ''
 
   return (
-    <div className={styles.sortWrap} ref={ref}>
+    <div className={styles.sortWrap} ref={boxRef}>
       <span className={styles.sortLabelFancy}>Sortieren:</span>
       <button
         type="button"
         className={`${styles.sortBtn} ${styles.hit}`}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(o=>!o)}
       >
         <span>{current}</span>
         <svg className={styles.sortCaret} width="16" height="16" viewBox="0 0 24 24" aria-hidden>
@@ -226,7 +206,7 @@ function SortDropdown({
               <button
                 type="button"
                 role="option"
-                aria-selected={o.value === value}
+                aria-selected={o.value===value}
                 className={`${styles.sortItem} ${o.value===value ? styles.isActive : ''}`}
                 onClick={() => { onChange(o.value as any); setOpen(false) }}
               >
@@ -245,8 +225,7 @@ export default function UserReviewsPage() {
   const search = useSearchParams()
   const router = useRouter()
 
-  // Auto-Scroll-Restore aus
-  useEffect(() => {
+  React.useEffect(() => {
     if ('scrollRestoration' in history) {
       const prev = (history as any).scrollRestoration
       ;(history as any).scrollRestoration = 'manual'
@@ -257,7 +236,7 @@ export default function UserReviewsPage() {
   const page = Math.max(1, parseInt(search.get('page') || '1', 10))
   const pageSize = Math.max(1, Math.min(50, parseInt(search.get('pageSize') || '10', 10)))
   const sortDefault = (search.get('sort') as 'neueste'|'älteste'|'beste'|'schlechteste') || 'neueste'
-  const [sortBy, setSortBy] = useState<'neueste'|'älteste'|'beste'|'schlechteste'>(sortDefault)
+  const [sortBy, setSortBy] = React.useState<'neueste'|'älteste'|'beste'|'schlechteste'>(sortDefault)
 
   const { data, error, isLoading } = useSWR<ApiResp>(
     `/api/reviews/by-user/${encodeURIComponent(params.slug)}?page=${page}&pageSize=${pageSize}`,
@@ -267,7 +246,7 @@ export default function UserReviewsPage() {
   const total = data?.total ?? 0
   const pages = Math.max(1, Math.ceil(total / pageSize))
 
-  function go(to: number) {
+  function go(to:number) {
     const sp = new URLSearchParams(search.toString())
     if (to <= 1) sp.delete('page'); else sp.set('page', String(to))
     sp.set('sort', sortBy)
@@ -275,7 +254,7 @@ export default function UserReviewsPage() {
     router.replace(sp.size ? `?${sp.toString()}` : '?', { scroll: false })
   }
 
-  const sortedItems = useMemo(() => {
+  const sortedItems = React.useMemo(() => {
     if (!data?.items) return []
     const arr = [...data.items]
     switch (sortBy) {
@@ -287,7 +266,7 @@ export default function UserReviewsPage() {
     }
   }, [data?.items, sortBy])
 
-  useEffect(() => {
+  React.useEffect(() => {
     const sp = new URLSearchParams(search.toString())
     if (sortBy === 'neueste') sp.delete('sort'); else sp.set('sort', sortBy)
     router.replace(sp.size ? `?${sp.toString()}` : '?', { scroll: false })
@@ -340,7 +319,6 @@ export default function UserReviewsPage() {
               <div className={styles.controls}>
                 <SortDropdown value={sortBy} onChange={setSortBy} />
               </div>
-
             </div>
 
             {/* LISTE */}
@@ -375,7 +353,7 @@ export default function UserReviewsPage() {
                       </div>
 
                       <div className={styles.meta}>
-                        <div className={styles.metaCol} style={{ maxWidth: '100%' }}>
+                        <div className={styles.metaCol} style={{ maxWidth:'100%' }}>
                           <div className={styles.metaLabel}>
                             {ctx.kind === 'lackanfrage' ? 'Kommentar zu Lackanfrage'
                               : ctx.kind === 'auftrag' ? 'Kommentar zu Auftrag'
