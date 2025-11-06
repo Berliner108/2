@@ -6,14 +6,14 @@
   --text:#0f172a;
   --muted:#6b7280;
 
-  width:100vw;                 /* exakt Viewportbreite */
+  width:100vw;
   max-width:100vw;
   margin:0;
   padding:clamp(8px,2vw,16px);
   color:var(--text);
   background:transparent;
-  box-sizing:border-box;       /* Padding einrechnen */
-  overflow-x:hidden;           /* Safety gegen horizontales Scrollen */
+  box-sizing:border-box;
+  overflow-x:hidden;
 }
 
 /* Karten */
@@ -33,7 +33,7 @@
   gap:clamp(10px,1.2vw,16px);
 }
 
-/* ---------------- Header / Overview (auffällig) ---------------- */
+/* ---------------- Header / Overview ---------------- */
 .headerCard{
   position:relative;
   background:
@@ -65,9 +65,30 @@
 .statValue{ font-size:clamp(22px,3vw,32px); font-weight:800; }
 .statValue span{ font-size:16px; font-weight:600; color:var(--muted); margin-left:4px; }
 
-/* Sterne gelb */
-.starsYellow{ color:#f59e0b; }
-.stars{ color:inherit; }
+/* Sortierleiste */
+.controls{
+  margin-top:12px;
+  display:flex;
+  justify-content:flex-end;
+}
+.sortLabel{
+  display:flex; align-items:center; gap:8px;
+  font-size:14px; color:#374151;
+}
+.sortSelect{
+  padding:6px 10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#fff;
+}
+
+/* Sterne – Text-basierte Half-Fill */
+.starsWrap{ display:inline-flex; gap:2px; vertical-align:middle; }
+.star{ position:relative; display:inline-block; width:var(--starSize, 18px); height:var(--starSize,18px); line-height:1; font-size:var(--starSize,18px); }
+.starBase, .starFill{ position:absolute; left:0; top:0; width:100%; height:100%; display:block; line-height:1; }
+.starBase{ color:#d1d5db; }          /* leerer Teil */
+.starFill{ color:#f59e0b; overflow:hidden; } /* gefüllter Teil */
+.starsYellow{ color:#f59e0b; }        /* für alte Verwendungen */
 
 /* ---------------- Kartenkopf ---------------- */
 .cardHeader{

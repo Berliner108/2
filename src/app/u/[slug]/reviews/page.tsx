@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useId } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
@@ -43,10 +43,38 @@ const fetcher = async (u: string) => {
   return j as ApiResp
 }
 
-/** Sterne mit optionaler Klasse (für gelb im Header/Karten) */
-function Stars({ n, className }: { n: number; className?: string }) {
-  const full = Math.max(1, Math.min(5, Math.round(n)))
-  return <span className={className} aria-label={`${full} Sterne`}>{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>
+/* ---------- Stars mit Halb-Schritten (Text-basiert, kein SVG nötig) ---------- */
+function Stars({
+  value,
+  max = 5,
+  className,
+  size = 18,
+  ariaLabel,
+}: {
+  value: number
+  max?: number
+  className?: string
+  size?: number
+  ariaLabel?: string
+}) {
+  const stars = []
+  for (let i = 1; i <= max; i++) {
+    // wie viel dieser Stern gefüllt ist (0..1)
+    const fill = Math.max(0, Math.min(1, value - (i - 1)))
+    const pct = Math.round(fill * 100)
+    stars.push(
+      <span key={i} className={styles.star} style={{ ['--starSize' as any]: `${size}px` }}>
+        <span className={styles.starBase}>★</span>
+        <span className={`${styles.starFill} ${styles.starsYellow}`} style={{ width: `${pct}%` }}>★</span>
+      </span>
+    )
+  }
+  const label = ariaLabel ?? `${value.toFixed(1)} von ${max} Sternen`
+  return (
+    <span className={`${styles.starsWrap} ${className || ''}`} aria-label={label}>
+      {stars}
+    </span>
+  )
 }
 
 /* ---------------- Skeletons ---------------- */
@@ -104,27 +132,20 @@ function getContext(it: ReviewItem): Ctx {
   return { kind: 'sonstiges', label: 'Bewertung', title: 'Bewertung' }
 }
 
-/* ---------------- Collapsible Kommentar (messend + smooth scroll) ---------------- */
+/* ---------------- Collapsible Kommentar (nur beim Toggle scrollen) ---------------- */
 function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
   const ref = useRef<HTMLParagraphElement | null>(null)
   const [open, setOpen] = useState(false)
   const [clampNeeded, setClampNeeded] = useState(false)
 
+  // Nur messen, nicht scrollen, open nicht anfassen
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    setOpen(false)
-    requestAnimationFrame(() => {
-      const lh = parseFloat(getComputedStyle(el).lineHeight || '24')
-      const maxH = lh * lines
-      setClampNeeded(el.scrollHeight > maxH + 2)
-    })
+    const lh = parseFloat(getComputedStyle(el).lineHeight || '24')
+    const maxH = lh * lines
+    setClampNeeded(el.scrollHeight > maxH + 2)
   }, [text, lines])
-
-  useEffect(() => {
-    if (!ref.current) return
-    ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [open])
 
   const cls = useMemo(() => {
     const base = styles.comment
@@ -132,11 +153,21 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
     return open ? base : `${base} ${styles.clamp}`
   }, [clampNeeded, open])
 
+  const onToggle = () => {
+    setOpen(prev => {
+      const next = !prev
+      requestAnimationFrame(() => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      })
+      return next
+    })
+  }
+
   return (
     <>
       <p ref={ref} className={cls}>{text}</p>
       {clampNeeded && (
-        <button type="button" className={styles.readMore} onClick={() => setOpen(v => !v)} aria-expanded={open}>
+        <button type="button" className={styles.readMore} onClick={onToggle} aria-expanded={open}>
           {open ? 'Weniger' : 'Mehr lesen'}
           <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
             <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -152,8 +183,19 @@ export default function UserReviewsPage() {
   const search = useSearchParams()
   const router = useRouter()
 
+  // Deaktiviere automatische Scroll-Wiederherstellung des Browsers
+  useEffect(() => {
+    if ('scrollRestoration' in history) {
+      const prev = (history as any).scrollRestoration
+      ;(history as any).scrollRestoration = 'manual'
+      return () => { (history as any).scrollRestoration = prev }
+    }
+  }, [])
+
   const page = Math.max(1, parseInt(search.get('page') || '1', 10))
   const pageSize = Math.max(1, Math.min(50, parseInt(search.get('pageSize') || '10', 10)))
+  const sortDefault = (search.get('sort') as 'neueste'|'älteste'|'beste'|'schlechteste') || 'neueste'
+  const [sortBy, setSortBy] = useState<'neueste'|'älteste'|'beste'|'schlechteste'>(sortDefault)
 
   const { data, error, isLoading } = useSWR<ApiResp>(
     `/api/reviews/by-user/${encodeURIComponent(params.slug)}?page=${page}&pageSize=${pageSize}`,
@@ -166,16 +208,38 @@ export default function UserReviewsPage() {
   function go(to: number) {
     const sp = new URLSearchParams(search.toString())
     if (to <= 1) sp.delete('page'); else sp.set('page', String(to))
+    sp.set('sort', sortBy)
     if (pageSize !== 10) sp.set('pageSize', String(pageSize))
     const qs = sp.toString()
     router.replace(qs ? `?${qs}` : '?', { scroll: false })
   }
+
+  // Sortierung: clientseitig
+  const sortedItems = useMemo(() => {
+    if (!data?.items) return []
+    const arr = [...data.items]
+    switch (sortBy) {
+      case 'beste':        return arr.sort((a,b) => b.stars - a.stars || +new Date(b.createdAt) - +new Date(a.createdAt))
+      case 'schlechteste': return arr.sort((a,b) => a.stars - b.stars || +new Date(a.createdAt) - +new Date(b.createdAt))
+      case 'älteste':      return arr.sort((a,b) => +new Date(a.createdAt) - +new Date(b.createdAt))
+      case 'neueste':
+      default:             return arr.sort((a,b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+    }
+  }, [data?.items, sortBy])
 
   const renderProfileTitle = () => {
     if (!data) return 'Nutzer'
     const u = data.profile.username?.replace(/^@+/, '')
     return u || 'Nutzer'
   }
+
+  // bei Sortwechsel URL aktualisieren (ohne Reload)
+  useEffect(() => {
+    const sp = new URLSearchParams(search.toString())
+    if (sortBy === 'neueste') sp.delete('sort'); else sp.set('sort', sortBy)
+    router.replace(sp.size ? `?${sp.toString()}` : '?', { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy])
 
   return (
     <>
@@ -198,9 +262,10 @@ export default function UserReviewsPage() {
               <div className={styles.headerTop}>
                 <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
                 <div className={styles.headerBadge}>
-                  <Stars n={Math.round(data.profile.ratingAvg ?? 5)} className={styles.starsYellow} />
+                  <Stars value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2} className={styles.starsYellow} size={20} />
                 </div>
               </div>
+
               <div className={styles.headerStats}>
                 <div className={styles.statBox}>
                   <div className={styles.statLabel}>Durchschnitt</div>
@@ -213,14 +278,31 @@ export default function UserReviewsPage() {
                   <div className={styles.statValue}>{data.profile.ratingCount ?? 0}</div>
                 </div>
               </div>
+
+              {/* Sortierung */}
+              <div className={styles.controls}>
+                <label className={styles.sortLabel}>
+                  Sortieren:
+                  <select
+                    className={styles.sortSelect}
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as any)}
+                  >
+                    <option value="neueste">Neueste zuerst</option>
+                    <option value="älteste">Älteste zuerst</option>
+                    <option value="beste">Beste zuerst</option>
+                    <option value="schlechteste">Schlechteste zuerst</option>
+                  </select>
+                </label>
+              </div>
             </div>
 
             {/* LISTE */}
-            {data.items.length === 0 ? (
+            {sortedItems.length === 0 ? (
               <div className={styles.emptyState}>Noch keine Bewertungen.</div>
             ) : (
               <ul className={styles.list}>
-                {data.items.map((it) => {
+                {sortedItems.map((it) => {
                   const r = it.rater
                   const name = r.username?.replace(/^@+/, '') || null
                   const raterHref = `/u/${encodeURIComponent(name || r.id)}/reviews`
@@ -238,7 +320,7 @@ export default function UserReviewsPage() {
                           {titleEl}
                         </div>
                         <div className={styles.cardMetaRight}>
-                          <span className={styles.stars}><Stars n={it.stars} className={styles.starsYellow} /></span>
+                          <Stars value={it.stars} className={styles.starsYellow} />
                           <span className={styles.dot}>·</span>
                           <span className={styles.date}>
                             {new Intl.DateTimeFormat('de-AT', { day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date(it.createdAt))}
