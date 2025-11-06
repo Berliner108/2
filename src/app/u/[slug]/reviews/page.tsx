@@ -113,28 +113,22 @@ function getContext(it: ReviewItem): Ctx {
   return { kind:'sonstiges', label:'Bewertung', title:'Bewertung' }
 }
 
-/* ---------- CollapsibleText (zuverlässig) ---------- */
-function CollapsibleText({ text, lines = 5 }: { text:string; lines?:number }) {
-  const ref = React.useRef<HTMLParagraphElement|null>(null)
+function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
+  const ref = React.useRef<HTMLParagraphElement | null>(null)
   const [open, setOpen] = React.useState(false)
-  const [clampNeeded, setClampNeeded] = React.useState(false)
+  const [canToggle, setCanToggle] = React.useState(false)
 
-  const measure = React.useCallback(() => {
-    const el = ref.current
-    if (!el) return
-    const clamped = el.scrollHeight > el.clientHeight + 1
-    setClampNeeded(clamped)
-  }, [])
-
+  // Beim Textwechsel: erst schließen, dann im geschlossenen Zustand messen
   React.useEffect(() => {
-    // immer zuerst mit Clamp rendern, dann messen
-    requestAnimationFrame(measure)
-  }, [text, lines, measure])
-
-  React.useEffect(() => {
-    requestAnimationFrame(measure)
-    if (open) ref.current?.scrollIntoView({ behavior:'smooth', block:'nearest' })
-  }, [open, measure])
+    setOpen(false)
+    requestAnimationFrame(() => {
+      const el = ref.current
+      if (!el) return
+      // nur im "zu"-Zustand (mit Clamp) messen:
+      const hasOverflow = el.scrollHeight > el.clientHeight + 1
+      setCanToggle(hasOverflow)
+    })
+  }, [text, lines])
 
   const cls = !open ? `${styles.comment} ${styles.clamp}` : styles.comment
   const clampStyle = { ['--clampLines' as any]: String(lines) }
@@ -142,8 +136,14 @@ function CollapsibleText({ text, lines = 5 }: { text:string; lines?:number }) {
   return (
     <>
       <p ref={ref} className={cls} style={clampStyle}>{text}</p>
-      {clampNeeded && (
-        <button type="button" className={`${styles.readMore} ${styles.hit}`} onClick={() => setOpen(v=>!v)} aria-expanded={open}>
+
+      {canToggle && (
+        <button
+          type="button"
+          className={`${styles.readMore} ${styles.hit}`}
+          onClick={() => setOpen(v => !v)}
+          aria-expanded={open}
+        >
           {open ? 'Weniger' : 'Mehr lesen'}
           <svg width="16" height="16" viewBox="0 0 24 24" className={styles.readMoreIcon} aria-hidden>
             <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -153,6 +153,8 @@ function CollapsibleText({ text, lines = 5 }: { text:string; lines?:number }) {
     </>
   )
 }
+
+
 
 /* ---------- Fancy Sort Dropdown (ohne sichtbare Umrandung) ---------- */
 function SortDropdown({
