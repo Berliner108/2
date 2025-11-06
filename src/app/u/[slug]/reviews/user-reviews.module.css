@@ -155,15 +155,21 @@
 .hit{ min-height:44px; min-width:44px; }
 
 /* „Mehr lesen“-Pill */
+/* „Mehr/Weniger“-Button – kompakter + Oswald */
 .readMore{
-  display:inline-flex; align-items:center; gap:6px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
   margin-top:8px;
-  padding:10px 14px;           /* ↑ für 44px Hit-Area */
+  padding:8px 12px;                 /* kompakter */
+  min-height:42px;                  /* angenehme Hit-Area ohne riesig zu wirken */
   border-radius:999px;
   border:1px solid var(--border);
   background:#fff;
   color:var(--text);
+  font-family:'Oswald', system-ui, sans-serif;  /* <- Oswald */
   font-weight:600;
+  font-size:15.5px;
   cursor:pointer;
   transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease, background .15s ease;
 }
@@ -322,4 +328,12 @@
     transform: translateX(-50%);
     width: min(92vw, 360px);
   }
+}
+@media (max-width:640px){
+  .readMore{
+    padding:7px 10px;              /* schmaler auf Mobil */
+    min-height:38px;               /* kompakter, wirkt nicht überdimensioniert */
+    font-size:15px;
+  }
+  .readMoreIcon{ width:14px; height:14px; }
 }
