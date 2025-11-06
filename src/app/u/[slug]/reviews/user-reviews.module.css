@@ -27,11 +27,7 @@
   box-shadow:0 2px 18px rgba(0,0,0,.06);
 }
 
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:clamp(10px,1.2vw,16px);
-}
+.list{ display:flex; flex-direction:column; gap:clamp(10px,1.2vw,16px); }
 
 /* ---------------- Header / Overview ---------------- */
 .headerCard{
@@ -45,73 +41,34 @@
   padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border);
 }
 .headerTitle{ font-weight:800; font-size:clamp(22px,3vw,36px); }
-.headerBadge{
-  padding:6px 12px; border-radius:999px;
-  background:rgba(37,99,235,.08);
-  border:1px solid var(--border);
-}
+.headerBadge{ padding:6px 12px; border-radius:999px; background:rgba(37,99,235,.08); border:1px solid var(--border); }
 
 .headerStats{
   display:grid; gap:clamp(10px,1.2vw,16px);
   grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
 }
-.statBox{
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:12px 14px;
-  background:linear-gradient(180deg, rgba(37,99,235,.06), #fff 80%);
-}
+.statBox{ border:1px solid var(--border); border-radius:12px; padding:12px 14px; background:linear-gradient(180deg, rgba(37,99,235,.06), #fff 80%); }
 .statLabel{ font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
 .statValue{ font-size:clamp(22px,3vw,32px); font-weight:800; }
 .statValue span{ font-size:16px; font-weight:600; color:var(--muted); margin-left:4px; }
 
-/* Sortierleiste */
-.controls{
-  margin-top:12px;
-  display:flex;
-  justify-content:flex-end;
-}
-.sortLabel{
-  display:flex; align-items:center; gap:8px;
-  font-size:14px; color:#374151;
-}
-.sortSelect{
-  padding:6px 10px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  background:#fff;
-}
+/* Controls */
+.controls{ margin-top:12px; display:flex; justify-content:flex-end; }
+.sortLabel{ display:flex; align-items:center; gap:8px; font-size:14px; color:#374151; }
+.sortSelect{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; }
 
-/* Sterne – Text-basierte Half-Fill */
+/* Sterne – Half fill */
 .starsWrap{ display:inline-flex; gap:2px; vertical-align:middle; }
 .star{ position:relative; display:inline-block; width:var(--starSize, 18px); height:var(--starSize,18px); line-height:1; font-size:var(--starSize,18px); }
 .starBase, .starFill{ position:absolute; left:0; top:0; width:100%; height:100%; display:block; line-height:1; }
-.starBase{ color:#d1d5db; }          /* leerer Teil */
-.starFill{ color:#f59e0b; overflow:hidden; } /* gefüllter Teil */
-.starsYellow{ color:#f59e0b; }        /* für alte Verwendungen */
+.starBase{ color:#d1d5db; }
+.starFill{ color:#f59e0b; overflow:hidden; }
+.starsYellow{ color:#f59e0b; }
 
 /* ---------------- Kartenkopf ---------------- */
-.cardHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-  margin-bottom:8px;
-}
-.cardTitle{
-  display:flex; align-items:center; gap:10px;
-  font-weight:700;
-  font-size:clamp(16px,2.2vw,22px);
-}
-.badge{
-  padding:4px 10px;
-  border-radius:999px;
-  background:var(--accent-weak);
-  color:var(--text);
-  font-size:12px;
-  font-weight:700;
-  border:1px solid var(--border);
-}
+.cardHeader{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px; }
+.cardTitle{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:clamp(16px,2.2vw,22px); }
+.badge{ padding:4px 10px; border-radius:999px; background:var(--accent-weak); color:var(--text); font-size:12px; font-weight:700; border:1px solid var(--border); }
 .cardMetaRight{ display:flex; align-items:center; gap:8px; }
 .dot{ opacity:.5; }
 .date{ opacity:.8; }
@@ -119,12 +76,9 @@
 /* ---------------- Inhalt ---------------- */
 .meta{ display:flex; flex-wrap:wrap; gap:16px; }
 .metaCol{ flex:1 1 0; min-width:280px; }
+.metaLabel{ font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
 
-.metaLabel{
-  font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px;
-}
-
-/* Kommentar nahezu volle Breite */
+/* Kommentar */
 .comment{
   white-space:pre-wrap;
   overflow-wrap:anywhere;
@@ -133,41 +87,33 @@
   margin:6px 0 0;
   max-width:none;
 }
+.clamp{ display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
 
-/* Clamp für CollapsibleText (Standard 5 Zeilen) */
-.clamp{
-  display:-webkit-box;
-  -webkit-line-clamp:5;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-}
+/* Buttons – 44×44 Hit-Area auf Mobile */
+.hit{ min-height:44px; min-width:44px; }
 
 /* „Mehr lesen“-Pill */
 .readMore{
   display:inline-flex; align-items:center; gap:6px;
   margin-top:8px;
-  padding:6px 12px;
+  padding:10px 14px;
   border-radius:999px;
   border:1px solid var(--border);
   background:#fff;
   color:var(--text);
   font-weight:600;
   cursor:pointer;
-  transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease;
+  transition: box-shadow .15s ease, transform .05s ease, border-color .15s ease, background .15s ease;
 }
-.readMore:hover{ box-shadow:0 2px 10px rgba(0,0,0,.08); border-color:#d1d5db; }
+.readMore:hover{ box-shadow:0 2px 10px rgba(0,0,0,.08); border-color:#d1d5db; background:#fafafa; }
 .readMore:active{ transform:translateY(1px); }
 .readMoreIcon{ transform:translateY(1px); }
 
+/* Footer */
 .byline{ margin-top:8px; color:#374151; }
 
 /* Links */
-.titleLink{
-  color:var(--text);
-  text-decoration:none;
-  border-bottom:1px solid transparent;
-  transition:border-color .15s ease;
-}
+.titleLink{ color:var(--text); text-decoration:none; border-bottom:1px solid transparent; transition:border-color .15s ease; }
 .titleLink:hover, .titleLink:focus-visible{ border-color:var(--text); outline:0; }
 
 /* ---------------- Pagination ---------------- */
@@ -175,10 +121,10 @@
 .pageInfo{ color:#4b5563; }
 .pageButtons{ display:flex; align-items:center; gap:6px; }
 .pageBtn{
-  padding:6px 10px; border:1px solid var(--border); background:#fff; border-radius:10px; cursor:pointer;
-  transition:box-shadow .15s ease, transform .05s ease;
+  padding:10px 12px; border:1px solid var(--border); background:#fff; border-radius:10px; cursor:pointer;
+  transition:box-shadow .15s ease, transform .05s ease, background .15s ease;
 }
-.pageBtn:hover:not(:disabled){ box-shadow:0 1px 6px rgba(0,0,0,.08); }
+.pageBtn:hover:not(:disabled){ box-shadow:0 1px 6px rgba(0,0,0,.08); background:#fafafa; }
 .pageBtn:active:not(:disabled){ transform:translateY(1px); }
 .pageBtn:disabled{ opacity:.5; cursor:not-allowed; }
 .pageNow{ padding:6px 10px; color:var(--text); }
@@ -208,4 +154,5 @@
   .headerBadge{ align-self:flex-start; }
   .cardHeader{ flex-direction:column; align-items:flex-start; gap:6px; }
   .cardMetaRight{ font-size:14px; }
+  .readMore, .sortSelect, .pageBtn{ font-size:16px; }
 }
