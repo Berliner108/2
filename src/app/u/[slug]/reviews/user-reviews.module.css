@@ -6,8 +6,8 @@
   --text:#0f172a;
   --muted:#6b7280;
 
-  width:100%;                  /* volle Breite */
-  max-width:100%;              /* kein künstliches Limit */
+  width:98%;                  /* volle Breite */
+  max-width:98%;              /* kein künstliches Limit */
   margin:0;
   padding:clamp(12px,1.5vw,24px);
   color:var(--text);
