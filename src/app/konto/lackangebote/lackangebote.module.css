@@ -660,7 +660,8 @@
 /* ==== Mobile Overflow-Fix für Cards ==== */
 @media (max-width: 700px) {
   .card {
-    contain-intrinsic-size: 200px !important; /* keine feste Inline-Size */
+    content-visibility: visible;            /* <- sichtbar rendern */
+    contain-intrinsic-size: auto !important;/* <- Breite nicht schätzen */
     max-width: 100%;
   }
   .list { overflow-x: clip; }
