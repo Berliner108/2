@@ -25,24 +25,22 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
 
     // Verkäufer markiert „Versandt“
     const { data: updated, error } = await sb
-      .from('orders')
-      .update({
-        shipped_at: nowIso,
-        reported_at: nowIso,
-        auto_release_at: autoRelease,
-        updated_at: nowIso,
-      })
-      .eq('id', id)
-      .eq('kind', 'lack')
-      .eq('supplier_id', user.id)      // nur der Verkäufer selbst
-      .eq('status', 'funds_held')      // nur solange Gelder gehalten werden
-      .is('released_at', null)         // nicht schon freigegeben
-      .is('refunded_at', null)         // nicht schon erstattet
-      .is('reported_at', null)         // nicht bereits gemeldet
-      .select('id, request_id')
-      .limit(1)
+  .from('orders')
+  .update({ shipped_at: nowIso, reported_at: nowIso, auto_release_at: autoRelease, updated_at: nowIso })
+  .eq('id', id)
+  .eq('kind', 'lack')
+  .eq('supplier_id', user.id)
+  .eq('status', 'funds_held')
+  .is('released_at', null)
+  .is('refunded_at', null)
+  .is('reported_at', null)
+  .is('shipped_at', null)
+  .or(`auto_refund_at.is.null,auto_refund_at.gt.${nowIso}`)   // ⬅️ NEU
+  .select('id, request_id')
+  .limit(1)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+if (!updated?.length) return NextResponse.json({ error: 'DEADLINE_PASSED_OR_NOT_ALLOWED' }, { status: 409 })
+
     if (!updated || updated.length === 0) {
       return NextResponse.json({ error: 'Bereits gemeldet oder unzulässig' }, { status: 409 })
     }
