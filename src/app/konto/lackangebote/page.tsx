@@ -588,13 +588,16 @@ const LackanfragenOrdersPage: FC = () => {
   }
 
   function remainingText(iso?: string) {
-    if (!iso) return '–'
-    const delta = +new Date(iso) - Date.now()
-    if (delta <= 0) return 'abgelaufen'
-    const days  = Math.floor(delta / 86400000)
-    const hours = Math.floor((delta % 86400000) / 3600000)
-    return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours} Std` : `${hours} Std`
-  }
+  if (!iso) return '–'
+  const ms = new Date(iso).getTime() - Date.now()
+  if (ms <= 0) return 'abgelaufen'
+  const mins = Math.ceil(ms / 60_000)
+  if (mins < 60) return `${mins} Min`
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours % 24} Std` : `${hours} Std`
+}
+
 
   const alreadyRated = (o: LackOrder) => !!(o.myReview || o.review)
   const canRateNow   = (o: LackOrder) => !alreadyRated(o)
