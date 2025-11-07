@@ -113,39 +113,30 @@ function getContext(it: ReviewItem): Ctx {
   return { kind:'sonstiges', label:'Bewertung', title:'Bewertung' }
 }
 
+/* ---------- CollapsibleText (mobil robust) ---------- */
 function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) {
   const ref = React.useRef<HTMLParagraphElement | null>(null)
   const [open, setOpen] = React.useState(false)
   const [canToggle, setCanToggle] = React.useState(false)
 
-  // Zwei rAFs warten => nach Layout/Paint messen
   const afterPaint = (cb: () => void) =>
     requestAnimationFrame(() => requestAnimationFrame(cb))
 
   const measure = React.useCallback(() => {
     const el = ref.current
     if (!el) return
-    // im geschlossenen Zustand ist clamp aktiv
     const diff = el.scrollHeight - el.clientHeight
-    // Mobile/WebKit rundet gerne; kleine Toleranz verwenden
     setCanToggle(diff > 0.5)
   }, [])
 
-  // Beim Textwechsel: schließen & nach Paint + Fonts messen
   React.useEffect(() => {
     setOpen(false)
     afterPaint(() => {
       measure()
-      // wenn Fonts async laden (Oswald), danach nochmal messen
-      // (nicht in allen Browsern vorhanden – darum optional)
-      ;(document as any).fonts?.ready?.then?.(() => {
-        // nochmal nach Paint, damit die neue Höhe sicher ist
-        afterPaint(measure)
-      })
+      ;(document as any).fonts?.ready?.then?.(() => afterPaint(measure))
     })
   }, [text, lines, measure])
 
-  // Bei Resize/Rotation neu messen (debounced per afterPaint)
   React.useEffect(() => {
     const onResize = () => afterPaint(measure)
     window.addEventListener('resize', onResize)
@@ -165,40 +156,28 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
 
       {canToggle && (
         <button
-  type="button"
-  className={`${styles.readMore} ${styles.hit}`}
-  onClick={() => setOpen(v => !v)}
-  aria-expanded={open}
->
-  {open ? 'Weniger' : 'Mehr lesen'}
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    className={`${styles.readMoreIcon} ${open ? styles.iconUp : styles.iconDown}`}
-    aria-hidden
-  >
-    {/* Chevron-Rechts – wir drehen ihn über CSS */}
-    <path
-      d="M8 5l8 7-8 7"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-</button>
-
+          type="button"
+          className={`${styles.readMore} ${styles.hit}`}
+          onClick={() => setOpen(v => !v)}
+          aria-expanded={open}
+        >
+          {open ? 'Weniger' : 'Mehr lesen'}
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            className={`${styles.readMoreIcon} ${open ? styles.iconUp : styles.iconDown}`}
+            aria-hidden
+          >
+            <path d="M8 5l8 7-8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       )}
     </>
   )
 }
 
-
-
-
-/* ---------- Fancy Sort Dropdown (ohne sichtbare Umrandung) ---------- */
+/* ---------- Fancy Sort Dropdown ---------- */
 function SortDropdown({
   value,
   onChange,
@@ -260,6 +239,29 @@ function SortDropdown({
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+/* ---------- Rating Breakdown (farbige Balken) ---------- */
+function RatingBreakdown({ items }: { items: ReviewItem[] }) {
+  const counts = [0,0,0,0,0]
+  items.forEach(r => { const i = Math.max(1, Math.min(5, Math.round(r.stars))) - 1; counts[i]++ })
+  const total = counts.reduce((a,b)=>a+b,0) || 1
+  return (
+    <div className={styles.breakdown}>
+      {[5,4,3,2,1].map((s) => {
+        const c = counts[s-1]; const pct = Math.round(c/total*100)
+        return (
+          <div key={s} className={styles.brRow}>
+            <span className={styles.brLabel}>{s}★</span>
+            <div className={styles.brBarWrap}>
+              <div className={`${styles.brBar} ${styles['brS'+s]}`} style={{width:`${pct}%`}} />
+            </div>
+            <span className={styles.brPct}>{pct}%</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -360,6 +362,9 @@ export default function UserReviewsPage() {
                 </div>
               </div>
 
+              {/* Farbige, kompakte Verteilung */}
+              <RatingBreakdown items={sortedItems} />
+
               <div className={styles.controls}>
                 <SortDropdown value={sortBy} onChange={setSortBy} />
               </div>
@@ -381,7 +386,7 @@ export default function UserReviewsPage() {
                     : <span className={styles.titleLink}>{ctx.title}</span>
 
                   return (
-                    <li key={it.id} className={styles.card}>
+                    <li key={it.id} className={`${styles.card} ${styles['is-' + ctx.kind]}`}>
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
                           {ctx.kind !== 'sonstiges' && <span className={styles.badge}>{ctx.label}</span>}
