@@ -529,3 +529,18 @@
   0% { background-position: -200% 0, 0 0; }
   100% { background-position: 200% 0, 0 0; }
 }
+/* Mobil: Segmented-Control füllt die ganze Zeile (2 Spalten) */
+@media (max-width: 700px) {
+  .toolbar { grid-template-columns: 1fr; }           /* eine Spalte */
+  .segmented {
+    display: grid;                                   /* statt inline-flex */
+    grid-template-columns: 1fr 1fr;                  /* zwei gleich breite Buttons */
+    width: 100%;
+    justify-self: stretch;
+  }
+  .segmentedBtn {
+    width: 100%;
+    justify-content: center;
+    padding: .6rem .9rem;                            /* etwas höher, damit’s voll aussieht */
+  }
+}

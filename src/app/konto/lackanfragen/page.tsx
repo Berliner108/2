@@ -839,18 +839,22 @@ const normalizeOffer = (o: any): LackOffer => {
               className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
               onClick={() => setTopSection('received')}
               type="button"
+              title={`Erhaltene oben – ${rec.total} Einträge`}
             >
-              Erhaltene oben
+              Erhaltene oben <span className={styles.chip}>{rec.total}</span>
             </button>
+
             <button
               role="tab"
               aria-selected={topSection === 'submitted'}
               className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
               onClick={() => setTopSection('submitted')}
               type="button"
+              title={`Abgegebene oben – ${sub.total} Einträge`}
             >
-              Abgegebene oben
+              Abgegebene oben <span className={styles.chip}>{sub.total}</span>
             </button>
+
           </div>
         </div>
 
