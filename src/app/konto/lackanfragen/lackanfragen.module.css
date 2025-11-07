@@ -33,15 +33,29 @@
   border-radius: 9999px;
   overflow: hidden;
 }
-.segmentedBtn {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: .45rem .9rem;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Oswald';
+.segmentedBtn{
+  appearance:none;
+  border:0;
+  background:transparent;
+  padding:.45rem .9rem;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Oswald';
+  display:inline-flex;          /* <-- hinzufügen */
+  align-items:center;           /* <-- hinzufügen */
+  gap:.5rem;                    /* <-- hinzufügen */
+  white-space:nowrap;           /* optional, verhindert Umbruch */
 }
+.chip{
+  font-size:.75rem;
+  line-height:1;
+  padding:.2rem .45rem;
+  border-radius:9999px;
+  background:#f4f4f5;
+  color:#111;
+  font-weight:700;
+}
+
 .segmentedBtn + .segmentedBtn { border-left: 2px solid #e0e0e0; }
 .segmentedActive { background: #00b5d8; color: #fff; }
 
