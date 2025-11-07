@@ -672,3 +672,14 @@
     box-sizing: border-box;
   }
 }
+/* Mobil: Segmented-Control strecken */
+@media (max-width: 768px) {
+  .segmented{
+    display: flex;      /* statt inline-flex */
+    width: 100%;        /* füllt die Zeile */
+  }
+  .segmentedBtn{
+    flex: 1 1 0;        /* beide Buttons gleich breit */
+    justify-content: center;
+  }
+}
