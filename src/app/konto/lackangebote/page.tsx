@@ -97,7 +97,7 @@ type LackOrder = {
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 
 // ✅ Neue Status/Filter-Keys
-type StatusKey = 'wartet' | 'offen' | 'reported' | 'disputed' | 'confirmed'
+type StatusKey = 'wartet' | 'offen' | 'reported' | 'disputed' | 'confirmed' | 'refunded'
 type FilterKey = 'alle' | StatusKey
 
 const LS_KEY       = 'myLackOrdersV1'
@@ -198,14 +198,22 @@ async function apiPost(path: string, body?: any) {
 
 /* ===== Display-Status aus Serverstatus + Lieferdatum ableiten ===== */
 function getDisplayStatus(order: LackOrder): { key: StatusKey; label: string } {
+  // Refunds sichtbar machen
+  if (order.refundedAt || (order as any).status === 'canceled') {
+    return { key: 'refunded', label: 'Erstattet' }
+  }
+  if (order.disputeOpenedAt) {
+    return { key: 'disputed', label: 'Reklamiert' } // optional „(erstattet)“ anhängen falls refundedAt gesetzt
+  }
   if (order.status === 'confirmed') return { key: 'confirmed', label: 'Geliefert (bestätigt)' }
   if (order.status === 'disputed')  return { key: 'disputed',  label: 'Reklamiert' }
   if (order.status === 'reported')  return { key: 'reported',  label: 'Versandt' }
-  // in_progress → wartet/offen per Lieferdatum
+
   const liefer = asDateLike(order.lieferdatum)
   if (liefer && Date.now() < +liefer) return { key: 'wartet', label: 'Anlieferung geplant' }
   return { key: 'offen', label: 'Offen' }
 }
+
 
 /* ============ Pagination-UI ============ */
 const Pagination: FC<{
@@ -647,6 +655,8 @@ const LackanfragenOrdersPage: FC = () => {
                   display.key === 'reported'  ? styles.statusPending : '',
                   display.key === 'disputed'  ? styles.statusPending : '',
                   display.key === 'confirmed' ? styles.statusDone    : '',
+                  display.key === 'refunded' ? styles.statusRefunded : '',
+
                 ].join(' ').trim()}>
                   {display.label}
                 </span>
@@ -895,6 +905,8 @@ const LackanfragenOrdersPage: FC = () => {
             <option value="reported">Versandt</option>
             <option value="disputed">Reklamiert</option>
             <option value="confirmed">Geliefert (bestätigt)</option>
+            <option value="refunded">Erstattet</option>
+
           </select>
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
