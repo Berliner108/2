@@ -598,9 +598,6 @@ const normalizeOffer = (o: any): LackOffer => {
                           <span className={styles.bestPrice}>{formatEUR(bestPrice)}</span>
                         )}
                       </div>
-                      <div className={styles.groupActions}>
-                        <Link href={href} className={styles.jobLink}>Zur Lackanfrage</Link>
-                      </div>
                     </div>
 
                     <div className={styles.groupMetaLine} aria-label="Anfrage-Metadaten">
@@ -776,9 +773,7 @@ const normalizeOffer = (o: any): LackOffer => {
                       </span>
                     </div>
 
-                    <div className={styles.actions}>
-                      <Link href={href} className={styles.jobLink}>Zur Lackanfrage</Link>
-                    </div>
+                    
                   </li>
                 )
               })}
