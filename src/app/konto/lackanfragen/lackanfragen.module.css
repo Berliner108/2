@@ -188,14 +188,22 @@
 
 /* ===== Gruppen (erhaltene Angebote) ===== */
 .groupList { display: grid; gap: 1rem; }
-.groupCard {
-  background:#fff; border:2px solid darkgrey; border-radius:12px; padding:1rem;
+/* Basiskarte unverändert – aber overflow, damit der Verlauf sauber in den Radius geclippt wird */
+.groupCard{
+  position: relative;
+  overflow: hidden;                 /* wichtig für saubere Ecken */
+  background:#fff;
+  border:2px solid darkgrey;
+  border-radius:12px;
+  padding:1rem;
   box-shadow:
     0 1px 3px rgba(0,0,0,.06),
     0 8px 24px rgba(0,0,0,.08);
   transition: box-shadow .18s ease, transform .06s ease;
 }
-.groupCard:hover {
+
+.groupCard:hover{
+  /* Nur Außenschatten ändern – Background bleibt unangetastet */
   box-shadow:
     0 12px 28px rgba(0,0,0,.16),
     0 4px 10px rgba(0,0,0,.08);
@@ -563,18 +571,18 @@
 .isLackanfrage::before { ... }
 */
 
+/* Farblicher Linksrand wie bei Bewertungen – ohne :root, ohne Doppelung */
 .isLackanfrage{
-  position: relative;
-  padding-left: 1rem;                        /* etwas Luft links fürs Auge */
-  /* EIN Streifen + weicher Glow, keine Doppelung */
-  box-shadow:
-    inset 6px 0 0 #06b6d4,                   /* der cyanfarbene Balken */
-    inset 12px 0 20px rgba(6,182,212,.25);   /* sanfter Glanz */
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
+  /* 6px fester Balken + softer 6px Glow rechts daneben */
+  background-image:
+    linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px, transparent 12px);
+  background-repeat: no-repeat;
+  background-size: 12px 100%;       /* volle Kartenhöhe */
+  background-position: left top;
+  padding-left: 1rem;               /* etwas Luft nach links */
 }
 
-/* Optional: Badge-Farbe angleichen */
+/* (Optional) Badge leicht angleichen */
 .isLackanfrage .groupCounter,
 .isLackanfrage .tagBest{
   background: rgba(6,182,212,.10);
