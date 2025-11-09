@@ -518,44 +518,42 @@
   }
 }
 /* ==== Karten mit farbigem Linksrand (wie Bewertungen) ==== */
-:root{
-  --card-accent: #00b5d8;     /* Hauptfarbe */
-  --card-accent-soft: #9ee8f3;/* Verlauf / Glanz */
-}
-
 .groupCard,
 .card{
-  position: relative;                 /* für ::before nötig */
-  padding-left: calc(1rem + 12px);    /* Platz für den Streifen */
+  position: relative;
+  overflow: hidden;             /* damit die Leiste sauber mitrundet */
+  border-radius: 12px;
 }
 
+/* schmale farbige Leiste links */
 .groupCard::before,
 .card::before{
   content: "";
   position: absolute;
-  left: -2px;             /* leicht über die Kartenkante, überdeckt den Rand */
+  left: -2px;                   /* überdeckt den 2px Außenborder */
   top: 8px;
   bottom: 8px;
   width: 10px;
-  border-radius: 9999px;  /* pillförmig */
-  background:
-    linear-gradient(180deg, var(--card-accent) 0%, #12c2d9 50%, var(--card-accent-soft) 100%);
+  border-radius: 9999px;        /* pill-förmig */
+  background: linear-gradient(180deg, #00b5d8 0%, #12c2d9 50%, #9ee8f3 100%);
   box-shadow:
-    inset 0 0 0 2px #ffffff,         /* feiner Innenrand/Glanz */
-    0 0 0 1px rgba(0,0,0,.04);       /* minimale Kontur */
+    inset 0 0 0 2px #fff,       /* feiner Innenrand/Glanz */
+    0 0 0 1px rgba(0,0,0,.04);  /* minimale Kontur */
   pointer-events: none;
 }
 
-/* kleine Hover-Verstärkung passend zu deinem Card-Hover */
+/* leichte Hover-Verstärkung */
 .groupCard:hover::before,
 .card:hover::before{
   filter: saturate(1.1) brightness(1.03);
 }
 
-/* Mobile: etwas kompakter */
+/* Mobile: kompakter */
 @media (max-width: 680px){
-  .groupCard,
-  .card{ padding-left: calc(1rem + 10px); }
   .groupCard::before,
-  .card::before{ top: 10px; bottom: 10px; width: 8px; }
+  .card::before{
+    top: 10px;
+    bottom: 10px;
+    width: 8px;
+  }
 }
