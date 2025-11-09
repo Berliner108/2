@@ -574,7 +574,7 @@ const normalizeOffer = (o: any): LackOffer => {
 
   const ReceivedSection = () => (
     <>
-      <h2 className={styles.heading}>Erhaltene Angebote für deine Lackanfragen</h2>
+      <h2 className={styles.heading}>Erhaltene Angebote - Lackanfragen</h2>
       <div className={styles.kontoContainer}>
         {rec.total === 0 ? (
           <div className={styles.emptyState}><strong>Keine Lackanfragen/Angebote sichtbar.</strong></div>
@@ -711,7 +711,7 @@ const normalizeOffer = (o: any): LackOffer => {
 
   const SubmittedSection = () => (
     <>
-      <h2 className={styles.heading}>Übersicht zu deinen abgegebenen Angeboten (Lackanfragen)</h2>
+      <h2 className={styles.heading}>Abgegebene Angebote - Lackanfragen</h2>
       <div className={styles.kontoContainer}>
         {sub.total === 0 ? (
           <div className={styles.emptyState}><strong>Keine gültigen Angeboten abgegeben.</strong></div>
