@@ -558,3 +558,26 @@
     padding: .6rem .9rem;                            /* etwas höher, damit’s voll aussieht */
   }
 }
+/* Vorherige Varianten entfernen/auskommentieren:
+.isLackanfrage { border-left:6px solid #06b6d4; }
+.isLackanfrage::before { ... }
+*/
+
+.isLackanfrage{
+  position: relative;
+  padding-left: 1rem;                        /* etwas Luft links fürs Auge */
+  /* EIN Streifen + weicher Glow, keine Doppelung */
+  box-shadow:
+    inset 6px 0 0 #06b6d4,                   /* der cyanfarbene Balken */
+    inset 12px 0 20px rgba(6,182,212,.25);   /* sanfter Glanz */
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+/* Optional: Badge-Farbe angleichen */
+.isLackanfrage .groupCounter,
+.isLackanfrage .tagBest{
+  background: rgba(6,182,212,.10);
+  border-color: #baf2f7;
+  color: #0b5561;
+}
