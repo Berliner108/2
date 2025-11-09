@@ -587,7 +587,7 @@ const normalizeOffer = (o: any): LackOffer => {
                 const reqExpires = endOfDay(liefer)
 
                 return (
-                  <li key={requestId} className={styles.groupCard}>
+                  <li key={requestId} className={`${styles.groupCard} ${styles.isLackanfrage}`}>
                     <div className={styles.groupHeader}>
                       <div className={styles.groupTitle}>
                         <Link href={href} className={styles.titleLink}>{title}</Link>
@@ -735,7 +735,7 @@ const normalizeOffer = (o: any): LackOffer => {
                     : 'keine Bewertungen'
 
                 return (
-                  <li key={o.id} className={styles.card}>
+                  <li key={o.id} className={`${styles.card} ${styles.isLackanfrage}`}>
                     <div className={styles.cardHeader}>
                       <div className={styles.cardTitle}>
                         <Link href={href} className={styles.titleLink}>{title}</Link>

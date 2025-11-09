@@ -517,43 +517,37 @@
     padding: .6rem .9rem;
   }
 }
-/* ==== Karten mit farbigem Linksrand (wie Bewertungen) ==== */
-.groupCard,
-.card{
+/* ==== Karten mit farbigem Linksrand – wie Bewertungen ==== */
+.isLackanfrage {
   position: relative;
-  overflow: hidden;             /* damit die Leiste sauber mitrundet */
-  border-radius: 12px;
+  border-left: 6px solid #06b6d4;                /* der blaue Streifen */
+  /* optional etwas mehr Innenabstand links */
+  padding-left: 1rem;
 }
 
-/* schmale farbige Leiste links */
-.groupCard::before,
-.card::before{
+/* subtiler Glanz/Glow entlang des Streifens */
+.isLackanfrage::before {
   content: "";
   position: absolute;
-  left: -2px;                   /* überdeckt den 2px Außenborder */
-  top: 8px;
-  bottom: 8px;
-  width: 10px;
-  border-radius: 9999px;        /* pill-förmig */
-  background: linear-gradient(180deg, #00b5d8 0%, #12c2d9 50%, #9ee8f3 100%);
-  box-shadow:
-    inset 0 0 0 2px #fff,       /* feiner Innenrand/Glanz */
-    0 0 0 1px rgba(0,0,0,.04);  /* minimale Kontur */
+  left: 0; top: 8px; bottom: 8px;
+  width: 6px;                                     /* gleiche Breite wie border-left */
+  border-radius: 6px;
+  background: linear-gradient(180deg, #06b6d4, #9ee8f3 70%);
+  opacity: .25;
   pointer-events: none;
 }
 
-/* leichte Hover-Verstärkung */
-.groupCard:hover::before,
-.card:hover::before{
-  filter: saturate(1.1) brightness(1.03);
+/* Runde Ecken sauber halten */
+.groupCard.isLackanfrage,
+.card.isLackanfrage {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
 }
 
-/* Mobile: kompakter */
-@media (max-width: 680px){
-  .groupCard::before,
-  .card::before{
-    top: 10px;
-    bottom: 10px;
-    width: 8px;
-  }
+/* (nice to have) Badge-Farben im Kontext angleichen */
+.isLackanfrage .groupCounter,
+.isLackanfrage .tagBest {
+  background: rgba(6,182,212,.10);
+  border-color: #baf2f7;
+  color: #0b5561;
 }
