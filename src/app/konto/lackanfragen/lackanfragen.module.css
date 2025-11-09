@@ -41,11 +41,12 @@
   font-weight:700;
   cursor:pointer;
   font-family:'Oswald';
-  display:inline-flex;          /* <-- hinzufügen */
-  align-items:center;           /* <-- hinzufügen */
-  gap:.5rem;                    /* <-- hinzufügen */
-  white-space:nowrap;           /* optional, verhindert Umbruch */
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  white-space:nowrap;
 }
+.segmentedBtn .chip{ margin-left:.35rem; }
 .chip{
   font-size:.75rem;
   line-height:1;
@@ -55,7 +56,6 @@
   color:#111;
   font-weight:700;
 }
-
 .segmentedBtn + .segmentedBtn { border-left: 2px solid #e0e0e0; }
 .segmentedActive { background: #00b5d8; color: #fff; }
 
@@ -83,7 +83,6 @@
   font-size: 1rem;
   font-family: 'Oswald';
 }
-.onlyActive { display: flex; gap: 0.5rem; align-items: center; font-weight: 600; }
 .search:focus-visible,
 .select:focus-visible { outline: 3px solid #9ee8f3; outline-offset: 2px; }
 
@@ -115,7 +114,16 @@
 @keyframes modalUp{from{transform:translateY(12px);opacity:.9}to{transform:translateY(0);opacity:1}}
 .modalTitle{margin:0 0 8px;font-size:20px;font-weight:800;color:#111827}
 .modalText{margin:0 0 14px;color:#374151}
-.modalSummary{display:grid;gap:6px;margin-bottom:12px;color:#111}
+.modalSummary{
+  display:grid;
+  gap:.4rem;
+  padding:.75rem .5rem;
+  border:1px dashed #e5e7eb;
+  border-radius:10px;
+  background:#fafafa;
+  margin-bottom:12px;
+}
+.modalSummary > div { font-size: .95rem; }
 .modalActions{display:flex;justify-content:flex-end;gap:10px}
 .btnGhost{appearance:none;border:1px solid #e5e7eb;background:#fff;color:#111827;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
 .btnGhost:hover{background:#f9fafb}
@@ -160,31 +168,8 @@
   font-size: 0.9rem;
   color: #555;
 }
+.metaItem { color:#555; font-size:.9rem; }
 .metaItem strong { color: #222; }
-
-.actions { margin-top: 0.75rem; }
-
-/* Einheitlicher Link-Button */
-.jobLink,
-.groupActions .jobLink,
-.actions .jobLink {
-  box-sizing: border-box;
-  display: inline-block;
-  background: #00b5d8;
-  color: #fff !important;
-  border: 0;
-  padding: .45rem .8rem;
-  border-radius: 12px;
-  font-weight: 700;
-  line-height: 1.1;
-  text-decoration: none;
-}
-.jobLink:hover,
-.groupActions .jobLink:hover,
-.actions .jobLink:hover {
-  background: #089bb9;
-  color: #fff !important;
-}
 
 /* ===== Gruppen (erhaltene Angebote) ===== */
 .groupList { display: grid; gap: 1rem; }
@@ -218,7 +203,14 @@
 }
 
 .bestPrice { font-weight:800; }
-.groupActions { display:flex; gap:.5rem; }
+
+/* kleine Bewertungs-Info hinter dem Handle */
+.vendorRatingSmall{
+  opacity:.8;
+  font-weight:500;
+  font-size:.9em;
+  margin-left:.25rem;
+}
 
 /* Beste-Preis Tag */
 .tagBest {
@@ -226,12 +218,12 @@
   background:#e6fbff; border:1px solid #bdeff8; color:#006a7d;
 }
 
-/* ===== Tabelle: Anbieter | Preis | Gültig bis | Aktion ===== */
+/* ===== Tabelle: Anbieter | Preis | Lieferdatum | Gültig bis | Aktion ===== */
 .offerTable { margin-top:.75rem; border-top:1px dashed black; }
 .offerHeader,
 .offerRow {
   display:grid;
-  grid-template-columns: 2fr 1fr 1.6fr 1fr;
+  grid-template-columns: 2fr 1fr 1.2fr 1.6fr 1fr; /* 5 Spalten */
   gap:.5rem; padding:.5rem 0; align-items:center;
 }
 .offerHeader { font-weight:700; color:#444; }
@@ -328,19 +320,14 @@
   }
   .groupHeader { padding: 1rem 1rem .5rem; }
   .groupFootNote { padding: 0 1rem 1rem; }
-  .groupActions .jobLink {
-    display: block;
-    width: 100%;
-    min-height: 36px;
-    padding: .5rem .9rem;
-    text-align: center;
-  }
+
   .offerTable {
     border-top: 1px dashed #e5e7eb;
     padding: .75rem 1rem 1rem;
     margin-top: .25rem;
   }
   .offerHeader { display: none !important; }
+
   .offerRow {
     display: grid !important;
     grid-template-columns: 1.15fr 0.85fr 2.3fr;
@@ -378,15 +365,17 @@
     margin-top: .4rem;
     text-align: left;
   }
-  .jobLink, .acceptBtn {
+
+  .acceptBtn {
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
+    min-height: 40px;
+    padding: .55rem .9rem;
   }
-  .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
 }
 
-/* Mobile 3-Spalten-Variante */
+/* Mobile 3-Spalten-Variante (Preis rechts ausrichten) */
 @media (max-width: 680px) {
   .offerRow {
     display: grid !important;
@@ -396,12 +385,6 @@
     padding: 0;
     border: 0;
     background: transparent;
-  }
-  .offerRow [role="cell"] {
-    display: flex !important;
-    flex-direction: column;
-    align-items: flex-start;
-    min-width: 0;
   }
   .offerRow .priceCell {
     align-items: flex-end;
@@ -462,37 +445,12 @@
 .pageBtn:disabled { opacity: .55; cursor: not-allowed; }
 .pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
 
-.modalSummary {
-  display: grid;
-  gap: .4rem;
-  padding: .75rem .5rem;
-  border: 1px dashed #e5e7eb;
-  border-radius: 10px;
-  background: #fafafa;
-  margin-bottom: 12px;
-}
-.modalSummary > div { font-size: .95rem; }
-/* lackanfragen.module.css */
-.metaInline { margin-left: 10px; opacity: .85; }
-/* lackanfragen.module.css */
-.groupMetaLine {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 6px 0 10px;
-  font-size: .95rem;
-  opacity: .9;
-}
-.metaDot { margin: 0 4px; opacity: .6; }
-
-  
 /* ===== Page Skeleton ===== */
 .skeletonPage {
   display: grid;
   gap: 16px;
   padding: 16px 0 32px 0;
 }
-
 .skelHeader { display: grid; gap: 10px; }
 .skelLine {
   height: 16px;
@@ -543,18 +501,19 @@
   0% { background-position: -200% 0, 0 0; }
   100% { background-position: 200% 0, 0 0; }
 }
+
 /* Mobil: Segmented-Control füllt die ganze Zeile (2 Spalten) */
 @media (max-width: 700px) {
-  .toolbar { grid-template-columns: 1fr; }           /* eine Spalte */
+  .toolbar { grid-template-columns: 1fr; }
   .segmented {
-    display: grid;                                   /* statt inline-flex */
-    grid-template-columns: 1fr 1fr;                  /* zwei gleich breite Buttons */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
     justify-self: stretch;
   }
   .segmentedBtn {
     width: 100%;
     justify-content: center;
-    padding: .6rem .9rem;                            /* etwas höher, damit’s voll aussieht */
+    padding: .6rem .9rem;
   }
 }
