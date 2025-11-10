@@ -41,10 +41,10 @@
   font-weight:700;
   cursor:pointer;
   font-family:'Oswald';
-  display:inline-flex;          /* <-- hinzufügen */
-  align-items:center;           /* <-- hinzufügen */
-  gap:.5rem;                    /* <-- hinzufügen */
-  white-space:nowrap;           /* optional, verhindert Umbruch */
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  white-space:nowrap;
 }
 .chip{
   font-size:.75rem;
@@ -55,7 +55,6 @@
   color:#111;
   font-weight:700;
 }
-
 .segmentedBtn + .segmentedBtn { border-left: 2px solid #e0e0e0; }
 .segmentedActive { background: #00b5d8; color: #fff; }
 
@@ -97,7 +96,7 @@
 
 /* ===== Karten & Listen ===== */
 
-/* Bullets für diese Listen entfernen */
+/* Bullets entfernen */
 .kontoContainer ul.groupList,
 .kontoContainer ul.list {
   list-style: none;
@@ -108,7 +107,7 @@
 /* Abgegebene Liste */
 .list { display: grid; gap: 0.75rem; }
 
-/* Modal (wie auf Aufträge-Seite) */
+/* Modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;animation:modalFade .15s ease-out}
 @keyframes modalFade{from{opacity:0}to{opacity:1}}
 .modalContent{width:min(520px,92vw);background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:22px 20px;transform:translateY(4px);animation:modalUp .18s ease-out}
@@ -124,6 +123,7 @@
 .btnDanger:active{transform:translateY(0)}
 @keyframes btnGradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:200% 50%}}
 
+/* Generische Karte */
 .card {
   background: #fff;
   border: 2px solid #e0e0e0;
@@ -131,17 +131,13 @@
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
   transition: box-shadow .2s, transform .06s;
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 400px;
 }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
 
 .cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .cardTitle { font-weight: 700; }
-
-/* Performance-Optimierung */
-.card {
-  content-visibility: auto;
-  contain-intrinsic-size: 200px 400px;
-}
 
 .titleLink {
   color: #111;
@@ -164,7 +160,7 @@
 
 .actions { margin-top: 0.75rem; }
 
-/* Einheitlicher Link-Button */
+/* Link-Button */
 .jobLink,
 .groupActions .jobLink,
 .actions .jobLink {
@@ -188,27 +184,44 @@
 
 /* ===== Gruppen (erhaltene Angebote) ===== */
 .groupList { display: grid; gap: 1rem; }
-/* Basiskarte unverändert – aber overflow, damit der Verlauf sauber in den Radius geclippt wird */
+
+/* Basiskarte (mit grauer Border) */
 .groupCard{
   position: relative;
-  overflow: hidden;                 /* wichtig für saubere Ecken */
+  overflow: hidden;                 /* für saubere Ecken beim Streifen */
   background:#fff;
-  border:2px solid darkgrey;
-  border-radius:12px;
-  padding:1rem;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:clamp(12px, 2.5vw, 16px);
   box-shadow:
     0 1px 3px rgba(0,0,0,.06),
     0 8px 24px rgba(0,0,0,.08);
   transition: box-shadow .18s ease, transform .06s ease;
 }
-
-.groupCard:hover{
-  /* Nur Außenschatten ändern – Background bleibt unangetastet */
+.groupCard:hover {
   box-shadow:
     0 12px 28px rgba(0,0,0,.16),
     0 4px 10px rgba(0,0,0,.08);
   transform: translateY(-2px);
 }
+
+/* EINZIGER cyan Streifen innen – Border bleibt außen sichtbar */
+.kontoContainer .groupCard.isLackanfrage{ position:relative; }
+.kontoContainer .groupCard.isLackanfrage::before{
+  content:"";
+  position:absolute;
+  top:0; bottom:0; left:0;
+  width:12px; /* 6px Balken + 6px Glow */
+  background: linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px);
+  pointer-events:none;
+  border-top-left-radius:inherit;
+  border-bottom-left-radius:inherit;
+  z-index:0;
+}
+/* etwas Luft links */
+.kontoContainer .groupCard.isLackanfrage{ padding-left: calc(1rem + 2px); }
+
+/* Badge-Farben (optional) */
 .groupHeader { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
 .groupTitle { display:flex; flex-wrap:wrap; gap:.5rem .75rem; align-items:center; font-weight:700; }
 .groupCounter {
@@ -220,6 +233,12 @@
   color: #064e3b;
   font-weight: 700;
 }
+.kontoContainer .groupCard.isLackanfrage .groupCounter,
+.kontoContainer .groupCard.isLackanfrage .tagBest{
+  background: rgba(6,182,212,.10);
+  border-color: #baf2f7;
+  color: #0b5561;
+}
 .groupCounter:hover {
   background: linear-gradient(90deg, #149142 0%, #6ee7b7 55%, #ffffff 100%);
   border-color: #149142;
@@ -228,13 +247,12 @@
 .bestPrice { font-weight:800; }
 .groupActions { display:flex; gap:.5rem; }
 
-/* Beste-Preis Tag */
 .tagBest {
   margin-left:.5rem; font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
   background:#e6fbff; border:1px solid #bdeff8; color:#006a7d;
 }
 
-/* ===== Tabelle: Anbieter | Preis | Gültig bis | Aktion ===== */
+/* ===== Tabelle ===== */
 .offerTable { margin-top:.75rem; border-top:1px dashed black; }
 .offerHeader,
 .offerRow {
@@ -324,16 +342,18 @@
   .heading { font-size: 1.25rem; margin-top: 2rem; }
 }
 
-/* Mobile Gruppenlayout */
+/* Mobile Gruppenlayout – gleicher Look wie Desktop (graue Border bleibt) */
 @media (max-width: 680px) {
-  .kontoContainer .groupCard {
+  .kontoContainer .groupCard{
     box-sizing: border-box;
-    border: 2px solid #000;
-    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: clamp(12px, 2.5vw, 16px);
     background: #fff;
-    padding: 0;
-    margin: 0 0 .9rem 0;
   }
+
+  /* Streifen via ::before greift automatisch (s.o.) */
+
   .groupHeader { padding: 1rem 1rem .5rem; }
   .groupFootNote { padding: 0 1rem 1rem; }
   .groupActions .jobLink {
@@ -470,6 +490,7 @@
 .pageBtn:disabled { opacity: .55; cursor: not-allowed; }
 .pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
 
+/* Modal-Extras */
 .modalSummary {
   display: grid;
   gap: .4rem;
@@ -480,9 +501,7 @@
   margin-bottom: 12px;
 }
 .modalSummary > div { font-size: .95rem; }
-/* lackanfragen.module.css */
 .metaInline { margin-left: 10px; opacity: .85; }
-/* lackanfragen.module.css */
 .groupMetaLine {
   display: flex;
   gap: 10px;
@@ -493,14 +512,12 @@
 }
 .metaDot { margin: 0 4px; opacity: .6; }
 
-  
 /* ===== Page Skeleton ===== */
 .skeletonPage {
   display: grid;
   gap: 16px;
   padding: 16px 0 32px 0;
 }
-
 .skelHeader { display: grid; gap: 10px; }
 .skelLine {
   height: 16px;
@@ -512,7 +529,6 @@
   animation: shimmer 1.2s linear infinite;
 }
 .skelLineWide { height: 24px; width: 60%; }
-
 .skelBlock, .skelBlockSmall, .skelDrop, .skelDropSmall, .skelInput {
   border-radius: 12px;
   background:
@@ -528,64 +544,24 @@
 .skelInput { height: 44px; }
 .skelDrop { height: 180px; }
 .skelDropSmall { height: 120px; }
+.skelTwoCols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 900px) { .skelTwoCols { grid-template-columns: 1fr; } }
+.skelGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 900px) { .skelGrid { grid-template-columns: 1fr; } }
+@keyframes shimmer { 0% { background-position: -200% 0, 0 0; } 100% { background-position: 200% 0, 0 0; } }
 
-.skelTwoCols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 900px) {
-  .skelTwoCols { grid-template-columns: 1fr; }
-}
-
-.skelGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 900px) {
-  .skelGrid { grid-template-columns: 1fr; }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0, 0 0; }
-  100% { background-position: 200% 0, 0 0; }
-}
 /* Mobil: Segmented-Control füllt die ganze Zeile (2 Spalten) */
 @media (max-width: 700px) {
-  .toolbar { grid-template-columns: 1fr; }           /* eine Spalte */
+  .toolbar { grid-template-columns: 1fr; }
   .segmented {
-    display: grid;                                   /* statt inline-flex */
-    grid-template-columns: 1fr 1fr;                  /* zwei gleich breite Buttons */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
     justify-self: stretch;
   }
   .segmentedBtn {
     width: 100%;
     justify-content: center;
-    padding: .6rem .9rem;                            /* etwas höher, damit’s voll aussieht */
+    padding: .6rem .9rem;
   }
-}
-/* Vorherige Varianten entfernen/auskommentieren:
-.isLackanfrage { border-left:6px solid #06b6d4; }
-.isLackanfrage::before { ... }
-*/
-
-/* Farblicher Linksrand wie bei Bewertungen – ohne :root, ohne Doppelung */
-.isLackanfrage{
-  /* 6px fester Balken + softer 6px Glow rechts daneben */
-  background-image:
-    linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px, transparent 12px);
-  background-repeat: no-repeat;
-  background-size: 12px 100%;       /* volle Kartenhöhe */
-  background-position: left top;
-  padding-left: 1rem;               /* etwas Luft nach links */
-}
-
-/* (Optional) Badge leicht angleichen */
-.isLackanfrage .groupCounter,
-.isLackanfrage .tagBest{
-  background: rgba(6,182,212,.10);
-  border-color: #baf2f7;
-  color: #0b5561;
 }
