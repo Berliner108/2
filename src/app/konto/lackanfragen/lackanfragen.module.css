@@ -129,6 +129,18 @@
   contain-intrinsic-size: 200px 400px;
 }
 
+/* <<< EINZIGER cyan Streifen für Karten (ohne doppelte Border) >>> */
+.card.isLackanfrage{ position:relative; overflow:hidden; border-left:0; } /* wichtig */
+.card.isLackanfrage::before{
+  content:"";
+  position:absolute; inset:0 auto 0 0;
+  width:12px; /* 6px Balken + 6px Glow */
+  background: linear-gradient(90deg,#06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px);
+  pointer-events:none;
+  border-top-left-radius:inherit;
+  border-bottom-left-radius:inherit;
+}
+
 .titleLink {
   color: #111;
   text-decoration: none;
