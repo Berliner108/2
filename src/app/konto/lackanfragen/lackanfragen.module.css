@@ -41,10 +41,10 @@
   font-weight:700;
   cursor:pointer;
   font-family:'Oswald';
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  white-space:nowrap;
+  display:inline-flex;          /* <-- hinzufügen */
+  align-items:center;           /* <-- hinzufügen */
+  gap:.5rem;                    /* <-- hinzufügen */
+  white-space:nowrap;           /* optional, verhindert Umbruch */
 }
 .chip{
   font-size:.75rem;
@@ -124,7 +124,6 @@
 .btnDanger:active{transform:translateY(0)}
 @keyframes btnGradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:200% 50%}}
 
-/* ===== Card Base ===== */
 .card {
   background: #fff;
   border: 2px solid #e0e0e0;
@@ -189,14 +188,14 @@
 
 /* ===== Gruppen (erhaltene Angebote) ===== */
 .groupList { display: grid; gap: 1rem; }
-/* Basiskarte (wichtig: overflow hidden für saubere Ecken) */
+/* Basiskarte unverändert – aber overflow, damit der Verlauf sauber in den Radius geclippt wird */
 .groupCard{
   position: relative;
-  overflow: hidden;
+  overflow: hidden;                 /* wichtig für saubere Ecken */
   background:#fff;
-  border:1px solid #e5e7eb;     /* neutrales Grau, einheitlich Desktop & Mobile */
-  border-radius:16px;
-  padding:clamp(12px, 2.5vw, 16px);
+  border:2px solid darkgrey;
+  border-radius:12px;
+  padding:1rem;
   box-shadow:
     0 1px 3px rgba(0,0,0,.06),
     0 8px 24px rgba(0,0,0,.08);
@@ -233,18 +232,6 @@
 .tagBest {
   margin-left:.5rem; font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
   background:#e6fbff; border:1px solid #bdeff8; color:#006a7d;
-}
-
-/* ==== Farblicher Linksrand (wie Bewertungen) – KEIN Doppelrand ==== */
-.kontoContainer .groupCard.isLackanfrage{
-  /* 6px fester Balken + weicher 6→12px Glow */
-  background-image:
-    linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px, transparent 12px);
-  background-repeat: no-repeat;
-  background-size: 12px 100%;
-  background-position: left top;
-  padding-left: 1rem;               /* Luft links */
-  border-left-color: transparent;   /* verhindert sichtbaren 2. Rand */
 }
 
 /* ===== Tabelle: Anbieter | Preis | Gültig bis | Aktion ===== */
@@ -337,28 +324,16 @@
   .heading { font-size: 1.25rem; margin-top: 2rem; }
 }
 
-/* Mobile Gruppenlayout – einheitlicher Card-Look */
+/* Mobile Gruppenlayout */
 @media (max-width: 680px) {
-  .kontoContainer .groupCard{
+  .kontoContainer .groupCard {
     box-sizing: border-box;
-    border: 1px solid #e5e7eb;   /* gleich wie Desktop */
-    border-radius: 16px;
-    padding: clamp(12px, 2.5vw, 16px);
+    border: 2px solid #000;
+    border-radius: 12px;
     background: #fff;
+    padding: 0;
+    margin: 0 0 .9rem 0;
   }
-
-  /* Lackanfrage-Streifen erneut setzen (nach evtl. border-Shorthand) */
-  .kontoContainer .groupCard.isLackanfrage{
-    border-left-width: 6px;          /* Breite konsistent */
-    border-left-color: transparent;  /* verhindert Doppelrand */
-    background-image:
-      linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px, transparent 12px);
-    background-repeat: no-repeat;
-    background-size: 12px 100%;
-    background-position: left top;
-    padding-left: 1rem;
-  }
-
   .groupHeader { padding: 1rem 1rem .5rem; }
   .groupFootNote { padding: 0 1rem 1rem; }
   .groupActions .jobLink {
@@ -505,9 +480,9 @@
   margin-bottom: 12px;
 }
 .modalSummary > div { font-size: .95rem; }
-
 /* lackanfragen.module.css */
 .metaInline { margin-left: 10px; opacity: .85; }
+/* lackanfragen.module.css */
 .groupMetaLine {
   display: flex;
   gap: 10px;
@@ -518,6 +493,7 @@
 }
 .metaDot { margin: 0 4px; opacity: .6; }
 
+  
 /* ===== Page Skeleton ===== */
 .skeletonPage {
   display: grid;
@@ -575,19 +551,41 @@
   0% { background-position: -200% 0, 0 0; }
   100% { background-position: 200% 0, 0 0; }
 }
-
 /* Mobil: Segmented-Control füllt die ganze Zeile (2 Spalten) */
 @media (max-width: 700px) {
-  .toolbar { grid-template-columns: 1fr; }
+  .toolbar { grid-template-columns: 1fr; }           /* eine Spalte */
   .segmented {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: grid;                                   /* statt inline-flex */
+    grid-template-columns: 1fr 1fr;                  /* zwei gleich breite Buttons */
     width: 100%;
     justify-self: stretch;
   }
   .segmentedBtn {
     width: 100%;
     justify-content: center;
-    padding: .6rem .9rem;
+    padding: .6rem .9rem;                            /* etwas höher, damit’s voll aussieht */
   }
+}
+/* Vorherige Varianten entfernen/auskommentieren:
+.isLackanfrage { border-left:6px solid #06b6d4; }
+.isLackanfrage::before { ... }
+*/
+
+/* Farblicher Linksrand wie bei Bewertungen – ohne :root, ohne Doppelung */
+.isLackanfrage{
+  /* 6px fester Balken + softer 6px Glow rechts daneben */
+  background-image:
+    linear-gradient(90deg, #06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px, transparent 12px);
+  background-repeat: no-repeat;
+  background-size: 12px 100%;       /* volle Kartenhöhe */
+  background-position: left top;
+  padding-left: 1rem;               /* etwas Luft nach links */
+}
+
+/* (Optional) Badge leicht angleichen */
+.isLackanfrage .groupCounter,
+.isLackanfrage .tagBest{
+  background: rgba(6,182,212,.10);
+  border-color: #baf2f7;
+  color: #0b5561;
 }
