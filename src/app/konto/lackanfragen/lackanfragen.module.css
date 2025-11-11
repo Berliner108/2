@@ -371,6 +371,29 @@
   }
   .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
 }
+/* Mobile: Inhalt in Cards bekommt wieder Seiten-Padding,
+   Header/Footnote/OfferTable behalten ihre eigenen Abstände */
+@media (max-width: 680px){
+  /* Standard-Inhalt */
+  .groupCard > p,
+  .groupCard .groupMetaLine {
+    padding-inline: 1rem;
+  }
+
+  /* Falls du noch andere Textzeilen hast, optional: */
+  .groupCard .cardMeta,
+  .groupCard .actions {
+    padding-inline: 1rem;
+  }
+
+  /* Extra Platz links, wenn der türkise Streifen aktiv ist */
+  .groupCard.isLackanfrage > p,
+  .groupCard.isLackanfrage .groupMetaLine,
+  .groupCard.isLackanfrage .cardMeta,
+  .groupCard.isLackanfrage .actions {
+    padding-inline-start: calc(1rem + 8px);
+  }
+}
 
 /* Mobile 3-Spalten-Variante */
 @media (max-width: 680px) {
