@@ -309,6 +309,7 @@
     border: 2px solid #000;
     border-radius: 12px;
     background: #fff;
+    padding: 0;
     margin: 0 0 .9rem 0;
   }
   .groupHeader { padding: 1rem 1rem .5rem; }
