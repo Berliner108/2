@@ -846,6 +846,7 @@
   .offerRow .colAction[data-label]::before { display: none; }
 
   /* Button wirklich 100% Breite auf Mobil (überschreibt Desktop-Regel) */
+  /* Button wirklich 100% Breite auf Mobil (überschreibt Desktop-Regel) */
   .acceptBtn {
     width: 100% !important;
     min-height: 40px;
