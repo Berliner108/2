@@ -587,3 +587,9 @@
 }
 /* Auch bei .card den alten ::before-Streifen ausschalten */
 .card.isLackanfrage::before{ content: none !important; }
+@media (max-width: 768px) {
+  .toolbar .segmented {
+    justify-self: start;
+    width: max-content; /* nur so breit wie der Inhalt */
+  }
+}
