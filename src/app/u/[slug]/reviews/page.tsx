@@ -342,12 +342,12 @@ export default function UserReviewsPage() {
           <>
             {/* HEADER */}
             <div className={`${styles.card} ${styles.headerCard}`}>
-              <div className={styles.headerTop}>
-                <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
-                <div className={styles.headerBadge}>
-                  <Stars value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2} className={styles.starsYellow} size={20} />
-                </div>
+            <div className={styles.headerTop}>
+              <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
+              <div className={styles.headerBadge}>
+                <Stars value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2} className={styles.starsYellow} size={20} />
               </div>
+            </div>
 
               <div className={styles.headerStats}>
                 <div className={styles.statBox}>
@@ -372,7 +372,9 @@ export default function UserReviewsPage() {
 
             {/* LISTE */}
             {sortedItems.length === 0 ? (
-              <div className={styles.emptyState}>Noch keine Bewertungen.</div>
+              <div className={styles.card}>
+                <EmptyRatingsLite username={renderProfileTitle()} />
+              </div>
             ) : (
               <ul className={styles.list}>
                 {sortedItems.map((it) => {
@@ -426,8 +428,9 @@ export default function UserReviewsPage() {
             {/* PAGINATION */}
             <div className={styles.pagination} aria-label="Seitensteuerung" style={{ marginTop: 16 }}>
               <div className={styles.pageInfo} aria-live="polite">
-                {data.total === 0 ? 'Keine Einträge' : <>Seite <strong>{data.page}</strong> / <strong>{Math.max(1, Math.ceil((data.total ?? 0) / (data.pageSize || 10)))}</strong> – {data.total} Reviews</>}
+                Seite <strong>{Math.min(Math.max(1, data?.page || 1), pages)}</strong> / <strong>{pages}</strong> – {total} Reviews
               </div>
+
               <div className={styles.pageButtons}>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(1)} disabled={page <= 1}>«</button>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(page - 1)} disabled={page <= 1}>‹</button>

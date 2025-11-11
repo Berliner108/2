@@ -578,3 +578,33 @@
 
 .iconDown{ transform: rotate(90deg); }   /* geschlossen: nach unten */
 .iconUp{ transform: rotate(-90deg); }    /* offen: nach oben */
+
+/* ---------- Minimal Empty State (ohne CTAs) ---------- */
+.empty{
+  text-align:center;
+  padding:28px 12px;
+  color:var(--text);
+}
+
+.emptyIcon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:54px; height:54px;
+  border-radius:999px;
+  background:var(--accent-weak);
+  margin-bottom:10px;
+  font-size:24px;
+  box-shadow:0 4px 16px rgba(37,99,235,.12) inset;
+}
+
+.emptyTitle{
+  font-weight:800;
+  font-size:clamp(18px,2.2vw,22px);
+  margin:2px 0 6px;
+}
+
+.emptyText{
+  color:#475569;
+  font-size:15px;
+}
