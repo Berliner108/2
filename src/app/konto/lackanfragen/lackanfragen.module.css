@@ -94,26 +94,14 @@
 /* Abgegebene Liste */
 .list { display: grid; gap: 0.75rem; }
 
-/* Modal */
+/* Modal (wie auf Aufträge-Seite) */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;animation:modalFade .15s ease-out}
 @keyframes modalFade{from{opacity:0}to{opacity:1}}
 .modalContent{width:min(520px,92vw);background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:22px 20px;transform:translateY(4px);animation:modalUp .18s ease-out}
 @keyframes modalUp{from{transform:translateY(12px);opacity:.9}to{transform:translateY(0);opacity:1}}
 .modalTitle{margin:0 0 8px;font-size:20px;font-weight:800;color:#111827}
 .modalText{margin:0 0 14px;color:#374151}
-
-/* (nur die spätere Fassung behalten) */
-.modalSummary{
-  display:grid;
-  gap:.4rem;
-  padding:.75rem .5rem;
-  border:1px dashed #e5e7eb;
-  border-radius:10px;
-  background:#fafafa;
-  margin-bottom:12px;
-}
-.modalSummary > div { font-size:.95rem; }
-
+.modalSummary{display:grid;gap:6px;margin-bottom:12px;color:#111}
 .modalActions{display:flex;justify-content:flex-end;gap:10px}
 .btnGhost{appearance:none;border:1px solid #e5e7eb;background:#fff;color:#111827;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
 .btnGhost:hover{background:#f9fafb}
@@ -122,7 +110,6 @@
 .btnDanger:active{transform:translateY(0)}
 @keyframes btnGradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:200% 50%}}
 
-/* Card */
 .card {
   background: #fff;
   border: 2px solid #e0e0e0;
@@ -130,13 +117,17 @@
   padding: 1rem;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
   transition: box-shadow .2s, transform .06s;
-  content-visibility: auto;
-  contain-intrinsic-size: 200px 400px;
 }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
 
 .cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .cardTitle { font-weight: 700; }
+
+/* Performance-Optimierung */
+.card {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 400px;
+}
 
 .titleLink {
   color: #111;
@@ -336,11 +327,9 @@
     margin-top: .25rem;
   }
   .offerHeader { display: none !important; }
-
-  /* (behalten: spätere 3-Spalten-Variante) */
   .offerRow {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: 1.15fr 0.85fr 2.3fr;
     gap: .75rem 1rem;
     align-items: start;
     padding: 0;
@@ -348,7 +337,6 @@
     background: transparent;
   }
   .offerRow + .offerRow { margin-top: .75rem; }
-
   .offerRow [role="cell"] {
     display: flex !important;
     flex-direction: column;
@@ -365,6 +353,42 @@
     font-weight: 700;
     margin-bottom: .2rem;
   }
+  .validCell {
+    display: grid !important;
+    grid-template-rows: auto auto;
+    align-content: start;
+    gap: .25rem;
+  }
+  .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .4rem;
+    text-align: left;
+  }
+  .jobLink, .acceptBtn {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+  .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
+}
+
+/* Mobile 3-Spalten-Variante */
+@media (max-width: 680px) {
+  .offerRow {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .75rem 1rem;
+    align-items: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .offerRow [role="cell"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
   .offerRow .priceCell {
     align-items: flex-end;
     text-align: right;
@@ -380,13 +404,6 @@
     margin-top: .4rem;
     text-align: left;
   }
-
-  .jobLink, .acceptBtn {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
-  }
-  .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
 }
 
 /* Pagination */
@@ -431,8 +448,19 @@
 .pageBtn:disabled { opacity: .55; cursor: not-allowed; }
 .pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
 
-/* Meta-Line */
+.modalSummary {
+  display: grid;
+  gap: .4rem;
+  padding: .75rem .5rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  margin-bottom: 12px;
+}
+.modalSummary > div { font-size: .95rem; }
+/* lackanfragen.module.css */
 .metaInline { margin-left: 10px; opacity: .85; }
+/* lackanfragen.module.css */
 .groupMetaLine {
   display: flex;
   gap: 10px;
@@ -443,12 +471,14 @@
 }
 .metaDot { margin: 0 4px; opacity: .6; }
 
+  
 /* ===== Page Skeleton ===== */
 .skeletonPage {
   display: grid;
   gap: 16px;
   padding: 16px 0 32px 0;
 }
+
 .skelHeader { display: grid; gap: 10px; }
 .skelLine {
   height: 16px;
@@ -460,6 +490,7 @@
   animation: shimmer 1.2s linear infinite;
 }
 .skelLineWide { height: 24px; width: 60%; }
+
 .skelBlock, .skelBlockSmall, .skelDrop, .skelDropSmall, .skelInput {
   border-radius: 12px;
   background:
@@ -475,17 +506,60 @@
 .skelInput { height: 44px; }
 .skelDrop { height: 180px; }
 .skelDropSmall { height: 120px; }
-.skelTwoCols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 900px) { .skelTwoCols { grid-template-columns: 1fr; } }
-.skelGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 900px) { .skelGrid { grid-template-columns: 1fr; } }
-@keyframes shimmer { 0% { background-position: -200% 0, 0 0; } 100% { background-position: 200% 0, 0 0; } }
 
-/* —— EINZIGER cyan Streifen via inset-Shadow —— */
+.skelTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelTwoCols { grid-template-columns: 1fr; }
+}
+
+.skelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelGrid { grid-template-columns: 1fr; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0, 0 0; }
+  100% { background-position: 200% 0, 0 0; }
+}
+/* EINZIGER cyan Streifen – linke Border unsichtbar machen */
+/* Nur EIN Streifen: linke Außenborder komplett entfernen */
+.card.isLackanfrage,
+.groupCard.isLackanfrage{
+  position: relative;
+  overflow: hidden;
+  border-left: 0 !important;     /* statt border-left-color: transparent */
+}
+
+/* Streifen + weicher Glow innen */
+.card.isLackanfrage::before,
+.groupCard.isLackanfrage::before{
+  content:"";
+  position:absolute;
+  top:0; bottom:0; left:0;
+  width:12px; /* 6px Balken + 6px Glow */
+  background: linear-gradient(90deg,#06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px);
+  pointer-events:none;
+  border-top-left-radius:inherit;
+  border-bottom-left-radius:inherit;
+}
+
+/* Mobile-Override: dort setzt .groupCard erneut eine Border */
+@media (max-width:680px){
+  .kontoContainer .groupCard.isLackanfrage{ border-left:0 !important; }
+}
+/* EIN Streifen per inset-Shadow, keine ::before nötig */
 .groupCard.isLackanfrage{
   border-left: 0 !important;
   box-shadow:
-    inset 6px 0 0 #06b6d4,
+    inset 6px 0 0 #06b6d4,             /* cyan Streifen */
     0 1px 3px rgba(0,0,0,.06),
     0 8px 24px rgba(0,0,0,.08);
 }
@@ -495,6 +569,11 @@
     0 12px 28px rgba(0,0,0,.16),
     0 4px 10px rgba(0,0,0,.08);
 }
+
+/* Falls gesetzt: alten ::before-Streifen für groupCard deaktivieren */
+.groupCard.isLackanfrage::before{ content: none !important; }
+
+/* Optional auch für .card verwenden */
 .card.isLackanfrage{
   border-left: 0 !important;
   box-shadow:
@@ -506,3 +585,5 @@
     inset 6px 0 0 #06b6d4,
     0 4px 12px rgba(0,0,0,.10);
 }
+/* Auch bei .card den alten ::before-Streifen ausschalten */
+.card.isLackanfrage::before{ content: none !important; }
