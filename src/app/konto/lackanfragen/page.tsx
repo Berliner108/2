@@ -13,6 +13,7 @@ type LackOffer = {
   id: string
   requestId: string | number
   vendorName: string
+  vendorHandle?: string | null
   vendorRating: number | null
   vendorRatingCount: number | null
   priceCents: number
@@ -270,6 +271,7 @@ const normalizeOffer = (o: any): LackOffer => {
   return {
     ...o,
     // UI verwendet dieses Feld – hier steht ab jetzt NUR noch der Handle oder "Anbieter"
+    vendorHandle: handle,
     vendorName: handle || 'Anbieter',
     itemCents: item,
     shippingCents: ship,
@@ -637,13 +639,19 @@ const normalizeOffer = (o: any): LackOffer => {
                             return (
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
+                                {o.vendorHandle ? (
+                                  <Link href={`/u/${o.vendorHandle}/reviews`} className={styles.titleLink}>
+                                    <span className={styles.vendor}>{o.vendorName}</span>
+                                  </Link>
+                                ) : (
                                   <span className={styles.vendor}>{o.vendorName}</span>
-                                  
-                                  <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
-                                  {o.priceCents === bestPrice && offers.length > 1 && (
-                                    <span className={styles.tagBest}>Bester Preis</span>
-                                  )}
+                                )}
+                                <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
+                                {o.priceCents === bestPrice && offers.length > 1 && (
+                                  <span className={styles.tagBest}>Bester Preis</span>
+                                )}
                                 </div>
+
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
                                   <div>{formatEUR(o.priceCents)}</div>
                                   <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
@@ -727,6 +735,7 @@ const normalizeOffer = (o: any): LackOffer => {
                 const reqExpires = endOfDay(liefer)
 
                 const askerName = meta?.ownerHandle ||  'Anfragesteller'
+                const askerHandle = asHandleOrNull(meta?.ownerHandle)
                 const ratingTxt =
                   (typeof meta?.ownerRating === 'number' && isFinite(meta.ownerRating) && meta?.ownerRatingCount && meta.ownerRatingCount > 0)
                     ? `${meta.ownerRating.toFixed(1)}/5 · ${meta.ownerRatingCount}`
@@ -750,10 +759,17 @@ const normalizeOffer = (o: any): LackOffer => {
                     <div className={styles.cardMeta}>
                       <span className={styles.metaItem}>Anfrage-Nr.: <strong>{o.requestId}</strong></span>
                       <span className={styles.metaItem}>
-                        Anfragesteller: <strong>{askerName}</strong>
-                       
+                        Anfragesteller:{' '}
+                        {askerHandle ? (
+                          <Link href={`/u/${askerHandle}/reviews`} className={styles.titleLink}>
+                            <strong>{askerName}</strong>
+                          </Link>
+                        ) : (
+                          <strong>{askerName}</strong>
+                        )}
                         <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                       </span>
+
                       <span className={styles.metaItem}>
                         Gültig bis: {formatDateTime(validUntil)}{' '}
                         <span
