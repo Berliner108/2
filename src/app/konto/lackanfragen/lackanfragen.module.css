@@ -652,48 +652,64 @@
   }
   .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
 }
-/* Mobile: Pagination kompakter machen */
-@media (max-width: 520px) {
+/* Mobile Pagination: stabil, keine Überlappung */
+@media (max-width: 560px) {
   .pagination{
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
     padding: 8px 0;
+    border-top: 1px solid #eee;
   }
 
+  /* Infozeile oben links */
   .pageInfo{
-    font-size: .9rem;
+    order: 1;
+    justify-self: start;
     width: 100%;
-    order: 0;                 /* zuerst in der Zeile */
+    font-size: .95rem;
   }
 
+  /* Control-Zeile: 3 Spalten = links / Mitte / rechts */
   .pagiControls{
-    gap: 8px;
-    flex: 1 1 100%;
-    justify-content: space-between;
+    order: 2;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 10px;
+    width: 100%;
   }
 
-  .pageSizeLabel{ display: none; }     /* Platz sparen */
-  .pageSize{
-    padding: 4px 8px;
+  /* Links: Select + Prev-Buttons gruppieren */
+  .pageSize{ 
+    padding: 4px 10px;
     font-size: 14px;
+    height: 34px;
     border-radius: 8px;
   }
-
   .pageButtons{
+    display: flex;
     gap: 6px;
     flex-wrap: nowrap;
   }
+  .pagiControls .pageButtons:first-of-type{ justify-content: flex-start; }
+  .pagiControls .pageButtons:last-of-type { justify-content: flex-end; }
 
+  /* Mittig: aktuelle Seite */
+  .pageNow{
+    justify-self: center;
+    min-width: auto;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  /* Buttons kompakter, ohne „Hüpfen“ */
   .pageBtn{
-    min-width: 32px;
-    height: 32px;
+    min-width: 34px;
+    height: 34px;
     padding: 0 8px;
     border-radius: 8px;
-    transform: none;                  /* kein Hüpfen */
+    transform: none;
   }
   .pageBtn:hover{ box-shadow: none; background: #fafafa; }
-
-  .pageNow{
-    min-width: 84px;
-    font-size: .95rem;
-  }
 }
