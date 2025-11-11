@@ -570,7 +570,8 @@ const normalizeOffer = (o: any): LackOffer => {
     }
   }
 
-  const cols = '2fr 1fr 1.2fr 1.6fr 1fr' // Anbieter | Preis | Lieferdatum | Gültig bis | Aktion
+  const cols = '2fr 1fr 1.6fr 1fr' // Anbieter | Preis | Gültig bis | Aktion
+
 
   const ReceivedSection = () => (
     <>
@@ -616,7 +617,6 @@ const normalizeOffer = (o: any): LackOffer => {
                           <div className={styles.offerHeader} role="row" style={{ gridTemplateColumns: cols }}>
                             <div role="columnheader">Anbieter</div>
                             <div role="columnheader">Preis</div>
-                            <div role="columnheader">Lieferdatum</div>
                             <div role="columnheader">Angebot gültig bis</div>
                             <div role="columnheader" className={styles.colAction}>Aktion</div>
                           </div>
@@ -650,9 +650,7 @@ const normalizeOffer = (o: any): LackOffer => {
                                     Artikel: {formatEUR(o.itemCents ?? o.priceCents)} · Versand: {(o.shippingCents ?? 0) > 0 ? formatEUR(o.shippingCents!) : 'Kostenlos'}
                                   </div>
                                 </div>
-                                <div role="cell" data-label="Lieferdatum">
-                                  {formatDate(liefer)}
-                                </div>
+                                
                                 <div role="cell" className={styles.validCell} data-label="Gültig bis">
                                   <span>{formatDateTime(validUntil)}</span>
                                   <span
