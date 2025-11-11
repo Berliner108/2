@@ -652,3 +652,48 @@
   }
   .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
 }
+/* Mobile: Pagination kompakter machen */
+@media (max-width: 520px) {
+  .pagination{
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .pageInfo{
+    font-size: .9rem;
+    width: 100%;
+    order: 0;                 /* zuerst in der Zeile */
+  }
+
+  .pagiControls{
+    gap: 8px;
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .pageSizeLabel{ display: none; }     /* Platz sparen */
+  .pageSize{
+    padding: 4px 8px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  .pageButtons{
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .pageBtn{
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 8px;
+    transform: none;                  /* kein Hüpfen */
+  }
+  .pageBtn:hover{ box-shadow: none; background: #fafafa; }
+
+  .pageNow{
+    min-width: 84px;
+    font-size: .95rem;
+  }
+}
