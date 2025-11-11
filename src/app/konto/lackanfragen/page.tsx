@@ -712,7 +712,7 @@ const normalizeOffer = (o: any): LackOffer => {
       <h2 className={styles.heading}>Abgegebene Angebote - Lackanfragen</h2>
       <div className={styles.kontoContainer}>
         {sub.total === 0 ? (
-          <div className={styles.emptyState}><strong>Keine gültigen Angeboten abgegeben.</strong></div>
+          <div className={styles.emptyState}><strong>Keine gültigen Angebote abgegeben.</strong></div>
         ) : (
           <>
             <ul className={styles.list}>
