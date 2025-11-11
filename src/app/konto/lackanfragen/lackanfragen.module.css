@@ -806,3 +806,49 @@
   .groupCard{ margin: 0 -12px; padding: 12px; }
   .heading{ font-size: 1.25rem; }
 }
+/* ===== Mobile Feinschliff für Angebotszeilen ===== */
+@media (max-width: 680px) {
+  /* 3-Spalten-Grid beibehalten, aber kompakter und oben ausgerichtet */
+  .offerRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: start;
+    gap: .6rem .9rem;
+  }
+
+  /* Spaltenlabels kleiner/enger */
+  .offerRow [role="cell"][data-label]::before {
+    font-size: .68rem;
+    margin-bottom: .15rem;
+    letter-spacing: .02em;
+  }
+
+  /* Preiszelle linksbündig (wirkt ruhiger auf schmalen Screens) */
+  .offerRow .priceCell {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  /* "Gültig bis" Spalte: auch linksbündig und ohne zu viel Abstand */
+  .offerRow .validCell {
+    align-items: flex-start;
+    gap: .25rem;
+  }
+
+  /* Aktionsspalte: volle Breite unter den drei Spalten */
+  .offerRow .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .35rem;
+    text-align: left;
+    justify-self: stretch;
+  }
+  /* Das "AKTION"-Label ausblenden – kostet nur Platz */
+  .offerRow .colAction[data-label]::before { display: none; }
+
+  /* Button wirklich 100% Breite auf Mobil (überschreibt Desktop-Regel) */
+  .acceptBtn {
+    width: 100% !important;
+    min-height: 40px;
+    padding: .55rem .9rem;
+  }
+}
