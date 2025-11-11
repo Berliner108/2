@@ -714,16 +714,17 @@
   .pageBtn:hover{ box-shadow: none; background: #fafafa; }
 }
 /* ---- Cards: Mobile Luft & klare Zeilen ---- */
-@media (max-width: 520px) {
-  /* Mehr nutzbare Breite, weicher Rahmen */
+@media (max-width: 520px){
   .card,
   .groupCard{
-    margin: 0 -8px;               /* leicht über die Ränder = mehr Platz */
-    border-width: 1px;            /* statt 2px */
-    border-radius: 14px;
-    padding: 12px 14px;           /* mehr Innenabstand */
-    box-shadow: 0 3px 14px rgba(0,0,0,.06);
+    margin: 8px 0 !important;     /* statt 0 -8px */
+    padding: 12px 14px;           /* gern so lassen */
+    box-sizing: border-box;
+    max-width: 100%;
   }
+
+  /* falls du noch irgendwo overflow siehst */
+  .list{ overflow-x: clip; }
 
   /* Headline/Badges untereinander statt gedrängt nebeneinander */
   .cardHeader,
