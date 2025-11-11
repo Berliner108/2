@@ -225,7 +225,7 @@
 
 .vendor { font-weight:600; }
 .priceCell { font-weight:700; }
-.colAction { text-align:right; }
+.colAction { justify-self: end; text-align: right; }
 .validCell { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
 
 .groupFootNote { margin-top:.5rem; color:#666; font-size:.9rem; }
@@ -246,6 +246,7 @@
   transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
   cursor: pointer;
 }
+.acceptBtn { width: max-content; }
 .acceptBtn:hover {
   animation-duration: 3s;
   box-shadow: 0 2px 6px rgba(0,0,0,.12);

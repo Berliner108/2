@@ -570,7 +570,7 @@ const normalizeOffer = (o: any): LackOffer => {
     }
   }
 
-  const cols = '2fr 1fr 1.6fr 1fr' // Anbieter | Preis | Gültig bis | Aktion
+  const cols = '1.6fr 1.6fr 1.6fr 1.6fr' // Anbieter | Preis | Gültig bis | Aktion
 
 
   const ReceivedSection = () => (
