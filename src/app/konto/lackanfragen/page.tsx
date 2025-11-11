@@ -821,8 +821,6 @@ const normalizeOffer = (o: any): LackOffer => {
             <option value="delivery_desc">Spätestes Lieferdatum zuerst</option>
             <option value="date_desc">Neueste Anfrage zuerst</option>
             <option value="date_asc">Älteste Anfrage zuerst</option>
-            <option value="price_desc">Bester Preis zuletzt</option>
-            <option value="price_asc">Bester Preis zuerst</option>
           </select>
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
