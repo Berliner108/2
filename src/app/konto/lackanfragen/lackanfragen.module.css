@@ -555,3 +555,33 @@
 @media (max-width:680px){
   .kontoContainer .groupCard.isLackanfrage{ border-left:0 !important; }
 }
+/* EIN Streifen per inset-Shadow, keine ::before nötig */
+.groupCard.isLackanfrage{
+  border-left: 0 !important;
+  box-shadow:
+    inset 6px 0 0 #06b6d4,             /* cyan Streifen */
+    0 1px 3px rgba(0,0,0,.06),
+    0 8px 24px rgba(0,0,0,.08);
+}
+.groupCard.isLackanfrage:hover{
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 12px 28px rgba(0,0,0,.16),
+    0 4px 10px rgba(0,0,0,.08);
+}
+
+/* Falls gesetzt: alten ::before-Streifen für groupCard deaktivieren */
+.groupCard.isLackanfrage::before{ content: none !important; }
+
+/* Optional auch für .card verwenden */
+.card.isLackanfrage{
+  border-left: 0 !important;
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 2px 8px rgba(0,0,0,.04);
+}
+.card.isLackanfrage:hover{
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 4px 12px rgba(0,0,0,.10);
+}
