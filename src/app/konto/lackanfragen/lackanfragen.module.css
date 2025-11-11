@@ -587,9 +587,17 @@
 }
 /* Auch bei .card den alten ::before-Streifen ausschalten */
 .card.isLackanfrage::before{ content: none !important; }
-@media (max-width: 768px) {
-  .toolbar .segmented {
-    justify-self: start;
-    width: max-content; /* nur so breit wie der Inhalt */
+/* Mobil: Segmented-Control strecken wie im anderen Screen */
+@media (max-width: 768px){
+  .toolbar { grid-template-columns: 1fr; }       /* eine Spalte */
+  .toolbar .segmented{
+    display: flex;                                /* statt inline-flex */
+    width: 100%;                                  /* volle Zeile */
+    justify-self: stretch;                        /* Grid-Lücke schließen */
+  }
+  .segmentedBtn{
+    flex: 1 1 0;                                  /* beide Buttons gleich breit */
+    justify-content: center;
+    min-width: 0;                                 /* Text darf umbrechen */
   }
 }
