@@ -585,3 +585,5 @@
     inset 6px 0 0 #06b6d4,
     0 4px 12px rgba(0,0,0,.10);
 }
+/* Auch bei .card den alten ::before-Streifen ausschalten */
+.card.isLackanfrage::before{ content: none !important; }
