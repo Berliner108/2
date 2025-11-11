@@ -601,3 +601,54 @@
     min-width: 0;                                 /* Text darf umbrechen */
   }
 }
+/* Mobil: Pagination sauber ausrichten */
+@media (max-width: 640px){
+  .pagination{
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  /* Infozeile oben, volle Breite */
+  .pageInfo{
+    width: 100%;
+    order: 1;
+    margin-bottom: 4px;
+  }
+
+  /* Controls darunter als 3-Spalten-Grid:
+     [Select]  [Seite x / y]  [Buttons] */
+  .pagiControls{
+    width: 100%;
+    order: 2;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Label mobil ausblenden (spart Platz) */
+  .pageSizeLabel{ display: none; }
+
+  /* Select links */
+  .pageSize{
+    justify-self: start;
+    max-width: 120px;
+  }
+
+  /* Seitentext mittig, ohne feste Mindestbreite */
+  .pageNow{
+    justify-self: center;
+    text-align: center;
+    min-width: auto;
+    font-weight: 700;
+  }
+
+  /* Pfeil-Buttons rechts */
+  .pageButtons{
+    justify-self: end;
+    display: inline-flex;
+    gap: 6px;
+  }
+  .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
+}
