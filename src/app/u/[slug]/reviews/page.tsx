@@ -266,6 +266,19 @@ function RatingBreakdown({ items }: { items: ReviewItem[] }) {
   )
 }
 
+/* ---------- Minimal Empty State (ohne CTAs) ---------- */
+function EmptyRatingsLite({ username }: { username: string }) {
+  return (
+    <div className={styles.empty}>
+      <div className={styles.emptyIcon} aria-hidden>⭐</div>
+      <h3 className={styles.emptyTitle}>Noch keine Bewertungen – das kommt noch!</h3>
+      <p className={styles.emptyText}>
+        Sobald erste Aufträge abgeschlossen sind, erscheinen die Bewertungen hier.
+      </p>
+    </div>
+  )
+}
+
 export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
   const search = useSearchParams()
@@ -293,8 +306,9 @@ export default function UserReviewsPage() {
   const pages = Math.max(1, Math.ceil(total / pageSize))
 
   function go(to:number) {
+    const target = Math.min(Math.max(1, to), pages) // clamp
     const sp = new URLSearchParams(search.toString())
-    if (to <= 1) sp.delete('page'); else sp.set('page', String(to))
+    if (target <= 1) sp.delete('page'); else sp.set('page', String(target))
     sp.set('sort', sortBy)
     if (pageSize !== 10) sp.set('pageSize', String(pageSize))
     router.replace(sp.size ? `?${sp.toString()}` : '?', { scroll: false })
@@ -342,12 +356,12 @@ export default function UserReviewsPage() {
           <>
             {/* HEADER */}
             <div className={`${styles.card} ${styles.headerCard}`}>
-            <div className={styles.headerTop}>
-              <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
-              <div className={styles.headerBadge}>
-                <Stars value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2} className={styles.starsYellow} size={20} />
+              <div className={styles.headerTop}>
+                <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
+                <div className={styles.headerBadge}>
+                  <Stars value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2} className={styles.starsYellow} size={20} />
+                </div>
               </div>
-            </div>
 
               <div className={styles.headerStats}>
                 <div className={styles.statBox}>
@@ -362,7 +376,7 @@ export default function UserReviewsPage() {
                 </div>
               </div>
 
-              {/* Farbige, kompakte Verteilung */}
+              {/* Verteilung + Sortierung bleiben IMMER sichtbar */}
               <RatingBreakdown items={sortedItems} />
 
               <div className={styles.controls}>
@@ -370,7 +384,7 @@ export default function UserReviewsPage() {
               </div>
             </div>
 
-            {/* LISTE */}
+            {/* LISTE oder Empty */}
             {sortedItems.length === 0 ? (
               <div className={styles.card}>
                 <EmptyRatingsLite username={renderProfileTitle()} />
@@ -434,7 +448,7 @@ export default function UserReviewsPage() {
               <div className={styles.pageButtons}>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(1)} disabled={page <= 1}>«</button>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(page - 1)} disabled={page <= 1}>‹</button>
-                <span className={styles.pageNow}>Seite {page}</span>
+                <span className={styles.pageNow}>Seite {Math.min(Math.max(1, page), pages)}</span>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(page + 1)} disabled={page >= pages}>›</button>
                 <button className={`${styles.pageBtn} ${styles.hit}`} onClick={() => go(pages)} disabled={page >= pages}>»</button>
               </div>
