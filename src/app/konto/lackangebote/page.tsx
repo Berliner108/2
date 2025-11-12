@@ -917,7 +917,7 @@ const LackanfragenOrdersPage: FC = () => {
               onClick={() => setTopSection('vergeben')}
               type="button"
             >
-              Vergebene oben <span className={styles.chip}>{filteredSortedV.length}</span>
+              Käufe oben <span className={styles.chip}>{filteredSortedV.length}</span>
             </button>
             <button
               role="tab"
@@ -926,7 +926,7 @@ const LackanfragenOrdersPage: FC = () => {
               onClick={() => setTopSection('angenommen')}
               type="button"
             >
-              Angenommene oben <span className={styles.chip}>{filteredSortedA.length}</span>
+              Verkäufe oben <span className={styles.chip}>{filteredSortedA.length}</span>
             </button>
           </div>
         </div>
