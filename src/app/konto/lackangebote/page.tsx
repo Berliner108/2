@@ -933,7 +933,7 @@ const LackanfragenOrdersPage: FC = () => {
 
         {topSection === 'vergeben' ? (
           <>
-            <h2 className={styles.heading}>Vergebene Lackanfragen</h2>
+            <h2 className={styles.heading}>Käufe - Lackanfragen</h2>
             <div className={styles.kontoContainer}>
               {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen vergeben.</strong></div>
@@ -942,7 +942,7 @@ const LackanfragenOrdersPage: FC = () => {
 
             <hr className={styles.divider} />
 
-            <h2 className={styles.heading}>Vom Auftraggeber angenommene Lackanfragen</h2>
+            <h2 className={styles.heading}>Verkäufe - Lackanfragen</h2>
             <div className={styles.kontoContainer}>
               {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen angenommen.</strong></div>
@@ -951,7 +951,7 @@ const LackanfragenOrdersPage: FC = () => {
           </>
         ) : (
           <>
-            <h2 className={styles.heading}>Vom Auftraggeber angenommene Lackanfragen</h2>
+            <h2 className={styles.heading}>Verkäufe - Lackanfragen</h2>
             <div className={styles.kontoContainer}>
               {sliceA.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen angenommen.</strong></div>
@@ -960,7 +960,7 @@ const LackanfragenOrdersPage: FC = () => {
 
             <hr className={styles.divider} />
 
-            <h2 className={styles.heading}>Vergebene Lackanfragen</h2>
+            <h2 className={styles.heading}>Käufe - Lackanfragen</h2>
             <div className={styles.kontoContainer}>
               {sliceV.total === 0
                 ? <div className={styles.emptyState}><strong>Noch keine Lackanfragen vergeben.</strong></div>
