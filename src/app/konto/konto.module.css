@@ -219,3 +219,44 @@
     justify-content: center;    /* Inhalt innen wieder mittig */
   }
 }
+/* Nur diese Seite: keine horizontale Scrollbar */
+.wrapper { 
+  max-width: 100vw; 
+  overflow-x: clip;           /* verhindert horizontales Scrollen */
+}
+.kontoContainer, .kontoList {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;         /* Sicherheitsnetz gegen Ausreißer */
+}
+.wrapper *, .kontoList * { box-sizing: border-box; }
+
+/* 810–1100 px: 2 Spalten, zentriert, gleich hohe Zeilen, keine Überläufe */
+@media (min-width: 810px) and (max-width: 1100px){
+  .kontoList{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;    /* Karte in der Zelle mittig */
+    align-items: stretch;     /* Zeilenhöhe = Höhe der höheren Karte */
+    margin-inline: auto;
+    padding-inline: 16px;     /* verhindert Kanten-Overflow mit Gap */
+  }
+
+  .kontoItem{ height: 100%; display:block; }
+
+  .kontoBox{
+    width: min(300px, 100%);  /* nie breiter als Zelle/Viewport */
+    max-width: 100%;
+    min-height: 170px;
+    height: auto;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    margin: 0 auto;           /* Sicherheitsnetz */
+  }
+
+  .kontoIcon{
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; margin-bottom:12px;
+  }
+  .kontoIcon > svg{ display:block; width:100% !important; height:100% !important; }
+}
