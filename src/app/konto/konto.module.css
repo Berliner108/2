@@ -169,13 +169,15 @@
     height:100% !important;
     margin:0;                /* Sicherheit */
   }
-}
-/* 844–1024 px: Karten & Icons wirklich mittig, kein Links-Kleben */
-@media (min-width: 810px) and (max-width: 1100px){
   /* 2 Spalten und Inhalte der Zellen zentrieren */
   .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;    /* <– Kachel in der Zelle mittig */
+    display: grid;
+    grid-template-columns: repeat(2, 300px); /* feste Spaltenbreite */
+    gap: 30px;
+    justify-content: center;   /* Grid als Ganzes zentrieren */
+    justify-items: center;     /* Kachel in der Spalte zentrieren */
+    margin: 0 auto;
+    padding-inline: 16px;      /* kleiner Rand, verhindert Overflow */
   }
 
   /* Kachel selbst nie breiter als die Zelle, aber max 300px */
@@ -198,15 +200,6 @@
     width:100% !important;
     height:100% !important;
   }
-}
-
-/* 2-Spalten-Bereich: 844–1024 px */
-@media (min-width: 810px) and (max-width: 1100px){
-  .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;      /* Karten mittig in der Zelle */
-    align-items: stretch;        /* beide Spalten gleich hoch je Zeile */
-  }
 
   /* Karten alle gleich hoch lassen */
   .kontoItem{ height: 100%; display: block; }
@@ -218,4 +211,8 @@
     flex-direction: column;
     justify-content: center;    /* Inhalt innen wieder mittig */
   }
+  /* Kachelgrößen bleiben 1:1 */
+  .kontoItem{ display:block; height:auto; }
+  .kontoBox{ width:300px; height:150px; }
+
 }
