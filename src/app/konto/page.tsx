@@ -114,7 +114,7 @@ export default function Page() {
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        <h2 className={styles.headline}>Mein Konto</h2>
+        <h2 className={styles.headline}>Übersicht - Mein Konto</h2>
 
         <div className={styles.kontoContainer}>
           <div className={styles.kontoList}>
