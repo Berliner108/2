@@ -200,3 +200,22 @@
   }
 }
 
+/* 2-Spalten-Bereich: 844–1024 px */
+@media (min-width: 844px) and (max-width: 1024px){
+  .kontoList{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: center;      /* Karten mittig in der Zelle */
+    align-items: stretch;        /* beide Spalten gleich hoch je Zeile */
+  }
+
+  /* Karten alle gleich hoch lassen */
+  .kontoItem{ height: 100%; display: block; }
+  .kontoBox{
+    width: min(300px, 100%);
+    min-height: 170px;          /* statt fester Höhe */
+    height: auto;               /* Inhalt darf wachsen */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;    /* Inhalt innen wieder mittig */
+  }
+}
