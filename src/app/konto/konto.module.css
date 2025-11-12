@@ -145,7 +145,7 @@
   box-shadow: 0 0 0 2px #fff; /* optionaler weißer Ring */
 }
 /* Fix: Icons in 844–1024 px wirklich zentrieren */
-@media (min-width: 810px) and (max-width: 1024px){
+@media (min-width: 810px) and (max-width: 1100px){
   .kontoBox{
     display:flex;
     flex-direction:column;
@@ -171,7 +171,7 @@
   }
 }
 /* 844–1024 px: Karten & Icons wirklich mittig, kein Links-Kleben */
-@media (min-width: 810px) and (max-width: 1024px){
+@media (min-width: 810px) and (max-width: 1100px){
   /* 2 Spalten und Inhalte der Zellen zentrieren */
   .kontoList{
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -201,7 +201,7 @@
 }
 
 /* 2-Spalten-Bereich: 844–1024 px */
-@media (min-width: 810px) and (max-width: 1024px){
+@media (min-width: 810px) and (max-width: 1100px){
   .kontoList{
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-items: center;      /* Karten mittig in der Zelle */
