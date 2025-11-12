@@ -641,7 +641,7 @@ const LackanfragenOrdersPage: FC = () => {
               : (order.refundedAt ? `Erstattung erfolgt am ${formatDate(asDateLike(order.refundedAt))}` : '')
 
           return (
-            <li key={`${order.kind}-${order.orderId}`} className={styles.card}>
+            <li key={`${order.kind}-${order.orderId}`} className={`${styles.card} ${styles.cardCyan}`}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
                   <Link href={`/lackanfragen/artikel/${String(order.requestId)}`} className={styles.titleLink}>

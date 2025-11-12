@@ -107,6 +107,10 @@
 
 .cardHeader { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
 .cardTitle { font-weight: 800; }
+/* Streifen wie in Reviews (.is-lackanfrage) */
+.cardCyan{
+  border-left:6px solid #06b6d4;
+}
 
 .titleLink {
   color: #111;
