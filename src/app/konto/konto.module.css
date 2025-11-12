@@ -216,3 +216,62 @@
     justify-content: center;    /* Inhalt innen wieder mittig */
   }
 }
+/* 810–1100 px: 2 Spalten, fixe Kachelgröße, sanftes Text-Fade */
+@media (min-width:810px) and (max-width:1100px){
+  /* Grid exakt 2 Spalten à 300px, mittig, mit 30px Gap */
+  .kontoList{
+    display:grid;
+    grid-template-columns: repeat(2, 300px);
+    column-gap: 30px;
+    row-gap: 30px;
+    justify-content: center;     /* Tracks mittig */
+    width: 100%;
+    padding-inline: 16px;        /* Sicherheitsrand */
+    overflow-x: hidden;          /* keine horizontale Scrollbar */
+  }
+
+  /* Kachel fester Rahmen, Inhalt mittig */
+  .kontoItem{ display:flex; }
+  .kontoBox{
+    width: 300px;
+    height: 150px;
+    margin: 0 auto;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+  }
+
+  /* Icons wirklich zentriert */
+  .kontoIcon{
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; margin-bottom:12px;
+  }
+  .kontoIcon > svg{ display:block; width:100% !important; height:100% !important; }
+
+  /* Titel: 1 Zeile mit Ellipsis (dezent) */
+  .kontoTitle{
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-inline:auto;
+  }
+
+  /* Subtext: 2 Zeilen mit weichem Fade statt hartem Cut */
+  .kontoSub{
+    position: relative;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;   /* bis 2 Zeilen */
+    overflow: hidden;
+    padding-bottom: .2rem;   /* Platz für Fade */
+  }
+  .kontoSub::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 1.1em;           /* Höhe des Fades */
+    /* Card-Hintergrund beachten (#f0f0f0): transparent -> card bg */
+    background: linear-gradient(to bottom, rgba(240,240,240,0), #f0f0f0);
+    pointer-events:none;
+  }
+}

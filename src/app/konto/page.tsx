@@ -102,9 +102,9 @@ export default function Page() {
     { href: '/konto/bestellungen', text: 'Bestellungen',                     sub: 'Hier hast du eine Übersicht zu deinen gekauften Artikeln',                            icon: <ShoppingCartIcon className="w-6 h-6 text-green-500 fill-current stroke-current" /> },
     { href: '/konto/lackanfragen', text: 'Lackanfragen-Angebote',            sub: 'Übersicht über deine eingeholten und abgegebenen Angebote für Lacke',                icon: <DocumentTextIcon className="w-6 h-6 text-teal-500" /> },
     { href: '/konto/lackangebote', text: 'Lackanfragen-Deals',               sub: 'Abgeschlossene und vereinbarte Deals für angefragte Lacke findest du hier',          icon: <ClipboardDocumentListIcon className="w-6 h-6 text-teal-500" /> },
-    { href: '/konto/verkaufen',    text: 'Verkaufen',                        sub: 'Verwalte deine eingestellten Artikel und Artikelverkäufe hier',                                   icon: <ShoppingBagIcon className="w-6 h-6 text-yellow-500" /> },
+    { href: '/konto/verkaufen',    text: 'Verkaufen',                        sub: 'Verwalte deine eingestellten Artikel und Verkäufe hier',                                   icon: <ShoppingBagIcon className="w-6 h-6 text-yellow-500" /> },
     { href: '/konto/einstellungen',text: 'Einstellungen',                     sub: 'Hier kannst du Änderungen zu deinem Profil & Sicherheit vornehmen',                   icon: <CogIcon className="w-6 h-6 text-purple-500 fill-current stroke-current" /> },
-    { href: '/konto/nachrichten',  text: 'Nachrichten',                      sub: 'Übersicht über deine Nachrichten und Chatverläufe mit anderen Usern',                                  icon: <EnvelopeIcon className="w-6 h-6 text-blue-600 fill-current stroke-current" /> }
+    { href: '/konto/nachrichten',  text: 'Nachrichten',                      sub: 'Übersicht über deine Nachrichten von anderen Usern',                                  icon: <EnvelopeIcon className="w-6 h-6 text-blue-600 fill-current stroke-current" /> }
   ]
 
   const displayOffers = offersNew > 9 ? '9+' : String(offersNew)
