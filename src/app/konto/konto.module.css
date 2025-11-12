@@ -200,5 +200,3 @@
   }
 }
 
-/* Globale Leitplanke gegen horizontales Scrollen (falls noch nicht gesetzt) */
-html, body { max-width: 100vw; overflow-x: clip; }
