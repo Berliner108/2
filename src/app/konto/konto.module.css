@@ -1,6 +1,7 @@
 /* Haupt-Wrapper */
 .wrapper {
   width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -146,30 +147,29 @@
   text-align: center;
   box-shadow: 0 0 0 2px #fff; /* optionaler weißer Ring */
 }
-/* Nur mobil (und beim Drehen) die Icons wirklich zentrieren */
-@media (max-width: 768px), (orientation: landscape) and (max-height: 480px) {
+/* Fix: Icons in 844–1024 px wirklich zentrieren */
+@media (min-width: 844px) and (max-width: 1024px){
+  .kontoBox{
+    display:flex;
+    flex-direction:column;
+    align-items:center;      /* horizontal mittig */
+    justify-content:center;  /* vertikal mittig */
+    text-align:center;
+  }
+
   .kontoIcon{
     display:flex;
     align-items:center;
     justify-content:center;
     width:38px;
     height:38px;
-    margin-bottom:12px; /* optionaler Abstand */
-  }
-  /* SVG ent-baselinen und auf Wrapper zentrieren/aufziehen */
-  .kontoIcon > svg{
-    display:block;          /* kein inline-baseline Versatz */
-    margin:0 auto;          /* falls doch kein Flex greift */
-    width:100% !important;  /* überschreibt w-6 / h-6 */
-    height:100% !important;
+    margin-bottom:12px;      /* optional */
   }
 
-  /* Sicherheitsnetz: die Box-Inhalte mittig halten */
-  .kontoBox{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
+  .kontoIcon > svg{
+    display:block;           /* kein inline/baseline drift */
+    width:100% !important;   /* überschreibt w-6/h-6 */
+    height:100% !important;
+    margin:0;                /* Sicherheit */
   }
 }
