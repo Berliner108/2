@@ -144,75 +144,38 @@
   text-align: center;
   box-shadow: 0 0 0 2px #fff; /* optionaler weißer Ring */
 }
-/* Fix: Icons in 844–1024 px wirklich zentrieren */
-@media (min-width: 810px) and (max-width: 1100px){
+/* 810–1100 px: exakt 2 Spalten, keine horizontale Scrollbar, KEIN Hover-Lift */
+@media (min-width:810px) and (max-width:1100px){
+  .kontoList{
+    grid-template-columns: repeat(2, 300px);
+    justify-content: center;
+    column-gap: 30px;
+    row-gap: 40px;           /* extra Abstand zwischen den Reihen */
+    padding-inline: 16px;
+    overflow-x: hidden;
+  }
+
   .kontoBox{
-    display:flex;
-    flex-direction:column;
-    align-items:center;      /* horizontal mittig */
-    justify-content:center;  /* vertikal mittig */
-    text-align:center;
+    width: 300px;
+    height: 150px;
   }
 
-  .kontoIcon{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:38px;
-    height:38px;
-    margin-bottom:12px;      /* optional */
+  /* Hover-Lift in dieser Range strikt deaktivieren */
+  .kontoBox:hover{
+    transform: none !important;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
   }
 
-  .kontoIcon > svg{
-    display:block;           /* kein inline/baseline drift */
-    width:100% !important;   /* überschreibt w-6/h-6 */
-    height:100% !important;
-    margin:0;                /* Sicherheit */
+  /* 2-Zeilen-Clamp ohne Aufhellen */
+  .kontoSub{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent);
+            mask-image: linear-gradient(180deg, #000 80%, transparent);
   }
 }
-/* 844–1024 px: Karten & Icons wirklich mittig, kein Links-Kleben */
-@media (min-width: 810px) and (max-width: 1100px){
-  /* 2 Spalten und Inhalte der Zellen zentrieren */
-  .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;    /* <– Kachel in der Zelle mittig */
-  }
 
-  /* Kachel selbst nie breiter als die Zelle, aber max 300px */
-  .kontoBox{
-    width: min(300px, 100%);
-    margin: 0 auto;           /* Sicherheitsnetz */
-  }
-
-  /* Icons wirklich zentrieren (überschreibt w-6/h-6 von Heroicons) */
-  .kontoIcon{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:38px;
-    height:38px;
-    margin-bottom:12px;
-  }
-  .kontoIcon > svg{
-    display:block;
-    width:100% !important;
-    height:100% !important;
-  }
-  
-  .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;      /* Karten mittig in der Zelle */
-    align-items: stretch;        /* beide Spalten gleich hoch je Zeile */
-  }
-
-  /* Karten alle gleich hoch lassen */
-  .kontoItem{ height: 100%; display: block; }
-  .kontoBox{
-    width: min(300px, 100%);
-    min-height: 170px;          /* statt fester Höhe */
-    height: auto;               /* Inhalt darf wachsen */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;    /* Inhalt innen wieder mittig */
-  }
-}
+/* Nur diese Seite: niemals horizontal scrollen */
+.wrapper{ overflow-x: hidden; max-width: 100vw; }
