@@ -438,27 +438,19 @@ const Einstellungen = (): JSX.Element => {
             </div>
 
             {/* Kontoart */}
-            <section className={styles.card} aria-labelledby="accType">
-  <div className={styles.cardHeader}>
-    <h3 id="accType" className={styles.cardTitle}>Kontoart</h3>
-    <span className={styles.cardSub}>Privat oder gewerblich festlegen</span>
-  </div>
-  <div className={styles.cardBody}>
-    <div className={styles.inputGroup}>
-      <div style={{ display: 'flex', gap: 12 }}>
-        <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-          <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
-          Gewerblich
-        </label>
-        <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-          <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
-          Privatperson
-        </label>
-      </div>
-    </div>
-  </div>
-</section>
-
+            <h3 className={styles.subSectionTitle}>Kontoart</h3>
+            <div className={styles.inputGroup}>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                  <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
+                  Gewerblich
+                </label>
+                <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                  <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
+                  Privatperson
+                </label>
+              </div>
+            </div>
 
             {/* Anschrift */}
             <div className={styles.separator}></div>
