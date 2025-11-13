@@ -19,7 +19,7 @@
 /* Container – Zentriert und schmaler als vorher */
 .kontoContainer {
   width: 100%;
-  max-width: 1300px;          /* <= schmaler als 1000px */
+  max-width: 95%;          /* <= schmaler als 1000px */
   margin: 0 auto;            /* zentriert */
   background-color: #fff;
   padding: 24px;
