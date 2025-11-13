@@ -1150,12 +1150,7 @@ function PageBody() {
 
                 <p className={styles.offerNote}>
                   Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist
-                  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Zustellnachweis bereit.
-                </p>
-
-                <p className={styles.offerNote} style={{ marginTop: 6 }}>
-                  <strong>Wichtig:</strong> Die Versandkosten sind separat ausgewiesen. Im Falle einer Rückabwicklung
-                  trägt der Käufer ggf. die Kosten für den Rückversand.
+                  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
                 </p>
               </div>
             )}
