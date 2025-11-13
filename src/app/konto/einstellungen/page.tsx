@@ -416,7 +416,7 @@ const Einstellungen = (): JSX.Element => {
   return (
     <>
       <Navbar />
-      <h2 className={styles.title}>Kontoeinstellungen</h2>
+      <h3 className={styles.title}>Kontoeinstellungen</h3>
       <div className={styles.wrapper}>
 
         <div className={styles.kontoContainer}>
