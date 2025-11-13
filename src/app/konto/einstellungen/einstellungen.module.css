@@ -10,6 +10,7 @@
 /* Wrapper – Desktop nicht zu breit, horizontal zentriert */
 .wrapper {
   width: 100%;
+  min-width: 100%;
   display: flex;
   justify-content: center;  /* zentriert den Inhalt horizontal */
   padding: 0 12px;
