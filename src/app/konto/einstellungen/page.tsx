@@ -438,7 +438,6 @@ const Einstellungen = (): JSX.Element => {
             </div>
 
             {/* Kontoart */}
-            <div className={styles.separator}></div>
             <h3 className={styles.subSectionTitle}>Kontoart</h3>
             <div className={styles.inputGroup}>
               <div style={{ display: 'flex', gap: 12 }}>
