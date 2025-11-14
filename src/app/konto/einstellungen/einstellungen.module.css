@@ -11,6 +11,7 @@
 /* /einstellungen.module.css */
 .wrapper{
   width:100%;
+  max-width: 100%;
   display:flex;
   flex-direction: column;   /* <— stapeln statt nebeneinander */
   align-items: center;      /* horizontal zentrieren */
@@ -241,27 +242,66 @@
     margin: 40px 0;
   }
 }
-/* Sticky-Mininar oben */
-.stickyNav{
+/* --- Sticky Nav, kompakt & mit aktivem Zustand --- */
+.stickyNav {
   position: sticky;
   top: 0;
   z-index: 20;
   background: #fff;
   border-bottom: 1px solid #eee;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   padding: 10px 12px;
   margin-bottom: 16px;
 }
-.stickyNav a{
-  font-weight: 600;
-  color: #111;
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 8px;
-}
-.stickyNav a:hover{ background:#f3f4f6; }
-.stickyNav a:focus-visible{ outline:2px solid rgba(0,180,216,.35); outline-offset:2px; }
 
-/* Beim Anspringen nicht unter der sticky Nav verstecken */
-.kontoContainer{ scroll-margin-top: 64px; }
+/* Scrollen auf kleinen Screens erlauben */
+.stickyNavTrack {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #0f172a;          /* Slate-900 */
+  text-decoration: none;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  white-space: nowrap;
+}
+
+.navItem:hover { 
+  background: #f8fafc; 
+  box-shadow: 0 1px 0 rgba(0,0,0,.03);
+}
+
+.navItemActive {
+  background: linear-gradient(180deg, #ecfeff 0%, #e6faff 100%);
+  border-color: #bae6fd;
+  box-shadow: 0 2px 8px rgba(0, 180, 216, .12);
+}
+
+.navDot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: #94a3b8;   /* inactive */
+}
+
+.navItemActive .navDot { background: #00b4d8; }
+
+/* Schönes Sticky-Feeling */
+.stickyShadow {
+  box-shadow: 0 6px 12px rgba(0,0,0,.04);
+}
+
+/* Anker-Ziel nicht unter die StickyNav rutschen */
+.kontoContainer { scroll-margin-top: 72px; }

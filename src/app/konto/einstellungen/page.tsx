@@ -407,6 +407,35 @@ const Einstellungen = (): JSX.Element => {
       setDeleting(false)
     }
   }
+  // --- Sticky-Nav: Sektionen + aktiver Tab ---
+const sections = [
+  { id: 'profil', label: 'Profil' },
+  { id: 'passwort', label: 'Passwort' },
+  { id: 'bewertungen', label: 'Bewertungen' },
+  { id: 'einladungen', label: 'Einladungen' },
+  { id: 'loeschen', label: 'Löschen' },
+] as const;
+
+const [activeId, setActiveId] = useState<string>('profil');
+
+useEffect(() => {
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) setActiveId(e.target.id);
+      });
+    },
+    { rootMargin: '-40% 0px -55% 0px', threshold: 0.01 }
+  );
+
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el) obs.observe(el);
+  });
+
+  return () => obs.disconnect();
+}, []);
+
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
   const myReviewsHref = useMemo(() => {
@@ -417,13 +446,21 @@ const Einstellungen = (): JSX.Element => {
   <>
     <Navbar />
     <h3 className={styles.title}>Kontoeinstellungen</h3>
-    <nav className={styles.stickyNav}>
-    <a href="#profil">Profil</a>
-    <a href="#passwort">Passwort</a>
-    <a href="#bewertungen">Bewertungen</a>
-    <a href="#einladungen">Einladungen</a>
-    <a href="#loeschen">Löschen</a>
+    <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
+      <div className={styles.stickyNavTrack}>
+        {sections.map(s => (
+          <a
+            key={s.id}
+            href={`#${s.id}`}
+            className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
+          >
+            <span className={styles.navDot} />
+            {s.label}
+          </a>
+        ))}
+      </div>
     </nav>
+
 
 
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
