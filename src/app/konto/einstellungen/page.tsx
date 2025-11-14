@@ -455,20 +455,20 @@ const scrollToId = (id: string) => {
     <Navbar />
     <h3 className={styles.title}>Kontoeinstellungen</h3>
     <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
-    <div className={styles.stickyNavTrack}>
-      {sections.map(s => (
-        <a
-          key={s.id}
-          href={`#${s.id}`}
-          onClick={(e) => { e.preventDefault(); scrollToId(s.id); }}
-          className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
-        >
-          {s.label}
-        </a>
+        <div className={styles.stickyNavTrack}>
+          {sections.map(s => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              onClick={(e) => { e.preventDefault(); scrollToId(s.id); }}
+              className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
+            >
+              {s.label}
+            </a>
+          ))}
+        </div>
+      </nav>
 
-      ))}
-    </div>
-  </nav>
 
 
 

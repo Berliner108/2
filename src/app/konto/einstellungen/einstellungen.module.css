@@ -243,27 +243,34 @@
   }
 }
 /* --- Sticky Nav, kompakt & mit aktivem Zustand --- */
+/* Der äußere Container scrollt horizontal */
 .stickyNav {
   position: sticky;
-  top: 0;
+  top: 0;                       /* ggf. auf Navbar-Höhe anpassen */
   z-index: 20;
   background: #fff;
   border-bottom: 1px solid #eee;
-  display: flex;
-  gap: 10px;
+  overflow-x: auto;             /* <— wichtig: Scrollbar hier */
+  -webkit-overflow-scrolling: touch;
   padding: 10px 12px;
   margin-bottom: 16px;
 }
 
-/* Scrollen auf kleinen Screens erlauben */
+/* Die Track-Zeile hat nur Inhaltsbreite und wird mittig gesetzt */
 .stickyNavTrack {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  width: max-content;           /* <— schrumpft auf Inhalt */
+  margin: 0 auto;               /* <— zentriert am Desktop */
+  white-space: nowrap;          /* <— keine Zeilenumbrüche */
   padding-bottom: 4px;
 }
+
+/* Optional: am großen Screen Scrollen “ausblenden” */
+@media (min-width: 1024px) {
+  .stickyNav { overflow-x: visible; }
+}
+
 
 .navItem {
   display: inline-flex;
