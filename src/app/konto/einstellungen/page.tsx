@@ -457,7 +457,6 @@ const Einstellungen = (): JSX.Element => {
           </div>
 
           {/* Anschrift */}
-          <div className={styles.separator}></div>
           <h3 className={styles.subSectionTitle}>Anschrift</h3>
 
           <div className={styles.inputGroup}>
