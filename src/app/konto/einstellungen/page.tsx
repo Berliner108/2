@@ -414,423 +414,428 @@ const Einstellungen = (): JSX.Element => {
   }, [username])
 
   return (
-    <>
-      <Navbar />
-      <h3 className={styles.title}>Kontoeinstellungen</h3>
-      <div className={styles.wrapper}>
+  <>
+    <Navbar />
+    <h3 className={styles.title}>Kontoeinstellungen</h3>
 
-        <div className={styles.kontoContainer}>
-          <p className={styles.description}>
-            Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.
-          </p>
+    {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
+         und packen ZWEI separate .kontoContainer darunter --- */}
+    <div className={styles.wrapper}>
 
-          <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
-            {/* Benutzername */}
-            <div className={styles.inputGroup}>
-              <label>Benutzername</label>
-              <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
+      {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
+      <div className={styles.kontoContainer}>
+        <p className={styles.description}>
+          Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.
+        </p>
+
+        <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
+          {/* Benutzername */}
+          <div className={styles.inputGroup}>
+            <label>Benutzername</label>
+            <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
+          </div>
+
+          {/* E-Mail */}
+          <div className={styles.inputGroup}>
+            <label htmlFor="email">E-Mail-Adresse</label>
+            <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
+          </div>
+
+          {/* Kontoart */}
+          <h3 className={styles.subSectionTitle}>Kontoart</h3>
+          <div className={styles.inputGroup}>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
+                Gewerblich
+              </label>
+              <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
+                Privatperson
+              </label>
             </div>
+          </div>
 
-            {/* E-Mail */}
-            <div className={styles.inputGroup}>
-              <label htmlFor="email">E-Mail-Adresse</label>
-              <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
-            </div>
+          {/* Anschrift */}
+          <div className={styles.separator}></div>
+          <h3 className={styles.subSectionTitle}>Anschrift</h3>
 
-            {/* Kontoart */}
-            <h3 className={styles.subSectionTitle}>Kontoart</h3>
-            <div className={styles.inputGroup}>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                  <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
-                  Gewerblich
-                </label>
-                <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                  <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
-                  Privatperson
-                </label>
-              </div>
-            </div>
+          <div className={styles.inputGroup}>
+            <label>Straße</label>
+            <input
+              type="text"
+              value={street}
+              onChange={(e) => onChangeStreet(e.target.value)}
+              required
+              inputMode="text"
+              className={styles.input}
+              maxLength={STREET_MAX}
+              placeholder="Straßenname"
+              autoComplete="address-line1"
+            />
+          </div>
 
-            {/* Anschrift */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Anschrift</h3>
-
-            <div className={styles.inputGroup}>
-              <label>Straße</label>
+          <div className={styles.inputRow}>
+            <div className={`${styles.inputGroup} ${styles.smallInput}`}>
+              <label>Hausnr.</label>
               <input
                 type="text"
-                value={street}
-                onChange={(e) => onChangeStreet(e.target.value)}
+                value={houseNumber}
+                onChange={(e) => onChangeHnr(e.target.value)}
                 required
                 inputMode="text"
                 className={styles.input}
-                maxLength={STREET_MAX}
-                placeholder="Straßenname"
-                autoComplete="address-line1"
+                pattern="\d{1,3}[a-z]?"
+                title="z. B. 12a (max. 3 Ziffern + 1 Kleinbuchstabe)"
+                placeholder="z. B. 12a"
+                autoComplete="address-line2"
               />
             </div>
 
-            <div className={styles.inputRow}>
-              <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-                <label>Hausnr.</label>
-                <input
-                  type="text"
-                  value={houseNumber}
-                  onChange={(e) => onChangeHnr(e.target.value)}
-                  required
-                  inputMode="text"
-                  className={styles.input}
-                  pattern="\d{1,3}[a-z]?"
-                  title="z. B. 12a (max. 3 Ziffern + 1 Kleinbuchstabe)"
-                  placeholder="z. B. 12a"
-                  autoComplete="address-line2"
-                />
-              </div>
-
-              <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-                <label>PLZ</label>
-                <input
-                  type="text"
-                  value={zip}
-                  onChange={(e) => onChangeZip(e.target.value)}
-                  required
-                  inputMode="numeric"
-                  className={styles.input}
-                  pattern="\d{1,5}"
-                  maxLength={ZIP_MAX}
-                  placeholder="PLZ"
-                />
-              </div>
-
-              <div className={styles.inputGroup} style={{ flex: 1 }}>
-                <label>Ort</label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => onChangeCity(e.target.value)}
-                  required
-                  inputMode="text"
-                  className={styles.input}
-                  maxLength={CITY_MAX}
-                  placeholder="Ort"
-                  autoComplete="address-level2"
-                />
-              </div>
-            </div>
-
-            {/* Land (Dropdown) – Pflicht */}
-            <div className={styles.inputGroup}>
-              <label>Land</label>
-              <select
-                value={country || ''}
-                onChange={(e) => setCountry(e.target.value)}
-                className={styles.input}
-                aria-label="Land auswählen"
-                required
-              >
-                <option value="">— Bitte wählen —</option>
-                {COUNTRY_OPTIONS.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Firmenfelder nur wenn gewerblich */}
-            {!isPrivatePerson && (
-              <>
-                <div className={styles.inputGroup}>
-                  <label>Firmenname</label>
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
-                    required
-                    inputMode="text"
-                    className={styles.input}
-                    maxLength={COMPANY_MAX}
-                  />
-                </div>
-
-                <div className={styles.inputGroup}>
-                  <label>Umsatzsteuer-ID</label>
-                  <input
-                    type="text"
-                    value={vatNumber}
-                    onChange={(e) => onChangeVat(e.target.value)}
-                    required
-                    inputMode="text"
-                    className={styles.input}
-                    maxLength={14}
-                    pattern="[A-Z0-9-]{8,14}"
-                    title="8–14 Zeichen (A–Z, 0–9, '-')"
-                    placeholder="z. B. DE123456789"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Änderungen speichern */}
-            <div className={styles.inputGroup}>
-              <button type="button" onClick={handleSave} className={styles.saveButton}>
-                Änderungen speichern
-              </button>
-            </div>
-
-            {/* Passwort ändern */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="password">Aktuelles Passwort</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  id="password"
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Aktuelles Passwort"
-                  className={styles.input}
-                  autoComplete="current-password"
-                  required
-                />
-                <button type="button" onClick={() => setShowPw(s => !s)} className={styles.saveButton} style={{ whiteSpace: 'nowrap' }}>
-                  {showPw ? 'Verbergen' : 'Anzeigen'}
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="newPassword">Neues Passwort</label>
+            <div className={`${styles.inputGroup} ${styles.smallInput}`}>
+              <label>PLZ</label>
               <input
-                id="newPassword"
-                type={showPw ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={`Neues Passwort (${MIN_PW}–${MAX_PW} Zeichen)`}
-                className={styles.input}
-                autoComplete="new-password"
-                minLength={MIN_PW}
-                maxLength={MAX_PW}
+                type="text"
+                value={zip}
+                onChange={(e) => onChangeZip(e.target.value)}
                 required
+                inputMode="numeric"
+                className={styles.input}
+                pattern="\d{1,5}"
+                maxLength={ZIP_MAX}
+                placeholder="PLZ"
               />
-              {/* Kleiner Hinweis, sichtbar */}
-              <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
-                Länge: {MIN_PW}–{MAX_PW} Zeichen. Alle Zeichen erlaubt. Empfehlung: 12+ Zeichen (Passphrase).
-              </p>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
+            <div className={styles.inputGroup} style={{ flex: 1 }}>
+              <label>Ort</label>
               <input
-                id="confirmPassword"
-                type={showPw ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Bestätige neues Passwort"
-                className={styles.input}
-                autoComplete="new-password"
-                minLength={MIN_PW}
-                maxLength={MAX_PW}
+                type="text"
+                value={city}
+                onChange={(e) => onChangeCity(e.target.value)}
                 required
-              />
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-                <input type="checkbox" checked={signOutAll} onChange={() => setSignOutAll(s => !s)} />
-                Nach Änderung auf allen Geräten abmelden (empfohlen)
-              </label>
-            </div>
-
-            <div className={styles.inputGroup}>
-              <button
-                type="button"
-                onClick={async () => await handleChangePassword()}
-                className={styles.saveButton}
-                disabled={
-                  pwSaving ||
-                  newPassword.length < MIN_PW ||
-                  newPassword.length > MAX_PW ||
-                  newPassword !== confirmPassword
-                }
-              >
-                {pwSaving ? 'Ändere…' : 'Passwort ändern'}
-              </button>
-            </div>
-
-            {/* (NEU) Meine Bewertungen */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Meine Bewertungen</h3>
-            <div className={styles.inputGroup}>
-              <p className={styles.description} style={{ marginTop: 0 }}>
-                Sieh dir deine öffentlichen Bewertungen an.
-              </p>
-              {myReviewsHref ? (
-                <Link href={myReviewsHref} className={styles.saveButton} style={{ width: 'fit-content' }}>
-                  Zu meinen Bewertungen
-                </Link>
-              ) : (
-                <div style={{
-                  marginTop: 6,
-                  padding: '8px 10px',
-                  borderRadius: 10,
-                  border: '1px solid #e5e7eb',
-                  background: '#f9fafb',
-                  color: '#6b7280'
-                }}>
-                  Kein öffentlicher Benutzername vorhanden – Bewertungen sind aktuell nicht verlinkbar.
-                </div>
-              )}
-            </div>
-
-            {/* Einladungen */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Leute einladen</h3>
-
-            <div className={styles.inputGroup}>
-              <label>Dein Einladungslink</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input type="text" readOnly value={inviteLink} className={styles.input} />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try { await navigator.clipboard.writeText(inviteLink); setInvMsg('Einladungslink kopiert.') }
-                    catch { setInvMsg('Konnte nicht kopieren.') }
-                    setTimeout(() => setInvMsg(null), 2000)
-                  }}
-                  className={styles.saveButton}
-                >
-                  Kopieren
-                </button>
-              </div>
-              <p style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
-                Jeder, der sich über diesen Link registriert, wird dir zugeordnet.
-              </p>
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>E-Mail(s) einladen (optional)</label>
-              <textarea
-                rows={2}
-                value={inviteEmails}
-                onChange={(e) => setInviteEmails(e.target.value)}
-                placeholder="anna@example.com, bob@firma.de"
+                inputMode="text"
                 className={styles.input}
-                style={{ minHeight: 70 }}
+                maxLength={CITY_MAX}
+                placeholder="Ort"
+                autoComplete="address-level2"
               />
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!inviteEmails.trim()) return
-                  setSendingInv(true); setInvMsg(null)
-                  try {
-                    const res = await fetch('/api/invitations/send', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ emails: inviteEmails }),
-                    })
-                    const json = await res.json()
-                    if (!res.ok) throw new Error(json?.error || 'Fehler beim Senden')
-                    const ok = (json.results || []).filter((r: any) => r.ok).length
-                    const fail = (json.results || []).filter((r: any) => !r.ok).length
-                    setInvMsg(`${ok} Einladung(en) gesendet${fail ? `, ${fail} fehlgeschlagen` : ''}.`)
-                    setInviteEmails('')
-                    await loadInvites()
-                  } catch (e: any) {
-                    setInvMsg(e?.message || 'Fehler beim Senden')
-                  } finally {
-                    setSendingInv(false)
-                  }
-                }}
-                disabled={sendingInv}
-                className={styles.saveButton}
-                style={{ width: 'fit-content', marginTop: 8 }}
-              >
-                {sendingInv ? 'Wird gesendet…' : 'Einladungen senden'}
-              </button>
-
-              {invMsg && (
-                <div style={{
-                  marginTop: 10,
-                  padding: '8px 10px',
-                  borderRadius: 10,
-                  border: '1px solid #e5e7eb',
-                  background: '#f9fafb',
-                  color: '#111827',
-                }}>{invMsg}</div>
-              )}
             </div>
+          </div>
 
-            <div className={styles.inputGroup}>
-              <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', width: '100%' }}>
-                <div style={{ padding: 12, background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontWeight: 600 }}>
-                  Gesendete Einladungen
-                </div>
-                <div style={{ padding: 12 }}>
-                  {listLoading && <div style={{ color: '#6b7280' }}>Lade…</div>}
-                  {!listLoading && inviteList.length === 0 && (
-                    <div style={{ color: '#6b7280' }}>Noch keine Einladungen.</div>
-                  )}
-                  {!listLoading && inviteList.length > 0 && (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ textAlign: 'left', fontSize: 14, color: '#6b7280' }}>
-                          <th style={{ padding: '8px 6px' }}>E-Mail</th>
-                          <th style={{ padding: '8px 6px' }}>Status</th>
-                          <th style={{ padding: '8px 6px' }}>Gesendet</th>
-                          <th style={{ padding: '8px 6px' }}>Akzeptiert</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inviteList.map((r: any) => (
-                          <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
-                            <td style={{ padding: '10px 6px' }}>{r.invitee_email}</td>
-                            <td style={{ padding: '10px 6px' }}>
-                              {r.status === 'sent' && <span style={{ color: '#2563eb' }}>versendet</span>}
-                              {r.status === 'accepted' && <span style={{ color: '#059669' }}>akzeptiert</span>}
-                              {r.status === 'failed' && <span style={{ color: '#b91c1c' }}>fehlgeschlagen</span>}
-                              {r.status === 'revoked' && <span>zurückgezogen</span>}
-                            </td>
-                            <td style={{ padding: '10px 6px' }}>{new Date(r.created_at).toLocaleString()}</td>
-                            <td style={{ padding: '10px 6px' }}>{r.accepted_at ? new Date(r.accepted_at).toLocaleString() : '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Konto löschen */}
-            <div className={styles.separator}></div>
-            <h3 className={styles.subSectionTitle}>Konto löschen</h3>
-            <p className={styles.deleteConfirmationText}>
-              Wenn du dein Konto löschst, werden alle deine Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.
-            </p>
-
-            <label htmlFor="deleteConfirm" style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              <input id="deleteConfirm" type="checkbox" checked={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.checked)} />
-              Ich bestätige, dass ich mein Konto löschen möchte.
-            </label>
-
-            <button
-              type="button"
-              onClick={handleDeleteAccount}
-              className={styles.deleteButton}
-              disabled={!deleteConfirm || deleting}
-              aria-disabled={!deleteConfirm || deleting}
+          {/* Land */}
+          <div className={styles.inputGroup}>
+            <label>Land</label>
+            <select
+              value={country || ''}
+              onChange={(e) => setCountry(e.target.value)}
+              className={styles.input}
+              aria-label="Land auswählen"
+              required
             >
-              {deleting ? 'Lösche…' : 'Konto löschen'}
+              <option value="">— Bitte wählen —</option>
+              {COUNTRY_OPTIONS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Firmenfelder (nur gewerblich) */}
+          {!isPrivatePerson && (
+            <>
+              <div className={styles.inputGroup}>
+                <label>Firmenname</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
+                  required
+                  inputMode="text"
+                  className={styles.input}
+                  maxLength={COMPANY_MAX}
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Umsatzsteuer-ID</label>
+                <input
+                  type="text"
+                  value={vatNumber}
+                  onChange={(e) => onChangeVat(e.target.value)}
+                  required
+                  inputMode="text"
+                  className={styles.input}
+                  maxLength={14}
+                  pattern="[A-Z0-9-]{8,14}"
+                  title="8–14 Zeichen (A–Z, 0–9, '-')"
+                  placeholder="z. B. DE123456789"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Änderungen speichern (Ende Container 1) */}
+          <div className={styles.inputGroup}>
+            <button type="button" onClick={handleSave} className={styles.saveButton}>
+              Änderungen speichern
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
 
-      <Toast toast={toast} onClose={() => setToast(null)} />
-    </>
-  )
+      {/* === Container 2: Passwort / Bewertungen / Einladungen / Konto löschen === */}
+      <div className={styles.kontoContainer}>
+        {/* Passwort ändern */}
+        <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">Aktuelles Passwort</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              id="password"
+              type={showPw ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Aktuelles Passwort"
+              className={styles.input}
+              autoComplete="current-password"
+              required
+            />
+            <button type="button" onClick={() => setShowPw(s => !s)} className={styles.saveButton} style={{ whiteSpace: 'nowrap' }}>
+              {showPw ? 'Verbergen' : 'Anzeigen'}
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="newPassword">Neues Passwort</label>
+          <input
+            id="newPassword"
+            type={showPw ? 'text' : 'password'}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder={`Neues Passwort (${MIN_PW}–${MAX_PW} Zeichen)`}
+            className={styles.input}
+            autoComplete="new-password"
+            minLength={MIN_PW}
+            maxLength={MAX_PW}
+            required
+          />
+          <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
+            Länge: {MIN_PW}–{MAX_PW} Zeichen. Alle Zeichen erlaubt. Empfehlung: 12+ Zeichen (Passphrase).
+          </p>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
+          <input
+            id="confirmPassword"
+            type={showPw ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Bestätige neues Passwort"
+            className={styles.input}
+            autoComplete="new-password"
+            minLength={MIN_PW}
+            maxLength={MAX_PW}
+            required
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+            <input type="checkbox" checked={signOutAll} onChange={() => setSignOutAll(s => !s)} />
+            Nach Änderung auf allen Geräten abmelden (empfohlen)
+          </label>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <button
+            type="button"
+            onClick={async () => await handleChangePassword()}
+            className={styles.saveButton}
+            disabled={
+              pwSaving ||
+              newPassword.length < MIN_PW ||
+              newPassword.length > MAX_PW ||
+              newPassword !== confirmPassword
+            }
+          >
+            {pwSaving ? 'Ändere…' : 'Passwort ändern'}
+          </button>
+        </div>
+
+        {/* Meine Bewertungen */}
+        <div className={styles.separator}></div>
+        <h3 className={styles.subSectionTitle}>Meine Bewertungen</h3>
+        <div className={styles.inputGroup}>
+          <p className={styles.description} style={{ marginTop: 0 }}>
+            Sieh dir deine öffentlichen Bewertungen an.
+          </p>
+          {myReviewsHref ? (
+            <Link href={myReviewsHref} className={styles.saveButton} style={{ width: 'fit-content' }}>
+              Zu meinen Bewertungen
+            </Link>
+          ) : (
+            <div style={{
+              marginTop: 6,
+              padding: '8px 10px',
+              borderRadius: 10,
+              border: '1px solid #e5e7eb',
+              background: '#f9fafb',
+              color: '#6b7280'
+            }}>
+              Kein öffentlicher Benutzername vorhanden – Bewertungen sind aktuell nicht verlinkbar.
+            </div>
+          )}
+        </div>
+
+        {/* Einladungen */}
+        <div className={styles.separator}></div>
+        <h3 className={styles.subSectionTitle}>Leute einladen</h3>
+
+        <div className={styles.inputGroup}>
+          <label>Dein Einladungslink</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input type="text" readOnly value={inviteLink} className={styles.input} />
+            <button
+              type="button"
+              onClick={async () => {
+                try { await navigator.clipboard.writeText(inviteLink); setInvMsg('Einladungslink kopiert.') }
+                catch { setInvMsg('Konnte nicht kopieren.') }
+                setTimeout(() => setInvMsg(null), 2000)
+              }}
+              className={styles.saveButton}
+            >
+              Kopieren
+            </button>
+          </div>
+          <p style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
+            Jeder, der sich über diesen Link registriert, wird dir zugeordnet.
+          </p>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label>E-Mail(s) einladen (optional)</label>
+          <textarea
+            rows={2}
+            value={inviteEmails}
+            onChange={(e) => setInviteEmails(e.target.value)}
+            placeholder="anna@example.com, bob@firma.de"
+            className={styles.input}
+            style={{ minHeight: 70 }}
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              if (!inviteEmails.trim()) return
+              setSendingInv(true); setInvMsg(null)
+              try {
+                const res = await fetch('/api/invitations/send', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ emails: inviteEmails }),
+                })
+                const json = await res.json()
+                if (!res.ok) throw new Error(json?.error || 'Fehler beim Senden')
+                const ok = (json.results || []).filter((r: any) => r.ok).length
+                const fail = (json.results || []).filter((r: any) => !r.ok).length
+                setInvMsg(`${ok} Einladung(en) gesendet${fail ? `, ${fail} fehlgeschlagen` : ''}.`)
+                setInviteEmails('')
+                await loadInvites()
+              } catch (e: any) {
+                setInvMsg(e?.message || 'Fehler beim Senden')
+              } finally {
+                setSendingInv(false)
+              }
+            }}
+            disabled={sendingInv}
+            className={styles.saveButton}
+            style={{ width: 'fit-content', marginTop: 8 }}
+          >
+            {sendingInv ? 'Wird gesendet…' : 'Einladungen senden'}
+          </button>
+
+          {invMsg && (
+            <div style={{
+              marginTop: 10,
+              padding: '8px 10px',
+              borderRadius: 10,
+              border: '1px solid #e5e7eb',
+              background: '#f9fafb',
+              color: '#111827',
+            }}>{invMsg}</div>
+          )}
+        </div>
+
+        <div className={styles.inputGroup}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', width: '100%' }}>
+            <div style={{ padding: 12, background: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontWeight: 600 }}>
+              Gesendete Einladungen
+            </div>
+            <div style={{ padding: 12 }}>
+              {listLoading && <div style={{ color: '#6b7280' }}>Lade…</div>}
+              {!listLoading && inviteList.length === 0 && (
+                <div style={{ color: '#6b7280' }}>Noch keine Einladungen.</div>
+              )}
+              {!listLoading && inviteList.length > 0 && (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', fontSize: 14, color: '#6b7280' }}>
+                      <th style={{ padding: '8px 6px' }}>E-Mail</th>
+                      <th style={{ padding: '8px 6px' }}>Status</th>
+                      <th style={{ padding: '8px 6px' }}>Gesendet</th>
+                      <th style={{ padding: '8px 6px' }}>Akzeptiert</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inviteList.map((r: any) => (
+                      <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '10px 6px' }}>{r.invitee_email}</td>
+                        <td style={{ padding: '10px 6px' }}>
+                          {r.status === 'sent' && <span style={{ color: '#2563eb' }}>versendet</span>}
+                          {r.status === 'accepted' && <span style={{ color: '#059669' }}>akzeptiert</span>}
+                          {r.status === 'failed' && <span style={{ color: '#b91c1c' }}>fehlgeschlagen</span>}
+                          {r.status === 'revoked' && <span>zurückgezogen</span>}
+                        </td>
+                        <td style={{ padding: '10px 6px' }}>{new Date(r.created_at).toLocaleString()}</td>
+                        <td style={{ padding: '10px 6px' }}>{r.accepted_at ? new Date(r.accepted_at).toLocaleString() : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Konto löschen */}
+        <div className={styles.separator}></div>
+        <h3 className={styles.subSectionTitle}>Konto löschen</h3>
+        <p className={styles.deleteConfirmationText}>
+          Wenn du dein Konto löschst, werden alle deine Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.
+        </p>
+
+        <label htmlFor="deleteConfirm" style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+          <input id="deleteConfirm" type="checkbox" checked={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.checked)} />
+          Ich bestätige, dass ich mein Konto löschen möchte.
+        </label>
+
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          className={styles.deleteButton}
+          disabled={!deleteConfirm || deleting}
+          aria-disabled={!deleteConfirm || deleting}
+        >
+          {deleting ? 'Lösche…' : 'Konto löschen'}
+        </button>
+      </div>
+    </div>
+
+    <Toast toast={toast} onClose={() => setToast(null)} />
+  </>
+)
 }
 
 export default Einstellungen
