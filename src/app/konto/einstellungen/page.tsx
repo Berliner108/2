@@ -459,16 +459,13 @@ const scrollToId = (id: string) => {
       {sections.map(s => (
         <a
           key={s.id}
-          href={`#${s.id}`}            // für Accessibility/Long-press etc.
-          onClick={(e) => {            // smooth scroll ohne globalen Style
-            e.preventDefault();
-            scrollToId(s.id);
-          }}
+          href={`#${s.id}`}
+          onClick={(e) => { e.preventDefault(); scrollToId(s.id); }}
           className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
         >
-          <span className={styles.navDot} />
           {s.label}
         </a>
+
       ))}
     </div>
   </nav>
