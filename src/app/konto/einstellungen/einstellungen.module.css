@@ -312,3 +312,92 @@
 
 /* Anker-Ziel nicht unter die StickyNav rutschen */
 .kontoContainer { scroll-margin-top: 72px; }
+/* ---------- Farb-Variablen nur innerhalb des Wrappers ---------- */
+.wrapper{
+  /* bestehende Styles bleiben */
+  --page-bg: #f6f8fb;
+  --card-bg: #ffffff;
+  --card-border: #e5e7eb;
+  --card-shadow: 0 6px 16px rgba(15, 23, 42, .06);
+
+  --nav-bg: #eef2f7;
+  --nav-item-bg: #f8fafc;
+  --nav-item-text: #0f172a;
+  --nav-item-border: #e5e7eb;
+  --nav-item-active-bg: #e6faff;       /* dezentes Türkis */
+  --nav-item-active-border: #bae6fd;
+  --brand: #00b4d8;
+  --brand-hover: #0094b6;
+
+  background: var(--page-bg);
+}
+
+/* ---------- Karten/Container deutlicher abheben ---------- */
+.kontoContainer {
+  /* bestehende Maße bleiben */
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+/* ---------- Sticky-Nav mit eigenem Hintergrund ---------- */
+.stickyNav {
+  /* bestehende Sticky-/Scroll-Styles beibehalten */
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--card-border);
+}
+
+/* ---------- Nav-Item Hintergründe/States ---------- */
+.navItem {
+  background: var(--nav-item-bg);
+  color: var(--nav-item-text);
+  border: 1px solid var(--nav-item-border);
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.navItem:hover { 
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  border-color: #dbe2ea;
+}
+
+.navItemActive {
+  background: var(--nav-item-active-bg);
+  border-color: var(--nav-item-active-border);
+  box-shadow: 0 3px 10px rgba(0, 180, 216, .14);
+}
+
+/* Optional: aktives Item stärker betonen */
+.navItemActive { outline: 2px solid rgba(0,180,216,.15); outline-offset: 0; }
+
+/* ---------- Buttons auf Brand-Farben angleichen (optional) ---------- */
+.saveButton { background: var(--brand); }
+.saveButton:hover { background: var(--brand-hover); }
+
+/* ---------- Dark-Mode freundlich (optional) ---------- */
+@media (prefers-color-scheme: dark) {
+  .wrapper{
+    --page-bg: #0b1220;
+    --card-bg: #0f172a;
+    --card-border: #1f2937;
+    --card-shadow: 0 8px 20px rgba(0,0,0,.45);
+
+    --nav-bg: #0d1424;
+    --nav-item-bg: #0f182b;
+    --nav-item-text: #e5e7eb;
+    --nav-item-border: #1f2a3b;
+    --nav-item-active-bg: rgba(0,180,216,.12);
+    --nav-item-active-border: rgba(186,230,253,.35);
+  }
+
+  .input, .inputReadonly {
+    background: #0b1220;
+    border-color: #243044;
+    color: #e5e7eb;
+  }
+  .input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.22);
+  }
+}
