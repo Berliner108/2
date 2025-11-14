@@ -435,6 +435,14 @@ useEffect(() => {
 
   return () => obs.disconnect();
 }, []);
+// in page.tsx, oben im Component-Body:
+const scrollToId = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    history.replaceState(null, '', `#${id}`); // URL-Hash aktualisieren (optional)
+  }
+};
 
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
@@ -447,19 +455,24 @@ useEffect(() => {
     <Navbar />
     <h3 className={styles.title}>Kontoeinstellungen</h3>
     <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
-      <div className={styles.stickyNavTrack}>
-        {sections.map(s => (
-          <a
-            key={s.id}
-            href={`#${s.id}`}
-            className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
-          >
-            <span className={styles.navDot} />
-            {s.label}
-          </a>
-        ))}
-      </div>
-    </nav>
+    <div className={styles.stickyNavTrack}>
+      {sections.map(s => (
+        <a
+          key={s.id}
+          href={`#${s.id}`}            // für Accessibility/Long-press etc.
+          onClick={(e) => {            // smooth scroll ohne globalen Style
+            e.preventDefault();
+            scrollToId(s.id);
+          }}
+          className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
+        >
+          <span className={styles.navDot} />
+          {s.label}
+        </a>
+      ))}
+    </div>
+  </nav>
+
 
 
 
