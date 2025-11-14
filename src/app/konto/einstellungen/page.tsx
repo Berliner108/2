@@ -468,20 +468,13 @@ const scrollToId = (id: string) => {
           ))}
         </div>
       </nav>
-
-
-
-
-
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
       <div id="profil" className={styles.kontoContainer}>
-        <p className={styles.description}>
-          Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.
-        </p>
+        <h1>Profil</h1>
 
         <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
           {/* Benutzername */}
