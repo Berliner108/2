@@ -8,13 +8,17 @@
 }
 
 /* Wrapper – Desktop nicht zu breit, horizontal zentriert */
-.wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;  /* zentriert den Inhalt horizontal */
+/* /einstellungen.module.css */
+.wrapper{
+  width:100%;
+  display:flex;
+  flex-direction: column;   /* <— stapeln statt nebeneinander */
+  align-items: center;      /* horizontal zentrieren */
+  gap: 24px;                /* Abstand zwischen den Containern */
   padding: 0 12px;
   margin: 40px 0;
 }
+
 
 /* Container – Zentriert und schmaler als vorher */
 .kontoContainer {
