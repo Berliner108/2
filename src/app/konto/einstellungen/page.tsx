@@ -417,13 +417,21 @@ const Einstellungen = (): JSX.Element => {
   <>
     <Navbar />
     <h3 className={styles.title}>Kontoeinstellungen</h3>
+    <nav className={styles.stickyNav}>
+    <a href="#profil">Profil</a>
+    <a href="#passwort">Passwort</a>
+    <a href="#bewertungen">Bewertungen</a>
+    <a href="#einladungen">Einladungen</a>
+    <a href="#loeschen">Löschen</a>
+    </nav>
+
 
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
-      <div className={styles.kontoContainer}>
+      <div id="profil" className={styles.kontoContainer}>
         <p className={styles.description}>
           Bearbeite hier deine E-Mail, Passwort und weitere Einstellungen.
         </p>
@@ -583,7 +591,7 @@ const Einstellungen = (): JSX.Element => {
       </div>
 
       {/* --- Container 2: Passwort ändern --- */}
-<div className={styles.kontoContainer}>
+<div id="passwort" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
     <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
 
@@ -667,7 +675,7 @@ const Einstellungen = (): JSX.Element => {
 </div>
 
 {/* --- Container 3: Meine Bewertungen --- */}
-<div className={styles.kontoContainer}>
+<div id="bewertungen" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
     <h3 className={styles.subSectionTitle}>Meine Bewertungen</h3>
     <div className={styles.inputGroup}>
@@ -691,7 +699,7 @@ const Einstellungen = (): JSX.Element => {
 </div>
 
 {/* --- Container 4: Leute einladen --- */}
-<div className={styles.kontoContainer}>
+<div id="einladungen" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
     <h3 className={styles.subSectionTitle}>Leute einladen</h3>
 
@@ -809,7 +817,7 @@ const Einstellungen = (): JSX.Element => {
 </div>
 
 {/* --- Container 5: Konto löschen --- */}
-<div className={styles.kontoContainer}>
+<div id="loeschen" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
     <h3 className={styles.subSectionTitle}>Konto löschen</h3>
     <p className={styles.deleteConfirmationText}>

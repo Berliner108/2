@@ -241,3 +241,27 @@
     margin: 40px 0;
   }
 }
+/* Sticky-Mininar oben */
+.stickyNav{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.stickyNav a{
+  font-weight: 600;
+  color: #111;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.stickyNav a:hover{ background:#f3f4f6; }
+.stickyNav a:focus-visible{ outline:2px solid rgba(0,180,216,.35); outline-offset:2px; }
+
+/* Beim Anspringen nicht unter der sticky Nav verstecken */
+.kontoContainer{ scroll-margin-top: 64px; }
