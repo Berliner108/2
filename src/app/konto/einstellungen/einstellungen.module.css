@@ -312,37 +312,3 @@
 
 /* Anker-Ziel nicht unter die StickyNav rutschen */
 .kontoContainer { scroll-margin-top: 72px; }
-/* Cards deutlich vom (bestehenden) Hintergrund abheben */
-.kontoContainer{
-  position: relative;
-  width: 100%;
-  max-width: 95%;
-  margin: 0 auto;
-  padding: 24px;
-  border-radius: 14px;
-
-  /* sanfter Card-Verlauf statt reinem Weiß */
-  background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
-  border: 1px solid #cfd8e3;                 /* kräftigerer Rand */
-  box-shadow:
-    0 14px 28px rgba(16,24,40,.10),
-    0 2px  6px rgba(16,24,40,.06);           /* tiefere Schatten */
-}
-
-/* Mini-Akzent links (dezent) – optional: auskommentieren, wenn nicht gewünscht */
-.kontoContainer::before{
-  content:"";
-  position:absolute; left:0; top:0; bottom:0;
-  width: 4px; border-radius: 14px 0 0 14px;
-  background: linear-gradient(180deg,#00b4d8,#6ed6ea);
-  opacity:.75;
-}
-
-/* leichte Variation für jede zweite Karte (minimal kühler) */
-.kontoContainer:nth-of-type(even){
-  background: linear-gradient(180deg,#ffffff 0%, #f2f8ff 100%);
-  border-color: #c6d8ea;
-}
-
-/* Inputs klar weiß halten für maximale Lesbarkeit */
-.input, .inputReadonly { background:#fff; }
