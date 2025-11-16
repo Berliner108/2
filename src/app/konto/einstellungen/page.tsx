@@ -453,6 +453,21 @@ const scrollToId = (id: string) => {
     history.replaceState(null, '', `#${id}`);
   }
 };
+const [copied, setCopied] = useState(false);
+
+const handleCopyInvite = async () => {
+  try {
+    await navigator.clipboard.writeText(inviteLink);
+    setCopied(true);
+    setInvMsg('Einladungslink kopiert.');
+  } catch {
+    setInvMsg('Konnte nicht kopieren.');
+  } finally {
+    setTimeout(() => setCopied(false), 1500);
+    setTimeout(() => setInvMsg(null), 2000);
+  }
+};
+
 
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
@@ -756,20 +771,29 @@ const scrollToId = (id: string) => {
 
     <div className={styles.inputGroup}>
       <label>Dein Einladungslink</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input type="text" readOnly value={inviteLink} className={styles.input} />
-        <button
-          type="button"
-          onClick={async () => {
-            try { await navigator.clipboard.writeText(inviteLink); setInvMsg('Einladungslink kopiert.') }
-            catch { setInvMsg('Konnte nicht kopieren.') }
-            setTimeout(() => setInvMsg(null), 2000)
-          }}
-          className={styles.saveButton}
-        >
-          Kopieren
-        </button>
-      </div>
+      <div className={styles.copyField}>
+  <input
+    type="text"
+    readOnly
+    value={inviteLink}
+    className={`${styles.input} ${styles.copyInput}`}
+    aria-label="Einladungslink"
+  />
+
+  {/* Icon im Feld (kein Button) */}
+  <span
+    className={styles.copyIcon}
+    role="button"
+    tabIndex={0}
+    aria-label={copied ? 'Kopiert' : 'Einladungslink kopieren'}
+    title={copied ? 'Kopiert' : 'Kopieren'}
+    onClick={handleCopyInvite}
+    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleCopyInvite()}
+  >
+    {copied ? <Check size={18} /> : <Copy size={18} />}
+  </span>
+</div>
+
       <p style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
         Jeder, der sich über diesen Link registriert, wird dir zugeordnet.
       </p>

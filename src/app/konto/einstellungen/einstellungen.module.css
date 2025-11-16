@@ -313,42 +313,34 @@
 .kontoContainer { scroll-margin-top: 72px; }
 .copyField {
   position: relative;
+  width: 100%;
 }
 
 .copyInput {
-  padding-right: 44px; /* Platz für das Icon rechts */
+  padding-right: 44px; /* Platz für das Icon rechts im Feld */
 }
 
-/* dezenter Icon-Button im Feld */
-.iconCopyBtn {
+.copyIcon {
   position: absolute;
   top: 50%;
   right: 10px;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid #dbe3ee;
-  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #0ea5b7;                 /* Türkis */
+  width: 28px;
+  height: 28px;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(16,24,40,.06);
+  border-radius: 6px;
+  /* dezenter Hintergrund für Klickfläche im Feld */
+  background: rgba(2, 132, 199, 0.08);
+  transition: background .15s ease, transform .08s ease;
+  user-select: none;
 }
 
-.iconCopyBtn:hover {
-  background: #eef6f9;
-  color: #0b8fa0;
-  border-color: #cfe3ee;
-}
-
-.iconCopyBtn:active {
-  transform: translateY(-50%) scale(0.98);
-}
-
-.iconCopyBtn:focus-visible {
-  outline: 3px solid rgba(0,180,216,.35);
+.copyIcon:hover { background: rgba(2, 132, 199, 0.14); }
+.copyIcon:active { transform: translateY(-50%) scale(0.96); }
+.copyIcon:focus-visible {
+  outline: 2px solid rgba(0, 180, 216, 0.4);
   outline-offset: 2px;
 }
