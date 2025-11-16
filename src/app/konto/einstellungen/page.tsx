@@ -805,9 +805,9 @@ const handleCopyInvite = async () => {
         rows={2}
         value={inviteEmails}
         onChange={(e) => setInviteEmails(e.target.value)}
-        placeholder="anna@example.com, bob@firma.de"
+        placeholder="max.mustermann@beispiel.com, bob@firma.de"
         className={styles.input}
-        style={{ minHeight: 70 }}
+        style={{ minHeight: 50 }}
       />
       <button
         type="button"
