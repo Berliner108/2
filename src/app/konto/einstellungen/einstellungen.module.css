@@ -26,7 +26,7 @@
   width: 100%;
   max-width: 95%;          /* <= schmaler als 1000px */
   margin: 0 auto;            /* zentriert */
-  background-color: green;
+  background-color: #fff;
   padding: 24px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
@@ -52,10 +52,9 @@
 
 /* Abschnittstitel */
 .subSectionTitle {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #333;
-  margin-bottom: 10px;
 }
 
 /* Separator */
@@ -312,3 +311,33 @@
 
 /* Anker-Ziel nicht unter die StickyNav rutschen */
 .kontoContainer { scroll-margin-top: 72px; }
+.iconButton{
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #dbe3ee;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16,24,40,.06);
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  color: #0f172a;
+}
+.iconButton:hover{
+  background: #f8fafc;
+  box-shadow: 0 4px 10px rgba(16,24,40,.10);
+}
+.iconButton:active{
+  transform: translateY(1px);
+}
+.iconButton:focus-visible{
+  outline: 3px solid rgba(0,180,216,.35);
+  outline-offset: 2px;
+}
+
+/* optional: etwas kleiner auf sehr kleinen Screens */
+@media (max-width:560px){
+  .iconButton{ width: 36px; height: 36px; }
+}

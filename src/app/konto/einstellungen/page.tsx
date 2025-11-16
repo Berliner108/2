@@ -642,7 +642,7 @@ const scrollToId = (id: string) => {
       {/* --- Container 2: Passwort ändern --- */}
 <div id="passwort" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
-    <h2 className={styles.subSectionTitle}>Passwort ändern</h2>
+    <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
 
     <div className={styles.inputGroup}>
       <label htmlFor="password">Aktuelles Passwort</label>
