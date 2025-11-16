@@ -7,6 +7,8 @@ import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Copy, Check } from 'lucide-react';
+
 
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
