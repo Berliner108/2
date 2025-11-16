@@ -421,26 +421,34 @@ const [activeId, setActiveId] = useState<string>('profil');
 useEffect(() => {
   const obs = new IntersectionObserver(
     (entries) => {
-      entries.forEach((e) => {
-        if (e.isIntersecting) setActiveId(e.target.id);
-      });
+      const visible = entries.filter(e => e.isIntersecting);
+      if (!visible.length) return;
+      const best = visible.reduce((a, b) =>
+        a.intersectionRatio > b.intersectionRatio ? a : b
+      );
+      setActiveId(best.target.id);
     },
-    { rootMargin: '-40% 0px -55% 0px', threshold: 0.01 }
+    {
+      // Oberer Puffer für Sticky-Nav; unten aggressiver, damit die nächste Section später „gewinnt“
+      rootMargin: '-80px 0px -55% 0px',
+      threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+    }
   );
 
   sections.forEach(s => {
     const el = document.getElementById(s.id);
     if (el) obs.observe(el);
   });
-
   return () => obs.disconnect();
 }, []);
+
 // in page.tsx, oben im Component-Body:
 const scrollToId = (id: string) => {
   const el = document.getElementById(id);
   if (el) {
+    setActiveId(id); // sofortige visuelle Rückmeldung
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    history.replaceState(null, '', `#${id}`); // URL-Hash aktualisieren (optional)
+    history.replaceState(null, '', `#${id}`);
   }
 };
 
