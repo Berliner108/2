@@ -461,6 +461,7 @@ const scrollToId = (id: string) => {
   return (
   <>
     <Navbar />
+    <div className={styles.page}>
     <h3 className={styles.title}>Kontoeinstellungen</h3>
     <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
         <div className={styles.stickyNavTrack}>
@@ -899,7 +900,7 @@ const scrollToId = (id: string) => {
 </div>
 
     </div>
-
+</div>
     <Toast toast={toast} onClose={() => setToast(null)} />
   </>
 )
