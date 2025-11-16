@@ -454,20 +454,22 @@ const scrollToId = (id: string) => {
   }
 };
 const [copied, setCopied] = useState(false);
+// ADD (unter copied)
+const [copyMsg, setCopyMsg] = useState<string | null>(null);
 
+// REPLACE handleCopyInvite
 const handleCopyInvite = async () => {
   try {
     await navigator.clipboard.writeText(inviteLink);
     setCopied(true);
-    setInvMsg('Einladungslink kopiert.');
+    setCopyMsg('Einladungslink kopiert.');
   } catch {
-    setInvMsg('Konnte nicht kopieren.');
+    setCopyMsg('Konnte nicht kopieren.');
   } finally {
     setTimeout(() => setCopied(false), 1500);
-    setTimeout(() => setInvMsg(null), 2000);
+    setTimeout(() => setCopyMsg(null), 2000);
   }
 };
-
 
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
@@ -797,6 +799,11 @@ const handleCopyInvite = async () => {
       <p style={{ color: '#6b7280', marginTop: 6, fontSize: 13 }}>
         Jeder, der sich über diesen Link registriert, wird dir zugeordnet.
       </p>
+      {/* unter dem <p> mit dem Hinweis */}
+{copyMsg && (
+  <div className={styles.inlineInfo}>{copyMsg}</div>
+)}
+
     </div>
 
     <div className={styles.inputGroup}>
