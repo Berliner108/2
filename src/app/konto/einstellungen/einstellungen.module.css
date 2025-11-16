@@ -312,12 +312,3 @@
 
 /* Anker-Ziel nicht unter die StickyNav rutschen */
 .kontoContainer { scroll-margin-top: 72px; }
-/* 2-Spalten-Reihe für Desktop */
-.inputRow2 {
-  display: grid;
-  grid-template-columns: 1fr;   /* mobil untereinander */
-  gap: 12px;
-}
-@media (min-width: 900px) {
-  .inputRow2 { grid-template-columns: 1fr 1fr; } /* Desktop nebeneinander */
-}
