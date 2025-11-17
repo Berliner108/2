@@ -535,19 +535,33 @@ useEffect(() => {
 
 
           {/* Kontoart */}
-          <h3 className={styles.subSectionTitle}>Kontoart</h3>
-          <div className={styles.inputGroup}>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
-                Gewerblich
-              </label>
-              <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
-                Privatperson
-              </label>
-            </div>
-          </div>
+         <h3 className={styles.subSectionTitle}>Kontoart</h3>
+<div
+  className={styles.radioRow}
+  role="radiogroup"
+  aria-label="Kontoart wählen"
+>
+  <label className={styles.radioPill}>
+    <input
+      type="radio"
+      name="acct"
+      checked={!isPrivatePerson}
+      onChange={() => setIsPrivatePerson(false)}
+    />
+    Gewerblich
+  </label>
+
+  <label className={styles.radioPill}>
+    <input
+      type="radio"
+      name="acct"
+      checked={isPrivatePerson}
+      onChange={() => setIsPrivatePerson(true)}
+    />
+    Privatperson
+  </label>
+</div>
+
 
           {/* Anschrift */}
 <h3 className={styles.subSectionTitle}>Anschrift</h3>

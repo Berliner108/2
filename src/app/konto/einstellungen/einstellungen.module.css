@@ -467,3 +467,74 @@
   outline: 3px solid rgba(0,180,216,.35);
   outline-offset: 2px;
 }
+/* Zeile für Radio-Buttons zentrieren */
+.radioRow{
+  display: flex;
+  justify-content: center;  /* mittig */
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+/* Auffällige „Pill“-Optik für die Labels */
+.radioPill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;      /* markanter Rahmen */
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease, transform .05s ease;
+}
+
+/* Hover-/Active-Feedback */
+.radioPill:hover{
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.radioPill:active{
+  transform: scale(.98);
+}
+
+/* Markierung, wenn gewählt (nutzt :has – moderne Browser) */
+.radioPill:has(input[type="radio"]:checked){
+  border-color: #00b4d8;
+  background: linear-gradient(180deg,#ecfeff 0%, #e6faff 100%);
+  box-shadow: 0 3px 12px rgba(0,180,216,.18);
+}
+
+/* Radio selbst etwas größer & konsistent mit bestehendem Custom-Radio */
+.form input[type="radio"]{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;              /* größer */
+  height: 20px;             /* größer */
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin: 0;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.form input[type="radio"]::before{
+  content: "";
+  width: 10px;              /* innerer Punkt größer */
+  height: 10px;
+  border-radius: 50%;
+  background: #00b4d8;
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+.form input[type="radio"]:checked{ border-color: #00e5ff; }
+.form input[type="radio"]:checked::before{ transform: scale(1); }
+
+/* Tastaturfokus deutlich sichtbar – sowohl für die ganze Pill als auch das Radio */
+.radioPill:focus-within{
+  outline: 3px solid rgba(0,180,216,.35);
+  outline-offset: 2px;
+}
