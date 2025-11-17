@@ -23,9 +23,8 @@
 
 /* Container – Zentriert und schmaler als vorher */
 .kontoContainer {
-  width: 100%;
-  max-width: 95%;          /* <= schmaler als 1000px */
-  margin: 0 auto;            /* zentriert */
+  width: min(95%, 920px);   /* oder 860/1000 px nach Geschmack */
+  margin-inline: auto;      /* horizontal mittig */
   background-color: #fff;
   padding: 24px;
   border-radius: 10px;
@@ -57,7 +56,8 @@
   color: #333;
   text-align: center;      /* <— zentriert */
   width: 100%; 
-  margin-top: -8px;
+  margin-top: -5px;
+  margin-bottom: -5px;
 }
 
 /* Separator */
