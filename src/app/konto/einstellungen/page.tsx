@@ -636,37 +636,40 @@ useEffect(() => {
 
           {/* Firmenfelder (nur gewerblich) */}
           {!isPrivatePerson && (
-            <>
-              <div className={styles.inputGroup}>
-                <label>Firmenname</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
-                  required
-                  inputMode="text"
-                  className={styles.input}
-                  maxLength={COMPANY_MAX}
-                />
-              </div>
+  <>
+    <div className={styles.inputRowCompany}>
+      <div className={styles.inputGroup}>
+        <label>Firmenname</label>
+        <input
+          type="text"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
+          required
+          inputMode="text"
+          className={styles.input}
+          maxLength={COMPANY_MAX}
+        />
+      </div>
 
-              <div className={styles.inputGroup}>
-                <label>Umsatzsteuer-ID</label>
-                <input
-                  type="text"
-                  value={vatNumber}
-                  onChange={(e) => onChangeVat(e.target.value)}
-                  required
-                  inputMode="text"
-                  className={styles.input}
-                  maxLength={14}
-                  pattern="[A-Z0-9-]{8,14}"
-                  title="8–14 Zeichen (A–Z, 0–9, '-')"
-                  placeholder="z. B. DE123456789"
-                />
-              </div>
-            </>
-          )}
+      <div className={styles.inputGroup}>
+        <label>Umsatzsteuer-ID</label>
+        <input
+          type="text"
+          value={vatNumber}
+          onChange={(e) => onChangeVat(e.target.value)}
+          required
+          inputMode="text"
+          className={styles.input}
+          maxLength={14}
+          pattern="[A-Z0-9-]{8,14}"
+          title="8–14 Zeichen (A–Z, 0–9, '-')"
+          placeholder="z. B. DE123456789"
+        />
+      </div>
+    </div>
+  </>
+)}
+
 
           {/* Änderungen speichern (Ende Container 1) */}
           <div className={styles.inputGroup}>

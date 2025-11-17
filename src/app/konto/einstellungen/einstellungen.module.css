@@ -134,6 +134,17 @@
 }
 
 .smallInput { min-width: 0; }
+/* Firmenname + USt-ID nebeneinander (Desktop), mobil untereinander */
+.inputRowCompany{
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* Firmenname breiter als USt-ID */
+  gap: 12px;
+  width: 100%;
+}
+.inputRowCompany > * { min-width: 0; } /* wichtig fürs Schrumpfen */
+@media (max-width: 900px){
+  .inputRowCompany{ grid-template-columns: 1fr; } /* stapeln */
+}
 
 /* Eingabefelder */
 .input,
