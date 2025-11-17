@@ -141,6 +141,18 @@
 @media (max-width: 400px) {
   .inputRowZipLand { gap: 10px; }
 }
+/* Benutzername + E-Mail nebeneinander (Desktop) */
+.inputRowUser {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* zwei gleich breite Spalten */
+  gap: 12px;
+  width: 100%;
+}
+.inputRowUser > * { min-width: 0; } /* verhindert Überlauf in Grids */
+
+@media (max-width: 560px) {
+  .inputRowUser { grid-template-columns: 1fr; } /* mobil untereinander */
+}
 
 .smallInput { min-width: 0; }
 /* Firmenname + USt-ID nebeneinander (Desktop), mobil untereinander */

@@ -520,17 +520,19 @@ useEffect(() => {
         <h3 className={styles.subSectionTitle}>Profil</h3>
 
         <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
-          {/* Benutzername */}
-          <div className={styles.inputGroup}>
-            <label>Benutzername</label>
-            <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
-          </div>
+          {/* Benutzername + E-Mail nebeneinander */}
+<div className={styles.inputRowUser}>
+  <div className={styles.inputGroup}>
+    <label>Benutzername</label>
+    <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
+  </div>
 
-          {/* E-Mail */}
-          <div className={styles.inputGroup}>
-            <label htmlFor="email">E-Mail-Adresse</label>
-            <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
-          </div>
+  <div className={styles.inputGroup}>
+    <label htmlFor="email">E-Mail-Adresse</label>
+    <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
+  </div>
+</div>
+
 
           {/* Kontoart */}
           <h3 className={styles.subSectionTitle}>Kontoart</h3>
