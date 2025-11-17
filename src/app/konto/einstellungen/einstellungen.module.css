@@ -362,3 +362,37 @@
   resize: none;         /* verhindert Ziehen mit der Maus */
   line-height: 1.4;
 }
+/* Icon-inside-input für Passwortfelder */
+.fieldWithIcon {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 44px;              /* Platz fürs Icon */
+}
+
+.togglePw {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;                   /* slate-500 */
+  transition: background .12s ease, color .12s ease, box-shadow .12s ease;
+}
+
+.togglePw:hover {
+  background: #eef2f7;              /* leichtes Hover */
+  color: #0f172a;                    /* slate-900 */
+}
+
+.togglePw:focus-visible {
+  outline: 3px solid rgba(0,180,216,.35);
+  outline-offset: 2px;
+}

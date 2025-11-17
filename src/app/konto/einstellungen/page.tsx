@@ -7,7 +7,7 @@ import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Eye, EyeOff } from 'lucide-react';
 
 
 type ToastType = 'success' | 'error' | 'info'
@@ -150,7 +150,6 @@ const Einstellungen = (): JSX.Element => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
   const [signOutAll, setSignOutAll] = useState(true)
-  const [showPw, setShowPw] = useState(false)
 
   // Einladungen
   const [inviteLink, setInviteLink] = useState<string>('')
@@ -379,6 +378,11 @@ const Einstellungen = (): JSX.Element => {
       setToast({ type: 'error', message: 'Fehler beim Ändern des Passworts.' })
     }
   }
+  // Passwort anzeigen/ausblenden je Feld
+const [showPwCurrent, setShowPwCurrent] = useState(false);
+const [showPwNew, setShowPwNew] = useState(false);
+const [showPwConfirm, setShowPwConfirm] = useState(false);
+
 
   // ===== Konto löschen =====
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -675,58 +679,95 @@ useEffect(() => {
     <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
 
     <div className={styles.inputGroup}>
-      <label htmlFor="password">Aktuelles Passwort</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          id="password"
-          type={showPw ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Aktuelles Passwort"
-          className={styles.input}
-          autoComplete="current-password"
-          required
-        />
-        <button type="button" onClick={() => setShowPw(s => !s)} className={styles.saveButton} style={{ whiteSpace: 'nowrap' }}>
-          {showPw ? 'Verbergen' : 'Anzeigen'}
-        </button>
-      </div>
-    </div>
+  <label htmlFor="password">Aktuelles Passwort</label>
+  <div className={styles.fieldWithIcon}>
+    <input
+      id="password"
+      type={showPwCurrent ? 'text' : 'password'}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      placeholder="Aktuelles Passwort"
+      className={`${styles.input} ${styles.passwordInput}`}
+      autoComplete="current-password"
+      required
+    />
+    <span
+      role="button"
+      tabIndex={0}
+      className={styles.togglePw}
+      aria-label={showPwCurrent ? 'Passwort verbergen' : 'Passwort anzeigen'}
+      title={showPwCurrent ? 'Verbergen' : 'Anzeigen'}
+      onClick={() => setShowPwCurrent(v => !v)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowPwCurrent(v => !v)}
+    >
+      {showPwCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+    </span>
+  </div>
+</div>
+
 
     <div className={styles.inputGroup}>
-      <label htmlFor="newPassword">Neues Passwort</label>
-      <input
-        id="newPassword"
-        type={showPw ? 'text' : 'password'}
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-        placeholder={`Neues Passwort (${MIN_PW}–${MAX_PW} Zeichen)`}
-        className={styles.input}
-        autoComplete="new-password"
-        minLength={MIN_PW}
-        maxLength={MAX_PW}
-        required
-      />
-      <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
-        Länge: {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase).
-      </p>
-    </div>
+  <label htmlFor="newPassword">Neues Passwort</label>
+  <div className={styles.fieldWithIcon}>
+    <input
+      id="newPassword"
+      type={showPwNew ? 'text' : 'password'}
+      value={newPassword}
+      onChange={(e) => setNewPassword(e.target.value)}
+      placeholder={`Neues Passwort (${MIN_PW}–${MAX_PW} Zeichen)`}
+      className={`${styles.input} ${styles.passwordInput}`}
+      autoComplete="new-password"
+      minLength={MIN_PW}
+      maxLength={MAX_PW}
+      required
+    />
+    <span
+      role="button"
+      tabIndex={0}
+      className={styles.togglePw}
+      aria-label={showPwNew ? 'Passwort verbergen' : 'Passwort anzeigen'}
+      title={showPwNew ? 'Verbergen' : 'Anzeigen'}
+      onClick={() => setShowPwNew(v => !v)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowPwNew(v => !v)}
+    >
+      {showPwNew ? <EyeOff size={18} /> : <Eye size={18} />}
+    </span>
+  </div>
+  <p style={{ color: '#6b7280', fontSize: 13, marginTop: 6 }}>
+    Länge: {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase).
+  </p>
+</div>
+
 
     <div className={styles.inputGroup}>
-      <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
-      <input
-        id="confirmPassword"
-        type={showPw ? 'text' : 'password'}
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        placeholder="Bestätige neues Passwort"
-        className={styles.input}
-        autoComplete="new-password"
-        minLength={MIN_PW}
-        maxLength={MAX_PW}
-        required
-      />
-    </div>
+  <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
+  <div className={styles.fieldWithIcon}>
+    <input
+      id="confirmPassword"
+      type={showPwConfirm ? 'text' : 'password'}
+      value={confirmPassword}
+      onChange={(e) => setConfirmPassword(e.target.value)}
+      placeholder="Bestätige neues Passwort"
+      className={`${styles.input} ${styles.passwordInput}`}
+      autoComplete="new-password"
+      minLength={MIN_PW}
+      maxLength={MAX_PW}
+      required
+    />
+    <span
+      role="button"
+      tabIndex={0}
+      className={styles.togglePw}
+      aria-label={showPwConfirm ? 'Passwort verbergen' : 'Passwort anzeigen'}
+      title={showPwConfirm ? 'Verbergen' : 'Anzeigen'}
+      onClick={() => setShowPwConfirm(v => !v)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowPwConfirm(v => !v)}
+    >
+      {showPwConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+    </span>
+  </div>
+</div>
+
 
     <div className={styles.inputGroup}>
       <label style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
