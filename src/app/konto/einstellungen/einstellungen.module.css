@@ -115,15 +115,22 @@
 @media (max-width: 560px) {
   .inputRowZip { grid-template-columns: 1fr; }
 }
-/* PLZ + Ort + Land in einer Zeile */
-.inputRowZipLand {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1.3fr; /* PLZ | Ort | Land */
+/* PLZ + Ort + Land nebeneinander */
+.inputRowZipLand{
+  display: grid !important;               /* falls etwas anderes überschreibt */
+  grid-template-columns: 1fr 2fr 1.3fr;   /* PLZ | Ort | Land */
   gap: 12px;
   width: 100%;
 }
-@media (max-width: 560px) {
-  .inputRowZipLand { grid-template-columns: 1fr; }
+
+/* WICHTIG: Kinder dürfen im Grid schrumpfen */
+.inputRowZipLand > *{
+  min-width: 0;
+}
+.inputRowZipLand select,
+.inputRowZipLand input{
+  min-width: 0;
+  width: 100%;
 }
 
 .smallInput { min-width: 0; }
