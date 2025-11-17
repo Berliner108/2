@@ -142,7 +142,7 @@
   width: 100%;
 }
 .inputRowCompany > * { min-width: 0; } /* wichtig fürs Schrumpfen */
-@media (max-width: 900px){
+@media (max-width: 700px){
   .inputRowCompany{ grid-template-columns: 1fr; } /* stapeln */
 }
 
