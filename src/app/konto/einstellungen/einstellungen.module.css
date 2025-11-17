@@ -22,14 +22,15 @@
 
 
 /* Container – Zentriert und schmaler als vorher */
-.kontoContainer {
-  width: min(95%, 920px);   /* oder 860/1000 px nach Geschmack */
-  margin-inline: auto;      /* horizontal mittig */
-  background-color: #fff;
-  padding: 24px;
-  border-radius: 10px;
-  border: 2px solid #9aa8b8;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+.kontoContainer{
+  width: 100%;
+  max-width: clamp(900px, 92vw, 1200px); /* min 900px, bis zu 1200px, sonst ~92% der Viewportbreite */
+  margin-inline: auto;
+  background-color:#fff;
+  padding:24px;
+  border-radius:10px;
+  border:2px solid #9aa8b8;
+  box-shadow:0 4px 6px rgba(0,0,0,.08);
 }
 
 /* Titel der Seite */
