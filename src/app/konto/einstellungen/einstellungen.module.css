@@ -94,6 +94,28 @@
   gap: 12px;
   width: 100%;
 }
+/* Straße + Hausnr. */
+.inputRow2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .inputRow2 { grid-template-columns: 1fr; }
+}
+
+/* PLZ + Ort */
+.inputRowZip {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .inputRowZip { grid-template-columns: 1fr; }
+}
+
 .smallInput { min-width: 0; }
 
 /* Eingabefelder */

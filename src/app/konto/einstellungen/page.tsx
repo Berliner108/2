@@ -548,70 +548,75 @@ useEffect(() => {
           </div>
 
           {/* Anschrift */}
-          <h3 className={styles.subSectionTitle}>Anschrift</h3>
+<h3 className={styles.subSectionTitle}>Anschrift</h3>
 
-          <div className={styles.inputGroup}>
-            <label>Straße</label>
-            <input
-              type="text"
-              value={street}
-              onChange={(e) => onChangeStreet(e.target.value)}
-              required
-              inputMode="text"
-              className={styles.input}
-              maxLength={STREET_MAX}
-              placeholder="Straßenname"
-              autoComplete="address-line1"
-            />
-          </div>
+{/* Reihe 1: Straße + Hausnr. */}
+<div className={styles.inputRow2}>
+  <div className={styles.inputGroup}>
+    <label>Straße</label>
+    <input
+      type="text"
+      value={street}
+      onChange={(e) => onChangeStreet(e.target.value)}
+      required
+      inputMode="text"
+      className={styles.input}
+      maxLength={STREET_MAX}
+      placeholder="Straßenname"
+      autoComplete="address-line1"
+    />
+  </div>
 
-          <div className={styles.inputRow}>
-            <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-              <label>Hausnr.</label>
-              <input
-                type="text"
-                value={houseNumber}
-                onChange={(e) => onChangeHnr(e.target.value)}
-                required
-                inputMode="text"
-                className={styles.input}
-                pattern="\d{1,3}[a-z]?"
-                title="z. B. 12a (max. 3 Ziffern + 1 Kleinbuchstabe)"
-                placeholder="z. B. 12a"
-                autoComplete="address-line2"
-              />
-            </div>
+  <div className={`${styles.inputGroup} ${styles.smallInput}`}>
+    <label>Hausnr.</label>
+    <input
+      type="text"
+      value={houseNumber}
+      onChange={(e) => onChangeHnr(e.target.value)}
+      required
+      inputMode="text"
+      className={styles.input}
+      pattern="\d{1,3}[a-z]?"
+      title="z. B. 12a (max. 3 Ziffern + 1 Kleinbuchstabe)"
+      placeholder="z. B. 12a"
+      autoComplete="address-line2"
+    />
+  </div>
+</div>
 
-            <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-              <label>PLZ</label>
-              <input
-                type="text"
-                value={zip}
-                onChange={(e) => onChangeZip(e.target.value)}
-                required
-                inputMode="numeric"
-                className={styles.input}
-                pattern="\d{1,5}"
-                maxLength={ZIP_MAX}
-                placeholder="PLZ"
-              />
-            </div>
+{/* Reihe 2: PLZ + Ort */}
+<div className={styles.inputRowZip}>
+  <div className={`${styles.inputGroup} ${styles.smallInput}`}>
+    <label>PLZ</label>
+    <input
+      type="text"
+      value={zip}
+      onChange={(e) => onChangeZip(e.target.value)}
+      required
+      inputMode="numeric"
+      className={styles.input}
+      pattern="\d{1,5}"
+      maxLength={ZIP_MAX}
+      placeholder="PLZ"
+    />
+  </div>
 
-            <div className={styles.inputGroup} style={{ flex: 1 }}>
-              <label>Ort</label>
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => onChangeCity(e.target.value)}
-                required
-                inputMode="text"
-                className={styles.input}
-                maxLength={CITY_MAX}
-                placeholder="Ort"
-                autoComplete="address-level2"
-              />
-            </div>
-          </div>
+  <div className={styles.inputGroup}>
+    <label>Ort</label>
+    <input
+      type="text"
+      value={city}
+      onChange={(e) => onChangeCity(e.target.value)}
+      required
+      inputMode="text"
+      className={styles.input}
+      maxLength={CITY_MAX}
+      placeholder="Ort"
+      autoComplete="address-level2"
+    />
+  </div>
+</div>
+
 
           {/* Land */}
           <div className={styles.inputGroup}>
