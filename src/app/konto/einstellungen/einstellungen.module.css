@@ -277,7 +277,7 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 400;
   color: #0f172a;          /* Slate-900 */
   text-decoration: none;
   border: 1px solid #e5e7eb;
@@ -352,4 +352,11 @@
   background: #f9fafb;
   color: #111827;
   font-size: 0.9rem;
+}
+.inviteTextarea{
+  min-height: 80px;     /* Startgröße */
+  max-height: 320px;    /* optional Deckel */
+  overflow-y: hidden;   /* keine Scrollbars beim Wachsen */
+  resize: none;         /* verhindert Ziehen mit der Maus */
+  line-height: 1.4;
 }
