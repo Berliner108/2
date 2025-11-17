@@ -584,8 +584,8 @@ useEffect(() => {
   </div>
 </div>
 
-{/* Reihe 2: PLZ + Ort */}
-<div className={styles.inputRowZip}>
+{/* Reihe 2: PLZ + Ort + Land */}
+<div className={styles.inputRowZipLand}>
   <div className={`${styles.inputGroup} ${styles.smallInput}`}>
     <label>PLZ</label>
     <input
@@ -615,25 +615,24 @@ useEffect(() => {
       autoComplete="address-level2"
     />
   </div>
+
+  <div className={styles.inputGroup}>
+    <label>Land</label>
+    <select
+      value={country || ''}
+      onChange={(e) => setCountry(e.target.value)}
+      className={styles.input}
+      aria-label="Land auswählen"
+      required
+    >
+      <option value="">— Bitte wählen —</option>
+      {COUNTRY_OPTIONS.map((c) => (
+        <option key={c} value={c}>{c}</option>
+      ))}
+    </select>
+  </div>
 </div>
 
-
-          {/* Land */}
-          <div className={styles.inputGroup}>
-            <label>Land</label>
-            <select
-              value={country || ''}
-              onChange={(e) => setCountry(e.target.value)}
-              className={styles.input}
-              aria-label="Land auswählen"
-              required
-            >
-              <option value="">— Bitte wählen —</option>
-              {COUNTRY_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
 
           {/* Firmenfelder (nur gewerblich) */}
           {!isPrivatePerson && (

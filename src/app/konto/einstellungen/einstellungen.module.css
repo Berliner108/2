@@ -115,6 +115,16 @@
 @media (max-width: 560px) {
   .inputRowZip { grid-template-columns: 1fr; }
 }
+/* PLZ + Ort + Land in einer Zeile */
+.inputRowZipLand {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1.3fr; /* PLZ | Ort | Land */
+  gap: 12px;
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .inputRowZipLand { grid-template-columns: 1fr; }
+}
 
 .smallInput { min-width: 0; }
 
