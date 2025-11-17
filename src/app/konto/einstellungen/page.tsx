@@ -1,7 +1,7 @@
 // /src/app/konto/einstellungen/page.tsx
 'use client'
 
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import Navbar from '../../components/navbar/Navbar';
 import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
@@ -470,6 +470,17 @@ const handleCopyInvite = async () => {
     setTimeout(() => setCopyMsg(null), 2000);
   }
 };
+const inviteTARef = useRef<HTMLTextAreaElement | null>(null);
+
+const autoGrow = (el: HTMLTextAreaElement) => {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+};
+
+// nach dem Laden einmalig Höhe setzen
+useEffect(() => {
+  if (inviteTARef.current) autoGrow(inviteTARef.current);
+}, []);
 
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
@@ -809,13 +820,15 @@ const handleCopyInvite = async () => {
     <div className={styles.inputGroup}>
       <label>E-Mail(s) einladen (optional)</label>
       <textarea
-        rows={2}
+        ref={inviteTARef}
+        rows={1}
         value={inviteEmails}
-        onChange={(e) => setInviteEmails(e.target.value)}
+        onInput={(e) => autoGrow(e.currentTarget)}          // live mitwachsen
+        onChange={(e) => setInviteEmails(e.target.value)}   // State pflegen
         placeholder="max.mustermann@beispiel.com, bob@firma.de"
-        className={styles.input}
-        style={{ minHeight: 50 }}
+        className={`${styles.input} ${styles.inviteTextarea}`}
       />
+
       <button
         type="button"
         onClick={async () => {
