@@ -132,6 +132,15 @@
   min-width: 0;
   width: 100%;
 }
+/* Mobile: PLZ, Ort, Land untereinander */
+@media (max-width: 560px) {
+  .inputRowZipLand {
+    grid-template-columns: 1fr !important; /* überschreibt die 3-Spalten-Variante */
+  }
+}
+@media (max-width: 400px) {
+  .inputRowZipLand { gap: 10px; }
+}
 
 .smallInput { min-width: 0; }
 /* Firmenname + USt-ID nebeneinander (Desktop), mobil untereinander */
