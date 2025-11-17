@@ -517,7 +517,7 @@ useEffect(() => {
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
       <div id="profil" className={styles.kontoContainer}>
-        <h2>Profil</h2>
+        <h3 className={styles.subSectionTitle}>Profil</h3>
 
         <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
           {/* Benutzername */}
