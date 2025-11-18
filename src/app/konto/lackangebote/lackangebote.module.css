@@ -340,6 +340,118 @@
   font-family: 'Oswald';
   font-size: 16px;
 }
+/* Mobil: Pagination sauber ausrichten – wie auf der anderen Seite */
+@media (max-width: 640px){
+  .pagination{
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  /* Infozeile oben, volle Breite */
+  .pageInfo{
+    width: 100%;
+    order: 1;
+    margin-bottom: 4px;
+  }
+
+  /* Controls darunter als 3-Spalten-Grid:
+     [Select]  [Seite x / y]  [Buttons] */
+  .pagiControls{
+    width: 100%;
+    order: 2;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Label mobil ausblenden (spart Platz) */
+  .pageSizeLabel{ display: none; }
+
+  /* Select links */
+  .pageSize{
+    justify-self: start;
+    max-width: 120px;
+  }
+
+  /* Seitentext mittig, ohne feste Mindestbreite */
+  .pageNow{
+    justify-self: center;
+    text-align: center;
+    min-width: auto;
+    font-weight: 700;
+  }
+
+  /* Pfeil-Buttons rechts */
+  .pageButtons{
+    justify-self: end;
+    display: inline-flex;
+    gap: 6px;
+  }
+  .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
+}
+
+/* Mobile Pagination: stabil, keine Überlappung */
+@media (max-width: 560px) {
+  .pagination{
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+  }
+
+  /* Infozeile oben links */
+  .pageInfo{
+    order: 1;
+    justify-self: start;
+    width: 100%;
+    font-size: .95rem;
+  }
+
+  /* Control-Zeile: 3 Spalten = links / Mitte / rechts */
+  .pagiControls{
+    order: 2;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 10px;
+    width: 100%;
+  }
+
+  /* Select kompakter */
+  .pageSize{ 
+    padding: 4px 10px;
+    font-size: 14px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .pageButtons{
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  /* Mittig: aktuelle Seite */
+  .pageNow{
+    justify-self: center;
+    min-width: auto;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  /* Buttons kompakter, ohne „Hüpfen“ */
+  .pageBtn{
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
+    transform: none;
+  }
+  .pageBtn:hover{ box-shadow: none; background: #fafafa; }
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
@@ -353,10 +465,6 @@
   .cardHeader { align-items: flex-start; flex-direction: column; }
 }
 
-@media (max-width: 640px) {
-  .pageInfo { width: 100%; }
-  .pageNow  { min-width: auto; }
-}
 
 @media (max-width: 600px) {
   .meta { grid-template-columns: 1fr; }
