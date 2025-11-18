@@ -297,161 +297,66 @@
 .btnDanger:active { transform: translateY(0); }
 .btnDanger:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(239, 68, 68, .35), 0 2px 6px rgba(0,0,0,.15); }
 
-/* ===== Pagination (wie auf der anderen Seite) ===== */
+/* ===== Pagination ===== */
 .pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .75rem;
-  margin-top: 1rem;
+  gap: 16px;
+  padding: 12px 0;
+  margin-top: 12px;
+  border-top: 1px solid #eee;
   flex-wrap: wrap;
 }
-.pageInfo { color: #444; font-size: .95rem; }
-.pagiControls {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  flex-wrap: wrap;
-}
-.pageSizeLabel { font-size: .9rem; color: #6b7280; }
-.pageSize {
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  padding: .35rem .5rem;
-  font: inherit;
-  background: #fff;
-}
-.pageButtons {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-}
+.pagiControls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pageButtons  { display: flex; align-items: center; gap: 6px; }
+
 .pageBtn {
-  appearance: none;
-  border: 2px solid #e5e7eb;
-  background: #fff;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #ddd;
   border-radius: 10px;
-  padding: .3rem .6rem;
-  cursor: pointer;
+  background: #fff;
   font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .15s ease, background .15s ease;
 }
-.pageBtn:hover:not(:disabled) { background: #f9fafb; }
-.pageBtn:disabled { opacity: .55; cursor: not-allowed; }
-.pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
+.pageBtn:hover   { transform: translateY(-1px); box-shadow: 0 2px 10px rgba(0,0,0,.06); background: #fafafa; }
+.pageBtn:active  { transform: translateY(0);    box-shadow: none; }
+.pageBtn:disabled{ opacity: .5; cursor: default; transform: none; box-shadow: none; }
 
-/* Mobil: Pagination sauber ausrichten */
-@media (max-width: 640px){
-  .pagination{
-    gap: 10px;
-    align-items: stretch;
-    flex-wrap: wrap;
-  }
+.pageInfo { color: #666; font-size: 0.95rem; }
+.pageNow  { min-width: 110px; text-align: center; font-weight: 600; color: #333; }
 
-  /* Infozeile oben, volle Breite */
-  .pageInfo{
-    width: 100%;
-    order: 1;
-    margin-bottom: 4px;
-  }
-
-  /* Controls darunter als 3-Spalten-Grid:
-     [Select]  [Seite x / y]  [Buttons] */
-  .pagiControls{
-    width: 100%;
-    order: 2;
-    display: grid;
-    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* Label mobil ausblenden (spart Platz) */
-  .pageSizeLabel{ display: none; }
-
-  /* Select links */
-  .pageSize{
-    justify-self: start;
-    max-width: 120px;
-  }
-
-  /* Seitentext mittig, ohne feste Mindestbreite */
-  .pageNow{
-    justify-self: center;
-    text-align: center;
-    min-width: auto;
-    font-weight: 700;
-  }
-
-  /* Pfeil-Buttons rechts */
-  .pageButtons{
-    justify-self: end;
-    display: inline-flex;
-    gap: 6px;
-  }
-  .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
+.pageSizeLabel { color: #666; font-size: 0.9rem; }
+.pageSize {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 500;
+  font-family: 'Oswald';
+  font-size: 16px;
 }
 
-/* Mobile Pagination: stabil, keine Überlappung */
-@media (max-width: 560px) {
-  .pagination{
-    display: grid;
-    grid-template-columns: 1fr;
-    row-gap: 10px;
-    padding: 8px 0;
-    border-top: 1px solid #eee;
-  }
-
-  /* Infozeile oben links */
-  .pageInfo{
-    order: 1;
-    justify-self: start;
-    width: 100%;
-    font-size: .95rem;
-  }
-
-  /* Control-Zeile: 3 Spalten = links / Mitte / rechts */
-  .pagiControls{
-    order: 2;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    column-gap: 10px;
-    width: 100%;
-  }
-
-  /* Links: Select */
-  .pageSize{ 
-    padding: 4px 10px;
-    font-size: 14px;
-    height: 34px;
-    border-radius: 8px;
-  }
-
-  .pageButtons{
-    display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-  }
-
-  /* Mittig: aktuelle Seite */
-  .pageNow{
-    justify-self: center;
-    min-width: auto;
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  /* Buttons kompakter, ohne „Hüpfen“ */
-  .pageBtn{
-    min-width: 34px;
-    height: 34px;
-    padding: 0 8px;
-    border-radius: 8px;
-    transform: none;
-  }
-  .pageBtn:hover{ box-shadow: none; background: #fafafa; }
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .wrapper { padding: 1rem; }
+  .heading { font-size: 1.35rem; }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+@media (max-width: 768px) {
+  .toolbar { grid-template-columns: 1fr; }
+  .cardHeader { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 640px) {
+  .pageInfo { width: 100%; }
+  .pageNow  { min-width: auto; }
+}
 
 @media (max-width: 600px) {
   .meta { grid-template-columns: 1fr; }
