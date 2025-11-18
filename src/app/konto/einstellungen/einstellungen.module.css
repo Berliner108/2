@@ -23,8 +23,8 @@
 
 /* Container – Zentriert und schmaler als vorher */
 .kontoContainer {
-  min-width: 95%;
-  max-width: 95%;          /* <= schmaler als 1000px */
+  min-width: 96%;
+  max-width: 96%;          /* <= schmaler als 1000px */
   margin: 0 auto;            /* zentriert */
   background-color: #fff;
   padding: 12px;
@@ -295,14 +295,14 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-  .kontoContainer { padding: 20px; min-width: 95%;  max-width: 95%; }
+  .kontoContainer { padding: 20px; min-width: 98%;  max-width: 98%; }
   .inputRow { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 560px) {
   .title { font-size: 1.5rem; }
-  .kontoContainer { padding: 16px; min-width: 95%;
-  max-width: 95%; }
+  .kontoContainer { padding: 16px; min-width: 98%;
+  max-width: 98%; }
   .input { font-size: .95rem; padding: 10px; }
   .saveButton, .deleteButton { padding: 10px; font-size: .95rem; }
   .inputRow { grid-template-columns: 1fr; gap: 10px; } /* untereinander, kein Überlaufen */
