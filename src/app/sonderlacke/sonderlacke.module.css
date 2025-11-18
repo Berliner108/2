@@ -560,10 +560,9 @@
 }
 @media (max-width: 599px) {
  .container {
-  min-width: 100%;
-  max-width: 100%;
+  max-width: 95%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 .radioLegend {
   font-weight: bold;
