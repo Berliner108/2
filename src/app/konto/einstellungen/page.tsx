@@ -487,6 +487,23 @@ const autoGrow = (el: HTMLTextAreaElement) => {
 useEffect(() => {
   if (inviteTARef.current) autoGrow(inviteTARef.current);
 }, []);
+const canSaveKonto = useMemo(() => {
+  const streetOk  = ONLY_LETTERS_VALIDATE.test(street) && street.length <= STREET_MAX && street.length > 0
+  const hnrOk     = HNR_RE.test(houseNumber)
+  const zipOk     = ZIP_RE.test(zip)
+  const cityOk    = ONLY_LETTERS_VALIDATE.test(city) && city.length <= CITY_MAX && city.length > 0
+  const countryOk = !!country && (COUNTRY_OPTIONS as readonly string[]).includes(country)
+
+  if (isPrivatePerson) {
+    return streetOk && hnrOk && zipOk && cityOk && countryOk
+  }
+  const companyOk = !!companyName.trim() && companyName.trim().length <= COMPANY_MAX
+  const vatOk     = VAT_RE.test(vatNumber.trim().toUpperCase())
+
+  return streetOk && hnrOk && zipOk && cityOk && countryOk && companyOk && vatOk
+}, [
+  isPrivatePerson, street, houseNumber, zip, city, country, companyName, vatNumber
+])
 
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
@@ -675,9 +692,24 @@ useEffect(() => {
 
           {/* Änderungen speichern (Ende Container 1) */}
           <div className={styles.inputGroup}>
-            <button type="button" onClick={handleSave} className={styles.saveButton}>
-              Änderungen speichern
-            </button>
+            <button
+            type="button"
+            onClick={handleSave}
+            className={styles.saveButton}
+            disabled={!canSaveKonto}
+            aria-disabled={!canSaveKonto}
+            title={!canSaveKonto ? 'Bitte alle Pflichtfelder korrekt ausfüllen' : undefined}
+          >
+            Änderungen speichern
+          </button>
+          {!canSaveKonto && (
+  <small style={{ color: '#6b7280' }}>
+    Prüfe Straße, Hausnr., PLZ, Ort, Land
+    {!isPrivatePerson && ' sowie Firmenname und USt-ID.'}
+  </small>
+)}
+
+
           </div>
         </form>
       </div>
