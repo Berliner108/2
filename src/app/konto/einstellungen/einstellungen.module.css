@@ -295,13 +295,14 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-  .kontoContainer { padding: 20px; max-width: 720px; }
+  .kontoContainer { padding: 20px; min-width: 95%;  max-width: 95%; }
   .inputRow { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 560px) {
   .title { font-size: 1.5rem; }
-  .kontoContainer { padding: 16px; max-width: 100%; }
+  .kontoContainer { padding: 16px; min-width: 95%;
+  max-width: 95%; }
   .input { font-size: .95rem; padding: 10px; }
   .saveButton, .deleteButton { padding: 10px; font-size: .95rem; }
   .inputRow { grid-template-columns: 1fr; gap: 10px; } /* untereinander, kein Überlaufen */
