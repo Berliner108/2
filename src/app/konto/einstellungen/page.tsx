@@ -416,11 +416,13 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = [
   { id: 'profil', label: 'Profil' },
+  { id: 'konto',  label: 'Kontoart & Anschrift' },      // <— NEU
   { id: 'passwort', label: 'Passwort' },
   { id: 'bewertungen', label: 'Bewertungen' },
   { id: 'einladungen', label: 'Einladungen' },
   { id: 'loeschen', label: 'Löschen' },
 ] as const;
+
 
 const [activeId, setActiveId] = useState<string>('profil');
 
@@ -517,54 +519,38 @@ useEffect(() => {
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
       <div id="profil" className={styles.kontoContainer}>
-        <h3 className={styles.subSectionTitle}>Profil</h3>
-
-        <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
-          {/* Benutzername + E-Mail nebeneinander */}
-<div className={styles.inputRowUser}>
-  <div className={styles.inputGroup}>
-    <label>Benutzername</label>
-    <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
-  </div>
-
-  <div className={styles.inputGroup}>
-    <label htmlFor="email">E-Mail-Adresse</label>
-    <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
-  </div>
+  <h3 className={styles.subSectionTitle}>Profil</h3>
+  <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
+    <div className={styles.inputRowUser}>
+      <div className={styles.inputGroup}>
+        <label>Benutzername</label>
+        <input type="text" value={username || '—'} readOnly className={styles.inputReadonly} />
+      </div>
+      <div className={styles.inputGroup}>
+        <label htmlFor="email">E-Mail-Adresse</label>
+        <input id="email" type="email" value={email} readOnly className={styles.inputReadonly} autoComplete="email" />
+      </div>
+    </div>
+  </form>
 </div>
 
-
-          {/* Kontoart */}
-         <h3 className={styles.subSectionTitle}>Kontoart</h3>
-<div
-  className={styles.radioRow}
-  role="radiogroup"
-  aria-label="Kontoart wählen"
->
-  <label className={styles.radioPill}>
-    <input
-      type="radio"
-      name="acct"
-      checked={!isPrivatePerson}
-      onChange={() => setIsPrivatePerson(false)}
-    />
-    Gewerblich
-  </label>
-
-  <label className={styles.radioPill}>
-    <input
-      type="radio"
-      name="acct"
-      checked={isPrivatePerson}
-      onChange={() => setIsPrivatePerson(true)}
-    />
-    Privatperson
-  </label>
-</div>
+{/* === B: Kontoart & Anschrift (eigener Container) === */}
+<div id="konto" className={styles.kontoContainer}>
+  <h3 className={styles.subSectionTitle}>Kontoart &amp; Anschrift</h3>
+  <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
+    {/* Kontoart */}
+    <div className={styles.radioRow} role="radiogroup" aria-label="Kontoart wählen">
+      <label className={styles.radioPill}>
+        <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
+        Gewerblich
+      </label>
+      <label className={styles.radioPill}>
+        <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
+        Privatperson
+      </label>
+    </div>
 
 
-          {/* Anschrift */}
-<h3 className={styles.subSectionTitle}>Anschrift</h3>
 
 {/* Reihe 1: Straße + Hausnr. */}
 <div className={styles.inputRow2}>
