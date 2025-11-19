@@ -270,3 +270,36 @@
     font-size: 0.84rem;
   }
 }
+/* === Bullet-Liste (Feature-Punkte) === */
+.pointsList {
+  margin: 0.25rem 0 0.35rem;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e5e7eb;
+}
+
+.pointsList li {
+  margin-bottom: 0.15rem;
+}
+
+/* Stripe-/Sicherheits-Hinweis */
+.smallNote {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  opacity: 0.95;
+}
+
+/* DSGVO / Meta-Zeile unten */
+.metaLine {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  opacity: 0.9;
+}
+
+/* Backdrop: Klicks blocken, Scroll erlauben (vor allem auf Handy) */
+.backdrop {
+  touch-action: pan-y;    /* Scroll nach oben/unten bleibt möglich */
+}

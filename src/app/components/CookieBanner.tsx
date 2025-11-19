@@ -68,7 +68,7 @@ const CookieBanner = () => {
 
   return (
     <>
-      {/* Blockiert Klicks auf die Seite, aber nicht den Scroll */}
+      {/* Klick-Schutz über der ganzen Seite, Scrollen bleibt möglich */}
       <div className={styles.backdrop} aria-hidden="true" />
 
       <aside
@@ -82,27 +82,43 @@ const CookieBanner = () => {
             <h2 id="cookie-title" className={styles.title}>
               Wir verwenden Cookies
             </h2>
+
             <p className={styles.description}>
-              Wir nutzen Cookies, um unsere Website zuverlässig zu betreiben und unser Angebot
-              zu verbessern. Technisch notwendige Cookies sind für den Betrieb erforderlich,
-              z.&nbsp;B. für Login, Warenkorb und Sicherheitsfunktionen.
+              Wir nutzen Cookies, um unsere Website zuverlässig zu betreiben, die
+              Sicherheit der Plattform zu gewährleisten und unser Angebot
+              kontinuierlich zu verbessern. Technisch notwendige Cookies sind
+              für den Betrieb erforderlich. Optionale Cookies helfen uns z.&nbsp;B.
+              bei Reichweitenmessung und Marketing. Wir verkaufen deine Daten
+              nicht und setzen keine Drittanbieter-Tracking-Tools ohne deine
+              Einwilligung ein.
             </p>
-            <p className={styles.description}>
-              Für die Zahlungsabwicklung setzen wir den Dienstleister{" "}
-              <strong>Stripe</strong> ein. Dabei können technisch notwendige Cookies von Stripe
-              gesetzt werden, um Zahlungen sicher zu verarbeiten.
+
+            <ul className={styles.pointsList}>
+              <li>✔ Betrieb &amp; Sicherheit der Plattform (Login, Warenkorb, Session)</li>
+              <li>✔ Zahlungsabwicklung über Stripe (verschlüsselte &amp; zertifizierte Zahlung)</li>
+              <li>✔ Optionale Analyse &amp; Marketing nur mit deiner ausdrücklichen Einwilligung</li>
+            </ul>
+
+            <p className={styles.smallNote}>
+              Zahlungen werden über unseren Zahlungsdienstleister Stripe
+              abgewickelt. Stripe ist nach gängigen Sicherheitsstandards
+              (z.&nbsp;B. PCI-DSS) zertifiziert.
             </p>
-            <p className={styles.description}>
-              Optionale Cookies nutzen wir für{" "}
-              <strong>Statistik, Reichweitenmessung und Marketing</strong>. Du kannst selbst
-              entscheiden, welche Kategorien du zulässt.
-            </p>
+
             <p className={styles.linkLine}>
-              Weitere Informationen findest du in unserer{" "}
+              Mehr Infos findest du in unserer{" "}
               <a href="/datenschutz" className={styles.link}>
                 Datenschutzerklärung
+              </a>{" "}
+              und unserem{" "}
+              <a href="/impressum" className={styles.link}>
+                Impressum
               </a>
               .
+            </p>
+
+            <p className={styles.metaLine}>
+              Rechtsgrundlage: Art. 6 Abs. 1 lit. a und f DSGVO · Stand: 11/2025
             </p>
           </div>
 
@@ -116,9 +132,9 @@ const CookieBanner = () => {
                   <span className={styles.settingsTag}>immer aktiv</span>
                 </div>
                 <p className={styles.settingsText}>
-                  Diese Cookies sind erforderlich, damit Basisfunktionen wie Anmeldung,
-                  Warenkorb, Sicherheitsfunktionen und die Zahlungsabwicklung über Stripe
-                  korrekt funktionieren.
+                  Diese Cookies sind erforderlich, damit Basisfunktionen wie
+                  Anmeldung, Warenkorb oder Sicherheitsfunktionen korrekt
+                  funktionieren.
                 </p>
                 <label className={styles.switchRow}>
                   <input type="checkbox" checked disabled />
@@ -131,9 +147,8 @@ const CookieBanner = () => {
                   <span className={styles.settingsName}>Marketing &amp; Analyse</span>
                 </div>
                 <p className={styles.settingsText}>
-                  Diese Cookies helfen uns, die Nutzung unserer Seiten zu verstehen und
-                  unser Angebot zu verbessern, z.&nbsp;B. durch Statistiken und
-                  personalisierte Inhalte.
+                  Diese Cookies ermöglichen uns z.&nbsp;B. Statistiken zur
+                  Seitennutzung und personalisierte Inhalte oder Angebote.
                 </p>
                 <label className={styles.switchRow}>
                   <input
