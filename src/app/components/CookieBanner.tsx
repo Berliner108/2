@@ -13,10 +13,21 @@ const CookieBanner = () => {
     if (!consent) setShowBanner(true);
   }, []);
 
+  // 🔒 Scroll und Interaktion mit dem Body blocken, solange Banner offen ist
+  useEffect(() => {
+    if (!showBanner) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [showBanner]);
+
   const acceptAll = () => {
     localStorage.setItem(
       "cookieConsent",
-      JSON.stringify({ necessary: true, marketing: true })
+      JSON.stringify({ necessary: true, marketing: true }),
     );
     setShowBanner(false);
   };
@@ -24,7 +35,7 @@ const CookieBanner = () => {
   const acceptNecessary = () => {
     localStorage.setItem(
       "cookieConsent",
-      JSON.stringify({ necessary: true, marketing: false })
+      JSON.stringify({ necessary: true, marketing: false }),
     );
     setShowBanner(false);
   };
@@ -32,53 +43,43 @@ const CookieBanner = () => {
   const saveSettings = () => {
     localStorage.setItem(
       "cookieConsent",
-      JSON.stringify({ necessary: true, marketing: marketingAllowed })
+      JSON.stringify({ necessary: true, marketing: marketingAllowed }),
     );
     setShowBanner(false);
   };
 
+  if (!showBanner) return null;
+
   return (
-    showBanner && (
-      <div className={styles.banner}>
+    <div className={styles.backdrop}>
+      <div
+        className={styles.banner}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cookie-title"
+      >
         <div className={styles.text}>
-          <strong>Wir verwenden Cookies</strong>
+          <strong id="cookie-title">Wir verwenden Cookies</strong>
           <p>
-            Um unsere Plattform stabil, sicher und benutzerfreundlich betreiben zu können,
-            setzen wir Cookies und ähnliche Technologien ein. Einige sind technisch notwendig,
-            andere helfen uns, unser Angebot zu analysieren und zu verbessern.
+            Um unsere Website für dich optimal zu gestalten und fortlaufend
+            verbessern zu können, verwenden wir Cookies. Einige Cookies sind
+            technisch notwendig (z. B. für den Warenkorb), während andere uns
+            helfen, unser Onlineangebot zu verbessern und wirtschaftlich zu
+            betreiben. Du kannst selbst entscheiden, welche Kategorien du
+            zulässt.
           </p>
           <p>
-            Notwendige Cookies sorgen z.&nbsp;B. dafür, dass du eingeloggt bleibst, dein Warenkorb
-            funktioniert und Zahlungen <strong>sicher über unseren Zahlungsdienstleister</strong>{" "}
-            (z.&nbsp;B. Stripe) abgewickelt werden.
-          </p>
-          <p>
-            Optionale Cookies für <strong>Marketing &amp; Analyse</strong> nutzen wir, um
-            anonyme Statistiken zu erstellen, Reichweiten zu messen und unsere Inhalte besser
-            an die Interessen unserer Nutzer anzupassen.
-          </p>
-          <p>
-            Wir verkaufen deine Daten <strong>nicht</strong> an Dritte. Eine Weitergabe erfolgt
-            nur, wenn dies technisch erforderlich ist (z.&nbsp;B. Hosting, Zahlungsabwicklung,
-            Sicherheitsdienste) oder du ausdrücklich eingewilligt hast.
-          </p>
-          <p>
-            Deine Einwilligung in optionale Cookies speichern wir in der Regel für{" "}
-            <strong>12&nbsp;Monate</strong>. Du kannst sie jederzeit in den
-            Cookie-Einstellungen oder über deine Browsereinstellungen widerrufen. Weitere
-            Informationen findest du in unserer{" "}
-            <a href="/datenschutz" className={styles.link}>
-              Datenschutzerklärung
-            </a>
-            .
+            Zahlungsabwicklungen (z.&nbsp;B. über Stripe) und sicherheitsrelevante
+            Funktionen können ebenfalls Cookies oder ähnliche Technologien
+            einsetzen.
           </p>
         </div>
 
         {showSettings && (
           <div className={styles.settingsBox}>
             <label>
-              <input type="checkbox" checked disabled />{" "}
-              Notwendige Cookies (immer aktiv)
+              <input type="checkbox" checked disabled /> Notwendige Cookies
+              (immer aktiv)
             </label>
             <label>
               <input
@@ -86,8 +87,7 @@ const CookieBanner = () => {
                 checked={marketingAllowed}
                 onChange={(e) => setMarketingAllowed(e.target.checked)}
               />
-              Marketing &amp; Analyse-Cookies (z.&nbsp;B. Besuchsstatistiken,
-              Performance-Messung)
+              Marketing &amp; Analyse Cookies
             </label>
             <button className={styles.btnPrimary} onClick={saveSettings}>
               Auswahl speichern
@@ -110,7 +110,7 @@ const CookieBanner = () => {
           </button>
         </div>
       </div>
-    )
+    </div>
   );
 };
 
