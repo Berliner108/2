@@ -5,12 +5,13 @@ import styles from "./cookieBanner.module.css";
 
 const CONSENT_KEY = "cookieConsent";
 const CONSENT_VERSION = "1.0";
+const CONSENT_MAX_AGE_DAYS = 365; // nach 12 Monaten erneut fragen
 
 type Consent = {
   necessary: boolean;
   marketing: boolean;
   version: string;
-  date: string;
+  date: string; // ISO-String
 };
 
 const CookieBanner = () => {
@@ -30,9 +31,22 @@ const CookieBanner = () => {
       if (!parsed || parsed.version !== CONSENT_VERSION) {
         // Alte oder ungültige Version → Banner erneut anzeigen
         setShowBanner(true);
-      } else {
-        setMarketingAllowed(!!parsed.marketing);
+        return;
       }
+
+      // Alter der Einwilligung prüfen
+      const givenAt = parsed.date ? new Date(parsed.date).getTime() : 0;
+      const now = Date.now();
+      const ageDays = (now - givenAt) / (1000 * 60 * 60 * 24);
+
+      if (!givenAt || ageDays > CONSENT_MAX_AGE_DAYS) {
+        // Einwilligung zu alt → neu fragen
+        setShowBanner(true);
+        return;
+      }
+
+      // Einwilligung gültig → Marketing-Zustand übernehmen
+      setMarketingAllowed(!!parsed.marketing);
     } catch {
       // Im Zweifel neu fragen
       setShowBanner(true);
@@ -93,6 +107,13 @@ const CookieBanner = () => {
               Einwilligung ein.
             </p>
 
+            <p className={styles.description}>
+              Session-Cookies werden in der Regel beim Schließen des Browsers
+              gelöscht. Persistente Cookies und deine Cookie-Einwilligung
+              speichern wir normalerweise für maximal{" "}
+              <strong>12&nbsp;Monate</strong>; danach fragen wir dich erneut.
+            </p>
+
             <ul className={styles.pointsList}>
               <li>✔ Betrieb &amp; Sicherheit der Plattform (Login, Warenkorb, Session)</li>
               <li>✔ Zahlungsabwicklung über Stripe (verschlüsselte &amp; zertifizierte Zahlung)</li>
@@ -118,7 +139,7 @@ const CookieBanner = () => {
             </p>
 
             <p className={styles.metaLine}>
-              Rechtsgrundlage: Art. 6 Abs. 1 lit. a und f DSGVO · Stand: 11/2025
+              Rechtsgrundlage: Art. 6 Abs. 1 lit. a und f DSGVO · Speicherdauer: i. d. R. max. 12&nbsp;Monate · Stand: 11/2025
             </p>
           </div>
 
@@ -133,8 +154,8 @@ const CookieBanner = () => {
                 </div>
                 <p className={styles.settingsText}>
                   Diese Cookies sind erforderlich, damit Basisfunktionen wie
-                  Anmeldung, Warenkorb oder Sicherheitsfunktionen korrekt
-                  funktionieren.
+                  Anmeldung, Warenkorb, Sicherheitsfunktionen und die
+                  Zahlungsabwicklung über Stripe korrekt funktionieren.
                 </p>
                 <label className={styles.switchRow}>
                   <input type="checkbox" checked disabled />
