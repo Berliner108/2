@@ -636,11 +636,23 @@ const LackanfragenOrdersPage: FC = () => {
           const isCustomer = order.kind === 'vergeben'
 
           const refundDeadlineIso =
-            order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
-          const refundHint =
-            (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && refundDeadlineIso)
-              ? `Automatisches Refundieren in ${remainingText(refundDeadlineIso)}${isVendor ? ' – bitte rechtzeitig „Versandt“ melden.' : ' (kein Versand gemeldet).'}`
-              : (order.refundedAt ? `Erstattung erfolgt am ${formatDate(asDateLike(order.refundedAt))}` : '')
+  order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
+
+let refundHint = ''
+
+if (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && refundDeadlineIso) {
+  const remaining = remainingText(refundDeadlineIso)
+
+  if (remaining === 'abgelaufen') {
+    // Frist vorbei, grammatikalisch sauberer Text
+    refundHint = 'Automatisch Refundiert, da kein Versand gemeldet.'
+  } else {
+    refundHint = `Automatisches Refundieren in ${remaining}${
+      isVendor ? ' – bitte rechtzeitig „Versandt“ melden.' : ' (kein Versand gemeldet).'
+    }`
+  }
+}
+
 
           return (
             <li key={`${order.kind}-${order.orderId}`} className={`${styles.card} ${styles.cardCyan}`}>
