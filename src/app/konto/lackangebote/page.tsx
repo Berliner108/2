@@ -655,7 +655,7 @@ const LackanfragenOrdersPage: FC = () => {
                   display.key === 'offen'     ? styles.statusActive  : '',
                   display.key === 'wartet'    ? styles.statusPending : '',
                   display.key === 'reported'  ? styles.statusPending : '',
-                  display.key === 'disputed'  ? styles.statusPending : '',
+                  display.key === 'disputed'  ? styles.statusDisputed  : '', // 👈 HIER
                   display.key === 'confirmed' ? styles.statusDone    : '',
                   display.key === 'refunded' ? styles.statusRefunded : '',
 

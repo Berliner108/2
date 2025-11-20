@@ -452,6 +452,12 @@
   }
   .pageBtn:hover{ box-shadow: none; background: #fafafa; }
 }
+/* Alternative etwas kräftiger */
+.statusDisputed {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
