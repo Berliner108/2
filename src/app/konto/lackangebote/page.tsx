@@ -636,22 +636,22 @@ const LackanfragenOrdersPage: FC = () => {
           const isCustomer = order.kind === 'vergeben'
 
           const refundDeadlineIso =
-  order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
+          order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
 
-let refundHint = ''
+          let refundHint = ''
 
-if (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && refundDeadlineIso) {
-  const remaining = remainingText(refundDeadlineIso)
+          if (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && refundDeadlineIso) {
+            const remaining = remainingText(refundDeadlineIso)
 
-  if (remaining === 'abgelaufen') {
-    // Frist vorbei, grammatikalisch sauberer Text
-    refundHint = 'Automatisch Refundiert, da kein Versand gemeldet.'
-  } else {
-    refundHint = `Automatisches Refundieren in ${remaining}${
-      isVendor ? ' – bitte rechtzeitig „Versandt“ melden.' : ' (kein Versand gemeldet).'
-    }`
-  }
-}
+            if (remaining === 'abgelaufen') {
+              // Frist vorbei, grammatikalisch sauberer Text
+              refundHint = 'Automatisch refundiert, da kein Versand gemeldet.'
+            } else {
+              refundHint = `Automatisches Refundieren in ${remaining}${
+                isVendor ? ' – bitte rechtzeitig „Versandt“ melden.' : ' (kein Versand gemeldet).'
+              }`
+            }
+          }
 
 
           return (
@@ -783,7 +783,14 @@ if (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && ref
                     </a>
                   )}
 
-                  {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (
+                  {isVendor &&
+                  (order.status ?? 'in_progress') === 'in_progress' &&
+                  (() => {
+                    const deadline = order.autoRefundAt || endOfDayIso(order.lieferdatum ?? undefined)
+                    if (!deadline) return true
+                    return new Date(deadline).getTime() > Date.now()
+                  })() && (
+
                     <>
                       <button
                         type="button"
@@ -830,6 +837,14 @@ if (!order.shippedAt && (order.status ?? 'in_progress') === 'in_progress' && ref
                   {isCustomer && refundHint && !order.shippedAt && (
                     <div className={styles.btnHint}>{refundHint}</div>
                   )}
+                  {order.disputeOpenedAt && (
+                  <div className={styles.btnHint}>
+                    {isCustomer
+                      ? 'Du hast eine Reklamation ausgelöst. Die Zahlung wurde refundiert.'
+                      : 'Der Käufer hat eine Reklamation ausgelöst. Die Zahlung wurde refundiert.'}
+                  </div>
+                )}
+
 
                   {order.disputeReason && (
                     <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
