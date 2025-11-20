@@ -210,7 +210,9 @@ function getDisplayStatus(order: LackOrder): { key: StatusKey; label: string } {
   if (order.status === 'reported')  return { key: 'reported',  label: 'Versandt' }
 
   const liefer = asDateLike(order.lieferdatum)
-  if (liefer && Date.now() < +liefer) return { key: 'wartet', label: 'Anlieferung geplant' }
+  if (liefer && Date.now() < +liefer) {
+    return { key: 'wartet', label: 'Versand in Vorbereitung' }
+  }
   return { key: 'offen', label: 'Offen' }
 }
 
@@ -900,14 +902,14 @@ const LackanfragenOrdersPage: FC = () => {
             title="Nach Status filtern"
           >
             <option value="alle">Alle</option>
-            <option value="wartet">Anlieferung geplant</option>
+            <option value="wartet">Versand in Vorbereitung</option>
             <option value="offen">Offen</option>
             <option value="reported">Versandt</option>
             <option value="disputed">Reklamiert</option>
             <option value="confirmed">Geliefert (bestätigt)</option>
             <option value="refunded">Erstattet</option>
-
           </select>
+
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
             <button
