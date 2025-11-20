@@ -783,7 +783,7 @@ const LackanfragenOrdersPage: FC = () => {
 
                       {/* Neuer Hinweis nur für Verkäufer */}
                       <div className={styles.btnHint}>
-                        Bitte unbedingt den Sendungsnachweis bis zum Abschluss der Bestellung aufbewahren.
+                        Bitte halten Sie stets den Sendungsnachweis bereit.
                       </div>
 
                       {refundHint && (
