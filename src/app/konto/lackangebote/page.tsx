@@ -605,7 +605,7 @@ const LackanfragenOrdersPage: FC = () => {
   if (mins < 60) return `${mins} Min`
   const hours = Math.floor(mins / 60)
   const days = Math.floor(hours / 24)
-  return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours % 24} Std` : `${hours} Std`
+  return days >= 1 ? `${days} ${days===1?'Tag':'Tagen'} ${hours % 24} Std` : `${hours} Std`
 }
 
 
