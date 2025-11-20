@@ -597,26 +597,16 @@ const LackanfragenOrdersPage: FC = () => {
     }
   }
 
-function remainingText(iso?: string) {
+  function remainingText(iso?: string) {
   if (!iso) return '–'
   const ms = new Date(iso).getTime() - Date.now()
   if (ms <= 0) return 'abgelaufen'
-
   const mins = Math.ceil(ms / 60_000)
-
-  // unter 60 Minuten → Minuten
   if (mins < 60) return `${mins} Min`
-
   const hours = Math.floor(mins / 60)
-
-  // unter 24 Stunden → Stunden
-  if (hours < 24) return `${hours} Std`
-
-  // ab 1 Tag → nur Tage, mit richtiger Beugung
   const days = Math.floor(hours / 24)
-  return days === 1 ? '1 Tag' : `${days} Tagen`
+  return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours % 24} Std` : `${hours} Std`
 }
-
 
 
   const alreadyRated = (o: LackOrder) => !!(o.myReview || o.review)
