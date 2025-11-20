@@ -780,9 +780,20 @@ const LackanfragenOrdersPage: FC = () => {
                       >
                         Versandt melden
                       </button>
-                      {refundHint && <div className={styles.btnHint}>{refundHint}</div>}
+
+                      {/* Neuer Hinweis nur für Verkäufer */}
+                      <div className={styles.btnHint}>
+                        Bitte den Sendungsnachweis (Tracking / Einlieferungsbeleg) bis zum Abschluss der Bestellung aufbewahren.
+                      </div>
+
+                      {refundHint && (
+                        <div className={styles.btnHint}>
+                          {refundHint}
+                        </div>
+                      )}
                     </>
                   )}
+
 
                   {isCustomer && order.status === 'reported' && (
                     <>
