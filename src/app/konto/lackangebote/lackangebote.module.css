@@ -802,24 +802,20 @@
   }
 }
 .statusRefunded { background:#eef2ff; color:#3730a3; border-color:#c7d2fe; }
-.disputeNote {
-  margin-top: 4px;
-  max-width: 320px;        /* nimmt nicht die ganze Kartenbreite ein */
-  font-size: 11px;
-  line-height: 1.4;
-  color: #666666;
+/* Spezieller grüner Gradient-Button nur für "Empfang bestätigen..." */
+.ctaConfirm {
+  background: linear-gradient(90deg, #1ba64a, #35c96a);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
-.disputeNoteLabel {
-  font-weight: 600;
-  text-transform: uppercase;
-  margin-right: 4px;
-  font-size: 10px;
+.ctaConfirm:hover {
+  background: linear-gradient(90deg, #169242, #2fb25f);
+  transform: translateY(-1px);
 }
 
-.disputeNoteText {
-  display: inline;
-}
-.sideCol .disputeNote {
-  align-self: flex-start;
+.ctaConfirm:active {
+  background: linear-gradient(90deg, #127b38, #27944f);
+  transform: translateY(0);
 }
