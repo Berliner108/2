@@ -830,6 +830,13 @@ const LackanfragenOrdersPage: FC = () => {
                       >
                         Problem melden
                       </button>
+                      {/* Hinweis zu Reklamation / Pflichten */}
+                    <div className={styles.btnHint}>
+                      Geschäftskunden bitte nur reklamieren, wenn die vereinbarte Leistung nicht erbracht
+                      oder mangelhaft ist. Privatkunden können im Rahmen der gesetzlichen Bestimmungen
+                      reklamieren. Rückversand bitte mit dem Anbieter abstimmen und Versandnachweise
+                      aufbewahren.
+                    </div>
                       <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
                     </>
                   )}
