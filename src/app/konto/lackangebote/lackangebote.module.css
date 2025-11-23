@@ -819,3 +819,69 @@
   background: linear-gradient(90deg, #127b38, #27944f);
   transform: translateY(0);
 }
+.disputeNote {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* kleines runder ?-Button */
+.disputeHintIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: #ffffff;
+  color: #444;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Tooltip-Bubble */
+.disputeHintBubble {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  max-width: 280px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  background: #ffffff;
+  color: #333333;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 5;
+}
+
+/* kleiner Pfeil unter der Bubble */
+.disputeHintBubble::before {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* anzeigen bei Hover / Fokus */
+.disputeNote:hover .disputeHintBubble,
+.disputeNote:focus-within .disputeHintBubble {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
