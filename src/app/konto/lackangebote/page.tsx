@@ -815,31 +815,39 @@ const LackanfragenOrdersPage: FC = () => {
 
 
                   {isCustomer && order.status === 'reported' && (
-                    <>
-                      <button
-                        type="button"
-                        className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-                        onClick={() => doRelease(order)}
-                      >
-                        Empfang bestätigen & Zahlung freigeben
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                        onClick={() => openDispute(order)}
-                      >
-                        Problem melden
-                      </button>
-                      {/* Hinweis zu Reklamation / Pflichten */}
-                    <div className={styles.btnHint}>
-                      Geschäftskunden bitte nur reklamieren, wenn die vereinbarte Leistung nicht erbracht
-                      oder mangelhaft ist. Privatkunden können im Rahmen der gesetzlichen Bestimmungen
-                      reklamieren. Rückversand bitte mit dem Anbieter abstimmen und Versandnachweise
-                      aufbewahren.
-                    </div>
-                      <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
-                    </>
-                  )}
+  <>
+    <button
+      type="button"
+      className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+      onClick={() => doRelease(order)}
+    >
+      Empfang bestätigen & Zahlung freigeben
+    </button>
+
+    <button
+      type="button"
+      className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+      onClick={() => openDispute(order)}
+    >
+      Problem melden
+    </button>
+
+    {/* Kompakter Hinweis unterhalb des Reklamations-Buttons */}
+    <div className={styles.disputeNote}>
+      <span className={styles.disputeNoteLabel}>Hinweis:</span>
+      <span className={styles.disputeNoteText}>
+        Geschäftskunden: bitte nur reklamieren, wenn die vereinbarte Leistung nicht erbracht
+        oder mangelhaft ist. Privatkunden: Reklamation im Rahmen der gesetzlichen Bestimmungen.
+        Rückversand mit dem Anbieter abstimmen und Versandnachweise aufbewahren.
+      </span>
+    </div>
+
+    <div className={styles.btnHint}>
+      Auto-Freigabe in {remainingText(order.autoReleaseAt)}
+    </div>
+  </>
+)}
+
 
                   {isCustomer && refundHint && !order.shippedAt && (
                     <div className={styles.btnHint}>{refundHint}</div>
