@@ -268,9 +268,6 @@ const LackanfragenOrdersPage: FC = () => {
 
   const [orders, setOrders] = useState<LackOrder[]>([])
   const [shipOrder, setShipOrder] = useState<LackOrder | null>(null)
-  // Reklamations-Hinweis (Tooltip) offen?
-const [openHintOrderId, setOpenHintOrderId] = useState<string | null>(null)
-
 
   // 👉 Beim Öffnen diese Seite: Events als „gesehen“ markieren (verhindert Altlasten)
   useEffect(() => {
@@ -827,8 +824,8 @@ const [openHintOrderId, setOpenHintOrderId] = useState<string | null>(null)
       Empfang bestätigen & Zahlung freigeben
     </button>
 
-    {/* Problem melden + Fragezeichen rechts daneben */}
-    <div className={styles.disputeRow}>
+    {/* Problem melden + ?-Bubble direkt daneben */}
+    <div className={styles.disputeInfoWrapper}>
       <button
         type="button"
         className={`${styles.ctaBtn} ${styles.ctaGhost}`}
@@ -837,36 +834,19 @@ const [openHintOrderId, setOpenHintOrderId] = useState<string | null>(null)
         Problem melden
       </button>
 
-      <div className={styles.disputeNote}>
-        {(() => {
-          const isHintOpen = openHintOrderId === order.orderId
-          return (
-            <>
-              <button
-                type="button"
-                className={styles.disputeHintIcon}
-                aria-label="Hinweis zur Reklamation anzeigen"
-                onClick={() =>
-                  setOpenHintOrderId(isHintOpen ? null : order.orderId)
-                }
-              >
-                ?
-              </button>
-              <div
-                className={`${styles.disputeHintBubble} ${
-                  isHintOpen ? styles.disputeHintBubbleOpen : ''
-                }`}
-                role="note"
-              >
-                <strong>Geschäftskunden:</strong> bitte nur reklamieren, wenn die
-                vereinbarte Leistung nicht erbracht oder mangelhaft ist.{' '}
-                <strong>Privatkunden:</strong> können im Rahmen der gesetzlichen
-                Bestimmungen reklamieren. Rückversand bitte mit dem Anbieter
-                abstimmen und Versandnachweise aufbewahren.
-              </div>
-            </>
-          )
-        })()}
+      <button
+        type="button"
+        className={styles.disputeInfoIcon}
+        aria-label="Hinweis zur Reklamation"
+      >
+        ?
+      </button>
+
+      <div className={styles.disputeInfoBubble}>
+        Geschäftskunden bitte nur reklamieren, wenn die vereinbarte Leistung nicht
+        erbracht oder mangelhaft ist. Privatkunden können im Rahmen der gesetzlichen
+        Bestimmungen reklamieren. Rückversand bitte mit dem Anbieter abstimmen und
+        Versandnachweise aufbewahren.
       </div>
     </div>
 

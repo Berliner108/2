@@ -819,75 +819,54 @@
   background: linear-gradient(90deg, #127b38, #27944f);
   transform: translateY(0);
 }
-/* Zeile: Problem melden + ?-Icon nebeneinander */
-.disputeRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-/* Container für Icon + Bubble */
-.disputeNote {
+.disputeInfoWrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
 }
 
-/* kleines ?-Icon */
-.disputeHintIcon {
+.disputeInfoIcon {
+  border: none;
+  background: #111827;
+  color: #f9fafb;
+  border-radius: 999px;
   width: 22px;
   height: 22px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background: #ffffff;
-  color: #444;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.85rem;
   cursor: pointer;
   padding: 0;
 }
 
-/* Tooltip-Bubble */
-.disputeHintBubble {
+/* Bubble hängt unter dem ? und geht nach links auf */
+.disputeInfoBubble {
   position: absolute;
-  right: 0;
-  top: 120%;
-  max-width: 280px;
-  padding: 8px 10px;
-  font-size: 11px;
+  top: calc(100% + 8px);     /* unter dem ? */
+  right: 0;                  /* an rechter Kante ausrichten */
+  left: auto;
+  z-index: 50;
+
+  min-width: 260px;                  /* breiter als Button */
+  max-width: min(360px, 80vw);
+
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.9rem;
   line-height: 1.4;
-  background: #ffffff;
-  color: #333333;
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  white-space: normal;
+  box-sizing: border-box;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  z-index: 5;
 }
 
-.disputeHintBubble::before {
-  content: "";
-  position: absolute;
-  right: 12px;
-  top: -6px;
-  width: 10px;
-  height: 10px;
-  background: #ffffff;
-  transform: rotate(45deg);
-  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.06);
-}
-
-/* anzeigen bei Hover / Fokus */
-.disputeNote:hover .disputeHintBubble,
-.disputeNote:focus-within .disputeHintBubble {
+/* Ein-/Ausblenden bei Hover */
+.disputeInfoWrapper:hover .disputeInfoBubble {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(0);
 }
