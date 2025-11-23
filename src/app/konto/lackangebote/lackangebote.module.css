@@ -819,15 +819,22 @@
   background: linear-gradient(90deg, #127b38, #27944f);
   transform: translateY(0);
 }
+/* Zeile: Problem melden + ?-Icon nebeneinander */
+.disputeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Container für Icon + Bubble */
 .disputeNote {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 6px;
 }
 
-/* kleines runder ?-Button */
+/* kleines ?-Icon */
 .disputeHintIcon {
   width: 22px;
   height: 22px;
@@ -865,7 +872,6 @@
   z-index: 5;
 }
 
-/* kleiner Pfeil unter der Bubble */
 .disputeHintBubble::before {
   content: "";
   position: absolute;

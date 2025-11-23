@@ -815,41 +815,49 @@ const LackanfragenOrdersPage: FC = () => {
 
 
                   {isCustomer && order.status === 'reported' && (
-                    <>
-                      <button
-                        type="button"
-                        className={`${styles.ctaBtn} ${styles.ctaConfirm}`}
-                        onClick={() => doRelease(order)}
-                      >
-                        Empfang bestätigen & Zahlung freigeben
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                        onClick={() => openDispute(order)}
-                      >
-                        Problem melden
-                      </button>
-                     {/* HINWEIS HINTER FRAGEZEICHEN */}
-    <div className={styles.disputeNote}>
+  <>
+    <button
+      type="button"
+      className={`${styles.ctaBtn} ${styles.ctaConfirm}`}
+      onClick={() => doRelease(order)}
+    >
+      Empfang bestätigen & Zahlung freigeben
+    </button>
+
+    {/* Problem melden + Hinweis in einer Zeile */}
+    <div className={styles.disputeRow}>
       <button
         type="button"
-        className={styles.disputeHintIcon}
-        aria-label="Hinweis zur Reklamation anzeigen"
+        className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+        onClick={() => openDispute(order)}
       >
-        ?
+        Problem melden
       </button>
-      <div className={styles.disputeHintBubble} role="note">
-        <strong>Geschäftskunden:</strong> bitte nur reklamieren, wenn die vereinbarte
-        Leistung nicht erbracht oder mangelhaft ist.{' '}
-        <strong>Privatkunden:</strong> Reklamation im Rahmen der gesetzlichen
-        Bestimmungen. Rückversand mit dem Anbieter abstimmen und
-        Versandnachweise aufbewahren.
+
+      <div className={styles.disputeNote}>
+        <button
+          type="button"
+          className={styles.disputeHintIcon}
+          aria-label="Hinweis zur Reklamation anzeigen"
+        >
+          ?
+        </button>
+        <div className={styles.disputeHintBubble} role="note">
+          <strong>Geschäftskunden:</strong> bitte nur reklamieren, wenn die vereinbarte
+          Leistung nicht erbracht oder mangelhaft ist.{' '}
+          <strong>Privatkunden:</strong> können im Rahmen der gesetzlichen Bestimmungen
+          reklamieren. Rückversand bitte mit dem Anbieter abstimmen und
+          Versandnachweise aufbewahren.
+        </div>
       </div>
     </div>
-                      <div className={styles.btnHint}>Auto-Freigabe in {remainingText(order.autoReleaseAt)}</div>
-                    </>
-                  )}
+
+    <div className={styles.btnHint}>
+      Auto-Freigabe in {remainingText(order.autoReleaseAt)}
+    </div>
+  </>
+)}
+
 
                   {isCustomer && refundHint && !order.shippedAt && (
                     <div className={styles.btnHint}>{refundHint}</div>
