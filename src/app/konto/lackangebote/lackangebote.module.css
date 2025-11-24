@@ -500,6 +500,9 @@
   font: inherit;
   resize: vertical;
   box-sizing: border-box; /* wichtig */
+ /* ⬇️ neu / geändert */
+  resize: none;      /* nicht mehr vom User ziehbar */
+  height: 140px;     /* fixe Höhe, nach Geschmack anpassen */
 }
 
 /* Zähler optisch rechts, dezent */
