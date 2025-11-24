@@ -371,9 +371,11 @@
   position: relative;
   width: 100%;
 }
+
 .passwordField input {
-  width: 95%;
+  /* WICHTIG: keine eigene width hier setzen */
   padding-right: 40px; /* Platz für das Auge */
+  box-sizing: border-box; /* damit Padding nichts über den Rand drückt */
 }
 .eyeIcon {
   position: absolute;
