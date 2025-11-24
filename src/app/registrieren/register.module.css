@@ -424,3 +424,7 @@
   justify-content: center;
   line-height: 0;
 }
+/* nur das Länder-Dropdown voll breit machen */
+.inputContainer select[name="country"] {
+  width: 100%;
+}
