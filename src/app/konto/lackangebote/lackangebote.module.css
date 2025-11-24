@@ -849,7 +849,7 @@
   z-index: 50;
 
   /* etwas schmaler als vorher */
-  min-width: 200px;
+  min-width: 300px;
   max-width: min(280px, 80vw);
 
   padding: 6px 8px;          /* weniger Padding */
