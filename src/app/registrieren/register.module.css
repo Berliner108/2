@@ -170,7 +170,7 @@
   font-family: 'Oswald';
 }
 
-.registerForm button {
+.registerForm button[type="submit"] {
   width: 60%;
   padding: 12px;
   background-color: #00b5d8;
@@ -184,7 +184,7 @@
   font-family: 'Oswald';
 }
 
-.registerForm button:hover {
+.registerForm button[type="submit"]:hover {
   background-color: #00e5ff;
 }
 /* --- schlanke Erfolgs-Meldung --- */
