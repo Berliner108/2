@@ -426,5 +426,5 @@
 }
 /* nur das Länder-Dropdown voll breit machen */
 .inputContainer select[name="country"] {
-  width: 100%;
+  width: 120%;
 }
