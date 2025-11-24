@@ -850,7 +850,7 @@
   z-index: 50;
 
   /* kleiner & kompakter */
-  min-width: 220px;
+  min-width: 320px;
   max-width: min(300px, 80vw);
   max-height: 120px;          /* <- Höhe begrenzen */
   overflow-y: auto;           /* <- bei Bedarf Scrollbar */
