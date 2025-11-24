@@ -168,7 +168,35 @@
   font-size: 16px;
   margin-bottom: 5px;
   font-family: 'Oswald';
+  box-sizing: border-box;
 }
+
+/* Wrapper für Passwort + Icon */
+.passwordField {
+  position: relative;
+  width: 100%;
+}
+
+/* Input bekommt rechts Platz für das Auge */
+.passwordInput {
+  padding-right: 40px;
+}
+
+/* Auge sitzt im Feld rechts innen */
+.eyeIcon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 .registerForm button {
   width: 60%;
@@ -338,7 +366,7 @@
 }
 
 .inputContainer input {
-  width: 90%;
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
