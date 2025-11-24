@@ -10,14 +10,13 @@ import { supabaseBrowser } from '@/lib/supabase-browser';
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <button
     type="button"
-    className={styles.eyeIcon}
+    className={styles.eyeIconBtn}
     onClick={onClick}
     aria-label={visible ? 'Passwort verbergen' : 'Passwort anzeigen'}
   >
     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
   </button>
 );
-
 
 /** ✨ Nur interne Redirects zulassen (verhindert Open-Redirects) */
 function safeRedirect(input: string | undefined | null): string {
@@ -442,7 +441,6 @@ const Register = () => {
   <label>Passwort</label>
   <div className={styles.passwordField}>
     <input
-      className={styles.passwordInput}
       type={showPassword ? 'text' : 'password'}
       name="password"
       value={formData.password}
@@ -455,9 +453,11 @@ const Register = () => {
     />
     <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
   </div>
+
   <p className={styles.hint} style={{ marginTop: 6 }}>
     {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
   </p>
+
   {errors.password && <p className={styles.error}>{errors.password}</p>}
 </div>
 
@@ -467,7 +467,6 @@ const Register = () => {
   <label>Passwort bestätigen</label>
   <div className={styles.passwordField}>
     <input
-      className={styles.passwordInput}
       type={showConfirmPassword ? 'text' : 'password'}
       name="confirmPassword"
       value={formData.confirmPassword}
