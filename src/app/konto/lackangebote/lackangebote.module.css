@@ -736,7 +736,7 @@
   .starBtn   { font-size: 20px; }
 
   .reviewBox{
-    min-height: 240px;
+    min-height: 230px;
     max-height: 60vh;
     overflow: auto;
     box-sizing: border-box;
