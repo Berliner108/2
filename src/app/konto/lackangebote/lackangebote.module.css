@@ -845,25 +845,29 @@
 .disputeInfoBubble {
   position: absolute;
   top: calc(100% + 8px);     /* unter dem ? */
-  right: 0;                  /* an rechter Kante ausrichten */
+  right: 0;
   left: auto;
   z-index: 50;
 
-  min-width: 260px;                  /* breiter als Button */
-  max-width: min(360px, 80vw);
+  /* kleiner & kompakter */
+  min-width: 220px;
+  max-width: min(300px, 80vw);
+  max-height: 120px;          /* <- Höhe begrenzen */
+  overflow-y: auto;           /* <- bei Bedarf Scrollbar */
 
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   background: #111827;
   color: #f9fafb;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.85rem;         /* etwas kleiner */
+  line-height: 1.35;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
   white-space: normal;
   box-sizing: border-box;
   opacity: 0;
   pointer-events: none;
 }
+
 
 /* Ein-/Ausblenden bei Hover */
 .disputeInfoWrapper:hover .disputeInfoBubble {
