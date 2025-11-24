@@ -845,7 +845,7 @@ const LackanfragenOrdersPage: FC = () => {
       <div className={styles.disputeInfoBubble}>
         Geschäftskunden bitte nur reklamieren, wenn die vereinbarte Leistung nicht
         erbracht oder mangelhaft ist. Privatkunden können im Rahmen der gesetzlichen
-        Bestimmungen reklamieren. Rückversand bitte mit dem Anbieter abstimmen und
+        Bestimmungen reklamieren. Rückversand bitte über die Chatfunktion mit dem Anbieter abstimmen und
         Versandnachweise aufbewahren.
       </div>
     </div>
