@@ -91,10 +91,12 @@
   font-size: 14px;
   word-break: break-word;
 }
+
 .confirmBox a {
   color: #00b5d8;
   text-decoration: underline;
 }
+
 .sliderContainer {
   position: relative;
   width: 100%;
@@ -116,6 +118,7 @@
   border-radius: 25px;
   transition: all 0.3s ease;
 }
+
 .sliderLabelLeft {
   position: absolute;
   left: 10px;
@@ -125,6 +128,7 @@
   font-size: 14px;
   font-weight: bold;
 }
+
 .sliderLabelRight {
   position: absolute;
   right: 10px;
@@ -134,6 +138,7 @@
   font-size: 14px;
   font-weight: bold;
 }
+
 .inputContainer label {
   display: block;
   margin-bottom: 5px;
@@ -150,6 +155,7 @@
   margin-bottom: 5px;
   font-family: 'Oswald';
 }
+
 .registerForm button[type="submit"] {
   width: 60%;
   padding: 12px;
@@ -163,6 +169,7 @@
   margin-top: 10px;
   font-family: 'Oswald';
 }
+
 .registerForm button[type="submit"]:hover {
   background-color: #00e5ff;
 }
@@ -179,6 +186,7 @@
   margin-top: 14px;
   font-size: 14px;
 }
+
 .successIcon {
   color: #10b981;                    /* green-500 */
   line-height: 0;
@@ -199,6 +207,7 @@
 @media (prefers-reduced-motion: reduce) {
   .successIcon { animation: none; }
 }
+
 .spinner {
   border: 3px solid #e0e0e0;
   border-top: 3px solid #00b5d8;
@@ -257,6 +266,7 @@
   margin-bottom: 5px;
   font-family: 'Oswald';
 }
+
   .sliderContainer {
     width: 80%;    
   }
@@ -366,56 +376,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .linkButton { transition: none; }
-}
-.passwordField {
-  position: relative;
-  width: 100%;
-}
-
-.passwordField input {
-  /* WICHTIG: keine eigene width hier setzen */
-  padding-right: 40px; /* Platz für das Auge */
-  box-sizing: border-box; /* damit Padding nichts über den Rand drückt */
-}
-.eyeIcon {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
-}
-/* Gemeinsame Zeilenbreite für ALLE Felder im Formular */
-.registerForm > .inputContainer,
-.registerForm > .inputRow {
-  width: 100%;
-  max-width: 640px;   /* hier stellst du deine Wunschbreite ein */
-}
-
-/* Formular-Inhalte links statt zentriert */
-.registerForm {
-  align-items: flex-start;
-}
-
-/* In mehrspaltigen Reihen dürfen die Container wieder voll in der Row mitlaufen */
-.inputRow .inputContainer {
-  width: 100%;
-}
-
-/* Passwort-Felder: nur Padding fürs Auge, keine eigene Breite */
-.passwordField {
-  width: 100%;
-}
-
-.passwordField input {
-  width: 100%;
-  padding-right: 40px;
-  box-sizing: border-box;
 }
