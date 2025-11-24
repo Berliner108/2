@@ -412,3 +412,29 @@
 @media (prefers-reduced-motion: reduce) {
   .linkButton { transition: none; }
 }
+.passwordField {
+  position: relative;
+  width: 100%;
+}
+
+.passwordField input {
+  width: 100%;
+  padding-right: 40px; /* Platz für das Auge */
+  box-sizing: border-box;
+}
+
+.eyeIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}

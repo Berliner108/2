@@ -8,10 +8,16 @@ import { Eye, EyeOff, Check } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
-  <div onClick={onClick} style={{ position: 'absolute', right: '0px', top: '38px', cursor: 'pointer' }}>
+  <button
+    type="button"
+    className={styles.eyeIcon}
+    onClick={onClick}
+    aria-label={visible ? 'Passwort verbergen' : 'Passwort anzeigen'}
+  >
     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
-  </div>
+  </button>
 );
+
 
 /** ✨ Nur interne Redirects zulassen (verhindert Open-Redirects) */
 function safeRedirect(input: string | undefined | null): string {
@@ -432,47 +438,53 @@ const Register = () => {
             {errors.username && <p className={styles.error}>{errors.username}</p>}
           </div>
 
-          <div className={styles.inputContainer} style={{ position: 'relative' }}>
-            <label>Passwort</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              autoComplete="new-password"
-              minLength={MIN_PW}
-              maxLength={MAX_PW}
-              aria-describedby="pw-hint"
-            />
-            <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
-              {/* 🔙 Sichtbare Regeln */}
-            <p className={styles.hint} style={{ marginTop: 6 }}>
-              {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
-            </p>
+          <div className={styles.inputContainer}>
+  <label>Passwort</label>
+  <div className={styles.passwordField}>
+    <input
+      type={showPassword ? 'text' : 'password'}
+      name="password"
+      value={formData.password}
+      onChange={handleInputChange}
+      required
+      autoComplete="new-password"
+      minLength={MIN_PW}
+      maxLength={MAX_PW}
+      aria-describedby="pw-hint"
+    />
+    <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
+  </div>
 
-            {errors.password && <p className={styles.error}>{errors.password}</p>}
-          </div>
+  <p className={styles.hint} style={{ marginTop: 6 }}>
+    {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
+  </p>
+
+  {errors.password && <p className={styles.error}>{errors.password}</p>}
+</div>
+
           
 
-          <div className={styles.inputContainer} style={{ position: 'relative' }}>
-            <label>Passwort bestätigen</label>
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              minLength={MIN_PW}
-              maxLength={MAX_PW}
-              autoComplete="new-password"
-            />
-            <EyeIcon
-              visible={showConfirmPassword}
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            />
-            {errors.confirmPassword && <p className={styles.error}>{errors.confirmPassword}</p>}
-          </div>
+         <div className={styles.inputContainer}>
+  <label>Passwort bestätigen</label>
+  <div className={styles.passwordField}>
+    <input
+      type={showConfirmPassword ? 'text' : 'password'}
+      name="confirmPassword"
+      value={formData.confirmPassword}
+      onChange={handleInputChange}
+      required
+      minLength={MIN_PW}
+      maxLength={MAX_PW}
+      autoComplete="new-password"
+    />
+    <EyeIcon
+      visible={showConfirmPassword}
+      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+    />
+  </div>
+  {errors.confirmPassword && <p className={styles.error}>{errors.confirmPassword}</p>}
+</div>
+
 
           <div className={styles.inputRow}>
             <div className={styles.inputContainer}>
