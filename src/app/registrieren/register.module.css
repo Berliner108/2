@@ -161,7 +161,7 @@
 }
 
 .inputContainer input {
-  width: 90%;
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -170,7 +170,7 @@
   font-family: 'Oswald';
 }
 
-.registerForm button[type="submit"] {
+.registerForm button {
   width: 60%;
   padding: 12px;
   background-color: #00b5d8;
@@ -184,7 +184,7 @@
   font-family: 'Oswald';
 }
 
-.registerForm button[type="submit"]:hover {
+.registerForm button:hover {
   background-color: #00e5ff;
 }
 /* --- schlanke Erfolgs-Meldung --- */
@@ -411,30 +411,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .linkButton { transition: none; }
-}
-.passwordField {
-  position: relative;
-  width: 100%;
-}
-
-.passwordField input {
-  width: 100%;
-  padding-right: 40px; /* Platz fürs Auge */
-  box-sizing: border-box;
-}
-
-.eyeIconBtn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
 }
