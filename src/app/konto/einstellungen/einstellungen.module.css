@@ -539,3 +539,14 @@
   outline: 3px solid rgba(0,180,216,.35);
   outline-offset: 2px;
 }
+.eyeIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
