@@ -392,3 +392,30 @@
   justify-content: center;
   line-height: 0;
 }
+/* Gemeinsame Zeilenbreite für ALLE Felder im Formular */
+.registerForm > .inputContainer,
+.registerForm > .inputRow {
+  width: 100%;
+  max-width: 640px;   /* hier stellst du deine Wunschbreite ein */
+}
+
+/* Formular-Inhalte links statt zentriert */
+.registerForm {
+  align-items: flex-start;
+}
+
+/* In mehrspaltigen Reihen dürfen die Container wieder voll in der Row mitlaufen */
+.inputRow .inputContainer {
+  width: 100%;
+}
+
+/* Passwort-Felder: nur Padding fürs Auge, keine eigene Breite */
+.passwordField {
+  width: 100%;
+}
+
+.passwordField input {
+  width: 100%;
+  padding-right: 40px;
+  box-sizing: border-box;
+}
