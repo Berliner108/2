@@ -432,62 +432,47 @@ const Register = () => {
             {errors.username && <p className={styles.error}>{errors.username}</p>}
           </div>
 
-          <div className={styles.inputContainer}>
-  <label>Passwort</label>
-  <div className={styles.passwordField}>
-    <input
-      type={showPassword ? 'text' : 'password'}
-      name="password"
-      value={formData.password}
-      onChange={handleInputChange}
-      required
-      autoComplete="new-password"
-      minLength={MIN_PW}
-      maxLength={MAX_PW}
-      aria-describedby="pw-hint"
-    />
-    <span
-      className={styles.eyeIcon}
-      onClick={() => setShowPassword(!showPassword)}
-      role="button"
-      aria-label="Passwort anzeigen/verbergen"
-      tabIndex={0}
-    >
-      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-    </span>
-  </div>
-  <p className={styles.hint} style={{ marginTop: 6 }}>
-    {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
-  </p>
-  {errors.password && <p className={styles.error}>{errors.password}</p>}
-</div>
+          <div className={styles.inputContainer} style={{ position: 'relative' }}>
+            <label>Passwort</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              autoComplete="new-password"
+              minLength={MIN_PW}
+              maxLength={MAX_PW}
+              aria-describedby="pw-hint"
+            />
+            <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
+              {/* 🔙 Sichtbare Regeln */}
+            <p className={styles.hint} style={{ marginTop: 6 }}>
+              {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
+            </p>
 
-<div className={styles.inputContainer}>
-  <label>Passwort bestätigen</label>
-  <div className={styles.passwordField}>
-    <input
-      type={showConfirmPassword ? 'text' : 'password'}
-      name="confirmPassword"
-      value={formData.confirmPassword}
-      onChange={handleInputChange}
-      required
-      minLength={MIN_PW}
-      maxLength={MAX_PW}
-      autoComplete="new-password"
-    />
-    <span
-      className={styles.eyeIcon}
-      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-      role="button"
-      aria-label="Passwort anzeigen/verbergen"
-      tabIndex={0}
-    >
-      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-    </span>
-  </div>
-  {errors.confirmPassword && <p className={styles.error}>{errors.confirmPassword}</p>}
-</div>
+            {errors.password && <p className={styles.error}>{errors.password}</p>}
+          </div>
+          
 
+          <div className={styles.inputContainer} style={{ position: 'relative' }}>
+            <label>Passwort bestätigen</label>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              required
+              minLength={MIN_PW}
+              maxLength={MAX_PW}
+              autoComplete="new-password"
+            />
+            <EyeIcon
+              visible={showConfirmPassword}
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            />
+            {errors.confirmPassword && <p className={styles.error}>{errors.confirmPassword}</p>}
+          </div>
 
           <div className={styles.inputRow}>
             <div className={styles.inputContainer}>
