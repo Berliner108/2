@@ -473,3 +473,16 @@
   line-height: 1.4;
   margin-top: 2px;      /* kannst dann das inline-style entfernen */
 }
+/* Nur das Länderdropdown breiter machen */
+.countrySelect {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;   /* Breite inkl. Rahmen, damit es bündig ist */
+}
+
+/* Mobil: genauso breit wie die anderen gestapelten Felder */
+@media (max-width: 1100px) {
+  .countrySelect {
+    width: 90%;            /* wie deine anderen Inputs im Mobile-Block */
+  }
+}
