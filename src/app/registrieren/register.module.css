@@ -416,3 +416,10 @@
   line-height: 0;
 
   }}
+
+  .hint {
+  font-size: 8px;      /* oder 11px, wie du magst */
+  color: #555;          /* etwas heller als normaler Text */
+  line-height: 1.4;
+  margin-top: 6px;      /* kannst dann das inline-style entfernen */
+}

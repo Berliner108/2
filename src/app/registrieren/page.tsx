@@ -455,7 +455,7 @@ const Register = () => {
     <EyeIcon visible={showPassword} onClick={() => setShowPassword(!showPassword)} />
   </div>
 
-  <p className={styles.hint} style={{ marginTop: 6 }}>
+  <p className={styles.hint}>
     {MIN_PW}–{MAX_PW} Zeichen. Empfehlung: 12+ Zeichen (Passphrase). Alle Zeichen erlaubt.
   </p>
 
