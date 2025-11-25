@@ -555,18 +555,18 @@ const Register = () => {
               <div className={styles.inputContainer}>
                 <label>Land</label>
                 <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  required
-                  className={`${styles.select} ${styles.countrySelect}`}   // <— NEU
-                >
-                  {COUNTRY_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                required
+                className={`${styles.select} ${styles.countrySelect}`}   // <— NEU
+              >
+                {COUNTRY_OPTIONS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
 
                 {errors.country && <p className={styles.error}>{errors.country}</p>}
               </div>
@@ -607,19 +607,18 @@ const Register = () => {
               <div className={styles.inputContainer}>
                 <label>Land</label>
                 <select
-  name="country"
-  value={formData.country}
-  onChange={handleInputChange}
-  required
-  className={`${styles.select} ${styles.countrySelect}`}   // <— NEU
->
-  {COUNTRY_OPTIONS.map((c) => (
-    <option key={c.value} value={c.value}>
-      {c.label}
-    </option>
-  ))}
-</select>
-
+                  name="country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                  required
+                  className={styles.select}
+                >
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
                 {errors.country && <p className={styles.error}>{errors.country}</p>}
               </div>
             </>
