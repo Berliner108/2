@@ -385,7 +385,7 @@
 .passwordField input {
   /* WICHTIG: keine eigene width setzen!
      Die 100%/90% kommen weiter oben aus .inputContainer input */
-  padding-left: -2px;      /* Platz für das Auge im Feld */
+  padding-left: -8px;      /* Platz für das Auge im Feld */
 }
 
 .eyeIcon {
