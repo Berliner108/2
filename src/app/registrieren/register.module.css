@@ -377,3 +377,30 @@
 @media (prefers-reduced-motion: reduce) {
   .linkButton { transition: none; }
 }
+.passwordField {
+  position: relative;
+  width: 100%;              /* genauso breit wie die anderen Felder */
+}
+
+.passwordField input {
+  /* WICHTIG: keine eigene width setzen!
+     Die 100%/90% kommen weiter oben aus .inputContainer input */
+  padding-right: 40px;      /* Platz für das Auge im Feld */
+  box-sizing: border-box;   /* damit das Padding nicht über den Rand drückt */
+}
+
+.eyeIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);  /* vertikal zentrieren */
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
