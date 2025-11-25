@@ -385,12 +385,12 @@
 .passwordField input {
   /* WICHTIG: keine eigene width setzen!
      Die 100%/90% kommen weiter oben aus .inputContainer input */
-  padding-left: -8px;      /* Platz für das Auge im Feld */
+  padding-right: 40px;      /* Platz für das Auge im Feld */
 }
 
 .eyeIcon {
   position: absolute;
-  right: -10px;
+  right: 40px;
   top: 50%;
   transform: translateY(-50%);  /* vertikal zentrieren */
   border: none;
