@@ -378,14 +378,14 @@
   .linkButton { transition: none; }
 }
 .passwordField {
-  position: relative;             /* genauso breit wie die anderen Felder */
+  position: relative;
+  width: 100%;              /* genauso breit wie die anderen Felder */
 }
 
 .passwordField input {
   /* WICHTIG: keine eigene width setzen!
      Die 100%/90% kommen weiter oben aus .inputContainer input */
   padding-right: 40px;      /* Platz für das Auge im Feld */
-  box-sizing: border-box;   /* damit das Padding nicht über den Rand drückt */
 }
 
 .eyeIcon {
