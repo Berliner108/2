@@ -419,7 +419,7 @@
   @media (min-width: 530px) and (max-width: 759px) {
   .eyeIcon {
   position: absolute;
-  right: 75px;
+  right: 55px;
   top: 50%;
   transform: translateY(-50%);  /* vertikal zentrieren */
   border: none;
