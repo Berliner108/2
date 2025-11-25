@@ -378,8 +378,7 @@
   .linkButton { transition: none; }
 }
 .passwordField {
-  position: relative;
-  width: 100%;              /* genauso breit wie die anderen Felder */
+  position: relative;             /* genauso breit wie die anderen Felder */
 }
 
 .passwordField input {
