@@ -416,9 +416,26 @@
   line-height: 0;
 
   }}
+  @media (min-width: 530px) and (max-width: 759px) {
+  .eyeIcon {
+  position: absolute;
+  right: 75px;
+  top: 50%;
+  transform: translateY(-50%);  /* vertikal zentrieren */
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+
+  }}
 
   .hint {
-  font-size: 11px;      /* oder 11px, wie du magst */
+  font-size: 13px;      /* oder 11px, wie du magst */
   color: #555;          /* etwas heller als normaler Text */
   line-height: 1.4;
   margin-top: 2px;      /* kannst dann das inline-style entfernen */
