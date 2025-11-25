@@ -219,17 +219,12 @@
   vertical-align: middle;
   margin-left: 8px;
 }
-.inputContainer input,
 .inputContainer select,
 .select {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-
-  display: block;
   width: 100%;
-  box-sizing: border-box;
-
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -237,13 +232,11 @@
   margin-bottom: 5px;
   background-color: #fff;
   font-family: 'Oswald';
-
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 14px 14px;
   cursor: pointer;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -265,7 +258,7 @@
     width: 90%;
   }
   .inputContainer select {
-  width: 90%;
+  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
