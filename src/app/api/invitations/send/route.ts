@@ -15,12 +15,35 @@ function normalizeEmails(input: unknown): string[] {
     .slice(0, 20)
 }
 
+function mapInviteError(msg?: string) {
+  const m = (msg || '').toLowerCase()
+
+  if (/already been registered/.test(m)) {
+    return {
+      code: 'already_registered',
+      message: 'Diese E-Mail-Adresse ist bereits registriert.',
+    }
+  }
+
+  if (/signup/i.test(m) && /(not allowed|disabled|for this instance)/i.test(m)) {
+    return {
+      code: 'signups_disabled',
+      message: 'Neue Registrierungen sind derzeit deaktiviert.',
+    }
+  }
+
+  return {
+    code: 'invite_failed',
+    message: 'Einladung konnte nicht versendet werden.',
+  }
+}
+
+type InviteResult = { email: string; ok: boolean; code?: string }
+
 export async function POST(req: NextRequest) {
   const sb = await supabaseServer()
   const { data: { user } } = await sb.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json().catch(() => ({}))
   const emails = normalizeEmails(body.emails)
@@ -34,11 +57,10 @@ export async function POST(req: NextRequest) {
     .select('*', { count: 'exact', head: true })
     .eq('inviter_id', user.id)
     .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-
   if ((count ?? 0) + emails.length > 20) {
     return NextResponse.json(
       { error: 'Limit erreicht (max. 20 Einladungen pro 24h).' },
-      { status: 429 }
+      { status: 429 },
     )
   }
 
@@ -47,79 +69,57 @@ export async function POST(req: NextRequest) {
   const redirectTo = `${origin}/auth/callback?redirect=/`
 
   const admin = supabaseAdmin()
-  const results: Array<{ email: string; ok: boolean; error?: string; reason?: string }> = []
+  const results: InviteResult[] = []
 
   for (const email of emails) {
-    const baseRow = { inviter_id: user.id, invitee_email: email }
-
     try {
-      // 1) Prüfen, ob E-Mail schon als User existiert
-      const { data: existsData, error: existsErr } = await admin
-        .rpc('user_exists_by_email', { p_email: email })
+      // Explizit als any typisieren, damit TS nicht "never" draus macht
+      const resp: any = await admin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: { invited_by: user.id },
+      } as any)
 
-      if (!existsErr && existsData === true) {
-        // Bereits registriert -> keine neue Einladung, Status = failed/ already_registered
-        await admin
-          .from('invitations')
-          .upsert(
-            {
-              ...baseRow,
-              status: 'failed',
-              error: 'already_registered',
-              invited_user_id: null,
-              accepted_at: null,
-            },
-            { onConflict: 'inviter_id,invitee_email' }
-          )
+      const invitedUserId = resp?.data?.user?.id ?? null
+      const error = resp?.error as { message?: string } | null
 
-        results.push({
-          email,
-          ok: false,
-          error: 'already_registered',
-          reason: 'already_registered',
+      if (error) {
+        const mapped = mapInviteError(error.message)
+
+        await admin.from('invitations').insert({
+          inviter_id: user.id,
+          invitee_email: email,
+          status: 'failed',
+          invited_user_id: invitedUserId,
+          error: mapped.code,
         })
+
+        results.push({ email, ok: false, code: mapped.code })
         continue
       }
 
-      // 2) Einladung normal senden
-      const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-        redirectTo,
-        data: { invited_by: user.id }, // wichtig: Einlader merken
-      } as any)
-
-      if (error) throw new Error(error.message)
-
-      await admin
-        .from('invitations')
-        .upsert(
-          {
-            ...baseRow,
-            status: 'sent',
-            invited_user_id: data?.user?.id ?? null,
-            error: null,
-            accepted_at: null,
-          },
-          { onConflict: 'inviter_id,invitee_email' }
-        )
+      // Erfolg
+      await admin.from('invitations').insert({
+        inviter_id: user.id,
+        invitee_email: email,
+        status: 'sent',
+        invited_user_id: invitedUserId,
+        error: null,
+      })
 
       results.push({ email, ok: true })
     } catch (e: any) {
-      const msg = String(e?.message || 'unknown error')
+      console.error('[invitations/send] fatal for', email, e)
+      const mapped = mapInviteError(String(e?.message || ''))
 
-      await admin
-        .from('invitations')
-        .upsert(
-          {
-            ...baseRow,
-            status: 'failed',
-            error: msg,
-            invited_user_id: null,
-            accepted_at: null,
-          },
-          { onConflict: 'inviter_id,invitee_email' }
-        )
+      await admin.from('invitations').insert({
+        inviter_id: user.id,
+        invitee_email: email,
+        status: 'failed',
+        invited_user_id: null,
+        error: mapped.code,
+      })
 
-      results.push({ email, ok: false, error: msg })
+      results.push({ email, ok: false, code: mapped.code })
     }
   }
 
