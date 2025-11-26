@@ -8,7 +8,7 @@ import { supabaseBrowser } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Copy, Check, Eye, EyeOff } from 'lucide-react';
-
+import { AcceptInvitationOnMount } from '../../components/invitations/AcceptInvitationOnMount'
 
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
@@ -514,6 +514,7 @@ const canSaveKonto = useMemo(() => {
   return (
   <>
     <Navbar />
+    <AcceptInvitationOnMount />   {/* 👈 löst /api/invitations/accept aus */}
     <div className={styles.page}></div>
     <h3 className={styles.title}>Kontoeinstellungen</h3>
     <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
