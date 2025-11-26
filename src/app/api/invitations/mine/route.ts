@@ -21,6 +21,7 @@ type InvitationRow = {
 function mapStatus(row: InvitationRow) {
   let status_label = ''
   let status_detail: string | null = null
+  const err = (row.error || '').toLowerCase()
 
   switch (row.status) {
     case 'sent':
@@ -41,13 +42,14 @@ function mapStatus(row: InvitationRow) {
     case 'failed':
     default:
       status_label = 'fehlgeschlagen'
-      // anhand des Fehlercodes genauer erläutern
-      if (row.error === 'already_registered') {
+
+      // 🔹 Sowohl neuer Code als auch alter Supabase-Text
+      if (row.error === 'already_registered' || /already been registered/.test(err)) {
         status_detail = 'Diese E-Mail-Adresse ist bereits registriert. Eine Einladung ist nicht nötig.'
-      } else if (row.error === 'signups_disabled') {
+      } else if (row.error === 'signups_disabled' || (/signup/.test(err) && /not allowed|disabled/.test(err))) {
         status_detail = 'Registrierungen sind derzeit deaktiviert. Die Einladung konnte nicht verschickt werden.'
       } else if (row.error) {
-        status_detail = 'Versand der Einladung ist fehlgeschlagen (' + row.error + ').'
+        status_detail = 'Versand der Einladung ist fehlgeschlagen.'
       } else {
         status_detail = 'Versand der Einladung ist fehlgeschlagen.'
       }
@@ -56,6 +58,7 @@ function mapStatus(row: InvitationRow) {
 
   return { status_label, status_detail }
 }
+
 
 export async function GET(_req: NextRequest) {
   try {
