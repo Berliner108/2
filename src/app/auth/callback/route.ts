@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
 
   // 3) Fehlerfall → Fehlerseite mit Kontext
   const errUrl = new URL('/auth/error', req.url)
-  errUrl.searchParams.set('code', 'callback_failed')
+  errUrl.searchParams.set('code', 'callback_fehlgeschlagen')
   if (type) errUrl.searchParams.set('type', type)
   errUrl.searchParams.set('redirect', redirectParam)
   return NextResponse.redirect(errUrl)
