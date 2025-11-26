@@ -11,13 +11,12 @@ type InvitationRow = {
   inviter_id: string
   invitee_email: string
   status: 'sent' | 'accepted' | 'failed' | 'revoked'
-  invited_user_id: string | null
   created_at: string
   accepted_at: string | null
   error: string | null
+  invited_user_id?: string | null
 }
 
-// Status-Label + Detailtext für das Frontend berechnen
 function mapStatus(row: InvitationRow) {
   let status_label = ''
   let status_detail: string | null = null
@@ -26,12 +25,12 @@ function mapStatus(row: InvitationRow) {
   switch (row.status) {
     case 'sent':
       status_label = 'versendet'
-      status_detail = 'Die Einladung wurde per E-Mail versendet. Noch nicht angenommen.'
+      status_detail = 'Die Einladung wurde per E-Mail versendet, die E-Mail ist noch nicht bestätigt.'
       break
 
     case 'accepted':
       status_label = 'akzeptiert'
-      status_detail = 'Der/die Eingeladene hat die Einladung angenommen und sich registriert.'
+      status_detail = 'Der/die Eingeladene hat die E-Mail bestätigt und kann sich nun anmelden.'
       break
 
     case 'revoked':
@@ -43,10 +42,9 @@ function mapStatus(row: InvitationRow) {
     default:
       status_label = 'fehlgeschlagen'
 
-      // 🔹 Sowohl neuer Code als auch alter Supabase-Text
-      if (row.error === 'already_registered' || /already been registered/.test(err)) {
+      if (row.error === 'already_registered' || err.includes('already been registered')) {
         status_detail = 'Diese E-Mail-Adresse ist bereits registriert. Eine Einladung ist nicht nötig.'
-      } else if (row.error === 'signups_disabled' || (/signup/.test(err) && /not allowed|disabled/.test(err))) {
+      } else if (row.error === 'signups_disabled' || (err.includes('signup') && (err.includes('not allowed') || err.includes('disabled')))) {
         status_detail = 'Registrierungen sind derzeit deaktiviert. Die Einladung konnte nicht verschickt werden.'
       } else if (row.error) {
         status_detail = 'Versand der Einladung ist fehlgeschlagen.'
@@ -58,6 +56,7 @@ function mapStatus(row: InvitationRow) {
 
   return { status_label, status_detail }
 }
+
 
 
 export async function GET(_req: NextRequest) {
