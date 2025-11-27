@@ -968,70 +968,56 @@ const canSaveKonto = useMemo(() => {
         </div>
         <div style={{ padding: 12 }}>
           {listLoading && <div style={{ color: '#6b7280' }}>Lade…</div>}
-          {!listLoading && inviteList.length === 0 && (
-            <div style={{ color: '#6b7280' }}>Noch keine Einladungen.</div>
-          )}
-          {!listLoading && inviteList.length > 0 && (
-  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-    <thead>
-      <tr style={{ textAlign: 'left', fontSize: 14, color: '#6b7280' }}>
-        <th style={{ padding: '8px 6px' }}>E-Mail</th>
-        <th style={{ padding: '8px 6px' }}>Status</th>
-        <th style={{ padding: '8px 6px' }}>Gesendet</th>
-        <th style={{ padding: '8px 6px' }}>Akzeptiert</th>
-      </tr>
-    </thead>
-    <tbody>
-      {inviteList.map((r: any) => {
-  let statusColor = '#6b7280' // grau
-  if (r.status === 'sent') statusColor = '#2563eb' // blau
-  else if (r.status === 'accepted') statusColor = '#059669' // grün
-  else if (r.status === 'failed' && r.error_code === 'already_registered') statusColor = '#d97706' // orange
-  else if (r.status === 'failed') statusColor = '#b91c1c' // rot
-  else if (r.status === 'revoked') statusColor = '#4b5563' // dunkelgrau
 
-  return (
-    <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
-      <td style={{ padding: '10px 6px' }}>{r.invitee_email}</td>
-
-      {/* 👇 hier der neue <td>-Block */}
-      <td style={{ padding: '10px 6px' }}>
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-    <span style={{ color: statusColor }}>
-      {r.status_label || r.status}
-    </span>
-    {r.status_detail && (
-      <span style={{ fontSize: 12, color: '#6b7280' }}>
-        {r.status_detail}
-      </span>
-    )}
-  </div>
-</td>
-
-
-      <td style={{ padding: '10px 6px' }}>
-        {new Date(r.created_at).toLocaleString()}
-      </td>
-      <td style={{ padding: '10px 6px' }}>
-        {r.accepted_at ? new Date(r.accepted_at).toLocaleString() : '—'}
-      </td>
-    </tr>
-  )
-})}
-
-    </tbody>
-  </table>
+{!listLoading && inviteList.length === 0 && (
+  <div style={{ color: '#6b7280' }}>Noch keine Einladungen.</div>
 )}
 
-        </div>
-      </div>
-    </div>
-  </form>
-</div>
 {!listLoading && inviteList.length > 0 && (
   <>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      {/* ... dein bestehendes <thead> + <tbody> ... */}
+      <thead>
+        <tr style={{ textAlign: 'left', fontSize: 14, color: '#6b7280' }}>
+          <th style={{ padding: '8px 6px' }}>E-Mail</th>
+          <th style={{ padding: '8px 6px' }}>Status</th>
+          <th style={{ padding: '8px 6px' }}>Gesendet</th>
+          <th style={{ padding: '8px 6px' }}>Akzeptiert</th>
+        </tr>
+      </thead>
+      <tbody>
+        {inviteList.map((r: any) => {
+          let statusColor = '#6b7280' // grau
+          if (r.status === 'sent') statusColor = '#2563eb' // blau
+          else if (r.status === 'accepted') statusColor = '#059669' // grün
+          else if (r.status === 'failed' && r.error_code === 'already_registered') statusColor = '#d97706' // orange
+          else if (r.status === 'failed') statusColor = '#b91c1c' // rot
+          else if (r.status === 'revoked') statusColor = '#4b5563' // dunkelgrau
+
+          return (
+            <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '10px 6px' }}>{r.invitee_email}</td>
+              <td style={{ padding: '10px 6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ color: statusColor }}>
+                    {r.status_label || r.status}
+                  </span>
+                  {r.status_detail && (
+                    <span style={{ fontSize: 12, color: '#6b7280' }}>
+                      {r.status_detail}
+                    </span>
+                  )}
+                </div>
+              </td>
+              <td style={{ padding: '10px 6px' }}>
+                {new Date(r.created_at).toLocaleString()}
+              </td>
+              <td style={{ padding: '10px 6px' }}>
+                {r.accepted_at ? new Date(r.accepted_at).toLocaleString() : '—'}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
     </table>
 
     {/* 🔢 Pagination-Leiste */}
@@ -1083,6 +1069,14 @@ const canSaveKonto = useMemo(() => {
     </div>
   </>
 )}
+
+
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
 
 {/* --- Container 5: Konto löschen --- */}
 <div id="loeschen" className={styles.kontoContainer}>
