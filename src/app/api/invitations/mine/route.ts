@@ -74,10 +74,10 @@ export async function GET(req: NextRequest) {
     const sp = url.searchParams
 
     const pageParam  = Number(sp.get('page')  ?? '1')
-    const limitParam = Number(sp.get('limit') ?? '20')
+    const limitParam = Number(sp.get('limit') ?? '5')
 
     const page  = Number.isFinite(pageParam)  && pageParam  > 0 ? pageParam  : 1
-    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : 20
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : 5
 
     const offset = (page - 1) * limit
     const to     = offset + limit - 1

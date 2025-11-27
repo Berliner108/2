@@ -224,7 +224,7 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
   const loadInvites = async (page = 1) => {
   try {
     setListLoading(true)
-    const res = await fetch(`/api/invitations/mine?page=${page}&limit=20`, { cache: 'no-store' })
+    const res = await fetch(`/api/invitations/mine?page=${page}&limit=5`, { cache: 'no-store' })
     const json = await res.json()
     if (!res.ok) throw new Error(json?.error || 'Einladungen konnten nicht geladen werden.')
 
