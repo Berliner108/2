@@ -158,6 +158,10 @@ const Einstellungen = (): JSX.Element => {
   const [invMsg, setInvMsg] = useState<string | null>(null)
   const [inviteList, setInviteList] = useState<any[]>([])
   const [listLoading, setListLoading] = useState<boolean>(false)
+  // 🔢 Pagination
+const [invPage, setInvPage] = useState<number>(1)
+const [invHasMore, setInvHasMore] = useState<boolean>(false)
+const [invTotal, setInvTotal] = useState<number | null>(null)
 
   // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
@@ -198,7 +202,7 @@ const Einstellungen = (): JSX.Element => {
         const origin = window.location.origin.replace(/\/$/, '')
         setInviteLink(`${origin}/registrieren?invited_by=${j.id}`)
 
-        loadInvites()
+        loadInvites(1)
       } catch {
         setToast({ type: 'error', message: 'Fehler beim Laden des Profils.' })
       }
@@ -217,19 +221,25 @@ const Einstellungen = (): JSX.Element => {
   }
   const onChangeVat = (v: string) => setVatNumber(v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 14))
 
-  const loadInvites = async () => {
-    try {
-      setListLoading(true)
-      const res = await fetch('/api/invitations/mine', { cache: 'no-store' })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json?.error || 'Einladungen konnten nicht geladen werden.')
-      setInviteList(json.items || [])
-    } catch {
-      setInviteList([])
-    } finally {
-      setListLoading(false)
-    }
+  const loadInvites = async (page = 1) => {
+  try {
+    setListLoading(true)
+    const res = await fetch(`/api/invitations/mine?page=${page}&limit=20`, { cache: 'no-store' })
+    const json = await res.json()
+    if (!res.ok) throw new Error(json?.error || 'Einladungen konnten nicht geladen werden.')
+
+    setInviteList(json.items || [])
+    setInvPage(json.page ?? page)
+    setInvHasMore(!!json.hasMore)
+    setInvTotal(typeof json.total === 'number' ? json.total : null)
+  } catch {
+    setInviteList([])
+    setInvHasMore(false)
+  } finally {
+    setListLoading(false)
   }
+}
+
 
   // ===== Speichern =====
   const handleSave = async () => {
@@ -1018,6 +1028,61 @@ const canSaveKonto = useMemo(() => {
     </div>
   </form>
 </div>
+{!listLoading && inviteList.length > 0 && (
+  <>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* ... dein bestehendes <thead> + <tbody> ... */}
+    </table>
+
+    {/* 🔢 Pagination-Leiste */}
+    <div
+      style={{
+        marginTop: 12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 8,
+        fontSize: 13,
+        color: '#4b5563',
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => loadInvites(invPage - 1)}
+        disabled={invPage <= 1 || listLoading}
+        style={{
+          padding: '6px 10px',
+          borderRadius: 8,
+          border: '1px solid #e5e7eb',
+          background: invPage <= 1 || listLoading ? '#f9fafb' : '#fff',
+          cursor: invPage <= 1 || listLoading ? 'not-allowed' : 'pointer',
+        }}
+      >
+        ← Vorherige Seite
+      </button>
+
+      <span>
+        Seite {invPage}
+        {invTotal != null && ` · ${invTotal} Einladungen gesamt`}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => loadInvites(invPage + 1)}
+        disabled={!invHasMore || listLoading}
+        style={{
+          padding: '6px 10px',
+          borderRadius: 8,
+          border: '1px solid #e5e7eb',
+          background: !invHasMore || listLoading ? '#f9fafb' : '#fff',
+          cursor: !invHasMore || listLoading ? 'not-allowed' : 'pointer',
+        }}
+      >
+        Nächste Seite →
+      </button>
+    </div>
+  </>
+)}
 
 {/* --- Container 5: Konto löschen --- */}
 <div id="loeschen" className={styles.kontoContainer}>

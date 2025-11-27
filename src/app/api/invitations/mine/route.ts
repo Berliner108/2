@@ -59,7 +59,8 @@ function mapStatus(row: InvitationRow) {
 
 
 
-export async function GET(_req: NextRequest) {
+// /src/app/api/invitations/mine/route.ts
+export async function GET(req: NextRequest) {
   try {
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
@@ -68,13 +69,29 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // 🔢 Pagination-Parameter aus Query
+    const url = new URL(req.url)
+    const sp = url.searchParams
+
+    const pageParam  = Number(sp.get('page')  ?? '1')
+    const limitParam = Number(sp.get('limit') ?? '20')
+
+    const page  = Number.isFinite(pageParam)  && pageParam  > 0 ? pageParam  : 1
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 100) : 20
+
+    const offset = (page - 1) * limit
+    const to     = offset + limit - 1
+
     const admin = supabaseAdmin()
-    const { data, error } = await admin
+
+    const { data, error, count } = await admin
       .from('invitations')
-      .select('id, inviter_id, invitee_email, status, invited_user_id, created_at, accepted_at, error')
+      .select('id, inviter_id, invitee_email, status, invited_user_id, created_at, accepted_at, error', {
+        count: 'exact',
+      })
       .eq('inviter_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .range(offset, to)
 
     if (error) {
       console.error('[GET /api/invitations/mine] db error', error)
@@ -85,22 +102,31 @@ export async function GET(_req: NextRequest) {
     }
 
     const rows = (data || []) as InvitationRow[]
+    const total = count ?? 0
 
     const items = rows.map(row => {
       const { status_label, status_detail } = mapStatus(row)
       return {
         id: row.id,
         invitee_email: row.invitee_email,
-        status: row.status,                // Rohstatus ("sent", "accepted", ...)
-        status_label,                      // für UI ("versendet", "akzeptiert", ...)
-        status_detail,                     // erklärender Text
+        status: row.status,
+        status_label,
+        status_detail,
         created_at: row.created_at,
         accepted_at: row.accepted_at,
-        error_code: row.error,             // z. B. "already_registered"
+        error_code: row.error,
       }
     })
 
-    return NextResponse.json({ items })
+    const hasMore = offset + items.length < total
+
+    return NextResponse.json({
+      items,
+      page,
+      limit,
+      total,
+      hasMore,
+    })
   } catch (e) {
     console.error('[GET /api/invitations/mine] fatal', e)
     return NextResponse.json(
@@ -109,3 +135,4 @@ export async function GET(_req: NextRequest) {
     )
   }
 }
+
