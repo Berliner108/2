@@ -118,10 +118,12 @@
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
-  resize: vertical;
+  /* vorher: resize: vertical; */
+  resize: none;              /* <-- jetzt fix */
   min-height: 300px;
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
 }
+
 .buttonContainer {
   display: flex;
   justify-content: center;
