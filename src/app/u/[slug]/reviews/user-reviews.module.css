@@ -659,7 +659,10 @@
   opacity:.6;
   cursor:default;
 }
-
+.reportBtn:disabled{
+  opacity:.6;
+  cursor:default;
+}
 .reportOk{
   color:#16a34a;
 }
