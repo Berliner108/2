@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     }
 
     // nur wenn Pflichtfelder ok sind, Zähler hochzählen
+    // nur wenn Pflichtfelder ok sind, Zähler hochzählen
     requestCount++;
 
     // Nodemailer mit STRATO (Werte aus .env.local)
