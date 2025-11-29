@@ -65,8 +65,8 @@ ${message}
 `;
 
     await transporter.sendMail({
-      from: `"Mein-Shop Kontakt" <${process.env.SMTP_USER}>`,
-      to: 'kontakt@mein-shop.com', // Empfänger-Adresse
+      from: `"Beschichter Scout Kontakt" <${process.env.SMTP_USER}>`,
+      to: 'office@beschichterscout.com', // Empfänger-Adresse
       replyTo: email,
       subject: `Kontaktformular: ${subject}`,
       text: mailText,

@@ -137,9 +137,13 @@ const ContactPage: React.FC = () => {
       <div className={styles.contactInfoContainer}>
         <div className={styles.contactInfo}>
           <h1 className={styles.title}>Kontaktformular</h1>
+          <p className={styles.requiredHint}>* Alle Felder sind Pflichtfelder.</p>
+
 
           <form onSubmit={handleSubmit} className={styles.form}>
-            <label className={styles.label}>Betreff / Inserat:</label>
+            <label className={styles.label}>
+              Betreff / Inserat<span className={styles.required}>*</span>
+            </label>
             <input
               type="text"
               name="subject"
@@ -149,7 +153,9 @@ const ContactPage: React.FC = () => {
               required
             />
 
-            <label className={styles.label}>E-Mail:</label>
+            <label className={styles.label}>
+              E-Mail<span className={styles.required}>*</span>
+            </label>
             <input
               type="email"
               name="email"
@@ -163,7 +169,9 @@ const ContactPage: React.FC = () => {
               title="Bitte gib eine gültige E-Mail-Adresse ein."
             />
 
-            <label className={styles.label}>Name:</label>
+            <label className={styles.label}>
+              Name<span className={styles.required}>*</span>
+            </label>
             <input
               type="text"
               name="name"
@@ -175,7 +183,9 @@ const ContactPage: React.FC = () => {
               title="Der Name darf keine Zahlen enthalten."
             />
 
-            <label className={styles.label}>Nachricht:</label>
+            <label className={styles.label}>
+              Nachricht<span className={styles.required}>*</span>
+            </label>
             <textarea
               name="message"
               value={formData.message}
@@ -207,6 +217,7 @@ const ContactPage: React.FC = () => {
                   Datenschutzerklärung
                 </a>{' '}
                 gelesen und bin damit einverstanden.
+                <span className={styles.required}>*</span>
               </label>
             </div>
 

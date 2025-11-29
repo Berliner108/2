@@ -233,3 +233,14 @@
     width: 100%;
   }
 }
+.required {
+  color: #c53030;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.requiredHint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 10px;
+}
