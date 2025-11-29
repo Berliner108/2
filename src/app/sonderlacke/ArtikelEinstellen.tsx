@@ -1874,8 +1874,7 @@ if (hasPromo) {
               <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
               <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
               <p><strong>Lieferdatum:</strong> {lieferDatum ? lieferDatum.toLocaleDateString('de-DE') : '–'}</p>
-              <p><strong>Lieferort:</strong> {[plz, ort].filter(Boolean).join(' ') || ort || (lieferadresseOption === 'profil' ? [profilAdresse.plz, profilAdresse.ort].filter(Boolean).join(' ') || profilAdresse.ort : '–')}</p>
-              <p><strong>Lieferadresse:</strong> {lieferadresseOption === 'profil' ? toAddressString(profilAdresse) : toAddressString({ vorname, nachname, firma, strasse, hausnummer, plz, ort, land }) || '–'}</p>
+              <p><strong>Lieferadresse:</strong>{' '}  {lieferadresseOption === 'profil'    ? toAddressString(profilAdresse)    : toAddressString({ vorname, nachname, firma, strasse, hausnummer, plz, ort, land }) || '–'}</p>
             </motion.div>
           )}
         </AnimatePresence>
