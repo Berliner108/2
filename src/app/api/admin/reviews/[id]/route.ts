@@ -1,4 +1,4 @@
-// src/app/api/lack/requests/[id]/offer/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
