@@ -96,6 +96,7 @@ const ContactPage: React.FC = () => {
           email: formData.email,
           subject: formData.subject,
           message: formData.message,
+          gdpr: formData.gdpr,   // <-- diese Zeile ergänzen
         }),
       });
 
