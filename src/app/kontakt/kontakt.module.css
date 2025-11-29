@@ -4,17 +4,14 @@
 .main {
   padding: 20px;
   min-height: 100vh;
-  background-color: #f5f5f5; /* Hintergrundfarbe für main */
+  background-color: #f5f5f5;
   margin-top: 0px;
-  
 }
 
 /* Stil für den Container */
 .contactInfoContainer {
   width: 90%;
-  
   margin: 0 auto;
-  
 }
 
 /* Stil für das Kontaktformular */
@@ -23,28 +20,27 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  
 }
 
-/* Lokale Klasse für h2 */
+/* Titel */
 .title {
   font-size: 1.9rem;
   color: #333;
-  
+  margin-bottom: 10px;
 }
+
 .title2 {
   font-size: 1.2rem;
   color: #333;
-
 }
+
 .inputFieldError {
   border: 2px solid red !important;
   background-color: #fff5f5 !important;
   transition: border 0.3s ease;
 }
 
-
-
+/* Shake-Animation */
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
@@ -57,45 +53,65 @@
   animation: shake 0.3s ease;
 }
 
+/* DSGVO-Checkbox-Container */
 .checkboxContainer {
-  display: inline-block;
+  display: flex;
+  align-items: flex-start;
   margin-top: 20px;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
-.checkboxContainer input[type="checkbox"] {
-  accent-color: #00b5d8; /* z. B. Türkis */
+/* eigentliche Checkbox */
+.checkbox {
+  margin-right: 8px;
+  margin-top: 3px;
 }
 
+/* Farbe der Checkbox */
+.checkboxContainer input[type='checkbox'] {
+  accent-color: #00b5d8;
+}
 
+/* Link in der DSGVO-Zeile */
+.checkboxContainer a {
+  color: #00b5d8;
+  text-decoration: underline;
+}
 
-
-
+/* Fehlermeldung */
 .error {
-  color: red;
+  color: #c53030;
   font-size: 0.875rem;
   margin-top: 4px;
   margin-bottom: 10px;
 }
 
-/* Lokale Klasse für p */
+/* Erfolgsmeldung */
+.success {
+  color: #2f855a;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+/* Beschreibungstext */
 .description {
   font-size: 1rem;
   color: #555;
 }
 
-/* Lokale Klasse für das Formular */
+/* Formular */
 .form {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  
 }
 
-/* Lokale Klasse für Label */
+/* Label */
 .label {
   font-size: 1rem;
   color: #333;
-  
 }
 
 /* Eingabefelder */
@@ -106,8 +122,7 @@
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
-  font-family: 'Oswald';
-  
+  font-family: 'Oswald', sans-serif;
 }
 
 /* Textarea */
@@ -118,23 +133,21 @@
   border-radius: 4px;
   width: 100%;
   box-sizing: border-box;
-  /* vorher: resize: vertical; */
-  resize: none;              /* <-- jetzt fix */
+  resize: none;        /* nicht mehr verstellbar */
   min-height: 300px;
   font-family: 'Oswald', sans-serif;
 }
 
+/* Button-Container */
 .buttonContainer {
   display: flex;
   justify-content: center;
-  align-items: center; /* optional, falls vertikal auch nötig */
+  align-items: center;
   width: 100%;
-  text-decoration: none;
-  text-align: center;
 }
-/* Button */
 
-.button {  
+/* Button */
+.button {
   width: 60%;
   padding: 12px;
   background-color: #00b5d8;
@@ -143,11 +156,12 @@
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.1s ease;
   margin-top: 20px;
   margin-bottom: 20px;
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
   text-decoration: none;
+  text-align: center;
 }
 
 .button:hover {
@@ -155,49 +169,67 @@
   text-decoration: none;
 }
 
+.button:active {
+  transform: scale(0.98);
+}
 
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 
+/* kleine Helper: Zähler unter Textarea */
+.form small {
+  font-size: 0.8rem;
+  color: #666;
+}
 
-/* Neue Media Query für mobile Geräte */
+/* Mobile */
 @media (max-width: 768px) {
   .main {
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* oder center für vertikale Zentrierung */
+    align-items: flex-start;
     max-width: 100%;
   }
+
   .contactInfoContainer {
-    width: 110%; /* Container auf 90% der Breite anpassen */
+    width: 100%;
   }
+
   .contactInfo {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-  
-}
+    padding: 16px;
+    max-width: 100%;
+  }
 
   .title {
-    font-size: 1.9rem; /* Kleinere Schriftgröße für Titel */
+    font-size: 1.7rem;
   }
+
   .title2 {
-    font-size: 1.2rem; /* Kleinere Schriftgröße für Titel */
+    font-size: 1.1rem;
   }
 
   .description {
-    font-size: 0.9rem; /* Kleinere Schriftgröße für Beschreibung */
+    font-size: 0.9rem;
   }
 
-  .inputField, .textareaField, .button {
-    font-size: 0.9rem; /* Kleinere Schriftgröße für Eingabefelder */
+  .inputField,
+  .textareaField,
+  .button {
+    font-size: 0.9rem;
   }
 
   .form {
-    gap: 12px; /* Weniger Abstand zwischen den Formularelementen */
+    gap: 12px;
   }
 
   .checkboxContainer {
-    font-size: 0.9rem; /* Kleinere Schriftgröße für die Checkbox */
+    font-size: 0.9rem;
+    flex-direction: row;
+  }
+
+  .button {
+    width: 100%;
   }
 }
