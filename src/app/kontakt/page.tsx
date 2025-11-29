@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './kontakt.module.css';
 
-const ContactPage = () => {
-  const [formData, setFormData] = useState({
+interface FormDataState {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  gdpr: boolean;
+}
+
+const ContactPage: React.FC = () => {
+  const [formData, setFormData] = useState<FormDataState>({
     name: '',
     email: '',
     subject: '',
@@ -13,59 +21,114 @@ const ContactPage = () => {
   });
 
   const [shakeGDPR, setShakeGDPR] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+
+  const emailRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (shakeGDPR) {
-      const timer = setTimeout(() => setShakeGDPR(false), 300);
-      return () => clearTimeout(timer);
-    }
+    if (!shakeGDPR) return;
+    const timer = setTimeout(() => setShakeGDPR(false), 300);
+    return () => clearTimeout(timer);
   }, [shakeGDPR]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
+
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
-      setFormData(prev => ({ ...prev, [name]: checked }));
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+
+    if (name === 'email') {
+      setEmailError(false);
+      if (emailRef.current) {
+        emailRef.current.setCustomValidity('');
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const allowedTLDs = ['.de', '.com', '.net', '.org', '.at', '.ch', '.info', '.eu', '.io'];
-    const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
-    const emailValid = allowedTLDs.some((tld) =>
-      formData.email.toLowerCase().endsWith(tld)
-    );
+    setSendSuccess(null);
+    setSendError(null);
 
-    if (!emailValid && emailInput) {
-      emailInput.setCustomValidity("Die E-Mail-Adresse muss auf eine gültige Endung wie .com, .de, .at, .ch etc. enden.");
-      emailInput.reportValidity();
+    // E-Mail-TLD-Prüfung
+    const allowedTLDs = ['.de', '.com', '.net', '.org', '.at', '.ch', '.info', '.eu', '.io'];
+    const emailLower = formData.email.toLowerCase();
+    const emailValid = allowedTLDs.some((tld) => emailLower.endsWith(tld));
+
+    if (!emailValid && emailRef.current) {
+      setEmailError(true);
+      emailRef.current.setCustomValidity(
+        'Die E-Mail-Adresse muss auf eine gültige Endung wie .com, .de, .at, .ch etc. enden.'
+      );
+      emailRef.current.reportValidity();
       return;
-    } else {
-      emailInput.setCustomValidity('');
+    } else if (emailRef.current) {
+      emailRef.current.setCustomValidity('');
+      setEmailError(false);
     }
 
+    // DSGVO-Checkbox prüfen
     if (!formData.gdpr) {
-  const gdprBox = document.getElementById("gdprContainer");
-  if (gdprBox) {
-    gdprBox.classList.add(styles.shake); // hinzufügen
-    setTimeout(() => {
-      gdprBox.classList.remove(styles.shake); // nach 300ms wieder entfernen
-    }, 300);
-  }
-  return;
-}
+      setShakeGDPR(true);
+      return;
+    }
 
+    try {
+      setIsSending(true);
 
-    const mailtoLink = `mailto:support@deinefirma.com?subject=${encodeURIComponent(
-      formData.subject
-    )}&body=${encodeURIComponent(
-      `Name: ${formData.name}\nE-Mail: ${formData.email}\n\nNachricht:\n${formData.message}`
-    )}`;
-    window.location.href = mailtoLink;
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        }),
+      });
+
+      if (res.status === 429) {
+        setSendError(
+          'Das Kontaktlimit für heute wurde erreicht. Bitte versuche es später erneut.'
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        setSendError(
+          'Es ist ein Fehler beim Senden aufgetreten. Bitte versuche es später erneut.'
+        );
+        return;
+      }
+
+      setSendSuccess('Deine Nachricht wurde erfolgreich versendet.');
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+        gdpr: false,
+      });
+    } catch (error) {
+      console.error(error);
+      setSendError(
+        'Es ist ein Fehler beim Senden aufgetreten. Bitte versuche es später erneut.'
+      );
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -75,7 +138,6 @@ const ContactPage = () => {
           <h1 className={styles.title}>Kontaktformular</h1>
 
           <form onSubmit={handleSubmit} className={styles.form}>
-            
             <label className={styles.label}>Betreff / Inserat:</label>
             <input
               type="text"
@@ -90,9 +152,12 @@ const ContactPage = () => {
             <input
               type="email"
               name="email"
+              ref={emailRef}
               value={formData.email}
               onChange={handleChange}
-              className={styles.inputField}
+              className={`${styles.inputField} ${
+                emailError ? styles.inputFieldError : ''
+              }`}
               required
               title="Bitte gib eine gültige E-Mail-Adresse ein."
             />
@@ -122,30 +187,40 @@ const ContactPage = () => {
             <small>{formData.message.length}/800 Zeichen</small>
 
             <div
-  className={styles.checkboxContainer}
-  id="gdprContainer"
->
-  <label className={styles.label}>
-    <input
-      type="checkbox"
-      name="gdpr"
-      checked={formData.gdpr}
-      onChange={handleChange}
-      className={styles.checkbox}
-      required
-      title="Bitte akzeptiere die Datenschutzerklärung."
-    />
-    Ja, ich habe die <a href="/datenschutz">Datenschutzerklärung</a> gelesen und bin damit einverstanden.
-  </label>
-</div>
-
-
+              id="gdprContainer"
+              className={`${styles.checkboxContainer} ${
+                !formData.gdpr && shakeGDPR ? styles.shake : ''
+              }`}
+            >
+              <label className={styles.label}>
+                <input
+                  type="checkbox"
+                  name="gdpr"
+                  checked={formData.gdpr}
+                  onChange={handleChange}
+                  className={styles.checkbox}
+                  title="Bitte akzeptiere die Datenschutzerklärung."
+                />
+                Ja, ich habe die{' '}
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer">
+                  Datenschutzerklärung
+                </a>{' '}
+                gelesen und bin damit einverstanden.
+              </label>
+            </div>
 
             <div className={styles.buttonContainer}>
-              <button type="submit" className={styles.button}>
-                <b>Absenden</b>
+              <button
+                type="submit"
+                className={styles.button}
+                disabled={isSending}
+              >
+                <b>{isSending ? 'Senden ...' : 'Absenden'}</b>
               </button>
             </div>
+
+            {sendSuccess && <p className={styles.success}>{sendSuccess}</p>}
+            {sendError && <p className={styles.error}>{sendError}</p>}
           </form>
         </div>
       </div>
