@@ -278,6 +278,58 @@ function EmptyRatingsLite({ username }: { username: string }) {
     </div>
   )
 }
+function ReportButton({ reviewId }: { reviewId: string }) {
+  const [sending, setSending] = React.useState(false)
+  const [done, setDone] = React.useState(false)
+  const [err, setErr] = React.useState<string | null>(null)
+
+  async function handleClick() {
+    const reason = window.prompt('Warum möchtest du diese Bewertung melden?')
+    if (!reason || !reason.trim()) return
+
+    setSending(true)
+    setErr(null)
+    setDone(false)
+
+    try {
+      const res = await fetch('/api/review-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          reviewId,
+          reason: reason.trim(),
+        }),
+      })
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || 'Fehler beim Senden der Meldung')
+      }
+
+      setDone(true)
+    } catch (e: any) {
+      setErr(e?.message || 'Unbekannter Fehler')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className={styles.reportWrap}>
+      <button
+        type="button"
+        className={styles.reportBtn}
+        onClick={handleClick}
+        disabled={sending}
+      >
+        {sending ? 'Wird gesendet …' : 'Bewertung melden'}
+      </button>
+      {done && <span className={styles.reportOk}>Danke, Meldung gesendet.</span>}
+      {err && !done && <span className={styles.reportErr}>{err}</span>}
+    </div>
+  )
+}
 
 export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
@@ -430,9 +482,17 @@ export default function UserReviewsPage() {
                         </div>
                       </div>
 
-                      <div className={styles.byline}>
-                        von {name ? <Link className={styles.titleLink} href={raterHref} prefetch={false}>{name}</Link> : '—'}
-                      </div>
+                      <div className={styles.bylineRow}>
+  <div className={styles.byline}>
+    von {name ? (
+      <Link className={styles.titleLink} href={raterHref} prefetch={false}>
+        {name}
+      </Link>
+    ) : '—'}
+  </div>
+  <ReportButton reviewId={it.id} />
+</div>
+
                     </li>
                   )
                 })}
