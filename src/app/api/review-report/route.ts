@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 
 export const runtime = 'nodejs'      // wichtig: Node-Runtime
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic' // wichtig: Node-Runtime
 
 export async function POST(req: Request) {
   try {
