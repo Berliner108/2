@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+// @ts-ignore
 import nodemailer from 'nodemailer';
 
 // --- Einfaches Rate-Limit im Speicher: 100 Anfragen pro Tag ---
