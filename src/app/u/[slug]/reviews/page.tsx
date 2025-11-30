@@ -281,12 +281,15 @@ function EmptyRatingsLite({ username }: { username: string }) {
 function ReportButton({ reviewId }: { reviewId: string }) {
   const [sending, setSending] = React.useState(false);
   const [done, setDone] = React.useState(false);
-  const [err, setErr] = React.useState<string | null>(null);
   const [alreadyReported, setAlreadyReported] = React.useState(false);
   const [isLoggedIn, setIsLoggedIn] = React.useState<boolean | null>(null);
 
   const [modalOpen, setModalOpen] = React.useState(false);
   const [reasonText, setReasonText] = React.useState('');
+
+  // 👉 getrennt: Fehler UNTER der Karte vs. IM Modal
+  const [inlineErr, setInlineErr] = React.useState<string | null>(null);
+  const [modalErr, setModalErr] = React.useState<string | null>(null);
 
   // Login-Status über /api/profile prüfen
   React.useEffect(() => {
@@ -327,10 +330,13 @@ function ReportButton({ reviewId }: { reviewId: string }) {
   }, [reviewId]);
 
   function openModal() {
-    setErr(null);
+    // alte Fehler zurücksetzen
+    setInlineErr(null);
+    setModalErr(null);
 
-    if (!isLoggedIn) {
-      setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+    if (isLoggedIn === false) {
+      // 👉 Login-Fehler weiter UNTER der Karte anzeigen
+      setInlineErr('Bitte melde dich an, um eine Bewertung zu melden.');
       return;
     }
     if (alreadyReported) return;
@@ -345,20 +351,21 @@ function ReportButton({ reviewId }: { reviewId: string }) {
   }
 
   async function submitReport() {
-    if (!isLoggedIn) {
-      setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+    if (isLoggedIn === false) {
+      setInlineErr('Bitte melde dich an, um eine Bewertung zu melden.');
       setModalOpen(false);
       return;
     }
 
     const reason = reasonText.trim();
     if (!reason || reason.length < 5) {
-      setErr('Bitte gib kurz an, warum du diese Bewertung meldest (mind. 5 Zeichen).');
+      // 👉 diese Meldung nur IM POPUP anzeigen
+      setModalErr('Bitte gib kurz an, warum du diese Bewertung meldest (mind. 5 Zeichen).');
       return;
     }
 
     setSending(true);
-    setErr(null);
+    setModalErr(null);
     setDone(false);
 
     try {
@@ -373,7 +380,7 @@ function ReportButton({ reviewId }: { reviewId: string }) {
       });
 
       if (res.status === 401) {
-        setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+        setInlineErr('Bitte melde dich an, um eine Bewertung zu melden.');
         setModalOpen(false);
         return;
       }
@@ -399,18 +406,19 @@ function ReportButton({ reviewId }: { reviewId: string }) {
       setDone(true);
       setModalOpen(false);
     } catch (e: any) {
-      setErr(e?.message || 'Unbekannter Fehler');
+      // 👉 Server-/Netzwerkfehler ebenfalls IM Popup
+      setModalErr(e?.message || 'Unbekannter Fehler');
     } finally {
       setSending(false);
     }
   }
 
-  // Nicht eingeloggt → gar keinen Report-Bereich anzeigen
+  // Nicht eingeloggt → solange unklar, gar nichts rendern
   if (isLoggedIn === false) {
     return null;
   }
 
-  // 👉 Bereits gemeldet: nur Text anzeigen, kein Button
+  // Bereits gemeldet: nur Hinweis-Text
   if (alreadyReported) {
     return (
       <div className={styles.reportWrap}>
@@ -419,7 +427,6 @@ function ReportButton({ reviewId }: { reviewId: string }) {
     );
   }
 
-  // Normalfall: Button + Modal
   return (
     <>
       <div className={styles.reportWrap}>
@@ -434,7 +441,8 @@ function ReportButton({ reviewId }: { reviewId: string }) {
         {done && !sending && (
           <span className={styles.reportOk}>Danke, Meldung gesendet.</span>
         )}
-        {err && !done && <span className={styles.reportErr}>{err}</span>}
+        {/* 👉 nur noch Login- / generelle Inline-Fehler hier */}
+        {inlineErr && !done && <span className={styles.reportErr}>{inlineErr}</span>}
       </div>
 
       {modalOpen && (
@@ -453,6 +461,11 @@ function ReportButton({ reviewId }: { reviewId: string }) {
               placeholder="z. B. Beleidigung, falsche Fakten, Spam …"
             />
             <div className={styles.reportCounter}>{reasonText.length} / 600 Zeichen</div>
+
+            {/* 👉 Popup-Fehler (mind. 5 Zeichen / Serverfehler) direkt HIER */}
+            {modalErr && (
+              <p className={styles.reportErr}>{modalErr}</p>
+            )}
 
             <div className={styles.reportActions}>
               <button
@@ -632,15 +645,15 @@ export default function UserReviewsPage() {
                       </div>
 
                       <div className={styles.bylineRow}>
-  <div className={styles.byline}>
-    von {name ? (
-      <Link className={styles.titleLink} href={raterHref} prefetch={false}>
-        {name}
-      </Link>
-    ) : '—'}
-  </div>
-  <ReportButton reviewId={it.id} />
-</div>
+                <div className={styles.byline}>
+                  von {name ? (
+                    <Link className={styles.titleLink} href={raterHref} prefetch={false}>
+                      {name}
+                    </Link>
+                  ) : '—'}
+                </div>
+                <ReportButton reviewId={it.id} />
+              </div>
 
                     </li>
                   )
