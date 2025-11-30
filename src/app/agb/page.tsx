@@ -19,10 +19,10 @@ const AgbPage = () => {
         </p>
         <p>Sobald der/die Käufer:in die erfolgreiche Erbringung der Leistung bestätigt, wird die Auszahlung ausgelöst. 
           Erfolgt innerhalb von 28 Tagen keine Bestätigung oder Reklamation, gilt die Leistung als erbracht und die Auszahlung wird automatisch veranlasst.
-          Bei fristgerechten Reklamationen wird die Auszahlung rückabgewickelt. Es gelten jedoch ausnahmslos die gesetzlichen Rechte und Pflichten zwischen den Vertragspartnern.
+          Bei fristgerechten Reklamationen wird die Auszahlung rückabgewickelt. Es gelten jedoch ausnahmslos die gesetzlichen Rechte und Pflichten zwischen den Vertragspartnern. Für etwaige Schadensersatzansprüche übernimmt Beschichter Scout keine Haftung. Diese sind ausschließlich zwischen dem Dienstleister / Verkäufer und dem Auftraggeber / Käufer zu regeln. Beschichter Scout kann auf Wunsch vermittelnd tätig werden, trifft jedoch auch hier keine bindende Entscheidung.  
         </p>
         <p>Die Plattform entscheidet <strong>nicht nach eigenem Ermessen </strong> über Auszahlungen, sondern folgt automatisierten, transparenten und fairen Regeln. Es besteht 
-        <strong>kein Treuhandverhältnis</strong> die Plattform verwahrt kein Geld für Dritte. Die Zahlung erfolgt ausschließlich über Stripe gemäß deren Nutzungsbedingungen. </p>
+        <strong> kein Treuhandverhältnis</strong> die Plattform verwahrt kein Geld für Dritte. Die Zahlung erfolgt ausschließlich über Stripe gemäß deren Nutzungsbedingungen. </p>
       </section>
 
       <h2 className={styles.subheading}>2. Reklamations- und Streitfallprozess</h2>
