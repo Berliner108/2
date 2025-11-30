@@ -539,3 +539,92 @@
   outline: 3px solid rgba(0,180,216,.35);
   outline-offset: 2px;
 }
+/* ===== Einladungs-Tabelle (Desktop) ===== */
+.inviteTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.inviteTable thead {
+  background: #f9fafb;
+}
+
+.inviteTable th,
+.inviteTable td {
+  padding: 8px 6px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.inviteTable th {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.inviteRow:last-child td {
+  border-bottom: 0;
+}
+
+.inviteCell {
+  vertical-align: top;
+}
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statusDetail {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ===== Mobile: Tabelle -> Karten ===== */
+@media (max-width: 640px) {
+  .inviteTable,
+  .inviteTable tbody,
+  .inviteTable tr,
+  .inviteTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .inviteTable thead {
+    display: none; /* Kopf ausblenden */
+  }
+
+  .inviteRow {
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    padding: 8px 10px;
+  }
+
+  .inviteCell {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: none;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+
+  /* Label links aus data-label */
+  .inviteCell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    margin-right: 8px;
+    flex: 0 0 40%;
+  }
+
+  .statusCell {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
