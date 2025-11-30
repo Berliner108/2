@@ -21,6 +21,8 @@ const AgbPage = () => {
           Erfolgt innerhalb von 28 Tagen keine Bestätigung oder Reklamation, gilt die Leistung als erbracht und die Auszahlung wird automatisch veranlasst.
           Bei fristgerechten Reklamationen wird die Auszahlung rückabgewickelt. Es gelten jedoch ausnahmslos die gesetzlichen Rechte und Pflichten zwischen den Vertragspartnern. Für etwaige Schadensersatzansprüche übernimmt Beschichter Scout keine Haftung. Diese sind ausschließlich zwischen dem Dienstleister / Verkäufer und dem Auftraggeber / Käufer zu regeln. Beschichter Scout kann auf Wunsch vermittelnd tätig werden, trifft jedoch auch hier keine bindende Entscheidung.  
         </p>
+        <p>
+        Verkäufer / Dienstleister hat das Recht 28 tage die Lieferung in Ordnung zu bringen. Etwaige Schadensersatzansprüche kommen dazu</p>
         <p>Die Plattform entscheidet <strong>nicht nach eigenem Ermessen </strong> über Auszahlungen, sondern folgt automatisierten, transparenten und fairen Regeln. Es besteht 
         <strong> kein Treuhandverhältnis</strong> die Plattform verwahrt kein Geld für Dritte. Die Zahlung erfolgt ausschließlich über Stripe gemäß deren Nutzungsbedingungen. </p>
       </section>
@@ -42,6 +44,7 @@ const AgbPage = () => {
       <section className={styles.section}>
         <p>Die Plattform vermittelt lediglich den Kontakt und die Zahlungsabwicklung zwischen Anbieter:innen und Käufer:innen. Es kommt ausschließlich zwischen diesen beiden 
           Parteien ein Vertrag über die jeweilige Leistung zustande. Die Plattform ist selbst nicht Vertragspartei und übernimmt keine Verantwortung für die Inhalte oder Durchführung der vereinbarten Leistungen.
+          Beschichter Scout überprüft etwaige Aktivitäten aller Nutzer und behält sich das Recht vor, User zu sperren und vom Gebrauch der Plattform auszuschließen. Ebenso meldet Beschichter Scout auffällige oder gesetzeswidrige Aktivitäten ausnahmslos den zuständigen Behörden. Das gilt auch für private Nutzer welche ggf. gewerblich tätig sind, jedoch nicht als solche registriert sind.
         </p>
       </section>
 

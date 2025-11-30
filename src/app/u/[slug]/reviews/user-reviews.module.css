@@ -632,29 +632,6 @@
   margin-top:8px;
 }
 
-.reportWrap{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:12px;
-  color:var(--muted);
-}
-
-.reportBtn{
-  border:none;
-  background:none;
-  padding:0;
-  font-size:12px;
-  color:#6b7280;
-  text-decoration:underline;
-  cursor:pointer;
-  transition:color .15s ease, opacity .15s ease;
-}
-
-.reportBtn:hover{
-  color:#111827;
-}
-
 .reportBtn:disabled{
   opacity:.6;
   cursor:default;
