@@ -279,17 +279,87 @@ function EmptyRatingsLite({ username }: { username: string }) {
   )
 }
 function ReportButton({ reviewId }: { reviewId: string }) {
-  const [sending, setSending] = React.useState(false)
-  const [done, setDone] = React.useState(false)
-  const [err, setErr] = React.useState<string | null>(null)
+  const [sending, setSending] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
+  const [alreadyReported, setAlreadyReported] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = React.useState<boolean | null>(null);
 
-  async function handleClick() {
-    const reason = window.prompt('Warum möchtest du diese Bewertung melden?')
-    if (!reason || !reason.trim()) return
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [reasonText, setReasonText] = React.useState('');
 
-    setSending(true)
-    setErr(null)
-    setDone(false)
+  // Login-Status über /api/profile prüfen
+  React.useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/profile', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (cancelled) return;
+        setIsLoggedIn(res.ok);
+      } catch {
+        if (!cancelled) setIsLoggedIn(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Schon gemeldet? -> aus localStorage lesen
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem('reportedReviews');
+      if (!raw) return;
+      const arr = JSON.parse(raw) as string[];
+      if (Array.isArray(arr) && arr.includes(reviewId)) {
+        setAlreadyReported(true);
+        setDone(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [reviewId]);
+
+  function openModal() {
+    setErr(null);
+
+    if (!isLoggedIn) {
+      setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+      return;
+    }
+    if (alreadyReported) return;
+
+    setReasonText('');
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    if (sending) return;
+    setModalOpen(false);
+  }
+
+  async function submitReport() {
+    if (!isLoggedIn) {
+      setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+      setModalOpen(false);
+      return;
+    }
+
+    const reason = reasonText.trim();
+    if (!reason || reason.length < 5) {
+      setErr('Bitte gib kurz an, warum du diese Bewertung meldest (mind. 5 Zeichen).');
+      return;
+    }
+
+    setSending(true);
+    setErr(null);
+    setDone(false);
 
     try {
       const res = await fetch('/api/review-report', {
@@ -298,38 +368,117 @@ function ReportButton({ reviewId }: { reviewId: string }) {
         credentials: 'include',
         body: JSON.stringify({
           reviewId,
-          reason: reason.trim(),
+          reason,
         }),
-      })
+      });
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        throw new Error(text || 'Fehler beim Senden der Meldung')
+      if (res.status === 401) {
+        setErr('Bitte melde dich an, um eine Bewertung zu melden.');
+        setModalOpen(false);
+        return;
       }
 
-      setDone(true)
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || 'Fehler beim Senden der Meldung');
+      }
+
+      // Erfolg → im localStorage merken
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = window.localStorage.getItem('reportedReviews');
+          const arr = raw ? (JSON.parse(raw) as string[]) : [];
+          if (!arr.includes(reviewId)) arr.push(reviewId);
+          window.localStorage.setItem('reportedReviews', JSON.stringify(arr));
+        } catch {
+          // ignore
+        }
+      }
+
+      setAlreadyReported(true);
+      setDone(true);
+      setModalOpen(false);
     } catch (e: any) {
-      setErr(e?.message || 'Unbekannter Fehler')
+      setErr(e?.message || 'Unbekannter Fehler');
     } finally {
-      setSending(false)
+      setSending(false);
     }
   }
 
+  // Nicht eingeloggt → gar keinen Report-Bereich anzeigen
+  if (isLoggedIn === false) {
+    return null;
+  }
+
+  // 👉 Bereits gemeldet: nur Text anzeigen, kein Button
+  if (alreadyReported) {
+    return (
+      <div className={styles.reportWrap}>
+        <span className={styles.reportOk}>Bereits gemeldet</span>
+      </div>
+    );
+  }
+
+  // Normalfall: Button + Modal
   return (
-    <div className={styles.reportWrap}>
-      <button
-        type="button"
-        className={styles.reportBtn}
-        onClick={handleClick}
-        disabled={sending}
-      >
-        {sending ? 'Wird gesendet …' : 'Bewertung melden'}
-      </button>
-      {done && <span className={styles.reportOk}>Danke, Meldung gesendet.</span>}
-      {err && !done && <span className={styles.reportErr}>{err}</span>}
-    </div>
-  )
+    <>
+      <div className={styles.reportWrap}>
+        <button
+          type="button"
+          className={styles.reportBtn}
+          onClick={openModal}
+          disabled={sending || isLoggedIn === null}
+        >
+          {sending ? 'Wird gesendet …' : 'Bewertung melden'}
+        </button>
+        {done && !sending && (
+          <span className={styles.reportOk}>Danke, Meldung gesendet.</span>
+        )}
+        {err && !done && <span className={styles.reportErr}>{err}</span>}
+      </div>
+
+      {modalOpen && (
+        <div className={styles.reportModalOverlay} role="dialog" aria-modal="true">
+          <div className={styles.reportModal}>
+            <h3 className={styles.reportTitle}>Bewertung melden</h3>
+            <p className={styles.reportText}>
+              Bitte beschreibe kurz, warum diese Bewertung auffällig oder problematisch ist.
+            </p>
+            <textarea
+              className={styles.reportTextarea}
+              rows={5}
+              maxLength={600}
+              value={reasonText}
+              onChange={(e) => setReasonText(e.target.value)}
+              placeholder="z. B. Beleidigung, falsche Fakten, Spam …"
+            />
+            <div className={styles.reportCounter}>{reasonText.length} / 600 Zeichen</div>
+
+            <div className={styles.reportActions}>
+              <button
+                type="button"
+                className={styles.reportSecondary}
+                onClick={closeModal}
+                disabled={sending}
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                className={styles.reportPrimary}
+                onClick={submitReport}
+                disabled={sending}
+              >
+                {sending ? 'Wird gesendet …' : 'Meldung abschicken'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
+
 
 export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
