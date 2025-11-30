@@ -740,6 +740,7 @@
   box-shadow:0 24px 80px rgba(15,23,42,.35);
   padding:18px 18px 16px;
   box-sizing:border-box;
+  font-family:'Oswald', system-ui, sans-serif; /* NEU */
 }
 
 .reportTitle{
@@ -831,4 +832,11 @@
     flex-direction:column;
     align-items:flex-start;
   }
+}
+.reportTitle,
+.reportText,
+.reportCounter,
+.reportPrimary,
+.reportSecondary{
+  font-family:'Oswald', system-ui, sans-serif;
 }
