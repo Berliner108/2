@@ -35,8 +35,8 @@ export default function Navbar() {
   const [showEdgeBadge, setShowEdgeBadge] = useState(false)
   const [edgeTop, setEdgeTop] = useState<number>(8)
 
-  // --- Badge-Zählung (dein bestehender Code, unverändert außer Form) ---
   const tsOf = (iso?: string) => (iso ? +new Date(iso) : 0)
+
   function lastEventTs(o: LackOrder): number {
     const fallback =
       o.deliveredConfirmedAt ??
@@ -47,6 +47,7 @@ export default function Navbar() {
       o.acceptedAt
     return tsOf(o.lastEventAt || fallback || o.acceptedAt)
   }
+
   function needsAction(o: LackOrder): boolean {
     if (o.kind === 'angenommen') return (o.status ?? 'in_progress') === 'in_progress'
     return o.status === 'reported'
@@ -57,6 +58,10 @@ export default function Navbar() {
 
     async function loadAllCounts() {
       try {
+        const now = Date.now()
+        const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+        const sevenDaysAgo = now - SEVEN_DAYS
+
         // 1) neue Lack-Angebote
         let offersNew = 0
         try {
@@ -64,37 +69,68 @@ export default function Navbar() {
           if (res.ok) {
             const j: ForAccountResponseOffers = await res.json()
             const received = Array.isArray(j?.received) ? j.received : []
-            const lastSeenOffers = Number(localStorage.getItem('offers:lastSeen') || '0')
+
+            const rawLastSeenOffers = Number(localStorage.getItem('offers:lastSeen') || '0')
+            const lastSeenOffers = Math.max(rawLastSeenOffers || 0, sevenDaysAgo)
+
             offersNew = received.reduce((acc, o) => {
               const ts = +new Date((o as any).createdAt || (o as any).created_at)
+              // „neu“ nur, wenn nach lastSeen UND jünger als 7 Tage
               return ts > lastSeenOffers ? acc + 1 : acc
             }, 0)
           }
-        } catch {}
+        } catch {
+          // ignore
+        }
 
         // 2) Orders + Handlungsbedarf
         let ordersBadge = 0
         try {
-          const res = await fetch('/api/orders/for-account', { cache: 'no-store', credentials: 'include' })
+          const res = await fetch('/api/orders/for-account', {
+            cache: 'no-store',
+            credentials: 'include',
+          })
           if (res.ok) {
             const j: OrdersResp = await res.json()
             const merged = [...(j.vergeben ?? []), ...(j.angenommen ?? [])]
-            const lastSeenOrders = Number(localStorage.getItem('lackOrders:lastSeen') || '0')
-            const newEvents = merged.reduce((n, o) => n + (lastEventTs(o) > lastSeenOrders ? 1 : 0), 0)
-            const pending   = merged.reduce((n, o) => n + (needsAction(o) ? 1 : 0), 0)
+
+            const rawLastSeenOrders = Number(localStorage.getItem('lackOrders:lastSeen') || '0')
+            const lastSeenOrders = Math.max(rawLastSeenOrders || 0, sevenDaysAgo)
+
+            // neue Events nur, wenn nach lastSeenOrders (der selbst max. 7 Tage alt ist)
+            const newEvents = merged.reduce(
+              (n, o) => n + (lastEventTs(o) > lastSeenOrders ? 1 : 0),
+              0
+            )
+
+            // Handlungsbedarf zählt nur, wenn Event jünger als 7 Tage
+            const pending = merged.reduce(
+              (n, o) => n + (needsAction(o) && lastEventTs(o) > sevenDaysAgo ? 1 : 0),
+              0
+            )
+
             ordersBadge = newEvents + pending
           }
-        } catch {}
+        } catch {
+          // ignore
+        }
 
         if (alive) setKontoNew(offersNew + ordersBadge)
-      } catch {}
+      } catch {
+        // ignore
+      }
     }
 
     loadAllCounts()
     const id = setInterval(loadAllCounts, 60_000)
 
     const onBadge = (e: any) => {
-      try { const det = e?.detail || {}; if (typeof det.total === 'number') setKontoNew(det.total) } catch {}
+      try {
+        const det = e?.detail || {}
+        if (typeof det.total === 'number') setKontoNew(det.total)
+      } catch {
+        // ignore
+      }
     }
     window.addEventListener('navbar:badge', onBadge as any)
 
@@ -105,12 +141,15 @@ export default function Navbar() {
     }
   }, [])
 
-  // --- KORRIGIERTE Sichtbarkeitsprüfung per BoundingClientRect ---
+  // --- Sichtbarkeitsprüfung per BoundingClientRect ---
   useEffect(() => {
     const updateOverlay = () => {
       const nav = navbarRef.current
       const konto = kontoLinkRef.current
-      if (!nav || !konto) { setShowEdgeBadge(false); return }
+      if (!nav || !konto) {
+        setShowEdgeBadge(false)
+        return
+      }
 
       const navRect = nav.getBoundingClientRect()
       const kontoRect = konto.getBoundingClientRect()
@@ -126,7 +165,6 @@ export default function Navbar() {
 
       setShowEdgeBadge(isOverflowing && kontoNew > 0 && offToRight)
     }
-    
 
     // initial + bei Änderungen
     updateOverlay()
@@ -136,7 +174,7 @@ export default function Navbar() {
     const nav = navbarRef.current
     nav?.addEventListener('scroll', rAFUpdate, { passive: true })
     window.addEventListener('resize', rAFUpdate, { passive: true })
-    window.addEventListener('scroll', rAFUpdate, { passive: true }) // falls die Navbar nicht ganz oben ist
+    window.addEventListener('scroll', rAFUpdate, { passive: true })
 
     return () => {
       nav?.removeEventListener('scroll', rAFUpdate)
@@ -144,19 +182,21 @@ export default function Navbar() {
       window.removeEventListener('scroll', rAFUpdate)
     }
   }, [kontoNew, pathname])
-  // Beim Besuch relevanter Konto-Seiten alles Gesehene stempeln
-useEffect(() => {
-  if (!pathname) return
-  try {
-    if (pathname.startsWith('/konto/lackangebote')) {
-      localStorage.setItem('lackOrders:lastSeen', String(Date.now()))
-    }
-    if (pathname.startsWith('/konto/lackanfragen')) {
-      localStorage.setItem('offers:lastSeen', String(Date.now()))
-    }
-  } catch {}
-}, [pathname])
 
+  // Beim Besuch relevanter Konto-Seiten alles Gesehene stempeln
+  useEffect(() => {
+    if (!pathname) return
+    try {
+      if (pathname.startsWith('/konto/lackangebote')) {
+        localStorage.setItem('lackOrders:lastSeen', String(Date.now()))
+      }
+      if (pathname.startsWith('/konto/lackanfragen')) {
+        localStorage.setItem('offers:lastSeen', String(Date.now()))
+      }
+    } catch {
+      // ignore
+    }
+  }, [pathname])
 
   const displayCounter = kontoNew > 9 ? '9+' : String(kontoNew)
 
@@ -167,7 +207,7 @@ useEffect(() => {
         <ul className={styles.navList}>
           {NAV_ITEMS.map((item, i) => {
             const isActive = pathname?.startsWith(item.href)
-            const isKonto  = item.title === 'Mein Konto'
+            const isKonto = item.title === 'Mein Konto'
             return (
               <li key={i} className={styles.navItem}>
                 <Link
