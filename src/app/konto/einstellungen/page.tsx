@@ -454,9 +454,11 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reason: deleteReason || null,
+          // Leerzeichen am Anfang/Ende entfernen, leere Strings → null
+          reason: deleteReason.trim() || null,
         }),
       })
+
 
       const json = await res.json().catch(() => ({}))
 
