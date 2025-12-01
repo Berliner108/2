@@ -19,6 +19,8 @@ type AdminDeleteRequest = {
 
 type ApiListResponse = {
   items: AdminDeleteRequest[]
+  message?: string
+  error?: string
 }
 
 const MAX_ADMIN_NOTE = 500
@@ -41,9 +43,10 @@ const AdminLoeschanfragenPage = () => {
       const json: ApiListResponse = await res.json()
 
       if (!res.ok) {
-        setError(json?.message || (json as any)?.error || 'Löschanfragen konnten nicht geladen werden.')
-        return
-      }
+  setError(json.message || json.error || 'Löschanfragen konnten nicht geladen werden.')
+  return
+}
+
 
       setRequests(json.items || [])
 

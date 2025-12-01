@@ -1,14 +1,14 @@
 // /src/app/api/admin/delete-requests/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin' // ggf. anpassen
+import { supabaseAdmin } from '@/lib/supabase-admin' // ggf. Pfad anpassen
 
 type DeleteStatus = 'open' | 'rejected' | 'done'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const id = params.id
+  const { id } = context.params
 
   try {
     const sb = supabaseAdmin()
@@ -17,7 +17,7 @@ export async function PATCH(
     const nextStatus: DeleteStatus = body.status || 'rejected'
     const adminNote: string | null = body.admin_note ?? null
 
-    // Wir erlauben hier nur "rejected" aus dem Admin-UI
+    // Nur "rejected" über dieses Endpoint erlauben
     if (nextStatus !== 'rejected') {
       return NextResponse.json(
         { error: 'INVALID_STATUS', message: 'Nur Status "rejected" ist hier erlaubt.' },
@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     const { data, error } = await sb
-      .from('account_delete_requests')
+      .from('account_delete_requests') // Tabellenname ggf. anpassen
       .update({
         status: nextStatus,
         admin_note: adminNote,
