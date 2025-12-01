@@ -3,6 +3,8 @@
 
 import { useEffect, useState } from 'react'
 import Navbar from '../../components/navbar/Navbar'
+import styles from './loeschanfragen.module.css'
+
 
 type DeleteStatus = 'open' | 'rejected' | 'done'
 

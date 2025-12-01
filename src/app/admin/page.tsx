@@ -163,6 +163,9 @@ export default async function AdminDashboardPage() {
   <a href="/admin/lackanfragen" className={styles.linkBtn}>Lackanfragen verwalten</a>
   {/* ⬇️ Neu: Besuche/Analytics */}
   <a href="/admin/analytics" className={styles.linkBtn}>Analytics (Besuche)</a>
+   <a href="/admin/loeschanfragen" className={styles.linkBtn}>
+    Löschanfragen
+  </a>
 </div>
 
 
