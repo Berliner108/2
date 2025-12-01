@@ -1,4 +1,3 @@
-// /src/app/api/admin/delete-requests/[id]/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -12,7 +11,6 @@ export async function PATCH(req: Request, context: any) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
 
-  // Auth + Admin-Check (gleich wie im Admin-Dashboard)
   const sb = await supabaseServer()
   const { data: { user } } = await sb.auth.getUser()
 
@@ -46,7 +44,7 @@ export async function PATCH(req: Request, context: any) {
 
   const admin = supabaseAdmin()
   const { data, error } = await admin
-    .from('account_delete_requests') // Name wie vorher bei dir verwendet
+    .from('account_delete_requests')
     .update({
       status: body.status,
       admin_note: body.admin_note ?? null,

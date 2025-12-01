@@ -1,52 +1,75 @@
 // /src/app/api/admin/delete-requests/route.ts
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin' // ggf. anpassen
+import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+type DeleteStatus = 'open' | 'rejected' | 'done'
+
+type DbRow = {
+  id: string
+  status: DeleteStatus
+  reason: string | null
+  admin_note: string | null
+  created_at: string
+  updated_at: string
+  user_id: string
+}
 
 export async function GET() {
-  try {
-    const sb = supabaseAdmin()
+  // 1) Auth + Admin prüfen (wie im Admin-Dashboard)
+  const sb = await supabaseServer()
+  const { data: { user } } = await sb.auth.getUser()
 
-    const { data, error } = await sb
-      .from('account_delete_requests') // TABELLENNAME anpassen falls anders
-      .select(
-        `
-          id,
-          status,
-          reason,
-          admin_note,
-          created_at,
-          updated_at,
-          user_id,
-          user:auth.users!inner(email)
-        `
-      )
-      .order('created_at', { ascending: false })
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
 
-    if (error) {
-      console.error('DB-Fehler', error)
-      return NextResponse.json(
-        { error: 'DB_ERROR', message: error.message },
-        { status: 500 }
-      )
-    }
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
-    const items = (data || []).map((row: any) => ({
-      id: row.id,
-      status: row.status,
-      reason: row.reason,
-      admin_note: row.admin_note,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      user_id: row.user_id,
-      user_email: row.user?.email ?? null,
-    }))
+  if (profile?.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
-    return NextResponse.json({ items })
-  } catch (err: any) {
-    console.error('UNBEKANNTER FEHLER', err)
+  // 2) Löschanfragen laden (ohne Join)
+  const admin = supabaseAdmin()
+  const { data, error } = await admin
+    .from('account_delete_requests') // <- Tabellenname wie bei dir
+    .select('id,status,reason,admin_note,created_at,updated_at,user_id')
+    .order('created_at', { ascending: false })
+
+  if (error) {
     return NextResponse.json(
-      { error: 'UNKNOWN', message: 'Fehler beim Laden der Löschanfragen.' },
-      { status: 500 }
+      { error: 'Query failed', details: error.message },
+      { status: 500 },
     )
   }
+
+  const rows = (data || []) as DbRow[]
+
+  // 3) User-E-Mails über Admin-API holen
+  const userIds = Array.from(new Set(rows.map(r => r.user_id).filter(Boolean)))
+  const emailById = new Map<string, string | null>()
+
+  await Promise.all(
+    userIds.map(async (uid) => {
+      try {
+        const { data: userRes } = await admin.auth.admin.getUserById(uid)
+        const email = userRes?.user?.email ?? null
+        emailById.set(uid, email)
+      } catch {
+        emailById.set(uid, null)
+      }
+    }),
+  )
+
+  const items = rows.map(r => ({
+    ...r,
+    user_email: r.user_id ? (emailById.get(r.user_id) ?? null) : null,
+  }))
+
+  return NextResponse.json({ items }, { status: 200 })
 }
