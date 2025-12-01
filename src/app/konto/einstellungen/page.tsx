@@ -1204,22 +1204,28 @@ const canSaveKonto = useMemo(() => {
 
     </div>
         {/* Optionaler Grund */}
-    <div className={styles.inputGroup}>
-      <label htmlFor="deleteReason">Grund (optional)</label>
-      <textarea
-  id="deleteReason"
-  value={deleteReason}
-  onChange={(e) => setDeleteReason(e.target.value)}
-  placeholder="Optional: Warum möchtest du dein Konto löschen?"
-  className={`${styles.input} ${styles.inviteTextarea}`}
-  rows={2}
-  maxLength={DELETE_REASON_MAX}
-/>
-<small style={{ color: '#6b7280', fontSize: 12 }}>
-  Max. {DELETE_REASON_MAX} Zeichen.
-</small>
+    {/* Optionaler Grund */}
+<div className={styles.inputGroup}>
+  <label htmlFor="deleteReason">Grund (optional)</label>
+  <textarea
+    id="deleteReason"
+    value={deleteReason}
+    onChange={(e) => setDeleteReason(e.target.value)}
+    placeholder="Optional: Warum möchtest du dein Konto löschen?"
+    className={`${styles.input} ${styles.inviteTextarea}`}
+    rows={2}
+    maxLength={DELETE_REASON_MAX}
+  />
+  <div style={{ marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
+    <small style={{ color: '#6b7280', fontSize: 12 }}>
+      Max. {DELETE_REASON_MAX} Zeichen.
+    </small>
+    <small style={{ color: '#6b7280', fontSize: 12 }}>
+      {deleteReason.length} / {DELETE_REASON_MAX}
+    </small>
+  </div>
+</div>
 
-    </div>
 
     {/* Checkbox + Hinweis */}
     <div className={styles.inputGroup}>
