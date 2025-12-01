@@ -53,6 +53,16 @@ type ApiGetResponse = {
     address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
   }
 }
+type DeleteStatus = 'open' | 'rejected' | 'done'
+
+type DeleteRequest = {
+  id: string
+  status: DeleteStatus
+  reason: string | null
+  admin_note: string | null
+  created_at: string
+  updated_at: string
+}
 
 /* ---------- (NEU) Reviews-Helpers ---------- */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
@@ -395,34 +405,68 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
 
 
   // ===== Konto löschen =====
+    // ===== Konto löschen (Request-basiert) =====
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteReq, setDeleteReq] = useState<DeleteRequest | null>(null)
+  const [deleteReqLoading, setDeleteReqLoading] = useState(true)
+  const [canRequestDelete, setCanRequestDelete] = useState(true)
+  const [deleteReason, setDeleteReason] = useState('')
 
-  const handleDeleteAccount = async () => {
+
+    const handleCreateDeleteRequest = async () => {
     if (!deleteConfirm) {
-      setToast({ type: 'error', message: 'Bitte bestätige die Checkbox vor dem Löschen.' })
+      setToast({ type: 'error', message: 'Bitte bestätige die Checkbox vor dem Senden der Anfrage.' })
       return
     }
-    if (!confirm('Willst du dein Konto wirklich dauerhaft löschen? Dies kann nicht rückgängig gemacht werden.')) {
+
+    if (!canRequestDelete) {
+      setToast({ type: 'error', message: 'Es besteht bereits eine offene Löschanfrage.' })
+      return
+    }
+
+    if (!confirm('Willst du wirklich eine Löschanfrage stellen? Dein Konto bleibt aktiv, bis wir sie geprüft haben.')) {
       return
     }
 
     setDeleting(true)
     try {
-      const res = await fetch('/api/account/delete', { method: 'POST' })
+      const res = await fetch('/api/account/delete-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: deleteReason || null,
+        }),
+      })
+
       const json = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        setToast({ type: 'error', message: json?.error || 'Löschung fehlgeschlagen.' })
+        let msg = json?.message || json?.error || 'Löschanfrage konnte nicht erstellt werden.'
+        if (json?.error === 'already-open') {
+          msg = 'Es besteht bereits eine offene Löschanfrage.'
+        }
+        setToast({ type: 'error', message: msg })
+
+        if (json?.request) {
+          setDeleteReq(json.request)
+          setCanRequestDelete(false)
+        }
         return
       }
-      await supabaseBrowser().auth.signOut()
-      router.replace('/?deleted=1')
+
+      setDeleteReq(json.request)
+      setCanRequestDelete(false)
+      setDeleteReason('')
+      setDeleteConfirm(false)
+      setToast({ type: 'success', message: 'Deine Löschanfrage wurde übermittelt.' })
     } catch {
-      setToast({ type: 'error', message: 'Netzwerkfehler bei der Löschung.' })
+      setToast({ type: 'error', message: 'Netzwerkfehler bei der Löschanfrage.' })
     } finally {
       setDeleting(false)
     }
   }
+
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = [
   { id: 'profil', label: 'Profil' },
@@ -1082,38 +1126,117 @@ const canSaveKonto = useMemo(() => {
 
 
 {/* --- Container 5: Konto löschen --- */}
+{/* --- Container 5: Konto löschen (Request-basiert) --- */}
 <div id="loeschen" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
     <h3 className={styles.subSectionTitle}>Konto löschen</h3>
+
     <p className={styles.deleteConfirmationText}>
-      Wenn du dein Konto löschst, werden alle deine Daten dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.
+      Hier kannst du eine Löschanfrage stellen. Dein Konto wird nicht sofort gelöscht,
+      sondern von uns manuell geprüft. Solange der Status <strong>„in Bearbeitung“</strong> ist,
+      kannst du die Plattform weiterhin normal nutzen.
     </p>
 
+    {/* Statusanzeige */}
     <div className={styles.inputGroup}>
-      <label htmlFor="deleteConfirm" style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+      {deleteReqLoading ? (
+        <p style={{ color: '#6b7280', fontSize: 13 }}>Lade aktuellen Löschstatus…</p>
+      ) : deleteReq ? (
+        <div
+          style={{
+            padding: '8px 10px',
+            borderRadius: 10,
+            border: '1px solid #e5e7eb',
+            background:
+              deleteReq.status === 'open'
+                ? '#eff6ff'
+                : deleteReq.status === 'rejected'
+                ? '#fef2f2'
+                : '#ecfdf5',
+            color: '#111827',
+            fontSize: 14,
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            Status:{' '}
+            {deleteReq.status === 'open' && 'In Bearbeitung'}
+            {deleteReq.status === 'rejected' && 'Abgelehnt'}
+            {deleteReq.status === 'done' && 'Abgeschlossen'}
+          </div>
+          {deleteReq.status === 'open' && (
+            <p style={{ margin: 0, color: '#4b5563' }}>
+              Deine Löschanfrage wurde eingereicht und wird geprüft.
+            </p>
+          )}
+          {deleteReq.status === 'rejected' && (
+            <p style={{ margin: 0, color: '#b91c1c' }}>
+              {deleteReq.admin_note
+                ? `Begründung: ${deleteReq.admin_note}`
+                : 'Deine Löschanfrage wurde abgelehnt.'}
+            </p>
+          )}
+          {deleteReq.status === 'done' && (
+            <p style={{ margin: 0, color: '#15803d' }}>
+              Deine Löschanfrage wurde abgeschlossen. (Du solltest diese Meldung normalerweise nicht mehr sehen.)
+            </p>
+          )}
+        </div>
+      ) : (
+        <p style={{ color: '#6b7280', fontSize: 13 }}>
+          Du hast bisher keine Löschanfrage gestellt.
+        </p>
+      )}
+    </div>
+
+    {/* Optionaler Grund */}
+    <div className={styles.inputGroup}>
+      <label htmlFor="deleteReason">Grund (optional)</label>
+      <textarea
+        id="deleteReason"
+        value={deleteReason}
+        onChange={(e) => setDeleteReason(e.target.value)}
+        placeholder="Optional: Warum möchtest du dein Konto löschen?"
+        className={`${styles.input} ${styles.inviteTextarea}`}
+        rows={2}
+      />
+    </div>
+
+    {/* Checkbox + Button */}
+    <div className={styles.inputGroup}>
+      <label
+        htmlFor="deleteConfirm"
+        style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}
+      >
         <input
           id="deleteConfirm"
           type="checkbox"
           checked={deleteConfirm}
           onChange={(e) => setDeleteConfirm(e.target.checked)}
+          disabled={!canRequestDelete}
         />
-        Ich bestätige, dass ich mein Konto löschen möchte.
+        Ich bestätige, dass ich eine Löschanfrage stellen möchte.
       </label>
+      {!canRequestDelete && (
+        <p style={{ marginTop: 4, color: '#b91c1c', fontSize: 13 }}>
+          Es besteht bereits eine offene Löschanfrage.
+        </p>
+      )}
     </div>
 
     <div className={styles.inputGroup}>
       <button
         type="button"
-        onClick={handleDeleteAccount}
+        onClick={handleCreateDeleteRequest}
         className={styles.deleteButton}
-        disabled={!deleteConfirm || deleting}
-        aria-disabled={!deleteConfirm || deleting}
+        disabled={!deleteConfirm || deleting || !canRequestDelete}
+        aria-disabled={!deleteConfirm || deleting || !canRequestDelete}
       >
-        {deleting ? 'Lösche…' : 'Konto löschen'}
+        {deleting ? 'Sende…' : 'Löschanfrage stellen'}
       </button>
     </div>
   </form>
 </div>
+
 
     </div>
 
