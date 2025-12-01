@@ -116,7 +116,6 @@ const AdminLoeschanfragenPage = () => {
 
   return (
     <>
-      <Navbar />
       <main className={styles.page}>
         <h1 className={styles.title}>Löschanfragen (Admin)</h1>
 
