@@ -23,6 +23,7 @@ const STREET_MAX = 48
 const COMPANY_MAX = 80
 const ZIP_MAX = 5
 const COUNTRY_MAX = 56
+const DELETE_REASON_MAX = 400
 
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/
@@ -1206,13 +1207,18 @@ const canSaveKonto = useMemo(() => {
     <div className={styles.inputGroup}>
       <label htmlFor="deleteReason">Grund (optional)</label>
       <textarea
-        id="deleteReason"
-        value={deleteReason}
-        onChange={(e) => setDeleteReason(e.target.value)}
-        placeholder="Optional: Warum möchtest du dein Konto löschen?"
-        className={`${styles.input} ${styles.inviteTextarea}`}
-        rows={2}
-      />
+  id="deleteReason"
+  value={deleteReason}
+  onChange={(e) => setDeleteReason(e.target.value)}
+  placeholder="Optional: Warum möchtest du dein Konto löschen?"
+  className={`${styles.input} ${styles.inviteTextarea}`}
+  rows={2}
+  maxLength={DELETE_REASON_MAX}
+/>
+<small style={{ color: '#6b7280', fontSize: 12 }}>
+  Max. {DELETE_REASON_MAX} Zeichen.
+</small>
+
     </div>
 
     {/* Checkbox + Hinweis */}
