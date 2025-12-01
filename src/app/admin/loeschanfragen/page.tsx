@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './loeschanfragen.module.css'
 
-
 type DeleteStatus = 'open' | 'rejected' | 'done'
 
 type AdminDeleteRequest = {
@@ -45,10 +44,9 @@ const AdminLoeschanfragenPage = () => {
       const json: ApiListResponse = await res.json()
 
       if (!res.ok) {
-  setError(json.message || json.error || 'Löschanfragen konnten nicht geladen werden.')
-  return
-}
-
+        setError(json.message || json.error || 'Löschanfragen konnten nicht geladen werden.')
+        return
+      }
 
       setRequests(json.items || [])
 
@@ -119,92 +117,53 @@ const AdminLoeschanfragenPage = () => {
   return (
     <>
       <Navbar />
-      <main style={{ maxWidth: 1100, margin: '40px auto', padding: '0 16px' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>
-          Löschanfragen (Admin)
-        </h1>
+      <main className={styles.page}>
+        <h1 className={styles.title}>Löschanfragen (Admin)</h1>
 
-        <p style={{ fontSize: 14, color: '#4b5563', marginBottom: 16 }}>
+        <p className={styles.lead}>
           Hier siehst du alle Nutzer, die eine Löschanfrage gestellt haben.
           Du kannst Anfragen ablehnen und einen Grund hinterlegen.
           Das endgültige Löschen des Users machst du wie gewohnt im Admin-Bereich / in Supabase.
         </p>
 
-        <div style={{ marginBottom: 12 }}>
+        <div className={styles.topBar}>
           <button
             type="button"
             onClick={loadRequests}
             disabled={loading}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 8,
-              border: '1px solid #e5e7eb',
-              background: '#fff',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: 14,
-            }}
+            className={styles.reloadBtn}
           >
             {loading ? 'Aktualisiere…' : 'Neu laden'}
           </button>
         </div>
 
         {error && (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: '8px 10px',
-              borderRadius: 10,
-              border: '1px solid #fee2e2',
-              background: '#fef2f2',
-              color: '#b91c1c',
-              fontSize: 14,
-            }}
-          >
+          <div className={styles.errorBox}>
             {error}
           </div>
         )}
 
-        <div
-          style={{
-            border: '1px solid #e5e7eb',
-            borderRadius: 10,
-            overflow: 'hidden',
-            background: '#ffffff',
-          }}
-        >
-          <div
-            style={{
-              padding: 12,
-              borderBottom: '1px solid #e5e7eb',
-              background: '#f9fafb',
-              fontWeight: 600,
-            }}
-          >
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
             Löschanfragen
           </div>
 
-          <div style={{ padding: 12 }}>
-            {loading && <div style={{ color: '#6b7280' }}>Lade…</div>}
+          <div className={styles.cardBody}>
+            {loading && <div className={styles.loadingText}>Lade…</div>}
 
             {!loading && requests.length === 0 && !error && (
-              <div style={{ color: '#6b7280' }}>Keine Löschanfragen gefunden.</div>
+              <div className={styles.emptyText}>Keine Löschanfragen gefunden.</div>
             )}
 
             {!loading && requests.length > 0 && (
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: 14,
-                }}
-              >
+              <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Nutzer</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Grund (User)</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Admin-Notiz</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Status</th>
-                    <th style={{ textAlign: 'left', padding: 8 }}>Erstellt</th>
+                    <th className={styles.th}>Nutzer</th>
+                    <th className={styles.th}>Grund (User)</th>
+                    <th className={styles.th}>Admin-Notiz</th>
+                    <th className={styles.th}>Status</th>
+                    <th className={styles.th}>Erstellt</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -214,92 +173,55 @@ const AdminLoeschanfragenPage = () => {
                     const charsLeft = MAX_ADMIN_NOTE - note.length
 
                     return (
-                      <tr key={r.id} style={{ borderTop: '1px solid #f3f4f6' }}>
+                      <tr key={r.id} className={styles.trRow}>
                         {/* Nutzer */}
-                        <td style={{ padding: 8, verticalAlign: 'top', maxWidth: 220 }}>
-                          <div style={{ fontWeight: 500 }}>
+                        <td className={`${styles.td} ${styles.tdUser}`}>
+                          <div className={styles.userMain}>
                             {r.user_email || '—'}
                           </div>
-                          <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          <div className={styles.userSub}>
                             User-ID: {r.user_id}
                           </div>
-                          <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                          <div className={styles.userSubMuted}>
                             Request-ID: {r.id}
                           </div>
                         </td>
 
                         {/* Grund (User) */}
-                        <td style={{ padding: 8, verticalAlign: 'top', maxWidth: 260 }}>
-                          <div
-                            style={{
-                              whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-word',
-                            }}
-                          >
+                        <td className={styles.td}>
+                          <div className={styles.reasonText}>
                             {r.reason || (
-                              <span style={{ color: '#9ca3af' }}>kein Grund angegeben</span>
+                              <span className={styles.muted}>kein Grund angegeben</span>
                             )}
                           </div>
                         </td>
 
                         {/* Admin-Notiz + Ablehnen */}
-                        <td style={{ padding: 8, verticalAlign: 'top', maxWidth: 260 }}>
+                        <td className={styles.td}>
                           <textarea
                             value={note}
                             onChange={(e) => onChangeNote(r.id, e.target.value)}
                             rows={3}
-                            style={{
-                              width: '100%',
-                              resize: 'vertical',
-                              padding: 6,
-                              borderRadius: 8,
-                              border: '1px solid #e5e7eb',
-                              fontSize: 13,
-                              fontFamily: 'inherit',
-                            }}
+                            className={styles.noteTextarea}
                             placeholder="z. B. 'Daten müssen aus steuerlichen Gründen vorerst behalten werden.'"
                             maxLength={MAX_ADMIN_NOTE}
                           />
-                          <div
-                            style={{
-                              marginTop: 4,
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              fontSize: 11,
-                              color: '#6b7280',
-                            }}
-                          >
-                            <span>{charsLeft} Zeichen übrig</span>
+                          <div className={styles.noteMetaRow}>
+                            <span className={styles.noteCounter}>{charsLeft} Zeichen übrig</span>
 
                             {isOpen ? (
                               <button
                                 type="button"
                                 onClick={() => rejectRequest(r.id)}
                                 disabled={savingId === r.id}
-                                style={{
-                                  padding: '4px 8px',
-                                  borderRadius: 999,
-                                  border: '1px solid #fecaca',
-                                  background: '#fef2f2',
-                                  color: '#b91c1c',
-                                  cursor:
-                                    savingId === r.id ? 'not-allowed' : 'pointer',
-                                }}
+                                className={styles.noteActionBtn}
                               >
                                 {savingId === r.id
                                   ? 'Lehne ab…'
                                   : 'Als abgelehnt markieren'}
                               </button>
                             ) : (
-                              <span
-                                style={{
-                                  padding: '2px 8px',
-                                  borderRadius: 999,
-                                  background: '#f9fafb',
-                                  fontSize: 11,
-                                }}
-                              >
+                              <span className={styles.noteBadge}>
                                 Bereits {r.status === 'rejected'
                                   ? 'abgelehnt'
                                   : 'abgeschlossen'}
@@ -309,26 +231,15 @@ const AdminLoeschanfragenPage = () => {
                         </td>
 
                         {/* Status */}
-                        <td style={{ padding: 8, verticalAlign: 'top' }}>
+                        <td className={styles.td}>
                           <span
-                            style={{
-                              display: 'inline-block',
-                              padding: '2px 8px',
-                              borderRadius: 999,
-                              fontSize: 12,
-                              background:
-                                r.status === 'open'
-                                  ? '#eff6ff'
-                                  : r.status === 'done'
-                                  ? '#ecfdf5'
-                                  : '#fef2f2',
-                              color:
-                                r.status === 'open'
-                                  ? '#1d4ed8'
-                                  : r.status === 'done'
-                                  ? '#15803d'
-                                  : '#b91c1c',
-                            }}
+                            className={`${styles.statusBadge} ${
+                              r.status === 'open'
+                                ? styles.statusOpen
+                                : r.status === 'done'
+                                ? styles.statusDone
+                                : styles.statusRejected
+                            }`}
                           >
                             {r.status === 'open' && 'Offen'}
                             {r.status === 'done' && 'Abgeschlossen'}
@@ -337,7 +248,7 @@ const AdminLoeschanfragenPage = () => {
                         </td>
 
                         {/* Datum */}
-                        <td style={{ padding: 8, verticalAlign: 'top', fontSize: 12 }}>
+                        <td className={`${styles.td} ${styles.tdDate}`}>
                           {formatDate(r.created_at)}
                         </td>
                       </tr>

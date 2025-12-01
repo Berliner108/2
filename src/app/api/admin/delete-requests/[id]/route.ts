@@ -1,54 +1,67 @@
 // /src/app/api/admin/delete-requests/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin' // ggf. Pfad anpassen
+import { NextResponse } from 'next/server'
+import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 type DeleteStatus = 'open' | 'rejected' | 'done'
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params
+export async function PATCH(req: Request, context: any) {
+  const id = context?.params?.id as string | undefined
 
-  try {
-    const sb = supabaseAdmin()
-    const body = await req.json().catch(() => ({}))
+  if (!id) {
+    return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  }
 
-    const nextStatus: DeleteStatus = body.status || 'rejected'
-    const adminNote: string | null = body.admin_note ?? null
+  // Auth + Admin-Check (gleich wie im Admin-Dashboard)
+  const sb = await supabaseServer()
+  const { data: { user } } = await sb.auth.getUser()
 
-    // Nur "rejected" über dieses Endpoint erlauben
-    if (nextStatus !== 'rejected') {
-      return NextResponse.json(
-        { error: 'INVALID_STATUS', message: 'Nur Status "rejected" ist hier erlaubt.' },
-        { status: 400 }
-      )
-    }
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
 
-    const { data, error } = await sb
-      .from('account_delete_requests') // Tabellenname ggf. anpassen
-      .update({
-        status: nextStatus,
-        admin_note: adminNote,
-      })
-      .eq('id', id)
-      .select()
-      .single()
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
-    if (error) {
-      console.error('DB-Fehler', error)
-      return NextResponse.json(
-        { error: 'DB_ERROR', message: error.message },
-        { status: 500 }
-      )
-    }
+  if (profile?.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
-    return NextResponse.json({ request: data })
-  } catch (err: any) {
-    console.error('UNBEKANNTER FEHLER', err)
+  const body = await req.json().catch(() => null) as {
+    status?: DeleteStatus
+    admin_note?: string | null
+  } | null
+
+  if (!body || !body.status) {
+    return NextResponse.json({ error: 'Missing status' }, { status: 400 })
+  }
+
+  const allowed: DeleteStatus[] = ['open', 'rejected', 'done']
+  if (!allowed.includes(body.status)) {
+    return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+  }
+
+  const admin = supabaseAdmin()
+  const { data, error } = await admin
+    .from('account_delete_requests') // Name wie vorher bei dir verwendet
+    .update({
+      status: body.status,
+      admin_note: body.admin_note ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .maybeSingle()
+
+  if (error) {
     return NextResponse.json(
-      { error: 'UNKNOWN', message: 'Fehler beim Aktualisieren der Löschanfrage.' },
-      { status: 500 }
+      { error: 'Update failed', details: error.message },
+      { status: 500 },
     )
   }
+
+  return NextResponse.json({ request: data }, { status: 200 })
 }
