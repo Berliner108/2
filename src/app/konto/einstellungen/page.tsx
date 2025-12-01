@@ -1202,6 +1202,42 @@ const canSaveKonto = useMemo(() => {
 )}
 
     </div>
+        {/* Optionaler Grund */}
+    <div className={styles.inputGroup}>
+      <label htmlFor="deleteReason">Grund (optional)</label>
+      <textarea
+        id="deleteReason"
+        value={deleteReason}
+        onChange={(e) => setDeleteReason(e.target.value)}
+        placeholder="Optional: Warum möchtest du dein Konto löschen?"
+        className={`${styles.input} ${styles.inviteTextarea}`}
+        rows={2}
+      />
+    </div>
+
+    {/* Checkbox + Hinweis */}
+    <div className={styles.inputGroup}>
+      <label
+        htmlFor="deleteConfirm"
+        style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}
+      >
+        <input
+          id="deleteConfirm"
+          type="checkbox"
+          checked={deleteConfirm}
+          onChange={(e) => setDeleteConfirm(e.target.checked)}
+          disabled={!canRequestDelete}
+        />
+        Ich bestätige, dass ich eine Löschanfrage stellen möchte.
+      </label>
+
+      {!canRequestDelete && (
+        <p style={{ marginTop: 4, color: '#b91c1c', fontSize: 13 }}>
+          Es besteht bereits eine offene Löschanfrage.
+        </p>
+      )}
+    </div>
+
 
     <div className={styles.inputGroup}>
       <button
