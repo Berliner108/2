@@ -82,7 +82,9 @@
   flex-wrap: nowrap;
   overflow-x: visible; /* kein Scrollen */
   max-width: 85%;
+  margin: 0 auto;      /* ⬅️ zentriert den Container horizontal */
 }
+
 .stepBox {
   width: 280px;
   min-height: 160px;
