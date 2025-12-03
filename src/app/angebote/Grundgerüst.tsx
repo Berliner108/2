@@ -462,38 +462,82 @@ const calculateProgress = () => {
 </div>
 
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
-<div className={styles.bewerbungGruppe}>
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('startseite')}
-      checked={bewerbungOptionen.includes('startseite')}
-    />
-    <Star size={18} color="#f5b400" />
-    Anzeige auf Startseite hervorheben (39,99 €)
-  </label>
+<div className={styles.bewerbungPanel}>
+  {/* Kopfzeile */}
+  <div className={styles.bewerbungHeader}>
+    <span className={styles.bewerbungIcon} aria-hidden></span>
+    <p className={styles.bewerbungText}>
+      Erhöhe die Sichtbarkeit deines Auftrags und erhalte schneller passende Angebote.
+    </p>
+  </div>
 
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('suche')}
-      checked={bewerbungOptionen.includes('suche')}
-    />
-    <Search size={18} color="#0070f3" />
-    Anzeige in Suche priorisieren (17,99 €)
-  </label>
+  {/* Optionen – aktuell statisch, Backend kommt später */}
+  <div className={styles.bewerbungGruppe}>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('startseite')}
+        checked={bewerbungOptionen.includes('startseite')}
+      />
+      <Star className={styles.iconStar} size={18} />
+      <span>
+        Startseiten-Paket  
+        <small style={{ display: 'block', color: '#64748b' }}>
+          Deine Anfrage wird auf der Startseite hervorgehoben.
+        </small>
+      </span>
+    </label>
 
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('premium')}
-      checked={bewerbungOptionen.includes('premium')}
-    />
-    <Crown size={18} color="#9b59b6" />
-    Premium-Anzeige aktivieren (19,99 €)
-  </label>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('suche')}
+        checked={bewerbungOptionen.includes('suche')}
+      />
+      <Search className={styles.iconSearch} size={18} />
+      <span>
+        Such-Boost  
+        <small style={{ display: 'block', color: '#64748b' }}>
+          Bessere Platzierung in den Suchergebnissen.
+        </small>
+      </span>
+    </label>
 
-  <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('premium')}
+        checked={bewerbungOptionen.includes('premium')}
+      />
+      <Crown className={styles.iconCrown} size={18} />
+      <span>
+        Premium-Paket  
+        <small style={{ display: 'block', color: '#64748b' }}>
+          Maximale Sichtbarkeit durch Kombination mehrerer Vorteile.
+        </small>
+      </span>
+    </label>
+
+    <p className={styles.steuerHinweis}>
+      Preise und genaue Konditionen werden später noch definiert.
+    </p>
+  </div>
+
+  {/* Hinweis-Zeile unterhalb – nur Frontend-Logik */}
+  <div className={styles.promoHinweis}>
+    <div className={styles.promoHinweisRow}>
+      <span className={styles.promoScore}>
+        Ausgewählt: {bewerbungOptionen.length} Paket(e)
+      </span>
+      <span className={styles.promoSumme}>
+        Gesamtpreis wird im nächsten Schritt berechnet.
+      </span>
+    </div>
+    <small>
+      Pakete können kombiniert werden. Die spätere Sortierung der Anzeigen kann z. B.
+      nach einem Promo-Score erfolgen – das Backend legt die Logik fest.
+    </small>
+  </div>
 </div>
 
 <div className={styles.agbContainer} ref={agbRef}>

@@ -206,8 +206,46 @@
   font-size: 0.85rem;
   color: #888;
 }
+/* Panel-Hintergrund für Hinweis + Optionen */
+.bewerbungPanel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  background: linear-gradient(to right, rgba(0,229,255,.12), rgba(0,180,216,.12));
+}
 
+/* Kopfzeile im Panel */
+.bewerbungHeader {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.2rem;
+  font-weight: 900;
 
+}
+.bewerbungIcon { font-size: 1.1rem; }
+.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
+
+/* Gruppe im Panel enger + ohne Außenabstand */
+.bewerbungPanel .bewerbungGruppe {
+  margin: 0;                 /* statt vorher 4rem */
+  gap: 1rem;                 /* kompakter als 1.5rem */
+}
+
+/* Mobile leicht kompakter */
+@media (max-width: 599px) {
+  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
+  .bewerbungText { font-size: .95rem; }
+}
+.steuerHinweis {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+}
 .agbContainer {
   margin-top: 2.5rem;
   padding: 1rem;
