@@ -549,29 +549,24 @@
  
 }
 
-.bewerbungPanel {
+.bewerbungOption {
+  flex: 1 1 200px;
   display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid #bae6fd;
-  border-radius: 10px;
-  background: #e0f7ff;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-size: 15px;
 }
-
-.iconStar { color: #f59e0b; }
-.iconSearch { color: #0ea5e9; }
-.iconCrown { color: #a78bfa; }
-
-.promoHinweis {
-  margin-top: 12px;
-  font-size: 0.85rem;
-  color: #475569;
-  line-height: 1.45;
+.bewerbungOption input {
+  width: 14px;
+  height: 14px;
+  accent-color: #00b4d8;
+  margin-right: 0.25rem;
 }
-/* ==== Bewerbungspanel 1:1 wie Vorlage ==== */
-
+.bewerbungOption svg {
+  margin-right: 0.3rem;
+}
 .bewerbungPanel {
   display: flex;
   flex-direction: column;
@@ -583,33 +578,29 @@
   background: linear-gradient(to right, rgba(0,229,255,.12), rgba(0,180,216,.12));
 }
 
+/* Kopfzeile im Panel */
 .bewerbungHeader {
   display: flex;
   align-items: center;
   gap: .5rem;
   font-size: 1.2rem;
   font-weight: 900;
-}
 
-.bewerbungIcon {
-  font-size: 1.1rem;
 }
+.bewerbungIcon { font-size: 1.1rem; }
+.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
 
-.bewerbungText {
-  margin: 0;
-  line-height: 1.45;
-  color: #0f172a;
-}
-
+/* Gruppe im Panel enger + ohne Außenabstand */
 .bewerbungPanel .bewerbungGruppe {
-  margin: 0;
-  gap: 1rem;
+  margin: 0;                 /* statt vorher 4rem */
+  gap: 1rem;                 /* kompakter als 1.5rem */
 }
 
-.iconStar { color: #f59e0b; }
-.iconSearch { color: #0ea5e9; }
-.iconCrown { color: #a78bfa; }
-
+/* Mobile leicht kompakter */
+@media (max-width: 599px) {
+  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
+  .bewerbungText { font-size: .95rem; }
+}
 .promoHinweis {
   margin-top: 8px;
   font-size: 12px;
@@ -631,9 +622,4 @@
   font-weight: 600;
   font-size: 13px;
   color: #0f172a;
-}
-
-@media (max-width: 599px) {
-  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
-  .bewerbungText { font-size: .95rem; }
 }
