@@ -39,7 +39,7 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
           className={styles.oswaldTextarea}
           value={text}
           onChange={(e) => {
-            if (e.target.value.length <= 400) {
+            if (e.target.value.length <= 1200) {
               setText(e.target.value)
             }
           }}
@@ -56,8 +56,8 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
 Bei Bedarf kannst du Prüfprotokolle, Sichtseiten, Nebensichtseiten und Nichtsichtseiten, beschichtungsfreie Stellen, zusätzliche Normen und Standards, gewünschte Schichtdicken Verpackungsvorschrift, Details zur Vor- und Nachbehandlung, Anforderungen an das Beschichtungsergebnis (z.B. frei von Kratzern oder Fremdpartikeln, optisch funktional) hinzufügen.`}
           rows={6}
         />
-        <div className={styles.charCount} style={{ color: text.length > 370 ? '#dc2626' : '#64748b' }}>
-          {text.length}/400 Zeichen
+        <div className={styles.charCount} style={{ color: text.length > 1170 ? '#dc2626' : '#64748b' }}>
+          {text.length}/1200 Zeichen
         </div>
       </div>
     </div>
