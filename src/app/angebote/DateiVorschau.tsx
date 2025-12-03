@@ -1,7 +1,7 @@
 // components/DateiVorschau.tsx
 'use client';
 import React from 'react';
-import styles from './sonderlacke.module.css';
+import styles from './dropzonedateivorschau.module.css';
 
 interface DateiVorschauProps {
   bilder?: boolean;

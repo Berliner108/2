@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import styles from './sonderlacke.module.css';
+import styles from './dropzonedateivorschau.module.css';
 
 const nurBilder = (file: File) => file.type.startsWith('image/');
 
