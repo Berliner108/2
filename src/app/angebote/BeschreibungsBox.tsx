@@ -51,6 +51,7 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
 - Bei thermischen Verfahren der Hitzeeinwirkung standhält
 - Kontaktstellen zum Aufhängen / Einspannen verfügt; kennzeichnen Sie ggf. genau, an welcher Stelle ihr Material für die Beschichtung kontaktiert werden kann
 - Dass die Verpackung Transportsicherheit und allg. Sicherheit gewährleistet
+-Achtung: Angaben in der Beschreibung haben stets höhere Priorität als in den Verfahrensangaben!
 
 Bei Bedarf kannst du Prüfprotokolle, Sichtseiten, Nebensichtseiten und Nichtsichtseiten, beschichtungsfreie Stellen, zusätzliche Normen und Standards, gewünschte Schichtdicken Verpackungsvorschrift, Details zur Vor- und Nachbehandlung, Anforderungen an das Beschichtungsergebnis (z.B. frei von Kratzern oder Fremdpartikeln, optisch funktional) hinzufügen.`}
           rows={6}

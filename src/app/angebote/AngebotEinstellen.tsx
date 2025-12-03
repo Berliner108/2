@@ -1243,7 +1243,7 @@ const validSecondOptions: { [key: string]: string[] } = {
       </motion.div>
 
       <motion.div {...fadeIn} className={styles.stepsAnimation}>
-        <h3>Sag uns in 5 einfachen Schritten, was du <span className={styles.highlight}>erledigt</span> haben möchtest.
+        <h3>Sag uns in 3 einfachen Schritten, was du <span className={styles.highlight}>erledigt</span> haben möchtest.
         <button
   type="button"
   onClick={() => setShowSteps(!showSteps)}
