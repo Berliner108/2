@@ -16,7 +16,7 @@
 .oswaldTextarea {
   max-width: 98%;
   font-family: 'Oswald', sans-serif;
-  font-size: 1rem;
+  font-size: 0.7rem;
   padding: 0.75rem;
   border: 1px solid ;
   border-color: grey;
@@ -83,3 +83,8 @@
   opacity: 1;
 }
 
+@media (max-width: 599px) {
+  .oswaldTextarea {
+    font-size: 0.5rem;
+  }
+}
