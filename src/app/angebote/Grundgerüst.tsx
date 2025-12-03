@@ -22,6 +22,35 @@ const oswald = Oswald({
   subsets: ['latin'],
   weight: ['400', '700']
 })
+// Fiktive Promo-Pakete (nur Frontend)
+const promoPackages = [
+  {
+    id: 'startseite',
+    title: 'Anzeige auf Startseite hervorheben',
+    subtitle: 'Startseiten-Hervorhebung',
+    priceCents: 3999,
+    score: 30,
+    icon: <Star size={18} className={styles.iconStar} aria-hidden />
+  },
+  {
+    id: 'suche',
+    title: 'Anzeige in Suche priorisieren',
+    subtitle: 'Ranking-Boost in der Suche',
+    priceCents: 1999,
+    score: 20,
+    icon: <Search size={18} className={styles.iconSearch} aria-hidden />
+  },
+  {
+    id: 'premium',
+    title: 'Premium-Anzeige aktivieren',
+    subtitle: 'Premium-Badge & Listing',
+    priceCents: 1799,
+    score: 25,
+    icon: <Crown size={18} className={styles.iconCrown} aria-hidden />
+  }
+] as const
+
+
 
 // ✅ aktualisiertes fadeIn
 const fadeIn = {
@@ -232,6 +261,16 @@ formData.append('abholArt', abholArt);
     setIsLoading(false)
   }
 }
+const formatEUR = (cents: number) =>
+  (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+
+const selectedPromoScore = promoPackages
+  .filter(p => bewerbungOptionen.includes(p.id))
+  .reduce((sum, p) => sum + p.score, 0)
+
+const selectedTotalCents = promoPackages
+  .filter(p => bewerbungOptionen.includes(p.id))
+  .reduce((sum, p) => sum + p.priceCents, 0)
 const calculateProgress = () => {
   let steps = 0
   if (photoFiles.length > 0) steps += 1
@@ -468,72 +507,59 @@ const calculateProgress = () => {
     Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
   </h3>
 
-  <div className={styles.bewerbungGruppe} style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-    {/* 1️⃣ Startseite */}
-    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('startseite')}
-        checked={bewerbungOptionen.includes('startseite')}
-      />
-      <Star className={styles.iconStar} size={18} />
-      <span>
-        <strong>Anzeige auf Startseite hervorheben — 39,99 €</strong><br />
-        <small style={{ color: '#475569' }}>Startseiten-Hervorhebung</small>
-      </span>
-    </label>
-
-    {/* 2️⃣ Suche */}
-    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('suche')}
-        checked={bewerbungOptionen.includes('suche')}
-      />
-      <Search className={styles.iconSearch} size={18} />
-      <span>
-        <strong>Anzeige in Suche priorisieren — 19,99 €</strong><br />
-        <small style={{ color: '#475569' }}>Ranking-Boost in der Suche</small>
-      </span>
-    </label>
-
-    {/* 3️⃣ Premium */}
-    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('premium')}
-        checked={bewerbungOptionen.includes('premium')}
-      />
-      <Crown className={styles.iconCrown} size={18} />
-      <span>
-        <strong>Premium-Anzeige aktivieren — 17,99 €</strong><br />
-        <small style={{ color: '#475569' }}>Premium-Badge & Listing</small>
-      </span>
-    </label>
+  {/* Bewerbung – statisches Frontend-Panel */}
+<div
+  className={styles.bewerbungPanel}
+  role="region"
+  aria-label="Bewerbung deiner Anfrage"
+>
+  <div className={styles.bewerbungHeader}>
+    <span className={styles.bewerbungIcon} aria-hidden></span>
+    <p className={styles.bewerbungText}>
+      Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
+    </p>
   </div>
 
-  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.2rem' }}>
-    <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+  <div className={styles.bewerbungGruppe}>
+    {promoPackages.map(p => (
+      <label key={p.id} className={styles.bewerbungOption}>
+        <input
+          type="checkbox"
+          onChange={() => toggleBewerbung(p.id)}
+          checked={bewerbungOptionen.includes(p.id)}
+        />
+        {p.icon}
+        <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+          <span>
+            {p.title} — {formatEUR(p.priceCents)}
+          </span>
+          <small style={{ color: '#64748b' }}>{p.subtitle}</small>
+        </span>
+      </label>
+    ))}
+
+    <p className={styles.steuerHinweis}>
       Steuern werden im Checkout berechnet.
     </p>
-    <p style={{ fontWeight: 'bold', color: '#0f172a', margin: 0 }}>
-      Gesamt:&nbsp;
-      {bewerbungOptionen.length > 0
-        ? `${bewerbungOptionen.length * 25.0},00 €`
-        : '0,00 €'}
-    </p>
   </div>
 
-  <div className={styles.promoHinweis}>
-    <strong>Deine Auswahl: +{bewerbungOptionen.length} Promo-Punkte</strong>
-    <br />
+  <div className={styles.promoHinweis} role="note" aria-live="polite">
+    <div className={styles.promoHinweisRow}>
+      <span className={styles.promoScore}>
+        Deine Auswahl: +{selectedPromoScore} Promo-Punkte
+      </span>
+      <span className={styles.promoSumme}>
+        Gesamt: {formatEUR(selectedTotalCents)}
+      </span>
+    </div>
     <small>
       Pakete addieren sich. Die Sortierung der Anzeigen erfolgt nach dem Promo-Score.
-      Eine Startseiten-Platzierung ist <em>nicht garantiert</em> – wenn andere zeitgleich
-      einen höheren Gesamtwert haben, erscheinen deren Anzeigen zuerst.
+      Eine Startseiten-Platzierung ist <em>nicht garantiert</em> – wenn andere
+      zeitgleich einen höheren Gesamtwert haben, erscheinen deren Anzeigen zuerst.
     </small>
   </div>
-</div>
+</div></div>
+
 
 
 
