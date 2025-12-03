@@ -27,13 +27,13 @@
   min-height: 300px;
 }
 .oswaldTextarea::placeholder {
-  font-size: 0.6rem;      /* 👈 hier Größe anpassen */
+  font-size: 0.8rem;      /* 👈 hier Größe anpassen */
   color: #777;            /* optional: etwas heller als normaler Text */
   line-height: 1.5;       /* falls du die Zeilenhöhe beeinflussen willst */
 }
 @media (max-width: 599px) {
   .oswaldTextarea::placeholder {
-    font-size: 0.4rem;
+    font-size: 0.6rem;
   }
 }
 
