@@ -690,7 +690,7 @@ const renderSpecs = (specs: Specification[]) =>
 
         <div className={styles.logistikGrid}>
           <div className={styles.inputGroup}>
-            <label>Lieferdatum</label>
+            <label>Lieferdatums</label>
             <input
               type="date"
               min={today}
