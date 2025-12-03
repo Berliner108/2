@@ -502,8 +502,6 @@ const calculateProgress = () => {
 
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 
-<div className={styles.bewerbungPanel}>
-
   {/* Bewerbung – statisches Frontend-Panel */}
 <div
   className={styles.bewerbungPanel}
@@ -555,11 +553,7 @@ const calculateProgress = () => {
       zeitgleich einen höheren Gesamtwert haben, erscheinen deren Anzeigen zuerst.
     </small>
   </div>
-</div></div>
-
-
-
-
+</div>
 <div className={styles.agbContainer} ref={agbRef}>
 
   <motion.label
