@@ -16,7 +16,7 @@
 .oswaldTextarea {
   max-width: 98%;
   font-family: 'Oswald', sans-serif;
-  font-size: 0.7rem;
+  font-size: 1rem;
   padding: 0.75rem;
   border: 1px solid ;
   border-color: grey;
@@ -25,6 +25,16 @@
   line-height: 1.5;
   background: #fff;
   min-height: 300px;
+}
+.oswaldTextarea::placeholder {
+  font-size: 0.6rem;      /* 👈 hier Größe anpassen */
+  color: #777;            /* optional: etwas heller als normaler Text */
+  line-height: 1.5;       /* falls du die Zeilenhöhe beeinflussen willst */
+}
+@media (max-width: 599px) {
+  .oswaldTextarea::placeholder {
+    font-size: 0.4rem;
+  }
 }
 
 .charCount {
@@ -83,8 +93,3 @@
   opacity: 1;
 }
 
-@media (max-width: 599px) {
-  .oswaldTextarea {
-    font-size: 0.5rem;
-  }
-}
