@@ -503,9 +503,6 @@ const calculateProgress = () => {
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 
 <div className={styles.bewerbungPanel}>
-  <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#023e8a', marginBottom: '1rem' }}>
-    Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
-  </h3>
 
   {/* Bewerbung – statisches Frontend-Panel */}
 <div
