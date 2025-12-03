@@ -462,18 +462,18 @@ const calculateProgress = () => {
 </div>
 
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
-<div className={styles.bewerbungPanel}>
-  {/* Kopfzeile */}
-  <div className={styles.bewerbungHeader}>
-    <span className={styles.bewerbungIcon} aria-hidden></span>
-    <p className={styles.bewerbungText}>
-      Erhöhe die Sichtbarkeit deines Auftrags und erhalte schneller passende Angebote.
-    </p>
-  </div>
+<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 
-  {/* Optionen – aktuell statisch, Backend kommt später */}
-  <div className={styles.bewerbungGruppe}>
-    <label className={styles.bewerbungOption}>
+<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
+
+<div className={styles.bewerbungPanel}>
+  <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#023e8a', marginBottom: '1rem' }}>
+    Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
+  </h3>
+
+  <div className={styles.bewerbungGruppe} style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+    {/* 1️⃣ Startseite */}
+    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
       <input
         type="checkbox"
         onChange={() => toggleBewerbung('startseite')}
@@ -481,14 +481,13 @@ const calculateProgress = () => {
       />
       <Star className={styles.iconStar} size={18} />
       <span>
-        Startseiten-Paket  
-        <small style={{ display: 'block', color: '#64748b' }}>
-          Deine Anfrage wird auf der Startseite hervorgehoben.
-        </small>
+        <strong>Anzeige auf Startseite hervorheben — 39,99 €</strong><br />
+        <small style={{ color: '#475569' }}>Startseiten-Hervorhebung</small>
       </span>
     </label>
 
-    <label className={styles.bewerbungOption}>
+    {/* 2️⃣ Suche */}
+    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
       <input
         type="checkbox"
         onChange={() => toggleBewerbung('suche')}
@@ -496,14 +495,13 @@ const calculateProgress = () => {
       />
       <Search className={styles.iconSearch} size={18} />
       <span>
-        Such-Boost  
-        <small style={{ display: 'block', color: '#64748b' }}>
-          Bessere Platzierung in den Suchergebnissen.
-        </small>
+        <strong>Anzeige in Suche priorisieren — 19,99 €</strong><br />
+        <small style={{ color: '#475569' }}>Ranking-Boost in der Suche</small>
       </span>
     </label>
 
-    <label className={styles.bewerbungOption}>
+    {/* 3️⃣ Premium */}
+    <label className={styles.bewerbungOption} style={{ flex: '1 1 250px', maxWidth: '350px' }}>
       <input
         type="checkbox"
         onChange={() => toggleBewerbung('premium')}
@@ -511,34 +509,36 @@ const calculateProgress = () => {
       />
       <Crown className={styles.iconCrown} size={18} />
       <span>
-        Premium-Paket  
-        <small style={{ display: 'block', color: '#64748b' }}>
-          Maximale Sichtbarkeit durch Kombination mehrerer Vorteile.
-        </small>
+        <strong>Premium-Anzeige aktivieren — 17,99 €</strong><br />
+        <small style={{ color: '#475569' }}>Premium-Badge & Listing</small>
       </span>
     </label>
+  </div>
 
-    <p className={styles.steuerHinweis}>
-      Preise und genaue Konditionen werden später noch definiert.
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.2rem' }}>
+    <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+      Steuern werden im Checkout berechnet.
+    </p>
+    <p style={{ fontWeight: 'bold', color: '#0f172a', margin: 0 }}>
+      Gesamt:&nbsp;
+      {bewerbungOptionen.length > 0
+        ? `${bewerbungOptionen.length * 25.0},00 €`
+        : '0,00 €'}
     </p>
   </div>
 
-  {/* Hinweis-Zeile unterhalb – nur Frontend-Logik */}
   <div className={styles.promoHinweis}>
-    <div className={styles.promoHinweisRow}>
-      <span className={styles.promoScore}>
-        Ausgewählt: {bewerbungOptionen.length} Paket(e)
-      </span>
-      <span className={styles.promoSumme}>
-        Gesamtpreis wird im nächsten Schritt berechnet.
-      </span>
-    </div>
+    <strong>Deine Auswahl: +{bewerbungOptionen.length} Promo-Punkte</strong>
+    <br />
     <small>
-      Pakete können kombiniert werden. Die spätere Sortierung der Anzeigen kann z. B.
-      nach einem Promo-Score erfolgen – das Backend legt die Logik fest.
+      Pakete addieren sich. Die Sortierung der Anzeigen erfolgt nach dem Promo-Score.
+      Eine Startseiten-Platzierung ist <em>nicht garantiert</em> – wenn andere zeitgleich
+      einen höheren Gesamtwert haben, erscheinen deren Anzeigen zuerst.
     </small>
   </div>
 </div>
+
+
 
 <div className={styles.agbContainer} ref={agbRef}>
 

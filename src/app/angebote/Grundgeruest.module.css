@@ -82,9 +82,8 @@
   flex-wrap: nowrap;
   overflow-x: visible; /* kein Scrollen */
   max-width: 85%;
-  margin: 0 auto;      /* ⬅️ zentriert den Container horizontal */
+  margin: 0 auto;
 }
-
 .stepBox {
   width: 280px;
   min-height: 160px;
@@ -206,46 +205,8 @@
   font-size: 0.85rem;
   color: #888;
 }
-/* Panel-Hintergrund für Hinweis + Optionen */
-.bewerbungPanel {
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid #bae6fd;
-  border-radius: 10px;
-  background: linear-gradient(to right, rgba(0,229,255,.12), rgba(0,180,216,.12));
-}
 
-/* Kopfzeile im Panel */
-.bewerbungHeader {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  font-size: 1.2rem;
-  font-weight: 900;
 
-}
-.bewerbungIcon { font-size: 1.1rem; }
-.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
-
-/* Gruppe im Panel enger + ohne Außenabstand */
-.bewerbungPanel .bewerbungGruppe {
-  margin: 0;                 /* statt vorher 4rem */
-  gap: 1rem;                 /* kompakter als 1.5rem */
-}
-
-/* Mobile leicht kompakter */
-@media (max-width: 599px) {
-  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
-  .bewerbungText { font-size: .95rem; }
-}
-.steuerHinweis {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #888;
-}
 .agbContainer {
   margin-top: 2.5rem;
   padding: 1rem;
@@ -587,7 +548,6 @@
 
  
 }
-/* ==== Promo-Panel wie in sonderlacke.module.css ==== */
 
 .bewerbungPanel {
   display: flex;
@@ -597,18 +557,36 @@
   padding: 1rem 1.25rem;
   border: 1px solid #bae6fd;
   border-radius: 10px;
-  background: linear-gradient(
-    to right,
-    rgba(0, 229, 255, 0.12),
-    rgba(0, 180, 216, 0.12)
-  );
+  background: #e0f7ff;
 }
 
-/* Kopfzeile im Panel */
+.iconStar { color: #f59e0b; }
+.iconSearch { color: #0ea5e9; }
+.iconCrown { color: #a78bfa; }
+
+.promoHinweis {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.45;
+}
+/* ==== Bewerbungspanel 1:1 wie Vorlage ==== */
+
+.bewerbungPanel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  background: linear-gradient(to right, rgba(0,229,255,.12), rgba(0,180,216,.12));
+}
+
 .bewerbungHeader {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: .5rem;
   font-size: 1.2rem;
   font-weight: 900;
 }
@@ -623,26 +601,15 @@
   color: #0f172a;
 }
 
-/* Gruppe im Panel etwas kompakter */
 .bewerbungPanel .bewerbungGruppe {
-  margin: 0;          /* überschreibt dein globales margin-top: 2rem; */
+  margin: 0;
   gap: 1rem;
 }
 
-/* Icons wie auf der Sonderlack-Seite */
-.iconStar {
-  color: #f59e0b;   /* Gold */
-}
+.iconStar { color: #f59e0b; }
+.iconSearch { color: #0ea5e9; }
+.iconCrown { color: #a78bfa; }
 
-.iconSearch {
-  color: #0ea5e9;   /* Blau */
-}
-
-.iconCrown {
-  color: #a78bfa;   /* Violett */
-}
-
-/* Hinweisbereich unten */
 .promoHinweis {
   margin-top: 8px;
   font-size: 12px;
@@ -666,14 +633,7 @@
   color: #0f172a;
 }
 
-/* Optional: Mobile etwas enger */
 @media (max-width: 599px) {
-  .bewerbungPanel {
-    padding: 0.75rem 1rem;
-    gap: 0.75rem;
-  }
-
-  .bewerbungText {
-    font-size: 0.95rem;
-  }
+  .bewerbungPanel { padding: .75rem 1rem; gap: .75rem; }
+  .bewerbungText { font-size: .95rem; }
 }
