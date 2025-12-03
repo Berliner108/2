@@ -1686,7 +1686,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     className={styles.charCount}
     style={{ color: text.length > 370 ? '#dc2626' : '#64748b' }}
   >
-    {text.length}/400 Zeichen
+    {text.length}/500 Zeichen
   </div>
 </div>
 </div>
