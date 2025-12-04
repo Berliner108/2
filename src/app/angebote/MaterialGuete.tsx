@@ -142,15 +142,15 @@ export default function MaterialGuete({
         </AnimatePresence>
       </div>
 
-      {/* Abmessungen & Masse im Grid */}
+      {/* Abmessungen & Masse – nebeneinander auf Desktop */}
       <div className={styles.abmessungWrapper}>
         <h3 className={styles.gruppenTitel}>
           Abmessungen größtes Werkstück (mm) &amp; Masse (kg):
         </h3>
 
-        <div className={styles.abmessungGrid}>
+        <div className={styles.abmessungRow}>
           {/* Länge */}
-          <div className={styles.dimensionItem}>
+          <div className={styles.dimensionInline}>
             <span className={styles.dimensionLabel}>Länge</span>
             <div className={styles.inputWithUnit}>
               <input
@@ -169,7 +169,7 @@ export default function MaterialGuete({
           </div>
 
           {/* Breite */}
-          <div className={styles.dimensionItem}>
+          <div className={styles.dimensionInline}>
             <span className={styles.dimensionLabel}>Breite</span>
             <div className={styles.inputWithUnit}>
               <input
@@ -188,7 +188,7 @@ export default function MaterialGuete({
           </div>
 
           {/* Höhe */}
-          <div className={styles.dimensionItem}>
+          <div className={styles.dimensionInline}>
             <span className={styles.dimensionLabel}>Höhe</span>
             <div className={styles.inputWithUnit}>
               <input
@@ -207,10 +207,8 @@ export default function MaterialGuete({
           </div>
 
           {/* Masse */}
-          <div className={styles.dimensionItem}>
-            <span className={styles.dimensionLabel}>
-              Masse schwerstes Werkstück
-            </span>
+          <div className={styles.dimensionInline}>
+            <span className={styles.dimensionLabel}>Masse</span>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
