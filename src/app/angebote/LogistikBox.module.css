@@ -3,7 +3,6 @@
   padding: 1.5rem;
   border: 1px solid #cbd5e1;
   border-radius: 0.75rem;
-  
   transition: all 0.4s ease;
 }
 
@@ -39,10 +38,11 @@
   margin-bottom: 0.5rem;
 }
 
+/* alte InputError-Regel – kann bleiben */
 .formGroup input[type="date"].inputError,
 .formGroup select.inputError {
-   width: 90%; /* z. B. kürzer als 100% */
-  max-width: 420px;  
+  width: 90%;
+  max-width: 420px;
   padding: 0.6rem 1rem;
   border: 1px solid #94a3b8;
   border-radius: 0.5rem;
@@ -53,8 +53,7 @@
 }
 
 .dropdown {
-     width: 95%; /* z. B. kürzer als 100% */
-  
+  width: 95%;
   padding: 0.6rem 1rem;
   border: 1px solid #94a3b8;
   border-radius: 0.5rem;
@@ -64,7 +63,6 @@
   font-family: 'Oswald';
   accent-color: #006d75;
 }
-
 
 .dropdown:focus {
   border-color: #0ea5e9;
@@ -72,35 +70,37 @@
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
 }
 
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
 .checkboxGroup input[type="checkbox"] {
-  
   accent-color: #006d75;
   cursor: pointer;
 }
 
 @media (max-width: 768px) {
   .formGroup input[type="date"],
-.formGroup select {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 100%;
-  padding: 0.6rem 1rem;
-  border: 1px solid #94a3b8;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  background-color: #ffffff;
-  color: #0f172a;
-  font-family: 'Oswald';
-  box-sizing: border-box;
-}
+  .formGroup select {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid #94a3b8;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background-color: #ffffff;
+    color: #0f172a;
+    font-family: 'Oswald';
+    box-sizing: border-box;
+  }
 
-/* Optional: Gleichmäßiger Look auf iOS */
-.formGroup input[type="date"]::-webkit-date-and-time-value {
-  text-align: left;
-}
-
+  .formGroup input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 .inputBase {
@@ -123,6 +123,40 @@
   animation: shake 0.3s ease;
 }
 
+/* Zeile für Textfeld + Buttons */
+.dateFieldRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+/* Kalender-Popover (wie in sonderlacke) */
+.calendarPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  z-index: 2000;
+  isolation: isolate;
+}
+
+/* Buttons (auch für „Datum wählen“ / „Löschen“) */
+.zuruecksetzenButton {
+  padding: 0.6rem 1.2rem;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+  font-family: 'Oswald';
+}
+
+.zuruecksetzenButton:hover {
+  background-color: #ddd;
+}
+
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-4px); }
@@ -130,6 +164,3 @@
   75% { transform: translateX(-4px); }
   100% { transform: translateX(0); }
 }
-
-
-
