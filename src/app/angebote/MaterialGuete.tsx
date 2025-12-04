@@ -85,7 +85,7 @@ export default function MaterialGuete({
             <span className={styles.tooltipText}>
               Wählen Sie die passende Materialgüte. Bei „Andere“ bitte manuell
               ergänzen. Wichtig: Abmessungen und Masse-Angaben sind erforderlich
-              für die Durchführbarkeit des Auftrags.
+              für die Durchführbarkeit dieses Auftrags.
             </span>
           </span>
         </p>
