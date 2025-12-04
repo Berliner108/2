@@ -175,3 +175,56 @@
     max-width: 100%;
   }
 }
+/* --- Kompakte Abmessungszeile Desktop + Mobile --- */
+.abmessungWrapper {
+  margin-top: 0.5rem;
+}
+
+.compactLabel {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.compactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.compactItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.inputWithUnit {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.inputField {
+  width: 90px;
+  padding: 0.35rem 0.45rem;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: 'Oswald', sans-serif;
+}
+
+/* Responsive: untereinander auf schmalen Geräten */
+@media (max-width: 768px) {
+  .compactRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inputField {
+    width: 100%;
+    max-width: 180px;
+  }
+}
