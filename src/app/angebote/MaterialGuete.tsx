@@ -216,7 +216,7 @@ export default function MaterialGuete({
                 pattern="[0-9]*"
                 onKeyDown={handleKeyDown}
                 value={masse}
-                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 4))}
+                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 5))}
                 className={`${styles.inputField} ${
                   abmessungError && !masse ? styles.inputError : ''
                 }`}
