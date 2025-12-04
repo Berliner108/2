@@ -424,3 +424,46 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   border: 2px solid red !important;
   border-radius: 4px;
 }
+/* Gruppe für Datums-Inputs: relative für Popover */
+.dateGroup {
+  position: relative;
+}
+
+/* Textfeld + Buttons in einer Reihe */
+.dateFieldRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+/* Buttons neben dem Datumsfeld */
+.dateButton {
+  padding: 0.4rem 0.8rem;
+  background-color: #eee;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: 'Oswald', sans-serif;
+  transition: background-color 0.2s ease;
+}
+
+.dateButton:hover {
+  background-color: #ddd;
+}
+
+.dateButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Kalender-Popover (analog zu deiner anderen Seite) */
+.calendarPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  z-index: 2000;
+  isolation: isolate;
+}
