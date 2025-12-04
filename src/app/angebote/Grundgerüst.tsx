@@ -612,7 +612,7 @@ const calculateProgress = () => {
 
   {/* 🔹 NEU: Abmessungen & Masse in der Vorschau */}
   <p>
-    <strong>Abmessungen größtes Werkstück:</strong>{' '}
+    <strong>Abmessungen größtes Werkstück (L/B/H):</strong>{' '}
     {laenge || breite || hoehe
       ? `${laenge || '–'} × ${breite || '–'} × ${hoehe || '–'} mm`
       : 'Noch keine Angaben gemacht'}
