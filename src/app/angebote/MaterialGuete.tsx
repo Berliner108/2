@@ -99,9 +99,6 @@ export default function MaterialGuete({
             </span>
           </span>
         </p>
-        <p className={styles.pflichtHinweis}>
-          Alle Felder in diesem Bereich sind Pflichtfelder.
-        </p>
       </div>
 
       {/* Material-Auswahl – Custom Select */}
@@ -255,7 +252,7 @@ export default function MaterialGuete({
                 pattern="[0-9]*"
                 onKeyDown={handleKeyDown}
                 value={masse}
-                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 4))}
+                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 5))}
                 className={`${styles.inputField} ${
                   abmessungError && !masse ? styles.inputError : ''
                 }`}
