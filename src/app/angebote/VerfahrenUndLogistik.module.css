@@ -467,3 +467,90 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   z-index: 2000;
   isolation: isolate;
 }
+.logistikIntro {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.logistikSummary {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+/* 2 Karten nebeneinander, mobil untereinander */
+.logistikCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.logistikCard {
+  background-color: #fdfdfd;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+
+.logistikCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.helperText {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Serienauftrag-Zeile */
+.serienauftragRow {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.serienCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.serienCheckboxLabel input {
+  width: 14px;
+  height: 14px;
+  accent-color: #00b4d8;
+}
+
+.serienauftragSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.serienauftragSelect select {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .logistikCards {
+    grid-template-columns: 1fr;
+  }
+}

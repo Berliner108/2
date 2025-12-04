@@ -1098,6 +1098,8 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   // --- Datum & Kalender-Logik ---
   const today = todayDate();
   const minDate = minSelectableDate();
+  const todayStr = toYMD(today);
+
 
   const [lieferDatumDate, setLieferDatumDate] = useState<Date | null>(() =>
     lieferDatum ? new Date(lieferDatum) : null,
@@ -1213,6 +1215,27 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     setAbholDatum(toYMD(d));
     setAbholCalOpen(false);
   };
+const [serienauftrag, setSerienauftrag] = useState(false);
+const [rhythmus, setRhythmus] = useState('');
+
+// Hilfsfunktionen für Aufenthaltsdauer + Datumsformat
+const aufenthaltTage =
+  lieferDatum && abholDatum
+    ? Math.max(
+        0,
+        Math.round(
+          (new Date(abholDatum).getTime() - new Date(lieferDatum).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      )
+    : null;
+
+const formatDateDE = (value: string) =>
+  new Date(value).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 
   const secondOptions = validSecondOptions[selectedOption1] || [];
   const thirdOptions =
@@ -1670,196 +1693,170 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         )}
       </AnimatePresence>
 
-      {/* LOGISTIK MIT MINI-KALENDERN */}
-      <fieldset
-        className={`${styles.logistik} ${
-          logistikError ? styles.errorFieldset : ''
-        }`}
-      >
-        <legend className={styles.legendLogistik}>Logistik</legend>
+      {/* LOGISTIK */}
+<fieldset
+  className={`${styles.logistik} ${
+    logistikError ? styles.errorFieldset : ''
+  }`}
+>
+  <legend className={styles.legendLogistik}>Logistik</legend>
 
-        <div className={styles.logistikGrid}>
-          {/* Lieferdatum */}
-          <div
-            className={`${styles.inputGroup} ${styles.dateGroup}`}
-            ref={lieferFieldRef}
-          >
-            <label>Lieferdatum</label>
-            <div className={styles.dateFieldRow}>
-              <input
-                type="text"
-                readOnly
-                className={
-                  logistikError && !lieferDatum ? styles.inputError : ''
-                }
-                value={
-                  lieferDatumDate
-                    ? new Intl.DateTimeFormat('de-DE').format(
-                        lieferDatumDate,
-                      )
-                    : ''
-                }
-                placeholder="Datum wählen"
-                onClick={() => setLieferCalOpen(true)}
-              />
-              <button
-                type="button"
-                className={styles.dateButton}
-                onClick={() => setLieferCalOpen(true)}
-              >
-                Datum wählen
-              </button>
-              {lieferDatumDate && (
-                <button
-                  type="button"
-                  className={styles.dateButton}
-                  onClick={() => {
-                    setLieferDatumDate(null);
-                    setLieferDatum('');
-                  }}
-                >
-                  Löschen
-                </button>
-              )}
-            </div>
+  {/* kurze Erklärung */}
+  <p className={styles.logistikIntro}>
+    Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
+    werden sollen.
+  </p>
 
-            {lieferCalOpen && (
-              <div
-                ref={lieferPopoverRef}
-                className={styles.calendarPopover}
-                role="dialog"
-                aria-label="Kalender Lieferdatum"
-              >
-                <MiniCalendar
-                  month={lieferCalMonth}
-                  onMonthChange={setLieferCalMonth}
-                  selected={lieferDatumDate}
-                  onSelect={handleSelectLieferdatum}
-                  isDisabled={isDisabledDay}
-                  minDate={minDate}
-                />
-              </div>
-            )}
-          </div>
+  {/* Aufenthaltsdauer, nur wenn beide Daten gesetzt sind */}
+  {lieferDatum && abholDatum && aufenthaltTage !== null && (
+    <p className={styles.logistikSummary}>
+      Aufenthalt beim Anbieter:{' '}
+      <strong>{aufenthaltTage} Tage</strong> (
+      {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
+    </p>
+  )}
 
-          {/* Lieferart */}
-          <div className={styles.inputGroup}>
-            <label>Lieferart</label>
-            <select
-              value={lieferArt}
-              onChange={(e) => setLieferArt(e.target.value)}
-              className={
-                logistikError && !lieferArt ? styles.inputError : ''
-              }
-            >
-              <option value="">Bitte wählen</option>
-              <option value="selbst">Ich liefere selbst</option>
-              <option value="abholung">Abholung an meinem Standort</option>
-            </select>
-          </div>
+  {/* zwei Karten: Anlieferung links, Abholung rechts */}
+  <div className={styles.logistikCards}>
+    {/* Karte 1: Anlieferung */}
+    <div className={styles.logistikCard}>
+      <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
 
-          {/* Abholdatum */}
-          <div
-            className={`${styles.inputGroup} ${styles.dateGroup}`}
-            ref={abholFieldRef}
-          >
-            <label>Abholdatum</label>
-            <div className={styles.dateFieldRow}>
-              <input
-                type="text"
-                readOnly
-                disabled={!lieferDatumDate}
-                className={
-                  logistikError && !abholDatum ? styles.inputError : ''
-                }
-                value={
-                  abholDatumDate
-                    ? new Intl.DateTimeFormat('de-DE').format(
-                        abholDatumDate,
-                      )
-                    : ''
-                }
-                placeholder={
-                  lieferDatumDate
-                    ? 'Datum wählen'
-                    : 'Bitte zuerst Lieferdatum wählen'
-                }
-                onClick={() => {
-                  if (!lieferDatumDate) return;
-                  setAbholCalOpen(true);
-                }}
-              />
-              <button
-                type="button"
-                className={styles.dateButton}
-                disabled={!lieferDatumDate}
-                onClick={() => {
-                  if (!lieferDatumDate) return;
-                  setAbholCalOpen(true);
-                }}
-              >
-                Datum wählen
-              </button>
-              {abholDatumDate && (
-                <button
-                  type="button"
-                  className={styles.dateButton}
-                  onClick={() => {
-                    setAbholDatumDate(null);
-                    setAbholDatum('');
-                  }}
-                >
-                  Löschen
-                </button>
-              )}
-            </div>
+      <div className={styles.inputGroup}>
+        <label>Lieferdatum</label>
+        <input
+  type="date"
+  min={todayStr}               // ✅ String
+  value={lieferDatum}
+  onChange={(e) => {
+    const newLiefer = e.target.value;
+    setLieferDatum(newLiefer);
+    if (abholDatum && new Date(newLiefer) >= new Date(abholDatum)) {
+      // Abhol-Datum darf nicht am gleichen oder davor sein
+      setAbholDatum('');
+    }
+  }}
+  className={logistikError && !lieferDatum ? styles.inputError : ''}
+/>
 
-            {abholCalOpen && (
-              <div
-                ref={abholPopoverRef}
-                className={styles.calendarPopover}
-                role="dialog"
-                aria-label="Kalender Abholdatum"
-              >
-                <MiniCalendar
-                  month={abholCalMonth}
-                  onMonthChange={setAbholCalMonth}
-                  selected={abholDatumDate}
-                  onSelect={handleSelectAbholdatum}
-                  isDisabled={isDisabledAbholDay}
-                  minDate={lieferDatumDate || minDate}
-                />
-              </div>
-            )}
-          </div>
+      </div>
 
-          {/* Abholart */}
-          <div className={styles.inputGroup}>
-            <label>Abholart</label>
-            <select
-              value={abholArt}
-              onChange={(e) => setAbholArt(e.target.value)}
-              className={
-                logistikError && !abholArt ? styles.inputError : ''
-              }
-            >
-              <option value="">Bitte wählen</option>
-              <option value="selbst">Ich hole selbst ab</option>
-              <option value="anlieferung">Anlieferung an meinem Standort</option>
-            </select>
-          </div>
-        </div>
+      <div className={styles.inputGroup}>
+        <label>Lieferart</label>
+        <select
+          value={lieferArt}
+          onChange={(e) => setLieferArt(e.target.value)}
+          className={
+            logistikError && !lieferArt ? styles.inputError : ''
+          }
+        >
+          <option value="">Bitte wählen</option>
+          <option value="selbst">Ich liefere selbst</option>
+          <option value="abholung">
+            Abholung an meinem Standort
+          </option>
+        </select>
+      </div>
+    </div>
 
-        {logistikError && (
-          <motion.p
-            className={styles.warnung}
-            animate={{ x: [0, -4, 4, -4, 0] }}
-            transition={{ duration: 0.3 }}
-          >
-            Bitte füllen Sie alle Logistikfelder korrekt aus.
-          </motion.p>
+    {/* Karte 2: Abholung / Rücktransport */}
+    <div className={styles.logistikCard}>
+      <h5 className={styles.logistikCardTitle}>
+        Abholung / Rücktransport
+      </h5>
+
+      <div className={styles.inputGroup}>
+        <label>Abholdatum</label>
+        <input
+  type="date"
+  disabled={!lieferDatum}
+  min={lieferDatum || todayStr}   // ✅ immer String
+  value={abholDatum}
+  onChange={(e) => {
+    const newAbhol = e.target.value;
+    // Abholdatum MUSS nach dem Lieferdatum sein (strict >)
+    if (
+      lieferDatum &&
+      new Date(newAbhol) <= new Date(lieferDatum)
+    ) {
+      return;
+    }
+    setAbholDatum(newAbhol);
+  }}
+  className={logistikError && !abholDatum ? styles.inputError : ''}
+/>
+
+        {!lieferDatum && (
+          <span className={styles.helperText}>
+            Bitte zuerst das Lieferdatum wählen.
+          </span>
         )}
-      </fieldset>
+      </div>
+
+      <div className={styles.inputGroup}>
+        <label>Abholart</label>
+        <select
+          disabled={!lieferDatum}
+          value={abholArt}
+          onChange={(e) => setAbholArt(e.target.value)}
+          className={
+            logistikError && !abholArt ? styles.inputError : ''
+          }
+        >
+          <option value="">Bitte wählen</option>
+          <option value="selbst">Ich hole selbst ab</option>
+          <option value="anlieferung">
+            Anlieferung an meinem Standort
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  {/* Serienauftrag (optional einklappbar) */}
+  <div className={styles.serienauftragRow}>
+    <label className={styles.serienCheckboxLabel}>
+      <input
+        type="checkbox"
+        checked={serienauftrag}
+        onChange={(e) => {
+          setSerienauftrag(e.target.checked);
+          if (!e.target.checked) {
+            setRhythmus('');
+          }
+        }}
+      />
+      Ich habe einen Serienauftrag
+    </label>
+
+    {serienauftrag && (
+      <div className={styles.serienauftragSelect}>
+        <span>Rhythmus der Anlieferung:</span>
+        <select
+          value={rhythmus}
+          onChange={(e) => setRhythmus(e.target.value)}
+        >
+          <option value="">Bitte wählen</option>
+          <option value="taeglich">Täglich</option>
+          <option value="woechentlich">Wöchentlich</option>
+          <option value="zweiwoechentlich">Alle zwei Wochen</option>
+          <option value="monatlich">Monatlich</option>
+        </select>
+      </div>
+    )}
+  </div>
+
+  {logistikError && (
+    <motion.p
+      className={styles.warnung}
+      animate={{ x: [0, -4, 4, -4, 0] }}
+      transition={{ duration: 0.3 }}
+    >
+      Bitte fülle die Logistik vollständig und korrekt aus.
+    </motion.p>
+  )}
+</fieldset>
+
     </section>
   );
 };
