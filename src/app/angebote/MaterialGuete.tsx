@@ -88,7 +88,8 @@ export default function MaterialGuete({
     <div className={styles.materialBox}>
       <div className={styles.materialBoxÜB}>
         <p>
-          Meine Teile sind aus:
+          Meine Teile sind aus
+          <span className={styles.requiredStar}>*</span>:
           <span className={styles.iconTooltip}>
             <HelpCircle size={18} />
             <span className={styles.tooltipText}>
@@ -97,6 +98,9 @@ export default function MaterialGuete({
               für die Durchführbarkeit des Auftrags.
             </span>
           </span>
+        </p>
+        <p className={styles.pflichtHinweis}>
+          Alle Felder in diesem Bereich sind Pflichtfelder.
         </p>
       </div>
 
@@ -114,7 +118,7 @@ export default function MaterialGuete({
         >
           <div className={styles.customSelectTrigger}>
             <span className={styles.customSelectValue}>
-              {materialGuete || 'Bitte wählen'}
+              {materialGuete || 'Bitte Materialgüte wählen'}
             </span>
             <span className={styles.customSelectArrow}>▾</span>
           </div>
@@ -133,6 +137,7 @@ export default function MaterialGuete({
                   }}
                 >
                   {option}
+                  <span className={styles.requiredStarInline}>*</span>
                 </div>
               ))}
             </div>
@@ -151,7 +156,7 @@ export default function MaterialGuete({
             >
               <input
                 type="text"
-                placeholder="Material"
+                placeholder="Material (Pflichtfeld)"
                 maxLength={12}
                 value={customMaterial}
                 onChange={(e) => {
@@ -170,13 +175,16 @@ export default function MaterialGuete({
       {/* Abmessungen & Masse – nebeneinander auf Desktop */}
       <div className={styles.abmessungWrapper}>
         <h3 className={styles.gruppenTitel}>
-          Abmessungen größtes Werkstück (mm) &amp; Masse (kg):
+          Abmessungen größtes Werkstück (mm) &amp; Masse (kg)
+          <span className={styles.requiredStar}>*</span>
         </h3>
 
         <div className={styles.abmessungRow}>
           {/* Länge */}
           <div className={styles.dimensionInline}>
-            <span className={styles.dimensionLabel}>Länge</span>
+            <span className={styles.dimensionLabel}>
+              Länge<span className={styles.requiredStarInline}>*</span>
+            </span>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
@@ -195,7 +203,9 @@ export default function MaterialGuete({
 
           {/* Breite */}
           <div className={styles.dimensionInline}>
-            <span className={styles.dimensionLabel}>Breite</span>
+            <span className={styles.dimensionLabel}>
+              Breite<span className={styles.requiredStarInline}>*</span>
+            </span>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
@@ -214,7 +224,9 @@ export default function MaterialGuete({
 
           {/* Höhe */}
           <div className={styles.dimensionInline}>
-            <span className={styles.dimensionLabel}>Höhe</span>
+            <span className={styles.dimensionLabel}>
+              Höhe<span className={styles.requiredStarInline}>*</span>
+            </span>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
@@ -233,7 +245,9 @@ export default function MaterialGuete({
 
           {/* Masse */}
           <div className={styles.dimensionInline}>
-            <span className={styles.dimensionLabel}>Masse</span>
+            <span className={styles.dimensionLabel}>
+              Masse<span className={styles.requiredStarInline}>*</span>
+            </span>
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
