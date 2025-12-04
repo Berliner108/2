@@ -1701,13 +1701,11 @@ const formatDateDE = (value: string) =>
 >
   <legend className={styles.legendLogistik}>Logistik</legend>
 
-  {/* kurze Erklärung */}
   <p className={styles.logistikIntro}>
     Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
-    werden sollen.
+    werden sollen. Wochenenden und gemeinsame DE/AT-Feiertage sind gesperrt.
   </p>
 
-  {/* Aufenthaltsdauer, nur wenn beide Daten gesetzt sind */}
   {lieferDatum && abholDatum && aufenthaltTage !== null && (
     <p className={styles.logistikSummary}>
       Aufenthalt beim Anbieter:{' '}
@@ -1716,29 +1714,42 @@ const formatDateDE = (value: string) =>
     </p>
   )}
 
-  {/* zwei Karten: Anlieferung links, Abholung rechts */}
   <div className={styles.logistikCards}>
     {/* Karte 1: Anlieferung */}
     <div className={styles.logistikCard}>
       <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
 
-      <div className={styles.inputGroup}>
+      {/* Lieferdatum mit eigenem Kalender */}
+      <div className={styles.inputGroup} ref={lieferFieldRef}>
         <label>Lieferdatum</label>
         <input
-  type="date"
-  min={todayStr}               // ✅ String
-  value={lieferDatum}
-  onChange={(e) => {
-    const newLiefer = e.target.value;
-    setLieferDatum(newLiefer);
-    if (abholDatum && new Date(newLiefer) >= new Date(abholDatum)) {
-      // Abhol-Datum darf nicht am gleichen oder davor sein
-      setAbholDatum('');
-    }
-  }}
-  className={logistikError && !lieferDatum ? styles.inputError : ''}
-/>
+          type="text"
+          readOnly
+          placeholder="Datum wählen"
+          onClick={() => setLieferCalOpen((prev) => !prev)}
+          value={
+            lieferDatumDate ? formatDateDE(lieferDatum) : ''
+          }
+          className={
+            logistikError && !lieferDatum ? styles.inputError : ''
+          }
+        />
 
+        {lieferCalOpen && (
+          <div
+            className={styles.calendarPopover}
+            ref={lieferPopoverRef}
+          >
+            <MiniCalendar
+              month={lieferCalMonth}
+              onMonthChange={setLieferCalMonth}
+              selected={lieferDatumDate}
+              onSelect={handleSelectLieferdatum}
+              isDisabled={isDisabledDay}
+              minDate={minDate}
+            />
+          </div>
+        )}
       </div>
 
       <div className={styles.inputGroup}>
@@ -1752,39 +1763,52 @@ const formatDateDE = (value: string) =>
         >
           <option value="">Bitte wählen</option>
           <option value="selbst">Ich liefere selbst</option>
-          <option value="abholung">
-            Abholung an meinem Standort
-          </option>
+          <option value="abholung">Abholung an meinem Standort</option>
         </select>
       </div>
     </div>
 
-    {/* Karte 2: Abholung / Rücktransport */}
+    {/* Karte 2: Abholung */}
     <div className={styles.logistikCard}>
       <h5 className={styles.logistikCardTitle}>
         Abholung / Rücktransport
       </h5>
 
-      <div className={styles.inputGroup}>
+      <div className={styles.inputGroup} ref={abholFieldRef}>
         <label>Abholdatum</label>
         <input
-  type="date"
-  disabled={!lieferDatum}
-  min={lieferDatum || todayStr}   // ✅ immer String
-  value={abholDatum}
-  onChange={(e) => {
-    const newAbhol = e.target.value;
-    // Abholdatum MUSS nach dem Lieferdatum sein (strict >)
-    if (
-      lieferDatum &&
-      new Date(newAbhol) <= new Date(lieferDatum)
-    ) {
-      return;
-    }
-    setAbholDatum(newAbhol);
-  }}
-  className={logistikError && !abholDatum ? styles.inputError : ''}
-/>
+          type="text"
+          readOnly
+          placeholder={
+            lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
+          }
+          onClick={() => {
+            if (!lieferDatumDate) return;
+            setAbholCalOpen((prev) => !prev);
+          }}
+          value={
+            abholDatumDate ? formatDateDE(abholDatum) : ''
+          }
+          className={
+            logistikError && !abholDatum ? styles.inputError : ''
+          }
+        />
+
+        {abholCalOpen && (
+          <div
+            className={styles.calendarPopover}
+            ref={abholPopoverRef}
+          >
+            <MiniCalendar
+              month={abholCalMonth}
+              onMonthChange={setAbholCalMonth}
+              selected={abholDatumDate}
+              onSelect={handleSelectAbholdatum}
+              isDisabled={isDisabledAbholDay}
+              minDate={lieferDatumDate ?? minDate}
+            />
+          </div>
+        )}
 
         {!lieferDatum && (
           <span className={styles.helperText}>
@@ -1813,7 +1837,7 @@ const formatDateDE = (value: string) =>
     </div>
   </div>
 
-  {/* Serienauftrag (optional einklappbar) */}
+  {/* Serienauftrag */}
   <div className={styles.serienauftragRow}>
     <label className={styles.serienCheckboxLabel}>
       <input
@@ -1821,9 +1845,7 @@ const formatDateDE = (value: string) =>
         checked={serienauftrag}
         onChange={(e) => {
           setSerienauftrag(e.target.checked);
-          if (!e.target.checked) {
-            setRhythmus('');
-          }
+          if (!e.target.checked) setRhythmus('');
         }}
       />
       Ich habe einen Serienauftrag
@@ -1856,6 +1878,7 @@ const formatDateDE = (value: string) =>
     </motion.p>
   )}
 </fieldset>
+
 
     </section>
   );
