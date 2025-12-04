@@ -554,3 +554,61 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     grid-template-columns: 1fr;
   }
 }
+.calendarPopover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  z-index: 2000;
+  isolation: isolate;
+}
+
+.logistikCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.logistikCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #f9fafb;
+}
+
+.logistikCardTitle {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.logistikIntro,
+.logistikSummary,
+.helperText {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.helperText {
+  margin-top: 0.25rem;
+}
+
+.serienauftragRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.serienCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.serienauftragSelect {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
