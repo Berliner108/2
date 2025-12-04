@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import styles from './Materialguete.module.css'
@@ -66,13 +66,23 @@ export default function MaterialGuete({
   abmessungError
 }: MaterialGueteProps) {
   const isEloxieren = selectedVerfahren.includes('Eloxieren')
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
     if (isEloxieren) {
       setMaterialGuete('Aluminium')
       setCustomMaterial('')
+      setIsOpen(false)
     }
   }, [isEloxieren, setMaterialGuete, setCustomMaterial])
+
+  const handleSelect = (value: string) => {
+    setMaterialGuete(value)
+    if (value !== 'Andere') {
+      setCustomMaterial('')
+    }
+    setIsOpen(false)
+  }
 
   return (
     <div className={styles.materialBox}>
@@ -90,29 +100,44 @@ export default function MaterialGuete({
         </p>
       </div>
 
-      {/* Material-Auswahl */}
+      {/* Material-Auswahl – Custom Select */}
       <div className={styles.dropdownRow}>
-        <select
-          className={`${styles.dropdown} ${
-            materialGueteError && !materialGuete ? styles.radioError : ''
+        <div
+          className={`${styles.customSelect} ${
+            isOpen ? styles.customSelectOpen : ''
+          } ${materialGueteError && !materialGuete ? styles.inputError : ''} ${
+            isEloxieren ? styles.customSelectDisabled : ''
           }`}
-          value={materialGuete}
-          onChange={(e) => {
-            const value = e.target.value
-            setMaterialGuete(value)
-            if (value !== 'Andere') {
-              setCustomMaterial('')
-            }
+          onClick={() => {
+            if (!isEloxieren) setIsOpen((prev) => !prev)
           }}
-          disabled={isEloxieren}
         >
-          <option value="">Bitte wählen</option>
-          {materialOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+          <div className={styles.customSelectTrigger}>
+            <span className={styles.customSelectValue}>
+              {materialGuete || 'Bitte wählen'}
+            </span>
+            <span className={styles.customSelectArrow}>▾</span>
+          </div>
+
+          {isOpen && (
+            <div className={styles.customSelectOptions}>
+              {materialOptions.map((option) => (
+                <div
+                  key={option}
+                  className={`${styles.customSelectOption} ${
+                    materialGuete === option ? styles.selectedOption : ''
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleSelect(option)
+                  }}
+                >
+                  {option}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <AnimatePresence>
           {materialGuete === 'Andere' && (
@@ -216,7 +241,7 @@ export default function MaterialGuete({
                 pattern="[0-9]*"
                 onKeyDown={handleKeyDown}
                 value={masse}
-                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 5))}
+                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 4))}
                 className={`${styles.inputField} ${
                   abmessungError && !masse ? styles.inputError : ''
                 }`}

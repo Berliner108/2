@@ -602,12 +602,26 @@ const calculateProgress = () => {
 
   <p><strong>Bilder:</strong> {photoFiles.length} Dateien hochgeladen</p>
   <p><strong>Dateien:</strong> {fileFiles.length} Dateien hochgeladen</p>
+
   <p>
     <strong>Materialgüte:</strong>{' '}
     {materialGuete === 'Andere'
       ? `Andere (${customMaterial})`
       : materialGuete || 'Noch keine Angabe'}
   </p>
+
+  {/* 🔹 NEU: Abmessungen & Masse in der Vorschau */}
+  <p>
+    <strong>Abmessungen größtes Werkstück:</strong>{' '}
+    {laenge || breite || hoehe
+      ? `${laenge || '–'} × ${breite || '–'} × ${hoehe || '–'} mm`
+      : 'Noch keine Angaben gemacht'}
+  </p>
+  <p>
+    <strong>Masse schwerstes Werkstück:</strong>{' '}
+    {masse ? `${masse} kg` : 'Noch keine Angabe gemacht'}
+  </p>
+
   <p>
     <strong>Verfahren:</strong>{' '}
     {selectedOption1
@@ -632,10 +646,14 @@ const calculateProgress = () => {
   <p><strong>Abholdatum:</strong> {abholDatum || 'Noch kein Datum gewählt'}</p>
   <p><strong>Lieferart:</strong> {lieferArt || 'Nicht angegeben'}</p>
   <p><strong>Abholart:</strong> {abholArt || 'Nicht angegeben'}</p>
-  <p><strong>Beschreibung:</strong> {beschreibung || 'Noch keine Angaben gemacht'}</p>  
-  <p><strong>Werbeoptionen:</strong> {bewerbungOptionen.length > 0 ? bewerbungOptionen.join(', ') : 'Keine ausgewählt'}</p>
+  <p><strong>Beschreibung:</strong> {beschreibung || 'Noch keine Angaben gemacht'}</p>
+  <p>
+    <strong>Werbeoptionen:</strong>{' '}
+    {bewerbungOptionen.length > 0 ? bewerbungOptionen.join(', ') : 'Keine ausgewählt'}
+  </p>
   <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
 </motion.div>
+
 
     )}
   </AnimatePresence>
