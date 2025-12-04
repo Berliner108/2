@@ -1,4 +1,3 @@
-
 .materialBox {
   border: 2px solid black;
   border-radius: 12px;
@@ -6,14 +5,24 @@
   margin: 2rem 0;
   background: #f9f9f9;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
 }
 
 .materialBoxÜB p {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
+}
+
+/* Material-Auswahl */
+
+.dropdownRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 0.75rem;
 }
 
 .dropdown {
@@ -23,38 +32,9 @@
   border-radius: 6px;
   border: 2px solid #ccc;
   font-size: 1rem;
-  background: white;
+  background: #fff;
   transition: border-color 0.2s ease;
-  font-family: 'Oswald';
-}
-.abmessungGruppe {
-  margin-top: 2rem;
-  
-}
-
-.masseGruppe {
-  margin-top: 2rem;
-  min-width: 250px;
-  margin-left: 50px;
-}
-
-.gruppenTitel {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  font-family: 'Oswald';
-  width: 100%;
-}
-.labeledInputSideBySide {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.labelLeft {
-  min-width: 20px;
-  font-weight: 500;
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
 }
 
 .dropdown:focus {
@@ -66,36 +46,56 @@
   border-color: red !important;
 }
 
-.customInputBox {
-  margin-top: 1rem;
-  max-width: 180px;
+.customInputInline {
+  max-width: 220px;
   width: 100%;
-
 }
 
-.customInputBox input {
-  width: 100%;
-  max-width: 180px; /* ergänzen */
-  padding: 0.5rem;
-  border-radius: 6px;
+.inputField1 {
+  padding: 0.55rem;
   border: 2px solid #ccc;
+  border-radius: 6px;
   font-size: 1rem;
-  transition: border-color 0.2s ease;
-  font-family: 'Oswald';
+  font-family: 'Oswald', sans-serif;
+  min-width: 80px;
+  overflow: hidden;
 }
-
 
 .inputError {
   border-color: red !important;
 }
 
-.rowGroup {
+/* Abmessungen & Masse */
+
+.abmessungWrapper {
+  margin-top: 2rem;
+}
+
+.gruppenTitel {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  font-family: 'Oswald', sans-serif;
+  width: 100%;
+}
+
+.abmessungGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.dimensionItem {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  font-family: 'Oswald';
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dimensionLabel {
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: 'Oswald', sans-serif;
 }
 
 .inputWithUnit {
@@ -106,21 +106,11 @@
 
 .inputField {
   width: 100%;
-  padding: 0.4rem;
-  border: 1.5 px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: 'Oswald';
-  max-width: 80px;
-}
-.inputField1 {  
-  padding: 0.55rem;
+  padding: 0.4rem 0.5rem;
   border: 2px solid #ccc;
   border-radius: 6px;
   font-size: 1rem;
-  font-family: 'Oswald';
-  min-width: 80px;
-  overflow: hidden;
+  font-family: 'Oswald', sans-serif;
 }
 
 .inputField:focus {
@@ -131,22 +121,9 @@
 .inputField.inputError {
   border-color: red;
 }
-.abmessungWrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  align-items: flex-start;
-}
-.dropdownRow {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
 
-.customInputInline {  
-  max-width: 220px;
-  width: 100%;
-}
+/* Tooltip */
+
 .iconTooltip {
   position: relative;
   display: inline-block;
@@ -178,70 +155,29 @@
   opacity: 1;
 }
 
+/* Responsive */
 
-
-@media (max-width: 768px) {
-  .abmessungWrapper {
-    flex-direction: column;
+@media (max-width: 1024px) {
+  .abmessungGrid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
   }
-
-  .masseGruppe {
-    max-width: 100%;
-    margin-top: 0px;
-  }
-  .rowGroup {
-    flex-direction: column;
-  }
-  .dropdownRow {
-  max-width: 80%;
 }
 
-}
-@media (max-width: 768px) {
+@media (max-width: 600px) {
+  .abmessungGrid {
+    grid-template-columns: 1fr;
+  }
+
   .dropdownRow {
-    flex-direction: column; /* ← bewirkt Umbruch */
+    flex-direction: column;
     align-items: stretch;
-    
-  }
-
-  .inputField1 {
-    width: 126%;        /* füllt die Breite */
-    max-width: none;    /* verhindert Begrenzung */
-    
-  }
-  .customInputInline {
-    width: 100%;
-    
   }
 
   .dropdown {
-    width: 100%;
     max-width: none;
-    
-  }
-}
-@media (max-width: 768px) {
-  .abmessungWrapper {
-    flex-direction: column;
-    align-items: flex-start;         /* NEU: linksbündig */
-    justify-content: flex-start;     /* NEU */
   }
 
-  .rowGroup {
-    flex-direction: column;
-    align-items: flex-start;         /* NEU: verhindert zentrierte Ausrichtung */
-    justify-content: flex-start;     /* NEU */
-  }
-
-  .masseGruppe {
-    max-width: 100%;
-    margin-top: 0px;
-    margin-left: 0;                  /* NEU: entfernt zentrierenden Abstand */
-    align-items: flex-start;         /* NEU */
-  }
-
-  .gruppenTitel,
-  .labelLeft {
-    text-align: left;                /* NEU: Überschrift und Label links */
+  .customInputInline {
+    max-width: none;
   }
 }
