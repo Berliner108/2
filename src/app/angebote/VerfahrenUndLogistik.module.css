@@ -175,13 +175,15 @@
 .dropdownList li:hover {
   background: #f0f0f0;
 }
-/* Nur Verfahren 1 & 2 */
-.dropdownContainer .inputField {
-  font-size: 1.05rem;   /* oder 1.1rem etc. */
+.verfahrenSelect {
+  font-size: 1.05rem;      /* Größe im geschlossenen Zustand */
+  padding: 0.6rem 0.8rem;
+  font-family: 'Oswald', sans-serif;
 }
 
-.dropdownContainer .dropdownList li {
-  font-size: 1.05rem;   /* gleiche Größe für die Einträge */
+/* 👇 wirkt in vielen Browsern auf die aufgeklappte Liste */
+.verfahrenSelect option {
+  font-size: 1.05rem;      /* hier kannst du höher gehen, z.B. 1.1rem */
 }
 
 .specTitle {

@@ -483,26 +483,26 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           </div>
 
           <div className={styles.inputGroup}>
-            <select
-              value={selectedOption1}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedOption1(value);
-                // Verfahren 2 zurücksetzen, wenn Verfahren 1 neu gewählt wird
-                setSelectedOption2('');
-              }}
-              className={
-                verfahrenError && !selectedOption1 ? styles.inputError : ''
-              }
-            >
-              <option value="">Bitte wählen</option>
-              {allOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
+  <select
+    value={selectedOption1}
+    onChange={(e) => {
+      const value = e.target.value;
+      setSelectedOption1(value);
+      setSelectedOption2('');
+    }}
+    className={`${styles.verfahrenSelect} ${
+      verfahrenError && !selectedOption1 ? styles.inputError : ''
+    }`}
+  >
+    <option value="">Bitte wählen</option>
+    {allOptions.map((opt) => (
+      <option key={opt} value={opt}>
+        {opt}
+      </option>
+    ))}
+  </select>
+</div>
+
 
           {selectedOption1 &&
             specificationsMap[selectedOption1]?.length > 0 && (
@@ -519,25 +519,25 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       {/* VERFAHREN 2 (optional) */}
       {selectedOption1 && (
         <div className={styles.dropdownContainer}>
-          <label className={styles.labelRow}>Verfahren 2 (optional):</label>
-
           <div className={styles.inputGroup}>
-            <label>Verfahren 2</label>
-            <select
-              value={selectedOption2}
-              onChange={(e) => {
-                const value = e.target.value;
-                setSelectedOption2(value);
-              }}
-            >
-              <option value="">Bitte wählen</option>
-              {secondOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
+  <label>Verfahren 2</label>
+  <select
+    value={selectedOption2}
+    onChange={(e) => {
+      const value = e.target.value;
+      setSelectedOption2(value);
+    }}
+    className={styles.verfahrenSelect}
+  >
+    <option value="">Bitte wählen</option>
+    {secondOptions.map((opt) => (
+      <option key={opt} value={opt}>
+        {opt}
+      </option>
+    ))}
+  </select>
+</div>
+
 
           {selectedOption2 &&
             specificationsMap[selectedOption2]?.length > 0 && (
