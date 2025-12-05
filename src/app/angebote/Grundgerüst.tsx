@@ -13,7 +13,7 @@ import MaterialGuete from './MaterialGuete'
 import VerfahrenUndLogistik from './VerfahrenUndLogistik'; // Pfad ggf. anpassen
 import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen';
 import LogistikSection from './LogistikSection';
-import beschreibungsStyles from './BeschreibungsBox.module.css';
+import beschreibungsStyles from './logistikbox.module.css';
 
 
 const stepIcons = [
