@@ -374,7 +374,7 @@ export default function Formular() {
                       {
                         [
                           'Dateien hochladen',
-                          'Verfahrensangaben machen',
+                          'Verfahren wählen',
                           'Logistik festlegen',
                         ][index]
                       }
