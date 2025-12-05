@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './VerfahrenUndLogistik.module.css';
-import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -54,7 +53,12 @@ const allOptions = [
 
 const validSecondOptions: { [key: string]: string[] } = {
   Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
-  Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Isolierstegverpressen', 'Einlagern'],
+  Pulverbeschichten: [
+    'Nasslackieren',
+    'Folieren',
+    'Isolierstegverpressen',
+    'Einlagern',
+  ],
   Verzinken: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -244,10 +248,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const level2Ref = useRef<HTMLDivElement | null>(null);
-
-  const [openLevel1, setOpenLevel1] = useState(false);
-  const [openLevel2, setOpenLevel2] = useState(false);
 
   const searchParams = useSearchParams();
   const firstParam = searchParams.get('first');
@@ -258,7 +258,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     }
   }, [firstParam, setSelectedOption1]);
 
-  // Click-Outside & ESC
+  // Click-Outside & ESC nur für die internen Spezifikations-Dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -266,19 +266,11 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setOpenDropdown(null);
       }
-      if (verfahrenRef.current && !verfahrenRef.current.contains(target)) {
-        setOpenLevel1(false);
-      }
-      if (level2Ref.current && !level2Ref.current.contains(target)) {
-        setOpenLevel2(false);
-      }
     };
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setOpenDropdown(null);
-        setOpenLevel1(false);
-        setOpenLevel2(false);
       }
     };
 
@@ -288,7 +280,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [verfahrenRef]);
+  }, []);
 
   // Spezifikationen rendern
   const renderSpecs = (specs: Specification[]) =>
@@ -415,9 +407,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         }
 
         if (spec.type === 'group') {
-          const selectedValues = Array.isArray(
-            specSelections[selectionKey],
-          )
+          const selectedValues = Array.isArray(specSelections[selectionKey])
             ? (specSelections[selectionKey] as string[])
             : [];
 
@@ -444,9 +434,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                       onChange={(e) => {
                         const updated = e.target.checked
                           ? [...selectedValues, opt]
-                          : selectedValues.filter(
-                              (val: string) => val !== opt,
-                            );
+                          : selectedValues.filter((val: string) => val !== opt);
                         setSpecSelections((prev: any) => ({
                           ...prev,
                           [selectionKey]: updated,
@@ -494,43 +482,30 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             </span>
           </div>
 
-          <div
-            className={`${styles.inputField} ${
-              verfahrenError ? styles.errorBorder : ''
-            }`}
-            onClick={() => setOpenLevel1((prev) => !prev)}
-          >
-            {selectedOption1 || 'Bitte wählen'}
+          <div className={styles.inputGroup}>
+            <label>Verfahren 1</label>
+            <select
+              value={selectedOption1}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedOption1(value);
+                // Verfahren 2 zurücksetzen, wenn Verfahren 1 neu gewählt wird
+                setSelectedOption2('');
+              }}
+              className={
+                verfahrenError && !selectedOption1 ? styles.inputError : ''
+              }
+            >
+              <option value="">Bitte wählen</option>
+              {allOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {openLevel1 && (
-            <ul className={styles.dropdownList}>
-              <li
-                onClick={() => {
-                  setSelectedOption1('');
-                  setSelectedOption2('');
-                  setOpenLevel1(false);
-                }}
-              >
-                Bitte wählen
-              </li>
-              {allOptions.map((opt, i) => (
-                <li
-                  key={i}
-                  onClick={() => {
-                    setSelectedOption1(opt);
-                    setSelectedOption2('');
-                    setOpenLevel1(false);
-                  }}
-                >
-                  {opt}
-                </li>
-              ))}
-            </ul>
-          )}
-
           {selectedOption1 &&
-            !openLevel1 &&
             specificationsMap[selectedOption1]?.length > 0 && (
               <div className={styles.specsBox}>
                 <h4 className={styles.specTitle}>
@@ -542,63 +517,40 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         </div>
       </div>
 
-      {/* VERFAHREN 2 */}
-      <AnimatePresence mode="wait">
-        {selectedOption1 && (
-          <motion.div
-            key="dropdown2"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <label className={styles.labelRow}>Verfahren 2:</label>
+      {/* VERFAHREN 2 (optional) */}
+      {selectedOption1 && (
+        <div className={styles.dropdownContainer}>
+          <label className={styles.labelRow}>Verfahren 2 (optional):</label>
 
-            <div className={styles.dropdownContainer} ref={level2Ref}>
-              <div
-                className={styles.inputField}
-                onClick={() => setOpenLevel2((prev) => !prev)}
-              >
-                {selectedOption2 || 'Bitte wählen'}
+          <div className={styles.inputGroup}>
+            <label>Verfahren 2</label>
+            <select
+              value={selectedOption2}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedOption2(value);
+              }}
+            >
+              <option value="">Bitte wählen</option>
+              {secondOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedOption2 &&
+            specificationsMap[selectedOption2]?.length > 0 && (
+              <div className={styles.specsBox}>
+                <h4 className={styles.specTitle}>
+                  Spezifikationen Stufe 2:
+                </h4>
+                {renderSpecs(specificationsMap[selectedOption2])}
               </div>
-
-              {openLevel2 && (
-                <ul className={styles.dropdownList}>
-                  <li
-                    onClick={() => {
-                      setSelectedOption2('');
-                      setOpenLevel2(false);
-                    }}
-                  >
-                    Bitte wählen
-                  </li>
-                  {secondOptions.map((opt, i) => (
-                    <li
-                      key={i}
-                      onClick={() => {
-                        setSelectedOption2(opt);
-                        setOpenLevel2(false);
-                      }}
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {selectedOption2 &&
-              specificationsMap[selectedOption2]?.length > 0 && (
-                <div className={styles.specsBox}>
-                  <h4 className={styles.specTitle}>
-                    Spezifikationen Stufe 2:
-                  </h4>
-                  {renderSpecs(specificationsMap[selectedOption2])}
-                </div>
-              )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+        </div>
+      )}
     </section>
   );
 };
