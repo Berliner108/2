@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './VerfahrenUndLogistik.module.css';
+
 import {
   todayDate,
   minSelectableDate,
@@ -348,7 +349,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       logistikError ? styles.errorFieldset : ''
     }`}
   >
-      <legend className={styles.legendLogistik}>Logistik</legend>
 
       <p className={styles.logistikIntro}>
         Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt

@@ -526,8 +526,8 @@ const calculateProgress = () => {
       logistikError={logistikError}
     />
   </div>
-
 </div>
+
   {/* Bewerbung – statisches Frontend-Panel */}
 <div
   className={styles.bewerbungPanel}
