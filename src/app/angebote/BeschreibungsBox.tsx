@@ -19,7 +19,6 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.75rem',
-            marginTop: '2.5rem',
             marginBottom: '2.5rem',
           }}
         >
