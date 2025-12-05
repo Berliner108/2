@@ -246,8 +246,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
 }) => {
   const secondOptions = validSecondOptions[selectedOption1] || [];
 
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
 
   const searchParams = useSearchParams();
   const firstParam = searchParams.get('first');
@@ -258,29 +257,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     }
   }, [firstParam, setSelectedOption1]);
 
-  // Click-Outside & ESC nur für die internen Spezifikations-Dropdowns
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-
-      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
-        setOpenDropdown(null);
-      }
-    };
-
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setOpenDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, []);
+  
 
   // Spezifikationen rendern
   const renderSpecs = (specs: Specification[]) =>
@@ -317,57 +294,33 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               />
             </div>
           );
-        }
+        }if (spec.type === 'dropdown') {
+  const currentValue = (specSelections[selectionKey] as string) || '';
 
-        if (spec.type === 'dropdown') {
-          return (
-            <div key={index} className={styles.inputRow}>
-              <label>{spec.label}</label>
-              <div className={styles.customDropdown} ref={dropdownRef}>
-                <div
-                  className={styles.dropdownSelected}
-                  onClick={() =>
-                    setOpenDropdown((prev) =>
-                      prev === selectionKey ? null : selectionKey,
-                    )
-                  }
-                >
-                  {(specSelections[selectionKey] as string) || 'Bitte wählen'}
-                </div>
-                {openDropdown === selectionKey && (
-                  <ul className={styles.dropdownList}>
-                    <li
-                      key="leer"
-                      onClick={() => {
-                        setSpecSelections((prev) => ({
-                          ...prev,
-                          [selectionKey]: '',
-                        }));
-                        setOpenDropdown(null);
-                      }}
-                    >
-                      Bitte wählen
-                    </li>
-                    {spec.options?.map((opt, i) => (
-                      <li
-                        key={i}
-                        onClick={() => {
-                          setSpecSelections((prev) => ({
-                            ...prev,
-                            [selectionKey]: opt,
-                          }));
-                          setOpenDropdown(null);
-                        }}
-                      >
-                        {opt}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          );
+  return (
+    <div key={index} className={styles.inputRow}>
+      <label>{spec.label}</label>
+      <select
+        className={styles.inputField2}
+        value={currentValue}
+        onChange={(e) =>
+          setSpecSelections((prev) => ({
+            ...prev,
+            [selectionKey]: e.target.value,
+          }))
         }
+      >
+        <option value="">Bitte wählen</option>
+        {spec.options?.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 
         if (spec.type === 'radio') {
           return (
