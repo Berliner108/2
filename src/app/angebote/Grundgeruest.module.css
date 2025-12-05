@@ -643,10 +643,9 @@
 }
 .beschreibungHeading {
   font-family: 'Oswald', sans-serif;
-  font-size: 15px;        /* ≈ 10 % kleiner als Verfahren 1 (17px) */
+  font-size: 16px;        /* ≈ 10 % kleiner als Verfahren 1 (17px) */
   font-weight: 500;
   text-align: left;
-  margin: 1.5rem 0 0.5rem; /* Abstand nach oben/unten anpassen wie du magst */
 }
 
 .dividerLine::before {
