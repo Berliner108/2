@@ -646,6 +646,7 @@
   font-size: 16px;        /* ≈ 10 % kleiner als Verfahren 1 (17px) */
   font-weight: 500;
   text-align: left;
+  margin-bottom: -30px;
 }
 
 .dividerLine::before {
