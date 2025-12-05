@@ -292,12 +292,15 @@
   outline-offset: 2px;
 }
 
+/* vorher vermutlich mit border / background */
 .logistik {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-top: 20px;  
+  /* border: 1px solid #e2e8f0;  ❌ raus */
+  /* background: #f9fafb;        optional: lassen oder heller machen */
+  border: none;              /* ✅ */
+  background: transparent;   /* oder leichtes Grau, wie du willst */
+  padding: 1rem 0;           /* Abstand behalten */
 }
+
 .legendLogistik {
   font-weight: bold;
   font-size: 1.01rem;
