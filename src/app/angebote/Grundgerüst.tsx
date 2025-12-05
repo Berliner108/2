@@ -550,30 +550,30 @@ export default function Formular() {
         >
           <div className={beschreibungsStyles.textfeldContainer}>
             <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.75rem',
-                marginTop: '2.5rem',
-                marginBottom: '2.5rem',
-              }}
-            >
-              <div className={beschreibungsStyles.stepNumber}>3</div>
-              <h2
-                className={beschreibungsStyles.headingSection}
-                style={{ display: 'flex', alignItems: 'center', margin: 0 }}
-              >
-                Logistik
-                <span className={beschreibungsStyles.iconTooltip}>
-                  <HelpCircle size={18} />
-                  <span className={beschreibungsStyles.tooltipText}>
-                    Plane Anlieferung, Abholung und Transportart für deinen
-                    Auftrag.
-                  </span>
-                </span>
-              </h2>
-            </div>
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.75rem',
+    marginTop: '2.5rem',
+    marginBottom: '2.5rem',
+  }}
+>
+  <div className={styles.stepNumber}>3</div>
+  <h2
+    className={styles.headingSection}
+    style={{ display: 'flex', alignItems: 'center', margin: 0 }}
+  >
+    Logistik
+    <span className={styles.iconTooltip}>
+      <HelpCircle size={18} />
+      <span className={styles.tooltipText}>
+        Plane Anlieferung, Abholung und Transportart für deinen Auftrag.
+      </span>
+    </span>
+  </h2>
+</div>
+
 
             <LogistikSection
               lieferDatum={lieferDatum}
