@@ -406,7 +406,7 @@ export default function Formular() {
               justifyContent: 'center',
               gap: '0.75rem',
               marginTop: '2.5rem',
-              marginBottom: '1rem',
+              marginBottom: '0.5rem',
             }}
           >
             <div className={styles.stepNumber}>1</div>
