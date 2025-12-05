@@ -405,8 +405,8 @@ export default function Formular() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.75rem',
-              marginTop: '0.5rem',
-              marginBottom: '0.5rem',
+              marginTop: '0.65rem',
+              marginBottom: '0.65rem',
             }}
           >
             <div className={styles.stepNumber}>1</div>
@@ -492,8 +492,8 @@ export default function Formular() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.75rem',
-              marginTop: '0.5rem',
-              marginBottom: '0.5rem',
+              marginTop: '0.65rem',
+              marginBottom: '0.65rem',
             }}
           >
             <div className={styles.stepNumber}>2</div>
@@ -562,8 +562,8 @@ export default function Formular() {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.75rem',
-    marginTop: '0.5rem',
-    marginBottom: '0.5rem',
+    marginTop: '0.65rem',
+    marginBottom: '0.65rem',
   }}
 >
   <div className={styles.stepNumber}>3</div>
