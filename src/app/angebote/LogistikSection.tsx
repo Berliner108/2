@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, RefObject } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './VerfahrenUndLogistik.module.css';
 import {
@@ -11,7 +11,6 @@ import {
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
-  logistikRef: RefObject<HTMLFieldSetElement>;   // 👈 WICHTIG: Fieldset, nicht Div
   lieferDatum: string;
   setLieferDatum: (value: string) => void;
   abholDatum: string;
@@ -23,7 +22,7 @@ interface LogistikSectionProps {
   logistikError: boolean;
 }
 
-/** -------- Mini-Kalender (wie gehabt) -------- */
+/* -------- Mini-Kalender -------- */
 type MiniCalendarProps = {
   month: Date;
   onMonthChange: (next: Date) => void;
@@ -44,7 +43,7 @@ function MiniCalendar({
   const y = month.getFullYear();
   const m = month.getMonth();
   const firstOfMonth = new Date(y, m, 1);
-  const firstWeekday = (firstOfMonth.getDay() + 6) % 7;
+  const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mo=0..So=6
   const daysInMonth = new Date(y, m + 1, 0).getDate();
 
   const weeks: Array<Array<Date | null>> = [];
@@ -90,11 +89,21 @@ function MiniCalendar({
           marginBottom: 8,
         }}
       >
-        <button type="button" onClick={goPrev} aria-label="Voriger Monat" style={{ padding: '4px 8px' }}>
+        <button
+          type="button"
+          onClick={goPrev}
+          aria-label="Voriger Monat"
+          style={{ padding: '4px 8px' }}
+        >
           ‹
         </button>
         <strong>{monthLabel}</strong>
-        <button type="button" onClick={goNext} aria-label="Nächster Monat" style={{ padding: '4px 8px' }}>
+        <button
+          type="button"
+          onClick={goNext}
+          aria-label="Nächster Monat"
+          style={{ padding: '4px 8px' }}
+        >
           ›
         </button>
       </div>
@@ -137,7 +146,9 @@ function MiniCalendar({
                 style={{
                   padding: '8px 0',
                   borderRadius: 8,
-                  border: `1px solid ${isSelected ? '#0ea5e9' : '#e2e8f0'}`,
+                  border: `1px solid ${
+                    isSelected ? '#0ea5e9' : '#e2e8f0'
+                  }`,
                   background: disabled
                     ? '#f1f5f9'
                     : isSelected
@@ -157,9 +168,8 @@ function MiniCalendar({
   );
 }
 
-/** -------- Logistik-Section -------- */
+/* -------- Logistik-Section -------- */
 const LogistikSection: React.FC<LogistikSectionProps> = ({
-  logistikRef,
   lieferDatum,
   setLieferDatum,
   abholDatum,
@@ -284,7 +294,8 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       ? Math.max(
           0,
           Math.round(
-            (new Date(abholDatum).getTime() - new Date(lieferDatum).getTime()) /
+            (new Date(abholDatum).getTime() -
+              new Date(lieferDatum).getTime()) /
               (1000 * 60 * 60 * 24),
           ),
         )
@@ -331,13 +342,177 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   return (
     <fieldset
-      ref={logistikRef}  // 👈 jetzt typ-kompatibel
       className={`${styles.logistik} ${
         logistikError ? styles.errorFieldset : ''
       }`}
     >
-      {/* ... Rest unverändert ... */}
-      {/* (dein kompletter JSX-Code aus der vorherigen Version bleibt gleich) */}
+      <legend className={styles.legendLogistik}>Logistik</legend>
+
+      <p className={styles.logistikIntro}>
+        Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
+        werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
+        <code>isSelectable()</code> in <code>dateUtils.ts</code> definiert.
+      </p>
+
+      {lieferDatum && abholDatum && aufenthaltTage !== null && (
+        <p className={styles.logistikSummary}>
+          Aufenthalt beim Anbieter:{' '}
+          <strong>{aufenthaltTage} Tage</strong> (
+          {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
+        </p>
+      )}
+
+      <div className={styles.logistikCards}>
+        {/* Anlieferung */}
+        <div className={styles.logistikCard}>
+          <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
+
+          <div className={styles.inputGroup} ref={lieferFieldRef}>
+            <label>Lieferdatum</label>
+            <input
+              type="text"
+              readOnly
+              placeholder="Datum wählen"
+              onClick={() => setLieferCalOpen((prev) => !prev)}
+              value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
+              className={
+                logistikError && !lieferDatum ? styles.inputError : ''
+              }
+            />
+
+            {lieferCalOpen && (
+              <div className={styles.calendarPopover} ref={lieferPopoverRef}>
+                <MiniCalendar
+                  month={lieferCalMonth}
+                  onMonthChange={setLieferCalMonth}
+                  selected={lieferDatumDate}
+                  onSelect={handleSelectLieferdatum}
+                  isDisabled={isDisabledDay}
+                  minDate={minDate}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>Lieferart</label>
+            <select
+              value={lieferArt}
+              onChange={(e) => setLieferArt(e.target.value)}
+              className={
+                logistikError && !lieferArt ? styles.inputError : ''
+              }
+            >
+              <option value="">Bitte wählen</option>
+              <option value="selbst">Ich liefere selbst</option>
+              <option value="abholung">Abholung an meinem Standort</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Abholung */}
+        <div className={styles.logistikCard}>
+          <h5 className={styles.logistikCardTitle}>
+            Abholung / Rücktransport
+          </h5>
+
+          <div className={styles.inputGroup} ref={abholFieldRef}>
+            <label>Abholdatum</label>
+            <input
+              type="text"
+              readOnly
+              placeholder={
+                lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
+              }
+              onClick={() => {
+                if (!lieferDatumDate) return;
+                setAbholCalOpen((prev) => !prev);
+              }}
+              value={abholDatumDate ? formatDateDE(abholDatum) : ''}
+              className={
+                logistikError && !abholDatum ? styles.inputError : ''
+              }
+            />
+
+            {abholCalOpen && (
+              <div className={styles.calendarPopover} ref={abholPopoverRef}>
+                <MiniCalendar
+                  month={abholCalMonth}
+                  onMonthChange={setAbholCalMonth}
+                  selected={abholDatumDate}
+                  onSelect={handleSelectAbholdatum}
+                  isDisabled={isDisabledAbholDay}
+                  minDate={lieferDatumDate ?? minDate}
+                />
+              </div>
+            )}
+
+            {!lieferDatum && (
+              <span className={styles.helperText}>
+                Bitte zuerst das Lieferdatum wählen.
+              </span>
+            )}
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label>Abholart</label>
+            <select
+              disabled={!lieferDatum}
+              value={abholArt}
+              onChange={(e) => setAbholArt(e.target.value)}
+              className={
+                logistikError && !abholArt ? styles.inputError : ''
+              }
+            >
+              <option value="">Bitte wählen</option>
+              <option value="selbst">Ich hole selbst ab</option>
+              <option value="anlieferung">
+                Anlieferung an meinem Standort
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.serienauftragRow}>
+        <label className={styles.serienCheckboxLabel}>
+          <input
+            type="checkbox"
+            checked={serienauftrag}
+            onChange={(e) => {
+              setSerienauftrag(e.target.checked);
+              if (!e.target.checked) setRhythmus('');
+            }}
+          />
+          Ich habe einen Serienauftrag
+        </label>
+
+        {serienauftrag && (
+          <div className={styles.serienauftragSelect}>
+            <span>Rhythmus der Anlieferung:</span>
+            <select
+              value={rhythmus}
+              onChange={(e) => setRhythmus(e.target.value)}
+            >
+              <option value="">Bitte wählen</option>
+              <option value="taeglich">Täglich</option>
+              <option value="woechentlich">Wöchentlich</option>
+              <option value="zweiwoechentlich">Alle zwei Wochen</option>
+              <option value="monatlich">Monatlich</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {logistikError && (
+        <motion.p
+          className={styles.warnung}
+          animate={{ x: [0, -4, 4, -4, 0] }}
+          transition={{ duration: 0.3 }}
+        >
+          Bitte fülle die Logistik vollständig und korrekt aus.
+        </motion.p>
+      )}
     </fieldset>
   );
 };

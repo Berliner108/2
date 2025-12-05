@@ -105,7 +105,7 @@ const [agbError, setAgbError] = useState(false)
 const agbRef = useRef<HTMLDivElement>(null)
 const bilderRef = useRef<HTMLDivElement>(null)
 const materialRef = useRef<HTMLDivElement>(null)
-const logistikRef = useRef<HTMLFieldSetElement>(null);
+const logistikRef = useRef<HTMLDivElement>(null)   // 🔁 vorher FieldSet
 
 
 
@@ -483,8 +483,8 @@ const calculateProgress = () => {
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 </div>
 
-<LogistikSection
-    logistikRef={logistikRef}
+<div ref={logistikRef}>
+  <LogistikSection
     lieferDatum={lieferDatum}
     setLieferDatum={setLieferDatum}
     abholDatum={abholDatum}
@@ -495,7 +495,7 @@ const calculateProgress = () => {
     setAbholArt={setAbholArt}
     logistikError={logistikError}
   />
-
+</div>
   {/* Bewerbung – statisches Frontend-Panel */}
 <div
   className={styles.bewerbungPanel}
