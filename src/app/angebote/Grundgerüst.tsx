@@ -12,6 +12,8 @@ import BeschreibungsBox from './BeschreibungsBox'
 import MaterialGuete from './MaterialGuete'
 import VerfahrenUndLogistik from './VerfahrenUndLogistik'; // Pfad ggf. anpassen
 import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen';
+import LogistikSection from './LogistikSection';
+
 
 const stepIcons = [
   <Upload size={40} />,
@@ -92,18 +94,6 @@ const verfahrenRef = useRef<HTMLDivElement>(null);
 
 
 const [specSelections, setSpecSelections] = useState<Record<string, string | string[]>>({});
-const allOptions = [
-  "Nasslackieren", "Pulverbeschichten", "Verzinken", "Eloxieren", "Anodisieren",
-  "Verzinnen", "Entlacken", "Aluminieren", "Strahlen", "Folieren",
-  "Isolierstegverpressen", "Einlagern", "Entzinken", "Entzinnen", "Entnickeln",
-  "Vernickeln", "Entanodisieren", "Entaluminieren", "Enteloxieren"
-];
-const validSecondOptions = {
-  // ... dein ganzer Block von validSecondOptions hier rein ...
-};
-const validThirdOptions = {
-  // ... dein ganzer Block von validThirdOptions hier rein ...
-};
 
 const istGueltigDatei = (file: File) => {
   const erlaubteEndungen = ['.pdf', '.zip', '.dxf'];
@@ -115,7 +105,7 @@ const [agbError, setAgbError] = useState(false)
 const agbRef = useRef<HTMLDivElement>(null)
 const bilderRef = useRef<HTMLDivElement>(null)
 const materialRef = useRef<HTMLDivElement>(null)
-const logistikRef = useRef<HTMLDivElement>(null);
+const logistikRef = useRef<HTMLFieldSetElement>(null);
 
 
 
@@ -350,7 +340,7 @@ const calculateProgress = () => {
                       {step}
                     </div>
                     <strong className={`${styles.stepTitle} ${(index === 0 || index === 2) ? styles.mbMobile : ''}`}>
-                      {['Dateien hochladen', 'Verfahren & Logistik wählen', 'Beschreibung hinzufügen'][index]}
+                      {['Dateien hochladen', 'Verfahren wählen', 'Logistik festlegen'][index]}
                     </strong>
                     <div className={styles.stepIcon}>{stepIcons[index]}</div>
                     <p>
@@ -458,7 +448,6 @@ const calculateProgress = () => {
         </h2>
 </div>
 
-<div ref={logistikRef}>
 <VerfahrenUndLogistik
   selectedOption1={selectedOption1}
   setSelectedOption1={setSelectedOption1}
@@ -469,19 +458,11 @@ const calculateProgress = () => {
   specificationsMap={specificationsMap}
   specSelections={specSelections}
   setSpecSelections={setSpecSelections}
-  lieferDatum={lieferDatum}
-  setLieferDatum={setLieferDatum}
-  abholDatum={abholDatum}
-  setAbholDatum={setAbholDatum}
-  lieferArt={lieferArt}
-  setLieferArt={setLieferArt}
-  abholArt={abholArt}
-  setAbholArt={setAbholArt}
-  logistikError={logistikError}
   verfahrenError={verfahrenError}
   verfahrenRef={verfahrenRef}
 />
-</div>
+  
+
 <MaterialGuete
   materialGuete={materialGuete}
   setMaterialGuete={setMaterialGuete}
@@ -502,7 +483,18 @@ const calculateProgress = () => {
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 </div>
 
-
+<LogistikSection
+    logistikRef={logistikRef}
+    lieferDatum={lieferDatum}
+    setLieferDatum={setLieferDatum}
+    abholDatum={abholDatum}
+    setAbholDatum={setAbholDatum}
+    lieferArt={lieferArt}
+    setLieferArt={setLieferArt}
+    abholArt={abholArt}
+    setAbholArt={setAbholArt}
+    logistikError={logistikError}
+  />
 
   {/* Bewerbung – statisches Frontend-Panel */}
 <div

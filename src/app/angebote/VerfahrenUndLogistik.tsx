@@ -5,14 +5,6 @@ import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-// Date-Helfer zentral aus lib/dateUtils
-import {
-  todayDate,
-  minSelectableDate,
-  toYMD,
-  isSelectable,
-} from '../../lib/dateUtils';
-
 export interface Specification {
   type: 'checkbox' | 'text' | 'radio' | 'group' | 'title' | 'dropdown';
   label: string;
@@ -34,15 +26,6 @@ interface VerfahrenUndLogistikProps {
   setSpecSelections: React.Dispatch<
     React.SetStateAction<Record<string, string | string[]>>
   >;
-  lieferDatum: string;
-  setLieferDatum: (value: string) => void;
-  abholDatum: string;
-  setAbholDatum: (value: string) => void;
-  lieferArt: string;
-  setLieferArt: (value: string) => void;
-  abholArt: string;
-  setAbholArt: (value: string) => void;
-  logistikError: boolean;
   verfahrenError: boolean;
   verfahrenRef: React.RefObject<HTMLDivElement>;
 }
@@ -921,153 +904,6 @@ const validThirdOptions: { [key: string]: { [key: string]: string[] } } = {
   },
 };
 
-/* -------- Mini-Kalender-Komponente (Mo–So) -------- */
-
-type MiniCalendarProps = {
-  month: Date;
-  onMonthChange: (next: Date) => void;
-  selected?: Date | null;
-  onSelect: (d: Date) => void;
-  isDisabled: (d: Date) => boolean;
-  minDate: Date;
-};
-
-function MiniCalendar({
-  month,
-  onMonthChange,
-  selected,
-  onSelect,
-  isDisabled,
-  minDate,
-}: MiniCalendarProps) {
-  const y = month.getFullYear();
-  const m = month.getMonth();
-  const firstOfMonth = new Date(y, m, 1);
-  const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mo=0..So=6
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-  const weeks: Array<Array<Date | null>> = [];
-  let week: Array<Date | null> = Array(firstWeekday).fill(null);
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    week.push(new Date(y, m, day));
-    if (week.length === 7) {
-      weeks.push(week);
-      week = [];
-    }
-  }
-  if (week.length) {
-    while (week.length < 7) week.push(null);
-    weeks.push(week);
-  }
-
-  const monthLabel = new Intl.DateTimeFormat('de-DE', {
-    month: 'long',
-    year: 'numeric',
-  }).format(month);
-
-  const goPrev = () => onMonthChange(new Date(y, m - 1, 1));
-  const goNext = () => onMonthChange(new Date(y, m + 1, 1));
-
-  return (
-    <div
-      style={{
-        background: '#fff',
-        border: '1px solid #e2e8f0',
-        borderRadius: 12,
-        padding: 12,
-        boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-        width: 320,
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 8,
-        }}
-      >
-        <button
-          type="button"
-          onClick={goPrev}
-          aria-label="Voriger Monat"
-          style={{ padding: '4px 8px' }}
-        >
-          ‹
-        </button>
-        <strong>{monthLabel}</strong>
-        <button
-          type="button"
-          onClick={goNext}
-          aria-label="Nächster Monat"
-          style={{ padding: '4px 8px' }}
-        >
-          ›
-        </button>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: 4,
-          fontSize: 12,
-          color: '#64748b',
-          marginBottom: 4,
-        }}
-      >
-        {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((d) => (
-          <div key={d} style={{ textAlign: 'center' }}>
-            {d}
-          </div>
-        ))}
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: 4,
-        }}
-      >
-        {weeks.map((w, wi) =>
-          w.map((d, di) => {
-            if (!d) return <div key={`${wi}-${di}`} />;
-            const disabled = isDisabled(d) || d < minDate;
-            const isSelected = !!selected && toYMD(selected) === toYMD(d);
-            return (
-              <button
-                key={`${wi}-${di}`}
-                type="button"
-                onClick={() => !disabled && onSelect(d)}
-                disabled={disabled}
-                style={{
-                  padding: '8px 0',
-                  borderRadius: 8,
-                  border: `1px solid ${
-                    isSelected ? '#0ea5e9' : '#e2e8f0'
-                  }`,
-                  background: disabled
-                    ? '#f1f5f9'
-                    : isSelected
-                    ? '#e0f2fe'
-                    : '#fff',
-                  color: disabled ? '#94a3b8' : '#0f172a',
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {d.getDate()}
-              </button>
-            );
-          }),
-        )}
-      </div>
-    </div>
-  );
-}
-
 const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   specificationsMap,
   selectedOption1,
@@ -1078,154 +914,9 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   setSelectedOption3,
   specSelections,
   setSpecSelections,
-  lieferDatum,
-  setLieferDatum,
-  abholDatum,
-  setAbholDatum,
-  lieferArt,
-  setLieferArt,
-  abholArt,
-  setAbholArt,
-  logistikError,
   verfahrenError,
   verfahrenRef,
 }) => {
-  // --- Datum & Kalender-Logik ---
-  const today = todayDate();
-  const minDate = minSelectableDate();
-
-  const [lieferDatumDate, setLieferDatumDate] = useState<Date | null>(() =>
-    lieferDatum ? new Date(lieferDatum) : null,
-  );
-  const [abholDatumDate, setAbholDatumDate] = useState<Date | null>(() =>
-    abholDatum ? new Date(abholDatum) : null,
-  );
-
-  useEffect(() => {
-    setLieferDatumDate(lieferDatum ? new Date(lieferDatum) : null);
-  }, [lieferDatum]);
-
-  useEffect(() => {
-    setAbholDatumDate(abholDatum ? new Date(abholDatum) : null);
-  }, [abholDatum]);
-
-  // zentrale Sperrlogik über dateUtils.isSelectable
-  const isDisabledDay = (d: Date): boolean => {
-    // alles vor minDate sperren
-    if (d < minDate) return true;
-    // alles, was laut isSelectable nicht erlaubt ist (z. B. heute, WE, Feiertage)
-    if (!isSelectable(d)) return true;
-    return false;
-  };
-
-  const isDisabledAbholDay = (d: Date): boolean => {
-    if (isDisabledDay(d)) return true;
-    if (!lieferDatumDate) return true;
-    // Abholdatum MUSS NACH dem Lieferdatum liegen
-    if (d <= lieferDatumDate) return true;
-    return false;
-  };
-
-  // Kalender-Zustand Liefer-/Abholdatum
-  const [lieferCalOpen, setLieferCalOpen] = useState(false);
-  const [lieferCalMonth, setLieferCalMonth] = useState<Date>(() => today);
-  const [abholCalOpen, setAbholCalOpen] = useState(false);
-  const [abholCalMonth, setAbholCalMonth] = useState<Date>(() => today);
-
-  const lieferFieldRef = useRef<HTMLDivElement | null>(null);
-  const lieferPopoverRef = useRef<HTMLDivElement | null>(null);
-  const abholFieldRef = useRef<HTMLDivElement | null>(null);
-  const abholPopoverRef = useRef<HTMLDivElement | null>(null);
-
-  // Monat beim Öffnen sinnvoll setzen
-  useEffect(() => {
-    if (lieferCalOpen) {
-      if (lieferDatumDate) {
-        setLieferCalMonth(
-          new Date(
-            lieferDatumDate.getFullYear(),
-            lieferDatumDate.getMonth(),
-            1,
-          ),
-        );
-      } else {
-        setLieferCalMonth(minDate);
-      }
-    }
-  }, [lieferCalOpen, lieferDatumDate, minDate]);
-
-  useEffect(() => {
-    if (abholCalOpen) {
-      if (abholDatumDate) {
-        setAbholCalMonth(
-          new Date(
-            abholDatumDate.getFullYear(),
-            abholDatumDate.getMonth(),
-            1,
-          ),
-        );
-      } else if (lieferDatumDate) {
-        setAbholCalMonth(
-          new Date(
-            lieferDatumDate.getFullYear(),
-            lieferDatumDate.getMonth(),
-            1,
-          ),
-        );
-      } else {
-        setAbholCalMonth(minDate);
-      }
-    }
-  }, [abholCalOpen, abholDatumDate, lieferDatumDate, minDate]);
-
-  // Wenn Lieferdatum geändert wird und Abholdatum nicht mehr gültig ist -> reset
-  useEffect(() => {
-    if (lieferDatumDate && abholDatumDate && abholDatumDate <= lieferDatumDate) {
-      setAbholDatumDate(null);
-      setAbholDatum('');
-    }
-  }, [lieferDatumDate, abholDatumDate, setAbholDatum]);
-
-  const handleSelectLieferdatum = (d: Date) => {
-    setLieferDatumDate(d);
-    setLieferDatum(toYMD(d));
-
-    if (abholDatumDate && abholDatumDate <= d) {
-      setAbholDatumDate(null);
-      setAbholDatum('');
-    }
-    setLieferCalOpen(false);
-  };
-
-  const handleSelectAbholdatum = (d: Date) => {
-    if (isDisabledAbholDay(d)) return;
-    setAbholDatumDate(d);
-    setAbholDatum(toYMD(d));
-    setAbholCalOpen(false);
-  };
-
-  const [serienauftrag, setSerienauftrag] = useState(false);
-  const [rhythmus, setRhythmus] = useState('');
-
-  // Aufenthaltsdauer + Datumsformat
-  const aufenthaltTage =
-    lieferDatum && abholDatum
-      ? Math.max(
-          0,
-          Math.round(
-            (new Date(abholDatum).getTime() - new Date(lieferDatum).getTime()) /
-              (1000 * 60 * 60 * 24),
-          ),
-        )
-      : null;
-
-  const formatDateDE = (value: string) =>
-    new Date(value).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-
   const secondOptions = validSecondOptions[selectedOption1] || [];
   const thirdOptions =
     validThirdOptions[selectedOption1]?.[selectedOption2] || [];
@@ -1248,7 +939,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     }
   }, [firstParam, setSelectedOption1]);
 
-  // Click-Outside & ESC für Dropdowns + Kalender
+  // Click-Outside & ESC nur für Dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -1265,21 +956,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       if (level3Ref.current && !level3Ref.current.contains(target)) {
         setOpenLevel3(false);
       }
-
-      const inLieferField =
-        lieferFieldRef.current?.contains(target) ?? false;
-      const inLieferPopover =
-        lieferPopoverRef.current?.contains(target) ?? false;
-      if (!inLieferField && !inLieferPopover) {
-        setLieferCalOpen(false);
-      }
-
-      const inAbholField = abholFieldRef.current?.contains(target) ?? false;
-      const inAbholPopover =
-        abholPopoverRef.current?.contains(target) ?? false;
-      if (!inAbholField && !inAbholPopover) {
-        setAbholCalOpen(false);
-      }
     };
 
     const handleKey = (e: KeyboardEvent) => {
@@ -1288,8 +964,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         setOpenLevel1(false);
         setOpenLevel2(false);
         setOpenLevel3(false);
-        setLieferCalOpen(false);
-        setAbholCalOpen(false);
       }
     };
 
@@ -1299,16 +973,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [
-    verfahrenRef,
-    dropdownRef,
-    level2Ref,
-    level3Ref,
-    lieferFieldRef,
-    lieferPopoverRef,
-    abholFieldRef,
-    abholPopoverRef,
-  ]);
+  }, [verfahrenRef]);
 
   // Spezifikationen rendern
   const renderSpecs = (specs: Specification[]) =>
@@ -1681,189 +1346,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* LOGISTIK */}
-      <fieldset
-        className={`${styles.logistik} ${
-          logistikError ? styles.errorFieldset : ''
-        }`}
-      >
-        <legend className={styles.legendLogistik}>Logistik</legend>
-
-        <p className={styles.logistikIntro}>
-          Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
-          werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
-          <code>isSelectable()</code> in <code>dateUtils.ts</code> definiert.
-        </p>
-
-        {lieferDatum && abholDatum && aufenthaltTage !== null && (
-          <p className={styles.logistikSummary}>
-            Aufenthalt beim Anbieter:{' '}
-            <strong>{aufenthaltTage} Tage</strong> (
-            {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
-          </p>
-        )}
-
-        <div className={styles.logistikCards}>
-          {/* Karte 1: Anlieferung */}
-          <div className={styles.logistikCard}>
-            <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
-
-            {/* Lieferdatum mit eigenem Kalender */}
-            <div className={styles.inputGroup} ref={lieferFieldRef}>
-              <label>Lieferdatum</label>
-              <input
-                type="text"
-                readOnly
-                placeholder="Datum wählen"
-                onClick={() => setLieferCalOpen((prev) => !prev)}
-                value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
-                className={
-                  logistikError && !lieferDatum ? styles.inputError : ''
-                }
-              />
-
-              {lieferCalOpen && (
-                <div
-                  className={styles.calendarPopover}
-                  ref={lieferPopoverRef}
-                >
-                  <MiniCalendar
-                    month={lieferCalMonth}
-                    onMonthChange={setLieferCalMonth}
-                    selected={lieferDatumDate}
-                    onSelect={handleSelectLieferdatum}
-                    isDisabled={isDisabledDay}
-                    minDate={minDate}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>Lieferart</label>
-              <select
-                value={lieferArt}
-                onChange={(e) => setLieferArt(e.target.value)}
-                className={
-                  logistikError && !lieferArt ? styles.inputError : ''
-                }
-              >
-                <option value="">Bitte wählen</option>
-                <option value="selbst">Ich liefere selbst</option>
-                <option value="abholung">Abholung an meinem Standort</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Karte 2: Abholung */}
-          <div className={styles.logistikCard}>
-            <h5 className={styles.logistikCardTitle}>
-              Abholung / Rücktransport
-            </h5>
-
-            <div className={styles.inputGroup} ref={abholFieldRef}>
-              <label>Abholdatum</label>
-              <input
-                type="text"
-                readOnly
-                placeholder={
-                  lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
-                }
-                onClick={() => {
-                  if (!lieferDatumDate) return;
-                  setAbholCalOpen((prev) => !prev);
-                }}
-                value={abholDatumDate ? formatDateDE(abholDatum) : ''}
-                className={
-                  logistikError && !abholDatum ? styles.inputError : ''
-                }
-              />
-
-              {abholCalOpen && (
-                <div
-                  className={styles.calendarPopover}
-                  ref={abholPopoverRef}
-                >
-                  <MiniCalendar
-                    month={abholCalMonth}
-                    onMonthChange={setAbholCalMonth}
-                    selected={abholDatumDate}
-                    onSelect={handleSelectAbholdatum}
-                    isDisabled={isDisabledAbholDay}
-                    minDate={lieferDatumDate ?? minDate}
-                  />
-                </div>
-              )}
-
-              {!lieferDatum && (
-                <span className={styles.helperText}>
-                  Bitte zuerst das Lieferdatum wählen.
-                </span>
-              )}
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>Abholart</label>
-              <select
-                disabled={!lieferDatum}
-                value={abholArt}
-                onChange={(e) => setAbholArt(e.target.value)}
-                className={
-                  logistikError && !abholArt ? styles.inputError : ''
-                }
-              >
-                <option value="">Bitte wählen</option>
-                <option value="selbst">Ich hole selbst ab</option>
-                <option value="anlieferung">
-                  Anlieferung an meinem Standort
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Serienauftrag */}
-        <div className={styles.serienauftragRow}>
-          <label className={styles.serienCheckboxLabel}>
-            <input
-              type="checkbox"
-              checked={serienauftrag}
-              onChange={(e) => {
-                setSerienauftrag(e.target.checked);
-                if (!e.target.checked) setRhythmus('');
-              }}
-            />
-            Ich habe einen Serienauftrag
-          </label>
-
-          {serienauftrag && (
-            <div className={styles.serienauftragSelect}>
-              <span>Rhythmus der Anlieferung:</span>
-              <select
-                value={rhythmus}
-                onChange={(e) => setRhythmus(e.target.value)}
-              >
-                <option value="">Bitte wählen</option>
-                <option value="taeglich">Täglich</option>
-                <option value="woechentlich">Wöchentlich</option>
-                <option value="zweiwoechentlich">Alle zwei Wochen</option>
-                <option value="monatlich">Monatlich</option>
-              </select>
-            </div>
-          )}
-        </div>
-
-        {logistikError && (
-          <motion.p
-            className={styles.warnung}
-            animate={{ x: [0, -4, 4, -4, 0] }}
-            transition={{ duration: 0.3 }}
-          >
-            Bitte fülle die Logistik vollständig und korrekt aus.
-          </motion.p>
-        )}
-      </fieldset>
     </section>
   );
 };
