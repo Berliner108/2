@@ -492,8 +492,8 @@ export default function Formular() {
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.75rem',
-              marginTop: '2.5rem',
-              marginBottom: '2.5rem',
+              marginTop: '0.5rem',
+              marginBottom: '0.5rem',
             }}
           >
             <div className={styles.stepNumber}>2</div>
