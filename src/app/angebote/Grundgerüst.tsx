@@ -457,23 +457,7 @@ const calculateProgress = () => {
           </span>
         </h2>
 </div>
-<MaterialGuete
-  materialGuete={materialGuete}
-  setMaterialGuete={setMaterialGuete}
-  customMaterial={customMaterial}
-  setCustomMaterial={setCustomMaterial}
-  laenge={laenge}
-  setLaenge={setLaenge}
-  breite={breite}
-  setBreite={setBreite}
-  hoehe={hoehe}
-  setHoehe={setHoehe}
-  masse={masse}
-  setMasse={setMasse}
-  materialGueteError={materialGueteError}
-  abmessungError={abmessungError}
-  selectedVerfahren={selectedVerfahren}
-/>
+
 <div ref={logistikRef}>
 <VerfahrenUndLogistik
   selectedOption1={selectedOption1}
@@ -498,6 +482,23 @@ const calculateProgress = () => {
   verfahrenRef={verfahrenRef}
 />
 </div>
+<MaterialGuete
+  materialGuete={materialGuete}
+  setMaterialGuete={setMaterialGuete}
+  customMaterial={customMaterial}
+  setCustomMaterial={setCustomMaterial}
+  laenge={laenge}
+  setLaenge={setLaenge}
+  breite={breite}
+  setBreite={setBreite}
+  hoehe={hoehe}
+  setHoehe={setHoehe}
+  masse={masse}
+  setMasse={setMasse}
+  materialGueteError={materialGueteError}
+  abmessungError={abmessungError}
+  selectedVerfahren={selectedVerfahren}
+/>
 </div>
 
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
