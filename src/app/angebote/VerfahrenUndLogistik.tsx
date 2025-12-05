@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import styles from './VerfahrenUndLogistik.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,8 +21,6 @@ interface VerfahrenUndLogistikProps {
   setSelectedOption1: (value: string) => void;
   selectedOption2: string;
   setSelectedOption2: (value: string) => void;
-  selectedOption3: string;
-  setSelectedOption3: (value: string) => void;
   specificationsMap: Record<string, Specification[]>;
   specSelections: Record<string, string | string[]>;
   setSpecSelections: React.Dispatch<
@@ -229,706 +229,25 @@ const validSecondOptions: { [key: string]: string[] } = {
   ],
 };
 
-const validThirdOptions: { [key: string]: { [key: string]: string[] } } = {
-  Nasslackieren: {
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Isolierstegverpressen: ['Einlagern'],
-    Einlagern: [],
-  },
-  Pulverbeschichten: {
-    Nasslackieren: ['Einlagern', 'Folieren', 'Isolierstegverpressen'],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Isolierstegverpressen: ['Einlagern'],
-    Einlagern: [],
-  },
-  Verzinken: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Vernickeln: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Entnickeln: {
-    Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Folieren: ['Isolierstegverpressen', 'Einlagern'],
-    Einlagern: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Isolierstegverpressen: ['Einlagern'],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Vernickeln: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-  },
-  Entaluminieren: {
-    Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Folieren: ['Isolierstegverpressen', 'Einlagern'],
-    Einlagern: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Isolierstegverpressen: ['Einlagern'],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Vernickeln: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-  },
-  Eloxieren: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Entlacken: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Eloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Eloxieren',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Entzinken',
-      'Entzinnen',
-      'Anodisieren',
-      'Verzinnen',
-      'Aluminieren',
-      'Entanodisieren',
-      'Enteloxieren',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-    Entzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Anodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Entanodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Anodisieren',
-    ],
-    Enteloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Eloxieren',
-    ],
-    Entzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-  },
-  Strahlen: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Eloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Entlacken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Eloxieren',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Entzinken',
-      'Entzinnen',
-      'Anodisieren',
-      'Verzinnen',
-      'Aluminieren',
-      'Entanodisieren',
-      'Enteloxieren',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-    Entzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Entzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Anodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Entanodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Anodisieren',
-    ],
-    Enteloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Eloxieren',
-    ],
-  },
-  Folieren: {
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Isolierstegverpressen: {
-    Einlagern: [],
-  },
-  Einlagern: {
-    Nasslackieren: ['Folieren', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Eloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Strahlen',
-    ],
-    Entlacken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Eloxieren',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Entzinken',
-      'Entzinnen',
-      'Anodisieren',
-      'Verzinnen',
-      'Aluminieren',
-      'Entanodisieren',
-      'Enteloxieren',
-    ],
-    Folieren: ['Isolierstegverpressen'],
-    Isolierstegverpressen: [],
-    Entzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Entzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Anodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Entanodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Anodisieren',
-    ],
-    Enteloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Eloxieren',
-    ],
-  },
-  Entzinken: {
-    Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Folieren: ['Isolierstegverpressen', 'Einlagern'],
-    Einlagern: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Isolierstegverpressen: ['Einlagern'],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-  },
-  Entzinnen: {
-    Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Verzinken: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-      'Strahlen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Folieren: ['Isolierstegverpressen', 'Einlagern'],
-    Einlagern: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Verzinken',
-      'Strahlen',
-      'Folieren',
-      'Isolierstegverpressen',
-      'Verzinnen',
-      'Aluminieren',
-    ],
-    Isolierstegverpressen: ['Einlagern'],
-    Verzinnen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-    Aluminieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Einlagern',
-      'Folieren',
-      'Isolierstegverpressen',
-    ],
-  },
-  Anodisieren: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Verzinnen: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  ' ': {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Aluminieren: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-  },
-  Entanodisieren: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-    Anodisieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-  },
-  Enteloxieren: {
-    Nasslackieren: ['Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Pulverbeschichten: ['Nasslackieren', 'Folieren', 'Einlagern', 'Isolierstegverpressen'],
-    Strahlen: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-    Folieren: ['Einlagern', 'Isolierstegverpressen'],
-    Einlagern: [],
-    Isolierstegverpressen: ['Einlagern'],
-    Eloxieren: [
-      'Nasslackieren',
-      'Pulverbeschichten',
-      'Strahlen',
-      'Folieren',
-      'Einlagern',
-      'Isolierstegverpressen',
-    ],
-  },
-};
-
 const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   specificationsMap,
   selectedOption1,
   setSelectedOption1,
   selectedOption2,
   setSelectedOption2,
-  selectedOption3,
-  setSelectedOption3,
   specSelections,
   setSpecSelections,
   verfahrenError,
   verfahrenRef,
 }) => {
   const secondOptions = validSecondOptions[selectedOption1] || [];
-  const thirdOptions =
-    validThirdOptions[selectedOption1]?.[selectedOption2] || [];
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const level2Ref = useRef<HTMLDivElement>(null);
-  const level3Ref = useRef<HTMLDivElement>(null);
+  const level2Ref = useRef<HTMLDivElement | null>(null);
 
   const [openLevel1, setOpenLevel1] = useState(false);
   const [openLevel2, setOpenLevel2] = useState(false);
-  const [openLevel3, setOpenLevel3] = useState(false);
 
   const searchParams = useSearchParams();
   const firstParam = searchParams.get('first');
@@ -939,7 +258,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     }
   }, [firstParam, setSelectedOption1]);
 
-  // Click-Outside & ESC nur für Dropdowns
+  // Click-Outside & ESC
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -953,9 +272,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       if (level2Ref.current && !level2Ref.current.contains(target)) {
         setOpenLevel2(false);
       }
-      if (level3Ref.current && !level3Ref.current.contains(target)) {
-        setOpenLevel3(false);
-      }
     };
 
     const handleKey = (e: KeyboardEvent) => {
@@ -963,7 +279,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         setOpenDropdown(null);
         setOpenLevel1(false);
         setOpenLevel2(false);
-        setOpenLevel3(false);
       }
     };
 
@@ -1194,7 +509,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                 onClick={() => {
                   setSelectedOption1('');
                   setSelectedOption2('');
-                  setSelectedOption3('');
                   setOpenLevel1(false);
                 }}
               >
@@ -1206,7 +520,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                   onClick={() => {
                     setSelectedOption1(opt);
                     setSelectedOption2('');
-                    setSelectedOption3('');
                     setOpenLevel1(false);
                   }}
                 >
@@ -1254,7 +567,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                   <li
                     onClick={() => {
                       setSelectedOption2('');
-                      setSelectedOption3('');
                       setOpenLevel2(false);
                     }}
                   >
@@ -1265,7 +577,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                       key={i}
                       onClick={() => {
                         setSelectedOption2(opt);
-                        setSelectedOption3('');
                         setOpenLevel2(false);
                       }}
                     >
@@ -1283,64 +594,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                     Spezifikationen Stufe 2:
                   </h4>
                   {renderSpecs(specificationsMap[selectedOption2])}
-                </div>
-              )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* VERFAHREN 3 */}
-      <AnimatePresence mode="wait">
-        {selectedOption2 && thirdOptions.length > 0 && (
-          <motion.div
-            key="dropdown3"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <label className={styles.labelRow}>Verfahren 3:</label>
-
-            <div className={styles.dropdownContainer} ref={level3Ref}>
-              <div
-                className={styles.inputField}
-                onClick={() => setOpenLevel3((prev) => !prev)}
-              >
-                {selectedOption3 || 'Bitte wählen'}
-              </div>
-
-              {openLevel3 && (
-                <ul className={styles.dropdownList}>
-                  <li
-                    onClick={() => {
-                      setSelectedOption3('');
-                      setOpenLevel3(false);
-                    }}
-                  >
-                    Bitte wählen
-                  </li>
-                  {thirdOptions.map((opt, i) => (
-                    <li
-                      key={i}
-                      onClick={() => {
-                        setSelectedOption3(opt);
-                        setOpenLevel3(false);
-                      }}
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {selectedOption3 &&
-              specificationsMap[selectedOption3]?.length > 0 && (
-                <div className={styles.specsBox}>
-                  <h4 className={styles.specTitle}>
-                    Spezifikationen Stufe 3:
-                  </h4>
-                  {renderSpecs(specificationsMap[selectedOption3])}
                 </div>
               )}
           </motion.div>

@@ -439,7 +439,7 @@ const calculateProgress = () => {
 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '2.5rem', marginBottom: '2.5rem' }}>
         <div className={styles.stepNumber}>2</div>
         <h2 className={styles.headingSection} style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
-          Arbeitsschritte und Logistik wählen
+          Verfahrensangaben machen
           <span className={styles.iconTooltip}>
             <HelpCircle size={18} />
             <span className={styles.tooltipText}>
@@ -454,8 +454,6 @@ const calculateProgress = () => {
   setSelectedOption1={setSelectedOption1}
   selectedOption2={selectedOption2}
   setSelectedOption2={setSelectedOption2}
-  selectedOption3={selectedOption3}
-  setSelectedOption3={setSelectedOption3}
   specificationsMap={specificationsMap}
   specSelections={specSelections}
   setSpecSelections={setSpecSelections}
