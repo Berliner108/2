@@ -116,7 +116,7 @@
 .inputField {
   width: 70px;
   padding: 0.35rem 0.45rem;
-  border: 1px  #ccc;
+  border: 0.5px solid #ccc;
   border-radius: 2px;
   font-size: 0.9rem;
   font-family: 'Oswald', sans-serif;
