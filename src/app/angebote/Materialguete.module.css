@@ -1,7 +1,6 @@
 .materialBox {
   padding: 1.1rem 1.2rem;
   margin: 1.2rem 0 0 0;  /* unten = 0 */
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   font-family: 'Oswald', sans-serif;
 }
 .materialBoxÜB p {
