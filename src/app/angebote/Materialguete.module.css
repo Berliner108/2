@@ -2,7 +2,7 @@
   border: 2px solid black;
   border-radius: 12px;
   padding: 1.1rem 1.2rem;
-  margin: 1.2rem 0 0.5rem 0;  /* oben 1.2rem, unten nur 0.5rem */
+  margin: 1.2rem 0 0 0;  /* unten = 0 */
   background: #f9f9f9;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   font-family: 'Oswald', sans-serif;
