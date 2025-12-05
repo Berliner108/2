@@ -124,6 +124,8 @@
   background-color: #fff;
   cursor: pointer;
   border-radius: 4px;
+  font-size: 1rem;   /* hier auch hochdrehen */
+  min-width: 100%;
 }
 .dropdownList {
   position: absolute;
