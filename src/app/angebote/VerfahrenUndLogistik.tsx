@@ -483,7 +483,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           </div>
 
           <div className={styles.inputGroup}>
-            <label>Verfahren 1</label>
             <select
               value={selectedOption1}
               onChange={(e) => {
