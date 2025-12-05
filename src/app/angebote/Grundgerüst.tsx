@@ -13,6 +13,7 @@ import MaterialGuete from './MaterialGuete'
 import VerfahrenUndLogistik from './VerfahrenUndLogistik'; // Pfad ggf. anpassen
 import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen';
 import LogistikSection from './LogistikSection';
+import beschreibungsStyles from './BeschreibungsBox.module.css';
 
 
 const stepIcons = [
@@ -340,7 +341,7 @@ const calculateProgress = () => {
                       {step}
                     </div>
                     <strong className={`${styles.stepTitle} ${(index === 0 || index === 2) ? styles.mbMobile : ''}`}>
-                      {['Dateien hochladen', 'Verfahren wählen', 'Logistik festlegen'][index]}
+                      {['Dateien hochladen', 'Verfahrensangaben machen', 'Logistik festlegen'][index]}
                     </strong>
                     <div className={styles.stepIcon}>{stepIcons[index]}</div>
                     <p>
@@ -483,18 +484,49 @@ const calculateProgress = () => {
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 </div>
 
-<div ref={logistikRef}>
-  <LogistikSection
-    lieferDatum={lieferDatum}
-    setLieferDatum={setLieferDatum}
-    abholDatum={abholDatum}
-    setAbholDatum={setAbholDatum}
-    lieferArt={lieferArt}
-    setLieferArt={setLieferArt}
-    abholArt={abholArt}
-    setAbholArt={setAbholArt}
-    logistikError={logistikError}
-  />
+<div
+  className={beschreibungsStyles.borderedContainer}
+  ref={logistikRef}
+>
+  <div className={beschreibungsStyles.textfeldContainer}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.75rem',
+        marginTop: '2.5rem',
+        marginBottom: '2.5rem',
+      }}
+    >
+      <div className={beschreibungsStyles.stepNumber}>3</div>
+      <h2
+        className={beschreibungsStyles.headingSection}
+        style={{ display: 'flex', alignItems: 'center', margin: 0 }}
+      >
+        Logistik
+        <span className={beschreibungsStyles.iconTooltip}>
+          <HelpCircle size={18} />
+          <span className={beschreibungsStyles.tooltipText}>
+            Plane Anlieferung, Abholung und Transportart für deinen Auftrag.
+          </span>
+        </span>
+      </h2>
+    </div>
+
+    <LogistikSection
+      lieferDatum={lieferDatum}
+      setLieferDatum={setLieferDatum}
+      abholDatum={abholDatum}
+      setAbholDatum={setAbholDatum}
+      lieferArt={lieferArt}
+      setLieferArt={setLieferArt}
+      abholArt={abholArt}
+      setAbholArt={setAbholArt}
+      logistikError={logistikError}
+    />
+  </div>
+
 </div>
   {/* Bewerbung – statisches Frontend-Panel */}
 <div

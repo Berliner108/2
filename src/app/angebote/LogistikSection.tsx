@@ -11,6 +11,7 @@ import {
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
+  // logistikRef: RefObject<HTMLDivElement>;   ❌ RAUS
   lieferDatum: string;
   setLieferDatum: (value: string) => void;
   abholDatum: string;
@@ -180,6 +181,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   setAbholArt,
   logistikError,
 }) => {
+
   const today = todayDate();
   const minDate = minSelectableDate();
 
@@ -341,11 +343,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   }, []);
 
   return (
-    <fieldset
-      className={`${styles.logistik} ${
-        logistikError ? styles.errorFieldset : ''
-      }`}
-    >
+     <div
+    className={`${styles.logistik} ${
+      logistikError ? styles.errorFieldset : ''
+    }`}
+  >
       <legend className={styles.legendLogistik}>Logistik</legend>
 
       <p className={styles.logistikIntro}>
@@ -513,7 +515,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           Bitte fülle die Logistik vollständig und korrekt aus.
         </motion.p>
       )}
-    </fieldset>
+    </div>
   );
 };
 
