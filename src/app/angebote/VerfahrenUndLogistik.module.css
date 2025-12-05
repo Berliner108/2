@@ -157,7 +157,7 @@
 }
 .dropdownContainer {
   position: relative;
-  max-width: 98%;
+  min-width: 100%;
 }
 .dropdownList {
   position: absolute;
