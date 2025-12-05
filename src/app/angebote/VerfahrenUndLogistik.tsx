@@ -520,7 +520,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       {selectedOption1 && (
         <div className={styles.dropdownContainer}>
           <div className={styles.inputGroup}>
-  <label>Verfahren 2</label>
+  <label>Verfahren 2:</label>
   <select
     value={selectedOption2}
     onChange={(e) => {
