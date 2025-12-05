@@ -466,21 +466,22 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       <div className={styles.dropdownContainer}>
         <div ref={verfahrenRef}>
           <div className={styles.labelRow}>
-            <span>Verfahren 1:</span>
-            <span className={styles.labelTooltipIcon}>
-              <HelpCircle size={18} />
-              <span className={styles.labelTooltipText}>
-                Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
-                Übersicht und weitere Infos zu den Verfahren findest du{' '}
-                <Link
-                  href="/wissenswertes#Verfahren"
-                  className={styles.tooltipLink}
-                >
-                  hier.
-                </Link>
-              </span>
-            </span>
-          </div>
+  <span>
+    Verfahren 1
+    <span className={styles.requiredStar}>*</span>:
+  </span>
+  <span className={styles.labelTooltipIcon}>
+    <HelpCircle size={18} />
+    <span className={styles.labelTooltipText}>
+      Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
+      Übersicht und weitere Infos zu den Verfahren findest du{' '}
+      <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
+        hier.
+      </Link>
+    </span>
+  </span>
+</div>
+
 
           <div className={styles.inputGroup}>
   <select

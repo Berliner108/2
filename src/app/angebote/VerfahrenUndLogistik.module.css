@@ -25,6 +25,12 @@
   margin-bottom: 1.5rem; /* mehr Abstand nach unten */
   text-decoration: underline;
 }
+.requiredStar {
+  color: #e11d48;       /* Rot wie bei „Meine Teile sind aus“ */
+  margin-left: 0.25rem;
+  font-size: 0.9em;     /* leicht kleiner als der Text */
+}
+
 .specsBox {
   border: 1px solid #ccc;
   padding: 1rem;
