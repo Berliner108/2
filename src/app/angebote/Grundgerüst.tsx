@@ -499,9 +499,10 @@ const calculateProgress = () => {
   abmessungError={abmessungError}
   selectedVerfahren={selectedVerfahren}
 />
+<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 </div>
 
-<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
+
 
   {/* Bewerbung – statisches Frontend-Panel */}
 <div
