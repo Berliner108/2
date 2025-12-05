@@ -1,11 +1,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  border: 2px solid black;
-  border-radius: 12px;
   padding: 1.5rem;
-  background: #f9f9f9;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   font-family: 'Oswald';
 }
 .sectionTitle {
