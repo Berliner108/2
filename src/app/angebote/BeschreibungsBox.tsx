@@ -23,7 +23,16 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
             marginBottom: '2.5rem',
           }}
         >
-          
+          <div className={styles.stepNumber}>3</div>
+          <h2 className={styles.headingSection} style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
+            Beschreibung
+            <span className={styles.iconTooltip}>
+              <HelpCircle size={18} />
+              <span className={styles.tooltipText}>
+                Hier können Sie genaue Angaben zum gewünschten Verfahren machen.
+              </span>
+            </span>
+          </h2>
         </div>
         <textarea
           id="beschreibung"
