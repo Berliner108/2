@@ -544,7 +544,9 @@ export default function Formular() {
 />
 
 <div className={styles.dividerLine} />
-
+<h3 className={styles.beschreibungHeading}>
+  Beschreibung / besondere Hinweise
+</h3>
 <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
 
         </div>
