@@ -4,7 +4,9 @@
   background-color: #fff;
 }
 
-
+.borderedContainer {
+  outline: 2px solid blue;
+}
 .textfeldContainer {
   display: flex;
   flex-direction: column;
