@@ -228,8 +228,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 0.9rem; /* oder 0.8rem, wie du magst */
+  font-weight: 500;  /* optional */
   margin-bottom: 0.9rem;
 }
 .labelRowNeutral {
