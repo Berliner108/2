@@ -1,10 +1,12 @@
 .borderedContainer {
+  border: none;
   border-radius: 8px;
   padding: 1rem;
   margin: 1rem 0;
-  background-color: #fff; /* Optional */
-  margin-top: 50px;  
+  background-color: #fff;
+  margin-top: 50px;
 }
+
 
 .textfeldContainer {
   display: flex;
