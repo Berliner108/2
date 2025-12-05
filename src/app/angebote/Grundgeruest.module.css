@@ -626,3 +626,44 @@
 .iconStar { color: #f59e0b; }   /* Gold */
 .iconSearch { color: #0ea5e9; } /* Blau */
 .iconCrown { color: #a78bfa; }  /* Violett */
+
+.dividerLine {
+  width: 100%;
+  max-width: 900px;
+  height: 3px;
+  margin: 2rem auto;
+  position: relative;
+  border-radius: 999px;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 180, 216, 0),
+    #00b4d8,
+    rgba(0, 180, 216, 0)
+  );
+}
+
+.dividerLine::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #00e5ff,
+    #00b4d8,
+    #00e5ff,
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: dividerMove 2.5s linear infinite;
+}
+
+@keyframes dividerMove {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

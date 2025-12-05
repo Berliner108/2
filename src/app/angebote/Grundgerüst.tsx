@@ -511,37 +511,42 @@ export default function Formular() {
               </span>
             </h2>
           </div>
+<VerfahrenUndLogistik
+  selectedOption1={selectedOption1}
+  setSelectedOption1={setSelectedOption1}
+  selectedOption2={selectedOption2}
+  setSelectedOption2={setSelectedOption2}
+  specificationsMap={specificationsMap}
+  specSelections={specSelections}
+  setSpecSelections={setSpecSelections}
+  verfahrenError={verfahrenError}
+  verfahrenRef={verfahrenRef}
+/>
 
-          <VerfahrenUndLogistik
-            selectedOption1={selectedOption1}
-            setSelectedOption1={setSelectedOption1}
-            selectedOption2={selectedOption2}
-            setSelectedOption2={setSelectedOption2}
-            specificationsMap={specificationsMap}
-            specSelections={specSelections}
-            setSpecSelections={setSpecSelections}
-            verfahrenError={verfahrenError}
-            verfahrenRef={verfahrenRef}
-          />
+<div className={styles.dividerLine} />
 
-          <MaterialGuete
-            materialGuete={materialGuete}
-            setMaterialGuete={setMaterialGuete}
-            customMaterial={customMaterial}
-            setCustomMaterial={setCustomMaterial}
-            laenge={laenge}
-            setLaenge={setLaenge}
-            breite={breite}
-            setBreite={setBreite}
-            hoehe={hoehe}
-            setHoehe={setHoehe}
-            masse={masse}
-            setMasse={setMasse}
-            materialGueteError={materialGueteError}
-            abmessungError={abmessungError}
-            selectedVerfahren={selectedVerfahren}
-          />
-          <BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
+<MaterialGuete
+  materialGuete={materialGuete}
+  setMaterialGuete={setMaterialGuete}
+  customMaterial={customMaterial}
+  setCustomMaterial={setCustomMaterial}
+  laenge={laenge}
+  setLaenge={setLaenge}
+  breite={breite}
+  setBreite={setBreite}
+  hoehe={hoehe}
+  setHoehe={setHoehe}
+  masse={masse}
+  setMasse={setMasse}
+  materialGueteError={materialGueteError}
+  abmessungError={abmessungError}
+  selectedVerfahren={selectedVerfahren}
+/>
+
+<div className={styles.dividerLine} />
+
+<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
+
         </div>
 
         <div
