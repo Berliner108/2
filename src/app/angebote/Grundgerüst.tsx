@@ -425,8 +425,8 @@ const scrollToSection = (step: number) => {
                       {
                         [
                           'Laden Sie Skizzen, Zeichnungen oder Fotos Ihrer Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer Ihre Daten, desto präziser das Angebot.',
-                          'Wählen Sie die gewünschten Bearbeitungsverfahren und geben Sie an, ob ihr Material abgeholt & geliefert werden soll, oder Sie es selbst bringen möchten.',
-                          'Teilen Sie mit, was Ihnen wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen – Ihr Beschichtungswunsch wird erfüllt, dafür stehen wir.',
+                          'Wählen Sie die gewünschten Bearbeitungsverfahren und was Ihnen wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen',
+                          'Teilen Sie mit, ob es ein Serienauftrag werden soll oder, ob ihr Material abgeholt & geliefert werden soll, oder Sie es selbst bringen möchten.',
                         ][index]
                       }
                     </p>
