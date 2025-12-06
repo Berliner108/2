@@ -230,6 +230,7 @@
   cursor: pointer;
   flex-shrink: 0;
   border: 2px solid #555 !important; /* hier Randdicke ändern */
+  accent-color: #00b4d8;
 }
 
 .agbLabel span {
