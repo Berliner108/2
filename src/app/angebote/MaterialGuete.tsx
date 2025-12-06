@@ -146,8 +146,8 @@ export default function MaterialGuete({
       {/* Abmessungen & Masse – nebeneinander auf Desktop */}
       <div className={styles.abmessungWrapper}>
         <h3 className={styles.gruppenTitel}>
-          Abmessungen des größten (mm) &amp; und Masse (kg) des schwersten Werkstücks:
-          <span className={styles.requiredStar}>*</span>
+          Abmessungen des größten (mm) &amp; und Masse (kg) des schwersten Werkstücks
+          <span className={styles.requiredStar}>*</span>:
         </h3>
 
         <div className={styles.abmessungRow}>
