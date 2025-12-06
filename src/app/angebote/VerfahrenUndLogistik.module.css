@@ -650,9 +650,9 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   }
 
   .TooltipText {
-    max-width: 35vw;     /* passt sich der Bildschirmbreite an */
-    left: 0;          /* nicht mehr mittig */
-    right: 0;            /* an der rechten Kante des Icons ausrichten */
+    max-width: 75vw;     /* passt sich der Bildschirmbreite an */
+    right: auto;          /* nicht mehr mittig */
+    left: 0;            /* an der rechten Kante des Icons ausrichten */
     transform: none;     /* kein translateX mehr */
     word-wrap: break-word;
   }
