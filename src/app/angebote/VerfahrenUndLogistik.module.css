@@ -649,7 +649,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     word-wrap: break-word;
   }
 
-  .TooltipText {
+  .TooltipText1 {
     max-width: 75vw;     /* passt sich der Bildschirmbreite an */
     left: auto;          /* nicht mehr mittig */
     right: 0;            /* an der linken Kante des Icons ausrichten */
