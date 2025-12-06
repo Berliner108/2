@@ -186,12 +186,7 @@
   }
 }
 
-@media (max-width: 480px) {
-  .dropdownRow {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
+
 @media (max-width: 768px) {
   .tooltipText {
     left: 0;
@@ -202,17 +197,56 @@
     text-align: left;
   }
 }
-@media (max-width: 768px) {
- 
+/* Tooltip nur für Materialgüte */
+.iconTooltip {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+  color: #666;
+  cursor: pointer;
+}
 
-  /* NUR Verfahren-1-Tooltip auf Mobile */
-  .tooltipText {
-    top: 120%;          /* unter dem Icon */
-    left: auto;         /* nicht mehr mittig */
-    right: 0;           /* an der rechten Kante des Icons ausrichten */
-    transform: none;    /* kein translateX mehr */
-    max-width: 80vw;    /* nie breiter als 80 % der Viewport-Breite */
+.tooltipText {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);   /* Desktop: rechts neben dem Icon */
+  transform: translateY(-50%);
+  background-color: #333;
+  color: #fff;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  box-sizing: border-box;
+
+  /* WICHTIG: Zeilenumbruch + Breite begrenzen */
+  white-space: normal;
+  max-width: 260px;
+}
+
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  
+  /* Tooltip auf Mobile: unter dem Icon und niemals rechts raus */
+  .iconTooltip .tooltipText {
+    top: 120%;           /* unter das Icon */
+    left: auto;
+    right: 0;            /* an der rechten Kante des Icons ausrichten */
+    transform: none;
+    max-width: 80vw;     /* max 80 % der Bildschirmbreite */
     white-space: normal;
     word-wrap: break-word;
   }
 }
+
+
