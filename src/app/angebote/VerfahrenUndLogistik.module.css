@@ -644,7 +644,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     left: 0;
     right: 0;
     transform: none;
-    max-width: 90vw;
+    max-width: 60vw;
     bottom: 110%;
     text-align: left;
   }
