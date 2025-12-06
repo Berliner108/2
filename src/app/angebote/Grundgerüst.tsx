@@ -574,9 +574,7 @@ export default function Formular() {
 />
 
 <div className={styles.dividerLine} />
-<h3 className={styles.beschreibungHeading}>
-  Arbeitsanweisung zu deinem Auftrag:
-</h3>
+
 <div ref={beschreibungRef}>
   <BeschreibungsBox
     text={beschreibung}
