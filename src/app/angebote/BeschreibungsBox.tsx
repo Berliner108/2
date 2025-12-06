@@ -23,8 +23,8 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({
         {/* Überschrift links mit Stern */}
         <div className={styles.headingRow}>
           <span className={styles.headingLabel}>
-            Anweisung zu deinem Auftrag:
-            {isRequired && <span className={styles.requiredStar}>*</span>}
+            Anweisung zu deinem Auftrag
+            {isRequired && <span className={styles.requiredStar}>*</span>}:
           </span>
         </div>
 
