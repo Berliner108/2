@@ -640,7 +640,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   gap: 0.75rem;
 }
 @media (max-width: 768px) {
-  .tooltipText {
+  .TooltipText {
     left: 0;
     right: 20;
     transform: none;
