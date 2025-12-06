@@ -84,11 +84,8 @@ export default function Formular() {
     const [beschreibungError, setBeschreibungError] = useState(false)
   const beschreibungRef = useRef<HTMLDivElement>(null)
 
-  const scrollToError = (ref: React.RefObject<HTMLElement>) => {
-  if (ref.current) {
-    ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-}
+  
+
 
 
   const [selectedOption1, setSelectedOption1] = useState('')
@@ -122,6 +119,9 @@ export default function Formular() {
   const bilderRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<HTMLDivElement>(null)
   const logistikRef = useRef<HTMLDivElement>(null) // 🔁 vorher FieldSet
+  const step1Ref = useRef<HTMLDivElement>(null)
+const step2Ref = useRef<HTMLDivElement>(null)
+const step3Ref = useRef<HTMLDivElement>(null)
 
 
   const [materialGuete, setMaterialGuete] = useState('')
@@ -158,16 +158,27 @@ export default function Formular() {
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [photoFiles])
 
- const scrollToSection = (step: number) => {
-  if (step === 1 && bilderRef.current) {
-    scrollToError(bilderRef)
-  }
-  if (step === 2 && materialRef.current) {
-    scrollToError(materialRef)
-  }
-  if (step === 3 && logistikRef.current) {
-    scrollToError(logistikRef)
-  }
+
+const scrollToBlock = (ref: React.RefObject<HTMLElement>) => {
+  if (!ref.current) return
+
+  // Falls du eine feste Navbar hast, etwas Abstand nach oben lassen (z. B. 90px)
+  const y = ref.current.getBoundingClientRect().top + window.scrollY - 90
+
+  window.scrollTo({
+    top: y,
+    behavior: 'smooth',
+  })
+}
+
+// weiter für Validierungs-Scroll benutzen
+const scrollToError = scrollToBlock
+
+// 🔹 DAS ist für die Klicks auf die Step-Boxen
+const scrollToSection = (step: number) => {
+  if (step === 1) scrollToBlock(step1Ref)
+  if (step === 2) scrollToBlock(step2Ref)
+  if (step === 3) scrollToBlock(step3Ref)
 }
 
 
@@ -377,7 +388,7 @@ export default function Formular() {
   <motion.div
     key={step}
     className={styles.stepBox}
-    onClick={() => scrollToSection(step)}
+    onClick={() => scrollToSection(step)}   // ✅ scrollt jetzt zu den Kreisen
                     animate={{
                       borderColor:
                         index === activeStep ? '#00b4d8' : '#00e5ff',
@@ -430,7 +441,9 @@ export default function Formular() {
         <motion.div {...fadeIn}>
           {/* Headline + Step-Nummer + Tooltip */}
           <div
+          ref={step1Ref}  // 🔹 HIER
             style={{
+              
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -517,6 +530,7 @@ export default function Formular() {
 
         <div className={styles.umrandung} ref={materialRef}>
           <div
+          ref={step2Ref}   // 🔹 HIER
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -592,7 +606,9 @@ export default function Formular() {
         >
           <div className={beschreibungsStyles.textfeldContainer}>
             <div
+            ref={step3Ref}   // 🔹 HIER
   style={{
+    
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
