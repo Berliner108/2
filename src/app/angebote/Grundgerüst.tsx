@@ -1,5 +1,5 @@
 'use client'
-
+import type React from 'react'   // ⬅️ NEU
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, FileText, HelpCircle } from 'lucide-react'
@@ -81,9 +81,20 @@ export default function Formular() {
   const [vorschauOffen, setVorschauOffen] = useState(false)
 
   const [beschreibung, setBeschreibung] = useState('')
+    const [beschreibungError, setBeschreibungError] = useState(false)
+  const beschreibungRef = useRef<HTMLDivElement>(null)
+
+  const scrollToError = (ref: React.RefObject<HTMLElement>) => {
+  if (ref.current) {
+    ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
 
   const [selectedOption1, setSelectedOption1] = useState('')
   const [selectedOption2, setSelectedOption2] = useState('')
+
+
 
   const [lieferDatum, setLieferDatum] = useState('')
   const [abholDatum, setAbholDatum] = useState('')
@@ -103,6 +114,7 @@ export default function Formular() {
     const name = file.name.toLowerCase()
     return erlaubteEndungen.some((ext) => name.endsWith(ext))
   }
+  
 
   const [agbAccepted, setAgbAccepted] = useState(false)
   const [agbError, setAgbError] = useState(false)
@@ -110,6 +122,7 @@ export default function Formular() {
   const bilderRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<HTMLDivElement>(null)
   const logistikRef = useRef<HTMLDivElement>(null) // 🔁 vorher FieldSet
+
 
   const [materialGuete, setMaterialGuete] = useState('')
   const [customMaterial, setCustomMaterial] = useState('')
@@ -145,11 +158,18 @@ export default function Formular() {
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [photoFiles])
 
-  const scrollToError = (ref: React.RefObject<HTMLElement>) => {
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
+ const scrollToSection = (step: number) => {
+  if (step === 1 && bilderRef.current) {
+    scrollToError(bilderRef)
   }
+  if (step === 2 && materialRef.current) {
+    scrollToError(materialRef)
+  }
+  if (step === 3 && logistikRef.current) {
+    scrollToError(logistikRef)
+  }
+}
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -208,6 +228,15 @@ export default function Formular() {
     } else {
       setVerfahrenError(false)
     }
+    if (!beschreibung.trim()) {
+  setBeschreibungError(true)
+  scrollToError(beschreibungRef)
+  hasError = true
+} else {
+  setBeschreibungError(false)
+}
+
+    
 
     if (hasError) return
 
@@ -345,9 +374,10 @@ export default function Formular() {
                 transition={{ duration: 0.5, ease: 'easeInOut' }}
               >
                 {[1, 2, 3].map((step, index) => (
-                  <motion.div
-                    key={step}
-                    className={styles.stepBox}
+  <motion.div
+    key={step}
+    className={styles.stepBox}
+    onClick={() => scrollToSection(step)}
                     animate={{
                       borderColor:
                         index === activeStep ? '#00b4d8' : '#00e5ff',
@@ -547,7 +577,14 @@ export default function Formular() {
 <h3 className={styles.beschreibungHeading}>
   Arbeitsanweisung zu deinem Auftrag:
 </h3>
-<BeschreibungsBox text={beschreibung} setText={setBeschreibung} />
+<div ref={beschreibungRef}>
+  <BeschreibungsBox
+    text={beschreibung}
+    setText={setBeschreibung}
+    isRequired
+    showError={beschreibungError}
+  />
+</div>
 
         </div>
 
@@ -747,18 +784,21 @@ export default function Formular() {
                 </p>
 
                 {Object.keys(specSelections).length > 0 && (
-                  <div>
-                    <strong>Spezifikationen:</strong>
-                    {Object.entries(specSelections).map(
-                      ([label, value], i) => (
-                        <p key={i}>
-                          {label}:{' '}
-                          {Array.isArray(value) ? value.join(', ') : value}
-                        </p>
-                      ),
-                    )}
-                  </div>
-                )}
+  <div>
+    <strong>Spezifikationen:</strong>
+    {(Object.entries(specSelections) as [string, string | string[]][])
+      .map(([label, value], i) => {
+        const display = Array.isArray(value) ? value.join(', ') : value
+
+        return (
+          <p key={i}>
+            {label}: {display}
+          </p>
+        )
+      })}
+  </div>
+)}
+
 
                 <p>
                   <strong>Lieferdatum:</strong>{' '}

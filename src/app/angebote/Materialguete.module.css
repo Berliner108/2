@@ -192,3 +192,13 @@
     align-items: stretch;
   }
 }
+@media (max-width: 768px) {
+  .tooltipText {
+    left: 0;
+    right: 0;
+    transform: none;
+    max-width: 90vw;
+    bottom: 110%;
+    text-align: left;
+  }
+}

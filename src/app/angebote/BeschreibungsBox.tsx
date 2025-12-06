@@ -1,31 +1,38 @@
 'use client'
 
-import { useState } from 'react'
 import { HelpCircle } from 'lucide-react'
 import styles from './BeschreibungsBox.module.css'
 
 interface BeschreibungsBoxProps {
   text: string
   setText: (value: string) => void
+  isRequired?: boolean
+  showError?: boolean
 }
 
-const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) => {
+
+const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({
+  text,
+  setText,
+  isRequired = false,
+  showError = false,
+}) => {
   return (
     <div className={styles.borderedContainer}>
       <div className={styles.textfeldContainer}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '2.5rem',
-          }}
-        >
-          
+        {/* Überschrift links mit Stern */}
+        <div className={styles.headingRow}>
+          <span className={styles.headingLabel}>
+            Beschreibung
+            {isRequired && <span className={styles.requiredStar}>*</span>}
+          </span>
         </div>
+
         <textarea
           id="beschreibung"
-          className={styles.oswaldTextarea}
+          className={`${styles.oswaldTextarea} ${
+            showError ? styles.inputError : ''
+          }`}
           value={text}
           onChange={(e) => {
             if (e.target.value.length <= 1200) {
@@ -45,9 +52,19 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({ text, setText }) =>
 Bei Bedarf kannst du Prüfprotokolle, Sichtseiten, Nebensichtseiten und Nichtsichtseiten, beschichtungsfreie Stellen, zusätzliche Normen und Standards, gewünschte Schichtdicken Verpackungsvorschrift, Details zur Vor- und Nachbehandlung, Anforderungen an das Beschichtungsergebnis (z.B. frei von Kratzern oder Fremdpartikeln, optisch funktional) hinzufügen.`}
           rows={6}
         />
-        <div className={styles.charCount} style={{ color: text.length > 1170 ? '#dc2626' : '#64748b' }}>
+
+        <div
+          className={styles.charCount}
+          style={{ color: text.length > 1170 ? '#dc2626' : '#64748b' }}
+        >
           {text.length}/1200 Zeichen
         </div>
+
+        {showError && (
+          <p className={styles.errorText}>
+            Bitte gib eine kurze Beschreibung deines Auftrags ein.
+          </p>
+        )}
       </div>
     </div>
   )

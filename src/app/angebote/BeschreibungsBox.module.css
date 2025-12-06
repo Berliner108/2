@@ -90,3 +90,29 @@
   opacity: 1;
 }
 
+.headingRow {
+  margin-bottom: 0.4rem;
+  text-align: left;
+}
+
+.headingLabel {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem; /* ca. 10 % kleiner als ~1rem/17px */
+  font-weight: 600;
+}
+
+.requiredStar {
+  color: #e53935;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+.inputError {
+  border-color: #e53935 !important;
+}
+
+.errorText {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: #e53935;
+}
