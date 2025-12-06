@@ -197,8 +197,22 @@
     left: 0;
     right: 0;
     transform: none;
-    max-width: 90vw;
+    max-width: 40vw;
     bottom: 110%;
     text-align: left;
+  }
+}
+@media (max-width: 768px) {
+ 
+
+  /* NUR Verfahren-1-Tooltip auf Mobile */
+  .tooltipText {
+    top: 120%;          /* unter dem Icon */
+    left: auto;         /* nicht mehr mittig */
+    right: 0;           /* an der rechten Kante des Icons ausrichten */
+    transform: none;    /* kein translateX mehr */
+    max-width: 80vw;    /* nie breiter als 80 % der Viewport-Breite */
+    white-space: normal;
+    word-wrap: break-word;
   }
 }
