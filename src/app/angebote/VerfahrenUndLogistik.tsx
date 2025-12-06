@@ -452,7 +452,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             </span>
             <span className={styles.labelTooltipIcon}>
               <HelpCircle size={18} />
-              <span className={styles.labelTooltipText1}>
+              <span className={styles.labelTooltipText}>
                 Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
                 Übersicht und weitere Infos zu den Verfahren findest du{' '}
                 <Link
