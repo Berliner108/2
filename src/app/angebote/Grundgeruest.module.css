@@ -676,3 +676,19 @@
     background-position: -200% 0;
   }
 }
+@media (max-width: 599px) {
+  .iconTooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+  }
+
+  .tooltipText {
+    max-width: 75vw;     /* passt sich der Bildschirmbreite an */
+    left: auto;          /* nicht mehr mittig */
+    right: 0;            /* an der rechten Kante des Icons ausrichten */
+    transform: none;     /* kein translateX mehr */
+    word-wrap: break-word;
+  }
+}
