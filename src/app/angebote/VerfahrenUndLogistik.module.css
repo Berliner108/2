@@ -723,3 +723,51 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     max-width: 30vw;
   }
 }
+.verfahrenTooltipIcon {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+  color: #666;
+  cursor: pointer;
+}
+
+.verfahrenTooltipText {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);  /* Desktop: rechts neben dem Icon */
+  transform: translateY(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  /* WICHTIG: Zeilenumbruch erlauben + Breite begrenzen */
+  white-space: normal;
+  max-width: 260px;
+  box-sizing: border-box;
+
+  font-size: 0.85rem;
+  z-index: 100;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.verfahrenTooltipIcon:hover .verfahrenTooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+@media (max-width: 768px) {
+ 
+
+  /* NUR Verfahren-1-Tooltip auf Mobile */
+  .labelRow .verfahrenTooltipIcon .verfahrenTooltipText {
+    top: 120%;          /* unter dem Icon */
+    left: auto;         /* nicht mehr mittig */
+    right: 0;           /* an der rechten Kante des Icons ausrichten */
+    transform: none;    /* kein translateX mehr */
+    max-width: 80vw;    /* nie breiter als 80 % der Viewport-Breite */
+    white-space: normal;
+    word-wrap: break-word;
+  }
+}

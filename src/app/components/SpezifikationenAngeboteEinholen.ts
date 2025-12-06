@@ -3,17 +3,18 @@ import type { Specification } from '../angebote/VerfahrenUndLogistik'; // <--- P
 export const specificationsMap: Record<string, Specification[]> = {
   Entlacken: [
     {
-      type: 'group',
+      type: 'radio',
       name: 'verfahren',
       label: 'Verfahren',
       options: ['Chemisch', 'Elektrochemisch', 'Thermisch', 'Mechanisch']
     },
   ],
   Strahlen: [
+    
     {
-      type: 'group',
+      type: 'radio',
       name: 'verfahren',
-      label: 'Verfahren',
+      label: 'Verfahren:',
       options: ['Sandstrahlen', 'Staubstrahlen', 'Glasperlen']
     },
     
