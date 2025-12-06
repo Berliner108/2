@@ -2,7 +2,7 @@
 import type React from 'react'   // ⬅️ NEU
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, FileText, HelpCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, FileText, HelpCircle, Truck } from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import styles from './Grundgeruest.module.css'
 import Navbar from '../components/navbar/Navbar'
@@ -18,7 +18,7 @@ import beschreibungsStyles from './logistikbox.module.css'
 const stepIcons = [
   <Upload size={40} />,
   <Settings size={40} />,
-  <FileText size={40} />,
+  <Truck size={40} />,
 ]
 
 const oswald = Oswald({
