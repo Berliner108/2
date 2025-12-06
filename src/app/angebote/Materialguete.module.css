@@ -194,11 +194,14 @@
 }
 @media (max-width: 768px) {
   .tooltipText {
-    left: 0;
-    right: 0;
-    transform: none;
-    max-width: 90vw;
-    bottom: 110%;
-    text-align: left;
+    left: auto;          /* zentrierung aus */
+    right: 0;            /* an den rechten Rand des Headers */
+    transform: none;     /* kein translateX mehr */
+    max-width: 80vw;     /* innerhalb des Viewports bleiben */
   }
+}
+
+.iconTooltip:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
 }
