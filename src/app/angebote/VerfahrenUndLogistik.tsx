@@ -274,7 +274,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                 {spec.tooltip && (
                   <span className={styles.labelTooltipIcon}>
                     <HelpCircle size={18} />
-                    <span className={styles.labelTooltipText}>
+                    <span className={styles.labeltooltipText}>
                       {spec.tooltip}
                     </span>
                   </span>
@@ -425,7 +425,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   </span>
   <span className={styles.labelTooltipIcon}>
     <HelpCircle size={18} />
-    <span className={styles.labelTooltipText}>
+    <span className={styles.labeltooltipText}>
       Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
       Übersicht und weitere Infos zu den Verfahren findest du{' '}
       <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
