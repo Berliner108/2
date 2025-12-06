@@ -6,7 +6,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'verfahren',
       label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      options: ['Chemisch', 'Elektrochemisch', 'Thermisch', 'Mechanisch']
     },
   ],
   Strahlen: [
@@ -14,7 +14,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'verfahren',
       label: 'Verfahren',
-      options: ['Sandstrahlen', 'Staubstrahlen']
+      options: ['Sandstrahlen', 'Staubstrahlen', 'Glasperlen']
     },
     
   ],
