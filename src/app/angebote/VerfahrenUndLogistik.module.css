@@ -657,3 +657,21 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     word-wrap: break-word;
   }
 }
+@media (max-width: 768px) {
+  /* Effekte, Extras, Zertifizierungen, Verfahren-Radios … */
+  .groupLabel .iconTooltip .tooltipText,
+  .radioLabel .iconTooltip .tooltipText {
+    left: 0;              /* Start direkt am Icon */
+    right: auto;
+    transform: translateX(0);
+    max-width: 80vw;      /* damit nichts links/rechts rausgeht */
+  }
+
+  /* Überschriften (z. B. Verfahren 1, Verfahren 2) mittig unter dem Text */
+  .labelRow .labelTooltipIcon .labelTooltipText {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: 90vw;
+  }
+}
