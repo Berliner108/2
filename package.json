@@ -19,7 +19,7 @@
     "framer-motion": "^12.17.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.503.0",
-    "next": "^15.3.5",
+    "next": "15.3.6",
     "nodemailer": "^7.0.11",
     "pdfkit": "^0.17.2",
     "react": "^18.3.1",
@@ -37,7 +37,7 @@
     "yet-another-react-lightbox": "^3.23.2"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^15.3.5",
+    "@next/eslint-plugin-next": "15.3.6",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.4",
     "@types/pdfkit": "^0.17.3",
