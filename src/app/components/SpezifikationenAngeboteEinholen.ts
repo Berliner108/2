@@ -8,11 +8,15 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Verfahren',
       options: ['Chemisch', 'Elektrochemisch']
     },
+  ],
+  Strahlen: [
     {
-      type: 'text',
-      name: 'bemerkung',
-      label: 'Bemerkung'
-    }
+      type: 'group',
+      name: 'verfahren',
+      label: 'Verfahren',
+      options: ['Sandstrahlen', 'Staubstrahlen']
+    },
+    
   ],
   Eloxieren: [
     {
