@@ -657,6 +657,3 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     word-wrap: break-word;
   }
 }
-.verfahrenContainer input[type='checkbox'] {
-  accent-color: #00b4d8;
-}

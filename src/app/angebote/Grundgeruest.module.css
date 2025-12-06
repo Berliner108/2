@@ -8,6 +8,9 @@
   overflow-x: hidden; /* schützt gegen zu breite Inhalte */
   min-height: 100vw;
 }
+.wrapper input[type='checkbox'] {
+  accent-color: #00b4d8;   /* Türkis für alle Formular-Checkboxen */
+}
 .oswaldTextarea {
   width: 98%;
   font-family: 'Oswald', sans-serif;
