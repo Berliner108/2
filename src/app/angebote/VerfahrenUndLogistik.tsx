@@ -233,6 +233,13 @@ const validSecondOptions: { [key: string]: string[] } = {
   ],
 };
 
+// 🔹 Hilfsfunktion für eindeutige Keys
+const makeSelectionKey = (
+  blockPrefix: string,      // "v1" oder "v2"
+  verfahrenName: string,    // z.B. "Pulverbeschichten"
+  fieldName: string,        // z.B. "zertifizierungen"
+) => `${blockPrefix}__${verfahrenName}__${fieldName}`;
+
 const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   specificationsMap,
   selectedOption1,
@@ -246,8 +253,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
 }) => {
   const secondOptions = validSecondOptions[selectedOption1] || [];
 
-
-
   const searchParams = useSearchParams();
   const firstParam = searchParams.get('first');
 
@@ -257,18 +262,24 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
     }
   }, [firstParam, setSelectedOption1]);
 
-  
-
-  // Spezifikationen rendern
-  const renderSpecs = (specs: Specification[]) =>
+  // 🔹 Spezifikationen rendern, jetzt mit Prefix + Verfahren
+  const renderSpecs = (
+    specs: Specification[],
+    blockPrefix: string,   // "v1" oder "v2"
+    verfahrenName: string, // z.B. "Pulverbeschichten"
+  ) =>
     specs
       .filter((spec) => spec.type !== 'checkbox')
       .map((spec, index) => {
-        const selectionKey = spec.name;
+        const selectionKey = makeSelectionKey(
+          blockPrefix,
+          verfahrenName,
+          spec.name,
+        );
 
         if (spec.type === 'text') {
           return (
-            <div key={index} className={styles.inputRow}>
+            <div key={selectionKey} className={styles.inputRow}>
               <div className={styles.labelRowNeutral}>
                 <span className={styles.labelTextNormal}>{spec.label}</span>
                 {spec.tooltip && (
@@ -294,37 +305,38 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               />
             </div>
           );
-        }if (spec.type === 'dropdown') {
-  const currentValue = (specSelections[selectionKey] as string) || '';
-
-  return (
-    <div key={index} className={styles.inputRow}>
-      <label>{spec.label}</label>
-      <select
-        className={styles.inputField2}
-        value={currentValue}
-        onChange={(e) =>
-          setSpecSelections((prev) => ({
-            ...prev,
-            [selectionKey]: e.target.value,
-          }))
         }
-      >
-        <option value="">Bitte wählen</option>
-        {spec.options?.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
 
+        if (spec.type === 'dropdown') {
+          const currentValue = (specSelections[selectionKey] as string) || '';
+
+          return (
+            <div key={selectionKey} className={styles.inputRow}>
+              <label>{spec.label}</label>
+              <select
+                className={styles.inputField2}
+                value={currentValue}
+                onChange={(e) =>
+                  setSpecSelections((prev) => ({
+                    ...prev,
+                    [selectionKey]: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Bitte wählen</option>
+                {spec.options?.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        }
 
         if (spec.type === 'radio') {
           return (
-            <div key={index} className={styles.radioGroup}>
+            <div key={selectionKey} className={styles.radioGroup}>
               <div className={styles.radioLabel}>
                 {spec.label}
                 {spec.tooltip && (
@@ -337,23 +349,27 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                 )}
               </div>
               <div className={styles.radioInline}>
-                {spec.options?.map((opt, i) => (
-                  <label key={i} className={styles.radioItem}>
-                    <input
-                      type="radio"
-                      name={selectionKey}
-                      value={opt}
-                      checked={specSelections[selectionKey] === opt}
-                      onChange={() =>
-                        setSpecSelections((prev) => ({
-                          ...prev,
-                          [selectionKey]: opt,
-                        }))
-                      }
-                    />
-                    {opt}
-                  </label>
-                ))}
+                {spec.options?.map((opt, i) => {
+                  const id = `${selectionKey}__${i}`;
+                  return (
+                    <label key={id} className={styles.radioItem} htmlFor={id}>
+                      <input
+                        id={id}
+                        type="radio"
+                        name={selectionKey} // 🔹 wichtig: Name = selectionKey → pro Verfahren getrennt
+                        value={opt}
+                        checked={specSelections[selectionKey] === opt}
+                        onChange={() =>
+                          setSpecSelections((prev) => ({
+                            ...prev,
+                            [selectionKey]: opt,
+                          }))
+                        }
+                      />
+                      {opt}
+                    </label>
+                  );
+                })}
               </div>
             </div>
           );
@@ -365,7 +381,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             : [];
 
           return (
-            <div key={index} className={styles.checkboxGroup}>
+            <div key={selectionKey} className={styles.checkboxGroup}>
               <p className={styles.groupLabel}>
                 {spec.label}
                 {spec.tooltip && (
@@ -379,24 +395,35 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               </p>
 
               <div className={styles.checkboxContainer}>
-                {spec.options?.map((opt, i) => (
-                  <label key={i} className={styles.checkboxRow}>
-                    <input
-                      type="checkbox"
-                      checked={selectedValues.includes(opt)}
-                      onChange={(e) => {
-                        const updated = e.target.checked
-                          ? [...selectedValues, opt]
-                          : selectedValues.filter((val: string) => val !== opt);
-                        setSpecSelections((prev: any) => ({
-                          ...prev,
-                          [selectionKey]: updated,
-                        }));
-                      }}
-                    />
-                    {opt}
-                  </label>
-                ))}
+                {spec.options?.map((opt, i) => {
+                  const id = `${selectionKey}__${i}`;
+                  const checked = selectedValues.includes(opt);
+                  return (
+                    <label
+                      key={id}
+                      className={styles.checkboxRow}
+                      htmlFor={id}
+                    >
+                      <input
+                        id={id}
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...selectedValues, opt]
+                            : selectedValues.filter(
+                                (val: string) => val !== opt,
+                              );
+                          setSpecSelections((prev) => ({
+                            ...prev,
+                            [selectionKey]: updated,
+                          }));
+                        }}
+                      />
+                      {opt}
+                    </label>
+                  );
+                })}
               </div>
             </div>
           );
@@ -404,7 +431,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
 
         if (spec.type === 'title') {
           return (
-            <h5 key={index} className={styles.sectionTitle}>
+            <h5 key={selectionKey} className={styles.sectionTitle}>
               {spec.label}
             </h5>
           );
@@ -419,52 +446,55 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       <div className={styles.dropdownContainer}>
         <div ref={verfahrenRef}>
           <div className={styles.labelRow}>
-  <span>
-    Verfahren 1
-    <span className={styles.requiredStar}>*</span>:
-  </span>
-  <span className={styles.labelTooltipIcon}>
-    <HelpCircle size={18} />
-    <span className={styles.labelTooltipText}>
-      Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
-      Übersicht und weitere Infos zu den Verfahren findest du{' '}
-      <Link href="/wissenswertes#Verfahren" className={styles.tooltipLink}>
-        hier.
-      </Link>
-    </span>
-  </span>
-</div>
-
+            <span>
+              Verfahren 1
+              <span className={styles.requiredStar}>*</span>:
+            </span>
+            <span className={styles.labelTooltipIcon}>
+              <HelpCircle size={18} />
+              <span className={styles.labelTooltipText}>
+                Wähle das Hauptverfahren, mit dem dein Auftrag beginnt.
+                Übersicht und weitere Infos zu den Verfahren findest du{' '}
+                <Link
+                  href="/wissenswertes#Verfahren"
+                  className={styles.tooltipLink}
+                >
+                  hier.
+                </Link>
+              </span>
+            </span>
+          </div>
 
           <div className={styles.inputGroup}>
-  <select
-    value={selectedOption1}
-    onChange={(e) => {
-      const value = e.target.value;
-      setSelectedOption1(value);
-      setSelectedOption2('');
-    }}
-    className={`${styles.verfahrenSelect} ${
-      verfahrenError && !selectedOption1 ? styles.inputError : ''
-    }`}
-  >
-    <option value="">Bitte wählen</option>
-    {allOptions.map((opt) => (
-      <option key={opt} value={opt}>
-        {opt}
-      </option>
-    ))}
-  </select>
-</div>
-
+            <select
+              value={selectedOption1}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedOption1(value);
+                setSelectedOption2('');
+              }}
+              className={`${styles.verfahrenSelect} ${
+                verfahrenError && !selectedOption1 ? styles.inputError : ''
+              }`}
+            >
+              <option value="">Bitte wählen</option>
+              {allOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {selectedOption1 &&
             specificationsMap[selectedOption1]?.length > 0 && (
               <div className={styles.specsBox}>
-                <h4 className={styles.specTitle}>
-                  Spezifikationen Stufe 1:
-                </h4>
-                {renderSpecs(specificationsMap[selectedOption1])}
+                <h4 className={styles.specTitle}>Spezifikationen Stufe 1:</h4>
+                {renderSpecs(
+                  specificationsMap[selectedOption1],
+                  'v1',              // 🔹 Prefix für Verfahren 1
+                  selectedOption1,   // 🔹 Name des Verfahrens
+                )}
               </div>
             )}
         </div>
@@ -474,32 +504,33 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       {selectedOption1 && (
         <div className={styles.dropdownContainer}>
           <div className={styles.inputGroup}>
-  <label>Verfahren 2:</label>
-  <select
-    value={selectedOption2}
-    onChange={(e) => {
-      const value = e.target.value;
-      setSelectedOption2(value);
-    }}
-    className={styles.verfahrenSelect}
-  >
-    <option value="">Bitte wählen</option>
-    {secondOptions.map((opt) => (
-      <option key={opt} value={opt}>
-        {opt}
-      </option>
-    ))}
-  </select>
-</div>
-
+            <label>Verfahren 2:</label>
+            <select
+              value={selectedOption2}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedOption2(value);
+              }}
+              className={styles.verfahrenSelect}
+            >
+              <option value="">Bitte wählen</option>
+              {secondOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {selectedOption2 &&
             specificationsMap[selectedOption2]?.length > 0 && (
               <div className={styles.specsBox}>
-                <h4 className={styles.specTitle}>
-                  Spezifikationen Stufe 2:
-                </h4>
-                {renderSpecs(specificationsMap[selectedOption2])}
+                <h4 className={styles.specTitle}>Spezifikationen Stufe 2:</h4>
+                {renderSpecs(
+                  specificationsMap[selectedOption2],
+                  'v2',              // 🔹 Prefix für Verfahren 2
+                  selectedOption2,   // 🔹 Name des Verfahrens
+                )}
               </div>
             )}
         </div>
