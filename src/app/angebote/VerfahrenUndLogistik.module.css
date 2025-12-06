@@ -720,6 +720,6 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    max-width: 90vw;
+    max-width: 30vw;
   }
 }
