@@ -677,7 +677,7 @@
     background-position: -200% 0;
   }
 }
-@media (max-width: 599px) {
+@media (max-width: 768px) {
   .iconTooltip {
     position: relative;
     display: inline-flex;
