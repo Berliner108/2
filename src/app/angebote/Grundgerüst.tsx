@@ -424,9 +424,9 @@ const scrollToSection = (step: number) => {
                     <p>
                       {
                         [
-                          'Laden Sie Skizzen, Zeichnungen oder Fotos Ihrer Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer Ihre Daten, desto präziser das Angebot.',
-                          'Wählen Sie die gewünschten Bearbeitungsverfahren und was Ihnen wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen',
-                          'Teilen Sie mit, ob es ein Serienauftrag werden soll oder, ob ihr Material abgeholt & geliefert werden soll, oder Sie es selbst bringen möchten.',
+                          'Lade Skizzen, Zeichnungen oder Fotos deiner Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer Ihre Daten, desto präziser das Angebot.',
+                          'Wähle die gewünschten Bearbeitungsverfahren und was dir wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen',
+                          'Teile uns mit, ob es ein Serienauftrag werden soll oder, ob dein Material abgeholt & geliefert werden soll, oder du es selbst bringen möchtest.',
                         ][index]
                       }
                     </p>
