@@ -832,6 +832,6 @@
 /* optional etwas kleiner auf sehr kleinen Screens */
 @media (max-width: 768px) {
   .stepsTitle {
-    font-size: 1.5rem;
+    font-size: 2.5rem;
   }
 }
