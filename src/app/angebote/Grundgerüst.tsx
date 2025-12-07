@@ -215,15 +215,6 @@ const step3Ref = useRef<HTMLDivElement>(null)
     setPhotoPreviews(urls)
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [photoFiles])
-// 🔄 Spezifikationen zurücksetzen, wenn Verfahren gewechselt wird
-useEffect(() => {
-  setSpecSelections({});
-}, [selectedOption1, selectedOption2]);
-useEffect(() => {
-  const urls = photoFiles.map((file) => URL.createObjectURL(file))
-  setPhotoPreviews(urls)
-  return () => urls.forEach((url) => URL.revokeObjectURL(url))
-}, [photoFiles])
 
 // 🔄 Wenn Verfahren 1 wechselt → alle v1__-Spezifikationen löschen
 useEffect(() => {
