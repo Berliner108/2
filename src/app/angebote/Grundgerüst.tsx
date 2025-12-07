@@ -387,6 +387,62 @@ const scrollToSection = (step: number) => {
     const totalSteps = 7
     return Math.round((steps / totalSteps) * 100)
   }
+    const handleReset = () => {
+    // Dateien & Bilder
+    setPhotoFiles([]);
+    setPhotoPreviews([]);
+    setWarnungBilder('');
+    setFileFiles([]);
+    setWarnungDateien('');
+
+    // Beschreibung
+    setBeschreibung('');
+    setBeschreibungError(false);
+
+    // Verfahren / Spezifikationen
+    setSelectedOption1('');
+    setSelectedOption2('');
+    setSpecSelections({});
+    setVerfahrenError(false);
+    setSelectedVerfahren([]);
+
+    // Logistik
+    setLieferDatum('');
+    setAbholDatum('');
+    setLieferArt('');
+    setAbholArt('');
+    setLogistikError(false);
+
+    // Materialgüte & Abmessungen
+    setMaterialGuete('');
+    setCustomMaterial('');
+    setMaterialGueteError(false);
+    setLaenge('');
+    setBreite('');
+    setHoehe('');
+    setMasse('');
+    setAbmessungError(false);
+
+    // Bewerbung / Promo
+    setBewerbungOptionen([]);
+
+    // AGB
+    setAgbAccepted(false);
+    setAgbError(false);
+
+    // Vorschau & Feedback
+    setVorschauOffen(false);
+    setSuccessMessage('');
+    setIsLoading(false);
+
+    // ggf. Warnungen nochmal sicher löschen
+    setWarnungBilder('');
+    setWarnungDateien('');
+
+    // Nach oben scrollen
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
     if (bootLoading) {
     return (
       <div className={oswald.className}>
@@ -911,7 +967,7 @@ const scrollToSection = (step: number) => {
           </AnimatePresence>
         </div>
 
-        <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center' }}>
           <button
             type="submit"
             className={styles.absendenButton}
@@ -927,7 +983,19 @@ const scrollToSection = (step: number) => {
             <p className={styles.erfolg}>{successMessage}</p>
           )}
         </div>
+
+        {/* 🔹 NEU: Alle Eingaben zurücksetzen */}
+        <div className={styles.resetRow}>
+          <button
+            type="button"
+            className={styles.resetButton}
+            onClick={handleReset}
+          >
+            Alle Eingaben zurücksetzen
+          </button>
+        </div>
       </form>
+
     </div>
   )
 }
