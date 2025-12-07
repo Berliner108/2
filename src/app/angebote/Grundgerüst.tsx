@@ -228,131 +228,141 @@ const scrollToSection = (step: number) => {
   if (step === 2) scrollToBlock(step2Ref)
   if (step === 3) scrollToBlock(step3Ref)
 }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  let hasError = false
 
+  // 🔹 neu: das erste fehlerhafte Feld merken
+  let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    let hasError = false
-
-    if (!materialGuete || (materialGuete === 'Andere' && !customMaterial)) {
-      setMaterialGueteError(true)
-      scrollToError(materialRef) // 👈
-      hasError = true
-    } else {
-      setMaterialGueteError(false)
-    }
-
-    if (!laenge || !breite || !hoehe || !masse) {
-      setAbmessungError(true)
-      scrollToError(materialRef) // 👈
-      hasError = true
-    } else {
-      setAbmessungError(false)
-    }
-
-    if (!lieferDatum || !abholDatum || !lieferArt || !abholArt) {
-      setLogistikError(true)
-      scrollToError(logistikRef)
-      hasError = true
-    } else if (new Date(lieferDatum) > new Date(abholDatum)) {
-      setLogistikError(true)
-      scrollToError(logistikRef)
-      hasError = true
-    } else {
-      setLogistikError(false)
-    }
-
-    // AGB prüfen
-    if (!agbAccepted) {
-      setAgbError(true)
-      scrollToError(agbRef)
-      hasError = true
-    } else {
-      setAgbError(false)
-    }
-
-    // Mindestens 1 Bild prüfen
-    if (photoFiles.length === 0) {
-      setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
-      scrollToError(bilderRef)
-      hasError = true
-    } else {
-      setWarnungBilder('')
-    }
-
-    if (!selectedOption1) {
-      setVerfahrenError(true)
-      scrollToError(verfahrenRef)
-      hasError = true
-    } else {
-      setVerfahrenError(false)
-    }
-    if (!beschreibung.trim()) {
-  setBeschreibungError(true)
-  scrollToError(beschreibungRef)
-  hasError = true
-} else {
-  setBeschreibungError(false)
-}
-
-    
-
-    if (hasError) return
-
-    setIsLoading(true)
-
-    const formData = new FormData()
-    formData.append('agbAccepted', agbAccepted ? 'true' : 'false')
-
-    bewerbungOptionen.forEach((option, i) => {
-      formData.append(`bewerbungOptionen[${i}]`, option)
-    })
-
-    photoFiles.forEach((file, i) => {
-      formData.append(`bilder[${i}]`, file)
-    })
-
-    fileFiles.forEach((file, i) => {
-      formData.append(`dateien[${i}]`, file)
-    })
-
-    formData.append('materialguete', materialGuete)
-    if (materialGuete === 'Andere') {
-      formData.append('andereMaterialguete', customMaterial)
-    }
-    formData.append('lieferDatum', lieferDatum)
-    formData.append('abholDatum', abholDatum)
-    formData.append('lieferArt', lieferArt)
-    formData.append('abholArt', abholArt)
-
-    try {
-      const res = await fetch('/api/auftrag-absenden', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!res.ok) {
-  console.error('Serverfehler mit Status:', res.status)
-  throw new Error('Fehler beim Absenden')
-}
-
-setSuccessMessage('✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …')
-
-// optional mit kurzer Erfolgsmeldung
-setTimeout(() => {
-  router.replace('/konto/angebote')
-}, 2000)
-
-// wenn du KEIN Delay willst, einfach direkt:
-// router.push('/konto/angebote')
-
-    } catch (err) {
-      console.error('❌ Fehler beim Absenden:', err)
-      alert('Fehler beim Absenden. Bitte versuche es erneut.')
-    } finally {
-      setIsLoading(false)
-    }
+  // Materialgüte
+  if (!materialGuete || (materialGuete === 'Andere' && !customMaterial)) {
+    setMaterialGueteError(true)
+    if (!firstErrorRef) firstErrorRef = materialRef
+    hasError = true
+  } else {
+    setMaterialGueteError(false)
   }
+
+  // Abmessungen
+  if (!laenge || !breite || !hoehe || !masse) {
+    setAbmessungError(true)
+    if (!firstErrorRef) firstErrorRef = materialRef
+    hasError = true
+  } else {
+    setAbmessungError(false)
+  }
+
+  // Logistik
+  if (!lieferDatum || !abholDatum || !lieferArt || !abholArt) {
+    setLogistikError(true)
+    if (!firstErrorRef) firstErrorRef = logistikRef
+    hasError = true
+  } else if (new Date(lieferDatum) > new Date(abholDatum)) {
+    setLogistikError(true)
+    if (!firstErrorRef) firstErrorRef = logistikRef
+    hasError = true
+  } else {
+    setLogistikError(false)
+  }
+
+  // AGB
+  if (!agbAccepted) {
+    setAgbError(true)
+    if (!firstErrorRef) firstErrorRef = agbRef
+    hasError = true
+  } else {
+    setAgbError(false)
+  }
+
+  // Mindestens 1 Bild
+  if (photoFiles.length === 0) {
+    setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
+    if (!firstErrorRef) firstErrorRef = bilderRef
+    hasError = true
+  } else {
+    setWarnungBilder('')
+  }
+
+  // Verfahren
+  if (!selectedOption1) {
+    setVerfahrenError(true)
+    if (!firstErrorRef) firstErrorRef = verfahrenRef
+    hasError = true
+  } else {
+    setVerfahrenError(false)
+  }
+
+  // Beschreibung
+  if (!beschreibung.trim()) {
+    setBeschreibungError(true)
+    if (!firstErrorRef) firstErrorRef = beschreibungRef
+    hasError = true
+  } else {
+    setBeschreibungError(false)
+  }
+
+  // 🔹 wenn irgendwas falsch ist → einmal zum obersten Fehler scrollen
+  if (hasError) {
+    if (firstErrorRef) {
+      scrollToError(firstErrorRef)
+    }
+    return
+  }
+
+  // ⬇️ ab hier alles wie gehabt (Absenden)
+  setIsLoading(true)
+
+  const formData = new FormData()
+  formData.append('agbAccepted', agbAccepted ? 'true' : 'false')
+
+  bewerbungOptionen.forEach((option, i) => {
+    formData.append(`bewerbungOptionen[${i}]`, option)
+  })
+
+  photoFiles.forEach((file, i) => {
+    formData.append(`bilder[${i}]`, file)
+  })
+
+  fileFiles.forEach((file, i) => {
+    formData.append(`dateien[${i}]`, file)
+  })
+
+  formData.append('materialguete', materialGuete)
+  if (materialGuete === 'Andere') {
+    formData.append('andereMaterialguete', customMaterial)
+  }
+  formData.append('lieferDatum', lieferDatum)
+  formData.append('abholDatum', abholDatum)
+  formData.append('lieferArt', lieferArt)
+  formData.append('abholArt', abholArt)
+
+  try {
+    const res = await fetch('/api/auftrag-absenden', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) {
+      console.error('Serverfehler mit Status:', res.status)
+      throw new Error('Fehler beim Absenden')
+    }
+
+    setSuccessMessage(
+      '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
+    )
+
+    setTimeout(() => {
+      router.replace('/konto/angebote')
+    }, 2000)
+  } catch (err) {
+    console.error('❌ Fehler beim Absenden:', err)
+    alert('Fehler beim Absenden. Bitte versuche es erneut.')
+  } finally {
+    setIsLoading(false)
+  }
+}
+
     useEffect(() => {
     // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
     const t = setTimeout(() => setBootLoading(false), 400) // kleiner Delay, damit man den Loader sieht
