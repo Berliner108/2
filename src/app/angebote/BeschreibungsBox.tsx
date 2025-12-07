@@ -39,13 +39,13 @@ const BeschreibungsBox: React.FC<BeschreibungsBoxProps> = ({
               setText(e.target.value)
             }
           }}
-          placeholder={`Um einen reibungslosen Ablauf zu gewährleisten, stellen Sie bitte sicher, dass Ihr Material:
+          placeholder={`Um einen reibungslosen Ablauf zu gewährleisten, stelle bitte sicher, dass dein Material:
 
 - Den Angaben entspricht (keine qualitativen / quantitativen Abweichungen)
 - Teile dem Beschichter mit, wie du deine Qualitätsanforderungen einschätzt (niedrig, mittel, hoch)
 - Frei von Fremdstoffen ist (Rost, Zunder, Kleber, Fette, Öle, Lacke, Schmutz, Silikon, etc.)
 - Bei thermischen Verfahren der Hitzeeinwirkung standhält
-- Kontaktstellen zum Aufhängen / Einspannen verfügt; kennzeichnen Sie ggf. genau, an welcher Stelle ihr Material für die Beschichtung kontaktiert werden kann
+- Kontaktstellen zum Aufhängen / Einspannen verfügt; kennzeichne ggf. genau, an welcher Stelle dein Material für die Beschichtung kontaktiert werden kann
 - Dass die Verpackung Transportsicherheit und allg. Sicherheit gewährleistet
 - Achtung: Angaben in der Beschreibung haben stets höhere Priorität als in den Verfahrensangaben!
 
