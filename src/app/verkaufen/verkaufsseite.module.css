@@ -856,3 +856,10 @@
     background-position: 200% 0, 0 0;
   }
 }
+@media (max-width: 768px) {
+.heading {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}}
