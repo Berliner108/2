@@ -425,17 +425,17 @@ const scrollToSection = (step: number) => {
 
         {/* Schrittübersicht */}
         <motion.div {...fadeIn} className={styles.stepsAnimation}>
-          <h3>
-            Sag uns in 3 einfachen Schritten, was du{' '}
-            <span className={styles.highlight}>erledigt</span> haben möchtest.
-            <button
-              type="button"
-              onClick={() => setShowSteps(!showSteps)}
-              className={styles.toggleButton}
-            >
-              {showSteps ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-          </h3>
+  <h3 className={styles.stepsTitle}>
+    Sag uns in 3 einfachen Schritten, was du{' '}
+    <span className={styles.highlight}>erledigt</span> haben möchtest.
+    <button
+      type="button"
+      onClick={() => setShowSteps(!showSteps)}
+      className={styles.toggleButton}
+    >
+      {showSteps ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+    </button>
+  </h3>
 
           <AnimatePresence initial={false}>
             {showSteps && (
