@@ -15,6 +15,51 @@ import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen
 import LogistikSection from './LogistikSection'
 import beschreibungsStyles from './logistikbox.module.css'
 
+/* ---------------- Fancy Loader Components ---------------- */
+
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <div
+      className={styles.skeletonPage}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+    </div>
+  );
+}
+
+
 const stepIcons = [
   <Upload size={40} />,
   <Settings size={40} />,
@@ -63,6 +108,7 @@ const fadeIn = {
 
 export default function Formular() {
   // ✅ standardmäßig sichtbar
+  const [bootLoading, setBootLoading] = useState(true)
   const [showSteps, setShowSteps] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
@@ -299,6 +345,12 @@ const scrollToSection = (step: number) => {
       setIsLoading(false)
     }
   }
+    useEffect(() => {
+    // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
+    const t = setTimeout(() => setBootLoading(false), 400) // kleiner Delay, damit man den Loader sieht
+    return () => clearTimeout(t)
+  }, [])
+
 
   const formatEUR = (cents: number) =>
     (cents / 100).toLocaleString('de-DE', {
@@ -335,7 +387,17 @@ const scrollToSection = (step: number) => {
     const totalSteps = 7
     return Math.round((steps / totalSteps) * 100)
   }
-
+    if (bootLoading) {
+    return (
+      <div className={oswald.className}>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.wrapper}>
+          <FormSkeleton />
+        </div>
+      </div>
+    )
+  }
   return (
     <div className={oswald.className}>
       <Navbar />
