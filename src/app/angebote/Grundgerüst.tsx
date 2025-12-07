@@ -2,7 +2,7 @@
 import type React from 'react'   // ⬅️ NEU
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, FileText, HelpCircle, Truck } from 'lucide-react'
+import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, HelpCircle, Truck } from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import styles from './Grundgeruest.module.css'
 import Navbar from '../components/navbar/Navbar'
@@ -19,7 +19,7 @@ import beschreibungsStyles from './logistikbox.module.css'
 
 function TopLoader() {
   return (
-    <div className={styles.topLoader} aria-hidden>
+    <div className={styles.topLoader} aria-hidden={true}>
       <div className={styles.topLoaderInner} />
     </div>
   );

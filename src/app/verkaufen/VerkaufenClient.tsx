@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import { useState, useEffect, useRef } from 'react';
 import styles from './verkaufsseite.module.css';
@@ -9,6 +9,63 @@ import { useSearchParams } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown } from 'lucide-react';
+
+/* ---------------- Fancy Loader Components ---------------- */
+
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <div
+      className={styles.skeletonPage}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      {/* Header */}
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+
+      {/* Info-/Hinweisbox */}
+      <div className={styles.skelBlock} />
+
+      {/* Dropzone-Bereich */}
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      {/* Kategorie-Icons */}
+      <div className={styles.skelThreeCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* Ein paar Eingabefelder */}
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* Preis / Versand / Werktage */}
+      <div className={styles.skelThreeCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+    </div>
+  );
+}
+
 
 function istGueltigeDatei(file: File): boolean {
   const erlaubteMimeTypen = [
@@ -52,6 +109,7 @@ const heute = new Date().toISOString().split('T')[0];
 
 function ArtikelEinstellen() {
   const searchParams = useSearchParams(); // <-- HIER
+  const [bootLoading, setBootLoading] = useState(true);
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
@@ -318,6 +376,22 @@ useEffect(() => {
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
   const [effekt, setEffekt] = useState<string[]>([]);
+  useEffect(() => {
+    const vorausgewaehlt = searchParams.get('kategorie');
+    if (
+      vorausgewaehlt === 'nasslack' ||
+      vorausgewaehlt === 'pulverlack' ||
+      vorausgewaehlt === 'arbeitsmittel'
+    ) {
+      setKategorie(vorausgewaehlt);
+    }
+  }, [searchParams]);
+
+  // ⬇️ NEU: kleines Boot-Loading mit Skeleton
+  useEffect(() => {
+    const t = setTimeout(() => setBootLoading(false), 400);
+    return () => clearTimeout(t);
+  }, []);
 
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
@@ -594,8 +668,8 @@ if (!aufLager) {
   bilder.forEach((file) => formData.append('bilder', file));
   dateien.forEach((file) => formData.append('dateien', file));
   formData.append('preis', (parseFloat(preis) || 0).toString());
-formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
-formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
+  formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
+  formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
 
 
   try {
@@ -646,6 +720,17 @@ const toggleBewerbung = (option: string) => {
       : [...prev, option]
   )
 }
+ if (bootLoading) {
+    return (
+      <>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.container}>
+          <FormSkeleton />
+        </div>
+      </>
+    );
+  }
   return (
     <>
       <Navbar />
