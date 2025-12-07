@@ -150,9 +150,19 @@ export default function Formular() {
   const [verfahrenError, setVerfahrenError] = useState(false)
   const verfahrenRef = useRef<HTMLDivElement>(null)
 
-  const [specSelections, setSpecSelections] = useState<
-    Record<string, string | string[]>
-  >({})
+ const [specSelections, setSpecSelections] = useState<
+  Record<string, string | string[]>
+>({})
+
+// 🔹 Hilfsfunktion: alle Keys mit bestimmtem Prefix löschen (v1__ / v2__)
+const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
+  setSpecSelections((prev) => {
+    const entries = Object.entries(prev).filter(
+      ([key]) => !key.startsWith(prefix),
+    )
+    return Object.fromEntries(entries)
+  })
+}
 
   const istGueltigDatei = (file: File) => {
     const erlaubteEndungen = ['.pdf', '.zip', '.dxf']
@@ -205,6 +215,25 @@ const step3Ref = useRef<HTMLDivElement>(null)
     setPhotoPreviews(urls)
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [photoFiles])
+// 🔄 Spezifikationen zurücksetzen, wenn Verfahren gewechselt wird
+useEffect(() => {
+  setSpecSelections({});
+}, [selectedOption1, selectedOption2]);
+useEffect(() => {
+  const urls = photoFiles.map((file) => URL.createObjectURL(file))
+  setPhotoPreviews(urls)
+  return () => urls.forEach((url) => URL.revokeObjectURL(url))
+}, [photoFiles])
+
+// 🔄 Wenn Verfahren 1 wechselt → alle v1__-Spezifikationen löschen
+useEffect(() => {
+  clearSpecsByPrefix('v1__')
+}, [selectedOption1])
+
+// 🔄 Wenn Verfahren 2 wechselt → alle v2__-Spezifikationen löschen
+useEffect(() => {
+  clearSpecsByPrefix('v2__')
+}, [selectedOption2])
 
 
 const scrollToBlock = (ref: React.RefObject<HTMLElement>) => {
@@ -338,6 +367,16 @@ const handleSubmit = async (e: React.FormEvent) => {
   formData.append('abholArt', abholArt)
 
   try {
+    Object.entries(specSelections).forEach(([key, value]) => {
+  if (Array.isArray(value)) {
+    value.forEach((v, idx) =>
+      formData.append(`spezifikationen[${key}][${idx}]`, v),
+    )
+  } else {
+    formData.append(`spezifikationen[${key}]`, value)
+  }
+})
+
     const res = await fetch('/api/auftrag-absenden', {
       method: 'POST',
       body: formData,
@@ -916,8 +955,15 @@ const handleSubmit = async (e: React.FormEvent) => {
   <div>
     <strong>Spezifikationen:</strong>
     {(Object.entries(specSelections) as [string, string | string[]][])
-      .map(([label, value], i) => {
+      .map(([rawKey, value], i) => {
         const display = Array.isArray(value) ? value.join(', ') : value
+
+        // hässliche IDs wie v1__Strahlen__verfahren → "Strahlen Verfahren"
+        const label = rawKey
+          .replace(/^v\d+_+/, '')   // v1__ entfernen
+          .replace(/_+/g, ' ')      // _ → Leerzeichen
+          .trim()
+
         return (
           <p key={i}>
             {label}: {display}
@@ -926,6 +972,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       })}
   </div>
 )}
+
 
 {/* 3️⃣ Materialgüte */}
 <p>
