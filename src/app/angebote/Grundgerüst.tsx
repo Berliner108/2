@@ -1,5 +1,6 @@
 'use client'
 import type React from 'react'   // ⬅️ NEU
+import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, HelpCircle, Truck } from 'lucide-react'
@@ -107,6 +108,7 @@ const fadeIn = {
 }
 
 export default function Formular() {
+  const router = useRouter()
   // ✅ standardmäßig sichtbar
   const [bootLoading, setBootLoading] = useState(true)
   const [showSteps, setShowSteps] = useState(true)
@@ -330,14 +332,20 @@ const scrollToSection = (step: number) => {
       })
 
       if (!res.ok) {
-        console.error('Serverfehler mit Status:', res.status)
-        throw new Error('Fehler beim Absenden')
-      }
-      setSuccessMessage('✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …')
+  console.error('Serverfehler mit Status:', res.status)
+  throw new Error('Fehler beim Absenden')
+}
 
-      setTimeout(() => {
-        window.location.href = '/auftragsboerse'
-      }, 2500)
+setSuccessMessage('✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …')
+
+// optional mit kurzer Erfolgsmeldung
+setTimeout(() => {
+  router.replace('/konto/angebote')
+}, 2000)
+
+// wenn du KEIN Delay willst, einfach direkt:
+// router.push('/konto/angebote')
+
     } catch (err) {
       console.error('❌ Fehler beim Absenden:', err)
       alert('Fehler beim Absenden. Bitte versuche es erneut.')
