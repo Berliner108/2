@@ -892,55 +892,32 @@ const handleSubmit = async (e: React.FormEvent) => {
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.4 }}
                 className={styles.vorschauContainer}
-              >
-                <h3>Deine Eingaben im Überblick</h3>
+              ><h3>Deine Eingaben im Überblick</h3>
 
-                <p>
-                  <strong>Bilder:</strong> {photoFiles.length} Dateien
-                  hochgeladen
-                </p>
-                <p>
-                  <strong>Dateien:</strong> {fileFiles.length} Dateien
-                  hochgeladen
-                </p>
+{/* 1️⃣ Bilder / Dateien */}
+<p>
+  <strong>Bilder:</strong> {photoFiles.length} Dateien hochgeladen
+</p>
+<p>
+  <strong>Dateien:</strong> {fileFiles.length} Dateien hochgeladen
+</p>
 
-                <p>
-                  <strong>Materialgüte:</strong>{' '}
-                  {materialGuete === 'Andere'
-                    ? `Andere (${customMaterial})`
-                    : materialGuete || 'Noch keine Angabe'}
-                </p>
+{/* 2️⃣ Verfahren & Spezifikationen */}
+<p>
+  <strong>Verfahren:</strong>{' '}
+  {selectedOption1
+    ? `${selectedOption1}${
+        selectedOption2 ? ' – ' + selectedOption2 : ''
+      }`
+    : 'Noch keine Auswahl getroffen'}
+</p>
 
-                {/* 🔹 NEU: Abmessungen & Masse in der Vorschau */}
-                <p>
-                  <strong>Abmessungen größtes Werkstück (L/B/H):</strong>{' '}
-                  {laenge || breite || hoehe
-                    ? `${laenge || '–'} × ${breite || '–'} × ${
-                        hoehe || '–'
-                      } mm`
-                    : 'Noch keine Angaben gemacht'}
-                </p>
-                <p>
-                  <strong>Masse schwerstes Werkstück:</strong>{' '}
-                  {masse ? `${masse} kg` : 'Noch keine Angabe gemacht'}
-                </p>
-
-                <p>
-                  <strong>Verfahren:</strong>{' '}
-                  {selectedOption1
-                    ? `${selectedOption1}${
-                        selectedOption2 ? ' – ' + selectedOption2 : ''
-                      }`
-                    : 'Noch keine Auswahl getroffen'}
-                </p>
-
-                {Object.keys(specSelections).length > 0 && (
+{Object.keys(specSelections).length > 0 && (
   <div>
     <strong>Spezifikationen:</strong>
     {(Object.entries(specSelections) as [string, string | string[]][])
       .map(([label, value], i) => {
         const display = Array.isArray(value) ? value.join(', ') : value
-
         return (
           <p key={i}>
             {label}: {display}
@@ -950,37 +927,64 @@ const handleSubmit = async (e: React.FormEvent) => {
   </div>
 )}
 
+{/* 3️⃣ Materialgüte */}
+<p>
+  <strong>Materialgüte:</strong>{' '}
+  {materialGuete === 'Andere'
+    ? `Andere (${customMaterial})`
+    : materialGuete || 'Noch keine Angabe'}
+</p>
 
-                <p>
-                  <strong>Lieferdatum:</strong>{' '}
-                  {lieferDatum || 'Noch kein Datum gewählt'}
-                </p>
-                <p>
-                  <strong>Abholdatum:</strong>{' '}
-                  {abholDatum || 'Noch kein Datum gewählt'}
-                </p>
-                <p>
-                  <strong>Lieferart:</strong>{' '}
-                  {lieferArt || 'Nicht angegeben'}
-                </p>
-                <p>
-                  <strong>Abholart:</strong>{' '}
-                  {abholArt || 'Nicht angegeben'}
-                </p>
-                <p>
-                  <strong>Beschreibung:</strong>{' '}
-                  {beschreibung || 'Noch keine Angaben gemacht'}
-                </p>
-                <p>
-                  <strong>Werbeoptionen:</strong>{' '}
-                  {bewerbungOptionen.length > 0
-                    ? bewerbungOptionen.join(', ')
-                    : 'Keine ausgewählt'}
-                </p>
-                <p>
-                  <strong>AGB:</strong>{' '}
-                  {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}
-                </p>
+{/* 4️⃣ Abmessungen & Masse */}
+<p>
+  <strong>Abmessungen größtes Werkstück (L/B/H):</strong>{' '}
+  {laenge || breite || hoehe
+    ? `${laenge || '–'} × ${breite || '–'} × ${hoehe || '–'} mm`
+    : 'Noch keine Angaben gemacht'}
+</p>
+<p>
+  <strong>Masse schwerstes Werkstück:</strong>{' '}
+  {masse ? `${masse} kg` : 'Noch keine Angabe gemacht'}
+</p>
+
+{/* 5️⃣ Beschreibung */}
+<p>
+  <strong>Beschreibung:</strong>{' '}
+  {beschreibung || 'Noch keine Angaben gemacht'}
+</p>
+
+{/* 6️⃣ Logistik */}
+<p>
+  <strong>Lieferdatum:</strong>{' '}
+  {lieferDatum || 'Noch kein Datum gewählt'}
+</p>
+<p>
+  <strong>Abholdatum:</strong>{' '}
+  {abholDatum || 'Noch kein Datum gewählt'}
+</p>
+<p>
+  <strong>Lieferart:</strong>{' '}
+  {lieferArt || 'Nicht angegeben'}
+</p>
+<p>
+  <strong>Abholart:</strong>{' '}
+  {abholArt || 'Nicht angegeben'}
+</p>
+
+{/* 7️⃣ Werbeoptionen */}
+<p>
+  <strong>Werbeoptionen:</strong>{' '}
+  {bewerbungOptionen.length > 0
+    ? bewerbungOptionen.join(', ')
+    : 'Keine ausgewählt'}
+</p>
+
+{/* 8️⃣ AGB */}
+<p>
+  <strong>AGB:</strong>{' '}
+  {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}
+</p>
+
               </motion.div>
             )}
           </AnimatePresence>
