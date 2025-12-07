@@ -57,17 +57,7 @@
   margin-top: 20px;
   color: #0f172a;
 }
-.stepsTitle {
-  font-size: 1.8rem;      /* hier nach Geschmack anpassen */
-  line-height: 1.3;
-}
 
-/* optional etwas kleiner auf sehr kleinen Screens */
-@media (max-width: 768px) {
-  .stepsTitle {
-    font-size: 1.5rem;
-  }
-}
 
 .stepBox strong {
   font-size: 1.1rem; /* z. B. größer als normal */
@@ -833,5 +823,16 @@
   }
   100% {
     background-position: 200% 0, 0 0;
+  }
+}
+.stepsTitle {
+  font-size: 1.8rem;      /* hier nach Geschmack anpassen */
+  line-height: 1.3;
+}
+
+/* optional etwas kleiner auf sehr kleinen Screens */
+@media (max-width: 768px) {
+  .stepsTitle {
+    font-size: 1.5rem;
   }
 }
