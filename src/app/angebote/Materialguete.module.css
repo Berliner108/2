@@ -42,7 +42,7 @@
 .dropdown {
   width: 200px;
   padding: 0.35rem 0.65rem;
-  border-radius: 2px;
+  border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 0.95rem;
   background: #fff;
