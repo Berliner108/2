@@ -78,8 +78,8 @@ export default function MaterialGuete({
     <div className={styles.materialBox}>
       <div className={styles.materialBoxÜB}>
         <p>
-          Meine Teile sind aus
-          <span className={styles.requiredStar}>*</span>:
+          Meine Teile sind aus:
+          <span className={styles.requiredStar}>*</span>
           <span className={styles.iconTooltip}>
             <HelpCircle size={18} />
             <span className={styles.tooltipText}>
@@ -146,8 +146,8 @@ export default function MaterialGuete({
       {/* Abmessungen & Masse – nebeneinander auf Desktop */}
       <div className={styles.abmessungWrapper}>
         <h3 className={styles.gruppenTitel}>
-          Abmessungen des größten (mm) &amp; und Masse (kg) des schwersten Werkstücks
-          <span className={styles.requiredStar}>*</span>:
+          Abmessungen des größten (mm) &amp; und Masse (kg) des schwersten Werkstücks:
+          <span className={styles.requiredStar}>*</span>
         </h3>
 
         <div className={styles.abmessungRow}>

@@ -447,8 +447,8 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         <div ref={verfahrenRef}>
           <div className={styles.labelRow}>
   <span>
-    Verfahren 1
-    <span className={styles.requiredStar}>*</span>:
+    Verfahren 1:
+    <span className={styles.requiredStar}>*</span>
   </span>
   <span className={styles.verfahrenTooltipIcon}>
     <HelpCircle size={18} />
