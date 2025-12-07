@@ -227,15 +227,33 @@ const scrollToSection = (step: number) => {
   if (step === 1) scrollToBlock(step1Ref)
   if (step === 2) scrollToBlock(step2Ref)
   if (step === 3) scrollToBlock(step3Ref)
-}
+  }
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
   let hasError = false
 
-  // 🔹 neu: das erste fehlerhafte Feld merken
+  // 🔹 das visuell OBERSTE fehlerhafte Feld merken
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
 
-  // Materialgüte
+  // 1️⃣ BILDER (steht im Formular ganz oben)
+  if (photoFiles.length === 0) {
+    setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
+    if (!firstErrorRef) firstErrorRef = bilderRef
+    hasError = true
+  } else {
+    setWarnungBilder('')
+  }
+
+  // 2️⃣ VERFAHREN (im Block "Verfahrensangaben machen")
+  if (!selectedOption1) {
+    setVerfahrenError(true)
+    if (!firstErrorRef) firstErrorRef = verfahrenRef
+    hasError = true
+  } else {
+    setVerfahrenError(false)
+  }
+
+  // 3️⃣ MATERIALGÜTE
   if (!materialGuete || (materialGuete === 'Andere' && !customMaterial)) {
     setMaterialGueteError(true)
     if (!firstErrorRef) firstErrorRef = materialRef
@@ -244,7 +262,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setMaterialGueteError(false)
   }
 
-  // Abmessungen
+  // 4️⃣ ABMESSUNGEN
   if (!laenge || !breite || !hoehe || !masse) {
     setAbmessungError(true)
     if (!firstErrorRef) firstErrorRef = materialRef
@@ -253,7 +271,16 @@ const handleSubmit = async (e: React.FormEvent) => {
     setAbmessungError(false)
   }
 
-  // Logistik
+  // 5️⃣ BESCHREIBUNG (liegt im selben Block, aber unterhalb)
+  if (!beschreibung.trim()) {
+    setBeschreibungError(true)
+    if (!firstErrorRef) firstErrorRef = beschreibungRef
+    hasError = true
+  } else {
+    setBeschreibungError(false)
+  }
+
+  // 6️⃣ LOGISTIK
   if (!lieferDatum || !abholDatum || !lieferArt || !abholArt) {
     setLogistikError(true)
     if (!firstErrorRef) firstErrorRef = logistikRef
@@ -266,7 +293,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLogistikError(false)
   }
 
-  // AGB
+  // 7️⃣ AGB (steht wirklich ganz unten → wird als letztes geprüft)
   if (!agbAccepted) {
     setAgbError(true)
     if (!firstErrorRef) firstErrorRef = agbRef
@@ -275,34 +302,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setAgbError(false)
   }
 
-  // Mindestens 1 Bild
-  if (photoFiles.length === 0) {
-    setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
-    if (!firstErrorRef) firstErrorRef = bilderRef
-    hasError = true
-  } else {
-    setWarnungBilder('')
-  }
-
-  // Verfahren
-  if (!selectedOption1) {
-    setVerfahrenError(true)
-    if (!firstErrorRef) firstErrorRef = verfahrenRef
-    hasError = true
-  } else {
-    setVerfahrenError(false)
-  }
-
-  // Beschreibung
-  if (!beschreibung.trim()) {
-    setBeschreibungError(true)
-    if (!firstErrorRef) firstErrorRef = beschreibungRef
-    hasError = true
-  } else {
-    setBeschreibungError(false)
-  }
-
-  // 🔹 wenn irgendwas falsch ist → einmal zum obersten Fehler scrollen
+  // 👉 wenn irgendwas falsch ist → GENAU EIN Scroll zum obersten Fehler
   if (hasError) {
     if (firstErrorRef) {
       scrollToError(firstErrorRef)
@@ -310,7 +310,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return
   }
 
-  // ⬇️ ab hier alles wie gehabt (Absenden)
+  // ⬇️ ab hier Absenden wie gehabt
   setIsLoading(true)
 
   const formData = new FormData()
@@ -362,6 +362,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setIsLoading(false)
   }
 }
+
 
     useEffect(() => {
     // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
