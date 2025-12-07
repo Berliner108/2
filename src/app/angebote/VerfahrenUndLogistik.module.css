@@ -771,3 +771,62 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     word-wrap: break-word;
   }
 }
+/* --- Radio-Buttons im Verfahren-Block im gleichen Stil wie Verkaufsseite --- */
+
+.radioItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+/* Checkbox (falls in Gruppen vorhanden): nur Farbe angleichen */
+.checkboxRow input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: #00e5ff;
+}
+
+/* Radio: custom Optik wie auf der Verkaufsseite */
+.radioItem input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;          /* Außen-Durchmesser */
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin-right: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.radioItem input[type="radio"]::before {
+  content: "";
+  width: 8px;           /* Innen-Durchmesser */
+  height: 8px;
+  border-radius: 50%;
+  background: #00b4d8;  /* Punktfarbe */
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+
+/* beim Anklicken → türkiser Rand + Punkt */
+.radioItem input[type="radio"]:checked {
+  border-color: #00e5ff;
+}
+
+.radioItem input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* Fokus-Zustand (Tastatur) */
+.radioItem input[type="radio"]:focus-visible,
+.checkboxRow input[type="checkbox"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.35);
+  outline-offset: 2px;
+}
