@@ -63,9 +63,9 @@
 }
 
 /* optional etwas kleiner auf sehr kleinen Screens */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .stepsTitle {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
 }
 
