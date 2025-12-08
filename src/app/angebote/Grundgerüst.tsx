@@ -973,14 +973,15 @@ useEffect(() => {
         const verfahrenName = verfahrenNameRaw.trim()
         const fieldKeyLower = (fieldKeyRaw || '').toLowerCase()
 
-        // Feld "verfahren" nicht nochmal anzeigen (steht oben bei "Verfahren:")
+        // Feld "verfahren" nicht nochmal anzeigen
         if (!fieldKeyRaw || fieldKeyLower === 'verfahren') {
           return null
         }
 
-        // 1) Spezielle Schreibweisen, wo wir explizit trennen wollen
+        // 1) Spezielle Schreibweisen
         const specialLabels: Record<string, string> = {
-          farbeeloxieren: 'Farbe Eloxieren',
+          farbeeloxieren: 'Farbe',       // ✅ nur „Farbe“
+          farbe: 'Farbe',
           farbpalette: 'Farbpalette',
           glanzgrad: 'Glanzgrad',
           zertifizierungen: 'Zertifizierungen',
@@ -988,23 +989,19 @@ useEffect(() => {
 
         let fieldLabel = specialLabels[fieldKeyLower]
 
-        // 2) Generische Heuristik für Dinge wie "schichtdicke", "vorbehandlung_extra", ...
+        // 2) Generische Heuristik für alles andere
         if (!fieldLabel) {
-          // zuerst Unterstriche in Leerzeichen
           let base = fieldKeyLower.replace(/_+/g, ' ').trim()
 
-          // einfache Trennung für zusammengesetzte "…eloxieren", "…lackieren", "…beschichten"
           const endings = ['eloxieren', 'lackieren', 'beschichten']
           for (const ending of endings) {
             if (base.endsWith(ending) && !base.includes(' ')) {
               const prefix = base.slice(0, -ending.length)
-              base =
-                (prefix ? prefix + ' ' : '') + ending
+              base = (prefix ? prefix + ' ' : '') + ending
               break
             }
           }
 
-          // jedes Wort groß schreiben
           fieldLabel = base.replace(/(^|\s)\w/g, (m) => m.toUpperCase())
         }
 
@@ -1018,6 +1015,7 @@ useEffect(() => {
       })}
   </div>
 )}
+
 
 
 
