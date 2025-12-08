@@ -408,15 +408,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       <p className={styles.logistikIntro}>
         Plane hier, wann die Teile bereit zur Beschichtung sind und wann du sie wieder erhalten willst.
         </p>
-
-      {lieferDatum && abholDatum && aufenthaltTage !== null && (
-        <p className={styles.logistikSummary}>
-          Aufenthalt beim Anbieter:{' '}
-          <strong>{aufenthaltTage} Tage</strong> (
-          {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
-        </p>
-      )}
-
       <div className={styles.logistikCards}>
         {/* Anlieferung */}
         <div className={styles.logistikCard}>
@@ -567,7 +558,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             Serienauftrag (wiederkehrende Lieferungen)
           </label>
           <p className={styles.serienHintInline}>
-            Wenn aktiviert, planst du einen regelmäßig wiederkehrenden Auftrag.
+            Wenn aktiviert, planst du einen wiederkehrenden Auftrag.
           </p>
           {aufenthaltTage !== null && aufenthaltTage < 7 && (
             <p className={styles.helperText}>
@@ -579,7 +570,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
         {serienauftrag && (
           <div className={styles.serienauftragSelect}>
-            <span>Rhythmus der Anlieferung:</span>
+            <span>Rhythmus der An- und Auslieferung:</span>
             <select
               value={rhythmus}
               onChange={(e) => setRhythmus(e.target.value)}
