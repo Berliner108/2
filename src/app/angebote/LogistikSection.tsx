@@ -11,7 +11,6 @@ import {
   isSelectable,
   isWeekend,
   gemeinsameFeiertageDEAT,
-  addDays,
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
@@ -317,38 +316,12 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         )
       : null;
 
-  const formatDateDE = (value: string | Date) => {
-  const d = typeof value === 'string' ? new Date(value) : value;
-  return d.toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-};
-
-// Hilfsfunktion: Datum kopieren
-const cloneDate = (d: Date) =>
-  new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-// nächster erlaubter Arbeitstag (nicht WE/Feiertag/gesperrt)
-const nextSelectable = (start: Date): Date => {
-  let current = cloneDate(start);
-  if (current < minDate) current = cloneDate(minDate);
-
-  while (isDisabledDay(current)) {
-    current = addDays(current, 1);
-  }
-  return current;
-};
-
-// Anzahl Tage pro Rhythmus
-const rhythmDays: Record<string, number> = {
-  taeglich: 1,
-  woechentlich: 7,
-  zweiwoechentlich: 14,
-  monatlich: 30,
-};
-
+  const formatDateDE = (value: string) =>
+    new Date(value).toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
 
   // Serienauftrag nur sinnvoll, wenn der Zeitraum lang genug ist
   const serienauftragDisabled =
@@ -425,48 +398,6 @@ const rhythmDays: Record<string, number> = {
       document.removeEventListener('keydown', handleKey);
     };
   }, []);
-type SerienEintrag = { liefer: Date; abhol: Date };
-
-let seriesEntries: SerienEintrag[] = [];
-
-if (
-  serienauftrag &&
-  lieferDatumDate &&
-  abholDatumDate &&
-  rhythmus &&
-  rhythmDays[rhythmus]
-) {
-  const diffMs = abholDatumDate.getTime() - lieferDatumDate.getTime();
-  const baseStay = Math.max(
-    0,
-    Math.round(diffMs / (1000 * 60 * 60 * 24)),
-  );
-
-  const step = rhythmDays[rhythmus];
-  const maxOccurrences = 6; // z.B. erste 6 Lieferungen anzeigen
-
-  const entries: SerienEintrag[] = [];
-
-  for (let i = 0; i < maxOccurrences; i++) {
-    // theoretischer Start
-    const rawStart = addDays(lieferDatumDate, step * i);
-    const start = nextSelectable(rawStart);
-
-    // theoretisches Ende: gleiche Aufenthaltsdauer
-    let rawEnd = addDays(rawStart, baseStay);
-    let end = nextSelectable(rawEnd);
-
-    // zur Sicherheit: Ende darf nicht vor Start liegen
-    while (end <= start) {
-      rawEnd = addDays(rawEnd, 1);
-      end = nextSelectable(rawEnd);
-    }
-
-    entries.push({ liefer: start, abhol: end });
-  }
-
-  seriesEntries = entries;
-}
 
   return (
     <div
@@ -673,37 +604,21 @@ if (
 
       {/* Serienauftrag-Zusammenfassung */}
       {serienauftrag && lieferDatum && rhythmus && (
-  <div className={styles.seriesBox}>
-    <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
-    <p className={styles.seriesInfo}>
-      Start der Serie:{' '}
-      <strong>{formatDateDE(lieferDatum)}</strong>
-      <br />
-      Rhythmus:{' '}
-      <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
-    </p>
-
-    {seriesEntries.length > 0 && (
-      <ul className={styles.seriesList}>
-        {seriesEntries.map((entry, index) => (
-          <li key={index}>
-            <strong>Lieferung {index + 1}:</strong>{' '}
-            {formatDateDE(entry.liefer)} (Anlieferung) –{' '}
-            {formatDateDE(entry.abhol)} (Abholung)
-          </li>
-        ))}
-      </ul>
-    )}
-
-    <p className={styles.seriesHint}>
-      Die dargestellten Termine berücksichtigen Wochenenden und
-      gemeinsame Feiertage. Fällt eine geplante Lieferung auf einen
-      solchen Tag, wird sie automatisch auf den nächsten möglichen Tag
-      verschoben – dadurch können sich einzelne Termine um 1–2 Tage
-      verschieben.
-    </p>
-  </div>
-
+        <div className={styles.seriesBox}>
+          <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
+          <p className={styles.seriesInfo}>
+            Start der Serie:{' '}
+            <strong>{formatDateDE(lieferDatum)}</strong>
+            <br />
+            Rhythmus:{' '}
+            <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
+          </p>
+          <p className={styles.seriesHint}>
+            Die exakten Folgetermine werden mit dem Anbieter im Detail
+            abgestimmt. Hier siehst du die grundlegende Planung für deinen
+            wiederkehrenden Auftrag.
+          </p>
+        </div>
       )}
 
       {logistikError && (

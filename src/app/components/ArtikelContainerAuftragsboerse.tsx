@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import styles from './ArtikelContainerAuftragsboerse.module.css';
+// Pfad ggf. anpassen:
 import { Auftrag } from '../../data/dummyAuftraege';
 
 type ArtikelContainerAuftragsboerseProps = {
@@ -52,10 +53,20 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
           {(gewerblich || privat) && (
             <>
-              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.desktopOnly}`}>
+              {/* Desktop */}
+              <div
+                className={`${styles.verkaufsTypLabel} ${
+                  gewerblich ? styles.gewerblichLabel : styles.privatLabel
+                } ${styles.desktopOnly}`}
+              >
                 {gewerblich ? 'Gewerblich' : 'Privat'}
               </div>
-              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.mobileOnly}`}>
+              {/* Mobile */}
+              <div
+                className={`${styles.verkaufsTypLabel} ${
+                  gewerblich ? styles.gewerblichLabel : styles.privatLabel
+                } ${styles.mobileOnly}`}
+              >
                 {gewerblich ? 'Gewerblich' : 'Privat'}
               </div>
             </>
@@ -63,20 +74,21 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
         </div>
 
         <div className={styles.cardTextBlock}>
-          <h4 className={styles.cardText1}>{verfahrenName}</h4>
-          <p className={styles.cardText2}>Material: {material}</p>
-          <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
-          <p className={styles.cardText4}>Masse: {masse}</p>
+          <div className={styles.cardText1}>{verfahrenName}</div>
+          <div className={styles.cardText2}>Material: {material}</div>
+          <div className={styles.cardText3}>
+            Maße: {length} × {width} × {height} mm
+          </div>
+          <div className={styles.cardText4}>Masse: {masse}</div>
 
-          {/* Labels nach deinem Wunsch + Klammern nur bei vorhandenem Wert */}
-          <p className={styles.cardText5}>
+          <div className={styles.cardText5}>
             Warenausgabe: {warenausgabeDatum.toLocaleDateString('de-DE')}
             {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
-          </p>
-          <p className={styles.cardText6}>
+          </div>
+          <div className={styles.cardText6}>
             Warenannahme: {warenannahmeDatum.toLocaleDateString('de-DE')}
             {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
-          </p>
+          </div>
 
           <div className={styles.cardOrt}>
             <MapPin size={16} className={styles.ortIcon} />
