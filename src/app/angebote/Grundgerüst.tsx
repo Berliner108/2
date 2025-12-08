@@ -406,6 +406,16 @@ formData.append('beschreibung', beschreibung.trim())
     const t = setTimeout(() => setBootLoading(false), 400) // kleiner Delay, damit man den Loader sieht
     return () => clearTimeout(t)
   }, [])
+  // 🔄 selectedVerfahren immer aus Verfahren 1 + 2 ableiten
+useEffect(() => {
+  const auswahl: string[] = []
+
+  if (selectedOption1) auswahl.push(selectedOption1)
+  if (selectedOption2) auswahl.push(selectedOption2)
+
+  setSelectedVerfahren(auswahl)
+}, [selectedOption1, selectedOption2])
+
 
 
   const formatEUR = (cents: number) =>

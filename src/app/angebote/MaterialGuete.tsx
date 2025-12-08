@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import styles from './Materialguete.module.css'
@@ -66,7 +66,24 @@ export default function MaterialGuete({
   abmessungError
 }: MaterialGueteProps) {
   const isEloxieren = selectedVerfahren.includes('Eloxieren')
+// Merker, ob wir das Material automatisch gesetzt haben
+const [wasAutoSet, setWasAutoSet] = useState(false)
 
+useEffect(() => {
+  if (isEloxieren) {
+    // automatisch auf Aluminium setzen
+    setMaterialGuete('Aluminium')
+    setCustomMaterial('')
+    setWasAutoSet(true)
+  } else {
+    // Nur zurücksetzen, wenn es von uns automatisch gesetzt wurde
+    if (wasAutoSet) {
+      setMaterialGuete('')
+      setCustomMaterial('')
+      setWasAutoSet(false)
+    }
+  }
+}, [isEloxieren, wasAutoSet, setMaterialGuete, setCustomMaterial])
   useEffect(() => {
     if (isEloxieren) {
       setMaterialGuete('Aluminium')
