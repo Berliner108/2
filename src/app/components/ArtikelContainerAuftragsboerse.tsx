@@ -63,6 +63,7 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
         </div>
 
         <div className={styles.cardTextBlock}>
+          <h4 className={styles.cardText1}>{verfahrenName}</h4>
           {/* Labels nach deinem Wunsch + Klammern nur bei vorhandenem Wert */}
           <p className={styles.cardText5}>
             Warenausgabe: {warenausgabeDatum.toLocaleDateString('de-DE')}
@@ -72,7 +73,7 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
             Warenannahme: {warenannahmeDatum.toLocaleDateString('de-DE')}
             {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
           </p>
-          <h4 className={styles.cardText1}>{verfahrenName}</h4>
+          
           <p className={styles.cardText2}>Material: {material}</p>
           <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
           <p className={styles.cardText4}>Masse: {masse}</p>
