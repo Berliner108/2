@@ -38,7 +38,6 @@
   width: 100%;
   max-width: 500px;   /* darf ruhig bleiben */
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   background-color: #fff;
 }
 
@@ -429,5 +428,6 @@
     min-width: unset;
     min-height: unset;
     max-height: 300px; /* oder none, wenn du gar nicht begrenzen willst */
+    border: none !important;
   }
 }
