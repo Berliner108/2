@@ -181,7 +181,13 @@
   font-size: 14px;
   margin-bottom: 1px;
   color: black;
-}  
+} 
+.cardText5 {
+  margin-bottom: -4px
+}
+.cardText6 {
+  margin-bottom: -2px
+}
 .overlay {
     position: fixed;
     top: 0;
