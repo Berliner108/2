@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import styles from './VerfahrenUndLogistik.module.css';
 
@@ -11,6 +11,7 @@ import {
   isSelectable,
   isWeekend,
   gemeinsameFeiertageDEAT,
+  addDays,
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
@@ -33,6 +34,11 @@ type MiniCalendarProps = {
   onSelect: (d: Date) => void;
   isDisabled: (d: Date) => boolean;
   minDate: Date;
+  getDayInfo?: (d: Date) => {
+    isLiefer?: boolean;
+    isAbhol?: boolean;
+    isSerie?: boolean;
+  };
 };
 
 function MiniCalendar({
@@ -42,6 +48,7 @@ function MiniCalendar({
   onSelect,
   isDisabled,
   minDate,
+  getDayInfo,
 }: MiniCalendarProps) {
   const y = month.getFullYear();
   const m = month.getMonth();
@@ -138,8 +145,35 @@ function MiniCalendar({
         {weeks.map((w, wi) =>
           w.map((d, di) => {
             if (!d) return <div key={`${wi}-${di}`} />;
+
             const disabled = isDisabled(d) || d < minDate;
             const isSelected = !!selected && toYMD(selected) === toYMD(d);
+
+            const info = typeof getDayInfo === 'function'
+              ? getDayInfo(d)
+              : undefined;
+
+            let borderColor = isSelected ? '#0ea5e9' : '#e2e8f0';
+            let background = disabled
+              ? '#f1f5f9'
+              : isSelected
+              ? '#e0f2fe'
+              : '#fff';
+            let textColor = disabled ? '#94a3b8' : '#0f172a';
+            let fontWeight: React.CSSProperties['fontWeight'] = 400;
+
+            if (!disabled) {
+              if (info?.isAbhol) {
+                textColor = '#b91c1c'; // rot
+                fontWeight = 600;
+              } else if (info?.isLiefer) {
+                textColor = '#15803d'; // grün
+                fontWeight = 600;
+              } else if (info?.isSerie) {
+                textColor = '#0369a1'; // blau
+              }
+            }
+
             return (
               <button
                 key={`${wi}-${di}`}
@@ -149,16 +183,12 @@ function MiniCalendar({
                 style={{
                   padding: '8px 0',
                   borderRadius: 8,
-                  border: `1px solid ${
-                    isSelected ? '#0ea5e9' : '#e2e8f0'
-                  }`,
-                  background: disabled
-                    ? '#f1f5f9'
-                    : isSelected
-                    ? '#e0f2fe'
-                    : '#fff',
-                  color: disabled ? '#94a3b8' : '#0f172a',
+                  border: `1px solid ${borderColor}`,
+                  background,
+                  color: textColor,
                   cursor: disabled ? 'not-allowed' : 'pointer',
+                  fontSize: 12,
+                  fontWeight,
                 }}
               >
                 {d.getDate()}
@@ -201,10 +231,10 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     setAbholDatumDate(abholDatum ? new Date(abholDatum) : null);
   }, [abholDatum]);
 
-  // ❗ wie in der anderen Datei: Wochenende + gemeinsame Feiertage sperren
+  // genau wie in der anderen Datei: heute + WE + gemeinsame Feiertage sperren
   const isDisabledDay = (d: Date): boolean => {
     if (d < minDate) return true;
-    if (!isSelectable(d)) return true; // heute ist schon gesperrt
+    if (!isSelectable(d)) return true; // heute gesperrt
     if (isWeekend(d)) return true;
     const feiertage = gemeinsameFeiertageDEAT(d.getFullYear());
     if (feiertage.has(toYMD(d))) return true;
@@ -228,6 +258,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   const abholFieldRef = useRef<HTMLDivElement | null>(null);
   const abholPopoverRef = useRef<HTMLDivElement | null>(null);
 
+  const isSameDate = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
   // 🔧 Bugfix: minDate NICHT in den Dependencies, sonst springt der Monat immer zurück
   useEffect(() => {
     if (lieferCalOpen) {
@@ -243,7 +278,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setLieferCalMonth(minDate);
       }
     }
-  }, [lieferCalOpen, lieferDatumDate]); // ⬅️ minDate raus
+  }, [lieferCalOpen, lieferDatumDate]); // minDate bewusst nicht in deps
 
   useEffect(() => {
     if (abholCalOpen) {
@@ -267,7 +302,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setAbholCalMonth(minDate);
       }
     }
-  }, [abholCalOpen, abholDatumDate, lieferDatumDate]); // ⬅️ minDate raus
+  }, [abholCalOpen, abholDatumDate, lieferDatumDate]); // minDate bewusst nicht in deps
 
   useEffect(() => {
     if (lieferDatumDate && abholDatumDate && abholDatumDate <= lieferDatumDate) {
@@ -291,6 +326,22 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     if (isDisabledAbholDay(d)) return;
     setAbholDatumDate(d);
     setAbholDatum(toYMD(d));
+    setAbholCalOpen(false);
+  };
+
+  // Reset-Buttons
+  const handleResetLiefer = () => {
+    setLieferDatum('');
+    setLieferDatumDate(null);
+    setAbholDatum('');
+    setAbholDatumDate(null);
+    setLieferCalOpen(false);
+    setAbholCalOpen(false);
+  };
+
+  const handleResetAbhol = () => {
+    setAbholDatum('');
+    setAbholDatumDate(null);
     setAbholCalOpen(false);
   };
 
@@ -325,7 +376,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   // Serienauftrag nur sinnvoll, wenn der Zeitraum lang genug ist
   const serienauftragDisabled =
-    aufenthaltTage !== null && aufenthaltTage < 1; // du kannst hier z.B. < 7 draus machen
+    aufenthaltTage !== null && aufenthaltTage < 1; // ggf. auf < 7 anpassen
 
   // Rhythmus-Abhängigkeiten: wöchentlich nur ab 7 Tagen, etc.
   const isRhythmusOptionDisabled = (key: string): boolean => {
@@ -367,6 +418,74 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     }
   }, [serienauftragDisabled, serienauftrag]);
 
+  // Alle Serien-Termine (Anlieferungen) berechnen
+  const serienTermine = useMemo(() => {
+    if (!serienauftrag || !lieferDatumDate || !rhythmus) return [];
+
+    const result: Date[] = [];
+
+    let current = new Date(
+      lieferDatumDate.getFullYear(),
+      lieferDatumDate.getMonth(),
+      lieferDatumDate.getDate(),
+    );
+
+    const end = abholDatumDate
+      ? new Date(
+          abholDatumDate.getFullYear(),
+          abholDatumDate.getMonth(),
+          abholDatumDate.getDate(),
+        )
+      : addDays(current, 90);
+
+    const maxIterations = 50;
+
+    const advance = (d: Date): Date => {
+      switch (rhythmus) {
+        case 'taeglich':
+          return addDays(d, 1);
+        case 'woechentlich':
+          return addDays(d, 7);
+        case 'zweiwoechentlich':
+          return addDays(d, 14);
+        case 'monatlich':
+          return new Date(d.getFullYear(), d.getMonth() + 1, d.getDate());
+        default:
+          return d;
+      }
+    };
+
+    let iterations = 0;
+    while (current <= end && iterations < maxIterations) {
+      result.push(new Date(current));
+      const next = advance(current);
+      if (next <= current) break;
+      current = next;
+      iterations++;
+    }
+
+    return result;
+  }, [serienauftrag, rhythmus, lieferDatumDate, abholDatumDate]);
+
+  const getDayInfo = (d: Date) => {
+    const info: { isLiefer?: boolean; isAbhol?: boolean; isSerie?: boolean } =
+      {};
+
+    if (lieferDatumDate && isSameDate(d, lieferDatumDate)) {
+      info.isLiefer = true;
+    }
+
+    if (abholDatumDate && isSameDate(d, abholDatumDate)) {
+      info.isAbhol = true;
+    }
+
+    if (serienTermine.some((t) => isSameDate(t, d))) {
+      info.isSerie = true;
+    }
+
+    return info;
+  };
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -406,8 +525,8 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       }`}
     >
       <p className={styles.logistikIntro}>
-        Plane hier, wann die Teile bereit zur Beschichtung sind und wann du sie wieder erhalten willst.
-        </p>
+        Plane hier, wann die Teile bereit sind und wann du sie wieder erhalten möchtest.
+      </p>
 
       {lieferDatum && abholDatum && aufenthaltTage !== null && (
         <p className={styles.logistikSummary}>
@@ -422,18 +541,32 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         <div className={styles.logistikCard}>
           <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
 
-          <div className={styles.inputGroup} ref={lieferFieldRef}>
+          <div
+            className={`${styles.inputGroup} ${styles.dateGroup}`}
+            ref={lieferFieldRef}
+          >
             <label>Lieferdatum</label>
-            <input
-              type="text"
-              readOnly
-              placeholder="Datum wählen"
-              onClick={() => setLieferCalOpen((prev) => !prev)}
-              value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
-              className={
-                logistikError && !lieferDatum ? styles.inputError : ''
-              }
-            />
+            <div className={styles.dateFieldRow}>
+              <input
+                type="text"
+                readOnly
+                placeholder="Datum wählen"
+                onClick={() => setLieferCalOpen((prev) => !prev)}
+                value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
+                className={
+                  logistikError && !lieferDatum ? styles.inputError : ''
+                }
+              />
+              {lieferDatumDate && (
+                <button
+                  type="button"
+                  className={styles.dateButton}
+                  onClick={handleResetLiefer}
+                >
+                  Zurücksetzen
+                </button>
+              )}
+            </div>
 
             {lieferCalOpen && (
               <div className={styles.calendarPopover} ref={lieferPopoverRef}>
@@ -444,6 +577,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
                   onSelect={handleSelectLieferdatum}
                   isDisabled={isDisabledDay}
                   minDate={minDate}
+                  getDayInfo={getDayInfo}
                 />
               </div>
             )}
@@ -471,23 +605,37 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             Abholung / Rücktransport
           </h5>
 
-          <div className={styles.inputGroup} ref={abholFieldRef}>
+          <div
+            className={`${styles.inputGroup} ${styles.dateGroup}`}
+            ref={abholFieldRef}
+          >
             <label>Abholdatum</label>
-             <input
-              type="text"
-              readOnly
-              placeholder={
-                lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
-              }
-              onClick={() => {
-                if (!lieferDatumDate) return;
-                setAbholCalOpen((prev) => !prev);
-              }}
-              value={abholDatumDate ? formatDateDE(abholDatum) : ''}
-              className={
-                logistikError && !abholDatum ? styles.inputError : ''
-              }
-            />
+            <div className={styles.dateFieldRow}>
+              <input
+                type="text"
+                readOnly
+                placeholder={
+                  lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
+                }
+                onClick={() => {
+                  if (!lieferDatumDate) return;
+                  setAbholCalOpen((prev) => !prev);
+                }}
+                value={abholDatumDate ? formatDateDE(abholDatum) : ''}
+                className={
+                  logistikError && !abholDatum ? styles.inputError : ''
+                }
+              />
+              {abholDatumDate && (
+                <button
+                  type="button"
+                  className={styles.dateButton}
+                  onClick={handleResetAbhol}
+                >
+                  Zurücksetzen
+                </button>
+              )}
+            </div>
 
             {abholCalOpen && (
               <div className={styles.calendarPopover} ref={abholPopoverRef}>
@@ -498,11 +646,16 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
                   onSelect={handleSelectAbholdatum}
                   isDisabled={isDisabledAbholDay}
                   minDate={lieferDatumDate ?? minDate}
+                  getDayInfo={getDayInfo}
                 />
               </div>
             )}
 
-            
+            {!lieferDatum && (
+              <span className={styles.helperText}>
+                Bitte zuerst das Lieferdatum wählen.
+              </span>
+            )}
           </div>
 
           <div className={styles.inputGroup}>
@@ -523,6 +676,20 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             </select>
           </div>
         </div>
+      </div>
+
+      {/* Legende für Farben im Kalender */}
+      <div
+        style={{
+          marginTop: '0.5rem',
+          fontSize: '0.8rem',
+          color: '#64748b',
+        }}
+      >
+        <strong>Kalender-Legende:</strong>{' '}
+        <span style={{ color: '#15803d' }}>●</span> Anlieferung{' '}
+        <span style={{ color: '#b91c1c', marginLeft: 8 }}>●</span> Abholung{' '}
+        <span style={{ color: '#0369a1', marginLeft: 8 }}>●</span> Serien-Lieferung
       </div>
 
       {/* Zusammenfassung als Zeitstrahl / Timeline */}
@@ -625,10 +792,30 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             Rhythmus:{' '}
             <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
           </p>
+
+          {serienTermine.length > 0 && (
+            <>
+              <p className={styles.seriesInfo}>
+                Geplante Anlieferungen an diesen Tagen:
+              </p>
+              <ul className={styles.timelineList}>
+                {serienTermine.slice(0, 12).map((d, idx) => (
+                  <li key={idx}>{formatDateDE(toYMD(d))}{idx === 0 ? ' (Start)' : ''}</li>
+                ))}
+              </ul>
+              {serienTermine.length > 12 && (
+                <p className={styles.seriesHint}>
+                  Weitere Termine folgen im gleichen Rhythmus.
+                </p>
+              )}
+            </>
+          )}
+
           <p className={styles.seriesHint}>
             Die exakten Folgetermine werden mit dem Anbieter im Detail
-            abgestimmt. Hier siehst du die grundlegende Planung für deinen
-            wiederkehrenden Auftrag.
+            abgestimmt. Fällt eine geplante Lieferung auf einen Feiertag
+            oder einen nicht verfügbaren Tag, kann sich die tatsächliche
+            Lieferung um einzelne Tage nach vorne oder hinten verschieben.
           </p>
         </div>
       )}
