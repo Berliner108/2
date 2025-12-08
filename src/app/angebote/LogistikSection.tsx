@@ -475,6 +475,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
           <div className={styles.inputGroup} ref={abholFieldRef}>
             <label>Abholdatum</label>
+            {!lieferDatum && (
+              <span className={styles.helperText}>
+                Bitte zuerst das Lieferdatum wählen.
+              </span>
+            )}
             <input
               type="text"
               readOnly
@@ -504,11 +509,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
               </div>
             )}
 
-            {!lieferDatum && (
-              <span className={styles.helperText}>
-                Bitte zuerst das Lieferdatum wählen.
-              </span>
-            )}
+            
           </div>
 
           <div className={styles.inputGroup}>
