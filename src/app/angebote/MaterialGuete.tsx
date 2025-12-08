@@ -84,12 +84,7 @@ useEffect(() => {
     }
   }
 }, [isEloxieren, wasAutoSet, setMaterialGuete, setCustomMaterial])
-  useEffect(() => {
-    if (isEloxieren) {
-      setMaterialGuete('Aluminium')
-      setCustomMaterial('')
-    }
-  }, [isEloxieren, setMaterialGuete, setCustomMaterial])
+  
 
   return (
     <div className={styles.materialBox}>

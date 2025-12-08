@@ -356,7 +356,6 @@ const handleSubmit = async (e: React.FormEvent) => {
   formData.append('abholDatum', abholDatum)
   formData.append('lieferArt', lieferArt)
   formData.append('abholArt', abholArt)
-  formData.append('beschreibung', beschreibung.trim())
 
   try {
     Object.entries(specSelections).forEach(([key, value]) => {
@@ -958,7 +957,6 @@ useEffect(() => {
       }`
     : 'Noch keine Auswahl getroffen'}
 </p>
-
 {Object.keys(specSelections).length > 0 && (
   <div>
     <strong>Spezifikationen:</strong>
@@ -966,16 +964,51 @@ useEffect(() => {
       .map(([rawKey, value], i) => {
         const display = Array.isArray(value) ? value.join(', ') : value
 
-        // Schlüssel wie "v1__Verzinken__verfahren"
-        // → Verfahren = "Verzinken", Feld = "verfahren"
-        const withoutPrefix = rawKey.replace(/^v\d+__/, '') // v1__ entfernen
-        const [verfahrenName, fieldKeyRaw] = withoutPrefix.split('__')
-        const fieldKey = (fieldKeyRaw || '').replace(/_+/g, ' ').trim()
+        // "v1__Eloxieren__farbeeloxieren" → verfahrenNameRaw="Eloxieren", fieldKeyRaw="farbeeloxieren"
+        const withoutPrefix = rawKey.replace(/^v\d+__/, '')
+        const [verfahrenNameRaw, fieldKeyRaw] = withoutPrefix.split('__')
 
-        const label =
-          !fieldKey || fieldKey.toLowerCase() === 'verfahren'
-            ? `Spezifikationen ${verfahrenName}`
-            : `Spezifikationen ${verfahrenName} ${fieldKey}`
+        if (!verfahrenNameRaw) return null
+
+        const verfahrenName = verfahrenNameRaw.trim()
+        const fieldKeyLower = (fieldKeyRaw || '').toLowerCase()
+
+        // Feld "verfahren" nicht nochmal anzeigen (steht oben bei "Verfahren:")
+        if (!fieldKeyRaw || fieldKeyLower === 'verfahren') {
+          return null
+        }
+
+        // 1) Spezielle Schreibweisen, wo wir explizit trennen wollen
+        const specialLabels: Record<string, string> = {
+          farbeeloxieren: 'Farbe Eloxieren',
+          farbpalette: 'Farbpalette',
+          glanzgrad: 'Glanzgrad',
+          zertifizierungen: 'Zertifizierungen',
+        }
+
+        let fieldLabel = specialLabels[fieldKeyLower]
+
+        // 2) Generische Heuristik für Dinge wie "schichtdicke", "vorbehandlung_extra", ...
+        if (!fieldLabel) {
+          // zuerst Unterstriche in Leerzeichen
+          let base = fieldKeyLower.replace(/_+/g, ' ').trim()
+
+          // einfache Trennung für zusammengesetzte "…eloxieren", "…lackieren", "…beschichten"
+          const endings = ['eloxieren', 'lackieren', 'beschichten']
+          for (const ending of endings) {
+            if (base.endsWith(ending) && !base.includes(' ')) {
+              const prefix = base.slice(0, -ending.length)
+              base =
+                (prefix ? prefix + ' ' : '') + ending
+              break
+            }
+          }
+
+          // jedes Wort groß schreiben
+          fieldLabel = base.replace(/(^|\s)\w/g, (m) => m.toUpperCase())
+        }
+
+        const label = `${verfahrenName} ${fieldLabel}`
 
         return (
           <p key={i}>
@@ -985,6 +1018,7 @@ useEffect(() => {
       })}
   </div>
 )}
+
 
 
 
