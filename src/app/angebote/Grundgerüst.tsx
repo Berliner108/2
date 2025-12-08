@@ -356,6 +356,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   formData.append('abholDatum', abholDatum)
   formData.append('lieferArt', lieferArt)
   formData.append('abholArt', abholArt)
+  formData.append('beschreibung', beschreibung.trim())
 
   try {
     Object.entries(specSelections).forEach(([key, value]) => {
@@ -367,6 +368,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     formData.append(`spezifikationen[${key}]`, value)
   }
 })
+formData.append('verfahren1', selectedOption1)
+if (selectedOption2) {
+  formData.append('verfahren2', selectedOption2)
+}
+
+formData.append('beschreibung', beschreibung.trim())
 
     const res = await fetch('/api/auftrag-absenden', {
       method: 'POST',
@@ -949,11 +956,16 @@ const handleSubmit = async (e: React.FormEvent) => {
       .map(([rawKey, value], i) => {
         const display = Array.isArray(value) ? value.join(', ') : value
 
-        // hässliche IDs wie v1__Strahlen__verfahren → "Strahlen Verfahren"
-        const label = rawKey
-          .replace(/^v\d+_+/, '')   // v1__ entfernen
-          .replace(/_+/g, ' ')      // _ → Leerzeichen
-          .trim()
+        // Schlüssel wie "v1__Verzinken__verfahren"
+        // → Verfahren = "Verzinken", Feld = "verfahren"
+        const withoutPrefix = rawKey.replace(/^v\d+__/, '') // v1__ entfernen
+        const [verfahrenName, fieldKeyRaw] = withoutPrefix.split('__')
+        const fieldKey = (fieldKeyRaw || '').replace(/_+/g, ' ').trim()
+
+        const label =
+          !fieldKey || fieldKey.toLowerCase() === 'verfahren'
+            ? `Spezifikationen ${verfahrenName}`
+            : `Spezifikationen ${verfahrenName} ${fieldKey}`
 
         return (
           <p key={i}>
@@ -963,6 +975,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       })}
   </div>
 )}
+
 
 
 {/* 3️⃣ Materialgüte */}
