@@ -4,16 +4,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './VerfahrenUndLogistik.module.css';
 
-
 import {
   todayDate,
   minSelectableDate,
   toYMD,
   isSelectable,
+  isWeekend,
+  gemeinsameFeiertageDEAT,
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
-  // logistikRef: RefObject<HTMLDivElement>;   ❌ RAUS
   lieferDatum: string;
   setLieferDatum: (value: string) => void;
   abholDatum: string;
@@ -201,9 +201,13 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     setAbholDatumDate(abholDatum ? new Date(abholDatum) : null);
   }, [abholDatum]);
 
+  // ❗ wie in der anderen Datei: Wochenende + gemeinsame Feiertage sperren
   const isDisabledDay = (d: Date): boolean => {
     if (d < minDate) return true;
-    if (!isSelectable(d)) return true;
+    if (!isSelectable(d)) return true; // heute ist schon gesperrt
+    if (isWeekend(d)) return true;
+    const feiertage = gemeinsameFeiertageDEAT(d.getFullYear());
+    if (feiertage.has(toYMD(d))) return true;
     return false;
   };
 
@@ -224,6 +228,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   const abholFieldRef = useRef<HTMLDivElement | null>(null);
   const abholPopoverRef = useRef<HTMLDivElement | null>(null);
 
+  // 🔧 Bugfix: minDate NICHT in den Dependencies, sonst springt der Monat immer zurück
   useEffect(() => {
     if (lieferCalOpen) {
       if (lieferDatumDate) {
@@ -238,7 +243,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setLieferCalMonth(minDate);
       }
     }
-  }, [lieferCalOpen, lieferDatumDate, minDate]);
+  }, [lieferCalOpen, lieferDatumDate]); // ⬅️ minDate raus
 
   useEffect(() => {
     if (abholCalOpen) {
@@ -262,7 +267,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setAbholCalMonth(minDate);
       }
     }
-  }, [abholCalOpen, abholDatumDate, lieferDatumDate, minDate]);
+  }, [abholCalOpen, abholDatumDate, lieferDatumDate]); // ⬅️ minDate raus
 
   useEffect(() => {
     if (lieferDatumDate && abholDatumDate && abholDatumDate <= lieferDatumDate) {
@@ -317,6 +322,50 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       month: '2-digit',
       year: 'numeric',
     });
+
+  // Serienauftrag nur sinnvoll, wenn der Zeitraum lang genug ist
+  const serienauftragDisabled =
+    aufenthaltTage !== null && aufenthaltTage < 1; // du kannst hier z.B. < 7 draus machen
+
+  // Rhythmus-Abhängigkeiten: wöchentlich nur ab 7 Tagen, etc.
+  const isRhythmusOptionDisabled = (key: string): boolean => {
+    if (aufenthaltTage == null) return true;
+    switch (key) {
+      case 'taeglich':
+        return aufenthaltTage < 1;
+      case 'woechentlich':
+        return aufenthaltTage < 7;
+      case 'zweiwoechentlich':
+        return aufenthaltTage < 14;
+      case 'monatlich':
+        return aufenthaltTage < 30;
+      default:
+        return false;
+    }
+  };
+
+  // Wenn sich der Zeitraum ändert und der aktuelle Rhythmus nicht mehr passt → zurücksetzen
+  useEffect(() => {
+    if (!serienauftrag || rhythmus === '' || aufenthaltTage == null) return;
+
+    const invalid =
+      (rhythmus === 'woechentlich' && aufenthaltTage < 7) ||
+      (rhythmus === 'zweiwoechentlich' && aufenthaltTage < 14) ||
+      (rhythmus === 'monatlich' && aufenthaltTage < 30) ||
+      (rhythmus === 'taeglich' && aufenthaltTage < 1);
+
+    if (invalid) {
+      setRhythmus('');
+    }
+  }, [aufenthaltTage, serienauftrag, rhythmus]);
+
+  // Wenn Zeitraum extrem kurz wird → Serienauftrag komplett zurücksetzen
+  useEffect(() => {
+    if (serienauftragDisabled && serienauftrag) {
+      setSerienauftrag(false);
+      setRhythmus('');
+    }
+  }, [serienauftragDisabled, serienauftrag]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -514,9 +563,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             <input
               type="checkbox"
               checked={serienauftrag}
+              disabled={serienauftragDisabled}
               onChange={(e) => {
-                setSerienauftrag(e.target.checked);
-                if (!e.target.checked) setRhythmus('');
+                const checked = e.target.checked;
+                setSerienauftrag(checked);
+                if (!checked) setRhythmus('');
               }}
             />
             Serienauftrag (wiederkehrende Lieferungen)
@@ -524,6 +575,12 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           <p className={styles.serienHintInline}>
             Wenn aktiviert, planst du einen regelmäßig wiederkehrenden Auftrag.
           </p>
+          {aufenthaltTage !== null && aufenthaltTage < 7 && (
+            <p className={styles.helperText}>
+              Wöchentliche oder längere Serien sind nur sinnvoll, wenn der
+              Aufenthalt mindestens 7 Tage beträgt.
+            </p>
+          )}
         </div>
 
         {serienauftrag && (
@@ -534,10 +591,30 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
               onChange={(e) => setRhythmus(e.target.value)}
             >
               <option value="">Bitte wählen</option>
-              <option value="taeglich">Täglich</option>
-              <option value="woechentlich">Wöchentlich</option>
-              <option value="zweiwoechentlich">Alle zwei Wochen</option>
-              <option value="monatlich">Monatlich</option>
+              <option
+                value="taeglich"
+                disabled={isRhythmusOptionDisabled('taeglich')}
+              >
+                Täglich
+              </option>
+              <option
+                value="woechentlich"
+                disabled={isRhythmusOptionDisabled('woechentlich')}
+              >
+                Wöchentlich
+              </option>
+              <option
+                value="zweiwoechentlich"
+                disabled={isRhythmusOptionDisabled('zweiwoechentlich')}
+              >
+                Alle zwei Wochen
+              </option>
+              <option
+                value="monatlich"
+                disabled={isRhythmusOptionDisabled('monatlich')}
+              >
+                Monatlich
+              </option>
             </select>
           </div>
         )}
@@ -574,6 +651,5 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     </div>
   );
 };
-
 
 export default LogistikSection;
