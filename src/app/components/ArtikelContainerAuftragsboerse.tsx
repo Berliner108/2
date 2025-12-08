@@ -76,7 +76,7 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
           
           <p className={styles.cardText2}>Material: {material}</p>
           <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
-          <p className={styles.cardText4}>Masse: {masse}</p>
+          <p className={styles.cardText4}>Masse schwerstes Werkstück: {masse}</p>
 
           
 
