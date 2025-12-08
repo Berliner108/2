@@ -70,7 +70,7 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
             {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
           </p>
           <p className={styles.cardText6}>
-            Warenannahme: {warenannahmeDatum.toLocaleDateString('de-DE')}
+            Warenrückgabe: {warenannahmeDatum.toLocaleDateString('de-DE')}
             {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
           </p>
           
