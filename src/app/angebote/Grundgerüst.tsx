@@ -14,7 +14,6 @@ import MaterialGuete from './MaterialGuete'
 import VerfahrenUndLogistik from './VerfahrenUndLogistik' // Pfad ggf. anpassen
 import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen'
 import LogistikSection from './LogistikSection'
-import beschreibungsStyles from './logistikbox.module.css'
 
 /* ---------------- Fancy Loader Components ---------------- */
 
@@ -783,52 +782,46 @@ useEffect(() => {
 
         </div>
 
-        <div
-          className={beschreibungsStyles.borderedContainer}
-          ref={logistikRef}
-        >
-          <div className={beschreibungsStyles.textfeldContainer}>
-            <div
-            ref={step3Ref}   // 🔹 HIER
-  style={{
-    
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.75rem',
-    marginTop: '0.65rem',
-    marginBottom: '0.65rem',
-  }}
->
-  <div className={styles.stepNumber}>3</div>
-  <h2
-    className={styles.headingSection}
-    style={{ display: 'flex', alignItems: 'center', margin: 0 }}
+        <div ref={logistikRef}>
+  <div
+    ref={step3Ref}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.75rem',
+      marginTop: '0.65rem',
+      marginBottom: '0.65rem',
+    }}
   >
-    Logistik
-    <span className={styles.iconTooltip}>
-      <HelpCircle size={18} />
-      <span className={styles.tooltipText}>
-        Plane Anlieferung, Abholung und Transportart für deinen Auftrag.
+    <div className={styles.stepNumber}>3</div>
+    <h2
+      className={styles.headingSection}
+      style={{ display: 'flex', alignItems: 'center', margin: 0 }}
+    >
+      Logistik
+      <span className={styles.iconTooltip}>
+        <HelpCircle size={18} />
+        <span className={styles.tooltipText}>
+          Plane Anlieferung, Abholung und Transportart für deinen Auftrag.
+        </span>
       </span>
-    </span>
-  </h2>
+    </h2>
+  </div>
+
+  <LogistikSection
+    lieferDatum={lieferDatum}
+    setLieferDatum={setLieferDatum}
+    abholDatum={abholDatum}
+    setAbholDatum={setAbholDatum}
+    lieferArt={lieferArt}
+    setLieferArt={setLieferArt}
+    abholArt={abholArt}
+    setAbholArt={setAbholArt}
+    logistikError={logistikError}
+  />
 </div>
 
-
-            <LogistikSection
-              lieferDatum={lieferDatum}
-              setLieferDatum={setLieferDatum}
-              abholDatum={abholDatum}
-              setAbholDatum={setAbholDatum}
-              lieferArt={lieferArt}
-              setLieferArt={setLieferArt}
-              abholArt={abholArt}
-              setAbholArt={setAbholArt}
-              logistikError={logistikError}
-            />
-          </div>
-        </div>
 
         {/* Bewerbung – statisches Frontend-Panel */}
         <div

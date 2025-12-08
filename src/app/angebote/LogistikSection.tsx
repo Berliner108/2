@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styles from './VerfahrenUndLogistik.module.css';
+import boxStyles from './logistikbox.module.css'; // ⬅️ NEU
 
 import {
   todayDate,
@@ -12,7 +13,6 @@ import {
 } from '../../lib/dateUtils';
 
 interface LogistikSectionProps {
-  // logistikRef: RefObject<HTMLDivElement>;   ❌ RAUS
   lieferDatum: string;
   setLieferDatum: (value: string) => void;
   abholDatum: string;
@@ -322,7 +322,8 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       const target = e.target as Node;
 
       const inLieferField = lieferFieldRef.current?.contains(target) ?? false;
-      const inLieferPopover = lieferPopoverRef.current?.contains(target) ?? false;
+      const inLieferPopover =
+        lieferPopoverRef.current?.contains(target) ?? false;
       if (!inLieferField && !inLieferPopover) {
         setLieferCalOpen(false);
       }
@@ -350,229 +351,233 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   }, []);
 
   return (
-    <div
-      className={`${styles.logistik} ${
-        logistikError ? styles.errorFieldset : ''
-      }`}
-    >
-      <p className={styles.logistikIntro}>
-        Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
-        werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
-        <code>isSelectable()</code> in <code>dateUtils.ts</code> definiert.
-      </p>
-
-      {lieferDatum && abholDatum && aufenthaltTage !== null && (
-        <p className={styles.logistikSummary}>
-          Aufenthalt beim Anbieter:{' '}
-          <strong>{aufenthaltTage} Tage</strong> (
-          {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
-        </p>
-      )}
-
-      <div className={styles.logistikCards}>
-        {/* Anlieferung */}
-        <div className={styles.logistikCard}>
-          <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
-
-          <div className={styles.inputGroup} ref={lieferFieldRef}>
-            <label>Lieferdatum</label>
-            <input
-              type="text"
-              readOnly
-              placeholder="Datum wählen"
-              onClick={() => setLieferCalOpen((prev) => !prev)}
-              value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
-              className={
-                logistikError && !lieferDatum ? styles.inputError : ''
-              }
-            />
-
-            {lieferCalOpen && (
-              <div className={styles.calendarPopover} ref={lieferPopoverRef}>
-                <MiniCalendar
-                  month={lieferCalMonth}
-                  onMonthChange={setLieferCalMonth}
-                  selected={lieferDatumDate}
-                  onSelect={handleSelectLieferdatum}
-                  isDisabled={isDisabledDay}
-                  minDate={minDate}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label>Lieferart</label>
-            <select
-              value={lieferArt}
-              onChange={(e) => setLieferArt(e.target.value)}
-              className={
-                logistikError && !lieferArt ? styles.inputError : ''
-              }
-            >
-              <option value="">Bitte wählen</option>
-              <option value="selbst">Ich liefere selbst</option>
-              <option value="abholung">Abholung an meinem Standort</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Abholung */}
-        <div className={styles.logistikCard}>
-          <h5 className={styles.logistikCardTitle}>
-            Abholung / Rücktransport
-          </h5>
-
-          <div className={styles.inputGroup} ref={abholFieldRef}>
-            <label>Abholdatum</label>
-            <input
-              type="text"
-              readOnly
-              placeholder={
-                lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
-              }
-              onClick={() => {
-                if (!lieferDatumDate) return;
-                setAbholCalOpen((prev) => !prev);
-              }}
-              value={abholDatumDate ? formatDateDE(abholDatum) : ''}
-              className={
-                logistikError && !abholDatum ? styles.inputError : ''
-              }
-            />
-
-            {abholCalOpen && (
-              <div className={styles.calendarPopover} ref={abholPopoverRef}>
-                <MiniCalendar
-                  month={abholCalMonth}
-                  onMonthChange={setAbholCalMonth}
-                  selected={abholDatumDate}
-                  onSelect={handleSelectAbholdatum}
-                  isDisabled={isDisabledAbholDay}
-                  minDate={lieferDatumDate ?? minDate}
-                />
-              </div>
-            )}
-
-            {!lieferDatum && (
-              <span className={styles.helperText}>
-                Bitte zuerst das Lieferdatum wählen.
-              </span>
-            )}
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label>Abholart</label>
-            <select
-              disabled={!lieferDatum}
-              value={abholArt}
-              onChange={(e) => setAbholArt(e.target.value)}
-              className={
-                logistikError && !abholArt ? styles.inputError : ''
-              }
-            >
-              <option value="">Bitte wählen</option>
-              <option value="selbst">Ich hole selbst ab</option>
-              <option value="anlieferung">
-                Anlieferung an meinem Standort
-              </option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Zusammenfassung als Zeitstrahl / Timeline */}
-      {lieferDatum && abholDatum && (
-        <div className={styles.timelineBox}>
-          <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
-          <ul className={styles.timelineList}>
-            <li>
-              <strong>📥 Anlieferung:</strong>{' '}
-              {formatDateDE(lieferDatum)} –{' '}
-              {lieferArt || 'Lieferart noch offen'}
-            </li>
-            <li>
-              <strong>📤 Abholung:</strong>{' '}
-              {formatDateDE(abholDatum)} –{' '}
-              {abholArt || 'Abholart noch offen'}
-            </li>
-            {aufenthaltTage !== null && (
-              <li>
-                <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
-                {aufenthaltTage} Tage
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-
-      {/* Serienauftrag-Bereich */}
-      <div className={styles.serienauftragRow}>
-        <div className={styles.serienauftragLeft}>
-          <label className={styles.serienCheckboxLabel}>
-            <input
-              type="checkbox"
-              checked={serienauftrag}
-              onChange={(e) => {
-                setSerienauftrag(e.target.checked);
-                if (!e.target.checked) setRhythmus('');
-              }}
-            />
-            Serienauftrag (wiederkehrende Lieferungen)
-          </label>
-          <p className={styles.serienHintInline}>
-            Wenn aktiviert, planst du einen regelmäßig wiederkehrenden Auftrag.
-          </p>
-        </div>
-
-        {serienauftrag && (
-          <div className={styles.serienauftragSelect}>
-            <span>Rhythmus der Anlieferung:</span>
-            <select
-              value={rhythmus}
-              onChange={(e) => setRhythmus(e.target.value)}
-            >
-              <option value="">Bitte wählen</option>
-              <option value="taeglich">Täglich</option>
-              <option value="woechentlich">Wöchentlich</option>
-              <option value="zweiwoechentlich">Alle zwei Wochen</option>
-              <option value="monatlich">Monatlich</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* Serienauftrag-Zusammenfassung */}
-      {serienauftrag && lieferDatum && rhythmus && (
-        <div className={styles.seriesBox}>
-          <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
-          <p className={styles.seriesInfo}>
-            Start der Serie:{' '}
-            <strong>{formatDateDE(lieferDatum)}</strong>
-            <br />
-            Rhythmus:{' '}
-            <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
-          </p>
-          <p className={styles.seriesHint}>
-            Die exakten Folgetermine werden mit dem Anbieter im Detail
-            abgestimmt. Hier siehst du die grundlegende Planung für deinen
-            wiederkehrenden Auftrag.
-          </p>
-        </div>
-      )}
-
-      {logistikError && (
-        <motion.p
-          className={styles.warnung}
-          animate={{ x: [0, -4, 4, -4, 0] }}
-          transition={{ duration: 0.3 }}
+    <div className={boxStyles.borderedContainer}>
+      <div className={boxStyles.textfeldContainer}>
+        <div
+          className={`${styles.logistik} ${
+            logistikError ? styles.errorFieldset : ''
+          }`}
         >
-          Bitte fülle die Logistik vollständig und korrekt aus.
-        </motion.p>
-      )}
+          <p className={styles.logistikIntro}>
+            Plane hier, wann die Teile zu dir kommen und wann sie wieder
+            abgeholt werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
+            <code>isSelectable()</code> in <code>dateUtils.ts</code> definiert.
+          </p>
+
+          {lieferDatum && abholDatum && aufenthaltTage !== null && (
+            <p className={styles.logistikSummary}>
+              Aufenthalt beim Anbieter:{' '}
+              <strong>{aufenthaltTage} Tage</strong> (
+              {formatDateDE(lieferDatum)} – {formatDateDE(abholDatum)})
+            </p>
+          )}
+
+          <div className={styles.logistikCards}>
+            {/* Anlieferung */}
+            <div className={styles.logistikCard}>
+              <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
+
+              <div className={styles.inputGroup} ref={lieferFieldRef}>
+                <label>Lieferdatum</label>
+                <input
+                  type="text"
+                  readOnly
+                  placeholder="Datum wählen"
+                  onClick={() => setLieferCalOpen((prev) => !prev)}
+                  value={lieferDatumDate ? formatDateDE(lieferDatum) : ''}
+                  className={
+                    logistikError && !lieferDatum ? styles.inputError : ''
+                  }
+                />
+
+                {lieferCalOpen && (
+                  <div className={styles.calendarPopover} ref={lieferPopoverRef}>
+                    <MiniCalendar
+                      month={lieferCalMonth}
+                      onMonthChange={setLieferCalMonth}
+                      selected={lieferDatumDate}
+                      onSelect={handleSelectLieferdatum}
+                      isDisabled={isDisabledDay}
+                      minDate={minDate}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Lieferart</label>
+                <select
+                  value={lieferArt}
+                  onChange={(e) => setLieferArt(e.target.value)}
+                  className={
+                    logistikError && !lieferArt ? styles.inputError : ''
+                  }
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="selbst">Ich liefere selbst</option>
+                  <option value="abholung">Abholung an meinem Standort</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Abholung */}
+            <div className={styles.logistikCard}>
+              <h5 className={styles.logistikCardTitle}>
+                Abholung / Rücktransport
+              </h5>
+
+              <div className={styles.inputGroup} ref={abholFieldRef}>
+                <label>Abholdatum</label>
+                <input
+                  type="text"
+                  readOnly
+                  placeholder={
+                    lieferDatum ? 'Datum wählen' : 'Zuerst Lieferdatum wählen'
+                  }
+                  onClick={() => {
+                    if (!lieferDatumDate) return;
+                    setAbholCalOpen((prev) => !prev);
+                  }}
+                  value={abholDatumDate ? formatDateDE(abholDatum) : ''}
+                  className={
+                    logistikError && !abholDatum ? styles.inputError : ''
+                  }
+                />
+
+                {abholCalOpen && (
+                  <div className={styles.calendarPopover} ref={abholPopoverRef}>
+                    <MiniCalendar
+                      month={abholCalMonth}
+                      onMonthChange={setAbholCalMonth}
+                      selected={abholDatumDate}
+                      onSelect={handleSelectAbholdatum}
+                      isDisabled={isDisabledAbholDay}
+                      minDate={lieferDatumDate ?? minDate}
+                    />
+                  </div>
+                )}
+
+                {!lieferDatum && (
+                  <span className={styles.helperText}>
+                    Bitte zuerst das Lieferdatum wählen.
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Abholart</label>
+                <select
+                  disabled={!lieferDatum}
+                  value={abholArt}
+                  onChange={(e) => setAbholArt(e.target.value)}
+                  className={
+                    logistikError && !abholArt ? styles.inputError : ''
+                  }
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="selbst">Ich hole selbst ab</option>
+                  <option value="anlieferung">
+                    Anlieferung an meinem Standort
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          {lieferDatum && abholDatum && (
+            <div className={styles.timelineBox}>
+              <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
+              <ul className={styles.timelineList}>
+                <li>
+                  <strong>📥 Anlieferung:</strong>{' '}
+                  {formatDateDE(lieferDatum)} –{' '}
+                  {lieferArt || 'Lieferart noch offen'}
+                </li>
+                <li>
+                  <strong>📤 Abholung:</strong>{' '}
+                  {formatDateDE(abholDatum)} –{' '}
+                  {abholArt || 'Abholart noch offen'}
+                </li>
+                {aufenthaltTage !== null && (
+                  <li>
+                    <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
+                    {aufenthaltTage} Tage
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Serienauftrag */}
+          <div className={styles.serienauftragRow}>
+            <div className={styles.serienauftragLeft}>
+              <label className={styles.serienCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={serienauftrag}
+                  onChange={(e) => {
+                    setSerienauftrag(e.target.checked);
+                    if (!e.target.checked) setRhythmus('');
+                  }}
+                />
+                Serienauftrag (wiederkehrende Lieferungen)
+              </label>
+              <p className={styles.serienHintInline}>
+                Wenn aktiviert, planst du einen regelmäßig wiederkehrenden
+                Auftrag.
+              </p>
+            </div>
+
+            {serienauftrag && (
+              <div className={styles.serienauftragSelect}>
+                <span>Rhythmus der Anlieferung:</span>
+                <select
+                  value={rhythmus}
+                  onChange={(e) => setRhythmus(e.target.value)}
+                >
+                  <option value="">Bitte wählen</option>
+                  <option value="taeglich">Täglich</option>
+                  <option value="woechentlich">Wöchentlich</option>
+                  <option value="zweiwoechentlich">Alle zwei Wochen</option>
+                  <option value="monatlich">Monatlich</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Serienauftrag-Zusammenfassung */}
+          {serienauftrag && lieferDatum && rhythmus && (
+            <div className={styles.seriesBox}>
+              <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
+              <p className={styles.seriesInfo}>
+                Start der Serie:{' '}
+                <strong>{formatDateDE(lieferDatum)}</strong>
+                <br />
+                Rhythmus:{' '}
+                <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
+              </p>
+              <p className={styles.seriesHint}>
+                Die exakten Folgetermine werden mit dem Anbieter im Detail
+                abgestimmt. Hier siehst du die grundlegende Planung für deinen
+                wiederkehrenden Auftrag.
+              </p>
+            </div>
+          )}
+
+          {logistikError && (
+            <motion.p
+              className={styles.warnung}
+              animate={{ x: [0, -4, 4, -4, 0] }}
+              transition={{ duration: 0.3 }}
+            >
+              Bitte fülle die Logistik vollständig und korrekt aus.
+            </motion.p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
-
 
 export default LogistikSection;
