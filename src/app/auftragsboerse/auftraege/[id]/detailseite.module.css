@@ -36,10 +36,6 @@
 /* Wrapper passt sich der Bild-Höhe an */
 .imageWrapper {
   width: 100%;
-  max-width: 500px;        /* optional, Grenze nach rechts */
-  min-width: 500px;
-  /* height: weg – Höhe kommt vom Bild */
-  /* aspect-ratio: weg */
   overflow: hidden;        /* für abgerundete Ecken */
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -440,12 +436,24 @@
   .imageWrapper {
     width: 100%;
     max-width: 100%;
-    min-width: 0;      /* WICHTIG: Mindestbreite weg */
-    max-height: none;  /* optional: Höhe nicht hart begrenzen */
+    min-width: 0 !important;   /* falls noch irgendwo eins bleibt */
+    max-height: none;
   }
 
   .thumbnail {
     width: 50px;
     height: 50px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .buyButton {
+    width: 100%;
   }
 }
