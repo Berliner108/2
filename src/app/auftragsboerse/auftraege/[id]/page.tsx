@@ -5,7 +5,7 @@ import { dummyAuftraege, type Auftrag } from '../../../../data/dummyAuftraege';
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
-import Navbar from '../../../components/navbar/Navbar'
+import Navbar from '../../../components/navbar/Navbar';
 import { FaFilePdf } from 'react-icons/fa';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -44,10 +44,20 @@ function DetailSkeleton() {
     </div>
   );
 }
+
 export default function AuftragDetailPage() {
-  const [loading] = useState(false); // später: true während Backend-Fetch
+  // später: auf true setzen, während echte Backend-Daten geladen werden
+  const [loading] = useState(false);
 
   const params = useParams<{ id: string }>();
+  const auftrag: Auftrag | undefined = dummyAuftraege.find(
+    (a) => a.id.toString() === params.id
+  );
+
+  if (!auftrag) {
+    notFound();
+    return null;
+  }
 
   if (loading) {
     return (
@@ -59,28 +69,6 @@ export default function AuftragDetailPage() {
         </div>
       </>
     );
-  }
-
-  const auftrag: Auftrag | undefined = dummyAuftraege.find(
-    (a) => a.id.toString() === params.id
-  );
-  if (!auftrag) {
-    notFound();
-    return null;
-  }
-
-  // ... dein bisheriger JSX (Bilder, Meta, Preis-Accordion etc.)
-}
-
-export default function AuftragDetailPage() {
-  // Route-Param sicher lesen
-  const params = useParams<{ id: string }>();
-  const auftrag: Auftrag | undefined = dummyAuftraege.find(
-    (a) => a.id.toString() === params.id
-  );
-  if (!auftrag) {
-    notFound();
-    return null;
   }
 
   // Lightbox
@@ -163,7 +151,6 @@ export default function AuftragDetailPage() {
   return (
     <>
       <Navbar />
-      <TopLoader />
 
       <div className={styles.container}>
         <div className={styles.grid}>
@@ -329,12 +316,11 @@ export default function AuftragDetailPage() {
                 className={`${styles.buyButton} ${styles.disclosureBtn}`}
                 aria-expanded={preisOpen}
                 aria-controls="pricePanel"
-                onClick={() => setPreisOpen(o => !o)}
+                onClick={() => setPreisOpen((o) => !o)}
               >
                 <span>Mach ein Angebot</span>
                 <span className={styles.disclosureIcon}>{preisOpen ? '▾' : '▸'}</span>
               </button>
-
 
               {preisOpen && (
                 <form onSubmit={onPreisSubmit} className={styles.priceForm}>
