@@ -830,3 +830,125 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   outline: 2px solid rgba(0, 229, 255, 0.35);
   outline-offset: 2px;
 }
+/* --- Timeline unter den Karten --- */
+.timelineBox {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px dashed #cbd5e1;
+  font-size: 0.9rem;
+  font-family: 'Oswald', sans-serif;
+}
+
+.timelineTitle {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.timelineList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timelineList li + li {
+  margin-top: 0.25rem;
+}
+
+/* --- Serienauftrag-Layout --- */
+.serienauftragRow {
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.serienauftragLeft {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.serienCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.serienCheckboxLabel input {
+  width: 14px;
+  height: 14px;
+  accent-color: #00b4d8;
+}
+
+.serienHintInline {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.serienauftragSelect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.serienauftragSelect select {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+}
+
+/* --- Serienauftrag-Box mit Zusammenfassung --- */
+.seriesBox {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  background: #ecfeff;
+  border: 1px solid #22d3ee;
+  font-size: 0.9rem;
+  font-family: 'Oswald', sans-serif;
+}
+
+.seriesTitle {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.seriesInfo {
+  margin: 0 0 0.25rem;
+}
+
+.seriesHint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Mobile etwas kompakter */
+@media (max-width: 768px) {
+  .timelineBox,
+  .seriesBox {
+    font-size: 0.85rem;
+  }
+
+  .serienauftragRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .serienauftragSelect {
+    justify-content: flex-start;
+  }
+}

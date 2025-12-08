@@ -182,7 +182,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   setAbholArt,
   logistikError,
 }) => {
-
   const today = todayDate();
   const minDate = minSelectableDate();
 
@@ -292,6 +291,13 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   const [serienauftrag, setSerienauftrag] = useState(false);
   const [rhythmus, setRhythmus] = useState('');
 
+  const rhythmusLabel: Record<string, string> = {
+    taeglich: 'täglich',
+    woechentlich: 'wöchentlich',
+    zweiwoechentlich: 'alle zwei Wochen',
+    monatlich: 'monatlich',
+  };
+
   const aufenthaltTage =
     lieferDatum && abholDatum
       ? Math.max(
@@ -344,12 +350,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   }, []);
 
   return (
-     <div
-    className={`${styles.logistik} ${
-      logistikError ? styles.errorFieldset : ''
-    }`}
-  >
-
+    <div
+      className={`${styles.logistik} ${
+        logistikError ? styles.errorFieldset : ''
+      }`}
+    >
       <p className={styles.logistikIntro}>
         Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
         werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
@@ -476,18 +481,49 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         </div>
       </div>
 
+      {/* Zusammenfassung als Zeitstrahl / Timeline */}
+      {lieferDatum && abholDatum && (
+        <div className={styles.timelineBox}>
+          <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
+          <ul className={styles.timelineList}>
+            <li>
+              <strong>📥 Anlieferung:</strong>{' '}
+              {formatDateDE(lieferDatum)} –{' '}
+              {lieferArt || 'Lieferart noch offen'}
+            </li>
+            <li>
+              <strong>📤 Abholung:</strong>{' '}
+              {formatDateDE(abholDatum)} –{' '}
+              {abholArt || 'Abholart noch offen'}
+            </li>
+            {aufenthaltTage !== null && (
+              <li>
+                <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
+                {aufenthaltTage} Tage
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {/* Serienauftrag-Bereich */}
       <div className={styles.serienauftragRow}>
-        <label className={styles.serienCheckboxLabel}>
-          <input
-            type="checkbox"
-            checked={serienauftrag}
-            onChange={(e) => {
-              setSerienauftrag(e.target.checked);
-              if (!e.target.checked) setRhythmus('');
-            }}
-          />
-          Ich habe einen Serienauftrag
-        </label>
+        <div className={styles.serienauftragLeft}>
+          <label className={styles.serienCheckboxLabel}>
+            <input
+              type="checkbox"
+              checked={serienauftrag}
+              onChange={(e) => {
+                setSerienauftrag(e.target.checked);
+                if (!e.target.checked) setRhythmus('');
+              }}
+            />
+            Serienauftrag (wiederkehrende Lieferungen)
+          </label>
+          <p className={styles.serienHintInline}>
+            Wenn aktiviert, planst du einen regelmäßig wiederkehrenden Auftrag.
+          </p>
+        </div>
 
         {serienauftrag && (
           <div className={styles.serienauftragSelect}>
@@ -506,6 +542,25 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         )}
       </div>
 
+      {/* Serienauftrag-Zusammenfassung */}
+      {serienauftrag && lieferDatum && rhythmus && (
+        <div className={styles.seriesBox}>
+          <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
+          <p className={styles.seriesInfo}>
+            Start der Serie:{' '}
+            <strong>{formatDateDE(lieferDatum)}</strong>
+            <br />
+            Rhythmus:{' '}
+            <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
+          </p>
+          <p className={styles.seriesHint}>
+            Die exakten Folgetermine werden mit dem Anbieter im Detail
+            abgestimmt. Hier siehst du die grundlegende Planung für deinen
+            wiederkehrenden Auftrag.
+          </p>
+        </div>
+      )}
+
       {logistikError && (
         <motion.p
           className={styles.warnung}
@@ -518,5 +573,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     </div>
   );
 };
+
 
 export default LogistikSection;
