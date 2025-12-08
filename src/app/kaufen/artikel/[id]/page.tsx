@@ -1,35 +1,75 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { artikelDaten } from '@/data/ArtikelimShop';
-import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import styles from './ArtikelDetail.module.css';
-import Navbar from '../../../components/navbar/Navbar'
+import Navbar from '../../../components/navbar/Navbar';
 import { FaFilePdf } from 'react-icons/fa';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
-import Link from 'next/link';  // ganz oben in der Datei
+import Link from 'next/link';
 
-// ✅ HIER EINSETZEN
-type PageProps = {
-  params: {
-    id: string;
-  };
-};
+// ===== Loader + Skeleton =====
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
 
-// ✅ richtig
+function DetailSkeleton() {
+  return (
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelDrop} />
+        <div className={styles.skelGrid}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+      </div>
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+    </div>
+  );
+}
+
 export default function ArtikelDetailPage() {
-  const params = useParams();
-  const artikel = (
-    artikelDaten.find((a) => a.id === params.id)
-  ) as (typeof artikelDaten)[number] & { preis: number };
+  // später: true, während Backend-Fetch läuft
+  const [loading] = useState(false);
 
-  if (!artikel) return notFound();
-  // …
+  const params = useParams<{ id: string }>();
+  const artikel = artikelDaten.find((a) => a.id === params.id) as
+    | ((typeof artikelDaten)[number] & { preis: number })
+    | undefined;
 
+  if (!artikel) {
+    notFound();
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.container}>
+          <DetailSkeleton />
+        </div>
+      </>
+    );
+  }
 
   const [preis, setPreis] = useState('');
   const [extraPreisVisible, setExtraPreisVisible] = useState(false);
@@ -40,13 +80,12 @@ export default function ArtikelDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
-  if (!artikel) return notFound();
-
   const slides = artikel.bilder?.map((bild) => ({ src: bild })) || [];
 
   return (
     <>
       <Navbar />
+
       <div className={styles.container}>
         <div className={styles.grid}>
           {/* Linke Spalte: Bilder */}
@@ -88,7 +127,6 @@ export default function ArtikelDetailPage() {
                 <span className={styles.value}>
                   {new Date(artikel.lieferdatum).toLocaleDateString('de-DE')}
                 </span>
-
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Zustand:</span>
@@ -99,8 +137,8 @@ export default function ArtikelDetailPage() {
                 <span className={styles.value}>{artikel.hersteller}</span>
               </div>
               <div className={styles.metaItem}>
-              <span className={styles.label}>Preis:</span>
-              <span className={styles.value}>{artikel.preis.toFixed(2)} €</span>
+                <span className={styles.label}>Preis:</span>
+                <span className={styles.value}>{artikel.preis.toFixed(2)} €</span>
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Farbcode:</span>
@@ -120,11 +158,16 @@ export default function ArtikelDetailPage() {
                   {showFarbcodeHint && (
                     <div id="farbcode-hint" className={styles.farbcodeHintBox}>
                       <p>
-                        Um den Farbcode einer Farbe herauszufinden, kannst du z.B. das Entwickler-Tool deines Browsers nutzen
-                        (Rechtsklick → <em>Untersuchen</em>), oder du verwendest diesen{' '}
-                        <a href="https://www.w3schools.com/colors/colors_picker.asp" target="_blank" rel="noopener noreferrer">
+                        Um den Farbcode einer Farbe herauszufinden, kannst du z.B. das Entwickler-Tool deines Browsers
+                        nutzen (Rechtsklick → <em>Untersuchen</em>), oder du verwendest diesen{' '}
+                        <a
+                          href="https://www.w3schools.com/colors/colors_picker.asp"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Farbcode-Picker
-                        </a>.
+                        </a>
+                        .
                       </p>
                     </div>
                   )}
@@ -160,54 +203,57 @@ export default function ArtikelDetailPage() {
                   <span className={styles.value}>{artikel.kategorie}</span>
                 </div>
               )}
+
               {artikel.farbpalette && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Farbpalette:</span>
-    <span className={styles.value}>{artikel.farbpalette}</span>
-  </div>
-)}
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Farbpalette:</span>
+                  <span className={styles.value}>{artikel.farbpalette}</span>
+                </div>
+              )}
 
-{artikel.farbton && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Farbton:</span>
-    <span className={styles.value}>{artikel.farbton}</span>
-  </div>
-)}
+              {artikel.farbton && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Farbton:</span>
+                  <span className={styles.value}>{artikel.farbton}</span>
+                </div>
+              )}
 
-{artikel.qualität && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Qualität:</span>
-    <span className={styles.value}>{artikel.qualität}</span>
-  </div>
-)}
+              {artikel.qualität && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Qualität:</span>
+                  <span className={styles.value}>{artikel.qualität}</span>
+                </div>
+              )}
 
-{artikel.zertifizierung && artikel.zertifizierung.length > 0 && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Zertifizierung:</span>
-    <span className={styles.value}>
-      {artikel.zertifizierung.join(', ')}
-    </span>
-  </div>
-)}
-{artikel.aufladung && artikel.aufladung.length > 0 && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Aufladung:</span>
-    <span className={styles.value}>
-      {artikel.aufladung.join(', ')}
-    </span>
-  </div>
-)}
-{artikel.user && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>User:</span>
-    <span className={styles.value}>{artikel.user}</span>
-    <div>
-    <Link href={`/messages?empfaenger=${encodeURIComponent(artikel.user)}`} className={styles.kontaktLink}>
-  User kontaktieren
-</Link>
-    </div>
-  </div>
-)}
+              {artikel.zertifizierung && artikel.zertifizierung.length > 0 && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Zertifizierung:</span>
+                  <span className={styles.value}>{artikel.zertifizierung.join(', ')}</span>
+                </div>
+              )}
+
+              {artikel.aufladung && artikel.aufladung.length > 0 && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Aufladung:</span>
+                  <span className={styles.value}>{artikel.aufladung.join(', ')}</span>
+                </div>
+              )}
+
+              {artikel.user && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>User:</span>
+                  <span className={styles.value}>{artikel.user}</span>
+                  <div>
+                    <Link
+                      href={`/messages?empfaenger=${encodeURIComponent(artikel.user)}`}
+                      className={styles.kontaktLink}
+                    >
+                      User kontaktieren
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               {artikel.effekt && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>Effekt:</span>
@@ -221,7 +267,12 @@ export default function ArtikelDetailPage() {
                   <ul className={styles.downloadList}>
                     {artikel.dateien.map((file, i) => (
                       <li key={i} className={styles.downloadItem}>
-                        <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.downloadLink}>
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.downloadLink}
+                        >
                           <FaFilePdf style={{ color: 'red', marginRight: '0.4rem' }} />
                           {file.name}
                         </a>
@@ -281,7 +332,8 @@ export default function ArtikelDetailPage() {
 
               <button className={styles.submitOfferButton}>Lack verbindlich anbieten</button>
               <p className={styles.offerNote}>
-                Mit der Angebotsabgabe bestätigen Sie, die Anforderungen zur Gänze erfüllen zu können. Ihr Angebot ist 24h gültig.
+                Mit der Angebotsabgabe bestätigen Sie, die Anforderungen zur Gänze erfüllen zu können. Ihr Angebot ist
+                24h gültig.
               </p>
             </div>
           </div>
@@ -290,18 +342,18 @@ export default function ArtikelDetailPage() {
 
       {/* Lightbox */}
       {lightboxOpen && (
-  <Lightbox
-    open={lightboxOpen}
-    close={() => setLightboxOpen(false)}
-    slides={slides}
-    index={photoIndex}
-    plugins={[Thumbnails]}
-    thumbnails={{ vignette: true }}
-    on={{
-      view: ({ index }) => setPhotoIndex(index),
-    }}
-  />
-)}
+        <Lightbox
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          slides={slides}
+          index={photoIndex}
+          plugins={[Thumbnails]}
+          thumbnails={{ vignette: true }}
+          on={{
+            view: ({ index }) => setPhotoIndex(index),
+          }}
+        />
+      )}
     </>
   );
 }
