@@ -406,10 +406,8 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       }`}
     >
       <p className={styles.logistikIntro}>
-        Plane hier, wann die Teile zu dir kommen und wann sie wieder abgeholt
-        werden sollen. Welche Tage erlaubt sind, wird zentral in{' '}
-        <code>isSelectable()</code> in <code>dateUtils.ts</code> definiert.
-      </p>
+        Plane hier, wann die Teile bereit zur Beschichtung sind und wann du sie wieder erhalten willst.
+        </p>
 
       {lieferDatum && abholDatum && aufenthaltTage !== null && (
         <p className={styles.logistikSummary}>
@@ -475,12 +473,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
           <div className={styles.inputGroup} ref={abholFieldRef}>
             <label>Abholdatum</label>
-            {!lieferDatum && (
-              <span className={styles.helperText}>
-                Bitte zuerst das Lieferdatum wählen.
-              </span>
-            )}
-            <input
+             <input
               type="text"
               readOnly
               placeholder={
