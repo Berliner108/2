@@ -36,22 +36,24 @@
 /* Wrapper passt sich der Bild-Höhe an */
 .imageWrapper {
   width: 100%;
-  overflow: hidden;        /* für abgerundete Ecken */
+  max-width: 500px;   /* darf ruhig bleiben */
+  overflow: hidden;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   background-color: #fff;
-  max-height: 500px;
 }
 
-/* Bild skaliert proportional auf 100% Breite */
+
 .image {
-  display: block;          /* kein Inline-White‑Space */
-  width: 100%;             /* füllt Wrapper-Breite */
-  height: auto;            /* Höhe wird proportional berechnet */
-  /* object-fit nicht nötig */
+  width: 100%;
+  max-width: 500px;
+  max-height: 500px;
+  object-fit: cover;
+  border-radius: 8px;
   cursor: pointer;
 }
+
 
 .label {
   font-weight: bold;
@@ -423,37 +425,11 @@
   }
 }
 @media (max-width: 768px) {
-  .grid {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .leftColumn,
-  .rightColumn {
-    width: 100%;
-  }
-
-  .imageWrapper {
-    width: 100%;
+  .image {
     max-width: 100%;
-    min-width: 0 !important;   /* falls noch irgendwo eins bleibt */
-    max-height: none;
-  }
-
-  .thumbnail {
-    width: 50px;
-    height: 50px;
-  }
-
-  .title {
-    font-size: 1.4rem;
-  }
-
-  .metaGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .buyButton {
-    width: 100%;
+    height: auto;
+    min-width: unset;
+    min-height: unset;
+    max-height: 300px; /* oder none, wenn du gar nicht begrenzen willst */
   }
 }
