@@ -422,6 +422,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   flex-direction: column;
   flex: 1; /* ➕ sorgt für gleichmäßige Verteilung */
   min-width: 0;
+   position: relative;   /* ⬅️ NEU */
 }
 
 .inputGroup label {
