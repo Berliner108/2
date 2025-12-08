@@ -197,3 +197,80 @@
 
   
 
+/* Rechter Teil der Karte */
+.cardTextBlock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 24px;
+  flex: 1;
+  font-family: 'Oswald', sans-serif;
+  color: #333;
+  line-height: 1.4;
+}
+
+/* Titel (z. B. „Pulverbeschichten“ oder „Füller“) */
+.cardText1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  margin-top: -2px;
+}
+
+/* Unterzeilen (alle restlichen Infos: Menge, Kategorie usw.) */
+.cardText2,
+.cardText3,
+.cardText4,
+.cardText5,
+.cardText6 {
+  font-size: 15px;
+  font-weight: 400;
+  color: #444;
+  margin-bottom: 2px;
+}
+
+/* Zusätzlicher Abstand nach Gruppen (z. B. vor Standort) */
+.cardText6 {
+  margin-bottom: 10px;
+}
+
+/* Standort unten */
+.cardOrt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  color: #444;
+  margin-top: 6px;
+}
+
+/* Standort-Icon */
+.ortIcon {
+  color: #888;
+}
+
+/* --- Mobilanpassung --- */
+@media (max-width: 768px) {
+  .cardTextBlock {
+    padding-left: 10px;
+  }
+
+  .cardText1 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6 {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  .cardOrt {
+    font-size: 14px;
+    margin-top: 4px;
+  }
+}
