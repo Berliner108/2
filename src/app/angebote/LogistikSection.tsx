@@ -414,7 +414,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           <h5 className={styles.logistikCardTitle}>Anlieferung</h5>
 
           <div className={styles.inputGroup} ref={lieferFieldRef}>
-            <label>Lieferdatum</label>
+            <label>Warenausgabedatum</label>
             <input
               type="text"
               readOnly
@@ -463,7 +463,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </h5>
 
           <div className={styles.inputGroup} ref={abholFieldRef}>
-            <label>Abholdatum</label>
+            <label>Warenrückgabedatum</label>
              <input
               type="text"
               readOnly
@@ -557,9 +557,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
             />
             Serienauftrag (wiederkehrende Lieferungen)
           </label>
-          <p className={styles.serienHintInline}>
-            Wenn aktiviert, planst du einen wiederkehrenden Auftrag.
-          </p>
           {aufenthaltTage !== null && aufenthaltTage < 7 && (
             <p className={styles.helperText}>
               Wöchentliche oder längere Serien sind nur sinnvoll, wenn der
