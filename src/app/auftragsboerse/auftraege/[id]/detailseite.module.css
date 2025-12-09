@@ -665,3 +665,60 @@
     font-size: 0.95rem;
   }
 }
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Basis: nicht zu groß, kein Overflow */
+.priceInput {
+  flex: 0 1 220px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;   /* ✅ verhindert „über den Rand“ */
+  max-width: 100%;          /* ✅ nie breiter als Container */
+  height: 42px;             /* ✅ keine Riesenhöhe */
+  min-height: 42px;
+}
+
+/* CTA-Button etwas flacher */
+.buyButton {
+  padding: 0.55rem 1.2rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  background: linear-gradient(to right, #00e5ff, #00b4d8);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Oswald', sans-serif;
+  text-align: center;
+}
+
+/* Mobile: alles untereinander, vollbreit, kompakter */
+@media (max-width: 768px) {
+  .priceRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .priceInput {
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.95rem;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .buyButton {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}
