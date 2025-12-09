@@ -74,7 +74,7 @@ export const dummyAuftraege = [{
     { name: 'zeichnung.pdf', url: '/uploads/zeichnung.pdf' },
     { name: 'details.docx', url: '/uploads/details.docx' }
   ],
-  standort: '6850 6850 Dornbirn',
+  standort: '6850 Dornbirn',
   user: 'Schlosserei Kalb - 4.5',
   gesponsert: true,
   gewerblich: true,
@@ -303,7 +303,7 @@ export const dummyAuftraege = [{
   warenannahmeArt: 'Zustellung',
   bilder: ['/images/baum9.jpg'],
   dateien: [{ name: 'bericht.pdf', url: '/uploads/bericht.pdf' }],
-  standort: '6850 6850 Dornbirn',
+  standort: '6850 Dornbirn',
   user: 'Nutzer9',
   gesponsert: false,
   gewerblich: true,
