@@ -306,7 +306,7 @@ export default function AuftragDetailPage() {
                 </span>
               </div>
 
-              <div className={styles.metaItem}>
+              <div className={styles.metaItem1}>
               <span className={styles.label}>Datum Warenrückgabe:</span>
               <span className={styles.value}>
                 {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
