@@ -326,7 +326,7 @@ export default function AuftragDetailPage() {
                   )}`}
                   className={styles.kontaktLink}
                 >
-                  User kontaktieren
+                   User kontaktieren
                 </Link>
               </div>
             )}
@@ -351,6 +351,8 @@ export default function AuftragDetailPage() {
                 </ul>
               </div>
             )}
+            </div>
+            <div>
 
             {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
             {auftrag.verfahren.map((v, idx) => {
