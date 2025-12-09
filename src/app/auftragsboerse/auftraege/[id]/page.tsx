@@ -313,7 +313,7 @@ export default function AuftragDetailPage() {
                 <DeadlineBadge date={auftrag.warenannahmeDatum} />
               </span>
             </div>
-            </div>
+            
 
             {/* User */}
             {auftrag.user && (
@@ -352,7 +352,6 @@ export default function AuftragDetailPage() {
               </div>
             )}
             </div>
-            <div>
 
             {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
             {auftrag.verfahren.map((v, idx) => {
