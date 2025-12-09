@@ -15,7 +15,6 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 
 /* ===== Fancy Top Loader ===== */
-
 function TopLoader() {
   return (
     <div className={styles.topLoader} aria-hidden>
@@ -24,16 +23,10 @@ function TopLoader() {
   );
 }
 
-/* ===== Page Skeleton ===== */
-
+/* ===== Skeleton ===== */
 function DetailSkeleton() {
   return (
-    <div
-      className={styles.skeletonPage}
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
       <div className={styles.skelHeader}>
         <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
         <div className={styles.skelLine} />
@@ -55,60 +48,51 @@ function DetailSkeleton() {
   );
 }
 
-/* ===== Helfer für schöne Labels in den Spezifikationen ===== */
-
-function formatSpecLabel(rawKey: string): string {
-  const key = rawKey.toLowerCase();
-
-  const special: Record<string, string> = {
-    farbeeloxieren: 'Farbe',
-    farbe: 'Farbe',
-    farbpalette: 'Farbpalette',
-    glanzgrad: 'Glanzgrad',
-    zertifizierungen: 'Zertifizierungen',
-    zertifizierung: 'Zertifizierung',
-  };
-
-  if (special[key]) return special[key];
-
-  let base = key.replace(/_+/g, ' ').trim();
-
-  const endings = ['eloxieren', 'lackieren', 'beschichten'];
-  for (const ending of endings) {
-    if (base.endsWith(ending) && !base.includes(' ')) {
-      const prefix = base.slice(0, -ending.length);
-      base = (prefix ? prefix + ' ' : '') + ending;
-      break;
-    }
-  }
-
-  return base.replace(/(^|\s)\w/g, (m) => m.toUpperCase());
+/* ===== Deadline-Helper – IDENTISCH zu Lackanfragen ===== */
+function daysUntil(date: Date): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(0, 0, 0, 0);
+  return Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-/* ===== Helfer für Preis-Eingabe (Formatierung) ===== */
+function DeadlineBadge({ date }: { date: Date | null }) {
+  if (!date) return null;
+  const d = daysUntil(date);
+  let text = '';
+  if (d < 0) text = `abgeschlossen seit ${Math.abs(d)} Tag${Math.abs(d) === 1 ? '' : 'en'}`;
+  else if (d === 0) text = 'heute';
+  else if (d === 1) text = 'morgen';
+  else text = `in ${d} Tagen`;
+  const variant = d < 0 ? styles.badgeDanger : d <= 3 ? styles.badgeWarn : styles.badgeOk;
+  return (
+    <span
+      className={`${styles.badge} ${styles.deadline} ${variant}`}
+      title={`Lieferfrist: ${date.toLocaleDateString('de-DE')}`}
+      aria-label={`Lieferfrist ${text}`}
+    >
+      {text}
+    </span>
+  );
+}
 
-function normalizePriceInput(value: string): string {
-  let v = value.replace(/,/g, '.').replace(/[^\d.]/g, '');
-  if (v.startsWith('.')) v = '0' + v;
+/* ===== Money-Helper (sehr simpel) ===== */
+function parseMoneyOrNull(raw: string): number | null {
+  if (!raw) return null;
+  let v = raw.replace(/\s/g, '').replace(',', '.');
+  if (!v) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(Math.max(n, 0), 9_999_999.99);
+}
 
-  const firstDot = v.indexOf('.');
-  if (firstDot !== -1) {
-    v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
-  }
-
-  let [int = '', dec = ''] = v.split('.');
-  if (int.length > 7) int = int.slice(0, 7);
-
-  if (v.endsWith('.')) {
-    return int + '.';
-  }
-
-  if (dec) dec = dec.slice(0, 2);
-  return dec ? `${int}.${dec}` : int;
+function formatMoney(n: number): string {
+  return n.toFixed(2);
 }
 
 export default function AuftragDetailPage() {
-  // später: auf true setzen, während echte Backend-Daten geladen werden
+  // später: beim echten Backend auf true setzen
   const [loading] = useState(false);
 
   const params = useParams<{ id: string }>();
@@ -138,123 +122,83 @@ export default function AuftragDetailPage() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const slides = auftrag.bilder?.map((src) => ({ src })) || [];
 
-  // 🔹 Logistik-Bedingung: nur wenn NICHT beides "selbst"
-  const isSelfAnlieferung = (auftrag.warenausgabeArt || '')
-    .toLowerCase()
-    .includes('selbst');
-  const isSelfAbholung = (auftrag.warenannahmeArt || '')
-    .toLowerCase()
-    .includes('selbst');
-  const logistikNoetig = !(isSelfAnlieferung && isSelfAbholung);
-
-  // Angebots-Accordion + 2 Preisfelder
+  // Preisbereich: 2 Felder
   const [preisOpen, setPreisOpen] = useState(false);
-
   const [gesamtPreis, setGesamtPreis] = useState<string>('');
   const [logistikPreis, setLogistikPreis] = useState<string>('');
-  const [gesamtPreisError, setGesamtPreisError] = useState<string | null>(null);
-  const [logistikPreisError, setLogistikPreisError] = useState<string | null>(
-    null
-  );
+  const [preisError, setPreisError] = useState<string | null>(null);
 
-  const onGesamtPreisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setGesamtPreisError(null);
-    setGesamtPreis(normalizePriceInput(e.target.value));
+  // Logistik-Bedingung: nur wenn NICHT beides "Selbst..."
+  const warenausgabeArt = (auftrag.warenausgabeArt || '').toLowerCase();
+  const warenannahmeArt = (auftrag.warenannahmeArt || '').toLowerCase();
+  const selbstAnlieferung = warenausgabeArt.includes('selbst');
+  const selbstAbholung = warenannahmeArt.includes('selbst');
+  const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
+
+  const handleGesamtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPreisError(null);
+    setGesamtPreis(e.target.value);
   };
 
-  const onLogistikPreisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLogistikPreisError(null);
-    setLogistikPreis(normalizePriceInput(e.target.value));
+  const handleLogistikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPreisError(null);
+    setLogistikPreis(e.target.value);
   };
 
-  const onPreisBlur =
-    (
-      value: string,
-      setValue: (v: string) => void,
-      setError: (msg: string | null) => void,
-      label: string
-    ) =>
-    () => {
-      if (!value || value.trim() === '') {
-        setError(`Bitte gib einen ${label} ein.`);
-        return;
-      }
-      let v = value.replace(/,/g, '.').replace(/[^\d.]/g, '');
-      if (v === '.' || v === '') {
-        setError(`Bitte gib einen ${label} ein.`);
-        setValue('');
-        return;
-      }
-      const firstDot = v.indexOf('.');
-      if (firstDot !== -1) {
-        v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
-      }
-      const n = Number(v);
-      if (Number.isNaN(n)) {
-        setError(`Bitte gib einen ${label} ein.`);
-        setValue('');
-        return;
-      }
-      const clamped = Math.min(Math.max(n, 0), 9_999_999.99);
-      setValue(clamped.toFixed(2));
-    };
+  const handleGesamtBlur = () => {
+    if (!gesamtPreis.trim()) return;
+    const n = parseMoneyOrNull(gesamtPreis);
+    if (n === null) {
+      setPreisError('Bitte gib einen gültigen Gesamtpreis ein.');
+      setGesamtPreis('');
+      return;
+    }
+    setGesamtPreis(formatMoney(n));
+  };
 
-  const gesamtPreisNumber: number | null = (() => {
-    if (!gesamtPreis) return null;
-    const n = Number(gesamtPreis.replace(',', '.'));
-    return Number.isFinite(n) ? n : null;
-  })();
+  const handleLogistikBlur = () => {
+    if (!logistikPreis.trim()) return;
+    const n = parseMoneyOrNull(logistikPreis);
+    if (n === null) {
+      setPreisError('Bitte gib einen gültigen Logistikpreis ein.');
+      setLogistikPreis('');
+      return;
+    }
+    setLogistikPreis(formatMoney(n));
+  };
 
-  const logistikPreisNumber: number | null = (() => {
-    if (!logistikPreis) return null;
-    const n = Number(logistikPreis.replace(',', '.'));
-    return Number.isFinite(n) ? n : null;
-  })();
-
-  const onPreisSubmit = (e: React.FormEvent) => {
+  const onPreisSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let hasError = false;
+    setPreisError(null);
 
-    setGesamtPreisError(null);
-    setLogistikPreisError(null);
-
-    if (!gesamtPreis || gesamtPreis.trim() === '') {
-      setGesamtPreisError('Bitte gib den Gesamtpreis für den Auftrag ein.');
-      hasError = true;
-    } else if (gesamtPreisNumber === null || gesamtPreisNumber <= 0) {
-      setGesamtPreisError('Bitte gib einen gültigen Gesamtpreis > 0 ein.');
-      hasError = true;
+    const base = parseMoneyOrNull(gesamtPreis);
+    if (base === null || base <= 0) {
+      setPreisError('Bitte die Gesamtkosten für den Auftrag eingeben ( > 0 € ).');
+      return;
     }
 
-    if (logistikNoetig) {
-      if (!logistikPreis || logistikPreis.trim() === '') {
-        setLogistikPreisError(
-          'Bitte gib die Logistikkosten ein (Transport/Spedition).'
-        );
-        hasError = true;
-      } else if (logistikPreisNumber === null || logistikPreisNumber < 0) {
-        setLogistikPreisError(
-          'Bitte gib einen gültigen Logistikpreis (≥ 0) ein.'
-        );
-        hasError = true;
+    let logistik = 0;
+    if (brauchtLogistikPreis) {
+      const l = parseMoneyOrNull(logistikPreis);
+      if (l === null || l < 0) {
+        setPreisError('Bitte einen gültigen Logistikpreis angeben (0 ist möglich).');
+        return;
       }
+      logistik = l;
     }
 
-    if (hasError) return;
-
-    // TODO: API-Call (z.B. POST /api/angebote)
-    const teile: string[] = [];
-    if (gesamtPreisNumber != null) {
-      teile.push(`Gesamtpreis (ohne Logistik): ${gesamtPreisNumber.toFixed(2)} €`);
-    }
-    if (logistikNoetig && logistikPreisNumber != null) {
-      teile.push(`Logistikkosten: ${logistikPreisNumber.toFixed(2)} €`);
-    }
-
+    // TODO: später API-Call (z. B. POST /api/auftraege/{id}/angebote)
     alert(
-      `Angebot übermittelt für Auftrag #${auftrag.id}:\n` + teile.join('\n')
+      `Angebot gesendet:\n` +
+        `Gesamtkosten Auftrag: ${formatMoney(base)} €\n` +
+        (brauchtLogistikPreis
+          ? `Logistikkosten: ${formatMoney(logistik)} €\n`
+          : 'Logistikkosten: 0,00 € (Selbstanlieferung & Selbstabholung)\n') +
+        `Auftrag #${auftrag.id}`
     );
   };
+
+  const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
 
   return (
     <>
@@ -266,8 +210,8 @@ export default function AuftragDetailPage() {
           <div className={styles.leftColumn}>
             <div className={styles.imageWrapper}>
               <Image
-                src={auftrag.bilder?.[photoIndex] || ''}
-                alt={auftrag.verfahren[0]?.name || ''}
+                src={auftrag.bilder?.[photoIndex] || '/images/platzhalter.jpg'}
+                alt={verfahrenName}
                 width={500}
                 height={500}
                 className={styles.image}
@@ -293,11 +237,8 @@ export default function AuftragDetailPage() {
 
           {/* Rechte Spalte */}
           <div className={styles.rightColumn}>
-            {/* Titel + Badges */}
             <div className={styles.titleRow}>
-              <h1 className={styles.title}>
-                {auftrag.verfahren.map((v) => v.name).join(' & ')}
-              </h1>
+              <h1 className={styles.title}>{verfahrenName}</h1>
               <div className={styles.badges}>
                 {auftrag.gesponsert && (
                   <span className={`${styles.badge} ${styles.gesponsert}`}>
@@ -317,48 +258,60 @@ export default function AuftragDetailPage() {
               </div>
             </div>
 
-            {/* 🔝 OBERER TEIL: alle Eingaben außer Spezifikationen */}
+            {/* Meta-Grid: alle allgemeinen Eingaben */}
             <div className={styles.metaGrid}>
               <div className={styles.metaItem}>
                 <span className={styles.label}>Material:</span>
                 <span className={styles.value}>{auftrag.material}</span>
               </div>
+
               <div className={styles.metaItem}>
-                <span className={styles.label}>Maße:</span>
+                <span className={styles.label}>Maße größtes Werkstück:</span>
                 <span className={styles.value}>
-                  {auftrag.length}×{auftrag.width}×{auftrag.height} mm
+                  {auftrag.length} × {auftrag.width} × {auftrag.height} mm
                 </span>
               </div>
+
               <div className={styles.metaItem}>
-                <span className={styles.label}>Max. Masse:</span>
+                <span className={styles.label}>Masse schwerstes Werkstück:</span>
                 <span className={styles.value}>{auftrag.masse}</span>
               </div>
+
               <div className={styles.metaItem}>
                 <span className={styles.label}>Standort:</span>
                 <span className={styles.value}>{auftrag.standort}</span>
               </div>
+
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenausgabe per:</span>
                 <span className={styles.value}>
-                  {auftrag.warenausgabeArt || '-'}
+                  {auftrag.warenausgabeArt || '—'}
                 </span>
               </div>
-              <div className={styles.metaItem}>
+
+              <div className={styles.metaItem1}>
                 <span className={styles.label}>Datum Warenausgabe:</span>
                 <span className={styles.value}>
-                  {auftrag.warenausgabeDatum.toLocaleDateString('de-DE')}
+                  {auftrag.warenausgabeDatum
+                    ? auftrag.warenausgabeDatum.toLocaleDateString('de-DE')
+                    : '—'}
                 </span>
+                <DeadlineBadge date={auftrag.warenausgabeDatum} />
               </div>
+
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenrückgabe per:</span>
                 <span className={styles.value}>
-                  {auftrag.warenannahmeArt || '-'}
+                  {auftrag.warenannahmeArt || '—'}
                 </span>
               </div>
+
               <div className={styles.metaItem}>
                 <span className={styles.label}>Datum Warenrückgabe:</span>
                 <span className={styles.value}>
-                  {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
+                  {auftrag.warenannahmeDatum
+                    ? auftrag.warenannahmeDatum.toLocaleDateString('de-DE')
+                    : '—'}
                 </span>
               </div>
             </div>
@@ -378,6 +331,33 @@ export default function AuftragDetailPage() {
                 </Link>
               </div>
             )}
+
+            {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
+            {auftrag.verfahren.map((v, idx) => {
+              const entries = Object.entries(v.felder ?? {});
+              if (!entries.length) return null;
+
+              return (
+                <div key={idx} className={styles.verfahrenBlock}>
+                  <h3 className={styles.verfahrenTitel}>{v.name}</h3>
+                  <div className={styles.verfahrenGrid}>
+                    {entries.map(([key, val]) => (
+                      <div key={key} className={styles.metaItem}>
+                        <span className={styles.label}>
+                          {key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^\w/, (c) => c.toUpperCase())}
+                          :
+                        </span>
+                        <span className={styles.value}>
+                          {Array.isArray(val) ? val.join(', ') : String(val)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
 
             {/* Downloads */}
             {auftrag.dateien && auftrag.dateien.length > 0 && (
@@ -401,76 +381,15 @@ export default function AuftragDetailPage() {
               </div>
             )}
 
-            {/* Beschreibung */}
+            {/* Beschreibung (aus Formular) */}
             {auftrag.beschreibung && (
               <div className={styles.beschreibung}>
                 <h2>Beschreibung</h2>
-                <p>{auftrag.beschreibung}</p>
+                <p className={styles.preserveNewlines}>{auftrag.beschreibung}</p>
               </div>
             )}
 
-            {/* 🔻 UNTERER TEIL: Spezifikationen pro Verfahren */}
-            {auftrag.verfahren.map((v, idx) => {
-              const entries = Object.entries(v.felder ?? {}).filter(
-                ([, val]) => {
-                  if (val == null) return false;
-                  if (Array.isArray(val)) {
-                    return (
-                      val.length > 0 &&
-                      val.some(
-                        (x) =>
-                          String(x).trim() !== '' &&
-                          String(x).trim().toLowerCase() !== 'keine'
-                      )
-                    );
-                  }
-                  const str = String(val).trim();
-                  if (!str) return false;
-                  if (str.toLowerCase() === 'keine') return false;
-                  return true;
-                }
-              );
-
-              if (entries.length === 0) return null;
-
-              return (
-                <div key={idx} className={styles.verfahrenBlock}>
-                  <h3 className={styles.verfahrenTitel}>
-                    {v.name} – Spezifikationen
-                  </h3>
-                  <div className={styles.verfahrenGrid}>
-                    {entries.map(([key, val]) => {
-                      if (key.toLowerCase() === 'verfahren') return null;
-
-                      const label = formatSpecLabel(key);
-
-                      const displayValue = Array.isArray(val)
-                        ? val
-                            .filter(
-                              (x) =>
-                                String(x).trim() !== '' &&
-                                String(x).trim().toLowerCase() !== 'keine'
-                            )
-                            .join(', ')
-                        : String(val);
-
-                      if (!displayValue || displayValue.trim() === '') {
-                        return null;
-                      }
-
-                      return (
-                        <div key={key} className={styles.metaItem}>
-                          <span className={styles.label}>{label}:</span>
-                          <span className={styles.value}>{displayValue}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Ausklappbarer Preisbereich mit 2 Feldern */}
+            {/* Ausklappbarer Preisbereich – nur 2 Felder */}
             <div className={`${styles.metaItem} ${styles.priceSection}`}>
               <button
                 type="button"
@@ -479,100 +398,84 @@ export default function AuftragDetailPage() {
                 aria-controls="pricePanel"
                 onClick={() => setPreisOpen((o) => !o)}
               >
-                <span>Mach ein Angebot</span>
+                <span>Mach ein Angebot für diesen Auftrag</span>
                 <span className={styles.disclosureIcon}>
                   {preisOpen ? '▾' : '▸'}
                 </span>
               </button>
 
               {preisOpen && (
-                <form onSubmit={onPreisSubmit} className={styles.priceForm}>
+                <form
+                  id="pricePanel"
+                  onSubmit={onPreisSubmit}
+                  className={styles.priceForm}
+                >
+                  <label htmlFor="gesamtpreis" className={styles.label}>
+                    Gesamtkosten für den Auftrag (inkl. aller Arbeitsschritte, exkl. Logistik) in €
+                  </label>
                   <div className={styles.priceRow}>
-                    <div className={styles.priceCol}>
-                      <label
-                        htmlFor="gesamtPreis"
-                        className={styles.label}
-                      >
-                        Gesamtpreis für den Auftrag (ohne Logistik) (€):
-                      </label>
-                      <input
-                        id="gesamtPreis"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="z. B. 1490.00"
-                        value={gesamtPreis}
-                        onChange={onGesamtPreisChange}
-                        onBlur={onPreisBlur(
-                          gesamtPreis,
-                          setGesamtPreis,
-                          setGesamtPreisError,
-                          'Gesamtpreis'
-                        )}
-                        aria-invalid={!!gesamtPreisError}
-                        className={`${styles.priceInput} ${
-                          gesamtPreisError ? styles.isInvalid : ''
-                        }`}
-                        autoComplete="off"
-                        pattern="^\d{1,7}([.,]\d{1,2})?$"
-                        title="Zahl mit bis zu 2 Nachkommastellen"
-                      />
-                    </div>
-
-                    {logistikNoetig && (
-                      <div className={styles.priceCol}>
-                        <label
-                          htmlFor="logistikPreis"
-                          className={styles.label}
-                        >
-                          Logistikkosten (Transport/Spedition) (€):
-                        </label>
-                        <input
-                          id="logistikPreis"
-                          type="text"
-                          inputMode="decimal"
-                          placeholder="z. B. 120.00"
-                          value={logistikPreis}
-                          onChange={onLogistikPreisChange}
-                          onBlur={onPreisBlur(
-                            logistikPreis,
-                            setLogistikPreis,
-                            setLogistikPreisError,
-                            'Logistikpreis'
-                          )}
-                          aria-invalid={!!logistikPreisError}
-                          className={`${styles.priceInput} ${
-                            logistikPreisError ? styles.isInvalid : ''
-                          }`}
-                          autoComplete="off"
-                          pattern="^\d{1,7}([.,]\d{1,2})?$"
-                          title="Zahl mit bis zu 2 Nachkommastellen"
-                        />
-                      </div>
-                    )}
+                    <input
+                      id="gesamtpreis"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="z. B. 1450,00"
+                      value={gesamtPreis}
+                      onChange={handleGesamtChange}
+                      onBlur={handleGesamtBlur}
+                      className={`${styles.priceInput} ${
+                        preisError ? styles.isInvalid : ''
+                      }`}
+                      autoComplete="off"
+                    />
                   </div>
 
-                  <button type="submit" className={styles.buyButton}>
-                    Angebot abgeben
-                  </button>
+                  {brauchtLogistikPreis && (
+                    <>
+                      <label
+                        htmlFor="logistikpreis"
+                        className={styles.label}
+                        style={{ marginTop: '0.75rem' }}
+                      >
+                        Logistikkosten in € (Transport/Spedition)
+                      </label>
+                      <div className={styles.priceRow}>
+                        <input
+                          id="logistikpreis"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="z. B. 180,00"
+                          value={logistikPreis}
+                          onChange={handleLogistikChange}
+                          onBlur={handleLogistikBlur}
+                          className={`${styles.priceInput} ${
+                            preisError ? styles.isInvalid : ''
+                          }`}
+                          autoComplete="off"
+                        />
+                      </div>
+                    </>
+                  )}
 
-                  {gesamtPreisError || logistikPreisError ? (
+                  {preisError ? (
                     <div
                       role="alert"
                       className={styles.priceError}
                       aria-live="polite"
                     >
-                      {gesamtPreisError && <div>{gesamtPreisError}</div>}
-                      {logistikPreisError && <div>{logistikPreisError}</div>}
+                      {preisError}
                     </div>
                   ) : (
                     <div className={styles.priceHint}>
-                      Abgegebene Angebote können nicht zurückgezogen werden. Mit
-                      der Angebotsabgabe bestätigst du im Falle einer Annahme
-                      vom Auftraggeber, alle Kundenanforderungen ausnahmslos
-                      erfüllen zu können. Dein Angebot ist 72h, oder bis zum Tag
-                      der Warenausgabe gültig.
+                      Mit der Angebotsabgabe bestätigst du, alle
+                      Kundenanforderungen zum Auftrag vollständig erfüllen zu
+                      können. Dein Angebot ist 72&nbsp;h oder bis zum Tag der
+                      Warenausgabe gültig.
                     </div>
                   )}
+
+                  <button type="submit" className={styles.buyButton}>
+                    Angebot abgeben
+                  </button>
                 </form>
               )}
             </div>
