@@ -330,6 +330,7 @@ export default function AuftragDetailPage() {
                 </Link>
               </div>
             )}
+            </div>
             {/* Downloads */}
             {auftrag.dateien && auftrag.dateien.length > 0 && (
               <div className={styles.metaItem}>
@@ -351,7 +352,7 @@ export default function AuftragDetailPage() {
                 </ul>
               </div>
             )}
-            </div>
+            
 
             {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
             {auftrag.verfahren.map((v, idx) => {
