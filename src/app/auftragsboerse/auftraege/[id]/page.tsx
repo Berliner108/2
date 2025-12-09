@@ -307,13 +307,12 @@ export default function AuftragDetailPage() {
               </div>
 
               <div className={styles.metaItem}>
-                <span className={styles.label}>Datum Warenrückgabe:</span>
-                <span className={styles.value}>
-                  {auftrag.warenannahmeDatum
-                    ? auftrag.warenannahmeDatum.toLocaleDateString('de-DE')
-                    : '—'}
-                </span>
-              </div>
+              <span className={styles.label}>Datum Warenrückgabe:</span>
+              <span className={styles.value}>
+                {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
+                <DeadlineBadge date={auftrag.warenannahmeDatum} />
+              </span>
+            </div>
             </div>
 
             {/* User */}
@@ -329,6 +328,27 @@ export default function AuftragDetailPage() {
                 >
                   User kontaktieren
                 </Link>
+              </div>
+            )}
+            {/* Downloads */}
+            {auftrag.dateien && auftrag.dateien.length > 0 && (
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Downloads:</span>
+                <ul className={styles.downloadList}>
+                  {auftrag.dateien.map((file, i) => (
+                    <li key={i} className={styles.downloadItem}>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.downloadLink}
+                      >
+                        <FaFilePdf className={styles.fileIcon} />
+                        {file.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -359,27 +379,7 @@ export default function AuftragDetailPage() {
               );
             })}
 
-            {/* Downloads */}
-            {auftrag.dateien && auftrag.dateien.length > 0 && (
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Downloads:</span>
-                <ul className={styles.downloadList}>
-                  {auftrag.dateien.map((file, i) => (
-                    <li key={i} className={styles.downloadItem}>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.downloadLink}
-                      >
-                        <FaFilePdf className={styles.fileIcon} />
-                        {file.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            
 
             {/* Beschreibung (aus Formular) */}
             {auftrag.beschreibung && (
