@@ -31,16 +31,13 @@
   gap: 1rem;
 }
 
-/* detailseite.module.css */
-
 /* Wrapper passt sich der Bild-Höhe an */
 .imageWrapper {
   width: 100%;
-  max-width: 500px;   /* darf ruhig bleiben */
+  max-width: 500px;
   overflow: hidden;
   background-color: #fff;
 }
-
 
 .image {
   width: 100%;
@@ -51,25 +48,22 @@
   cursor: pointer;
 }
 
-
 .label {
   font-weight: bold;
   display: inline-block;
   margin-bottom: 0.3rem;
   color: #555;
-  /* optional: falls du statt Pseudo-Element lieber einen Abstand hier setzen willst: */
-  /* margin-right: 0.25rem; */
 }
 
 .label::after {
-  content: ' ';      /* sorgt für genau ein Leer­zeichen nach dem Label */
-  margin-right: 0.25rem; /* optional: etwas mehr Platz */
+  content: ' ';
+  margin-right: 0.25rem;
 }
 
-/* in detailseite.module.css */
+/* Kontaktlink */
 .kontaktLink {
-  display: block;        /* macht den Link zum Block */
-  margin-top: 0.5rem;    /* Abstand nach oben */
+  display: block;
+  margin-top: 0.5rem;
   color: #0070f3;
   text-decoration: underline;
   cursor: pointer;
@@ -78,15 +72,16 @@
 .kontaktLink:hover {
   color: #0051a3;
 }
+
 /* icon neben dem Dateinamen */
 .fileIcon {
   margin-right: 0.5rem;
-  color: #d32f2f;      /* klassisches PDF‑Rot */
-  font-size: 1.2rem;   /* etwas größer als Text */
+  color: #d32f2f;
+  font-size: 1.2rem;
   vertical-align: middle;
 }
 
-/* bestehender Link-Style sorgt für flexibles Layout */
+/* Download-Link */
 .downloadLink {
   display: flex;
   align-items: center;
@@ -95,14 +90,13 @@
   font-weight: 500;
 }
 
-
-
-/* Thumbnails wie auf Amazon: heller Rahmen, active etwas dunkler */
+/* Thumbnails */
 .thumbnails {
   margin-top: 0.75rem;
   display: flex;
   gap: 0.5rem;
 }
+
 .thumbnail {
   width: 60px;
   height: 60px;
@@ -112,13 +106,14 @@
   cursor: pointer;
   transition: border-color 0.2s;
 }
+
 .thumbnail:hover {
   border-color: #888;
 }
+
 .thumbnailActive {
   border-color: #555;
 }
-
 
 .titleRow {
   display: flex;
@@ -128,26 +123,19 @@
   margin-bottom: 1rem;
 }
 
-
 .title {
   font-size: 1.7rem;
   font-weight: bold;
   color: #333;
   margin: 0;
 }
-/* Grid für die Verfahrens‑Felder: 2 Spalten */
+
+/* Grid für die Verfahrens-Felder: 2 Spalten */
 .verfahrenGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-top: 0.5rem;
-}
-
-/* Optional: bei kleineren Bildschirmen nur 1 Spalte */
-@media (max-width: 600px) {
-  .verfahrenGrid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Block für jedes Verfahren */
@@ -157,7 +145,7 @@
   padding-top: 1rem;
 }
 
-/* Verfahrenstitel über dem Block */
+/* Verfahrenstitel */
 .verfahrenTitel {
   font-size: 1.2rem;
   font-weight: 600;
@@ -165,43 +153,36 @@
   color: #333;
 }
 
-
-/* Basis‑Badge: Padding, Border‑Radius, Font */
+/* Badges */
 .badge {
-  display: inline-block;       /* sorgt für konsistente Höhe */
-  padding: 0.4rem 0.8rem;      
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-size: 0.85rem;
-  font-weight: 600;            /* etwas kräftiger als Standard */
-  line-height: 1;              /* vertikale Zentrierung */
+  font-weight: 600;
+  line-height: 1;
   text-align: center;
 }
 
-/* Gewerblich (grün) */
 .badge.gewerblich {
   background-color: #28a745;
   color: #fff;
 }
 
-/* Privat (blau) */
 .badge.privat {
   background-color: #007acc;
   color: #fff;
 }
 
-/* Gesponsert – jetzt gleiche Form, nur andere Farbe */
 .badge.gesponsert {
-  background-color: #f0f0f0;   /* helle Grundfarbe */
-  color: #888;                 /* dunklere Schrift */
-  /* Die folgenden Eigenschaften stellen sicher, dass „Gesponsert“
-     genauso viel Platz und dieselbe Ausrichtung hat wie die anderen Badges */
+  background-color: #f0f0f0;
+  color: #888;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
 }
-
 
 .metaGrid {
   display: grid;
@@ -215,13 +196,6 @@
   background: #f5f5f5;
   border-radius: 5px;
   font-size: 0.95rem;
-}
-
-.label {
-  font-weight: bold;
-  display: inline-block;
-  margin-bottom: 0.3rem;
-  color: #555;
 }
 
 .value {
@@ -238,18 +212,7 @@
   margin-bottom: 0.4rem;
 }
 
-.downloadLink {
-  color: #0070f3;
-  text-decoration: underline;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-}
-
-.downloadLink:hover {
-  text-decoration: underline;
-}
-
+/* Beschreibung */
 .beschreibung {
   margin-top: 0.1rem;
   margin-bottom: 1.5rem;
@@ -260,6 +223,7 @@
   border-radius: 8px;
 }
 
+/* Buy Button / CTA */
 .buyButton {
   padding: 0.75rem 1.5rem;
   font-weight: 800;
@@ -272,12 +236,13 @@
   transition: background-color 0.3s ease;
   font-family: 'Oswald', sans-serif;
   text-align: center;
-  margin-top: 0; /* Button direkt unter Beschreibung */
+  margin-top: 0;
 }
 
 .buyButton:hover {
   background-color: #00b4d8;
 }
+
 /* ===== Preis-Accordion & Formular ===== */
 
 .priceSection {
@@ -285,28 +250,35 @@
 }
 
 .disclosureBtn {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  background: transparent;
-  border: none;
-  padding: 0;
+  gap: 0.75rem;
+  padding: 0.9rem 1.2rem;
   font-size: 1.05rem;
   font-weight: 800;
   cursor: pointer;
   font-family: 'Oswald', sans-serif;
   color: #222;
+  background-color: #00e5ff;
+  border: none;
 }
 
 .disclosureBtn:hover .disclosureIcon {
   transform: translateY(1px);
 }
 
+.disclosureBtn:focus-visible {
+  outline: 3px solid rgba(0, 180, 216, 0.5);
+  outline-offset: 2px;
+}
+
 .disclosureIcon {
   font-size: 1.2rem;
   line-height: 1;
   transition: transform 0.15s ease;
+  user-select: none;
 }
 
 .priceForm {
@@ -315,12 +287,20 @@
 
 .priceRow {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+/* Spalte für ein Preisfeld (Label + Input) */
+.priceCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 0;
 }
 
 .priceInput {
-  flex: 0 1 220px;
+  flex: 0 1 auto;
   padding: 0.6rem 0.7rem;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -328,6 +308,7 @@
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  max-width: 260px;
 }
 
 .priceInput:focus {
@@ -351,43 +332,165 @@
   color: #666;
   font-size: 0.9rem;
 }
-/* macht den Disclosure-Header wie den farbigen CTA, aber mit Row-Layout */
-.disclosureBtn {
+
+/* ===== Fancy Top Loader (farbig) ===== */
+.topLoader {
+  position: sticky;
+  top: 0;
+  height: 4px;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: .75rem;
-  padding: 0.9rem 1.2rem;      /* etwas größerer Hit-Target */
-  font-weight: 800;            /* passend zu buyButton */
-  letter-spacing: .2px;
-  background-color: #00e5ff;
+  z-index: 60;
+  overflow: hidden;
+  background: transparent;
 }
 
-.disclosureBtn:focus-visible {
-  outline: 3px solid rgba(0,180,216,.5);
-  outline-offset: 2px;
+.topLoaderInner {
+  height: 100%;
+  width: 30%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6, #60a5fa);
+  background-size: 300% 100%;
+  animation: sweep 1.1s ease-in-out infinite;
+  transform: translateX(-50%);
 }
 
-.disclosureIcon {
-  line-height: 1;
-  user-select: none;
+@keyframes sweep {
+  0% {
+    transform: translateX(-50%);
+    background-position: 0% 0;
+  }
+  100% {
+    transform: translateX(350%);
+    background-position: 100% 0;
+  }
 }
 
-/* Mobile: Button vollbreit unter dem Input */
+/* ===== Page Skeleton ===== */
+.skeletonPage {
+  display: grid;
+  gap: 16px;
+  padding: 16px 0 32px 0;
+}
+
+.skelHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.skelLine {
+  height: 16px;
+  border-radius: 10px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 25%,
+      rgba(255, 255, 255, 0.6) 37%,
+      rgba(255, 255, 255, 0) 63%
+    ),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skelLineWide {
+  height: 24px;
+  width: 60%;
+}
+
+.skelBlock,
+.skelBlockSmall,
+.skelDrop,
+.skelDropSmall,
+.skelInput {
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 25%,
+      rgba(255, 255, 255, 0.6) 37%,
+      rgba(255, 255, 255, 0) 63%
+    ),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+.skelBlock {
+  height: 56px;
+}
+
+.skelBlockSmall {
+  height: 40px;
+  width: 50%;
+}
+
+.skelInput {
+  height: 44px;
+}
+
+.skelDrop {
+  height: 380px;
+}
+
+.skelDropSmall {
+  height: 120px;
+}
+
+.skelTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.skelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0, 0 0;
+  }
+  100% {
+    background-position: 200% 0, 0 0;
+  }
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 900px) {
+  .skelTwoCols {
+    grid-template-columns: 1fr;
+  }
+  .skelGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
+  .verfahrenGrid {
+    grid-template-columns: 1fr;
+  }
+
   .priceRow {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
+
   .priceInput {
-    width: 100%;
+    width: 90%;
+    max-width: 240px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.95rem;
   }
+
   .buyButton {
     width: 100%;
   }
 }
-
 
 @media (max-width: 768px) {
   .grid {
@@ -417,135 +520,12 @@
     grid-template-columns: 1fr;
   }
 
-  .buyButton {
-    width: 100%;
-  }
-}
-@media (max-width: 768px) {
   .image {
     max-width: 100%;
     height: auto;
     min-width: unset;
     min-height: unset;
-    max-height: 300px; /* oder none, wenn du gar nicht begrenzen willst */
+    max-height: 300px;
     border: none !important;
-  }
-}
-/* ===== Fancy Top Loader (farbig) ===== */
-.topLoader {
-  position: sticky;
-  top: 0;
-  height: 4px;
-  width: 100%;
-  z-index: 60;
-  overflow: hidden;
-  background: transparent;
-}
-.topLoaderInner {
-  height: 100%;
-  width: 30%;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6, #60a5fa);
-  background-size: 300% 100%;
-  animation: sweep 1.1s ease-in-out infinite;
-  transform: translateX(-50%);
-}
-@keyframes sweep {
-  0% {
-    transform: translateX(-50%);
-    background-position: 0% 0;
-  }
-  100% {
-    transform: translateX(350%);
-    background-position: 100% 0;
-  }
-}
-
-/* ===== Page Skeleton ===== */
-.skeletonPage {
-  display: grid;
-  gap: 16px;
-  padding: 16px 0 32px 0;
-}
-
-.skelHeader {
-  display: grid;
-  gap: 10px;
-}
-
-.skelLine {
-  height: 16px;
-  border-radius: 10px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0.6) 37%, rgba(255, 255, 255, 0) 63%),
-    linear-gradient(0deg, #e0f2fe, #fae8ff);
-  background-size: 200% 100%, 100% 100%;
-  animation: shimmer 1.2s linear infinite;
-}
-.skelLineWide {
-  height: 24px;
-  width: 60%;
-}
-
-.skelBlock,
-.skelBlockSmall,
-.skelDrop,
-.skelDropSmall,
-.skelInput {
-  border-radius: 12px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0.6) 37%, rgba(255, 255, 255, 0) 63%),
-    linear-gradient(0deg, #e0f2fe, #fae8ff);
-  background-size: 200% 100%, 100% 100%;
-  animation: shimmer 1.2s linear infinite;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
-}
-
-.skelBlock {
-  height: 56px;
-}
-.skelBlockSmall {
-  height: 40px;
-  width: 50%;
-}
-.skelInput {
-  height: 44px;
-}
-.skelDrop {
-  height: 380px; /* großes Bild-Skelett */
-}
-.skelDropSmall {
-  height: 120px;
-}
-
-.skelTwoCols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-@media (max-width: 900px) {
-  .skelTwoCols {
-    grid-template-columns: 1fr;
-  }
-}
-
-.skelGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 900px) {
-  .skelGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0, 0 0;
-  }
-  100% {
-    background-position: 200% 0, 0 0;
   }
 }
