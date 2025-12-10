@@ -92,9 +92,9 @@ function formatMoney(n: number): string {
 }
 
 /* ===== Mindestpreise & Limits ===== */
-const MIN_AUFTRAG_PREIS = 50;   // Mindestpreis Auftrag in €
-const MIN_LOGISTIK_PREIS = 20;  // Mindestpreis Logistik in €
-const MAX_PRICE_CHARS = 11;     // z. B. "9999999,99"
+const MIN_AUFTRAG_PREIS = 100;   // Mindestpreis Auftrag in €
+const MIN_LOGISTIK_PREIS = 40;  // Mindestpreis Logistik in €
+const MAX_PRICE_CHARS = 8;     // z. B. "99999,99"
 
 /**
  * Erlaubt NUR Ziffern + EIN Dezimaltrennzeichen (Komma oder Punkt),
@@ -162,7 +162,6 @@ export default function AuftragDetailPage() {
   const slides = auftrag.bilder?.map((src) => ({ src })) || [];
 
   // Preisbereich: 2 Felder
-  const [preisOpen, setPreisOpen] = useState(false);
   const [gesamtPreis, setGesamtPreis] = useState<string>('');
   const [logistikPreis, setLogistikPreis] = useState<string>('');
   const [preisError, setPreisError] = useState<string | null>(null);
@@ -453,25 +452,16 @@ export default function AuftragDetailPage() {
             })}
 
             {/* Ausklappbarer Preisbereich – nur 2 Felder */}
-            <div className={`${styles.metaItem} ${styles.priceSection}`}>
-              <button
-                type="button"
-                className={`${styles.buyButton} ${styles.disclosureBtn}`}
-                aria-expanded={preisOpen}
-                aria-controls="pricePanel"
-                onClick={() => setPreisOpen((o) => !o)}
-              >
-                <span>Mach ein Angebot für diesen Auftrag</span>
-                <span className={styles.disclosureIcon}>
-                  {preisOpen ? '▾' : '▸'}
-                </span>
-              </button>
+            {/* Preisbereich – immer sichtbar */}
+<div className={`${styles.metaItem} ${styles.priceSection}`}>
+  <h2 className={styles.priceHeading}>
+    Mach ein Angebot für diesen Auftrag
+  </h2>
 
-              {preisOpen && (
-                <form
-                  id="pricePanel"
-                  onSubmit={onPreisSubmit}
-                  className={styles.priceForm}
+  <form
+    id="pricePanel"
+    onSubmit={onPreisSubmit}
+    className={styles.priceForm}
                 >
                   <label htmlFor="gesamtpreis" className={styles.label}>
                     Gesamtkosten für den Auftrag (inkl. aller Arbeitsschritte, exkl. Logistik) in €
@@ -546,7 +536,7 @@ export default function AuftragDetailPage() {
                     Angebot abgeben
                   </button>
                 </form>
-              )}
+              
             </div>
           </div>
         </div>

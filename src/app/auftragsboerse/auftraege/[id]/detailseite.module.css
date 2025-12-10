@@ -712,3 +712,8 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.priceHeading {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
