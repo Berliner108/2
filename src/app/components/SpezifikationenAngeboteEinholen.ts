@@ -8,6 +8,16 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Verfahren',
       options: ['Chemisch', 'Elektrochemisch', 'Thermisch', 'Mechanisch']
     },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Zertifizierungen:',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      options: [
+        'Qualistrip',
+      ]
+    },
+    
   ],
   Strahlen: [
     
@@ -150,7 +160,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'extra',
       label: 'Extra:',
       options: [
-        'Bitte im Trockenen lagern',
+        'Trockenen lagern',
       ]
     }
   ],
@@ -342,7 +352,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'extras',
       label: 'Extras:',
-      tooltip: 'Genauere Angaben kannst du in der Beschreibung machen.',
+      tooltip: 'Weitere Angaben kannst du in der Beschreibung machen.',
       options: [
         'Zweifärbig ',
         'Duplexbeschichtung ',        
@@ -404,7 +414,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'extras',
       label: 'Extras:',
-      tooltip: 'Genauere Angaben kannst du in der Beschreibung machen.',
+      tooltip: 'Weitere Angaben kannst du in der Beschreibung machen.',
       options: [
         'Zweifärbig ',
         'Duplexbeschichtung ',        
