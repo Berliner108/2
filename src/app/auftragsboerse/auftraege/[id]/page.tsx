@@ -76,16 +76,23 @@ function DeadlineBadge({ date }: { date: Date | null }) {
     </span>
   );
 }
-
-/* ===== Money-Helper (sehr simpel) ===== */
 function parseMoneyOrNull(raw: string): number | null {
   if (!raw) return null;
+
   let v = raw.replace(/\s/g, '').replace(',', '.');
   if (!v) return null;
+
   const n = Number(v);
-  if (!Number.isFinite(n)) return null;
-  return Math.min(Math.max(n, 0), 9_999_999.99);
+
+  // ungültig oder negativ -> Fehler
+  if (!Number.isFinite(n) || n < 0) {
+    return null;
+  }
+
+  // keine künstliche Obergrenze mehr
+  return n;
 }
+
 
 function formatMoney(n: number): string {
   return n.toFixed(2);
