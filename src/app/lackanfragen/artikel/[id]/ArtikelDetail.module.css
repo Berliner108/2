@@ -50,16 +50,16 @@
   
   .thumbnail {
     width: 60px;
-    height: 60px;
     margin: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
   transition: border-color 0.2s;
   }
   
   .thumbnail:hover {
-    border-color: #0070f3;
+    border-color: #888;
   }
   .kontaktLink {
     display: inline-block;
