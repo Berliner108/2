@@ -24,7 +24,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'Qualanod',
         'GSB',
@@ -53,7 +53,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'RAL-GZ',
         'ISO 9001',
@@ -74,7 +74,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -95,7 +95,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -115,7 +115,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -135,7 +135,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -201,7 +201,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -214,7 +214,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -234,7 +234,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -255,7 +255,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'Qualanod',
         'ISO 9001',
@@ -276,7 +276,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'Qualanod',
         'ISO 9001',
@@ -297,7 +297,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'ISO 9001',
         'ISO 14001',
@@ -351,7 +351,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'GSB',
         'ISO 9001',
@@ -413,7 +413,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
-      tooltip: 'Wähle die Zertifikate aus, die der Beschichter erfüllen muss.',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen.',
       options: [
         'GSB',
         'Qualicoat',
