@@ -91,6 +91,45 @@ function formatMoney(n: number): string {
   return n.toFixed(2);
 }
 
+/* ===== Mindestpreise & Limits ===== */
+const MIN_AUFTRAG_PREIS = 50;   // Mindestpreis Auftrag in €
+const MIN_LOGISTIK_PREIS = 20;  // Mindestpreis Logistik in €
+const MAX_PRICE_CHARS = 11;     // z. B. "9999999,99"
+
+/**
+ * Erlaubt NUR Ziffern + EIN Dezimaltrennzeichen (Komma oder Punkt),
+ * max. 2 Nachkommastellen, max. Länge.
+ */
+function normalizeMoneyInput(raw: string, maxChars: number): string {
+  // Nur Ziffern und ,/. zulassen
+  let v = raw.replace(/[^\d.,]/g, '');
+
+  if (!v) return '';
+
+  // Nur EIN Dezimaltrennzeichen erlauben
+  const firstSep = v.search(/[.,]/);
+  if (firstSep !== -1) {
+    const before = v.slice(0, firstSep + 1);
+    const after = v.slice(firstSep + 1).replace(/[.,]/g, '');
+    v = before + after;
+  }
+
+  // Maximal 2 Nachkommastellen
+  const match = v.match(/^(\d+)([.,])?(\d{0,2})?/);
+  if (!match) return '';
+
+  let result = match[1];            // ganzzahliger Teil
+  if (match[2]) result += match[2]; // Trenner
+  if (match[3]) result += match[3]; // Nachkommastellen
+
+  // Länge begrenzen
+  if (result.length > maxChars) {
+    result = result.slice(0, maxChars);
+  }
+
+  return result;
+}
+
 export default function AuftragDetailPage() {
   // später: beim echten Backend auf true setzen
   const [loading] = useState(false);
@@ -137,19 +176,25 @@ export default function AuftragDetailPage() {
 
   const handleGesamtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPreisError(null);
-    setGesamtPreis(e.target.value);
+    const sanitized = normalizeMoneyInput(e.target.value, MAX_PRICE_CHARS);
+    setGesamtPreis(sanitized);
   };
 
   const handleLogistikChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPreisError(null);
-    setLogistikPreis(e.target.value);
+    const sanitized = normalizeMoneyInput(e.target.value, MAX_PRICE_CHARS);
+    setLogistikPreis(sanitized);
   };
 
   const handleGesamtBlur = () => {
     if (!gesamtPreis.trim()) return;
     const n = parseMoneyOrNull(gesamtPreis);
-    if (n === null) {
-      setPreisError('Bitte gib einen gültigen Gesamtpreis ein.');
+    if (n === null || n < MIN_AUFTRAG_PREIS) {
+      setPreisError(
+        `Bitte gib einen gültigen Gesamtpreis ein (mindestens ${formatMoney(
+          MIN_AUFTRAG_PREIS
+        )} €).`
+      );
       setGesamtPreis('');
       return;
     }
@@ -159,8 +204,12 @@ export default function AuftragDetailPage() {
   const handleLogistikBlur = () => {
     if (!logistikPreis.trim()) return;
     const n = parseMoneyOrNull(logistikPreis);
-    if (n === null) {
-      setPreisError('Bitte gib einen gültigen Logistikpreis ein.');
+    if (n === null || n < MIN_LOGISTIK_PREIS) {
+      setPreisError(
+        `Bitte gib einen gültigen Logistikpreis ein (mindestens ${formatMoney(
+          MIN_LOGISTIK_PREIS
+        )} €).`
+      );
       setLogistikPreis('');
       return;
     }
@@ -172,16 +221,24 @@ export default function AuftragDetailPage() {
     setPreisError(null);
 
     const base = parseMoneyOrNull(gesamtPreis);
-    if (base === null || base <= 0) {
-      setPreisError('Bitte die Gesamtkosten für den Auftrag eingeben ( > 0 € ).');
+    if (base === null || base < MIN_AUFTRAG_PREIS) {
+      setPreisError(
+        `Bitte die Gesamtkosten für den Auftrag eingeben (mindestens ${formatMoney(
+          MIN_AUFTRAG_PREIS
+        )} €).`
+      );
       return;
     }
 
     let logistik = 0;
     if (brauchtLogistikPreis) {
       const l = parseMoneyOrNull(logistikPreis);
-      if (l === null || l < 0) {
-        setPreisError('Bitte einen gültigen Logistikpreis angeben (0 ist möglich).');
+      if (l === null || l < MIN_LOGISTIK_PREIS) {
+        setPreisError(
+          `Bitte einen gültigen Logistikpreis angeben (mindestens ${formatMoney(
+            MIN_LOGISTIK_PREIS
+          )} €).`
+        );
         return;
       }
       logistik = l;
@@ -197,6 +254,11 @@ export default function AuftragDetailPage() {
         `Auftrag #${auftrag.id}`
     );
   };
+
+  const isSubmitDisabled =
+    !!preisError ||
+    !gesamtPreis.trim() ||
+    (brauchtLogistikPreis && !logistikPreis.trim());
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
 
@@ -289,17 +351,17 @@ export default function AuftragDetailPage() {
               </div>
 
               <div className={styles.metaItem1}>
-              <span className={styles.label}>Datum Warenrückgabe:</span>
-              <span className={styles.value}>
-                {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
-                <DeadlineBadge date={auftrag.warenannahmeDatum} />
-              </span>
-            </div>           
+                <span className={styles.label}>Datum Warenrückgabe:</span>
+                <span className={styles.value}>
+                  {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
+                  <DeadlineBadge date={auftrag.warenannahmeDatum} />
+                </span>
+              </div>
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Standort:</span>
                 <span className={styles.value}>{auftrag.standort}</span>
-              </div>        
+              </div>
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Maße größtes Werkstück:</span>
@@ -313,22 +375,23 @@ export default function AuftragDetailPage() {
                 <span className={styles.value}>{auftrag.masse}</span>
               </div>
 
-            {/* User */}
-            {auftrag.user && (
-              <div className={styles.metaItem}>
-                <span className={styles.label}>User:</span>
-                <span className={styles.value}>{auftrag.user}</span>
-                <Link
-                  href={`/messages?empfaenger=${encodeURIComponent(
-                    auftrag.user
-                  )}`}
-                  className={styles.kontaktLink}
-                >
-                   User kontaktieren
-                </Link>
-              </div>
-            )}
+              {/* User */}
+              {auftrag.user && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>User:</span>
+                  <span className={styles.value}>{auftrag.user}</span>
+                  <Link
+                    href={`/messages?empfaenger=${encodeURIComponent(
+                      auftrag.user
+                    )}`}
+                    className={styles.kontaktLink}
+                  >
+                    User kontaktieren
+                  </Link>
+                </div>
+              )}
             </div>
+
             {/* Downloads */}
             {auftrag.dateien && auftrag.dateien.length > 0 && (
               <div className={styles.metaItem}>
@@ -350,6 +413,7 @@ export default function AuftragDetailPage() {
                 </ul>
               </div>
             )}
+
             {/* Beschreibung (aus Formular) */}
             {auftrag.beschreibung && (
               <div className={styles.beschreibung}>
@@ -365,33 +429,28 @@ export default function AuftragDetailPage() {
 
               return (
                 <div key={idx} className={styles.verfahrenBlock}>
-  <h3 className={styles.verfahrenTitel}>
-    Spezifikationen zum&nbsp;{v.name}
-  </h3>
+                  <h3 className={styles.verfahrenTitel}>
+                    Spezifikationen zum&nbsp;{v.name}
+                  </h3>
 
-  <div className={styles.verfahrenGrid}>
-    {entries.map(([key, val]) => (
-      <div key={key} className={styles.metaItem}>
-        <span className={styles.label}>
-          {key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/^\w/, (c) => c.toUpperCase())}
-          :
-        </span>
-        <span className={styles.value}>
-          {Array.isArray(val) ? val.join(', ') : String(val)}
-        </span>
-      </div>
-    ))}
-  </div>
-</div>
-
+                  <div className={styles.verfahrenGrid}>
+                    {entries.map(([key, val]) => (
+                      <div key={key} className={styles.metaItem}>
+                        <span className={styles.label}>
+                          {key
+                            .replace(/([A-Z])/g, ' $1')
+                            .replace(/^\w/, (c) => c.toUpperCase())}
+                          :
+                        </span>
+                        <span className={styles.value}>
+                          {Array.isArray(val) ? val.join(', ') : String(val)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               );
             })}
-
-            
-
-            
 
             {/* Ausklappbarer Preisbereich – nur 2 Felder */}
             <div className={`${styles.metaItem} ${styles.priceSection}`}>
@@ -430,6 +489,7 @@ export default function AuftragDetailPage() {
                         preisError ? styles.isInvalid : ''
                       }`}
                       autoComplete="off"
+                      maxLength={MAX_PRICE_CHARS}
                     />
                   </div>
 
@@ -455,6 +515,7 @@ export default function AuftragDetailPage() {
                             preisError ? styles.isInvalid : ''
                           }`}
                           autoComplete="off"
+                          maxLength={MAX_PRICE_CHARS}
                         />
                       </div>
                     </>
@@ -477,7 +538,11 @@ export default function AuftragDetailPage() {
                     </div>
                   )}
 
-                  <button type="submit" className={styles.buyButton}>
+                  <button
+                    type="submit"
+                    className={styles.buyButton}
+                    disabled={isSubmitDisabled}
+                  >
                     Angebot abgeben
                   </button>
                 </form>
