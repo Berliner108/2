@@ -264,12 +264,6 @@ export default function AuftragDetailPage() {
                 <span className={styles.label}>Material:</span>
                 <span className={styles.value}>{auftrag.material}</span>
               </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Standort:</span>
-                <span className={styles.value}>{auftrag.standort}</span>
-              </div>
-
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenausgabe per:</span>
                 <span className={styles.value}>
@@ -300,8 +294,12 @@ export default function AuftragDetailPage() {
                 {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
                 <DeadlineBadge date={auftrag.warenannahmeDatum} />
               </span>
-            </div>
-            
+            </div>           
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Standort:</span>
+                <span className={styles.value}>{auftrag.standort}</span>
+              </div>        
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Maße größtes Werkstück:</span>
