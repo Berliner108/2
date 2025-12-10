@@ -378,7 +378,7 @@ export default function AuftragsboerseSeite() {
 
           {/* Warenannahme */}
           <div className={styles.checkboxGroup}>
-            <strong>Warenannahme</strong>
+            <strong>Warenrückgabe</strong>
             <label className={styles.checkboxLabel}>
               <input type="checkbox" checked={wnZust} onChange={() => setWnZust(!wnZust)} />
               Zustellung
