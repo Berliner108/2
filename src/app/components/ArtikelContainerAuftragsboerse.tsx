@@ -35,7 +35,7 @@ function getDeadlineInfo(
 
   let text: string;
   if (d < -100) {
-    text = 'abgeschlossen vor mehr als 100 Tagen';
+    text = 'abgeschlossen vor über 100 Tagen';
   } else if (d < -1) {
     text = `abgeschlossen vor ${Math.abs(d)} Tagen`;
   } else if (d === -1) {
@@ -47,7 +47,7 @@ function getDeadlineInfo(
   } else if (d <= 100) {
     text = `in ${d} Tagen`;
   } else {
-    text = 'in mehr als 100 Tagen';
+    text = 'in über 100 Tagen';
   }
 
   const variant: DeadlineVariant =
