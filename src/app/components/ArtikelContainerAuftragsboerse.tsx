@@ -102,10 +102,18 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
           {(gewerblich || privat) && (
             <>
-              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.desktopOnly}`}>
+              <div
+                className={`${styles.verkaufsTypLabel} ${
+                  gewerblich ? styles.gewerblichLabel : styles.privatLabel
+                } ${styles.desktopOnly}`}
+              >
                 {gewerblich ? 'Gewerblich' : 'Privat'}
               </div>
-              <div className={`${styles.verkaufsTypLabel} ${gewerblich ? styles.gewerblichLabel : styles.privatLabel} ${styles.mobileOnly}`}>
+              <div
+                className={`${styles.verkaufsTypLabel} ${
+                  gewerblich ? styles.gewerblichLabel : styles.privatLabel
+                } ${styles.mobileOnly}`}
+              >
                 {gewerblich ? 'Gewerblich' : 'Privat'}
               </div>
             </>
@@ -115,9 +123,11 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
         <div className={styles.cardTextBlock}>
           <h4 className={styles.cardText1}>{verfahrenName}</h4>
 
+          {/* Warenausgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText5}>
             Warenausgabe:{' '}
             {warenausgabeDatum.toLocaleDateString('de-DE')}
+            {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
             {waInfo && (
               <span
                 className={`${styles.deadlineBadge} ${
@@ -131,12 +141,13 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
                 {waInfo.text}
               </span>
             )}
-            {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
           </p>
 
+          {/* Warenrückgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText6}>
             Warenrückgabe:{' '}
             {warenannahmeDatum.toLocaleDateString('de-DE')}
+            {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
             {wnInfo && (
               <span
                 className={`${styles.deadlineBadge} ${
@@ -150,7 +161,6 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
                 {wnInfo.text}
               </span>
             )}
-            {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
           </p>
 
           <p className={styles.cardText2}>Material: {material}</p>
