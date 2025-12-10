@@ -338,8 +338,8 @@ export default function AuftragsboerseSeite() {
             <option value="">Sortieren</option>
             <option value="warenausgabe-auf">Warenausgabe aufsteigend</option>
             <option value="warenausgabe-ab">Warenausgabe absteigend</option>
-            <option value="warenannahme-auf">Warenannahme aufsteigend</option>
-            <option value="warenannahme-ab">Warenannahme absteigend</option>
+            <option value="warenannahme-auf">Warenrückgabe aufsteigend</option>
+            <option value="warenannahme-ab">Warenrückgabe absteigend</option>
           </select>
 
           <input
