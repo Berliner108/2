@@ -218,3 +218,32 @@
 
   
 
+.deadlineBadge {
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Farben wie in der Detailseite */
+.badgeOk {
+  background: #e6f6ec;
+  color: #0f7b3e;
+  border: 1px solid #b6e2c8;
+}
+
+.badgeWarn {
+  background: #fff4e5;
+  color: #8a4b00;
+  border: 1px solid #ffd59e;
+}
+
+.badgeDanger {
+  background: #fdecea;
+  color: #b00020;
+  border: 1px solid #f5c6cb;
+}

@@ -11,6 +11,53 @@ type ArtikelContainerAuftragsboerseProps = {
   artikel: Auftrag;
 };
 
+/* ===== Deadline-Helper – gleiche Logik wie bei Lackanfragen ===== */
+
+type DeadlineVariant = 'ok' | 'warn' | 'danger';
+
+function daysBetweenToday(date: Date): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+
+  const diffMs = d.getTime() - today.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function getDeadlineInfo(
+  date?: Date | null
+): { text: string; variant: DeadlineVariant } | null {
+  if (!date) return null;
+
+  const d = daysBetweenToday(date);
+
+  let text: string;
+  if (d < -100) {
+    text = 'abgeschlossen vor mehr als 100 Tagen';
+  } else if (d < -1) {
+    text = `abgeschlossen vor ${Math.abs(d)} Tagen`;
+  } else if (d === -1) {
+    text = 'abgeschlossen seit gestern';
+  } else if (d === 0) {
+    text = 'heute';
+  } else if (d === 1) {
+    text = 'in 1 Tag';
+  } else if (d <= 100) {
+    text = `in ${d} Tagen`;
+  } else {
+    text = 'in mehr als 100 Tagen';
+  }
+
+  const variant: DeadlineVariant =
+    d < 0 ? 'danger' : d <= 3 ? 'warn' : 'ok';
+
+  return { text, variant };
+}
+
+/* ===== Komponente ===== */
+
 export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelContainerAuftragsboerseProps) {
   const {
     id,
@@ -33,6 +80,9 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
   const verfahrenName = verfahren.map((v) => v.name).join(' & ');
   const imgSrc = bilder.length > 0 ? bilder[0] : '/images/platzhalter.jpg';
+
+  const waInfo = getDeadlineInfo(warenausgabeDatum);
+  const wnInfo = getDeadlineInfo(warenannahmeDatum);
 
   return (
     <Link href={`/auftragsboerse/auftraege/${id}`} className={styles.cardLink}>
@@ -64,21 +114,48 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
         <div className={styles.cardTextBlock}>
           <h4 className={styles.cardText1}>{verfahrenName}</h4>
-          {/* Labels nach deinem Wunsch + Klammern nur bei vorhandenem Wert */}
+
           <p className={styles.cardText5}>
-            Warenausgabe: {warenausgabeDatum.toLocaleDateString('de-DE')}
+            Warenausgabe:{' '}
+            {warenausgabeDatum.toLocaleDateString('de-DE')}
+            {waInfo && (
+              <span
+                className={`${styles.deadlineBadge} ${
+                  waInfo.variant === 'danger'
+                    ? styles.badgeDanger
+                    : waInfo.variant === 'warn'
+                    ? styles.badgeWarn
+                    : styles.badgeOk
+                }`}
+              >
+                {waInfo.text}
+              </span>
+            )}
             {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
           </p>
+
           <p className={styles.cardText6}>
-            Warenrückgabe: {warenannahmeDatum.toLocaleDateString('de-DE')}
+            Warenrückgabe:{' '}
+            {warenannahmeDatum.toLocaleDateString('de-DE')}
+            {wnInfo && (
+              <span
+                className={`${styles.deadlineBadge} ${
+                  wnInfo.variant === 'danger'
+                    ? styles.badgeDanger
+                    : wnInfo.variant === 'warn'
+                    ? styles.badgeWarn
+                    : styles.badgeOk
+                }`}
+              >
+                {wnInfo.text}
+              </span>
+            )}
             {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
           </p>
-          
+
           <p className={styles.cardText2}>Material: {material}</p>
           <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
           <p className={styles.cardText4}>Masse schwerstes Werkstück: {masse}</p>
-
-          
 
           <div className={styles.cardOrt}>
             <MapPin size={16} className={styles.ortIcon} />
