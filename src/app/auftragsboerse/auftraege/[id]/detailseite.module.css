@@ -337,7 +337,7 @@
 .priceInput {
   flex: 0 1 220px;
   padding: 0.55rem 0.7rem;
-  border: 1px solid black;
+  border: 1px solid #000;
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;

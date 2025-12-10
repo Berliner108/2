@@ -460,18 +460,18 @@ export default function AuftragDetailPage() {
 
             {/* Ausklappbarer Preisbereich – nur 2 Felder */}
             {/* Preisbereich – immer sichtbar */}
-<div className={`${styles.metaItem} ${styles.priceSection}`}>
-  <h2 className={styles.priceHeading}>
-    Mach ein Angebot für diesen Auftrag
-  </h2>
+            <div className={`${styles.metaItem} ${styles.priceSection}`}>
+              <h2 className={styles.priceHeading}>
+                Mach ein Angebot für diesen Auftrag
+              </h2>
 
-  <form
-    id="pricePanel"
-    onSubmit={onPreisSubmit}
-    className={styles.priceForm}
-                >
+              <form
+                id="pricePanel"
+                onSubmit={onPreisSubmit}
+                className={styles.priceForm}
+                            >
                   <label htmlFor="gesamtpreis" className={styles.label}>
-                    Gesamtkosten für den Auftrag (inkl. aller Arbeitsschritte, exkl. Logistik) in €
+                    Gesamtkosten für den Auftrag (inkl. Steuern und Gebühren exkl. Logistik) in €
                   </label>
                   <div className={styles.priceRow}>
                     <input
