@@ -344,7 +344,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Zweifärbig ',
         'Duplexbeschichtung ',        
-        'Lack wird beigestellt'
+        'Beigestellter Lack'
       ]
     },
     {
@@ -406,7 +406,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Zweifärbig ',
         'Duplexbeschichtung ',        
-        'Lack wird beigestellt'
+        'Beigestellter Lack'
       ]
     },
     {
