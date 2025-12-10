@@ -860,7 +860,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
 
 /* --- Serienauftrag-Layout --- */
 .serienauftragRow {
-  margin-top: 0rem;
+  margin-top: 1.25rem;
   padding-top: 0.75rem;
   border-top: 1px dashed #e2e8f0;
   display: flex;
@@ -869,7 +869,16 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   align-items: flex-start;
 }
 
+.serienauftragLeft {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+@media (max-width: 768px) {
+  .serienauftragLeft {
+    flex: none;        
+  }
 
+}
 .serienCheckboxLabel {
   display: inline-flex;
   align-items: center;
