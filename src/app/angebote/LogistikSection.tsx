@@ -559,7 +559,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </label>
           {aufenthaltTage !== null && aufenthaltTage < 7 && (
             <p className={styles.helperText}>
-              Wöchentliche oder längere Serien sind nur sinnvoll, wenn der
+              Wöchentliche oder längere Serien sind nur möglich, wenn der
               Aufenthalt mindestens 7 Tage beträgt.
             </p>
           )}

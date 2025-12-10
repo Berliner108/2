@@ -963,3 +963,18 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
 .seriesList li + li {
   margin-top: 0.25rem;
 }
+/* >>> GANZ ANS ENDE DER DATEI SETZEN <<< */
+@media (max-width: 768px) {
+  .logistik {
+    padding-bottom: 0.25rem;   /* oder 0, wenn du es ganz ohne haben willst */
+  }
+
+  .serienauftragRow {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .seriesBox {
+    margin-bottom: 0;
+  }
+}
