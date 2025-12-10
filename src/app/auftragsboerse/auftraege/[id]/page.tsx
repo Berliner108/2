@@ -99,8 +99,8 @@ function formatMoney(n: number): string {
 }
 
 /* ===== Mindestpreise & Limits ===== */
-const MIN_AUFTRAG_PREIS = 100;   // Mindestpreis Auftrag in €
-const MIN_LOGISTIK_PREIS = 40;  // Mindestpreis Logistik in €
+const MIN_AUFTRAG_PREIS = 60;   // Mindestpreis Auftrag in €
+const MIN_LOGISTIK_PREIS = 20;  // Mindestpreis Logistik in €
 const MAX_PRICE_CHARS = 8;     // z. B. "99999,99"
 
 /**
@@ -135,6 +135,12 @@ function normalizeMoneyInput(raw: string, maxChars: number): string {
   }
 
   return result;
+}
+function hasMinWholeDigits(value: string, minDigits: number): boolean {
+  // nur Ziffern und Trennzeichen
+  const cleaned = value.replace(/[^\d.,]/g, '');
+  const [wholePart] = cleaned.split(/[.,]/);
+  return wholePart.length >= minDigits;
 }
 
 export default function AuftragDetailPage() {
@@ -221,6 +227,29 @@ export default function AuftragDetailPage() {
     }
     setLogistikPreis(formatMoney(n));
   };
+    const isGesamtPreisValid = (() => {
+    if (!gesamtPreis.trim()) return false;
+
+    // mind. 3 Ziffern vor dem Komma/Punkt
+    if (!hasMinWholeDigits(gesamtPreis, 2)) return false;
+
+    const n = parseMoneyOrNull(gesamtPreis);
+    if (n === null || n < MIN_AUFTRAG_PREIS) return false;
+
+    return true;
+  })();
+
+
+  const isLogistikPreisValid = (() => {
+    if (!brauchtLogistikPreis) return true;   // wenn nicht nötig, einfach ok
+    if (!logistikPreis.trim()) return false;
+
+    const n = parseMoneyOrNull(logistikPreis);
+    if (n === null || n < MIN_LOGISTIK_PREIS) return false;
+
+    return true;
+  })();
+
 
   const onPreisSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -261,10 +290,9 @@ export default function AuftragDetailPage() {
     );
   };
 
-  const isSubmitDisabled =
-    !!preisError ||
-    !gesamtPreis.trim() ||
-    (brauchtLogistikPreis && !logistikPreis.trim());
+   const isSubmitDisabled =
+    !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
+
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
 
@@ -478,7 +506,7 @@ export default function AuftragDetailPage() {
                       id="gesamtpreis"
                       type="text"
                       inputMode="decimal"
-                      placeholder="z. B. 1450,00"
+                      placeholder="mind. 60€; z. B. 1450,00"
                       value={gesamtPreis}
                       onChange={handleGesamtChange}
                       onBlur={handleGesamtBlur}
@@ -504,7 +532,7 @@ export default function AuftragDetailPage() {
                           id="logistikpreis"
                           type="text"
                           inputMode="decimal"
-                          placeholder="z. B. 180,00"
+                          placeholder="mind. 20€; z. B. 180,00"
                           value={logistikPreis}
                           onChange={handleLogistikChange}
                           onBlur={handleLogistikBlur}
