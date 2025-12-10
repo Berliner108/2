@@ -367,23 +367,27 @@ export default function AuftragDetailPage() {
 
               return (
                 <div key={idx} className={styles.verfahrenBlock}>
-                  <h3>Spezifikationen zum</h3><h3 className={styles.verfahrenTitel}>{v.name}</h3>
-                  <div className={styles.verfahrenGrid}>
-                    {entries.map(([key, val]) => (
-                      <div key={key} className={styles.metaItem}>
-                        <span className={styles.label}>
-                          {key
-                            .replace(/([A-Z])/g, ' $1')
-                            .replace(/^\w/, (c) => c.toUpperCase())}
-                          :
-                        </span>
-                        <span className={styles.value}>
-                          {Array.isArray(val) ? val.join(', ') : String(val)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+  <h3 className={styles.verfahrenTitel}>
+    Spezifikationen zum&nbsp;{v.name}
+  </h3>
+
+  <div className={styles.verfahrenGrid}>
+    {entries.map(([key, val]) => (
+      <div key={key} className={styles.metaItem}>
+        <span className={styles.label}>
+          {key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^\w/, (c) => c.toUpperCase())}
+          :
+        </span>
+        <span className={styles.value}>
+          {Array.isArray(val) ? val.join(', ') : String(val)}
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
+
               );
             })}
 

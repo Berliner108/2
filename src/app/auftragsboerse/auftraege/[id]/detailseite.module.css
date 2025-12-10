@@ -696,3 +696,15 @@
     max-height: 34px;           /* auf Mobil noch etwas kleiner */
   }
 }
+.verfahrenTitel {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  white-space: nowrap; /* ⬅️ verhindert Umbruch in der gesamten Überschrift */
+}
+@media (max-width: 370px) {
+  .verfahrenTitel {
+    white-space: normal;
+  }
+}
