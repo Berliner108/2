@@ -1086,7 +1086,7 @@ function PageBody() {
               <div className={styles.offerBox}>
                 <div className={styles.inputGroup}>
                   <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
-                    Artikelpreis in € (ohne Versand)
+                    Gesamtpreis in € (inkl. Steuern & Gebühren excl. Versand)
                   </label>
                   <input
                     type="text"
