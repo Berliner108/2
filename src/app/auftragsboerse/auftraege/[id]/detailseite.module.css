@@ -667,14 +667,13 @@
 }
 .priceInput {
   flex: 0 1 220px;
-  padding: 0.35rem 0.55rem;   /* weniger Padding */
-  border: 1px solid #ccc;
+  padding: 0.35rem 0.55rem;   /* weniger Padding */  
+  border: 1px solid #000;
   border-radius: 6px;
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-
   box-sizing: border-box;     /* wichtig: kein Überlauf */
   max-width: 100%;
   height: 36px;               /* ✅ feste, kleine Höhe */
@@ -693,7 +692,7 @@
     width: 100%;
     padding: 0.3rem 0.5rem;
     font-size: 0.9rem;
-    max-height: 38px;           /* auf Mobil noch etwas kleiner */
+    max-height: 42px;           /* auf Mobil noch etwas kleiner */
   }
 }
 .verfahrenTitel {
