@@ -266,18 +266,6 @@ export default function AuftragDetailPage() {
               </div>
 
               <div className={styles.metaItem}>
-                <span className={styles.label}>Maße größtes Werkstück:</span>
-                <span className={styles.value}>
-                  {auftrag.length} × {auftrag.width} × {auftrag.height} mm
-                </span>
-              </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Masse schwerstes Werkstück:</span>
-                <span className={styles.value}>{auftrag.masse}</span>
-              </div>
-
-              <div className={styles.metaItem}>
                 <span className={styles.label}>Standort:</span>
                 <span className={styles.value}>{auftrag.standort}</span>
               </div>
@@ -314,6 +302,18 @@ export default function AuftragDetailPage() {
               </span>
             </div>
             
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Maße größtes Werkstück:</span>
+                <span className={styles.value}>
+                  {auftrag.length} × {auftrag.width} × {auftrag.height} mm
+                </span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Masse schwerstes Werkstück:</span>
+                <span className={styles.value}>{auftrag.masse}</span>
+              </div>
 
             {/* User */}
             {auftrag.user && (
