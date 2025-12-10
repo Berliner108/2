@@ -50,9 +50,12 @@
   
   .thumbnail {
     width: 60px;
+    height: 60px;
     margin: 5px;
-    border: 2px solid transparent;
-    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s;
   }
   
   .thumbnail:hover {
