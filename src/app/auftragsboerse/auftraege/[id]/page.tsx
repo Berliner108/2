@@ -352,7 +352,13 @@ export default function AuftragDetailPage() {
                 </ul>
               </div>
             )}
-            
+            {/* Beschreibung (aus Formular) */}
+            {auftrag.beschreibung && (
+              <div className={styles.beschreibung}>
+                <h2>Beschreibung</h2>
+                <p className={styles.preserveNewlines}>{auftrag.beschreibung}</p>
+              </div>
+            )}
 
             {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
             {auftrag.verfahren.map((v, idx) => {
@@ -383,13 +389,7 @@ export default function AuftragDetailPage() {
 
             
 
-            {/* Beschreibung (aus Formular) */}
-            {auftrag.beschreibung && (
-              <div className={styles.beschreibung}>
-                <h2>Beschreibung</h2>
-                <p className={styles.preserveNewlines}>{auftrag.beschreibung}</p>
-              </div>
-            )}
+            
 
             {/* Ausklappbarer Preisbereich – nur 2 Felder */}
             <div className={`${styles.metaItem} ${styles.priceSection}`}>

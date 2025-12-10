@@ -693,6 +693,6 @@
     width: 100%;
     padding: 0.3rem 0.5rem;
     font-size: 0.9rem;
-    height: 34px;           /* auf Mobil noch etwas kleiner */
+    max-height: 34px;           /* auf Mobil noch etwas kleiner */
   }
 }
