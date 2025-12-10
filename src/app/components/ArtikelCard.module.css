@@ -284,7 +284,7 @@
 /* Badge für Lieferdatum */
 .deadlineBadge {
   display: inline-block;
-  padding: 5px;
+  padding: 2px;
   margin-top: 2px;
   border-radius: 9999px;
   font-size: 12px;
