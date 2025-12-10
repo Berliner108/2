@@ -506,7 +506,7 @@ export default function AuftragDetailPage() {
                       id="gesamtpreis"
                       type="text"
                       inputMode="decimal"
-                      placeholder="mind. 60€; z. B. 1450,00"
+                      placeholder="mind. 60 € - z. B. 1450,00 €"
                       value={gesamtPreis}
                       onChange={handleGesamtChange}
                       onBlur={handleGesamtBlur}
@@ -532,7 +532,7 @@ export default function AuftragDetailPage() {
                           id="logistikpreis"
                           type="text"
                           inputMode="decimal"
-                          placeholder="mind. 20€; z. B. 180,00"
+                          placeholder="mind. 20 € - z. B. 180,00 €"
                           value={logistikPreis}
                           onChange={handleLogistikChange}
                           onBlur={handleLogistikBlur}

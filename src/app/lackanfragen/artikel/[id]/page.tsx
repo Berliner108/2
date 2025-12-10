@@ -1088,34 +1088,42 @@ function PageBody() {
                   <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
                     Gesamtpreis in € (inkl. Steuern & Gebühren excl. Versand)
                   </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^\d{1,5}([.,]\d{1,2})?$"
-                    maxLength={8}
-                    value={basisPreis}
-                    onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
-                    className={styles.priceField}
-                    placeholder="z. B. 120,00"
-                    aria-label="Artikelpreis ohne Versand"
-                  />
+                  <div className={styles.priceInputWrapper}>
+  <input
+    type="text"
+    inputMode="decimal"
+    pattern="^\d{1,5}([.,]\d{1,2})?$"
+    maxLength={8}
+    value={basisPreis}
+    onChange={(e) => setBasisPreis(limitMoneyInput(e.target.value))}
+    className={styles.priceField}
+    placeholder="z. B. 120,00"
+    aria-label="Artikelpreis ohne Versand"
+  />
+  <span className={styles.priceInputSuffix}>€</span>
+</div>
+
                 </div>
 
                 <div className={styles.inputGroup} style={{ marginTop: 10 }}>
                   <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
                     Versandkosten in € (separat)
                   </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^\d{1,5}([.,]\d{1,2})?$"
-                    maxLength={8}
-                    value={versandPreis}
-                    onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}
-                    className={styles.altPriceField}
-                    placeholder="z. B. 6,90"
-                    aria-label="Versandkosten separat"
-                  />
+                  <div className={styles.priceInputWrapper}>
+  <input
+    type="text"
+    inputMode="decimal"
+    pattern="^\d{1,5}([.,]\d{1,2})?$"
+    maxLength={8}
+    value={versandPreis}
+    onChange={(e) => setVersandPreis(limitMoneyInput(e.target.value))}
+    className={styles.altPriceField}
+    placeholder="z. B. 6,90"
+    aria-label="Versandkosten separat"
+  />
+  <span className={styles.priceInputSuffix}>€</span>
+</div>
+
                   <div className={styles.offerNote} style={{ marginTop: 6 }}>
                     Versandkosten werden separat ausgewiesen. Falls Versandkosten anfallen, muss der Käufer ggf. für den
                     Rückversand aufkommen.
