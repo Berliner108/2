@@ -280,12 +280,12 @@
 }  
 
 
-@media (max-width: 375px){  
+@media (max-width: 376px){  
 /* Badge für Lieferdatum */
 .deadlineBadge {
   display: inline-block;
   padding: 5px;
-  margin-top: 5px;
+  margin-top: 20px;
   border-radius: 9999px;
   font-size: 12px;
   line-height: 20px;
