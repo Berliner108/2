@@ -532,7 +532,7 @@ export default function AuftragDetailPage() {
                           id="logistikpreis"
                           type="text"
                           inputMode="decimal"
-                          placeholder="mind. 20 € - z. B. 180,00 €"
+                          placeholder="mind. 20 € - z. B. 180,00 € "
                           value={logistikPreis}
                           onChange={handleLogistikChange}
                           onBlur={handleLogistikBlur}

@@ -61,3 +61,22 @@
   opacity: 1;
 }
 
+.serienauftragRow {
+  margin-top: 1rem;
+  margin-bottom: 0; /* verhindert großen Leerraum */
+  padding-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .serienauftragRow {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .borderedContainer {
+    padding-bottom: 0.75rem; /* unten weniger Platz */
+  }
+}
+.logistik {
+  margin-bottom: 0 !important;
+}
