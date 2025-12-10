@@ -963,18 +963,19 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
 .seriesList li + li {
   margin-top: 0.25rem;
 }
-/* >>> GANZ ANS ENDE DER DATEI SETZEN <<< */
+/* --- Override: Serienauftrag-Abstand unter der Checkbox auf Mobile reduzieren --- */
 @media (max-width: 768px) {
-  .logistik {
-    padding-bottom: 0.25rem;   /* oder 0, wenn du es ganz ohne haben willst */
-  }
-
   .serienauftragRow {
-    margin-bottom: 0;
-    padding-bottom: 0;
+    gap: 0.35rem;        /* statt 0.75rem / 1rem -> Elemente näher zusammen */
+    margin-top: 0.5rem;  /* optional: weniger Abstand nach oben */
   }
 
-  .seriesBox {
-    margin-bottom: 0;
+  .serienCheckboxLabel {
+    margin-bottom: 0;    /* falls irgendwo Margin unten greift */
+  }
+
+  .helperText {
+    margin-top: 0.1rem;  /* Hinweis dichter an der Checkbox */
+    margin-bottom: 0;    /* kein zusätzlicher Abstand nach unten */
   }
 }
