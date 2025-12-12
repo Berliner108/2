@@ -23,7 +23,7 @@ interface LogistikSectionProps {
   abholArt: string;
   setAbholArt: (value: string) => void;
   logistikError: boolean;
- // 🔽 NEU:
+  // 🔽 Serienauftrag
   serienauftrag: boolean;
   setSerienauftrag: (value: boolean) => void;
   rhythmus: string;
@@ -189,7 +189,8 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   setLieferArt,
   abholArt,
   setAbholArt,
-  logistikError,  serienauftrag,
+  logistikError,
+  serienauftrag,
   setSerienauftrag,
   rhythmus,
   setRhythmus,
@@ -213,10 +214,10 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     setAbholDatumDate(abholDatum ? new Date(abholDatum) : null);
   }, [abholDatum]);
 
-  // ❗ wie in der anderen Datei: Wochenende + gemeinsame Feiertage sperren
+  // ❗ Wochenende + gemeinsame Feiertage sperren
   const isDisabledDay = (d: Date): boolean => {
     if (d < minDate) return true;
-    if (!isSelectable(d)) return true; // heute ist schon gesperrt
+    if (!isSelectable(d)) return true;
     if (isWeekend(d)) return true;
     const feiertage = gemeinsameFeiertageDEAT(d.getFullYear());
     if (feiertage.has(toYMD(d))) return true;
@@ -240,7 +241,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   const abholFieldRef = useRef<HTMLDivElement | null>(null);
   const abholPopoverRef = useRef<HTMLDivElement | null>(null);
 
-  // 🔧 Bugfix: minDate NICHT in den Dependencies, sonst springt der Monat immer zurück
   useEffect(() => {
     if (lieferCalOpen) {
       if (lieferDatumDate) {
@@ -255,7 +255,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setLieferCalMonth(minDate);
       }
     }
-  }, [lieferCalOpen, lieferDatumDate]); // ⬅️ minDate raus
+  }, [lieferCalOpen, lieferDatumDate]);
 
   useEffect(() => {
     if (abholCalOpen) {
@@ -279,7 +279,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         setAbholCalMonth(minDate);
       }
     }
-  }, [abholCalOpen, abholDatumDate, lieferDatumDate]); // ⬅️ minDate raus
+  }, [abholCalOpen, abholDatumDate, lieferDatumDate]);
 
   useEffect(() => {
     if (lieferDatumDate && abholDatumDate && abholDatumDate <= lieferDatumDate) {
@@ -305,7 +305,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     setAbholDatum(toYMD(d));
     setAbholCalOpen(false);
   };
-
 
   const rhythmusLabel: Record<string, string> = {
     taeglich: 'täglich',
@@ -335,9 +334,9 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   // Serienauftrag nur sinnvoll, wenn der Zeitraum lang genug ist
   const serienauftragDisabled =
-    aufenthaltTage !== null && aufenthaltTage < 1; // du kannst hier z.B. < 7 draus machen
+    aufenthaltTage !== null && aufenthaltTage < 1;
 
-  // Rhythmus-Abhängigkeiten: wöchentlich nur ab 7 Tagen, etc.
+  // Rhythmus-Abhängigkeiten
   const isRhythmusOptionDisabled = (key: string): boolean => {
     if (aufenthaltTage == null) return true;
     switch (key) {
@@ -354,7 +353,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     }
   };
 
-  // Wenn sich der Zeitraum ändert und der aktuelle Rhythmus nicht mehr passt → zurücksetzen
   useEffect(() => {
     if (!serienauftrag || rhythmus === '' || aufenthaltTage == null) return;
 
@@ -367,15 +365,14 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     if (invalid) {
       setRhythmus('');
     }
-  }, [aufenthaltTage, serienauftrag, rhythmus]);
+  }, [aufenthaltTage, serienauftrag, rhythmus, setRhythmus]);
 
-  // Wenn Zeitraum extrem kurz wird → Serienauftrag komplett zurücksetzen
   useEffect(() => {
     if (serienauftragDisabled && serienauftrag) {
       setSerienauftrag(false);
       setRhythmus('');
     }
-  }, [serienauftragDisabled, serienauftrag]);
+  }, [serienauftragDisabled, serienauftrag, setSerienauftrag, setRhythmus]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -407,7 +404,10 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, []);  type SerienTermin = { nr: number; liefer: Date; abhol: Date };
+  }, []);
+
+  /* 👉 Serienlogik: Start/Ende + Rhythmus → Termine */
+  type SerienTermin = { nr: number; liefer: Date; abhol: Date };
 
   const maxSerienTermine = 8;
 
@@ -418,15 +418,15 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     const base = new Date(start);
     switch (rhythmus) {
       case 'taeglich':
-        return addDays(base, index);        // jeden Tag
+        return addDays(base, index);
       case 'woechentlich':
-        return addDays(base, index * 7);    // alle 7 Tage
+        return addDays(base, index * 7);
       case 'zweiwoechentlich':
-        return addDays(base, index * 14);   // alle 14 Tage
+        return addDays(base, index * 14);
       case 'monatlich':
         return new Date(
           base.getFullYear(),
-          base.getMonth() + index,          // jeden Monat
+          base.getMonth() + index,
           base.getDate(),
         );
       default:
@@ -436,24 +436,22 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   const serienTermine: SerienTermin[] = [];
 
-  // ❗ Wichtig: jetzt alle Termine ZWISCHEN Start- und Enddatum berechnen
   if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
     let index = 0;
     let current = new Date(lieferDatumDate); // Startdatum
 
+    // so lange zwischen Start und Ende + max. 8
     while (index < maxSerienTermine && current <= abholDatumDate) {
       let liefer = new Date(current);
 
-      // auf nächsten gültigen Arbeitstag schieben, aber nicht über Enddatum hinaus
+      // auf nächsten gültigen Arbeitstag schieben
       while (isDisabledDay(liefer) && liefer <= abholDatumDate) {
         liefer = addDays(liefer, 1);
       }
 
-      if (liefer > abholDatumDate) {
-        break;
-      }
+      if (liefer > abholDatumDate) break;
 
-      // Für jetzt: Zustellung am selben Tag wie Anlieferung
+      // 👉 hier: Anlieferung & Rückgabe am selben Tag
       const abhol = new Date(liefer);
 
       serienTermine.push({
@@ -467,8 +465,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     }
   }
 
-
-  // 👉 Termine nach oben ins Grundgerüst geben, in YYYY-MM-DD
+  // Termine in Grundgerüst melden
   useEffect(() => {
     if (!onSerienTermineChange) return;
 
@@ -492,8 +489,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     JSON.stringify(serienTermine),
   ]);
 
-
-
   return (
     <div
       className={`${styles.logistik} ${
@@ -501,8 +496,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       }`}
     >
       <p className={styles.logistikIntro}>
-        Plane hier, wann die Teile bereit zur Beschichtung sind und wann du sie wieder erhalten willst.
-        </p>
+        Plane hier, wann die Teile bereit zur Beschichtung sind und wann du sie
+        wieder erhalten willst.
+      </p>
+
+      {/* Karten: Anlieferung / Rücktransport */}
       <div className={styles.logistikCards}>
         {/* Anlieferung */}
         <div className={styles.logistikCard}>
@@ -551,7 +549,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </div>
         </div>
 
-        {/* Abholung */}
+        {/* Rücktransport */}
         <div className={styles.logistikCard}>
           <h5 className={styles.logistikCardTitle}>
             Abholung / Rücktransport
@@ -559,7 +557,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
           <div className={styles.inputGroup} ref={abholFieldRef}>
             <label>Warenrückgabedatum</label>
-             <input
+            <input
               type="text"
               readOnly
               placeholder={
@@ -587,8 +585,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
                 />
               </div>
             )}
-
-            
           </div>
 
           <div className={styles.inputGroup}>
@@ -611,7 +607,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         </div>
       </div>
 
-      {/* Zusammenfassung als Zeitstrahl / Timeline */}
+      {/* Timeline Einzelauftrag */}
       {lieferDatum && abholDatum && (
         <div className={styles.timelineBox}>
           <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
@@ -636,7 +632,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         </div>
       )}
 
-      {/* Serienauftrag-Bereich */}
+      {/* Serienauftrag-Einstellungen */}
       <div className={styles.serienauftragRow}>
         <div className={styles.serienauftragLeft}>
           <label className={styles.serienCheckboxLabel}>
@@ -697,7 +693,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
         )}
       </div>
 
-      {/* Serienauftrag-Zusammenfassung */}
+      {/* Serienauftrag-Zusammenfassung + Liste */}
       {serienauftrag && lieferDatum && rhythmus && (
         <div className={styles.seriesBox}>
           <h5 className={styles.seriesTitle}>Serienauftrag aktiviert</h5>
@@ -715,7 +711,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </p>
         </div>
       )}
-            {/* Serientermine-Liste (max. 8) */}
+
       {serienauftrag && rhythmus && serienTermine.length > 0 && (
         <div className={styles.seriesScheduleBox}>
           <h5 className={styles.seriesTitle}>
@@ -749,7 +745,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </ol>
         </div>
       )}
-
 
       {logistikError && (
         <motion.p
