@@ -1,6 +1,6 @@
 // src/lib/job-detail.ts
 import { supabaseServer } from '@/lib/supabase-server'
-import type { Auftrag } from '@/data/dummyAuftraege'
+import type { Auftrag } from '@/lib/types/auftrag'
 
 type JobRow = {
   id: string
@@ -20,6 +20,7 @@ type JobRow = {
   verfahren_2: string | null
   specs: any | null
 }
+
 
 type JobFileRow = {
   job_id: string
