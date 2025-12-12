@@ -1074,11 +1074,11 @@ useEffect(() => {
 
 {/* 6️⃣ Logistik */}
 <p>
-  <strong>Lieferdatum:</strong>{' '}
+  <strong>Warenausgabedatum:</strong>{' '}
   {lieferDatum || 'Noch kein Datum gewählt'}
 </p>
 <p>
-  <strong>Abholdatum:</strong>{' '}
+  <strong>Warenrückgabedatum:</strong>{' '}
   {abholDatum || 'Noch kein Datum gewählt'}
 </p>
 <p>
