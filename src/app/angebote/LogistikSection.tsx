@@ -337,35 +337,47 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     aufenthaltTage !== null && aufenthaltTage < 1;
 
   // Rhythmus-Abhängigkeiten
-  const isRhythmusOptionDisabled = (key: string): boolean => {
-    if (aufenthaltTage == null) return true;
-    switch (key) {
-      case 'taeglich':
-        return aufenthaltTage < 1;
-      case 'woechentlich':
-        return aufenthaltTage < 7;
-      case 'zweiwoechentlich':
-        return aufenthaltTage < 14;
-      case 'monatlich':
-        return aufenthaltTage < 30;
-      default:
-        return false;
-    }
-  };
+// Rhythmus-Abhängigkeiten: ein Rhythmus ist nur wählbar,
+// wenn mindestens 2 Zyklen in den Zeitraum passen
+const isRhythmusOptionDisabled = (key: string): boolean => {
+  if (aufenthaltTage == null) return true;
 
-  useEffect(() => {
-    if (!serienauftrag || rhythmus === '' || aufenthaltTage == null) return;
+  // Schrittweite (Tage) pro Rhythmus
+  let stepDays = 0;
+  switch (key) {
+    case 'taeglich':
+      stepDays = 1;
+      break;
+    case 'woechentlich':
+      stepDays = 7;
+      break;
+    case 'zweiwoechentlich':
+      stepDays = 14;
+      break;
+    case 'monatlich':
+      stepDays = 30; // pragmatisch
+      break;
+    default:
+      return true;
+  }
 
-    const invalid =
-      (rhythmus === 'woechentlich' && aufenthaltTage < 7) ||
-      (rhythmus === 'zweiwoechentlich' && aufenthaltTage < 14) ||
-      (rhythmus === 'monatlich' && aufenthaltTage < 30) ||
-      (rhythmus === 'taeglich' && aufenthaltTage < 1);
+  // mindestens 2 Zyklen notwendig
+  const minSpanForTwoCycles = stepDays * 2;
 
-    if (invalid) {
-      setRhythmus('');
-    }
-  }, [aufenthaltTage, serienauftrag, rhythmus, setRhythmus]);
+  // aufenthaltTage ist dein Zeitraum: abholDatum - lieferDatum
+  return aufenthaltTage < minSpanForTwoCycles;
+};
+
+useEffect(() => {
+  if (!serienauftrag || rhythmus === '' || aufenthaltTage == null) return;
+
+  // Wenn der aktuell gewählte Rhythmus laut neuer Logik
+  // nicht (mehr) zulässig ist → zurücksetzen
+  if (isRhythmusOptionDisabled(rhythmus)) {
+    setRhythmus('');
+  }
+}, [aufenthaltTage, serienauftrag, rhythmus]);
+
 
   useEffect(() => {
     if (serienauftragDisabled && serienauftrag) {
@@ -630,14 +642,14 @@ useEffect(() => {
     <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
     <ul className={styles.timelineList}>
       <li>
-        <strong>📥 Anlieferung:</strong>{' '}
+        <strong>📥 Warenausgabe:</strong>{' '}
         {formatDateDE(lieferDatum)} –{' '}
         {lieferArt
           ? lieferArtLabelMap[lieferArt] ?? lieferArt
           : 'Lieferart noch offen'}
       </li>
       <li>
-        <strong>📤 Abholung:</strong>{' '}
+        <strong>📤 Warenrückgabe:</strong>{' '}
         {formatDateDE(abholDatum)} –{' '}
         {abholArt
           ? abholArtLabelMap[abholArt] ?? abholArt
@@ -645,7 +657,7 @@ useEffect(() => {
       </li>
       {aufenthaltTage !== null && (
         <li>
-          <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
+          <strong>🕒 Zeitspanne des Auftrags:</strong>{' '}
           {aufenthaltTage} Tage
         </li>
       )}
@@ -744,7 +756,7 @@ useEffect(() => {
               <li key={t.nr} className={styles.seriesScheduleItem}>
                 <span className={styles.seriesBadge}>#{t.nr}</span>
                 <span>
-                  📥 Anlieferung:{' '}
+                  📥 Warenausgabe:{' '}
                   <strong>
                     {t.liefer.toLocaleDateString('de-DE', {
                       day: '2-digit',
