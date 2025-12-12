@@ -1085,14 +1085,20 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 </p>
 
 {/* 6️⃣ Logistik */}
+{/* 6️⃣ Logistik */}
 <p>
-  <strong>Warenausgabedatum:</strong>{' '}
-  {lieferDatum || 'Noch kein Datum gewählt'}
+  <strong>Lieferdatum:</strong>{' '}
+  {lieferDatum
+    ? formatDateDE(lieferDatum)
+    : 'Noch kein Datum gewählt'}
 </p>
 <p>
-  <strong>Warenrückgabedatum:</strong>{' '}
-  {abholDatum || 'Noch kein Datum gewählt'}
+  <strong>Abholdatum:</strong>{' '}
+  {abholDatum
+    ? formatDateDE(abholDatum)
+    : 'Noch kein Datum gewählt'}
 </p>
+
 <p>
   <strong>Warenausgabe:</strong>{' '}
   {lieferArt ? formatLieferArt(lieferArt) : 'Nicht angegeben'}
