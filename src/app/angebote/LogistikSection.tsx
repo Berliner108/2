@@ -23,6 +23,14 @@ interface LogistikSectionProps {
   abholArt: string;
   setAbholArt: (value: string) => void;
   logistikError: boolean;
+ // 🔽 NEU:
+  serienauftrag: boolean;
+  setSerienauftrag: (value: boolean) => void;
+  rhythmus: string;
+  setRhythmus: (value: string) => void;
+  onSerienTermineChange?: (
+    termine: { nr: number; liefer: string; abhol: string }[],
+  ) => void;
 }
 
 /* -------- Mini-Kalender -------- */
@@ -181,7 +189,11 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   setLieferArt,
   abholArt,
   setAbholArt,
-  logistikError,
+  logistikError,  serienauftrag,
+  setSerienauftrag,
+  rhythmus,
+  setRhythmus,
+  onSerienTermineChange,
 }) => {
   const today = todayDate();
   const minDate = minSelectableDate();
@@ -294,8 +306,6 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     setAbholCalOpen(false);
   };
 
-  const [serienauftrag, setSerienauftrag] = useState(false);
-  const [rhythmus, setRhythmus] = useState('');
 
   const rhythmusLabel: Record<string, string> = {
     taeglich: 'täglich',
@@ -398,6 +408,73 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       document.removeEventListener('keydown', handleKey);
     };
   }, []);
+    type SerienTermin = { nr: number; liefer: Date; abhol: Date };
+
+  const maxSerienTermine = 8;
+
+  const addDays = (date: Date, days: number) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+
+  const addRhythmusOffset = (start: Date, index: number): Date => {
+    const base = new Date(start);
+    switch (rhythmus) {
+      case 'taeglich':
+        return addDays(base, index);
+      case 'woechentlich':
+        return addDays(base, index * 7);
+      case 'zweiwoechentlich':
+        return addDays(base, index * 14);
+      case 'monatlich':
+        return new Date(
+          base.getFullYear(),
+          base.getMonth() + index,
+          base.getDate(),
+        );
+      default:
+        return base;
+    }
+  };
+
+  const serienTermine: SerienTermin[] = [];
+
+  if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
+    for (let i = 0; i < maxSerienTermine; i++) {
+      let liefer =
+        i === 0 ? new Date(lieferDatumDate) : addRhythmusOffset(lieferDatumDate, i);
+
+      let abhol =
+        i === 0 ? new Date(abholDatumDate) : addRhythmusOffset(abholDatumDate, i);
+
+      while (isDisabledDay(liefer)) {
+        liefer = addDays(liefer, 1);
+      }
+
+      while (abhol <= liefer || isDisabledDay(abhol)) {
+        abhol = addDays(abhol, 1);
+      }
+
+      serienTermine.push({ nr: i + 1, liefer, abhol });
+    }
+  }
+
+  // 👉 Termine nach oben ins Grundgerüst geben, in YYYY-MM-DD
+  useEffect(() => {
+    if (!onSerienTermineChange) return;
+
+    if (!serienauftrag || !rhythmus || !lieferDatumDate || !abholDatumDate) {
+      onSerienTermineChange([]);
+      return;
+    }
+
+    const plain = serienTermine.map((t) => ({
+      nr: t.nr,
+      liefer: toYMD(t.liefer),
+      abhol: toYMD(t.abhol),
+    }));
+
+    onSerienTermineChange(plain);
+  }, [serienauftrag, rhythmus, lieferDatum, abholDatum, serienTermine.length]);
+
 
   return (
     <div

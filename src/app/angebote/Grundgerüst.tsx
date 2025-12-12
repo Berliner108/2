@@ -146,6 +146,12 @@ export default function Formular() {
   const [lieferArt, setLieferArt] = useState('')
   const [abholArt, setAbholArt] = useState('')
   const [logistikError, setLogistikError] = useState(false)
+    const [serienauftrag, setSerienauftrag] = useState(false)
+  const [rhythmus, setRhythmus] = useState('')
+  const [serienTermine, setSerienTermine] = useState<
+    { nr: number; liefer: string; abhol: string }[]
+  >([])
+
 
   const [verfahrenError, setVerfahrenError] = useState(false)
   const verfahrenRef = useRef<HTMLDivElement>(null)
@@ -422,7 +428,12 @@ useEffect(() => {
       style: 'currency',
       currency: 'EUR',
     })
-
+ const formatDateDE = (value: string) =>
+    new Date(value).toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
   const selectedPromoScore = promoPackages
     .filter((p) => bewerbungOptionen.includes(p.id))
     .reduce((sum, p) => sum + p.score, 0)
@@ -816,7 +827,7 @@ useEffect(() => {
 </div>
 
 
-            <LogistikSection
+              <LogistikSection
               lieferDatum={lieferDatum}
               setLieferDatum={setLieferDatum}
               abholDatum={abholDatum}
@@ -826,7 +837,13 @@ useEffect(() => {
               abholArt={abholArt}
               setAbholArt={setAbholArt}
               logistikError={logistikError}
+              serienauftrag={serienauftrag}
+              setSerienauftrag={setSerienauftrag}
+              rhythmus={rhythmus}
+              setRhythmus={setRhythmus}
+              onSerienTermineChange={setSerienTermine}
             />
+
           </div>
         </div>
 
@@ -1063,6 +1080,30 @@ useEffect(() => {
   <strong>Abholart:</strong>{' '}
   {abholArt || 'Nicht angegeben'}
 </p>
+{/* Serienauftrag / Serien-Termine */}
+{serienauftrag && (
+  <>
+    <p>
+      <strong>Serienauftrag:</strong>{' '}
+      {rhythmus
+        ? `Ja (${rhythmus})`
+        : 'Ja (Rhythmus noch nicht gewählt)'}
+    </p>
+
+    {serienTermine.length > 0 && (
+      <div>
+        <strong>Serientermine:</strong>
+        <ul>
+          {serienTermine.map((t) => (
+            <li key={t.nr}>
+              #{t.nr}: {formatDateDE(t.liefer)} – {formatDateDE(t.abhol)}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </>
+)}
 
 {/* 7️⃣ Werbeoptionen */}
 <p>
