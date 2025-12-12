@@ -164,8 +164,8 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
           </p>
 
           <p className={styles.cardText2}>Material: {material}</p>
-          <p className={styles.cardText3}>Maße: {length} × {width} × {height} mm</p>
-          <p className={styles.cardText4}>Masse schwerstes Werkstück: {masse}</p>
+          <p className={styles.cardText3}>Maße größtes Werkstück: {length} × {width} × {height} mm</p>
+          <p className={styles.cardText4}>Masse schwerstes Werkstück: {masse} kg</p>
 
           <div className={styles.cardOrt}>
             <MapPin size={16} className={styles.ortIcon} />
