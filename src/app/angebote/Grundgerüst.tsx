@@ -425,6 +425,18 @@ useEffect(() => {
   setSelectedVerfahren(auswahl)
 }, [selectedOption1, selectedOption2])
 
+const lieferArtLabel: Record<string, string> = {
+  selbst: 'Ich liefere selbst',
+  abholung: 'Abholung an meinem Standort',
+};
+
+const abholArtLabel: Record<string, string> = {
+  selbst: 'Ich hole selbst ab',
+  anlieferung: 'Anlieferung an meinem Standort',
+};
+
+const formatLieferArt = (value: string) => lieferArtLabel[value] ?? value;
+const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
 
   const formatEUR = (cents: number) =>
@@ -1082,12 +1094,12 @@ useEffect(() => {
   {abholDatum || 'Noch kein Datum gewählt'}
 </p>
 <p>
-  <strong>Lieferart:</strong>{' '}
-  {lieferArt || 'Nicht angegeben'}
+  <strong>Warenausgabe:</strong>{' '}
+  {lieferArt ? formatLieferArt(lieferArt) : 'Nicht angegeben'}
 </p>
 <p>
-  <strong>Abholart:</strong>{' '}
-  {abholArt || 'Nicht angegeben'}
+  <strong>Warenrückgabe:</strong>{' '}
+  {abholArt ? formatAbholArt(abholArt) : 'Nicht angegeben'}
 </p>
 {/* Serienauftrag / Serien-Termine */}
 {serienauftrag && (
