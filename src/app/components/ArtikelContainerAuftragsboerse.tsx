@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
 import styles from './ArtikelContainerAuftragsboerse.module.css';
-import { Auftrag } from '../../data/dummyAuftraege';
+import type { Auftrag } from '@/lib/types/auftrag';
 
 type ArtikelContainerAuftragsboerseProps = {
   artikel: Auftrag;

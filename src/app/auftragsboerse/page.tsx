@@ -1,8 +1,13 @@
 import React, { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import AuftragsboerseSeite from './AuftragsboerseSeite';
+import { fetchBoersenJobs } from '@/lib/jobs-boerse';
 
-export default function Page() {
+export const dynamic = 'force-dynamic'; // optional, damit Börse immer live ist
+
+export default async function Page() {
+  const jobs = await fetchBoersenJobs();
+
   return (
     <Suspense
       fallback={
@@ -11,7 +16,7 @@ export default function Page() {
         </div>
       }
     >
-      <AuftragsboerseSeite />
+      <AuftragsboerseSeite jobs={jobs} />
     </Suspense>
   );
 }

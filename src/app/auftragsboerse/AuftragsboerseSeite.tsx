@@ -6,9 +6,8 @@ import styles from './auftragsboerse.module.css';
 import Navbar from '../components/navbar/Navbar'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { dummyAuftraege, Auftrag } from '../../data/dummyAuftraege';
 import ArtikelContainerAuftragsboerse from '../components/ArtikelContainerAuftragsboerse';
-
+import type { Auftrag } from '@/lib/types/auftrag';
 // Feste Verfahren
 const VERFAHREN = [
   'Nasslackieren','Pulverbeschichten','Verzinken','Eloxieren','Strahlen','Entlacken',
@@ -16,42 +15,13 @@ const VERFAHREN = [
   'Entzinken','Entzinnen','Entnickeln','Vernickeln','Entanodisieren','Entaluminieren','Enteloxieren',
 ] as const;
 
-// Maximalwerte aus Daten
-const maxValues = dummyAuftraege.reduce(
-  (acc, a: any) => ({
-    length: Math.max(acc.length, a.length),
-    width:  Math.max(acc.width,  a.width),
-    height: Math.max(acc.height, a.height),
-    masse:  Math.max(acc.masse,  parseFloat(a.masse)),
-  }),
-  { length: 0, width: 0, height: 0, masse: 0 }
-);
-
-// Rundung auf 1/2/5*10^n
-const niceCeil = (n: number) => {
-  if (n <= 0) return 0;
-  const exp = Math.floor(Math.log10(n));
-  const base = Math.pow(10, exp);
-  const m = n / base;
-  const nice = m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10;
-  return nice * base;
-};
-
-// Große, feste Mindestbereiche (genug Reserve)
-const FLOORS = {
-  length: 20000, // mm
-  width:   6000, // mm
-  height:  3000, // mm
-  masse:  20000, // kg
-};
-
-// Endgültige Slider-Limits
 const LIMITS = {
-  length: Math.max(FLOORS.length, niceCeil(maxValues.length * 2)),
-  width:  Math.max(FLOORS.width,  niceCeil(maxValues.width  * 2)),
-  height: Math.max(FLOORS.height, niceCeil(maxValues.height * 2)),
-  masse:  Math.max(FLOORS.masse,  niceCeil(maxValues.masse  * 3)),
+  length: 20000,
+  width: 6000,
+  height: 3000,
+  masse: 20000,
 };
+
 
 // Logistik normalisieren (neu bevorzugt, alte/abweichende Felder als Fallback)
 function normLogistik(a: any) {
@@ -71,15 +41,15 @@ function normLogistik(a: any) {
   };
 }
 
-export default function AuftragsboerseSeite() {
+export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
   const router   = useRouter();
   const pathname = usePathname();
   const sp       = useSearchParams();
 
   // Datenquelle robust (falls dateien optional)
-  const data: (Auftrag & { dateien?: { name: string; url: string }[] })[] = useMemo(
-    () => dummyAuftraege.map(a => ({ ...a, dateien: (a as any).dateien ?? [] })),
-    []
+ const data = useMemo(
+    () => jobs.map(a => ({ ...a, dateien: a.dateien ?? [] })),
+    [jobs]
   );
 
   // --- Refs & stabile Scroll-Position beim Filtern ---
