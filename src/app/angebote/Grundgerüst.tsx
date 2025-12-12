@@ -394,14 +394,20 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
     const res = await fetch('/api/auftrag-absenden', {
-      method: 'POST',
-      body: formData,
-    })
+  method: 'POST',
+  body: formData,
+})
 
-    if (!res.ok) {
-      console.error('Serverfehler mit Status:', res.status)
-      throw new Error('Fehler beim Absenden')
-    }
+if (!res.ok) {
+  let payload: any = null
+  try {
+    payload = await res.json()
+  } catch {}
+
+  console.error('API-Fehler:', res.status, payload)
+  throw new Error(payload?.details || 'Fehler beim Absenden')
+}
+
 
     setSuccessMessage(
       '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
