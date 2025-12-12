@@ -984,3 +984,9 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     margin-bottom: 0;    /* kein zusätzlicher Abstand nach unten */
   }
 }
+.charCounter {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+}

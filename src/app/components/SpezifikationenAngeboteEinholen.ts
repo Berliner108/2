@@ -281,7 +281,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'radio',
       name: 'verfahren',
       label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      options: ['Chemisch', 'Galvanisch']
     },
     
     {
@@ -327,7 +327,9 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'farbton',
-      label: 'Farbtonbezeichnung oder Artikelnummer'
+      label: 'Farbtonbezeichnung oder Artikelnummer',
+      maxLength: 40,      // 👈 z.B. 40 Zeichen
+      showCounter: true   // 👈 Counter anzeigen
     },
     {
       type: 'dropdown',
@@ -383,7 +385,10 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'farbton',
-      label: 'Farbtonbezeichnung oder Artikelnummer'
+      label: 'Farbtonbezeichnung oder Artikelnummer',
+      maxLength: 40,
+      showCounter: true
+      
     },
     {
       type: 'dropdown',
