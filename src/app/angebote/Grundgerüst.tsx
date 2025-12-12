@@ -362,6 +362,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   formData.append('abholDatum', abholDatum)
   formData.append('lieferArt', lieferArt)
   formData.append('abholArt', abholArt)
+    formData.append('serienauftragAktiv', serienauftrag ? 'true' : 'false')
+  formData.append('serienRhythmus', rhythmus || '')
+  formData.append('serienTermine', JSON.stringify(serienTermine))
+
 
   try {
     Object.entries(specSelections).forEach(([key, value]) => {
@@ -483,11 +487,16 @@ useEffect(() => {
     setSelectedVerfahren([]);
 
     // Logistik
+        // Logistik
     setLieferDatum('');
     setAbholDatum('');
     setLieferArt('');
     setAbholArt('');
     setLogistikError(false);
+    setSerienauftrag(false);
+    setRhythmus('');
+    setSerienTermine([]);
+
 
     // Materialgüte & Abmessungen
     setMaterialGuete('');
