@@ -407,8 +407,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
-  }, []);
-    type SerienTermin = { nr: number; liefer: Date; abhol: Date };
+  }, []);  type SerienTermin = { nr: number; liefer: Date; abhol: Date };
 
   const maxSerienTermine = 8;
 
@@ -419,15 +418,15 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     const base = new Date(start);
     switch (rhythmus) {
       case 'taeglich':
-        return addDays(base, index);
+        return addDays(base, index);        // jeden Tag
       case 'woechentlich':
-        return addDays(base, index * 7);
+        return addDays(base, index * 7);    // alle 7 Tage
       case 'zweiwoechentlich':
-        return addDays(base, index * 14);
+        return addDays(base, index * 14);   // alle 14 Tage
       case 'monatlich':
         return new Date(
           base.getFullYear(),
-          base.getMonth() + index,
+          base.getMonth() + index,          // jeden Monat
           base.getDate(),
         );
       default:
@@ -437,25 +436,37 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   const serienTermine: SerienTermin[] = [];
 
+  // ❗ Wichtig: jetzt alle Termine ZWISCHEN Start- und Enddatum berechnen
   if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
-    for (let i = 0; i < maxSerienTermine; i++) {
-      let liefer =
-        i === 0 ? new Date(lieferDatumDate) : addRhythmusOffset(lieferDatumDate, i);
+    let index = 0;
+    let current = new Date(lieferDatumDate); // Startdatum
 
-      let abhol =
-        i === 0 ? new Date(abholDatumDate) : addRhythmusOffset(abholDatumDate, i);
+    while (index < maxSerienTermine && current <= abholDatumDate) {
+      let liefer = new Date(current);
 
-      while (isDisabledDay(liefer)) {
+      // auf nächsten gültigen Arbeitstag schieben, aber nicht über Enddatum hinaus
+      while (isDisabledDay(liefer) && liefer <= abholDatumDate) {
         liefer = addDays(liefer, 1);
       }
 
-      while (abhol <= liefer || isDisabledDay(abhol)) {
-        abhol = addDays(abhol, 1);
+      if (liefer > abholDatumDate) {
+        break;
       }
 
-      serienTermine.push({ nr: i + 1, liefer, abhol });
+      // Für jetzt: Zustellung am selben Tag wie Anlieferung
+      const abhol = new Date(liefer);
+
+      serienTermine.push({
+        nr: index + 1,
+        liefer,
+        abhol,
+      });
+
+      index += 1;
+      current = addRhythmusOffset(lieferDatumDate, index);
     }
   }
+
 
   // 👉 Termine nach oben ins Grundgerüst geben, in YYYY-MM-DD
   useEffect(() => {
