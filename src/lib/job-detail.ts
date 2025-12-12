@@ -5,8 +5,8 @@ import type { Auftrag } from '@/lib/types/auftrag'
 type JobRow = {
   id: string
   description: string | null
-  materialguete: string | null
-  materialguete_custom: string | null
+  material_guete: string | null
+  material_guete_custom: string | null
   laenge_mm: number | null
   breite_mm: number | null
   hoehe_mm: number | null
@@ -39,8 +39,8 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
       `
       id,
       description,
-      materialguete,
-      materialguete_custom,
+      material_guete,
+      material_guete_custom,
       laenge_mm,
       breite_mm,
       hoehe_mm,
@@ -113,9 +113,9 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
   if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
 
   const material =
-    job.materialguete === 'Andere' && job.materialguete_custom
-      ? `Andere (${job.materialguete_custom})`
-      : job.materialguete ?? 'k. A.'
+    job.material_guete === 'Andere' && job.material_guete_custom
+      ? `Andere (${job.material_guete_custom})`
+      : job.material_guete ?? 'k. A.'
 
   const length = job.laenge_mm ?? 0
   const width = job.breite_mm ?? 0
