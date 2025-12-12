@@ -13,6 +13,8 @@ export interface Specification {
   options?: string[];
   position?: 'left' | 'top';
   tooltip?: string;
+  maxLength?: number;     // 👈 NEU
+  showCounter?: boolean;  // 👈 NEU
 }
 
 interface VerfahrenUndLogistikProps {
@@ -277,7 +279,10 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           spec.name,
         );
 
-        if (spec.type === 'text') {
+               if (spec.type === 'text') {
+          const maxLen = spec.maxLength ?? 255;
+          const value = (specSelections[selectionKey] as string) || '';
+
           return (
             <div key={selectionKey} className={styles.inputRow}>
               <div className={styles.labelRowNeutral}>
@@ -295,7 +300,8 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               <input
                 type="text"
                 className={styles.inputField2}
-                value={(specSelections[selectionKey] as string) || ''}
+                value={value}
+                maxLength={maxLen} // 👈 Begrenzung greift hier
                 onChange={(e) =>
                   setSpecSelections((prev) => ({
                     ...prev,
@@ -303,9 +309,16 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                   }))
                 }
               />
+
+              {spec.showCounter && (
+                <div className={styles.charCounter}>
+                  {value.length}/{maxLen}
+                </div>
+              )}
             </div>
           );
         }
+
 
         if (spec.type === 'dropdown') {
           const currentValue = (specSelections[selectionKey] as string) || '';
