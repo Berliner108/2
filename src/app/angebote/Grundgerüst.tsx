@@ -374,21 +374,24 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
   try {
-    Object.entries(specSelections).forEach(([key, value]) => {
-  if (Array.isArray(value)) {
-    value.forEach((v, idx) =>
-      formData.append(`spezifikationen[${key}][${idx}]`, v),
-    )
-  } else {
-    formData.append(`spezifikationen[${key}]`, value)
-  }
-})
-formData.append('verfahren1', selectedOption1)
-if (selectedOption2) {
-  formData.append('verfahren2', selectedOption2)
-}
+    // Spezifikationen als JSON bündeln (viel einfacher im Backend)
+    formData.append('specSelections', JSON.stringify(specSelections))
 
-formData.append('beschreibung', beschreibung.trim())
+    // Verfahren
+    formData.append('verfahren1', selectedOption1)
+    if (selectedOption2) {
+      formData.append('verfahren2', selectedOption2)
+    }
+
+    // Beschreibung
+    formData.append('beschreibung', beschreibung.trim())
+
+    // Abmessungen & Masse
+    formData.append('laenge', laenge)
+    formData.append('breite', breite)
+    formData.append('hoehe', hoehe)
+    formData.append('masse', masse)
+
 
     const res = await fetch('/api/auftrag-absenden', {
       method: 'POST',

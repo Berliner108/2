@@ -1,41 +1,48 @@
-// src/app/api/auftrag-absenden/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 
-type PromoId = 'startseite' | 'suche' | 'premium'
-
-const PROMO_CONFIG: Record<PromoId, { score: number }> = {
-  startseite: { score: 30 },
-  suche: { score: 15 },
-  premium: { score: 12 },
+const PROMO_SCORES: Record<string, number> = {
+  startseite: 30,
+  suche: 15,
+  premium: 12,
 }
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = await supabaseServer()
 
-    // 🔐 User holen
+    // User holen (damit wir user_id speichern können)
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Nicht eingeloggt' }, { status: 401 })
+    if (authError) {
+      console.error('auth error:', authError)
+    }
+    if (!user) {
+      return NextResponse.json(
+        { error: 'not_authenticated' },
+        { status: 401 },
+      )
     }
 
     const formData = await req.formData()
 
-    // ---------- Grunddaten ----------
+    // ---------- einfache Felder ----------
     const agbAccepted = formData.get('agbAccepted') === 'true'
-    const beschreibung = String(formData.get('beschreibung') ?? '').trim()
 
     const materialguete = String(formData.get('materialguete') ?? '')
     const andereMaterialguete = String(
       formData.get('andereMaterialguete') ?? '',
-    ).trim()
+    )
 
-    const lieferDatum = String(formData.get('lieferDatum') ?? '') // YYYY-MM-DD
+    const laenge = String(formData.get('laenge') ?? '')
+    const breite = String(formData.get('breite') ?? '')
+    const hoehe = String(formData.get('hoehe') ?? '')
+    const masse = String(formData.get('masse') ?? '')
+
+    const lieferDatum = String(formData.get('lieferDatum') ?? '')
     const abholDatum = String(formData.get('abholDatum') ?? '')
     const lieferArt = String(formData.get('lieferArt') ?? '')
     const abholArt = String(formData.get('abholArt') ?? '')
@@ -43,100 +50,159 @@ export async function POST(req: NextRequest) {
     const verfahren1 = String(formData.get('verfahren1') ?? '')
     const verfahren2 = String(formData.get('verfahren2') ?? '')
 
-    // ---------- Promo-Optionen ----------
-    const promoSelected: PromoId[] = []
-    for (const [key, value] of formData.entries()) {
-      if (!key.startsWith('bewerbungOptionen[')) continue
-      const id = String(value) as PromoId
-      if (id in PROMO_CONFIG && !promoSelected.includes(id)) {
-        promoSelected.push(id)
+    const beschreibung = String(formData.get('beschreibung') ?? '')
+
+    const serienauftragAktiv =
+      formData.get('serienauftragAktiv') === 'true'
+    const serienRhythmus = String(formData.get('serienRhythmus') ?? '')
+    const serienTermineRaw = String(formData.get('serienTermine') ?? '[]')
+
+    let serienTermine: any[] = []
+    try {
+      serienTermine = JSON.parse(serienTermineRaw || '[]')
+    } catch {
+      serienTermine = []
+    }
+
+    // Spezifikationen (JSON aus dem Formular)
+    let specs: Record<string, any> = {}
+    const specsJson = formData.get('specSelections')
+    if (typeof specsJson === 'string' && specsJson.trim()) {
+      try {
+        specs = JSON.parse(specsJson)
+      } catch (err) {
+        console.warn('specSelections JSON parse error:', err)
       }
     }
 
-    const promoScore = promoSelected.reduce(
-      (sum, id) => sum + PROMO_CONFIG[id].score,
+    // Bewerbung / Promo-Optionen
+    const bewerbungOptionen: string[] = []
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('bewerbungOptionen[')) {
+        bewerbungOptionen.push(String(value))
+      }
+    }
+
+    const promoScore = bewerbungOptionen.reduce(
+      (sum, id) => sum + (PROMO_SCORES[id] ?? 0),
       0,
     )
 
-    // ---------- Minimal-Validierung ----------
-    if (!lieferDatum || !abholDatum || !lieferArt || !abholArt) {
-      return NextResponse.json(
-        { error: 'Logistik unvollständig' },
-        { status: 400 },
-      )
-    }
-    if (!verfahren1) {
-      return NextResponse.json(
-        { error: 'Mindestens ein Verfahren ist erforderlich' },
-        { status: 400 },
-      )
-    }
-    if (!agbAccepted) {
-      return NextResponse.json(
-        { error: 'AGB müssen akzeptiert werden' },
-        { status: 400 },
-      )
-    }
-
-    const materialFinal =
-      materialguete === 'Andere' && andereMaterialguete
-        ? andereMaterialguete
-        : materialguete || null
-
-    // ---------- Job in jobs eintragen ----------
+    // ---------- Job in DB anlegen ----------
     const { data: job, error: jobError } = await supabase
       .from('jobs')
       .insert({
-        owner_user_id: user.id,
+        user_id: user.id,
         description: beschreibung || null,
-        material: materialFinal,
-        warenausgabe_datum: lieferDatum,
-        rueckgabe_datum: abholDatum,
-        liefer_art: lieferArt,
-        abhol_art: abholArt,
-        promo_score: promoScore,
-        promo_flags: promoSelected, // jsonb[]
+        materialguete: materialguete || null,
+        materialguete_custom:
+          materialguete === 'Andere' && andereMaterialguete
+            ? andereMaterialguete
+            : null,
+        laenge_mm: laenge ? Number(laenge) : null,
+        breite_mm: breite ? Number(breite) : null,
+        hoehe_mm: hoehe ? Number(hoehe) : null,
+        masse_kg: masse ? Number(masse) : null,
+        verfahren_1: verfahren1 || null,
+        verfahren_2: verfahren2 || null,
+        liefer_datum: lieferDatum || null,
+        rueck_datum: abholDatum || null,
+        liefer_art: lieferArt || null,
+        rueck_art: abholArt || null,
         agb_accepted: agbAccepted,
-        status: 'open',
-        published: true,
+        promo_score: promoScore,
+        promo_flags: bewerbungOptionen,
+        serienauftrag_aktiv: serienauftragAktiv,
+        serien_rhythmus: serienRhythmus || null,
+        serien_termine: serienTermine,
+        specs,
+        published: true, // erstmal sichtbar
       })
       .select('id')
       .single()
 
     if (jobError || !job) {
-      console.error('Job insert error', jobError)
+      console.error('job insert error:', jobError)
       return NextResponse.json(
-        { error: 'Fehler beim Speichern des Auftrags' },
+        { error: 'job_insert_failed', details: jobError?.message },
         { status: 500 },
       )
     }
 
     const jobId = job.id as string
 
-    // ---------- Verfahren in job_procedures ----------
-    const proceduresToInsert = [
-      verfahren1 && { job_id: jobId, sort_index: 1, name: verfahren1 },
-      verfahren2 && { job_id: jobId, sort_index: 2, name: verfahren2 },
-    ].filter(Boolean) as { job_id: string; sort_index: number; name: string }[]
+    // ---------- Dateien ins Storage hochladen ----------
+    const fileRows: {
+      job_id: string
+      storage_path: string
+      file_name: string
+      file_type: 'image' | 'attachment'
+    }[] = []
 
-    if (proceduresToInsert.length > 0) {
-      const { error: procError } = await supabase
-        .from('job_procedures')
-        .insert(proceduresToInsert)
+    // Alle FormData-Files durchgehen
+    for (const [key, value] of formData.entries()) {
+      if (!(value instanceof File)) continue
 
-      if (procError) {
-        console.error('job_procedures insert error', procError)
-        // optional: später mal Rollback/Logik ergänzen
+      const isImage = key.startsWith('bilder[')
+      const isAttachment = key.startsWith('dateien[')
+      if (!isImage && !isAttachment) continue
+
+      const kind: 'image' | 'attachment' = isImage ? 'image' : 'attachment'
+
+      const random = Math.random().toString(36).slice(2)
+      const safeName = value.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')
+      const path = `${user.id}/${jobId}/${kind}/${Date.now()}-${random}-${safeName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('job-files')
+        .upload(path, value, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: value.type || undefined,
+        })
+
+      if (uploadError) {
+        console.error('storage upload error:', uploadError)
+        continue // Job bleibt trotzdem bestehen
       }
+
+      fileRows.push({
+        job_id: jobId,
+        storage_path: path,
+        file_name: value.name,
+        file_type: kind,
+      })
     }
 
-    // 🔜 job_files & job_procedure_specs machen wir danach
+    if (fileRows.length > 0) {
+      const { error: filesError } = await supabase
+        .from('job_files')
+        .insert(fileRows)
+
+      if (filesError) {
+        console.error('job_files insert error:', filesError)
+      }
+
+      // optional: counts nachziehen
+      const imagesCount = fileRows.filter((f) => f.file_type === 'image').length
+      const filesCount = fileRows.filter(
+        (f) => f.file_type === 'attachment',
+      ).length
+
+      await supabase
+        .from('jobs')
+        .update({
+          images_count: imagesCount,
+          files_count: filesCount,
+        })
+        .eq('id', jobId)
+    }
 
     return NextResponse.json({ ok: true, jobId }, { status: 200 })
-  } catch (err) {
-    console.error('POST /api/auftrag-absenden unexpected', err)
+  } catch (err: any) {
+    console.error('UNHANDLED ERROR in /api/auftrag-absenden:', err)
     return NextResponse.json(
-      { error: 'Unerwarteter Fehler beim Absenden' },
+      { error: 'unexpected', details: String(err?.message ?? err) },
       { status: 500 },
     )
   }
