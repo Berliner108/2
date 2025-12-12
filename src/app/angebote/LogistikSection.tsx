@@ -405,95 +405,107 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
       document.removeEventListener('keydown', handleKey);
     };
   }, []);
+/* 👉 Serienlogik: Start/Ende + Rhythmus → Serien-Termine */
+type SerienTermin = { nr: number; liefer: Date; abhol: Date };
 
-  /* 👉 Serienlogik: Start/Ende + Rhythmus → Termine */
-  type SerienTermin = { nr: number; liefer: Date; abhol: Date };
+const maxSerienTermine = 8;
 
-  const maxSerienTermine = 8;
+const addDays = (date: Date, days: number) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 
-  const addDays = (date: Date, days: number) =>
-    new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+// wie viele Tage zwischen zwei Terminen (Rhythmus)
+const getStepDaysForRhythmus = (r: string): number => {
+  switch (r) {
+    case 'taeglich':
+      return 1;
+    case 'woechentlich':
+      return 7;
+    case 'zweiwoechentlich':
+      return 14;
+    case 'monatlich':
+      return 30; // pragmatisch, nicht kalendermonatsgenau
+    default:
+      return 0;
+  }
+};
 
-  const addRhythmusOffset = (start: Date, index: number): Date => {
-    const base = new Date(start);
-    switch (rhythmus) {
-      case 'taeglich':
-        return addDays(base, index);          // jeden Tag
-      case 'woechentlich':
-        return addDays(base, index * 7);      // alle 7 Tage
-      case 'zweiwoechentlich':
-        return addDays(base, index * 14);     // alle 14 Tage
-      case 'monatlich':
-        return new Date(
-          base.getFullYear(),
-          base.getMonth() + index,           // jeden Monat
-          base.getDate(),
-        );
-      default:
-        return base;
-    }
-  };
+const serienTermine: SerienTermin[] = [];
 
-  const serienTermine: SerienTermin[] = [];
+// 👉 Termine aus Start-/Enddatum + Rhythmus berechnen
+if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
+  const stepDays = getStepDaysForRhythmus(rhythmus);
 
-  // 👉 Termine aus Start-/Enddatum + Rhythmus berechnen
-  if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
-    // Aufenthalt des ersten Auftrags in Tagen (z.B. 8 Tage)
-    const diffMs = abholDatumDate.getTime() - lieferDatumDate.getTime();
-    const aufenthalt = Math.max(
-      1,
-      Math.round(diffMs / (1000 * 60 * 60 * 24)),
-    );
+  if (stepDays > 0) {
+    const endDate = abholDatumDate; // letzte Rückgabe darf nicht NACH diesem Datum sein
+    let nr = 1;
+    let currentLiefer = new Date(lieferDatumDate);
 
-    for (let i = 0; i < maxSerienTermine; i++) {
-      // Anlieferungsdatum für diesen Serien-Termin
-      let liefer = addRhythmusOffset(lieferDatumDate, i);
+    while (nr <= maxSerienTermine && currentLiefer <= endDate) {
+      // 1) Anlieferungsdatum für diesen Termin
+      let liefer = new Date(currentLiefer);
 
-      // falls auf ein gesperrtes Datum fällt → auf nächsten gültigen Tag schieben
-      while (isDisabledDay(liefer)) {
+      // falls auf gesperrten Tag → nach vorne schieben
+      while (isDisabledDay(liefer) && liefer <= endDate) {
         liefer = addDays(liefer, 1);
       }
+      if (liefer > endDate) break;
 
-      // Rückgabedatum = Anlieferung + Aufenthaltstage
-      let abhol = addDays(liefer, aufenthalt);
+      // 2) Rückgabe = Anlieferung + stepDays (z.B. +7 bei wöchentlich)
+      let abhol = addDays(liefer, stepDays);
 
-      // auch hier: notfalls von gesperrten Tagen wegschieben
+      // Rückgabe auch von gesperrten Tagen wegschieben
       while (isDisabledDay(abhol)) {
         abhol = addDays(abhol, 1);
       }
 
-      serienTermine.push({
-        nr: i + 1,
-        liefer,
-        abhol,
-      });
+      // wenn Rückgabe schon hinter dem Enddatum liegen würde → diesen Termin nicht mehr anzeigen
+      if (abhol > endDate) break;
+
+      serienTermine.push({ nr, liefer, abhol });
+
+      // 3) Nächster Termin
+      nr += 1;
+      currentLiefer = addDays(liefer, stepDays);
     }
   }
+}
 
+
+const lieferArtLabelMap: Record<string, string> = {
+  selbst: 'Ich liefere selbst',
+  abholung: 'Abholung an meinem Standort',
+};
+
+const abholArtLabelMap: Record<string, string> = {
+  selbst: 'Ich hole selbst ab',
+  anlieferung: 'Anlieferung an meinem Standort',
+};
 
   // Termine in Grundgerüst melden
-  useEffect(() => {
-    if (!onSerienTermineChange) return;
+// Termine in Grundgerüst melden
+useEffect(() => {
+  if (!onSerienTermineChange) return;
 
-    if (!serienauftrag || !rhythmus || !lieferDatumDate || !abholDatumDate) {
-      onSerienTermineChange([]);
-      return;
-    }
+  if (!serienauftrag || !rhythmus || !lieferDatumDate || !abholDatumDate) {
+    onSerienTermineChange([]);
+    return;
+  }
 
-    const plain = serienTermine.map((t) => ({
-      nr: t.nr,
-      liefer: toYMD(t.liefer),
-      abhol: toYMD(t.abhol),
-    }));
+  const plain = serienTermine.map((t) => ({
+    nr: t.nr,
+    liefer: toYMD(t.liefer),
+    abhol: toYMD(t.abhol),
+  }));
 
-    onSerienTermineChange(plain);
-  }, [
-    serienauftrag,
-    rhythmus,
-    lieferDatum,
-    abholDatum,
-    JSON.stringify(serienTermine),
-  ]);
+  onSerienTermineChange(plain);
+}, [
+  serienauftrag,
+  rhythmus,
+  lieferDatum,
+  abholDatum,
+  JSON.stringify(serienTermine),
+]);
+
 
   return (
     <div
@@ -612,31 +624,35 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Timeline Einzelauftrag */}
-      {lieferDatum && abholDatum && (
-        <div className={styles.timelineBox}>
-          <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
-          <ul className={styles.timelineList}>
-            <li>
-              <strong>📥 Anlieferung:</strong>{' '}
-              {formatDateDE(lieferDatum)} –{' '}
-              {lieferArt || 'Lieferart noch offen'}
-            </li>
-            <li>
-              <strong>📤 Abholung:</strong>{' '}
-              {formatDateDE(abholDatum)} –{' '}
-              {abholArt || 'Abholart noch offen'}
-            </li>
-            {aufenthaltTage !== null && (
-              <li>
-                <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
-                {aufenthaltTage} Tage
-              </li>
-            )}
-          </ul>
-        </div>
+{/* Timeline Einzelauftrag */}
+{lieferDatum && abholDatum && (
+  <div className={styles.timelineBox}>
+    <h5 className={styles.timelineTitle}>Dein Terminplan</h5>
+    <ul className={styles.timelineList}>
+      <li>
+        <strong>📥 Anlieferung:</strong>{' '}
+        {formatDateDE(lieferDatum)} –{' '}
+        {lieferArt
+          ? lieferArtLabelMap[lieferArt] ?? lieferArt
+          : 'Lieferart noch offen'}
+      </li>
+      <li>
+        <strong>📤 Abholung:</strong>{' '}
+        {formatDateDE(abholDatum)} –{' '}
+        {abholArt
+          ? abholArtLabelMap[abholArt] ?? abholArt
+          : 'Abholart noch offen'}
+      </li>
+      {aufenthaltTage !== null && (
+        <li>
+          <strong>🕒 Aufenthalt beim Anbieter:</strong>{' '}
+          {aufenthaltTage} Tage
+        </li>
       )}
+    </ul>
+  </div>
+)}
+
 
       {/* Serienauftrag-Einstellungen */}
       <div className={styles.serienauftragRow}>
