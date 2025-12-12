@@ -71,6 +71,12 @@ const oswald = Oswald({
   subsets: ['latin'],
   weight: ['400', '700'],
 })
+const rhythmusLabel: Record<string, string> = {
+  taeglich: 'täglich',
+  woechentlich: 'wöchentlich',
+  zweiwoechentlich: 'alle zwei Wochen',
+  monatlich: 'monatlich',
+};
 
 // Fiktive Promo-Pakete (nur Frontend)
 const promoPackages = [

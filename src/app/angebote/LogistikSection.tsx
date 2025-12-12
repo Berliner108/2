@@ -739,8 +739,8 @@ useEffect(() => {
             <strong>{rhythmusLabel[rhythmus] ?? rhythmus}</strong>
           </p>
           <p className={styles.seriesHint}>
-            Die exakten Folgetermine werden mit dem Anbieter im Detail
-            abgestimmt. Hier siehst du die grundlegende Planung für deinen
+            Die exakten Folgetermine kannst du mit dem Beschichter im Detail
+            abstimmen. Hier siehst du die grundlegende Planung für deinen
             wiederkehrenden Auftrag.
           </p>
         </div>
@@ -765,7 +765,7 @@ useEffect(() => {
                     })}
                   </strong>
                   {' · '}
-                  📤 Rückgabe:{' '}
+                  📤 Warenrückgabe:{' '}
                   <strong>
                     {t.abhol.toLocaleDateString('de-DE', {
                       day: '2-digit',
