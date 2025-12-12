@@ -427,7 +427,6 @@ if (!res.ok) {
 
     useEffect(() => {
     // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
-    // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
     const t = setTimeout(() => setBootLoading(false), 400) // kleiner Delay, damit man den Loader sieht
     return () => clearTimeout(t)
   }, [])
