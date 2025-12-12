@@ -90,36 +90,43 @@ export async function POST(req: NextRequest) {
 
     // ---------- Job in DB anlegen ----------
     const { data: job, error: jobError } = await supabase
-      .from('jobs')
-      .insert({
-        user_id: user.id,
-        description: beschreibung || null,
-        materialguete: materialguete || null,
-        materialguete_custom:
-          materialguete === 'Andere' && andereMaterialguete
-            ? andereMaterialguete
-            : null,
-        laenge_mm: laenge ? Number(laenge) : null,
-        breite_mm: breite ? Number(breite) : null,
-        hoehe_mm: hoehe ? Number(hoehe) : null,
-        masse_kg: masse ? Number(masse) : null,
-        verfahren_1: verfahren1 || null,
-        verfahren_2: verfahren2 || null,
-        liefer_datum: lieferDatum || null,
-        rueck_datum: abholDatum || null,
-        liefer_art: lieferArt || null,
-        rueck_art: abholArt || null,
-        agb_accepted: agbAccepted,
-        promo_score: promoScore,
-        promo_flags: bewerbungOptionen,
-        serienauftrag_aktiv: serienauftragAktiv,
-        serien_rhythmus: serienRhythmus || null,
-        serien_termine: serienTermine,
-        specs,
-        published: true, // erstmal sichtbar
-      })
-      .select('id')
-      .single()
+  .from('jobs')
+  .insert({
+    user_id: user.id,
+    description: beschreibung || null,
+    materialguete: materialguete || null,
+    materialguete_custom:
+      materialguete === 'Andere' && andereMaterialguete
+        ? andereMaterialguete
+        : null,
+    laenge_mm: laenge ? Number(laenge) : null,
+    breite_mm: breite ? Number(breite) : null,
+    hoehe_mm: hoehe ? Number(hoehe) : null,
+    masse_kg: masse ? Number(masse) : null,
+    verfahren_1: verfahren1 || null,
+    verfahren_2: verfahren2 || null,
+
+    // 🔴 ALT (falsch)
+    // liefer_datum: lieferDatum || null,
+    // rueck_datum:  abholDatum || null,
+
+    // ✅ NEU (genau wie in der DB)
+    liefer_datum_utc: lieferDatum || null,
+    rueck_datum_utc:  abholDatum || null,
+
+    liefer_art: lieferArt || null,
+    rueck_art: abholArt || null,
+    agb_accepted: agbAccepted,
+    promo_score: promoScore,
+    promo_flags: bewerbungOptionen,
+    serienauftrag_aktiv: serienauftragAktiv,
+    serien_rhythmus: serienRhythmus || null,
+    serien_termine: serienTermine,
+    specs,
+    published: true,
+  })
+  .select('id')
+  .single()
 
     if (jobError || !job) {
       console.error('job insert error:', jobError)
