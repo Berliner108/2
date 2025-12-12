@@ -473,7 +473,14 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     }));
 
     onSerienTermineChange(plain);
-  }, [serienauftrag, rhythmus, lieferDatum, abholDatum, serienTermine.length]);
+  }, [
+    serienauftrag,
+    rhythmus,
+    lieferDatum,
+    abholDatum,
+    JSON.stringify(serienTermine),
+  ]);
+
 
 
   return (
@@ -697,6 +704,41 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
           </p>
         </div>
       )}
+            {/* Serientermine-Liste (max. 8) */}
+      {serienauftrag && rhythmus && serienTermine.length > 0 && (
+        <div className={styles.seriesScheduleBox}>
+          <h5 className={styles.seriesTitle}>
+            Geplante Serien-Termine (max. 8)
+          </h5>
+          <ol className={styles.seriesScheduleList}>
+            {serienTermine.map((t) => (
+              <li key={t.nr} className={styles.seriesScheduleItem}>
+                <span className={styles.seriesBadge}>#{t.nr}</span>
+                <span>
+                  📥 Anlieferung:{' '}
+                  <strong>
+                    {t.liefer.toLocaleDateString('de-DE', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </strong>
+                  {' · '}
+                  📤 Rückgabe:{' '}
+                  <strong>
+                    {t.abhol.toLocaleDateString('de-DE', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </strong>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
 
       {logistikError && (
         <motion.p
