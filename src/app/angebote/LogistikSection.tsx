@@ -418,15 +418,15 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
     const base = new Date(start);
     switch (rhythmus) {
       case 'taeglich':
-        return addDays(base, index);
+        return addDays(base, index);          // jeden Tag
       case 'woechentlich':
-        return addDays(base, index * 7);
+        return addDays(base, index * 7);      // alle 7 Tage
       case 'zweiwoechentlich':
-        return addDays(base, index * 14);
+        return addDays(base, index * 14);     // alle 14 Tage
       case 'monatlich':
         return new Date(
           base.getFullYear(),
-          base.getMonth() + index,
+          base.getMonth() + index,           // jeden Monat
           base.getDate(),
         );
       default:
@@ -436,34 +436,40 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
 
   const serienTermine: SerienTermin[] = [];
 
+  // 👉 Termine aus Start-/Enddatum + Rhythmus berechnen
   if (serienauftrag && rhythmus && lieferDatumDate && abholDatumDate) {
-    let index = 0;
-    let current = new Date(lieferDatumDate); // Startdatum
+    // Aufenthalt des ersten Auftrags in Tagen (z.B. 8 Tage)
+    const diffMs = abholDatumDate.getTime() - lieferDatumDate.getTime();
+    const aufenthalt = Math.max(
+      1,
+      Math.round(diffMs / (1000 * 60 * 60 * 24)),
+    );
 
-    // so lange zwischen Start und Ende + max. 8
-    while (index < maxSerienTermine && current <= abholDatumDate) {
-      let liefer = new Date(current);
+    for (let i = 0; i < maxSerienTermine; i++) {
+      // Anlieferungsdatum für diesen Serien-Termin
+      let liefer = addRhythmusOffset(lieferDatumDate, i);
 
-      // auf nächsten gültigen Arbeitstag schieben
-      while (isDisabledDay(liefer) && liefer <= abholDatumDate) {
+      // falls auf ein gesperrtes Datum fällt → auf nächsten gültigen Tag schieben
+      while (isDisabledDay(liefer)) {
         liefer = addDays(liefer, 1);
       }
 
-      if (liefer > abholDatumDate) break;
+      // Rückgabedatum = Anlieferung + Aufenthaltstage
+      let abhol = addDays(liefer, aufenthalt);
 
-      // 👉 hier: Anlieferung & Rückgabe am selben Tag
-      const abhol = new Date(liefer);
+      // auch hier: notfalls von gesperrten Tagen wegschieben
+      while (isDisabledDay(abhol)) {
+        abhol = addDays(abhol, 1);
+      }
 
       serienTermine.push({
-        nr: index + 1,
+        nr: i + 1,
         liefer,
         abhol,
       });
-
-      index += 1;
-      current = addRhythmusOffset(lieferDatumDate, index);
     }
   }
+
 
   // Termine in Grundgerüst melden
   useEffect(() => {
