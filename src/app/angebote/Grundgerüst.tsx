@@ -1119,11 +1119,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     <p>
       <strong>Serienauftrag:</strong>{' '}
       {rhythmus
-        ? `Ja (${rhythmus})`
+        ? `Ja (${rhythmusLabel[rhythmus] ?? rhythmus})`
         : 'Ja (Rhythmus noch nicht gewählt)'}
     </p>
-
     {serienTermine.length > 0 && (
+
       <div>
         <strong>Serientermine:</strong>
         <ul>
