@@ -4,10 +4,10 @@ import { supabaseServer } from '@/lib/supabase-server'
 import type { Auftrag } from '@/lib/types/auftrag'
 
 type ProfileRow = {
-  plz: string | null
-  ort: string | null
   account_type: string | null
+  address: { zip?: string; city?: string } | null
 }
+
 
 type JobRow = {
   id: string
@@ -67,10 +67,9 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       serien_rhythmus,
       serien_termine,
       profiles (
-        plz,
-        ort,
-        account_type
-      )
+  account_type,
+  address
+)
     `
     )
     .eq('published', true)
@@ -117,16 +116,17 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     const warenannahmeArt = job.rueck_art ?? ''
 
     // 5) Standort aus profiles (PLZ + Ort)
-    const profile = job.profiles?.[0] ?? null
-    const plz = profile?.plz ?? ''
-    const ort = profile?.ort ?? ''
-    const standort =
-      plz && ort ? `${plz} ${ort}` : plz || ort || 'Österreich'
+  const profile = job.profiles?.[0] ?? null
+const zip = profile?.address?.zip ?? ''
+const city = profile?.address?.city ?? ''
+const standort = (zip || city) ? `${zip} ${city}`.trim() : 'Österreich'
+
 
     // 6) Gewerblich / Privat aus account_type
-    const accountType = profile?.account_type ?? ''
-    const gewerblich = accountType === 'gewerblich'
-    const privat = accountType === 'privat'
+ const accountType = profile?.account_type ?? 'business'
+const gewerblich = accountType === 'business'
+const privat = accountType === 'private'
+
 
     // 7) Promo / gesponsert
     const gesponsert = (job.promo_score ?? 0) > 0
