@@ -37,6 +37,7 @@ type JobFileRow = {
   bucket: string
   path: string
   original_name: string | null
+  created_at?: string
 }
 
 export async function fetchBoersenJobs(): Promise<Auftrag[]> {
@@ -95,22 +96,25 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const profileById = new Map<string, ProfileRow>()
   for (const p of (profileData ?? []) as ProfileRow[]) profileById.set(p.id, p)
 
-  // 3) job_files holen (Bilder + Dokumente)
+  // 3) job_files holen (für Titelbild reicht: nur images!)
   const jobIds = jobs.map((j) => j.id)
   const { data: filesData, error: filesError } = await supabase
     .from('job_files')
-    .select('job_id, kind, bucket, path, original_name')
+    .select('job_id, kind, bucket, path, original_name, created_at')
     .in('job_id', jobIds)
+    .eq('kind', 'image') // ✅ Börse: nur Bilder
+    .order('created_at', { ascending: true }) // ✅ erstes Bild = Titelbild
 
   if (filesError) {
     console.error('fetchBoersenJobs job_files error:', filesError)
   }
 
-  const filesByJob = new Map<string, JobFileRow[]>()
+  // Map: job_id -> erstes Bild
+  const titleImgByJob = new Map<string, string>()
   for (const f of ((filesData ?? []) as unknown as JobFileRow[])) {
-    const arr = filesByJob.get(f.job_id) ?? []
-    arr.push(f)
-    filesByJob.set(f.job_id, arr)
+    if (titleImgByJob.has(f.job_id)) continue
+    const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
+    titleImgByJob.set(f.job_id, data.publicUrl)
   }
 
   // 4) Mapping → Auftrag[]
@@ -119,23 +123,16 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
     if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
 
-    const material =
+    const material: Auftrag['material'] =
       job.material_guete === 'Andere' && job.material_guete_custom
         ? `Andere (${job.material_guete_custom})`
-        : job.material_guete ?? 'k. A.'
-
-    const length = job.laenge_mm ?? 0
-    const width = job.breite_mm ?? 0
-    const height = job.hoehe_mm ?? 0
-    const masse = job.masse_kg != null ? String(job.masse_kg) : '0'
-
-    const warenausgabeDatum = new Date(job.liefer_datum_utc)
-    const warenannahmeDatum = new Date(job.rueck_datum_utc)
+        : (job.material_guete ?? null)
 
     const profile = profileById.get(job.user_id) ?? null
     const zip = profile?.address?.zip ?? ''
     const city = profile?.address?.city ?? ''
-    const standort = zip || city ? `${zip} ${city}`.trim() : 'Österreich'
+    const standort: Auftrag['standort'] =
+      zip || city ? `${zip} ${city}`.trim() : null
 
     const accountType = profile?.account_type ?? 'business'
     const gewerblich = accountType === 'business'
@@ -143,42 +140,29 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
 
     const gesponsert = (job.promo_score ?? 0) > 0
 
-    const jobFiles = filesByJob.get(job.id) ?? []
-    const imageFiles = jobFiles.filter((f) => f.kind === 'image')
-    const docFiles = jobFiles.filter((f) => f.kind === 'document')
-
-    // ✅ Bilder aus Storage
-    const bilder = imageFiles.map((f) => {
-      const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
-      return data.publicUrl
-    })
-
-    // ✅ Dokumente (optional)
-    const dateien = docFiles.map((f) => {
-      const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
-      return { name: f.original_name ?? 'Datei', url: data.publicUrl }
-    })
+    const titelbild = titleImgByJob.get(job.id)
+    const bilder = titelbild ? [titelbild] : [] // ✅ genau 1 Bild
 
     return {
       id: job.id,
       verfahren,
       material,
-      length,
-      width,
-      height,
-      masse,
-      warenausgabeDatum,
-      warenannahmeDatum,
-      warenausgabeArt: job.liefer_art ?? '',
-      warenannahmeArt: job.rueck_art ?? '',
-      bilder, // ✅ echte Bilder aus dem Formular
+      length: job.laenge_mm ?? 0,
+      width: job.breite_mm ?? 0,
+      height: job.hoehe_mm ?? 0,
+      masse: job.masse_kg != null ? String(job.masse_kg) : '0',
+      warenausgabeDatum: new Date(job.liefer_datum_utc),
+      warenannahmeDatum: new Date(job.rueck_datum_utc),
+      warenausgabeArt: job.liefer_art ?? null,
+      warenannahmeArt: job.rueck_art ?? null,
+      bilder,
       standort,
       gesponsert,
       gewerblich,
       privat,
-      beschreibung: job.description ?? '',
-      dateien,
-      user: undefined,
+      beschreibung: job.description ?? null,
+      dateien: [], // ✅ Börse: keine Dokumente laden
+      user: null,
     }
   })
 }
