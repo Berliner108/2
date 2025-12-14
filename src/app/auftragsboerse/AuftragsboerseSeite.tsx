@@ -185,8 +185,10 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
     const { waArt } = normLogistik(a);
     if (!waArt) return false;
     return (
-      (waSelbst && waArt === 'selbstanlieferung') ||
-      (waAbhol  && waArt === 'abholung')
+      // Warenausgabe
+(waSelbst && waArt === 'selbst') ||
+(waAbhol  && waArt === 'abholung')
+
     );
   };
   const matchWarenannahme = (a: Auftrag) => {
@@ -195,7 +197,7 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
     if (!wnArt) return false;
     return (
       (wnZust   && wnArt === 'zustellung') ||
-      (wnSelbst && wnArt === 'selbstabholung')
+(wnSelbst && wnArt === 'selbst')
     );
   };
 
