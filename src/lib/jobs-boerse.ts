@@ -3,14 +3,9 @@ import 'server-only'
 import { supabaseServer } from '@/lib/supabase-server'
 import type { Auftrag } from '@/lib/types/auftrag'
 
-type ProfileRow = {
-  account_type: string | null
-  address: { zip?: string; city?: string } | null
-}
-
-
 type JobRow = {
   id: string
+  user_id: string
   description: string | null
   material_guete: string | null
   material_guete_custom: string | null
@@ -28,22 +23,23 @@ type JobRow = {
   specs: any | null
   published: boolean | null
   status: string | null
-  images_count: number | null
-  files_count: number | null
-  serienauftrag_aktiv: boolean | null
-  serien_rhythmus: string | null
-  serien_termine: any | null
-  profiles: ProfileRow[] | null
+}
+
+type ProfileRow = {
+  id: string
+  account_type: string | null
+  address: { zip?: string; city?: string } | null
 }
 
 export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
-  const { data, error } = await supabase
+  // 1) Jobs holen
+  const { data: jobData, error: jobError } = await supabase
     .from('jobs')
-    .select(
-      `
+    .select(`
       id,
+      user_id,
       description,
       material_guete,
       material_guete_custom,
@@ -60,82 +56,64 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       verfahren_2,
       specs,
       published,
-      status,
-      images_count,
-      files_count,
-      serienauftrag_aktiv,
-      serien_rhythmus,
-      serien_termine,
-      profiles (
-  account_type,
-  address
-)
-    `
-    )
+      status
+    `)
     .eq('published', true)
     .eq('status', 'open')
-    // 🔥 Kein Datums-Filter – sonst würden ältere Jobs verschwinden
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
-  if (error) {
-    console.error('fetchBoersenJobs error:', error)
+  if (jobError) {
+    console.error('fetchBoersenJobs jobs error:', jobError)
     return []
   }
 
-  const rows = (data ?? []) as unknown as JobRow[]
+  const jobs = (jobData ?? []) as unknown as JobRow[]
+  if (jobs.length === 0) return []
 
-  // Debug: siehst du im Server-Log, wie viele Jobs es wirklich sind
-  console.log('fetchBoersenJobs: rows from DB =', rows.length)
+  // 2) Profiles separat holen
+  const userIds = Array.from(new Set(jobs.map(j => j.user_id)))
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, account_type, address')
+    .in('id', userIds)
 
-  const jobs: Auftrag[] = rows.map((job) => {
-    // 1) Verfahren 1 & 2 → Überschrift in Karte
+  if (profileError) {
+    console.error('fetchBoersenJobs profiles error:', profileError)
+  }
+
+  const profileById = new Map<string, ProfileRow>()
+  for (const p of (profileData ?? []) as ProfileRow[]) profileById.set(p.id, p)
+
+  // 3) Mapping → Auftrag[]
+  return jobs.map((job) => {
     const verfahren: Auftrag['verfahren'] = []
     if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
     if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
 
-    // 2) Materialgüte → Feld "material"
     const material =
       job.material_guete === 'Andere' && job.material_guete_custom
         ? `Andere (${job.material_guete_custom})`
         : job.material_guete ?? 'k. A.'
 
-    // 3) Maße & Masse
     const length = job.laenge_mm ?? 0
     const width = job.breite_mm ?? 0
     const height = job.hoehe_mm ?? 0
-    const masse =
-      job.masse_kg !== null && job.masse_kg !== undefined
-        ? String(job.masse_kg)
-        : '0'
+    const masse = job.masse_kg != null ? String(job.masse_kg) : '0'
 
-    // 4) Warenausgabe / Warenrückgabe
     const warenausgabeDatum = new Date(job.liefer_datum_utc)
     const warenannahmeDatum = new Date(job.rueck_datum_utc)
-    const warenausgabeArt = job.liefer_art ?? ''
-    const warenannahmeArt = job.rueck_art ?? ''
 
-    // 5) Standort aus profiles (PLZ + Ort)
-  const profile = job.profiles?.[0] ?? null
-const zip = profile?.address?.zip ?? ''
-const city = profile?.address?.city ?? ''
-const standort = (zip || city) ? `${zip} ${city}`.trim() : 'Österreich'
+    const profile = profileById.get(job.user_id) ?? null
+    const zip = profile?.address?.zip ?? ''
+    const city = profile?.address?.city ?? ''
+    const standort = (zip || city) ? `${zip} ${city}`.trim() : 'Österreich'
 
+    const accountType = profile?.account_type ?? 'business'
+    const gewerblich = accountType === 'business'
+    const privat = accountType === 'private'
 
-    // 6) Gewerblich / Privat aus account_type
- const accountType = profile?.account_type ?? 'business'
-const gewerblich = accountType === 'business'
-const privat = accountType === 'private'
-
-
-    // 7) Promo / gesponsert
     const gesponsert = (job.promo_score ?? 0) > 0
-
-    // 8) Bilder / Dateien – erstmal leer; Karte nimmt Platzhalterbild
-    const bilder: string[] = ['/images/platzhalter.jpg']
-    const dateien: { name: string; url: string }[] = []
-
-    const beschreibung = job.description ?? ''
 
     return {
       id: job.id,
@@ -147,19 +125,16 @@ const privat = accountType === 'private'
       masse,
       warenausgabeDatum,
       warenannahmeDatum,
-      warenausgabeArt,
-      warenannahmeArt,
-      bilder,
+      warenausgabeArt: job.liefer_art ?? '',
+      warenannahmeArt: job.rueck_art ?? '',
+      bilder: ['/images/platzhalter.jpg'],  // Karten kommen sicher zurück
       standort,
       gesponsert,
       gewerblich,
       privat,
-      beschreibung,
-      dateien,
-      user: null,
+      beschreibung: job.description ?? '',
+      dateien: [],
+      user: undefined,
     }
   })
-
-  console.log('fetchBoersenJobs: mapped jobs =', jobs.length)
-  return jobs
 }
