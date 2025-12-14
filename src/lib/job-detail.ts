@@ -3,6 +3,34 @@ import 'server-only'
 import { supabaseServer } from '@/lib/supabase-server'
 import type { Auftrag } from '@/lib/types/auftrag'
 
+type JobRow = {
+  id: string
+  user_id: string
+  description: string | null
+  material_guete: string | null
+  material_guete_custom: string | null
+  laenge_mm: number | null
+  breite_mm: number | null
+  hoehe_mm: number | null
+  masse_kg: number | null
+  liefer_datum_utc: string
+  rueck_datum_utc: string
+  liefer_art: string | null
+  rueck_art: string | null
+  promo_score: number | null
+  verfahren_1: string | null
+  verfahren_2: string | null
+  specs: any | null
+  published: boolean | null
+  status: string | null
+}
+
+type ProfileRow = {
+  id: string
+  account_type: string | null
+  address: { zip?: string; city?: string } | null
+}
+
 type JobFileRow = {
   job_id: string
   kind: 'image' | 'document'
@@ -14,11 +42,10 @@ type JobFileRow = {
 export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
   const supabase = await supabaseServer()
 
-  // 1️⃣ Job + Profil holen
-  const { data: row, error } = await supabase
+  // 1) Job holen (OHNE profiles-embed)
+  const { data: job, error: jobError } = await supabase
     .from('jobs')
-    .select(
-      `
+    .select(`
       id,
       user_id,
       description,
@@ -36,118 +63,107 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
       verfahren_1,
       verfahren_2,
       specs,
-      profiles (
-        account_type,
-        address
-      )
-    `,
-    )
+      published,
+      status
+    `)
     .eq('id', jobId)
-    .eq('published', true)
-    .eq('status', 'open')
     .single()
 
-  if (error || !row) {
-    console.error('fetchJobDetail job error', error)
+  if (jobError || !job) {
+    console.error('fetchJobDetail jobs error:', jobError, 'jobId:', jobId)
     return null
   }
 
-  const job = row as any
+  const j = job as unknown as JobRow
 
-  // 2️⃣ Alle Dateien für diesen Job holen (Schema: kind/bucket/path)
+  // Optional: wenn du NUR published+open anzeigen willst, hier prüfen:
+  if (!j.published || j.status !== 'open') {
+    return null
+  }
+
+  // 2) Profile separat holen
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, account_type, address')
+    .eq('id', j.user_id)
+    .maybeSingle()
+
+  if (profileError) {
+    console.error('fetchJobDetail profiles error:', profileError)
+  }
+
+  const p = (profile ?? null) as ProfileRow | null
+
+  // 3) Files separat holen
   const { data: fileRows, error: filesError } = await supabase
     .from('job_files')
     .select('job_id, kind, bucket, path, original_name')
-    .eq('job_id', job.id)
+    .eq('job_id', j.id)
 
   if (filesError) {
-    console.error('fetchJobDetail job_files error', filesError)
+    console.error('fetchJobDetail job_files error:', filesError)
   }
 
   const files = (fileRows ?? []) as unknown as JobFileRow[]
-  const imageFiles = files.filter((f) => f.kind === 'image')
-  const docFiles = files.filter((f) => f.kind === 'document')
+  const imageFiles = files.filter(f => f.kind === 'image')
+  const docFiles = files.filter(f => f.kind === 'document')
 
-  // ✅ Bilder-URLs
-  const bilder: string[] =
-    imageFiles.length > 0
-      ? imageFiles.map((f) => {
-          const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
-          return data.publicUrl
-        })
-      : []
+  // alle Bilder
+  const bilder = imageFiles.map(f => {
+    const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
+    return data.publicUrl
+  })
 
-  // ✅ Dokumente
-  const dateien =
-    docFiles.length > 0
-      ? docFiles.map((f) => {
-          const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
-          return {
-            name: f.original_name ?? 'Datei',
-            url: data.publicUrl,
-          }
-        })
-      : []
+  // alle Dokumente
+  const dateien = docFiles.map(f => {
+    const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
+    return { name: f.original_name ?? 'Datei', url: data.publicUrl }
+  })
 
-  // 3️⃣ Materialgüte
-  const material =
-    job.material_guete === 'Andere' && job.material_guete_custom
-      ? `Andere (${job.material_guete_custom})`
-      : job.material_guete ?? 'k. A.'
-
-  // 4️⃣ Maße & Masse
-  const length = job.laenge_mm ?? 0
-  const width = job.breite_mm ?? 0
-  const height = job.hoehe_mm ?? 0
-  const masse = job.masse_kg != null ? String(job.masse_kg) : '0'
-
-  // 5️⃣ Logistikdaten
-  const warenausgabeDatum = new Date(job.liefer_datum_utc)
-  const warenannahmeDatum = new Date(job.rueck_datum_utc)
-
-  // Hier nutzt du aktuell "selbst" in DB → in UI passt "selbst" auch (du filterst inzwischen so)
-  const warenausgabeArt = job.liefer_art ?? ''
-  const warenannahmeArt = job.rueck_art ?? ''
-
-  // 6️⃣ Specs → felder je Verfahren (wie bei dir)
+  // Specs -> felder je Verfahren (wie gehabt)
   const felder1: Record<string, any> = {}
   const felder2: Record<string, any> = {}
 
-  if (job.specs && typeof job.specs === 'object') {
-    const specsObj = job.specs as Record<string, any>
-
-    Object.entries(specsObj).forEach(([key, value]) => {
+  if (j.specs && typeof j.specs === 'object') {
+    for (const [key, value] of Object.entries(j.specs as Record<string, any>)) {
       const prefixMatch = key.match(/^v(\d+)__/)
       const verfahrenIndex = prefixMatch ? Number(prefixMatch[1]) - 1 : 0
-
       const withoutPrefix = key.replace(/^v\d+__/, '')
       const parts = withoutPrefix.split('__')
       const fieldKey = parts.length > 1 ? parts[1] : parts[0]
-
-      const target = verfahrenIndex === 1 ? felder2 : felder1
-      target[fieldKey] = value
-    })
+      ;(verfahrenIndex === 1 ? felder2 : felder1)[fieldKey] = value
+    }
   }
 
   const verfahren: Auftrag['verfahren'] = []
-  if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: felder1 })
-  if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: felder2 })
+  if (j.verfahren_1) verfahren.push({ name: j.verfahren_1, felder: felder1 })
+  if (j.verfahren_2) verfahren.push({ name: j.verfahren_2, felder: felder2 })
 
-  // 7️⃣ Standort + Typ aus profiles.address/account_type
-  const profile = job.profiles?.[0] ?? null
-  const zip = profile?.address?.zip ?? ''
-  const city = profile?.address?.city ?? ''
+  const material =
+    j.material_guete === 'Andere' && j.material_guete_custom
+      ? `Andere (${j.material_guete_custom})`
+      : j.material_guete ?? 'k. A.'
+
+  const length = j.laenge_mm ?? 0
+  const width = j.breite_mm ?? 0
+  const height = j.hoehe_mm ?? 0
+  const masse = j.masse_kg != null ? String(j.masse_kg) : '0'
+
+  const warenausgabeDatum = new Date(j.liefer_datum_utc)
+  const warenannahmeDatum = new Date(j.rueck_datum_utc)
+
+  const zip = p?.address?.zip ?? ''
+  const city = p?.address?.city ?? ''
   const standort = (zip || city) ? `${zip} ${city}`.trim() : 'Österreich'
 
-  const accountType = profile?.account_type ?? 'business'
+  const accountType = p?.account_type ?? 'business'
   const gewerblich = accountType === 'business'
   const privat = accountType === 'private'
 
-  const beschreibung = job.description ?? ''
-  const gesponsert = (job.promo_score ?? 0) > 0
+  const gesponsert = (j.promo_score ?? 0) > 0
 
-  const auftrag: Auftrag = {
-    id: job.id,
+  return {
+    id: j.id,
     verfahren,
     material,
     length,
@@ -156,17 +172,15 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     masse,
     warenausgabeDatum,
     warenannahmeDatum,
-    warenausgabeArt,
-    warenannahmeArt,
+    warenausgabeArt: j.liefer_art ?? '',
+    warenannahmeArt: j.rueck_art ?? '',
     bilder,
+    dateien,
     standort,
     gesponsert,
     gewerblich,
     privat,
-    beschreibung,
-    dateien,
+    beschreibung: j.description ?? '',
     user: undefined,
   }
-
-  return auftrag
 }
