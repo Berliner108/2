@@ -168,6 +168,23 @@ export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
       </>
     );
   }
+  const username = auftrag.user ?? ''
+const messageTarget = encodeURIComponent(username)
+
+const reviewsHref = username
+  ? `/u/${encodeURIComponent(username)}/reviews`
+  : null
+
+const ratingValue =
+  typeof auftrag.userRatingAvg === 'number' && Number.isFinite(auftrag.userRatingAvg)
+    ? auftrag.userRatingAvg
+    : 0
+
+const ratingCount =
+  typeof auftrag.userRatingCount === 'number' && Number.isFinite(auftrag.userRatingCount)
+    ? auftrag.userRatingCount
+    : 0
+
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -406,37 +423,38 @@ export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
                 <span className={styles.label}>Masse schwerstes Werkstück :</span>
                 <span className={styles.value}>{auftrag.masse} kg</span>
               </div>
-
-{/* User + Rating + Links */}
 {auftrag.user && (
   <div className={styles.metaItem}>
     <span className={styles.label}>User:</span>
 
     <span className={styles.value}>
-      <Link
-        href={`/profil/${encodeURIComponent(auftrag.user)}`} // ✅ Ziel wie bei Lackanfragen anpassen
-        className={styles.userLink}
-      >
-        {auftrag.user}
-      </Link>
-
-      {auftrag.userRatingAvg != null && (
-        <>
-          {' '}
-          • {auftrag.userRatingAvg.toFixed(2)} / 5
-          {auftrag.userRatingCount != null ? ` · ${auftrag.userRatingCount} Bewertungen` : ''}
-        </>
+      {reviewsHref ? (
+        <Link href={reviewsHref} className={styles.kontaktLink} title="Zu den Bewertungen">
+          {auftrag.user}
+        </Link>
+      ) : (
+        auftrag.user
       )}
     </span>
 
-    <Link
-      href={`/messages?empfaenger=${encodeURIComponent(auftrag.user)}`}
-      className={styles.kontaktLink}
-    >
-      User kontaktieren
-    </Link>
+    <div className={styles.userRating} style={{ marginTop: 6 }}>
+      {ratingCount > 0 ? (
+        <>
+          Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung{ratingCount === 1 ? '' : 'en'}
+        </>
+      ) : (
+        <>Bewertung: Noch keine Bewertungen</>
+      )}
+    </div>
+
+    <div style={{ marginTop: 6 }}>
+      <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
+        User kontaktieren
+      </Link>
+    </div>
   </div>
 )}
+
 
 
             </div>

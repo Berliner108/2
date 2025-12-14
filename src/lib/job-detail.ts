@@ -166,11 +166,8 @@ const { data: profile, error: profileError } = await supabase
   const gesponsert = (j.promo_score ?? 0) > 0
   const username = p?.username ?? null
 
-  const ratingAvg =
-  p?.rating_avg == null ? null : Number(p.rating_avg)
-
-const ratingCount =
-  p?.rating_count == null ? null : Number(p.rating_count)
+  const ratingAvg = p?.rating_avg == null ? null : Number(p.rating_avg)
+const ratingCount = p?.rating_count == null ? null : Number(p.rating_count)
 
   return {
     id: j.id,
