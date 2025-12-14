@@ -66,14 +66,14 @@ export async function POST(req: NextRequest) {
 
     // Spezifikationen (JSON aus dem Formular)
     let specs: Record<string, any> = {}
-    const specsJson = formData.get('specSelections')
-    if (typeof specsJson === 'string' && specsJson.trim()) {
-      try {
-        specs = JSON.parse(specsJson)
-      } catch (err) {
-        console.warn('specSelections JSON parse error:', err)
-      }
-    }
+const specsJson = formData.get('specSelections')
+if (typeof specsJson === 'string' && specsJson.trim()) {
+  try {
+    specs = JSON.parse(specsJson)
+  } catch (err) {
+    console.warn('specSelections JSON parse error:', err)
+  }
+}
 
     // Bewerbung / Promo-Optionen
     const bewerbungOptionen: string[] = []
@@ -93,7 +93,6 @@ const { data: job, error: jobError } = await supabase
     user_id: user.id,
     description: beschreibung || null,
 
-    // Material
     material_guete: materialguete || null,
     material_guete_custom:
       materialguete === 'Andere' && andereMaterialguete
@@ -105,7 +104,6 @@ const { data: job, error: jobError } = await supabase
     hoehe_mm: hoehe ? Number(hoehe) : null,
     masse_kg: masse ? Number(masse) : null,
 
-    // 🔹 jetzt gibt es die Spalten wirklich:
     verfahren_1: verfahren1 || null,
     verfahren_2: verfahren2 || null,
 
