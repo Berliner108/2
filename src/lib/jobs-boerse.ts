@@ -66,8 +66,8 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     specs,
     images_count
   `)
-    .eq('published', true)
-    .eq('status', 'open')
+  .eq('status', 'open')
+.or('published.is.null,published.eq.true')
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
