@@ -42,33 +42,30 @@ type JobFileRow = {
 export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
-  // 1) Jobs holen
-  const { data: jobData, error: jobError } = await supabase
-    .from('jobs')
-    .select(
-      `
-        id,
-        user_id,
-        description,
-        material_guete,
-        material_guete_custom,
-        materialguete,
-        materialguete_custom,
-        laenge_mm,
-        breite_mm,
-        hoehe_mm,
-        masse_kg,
-        liefer_datum_utc,
-        rueck_datum_utc,
-        liefer_art,
-        rueck_art,
-        promo_score,
-        verfahren_1,
-        verfahren_2,
-        specs,
-        images_count
-      `,
-    )
+ const { data: jobData, error: jobError } = await supabase
+  .from('jobs')
+  .select(`
+    id,
+    user_id,
+    description,
+    material_guete,
+    material_guete_custom,
+    materialguete,
+    materialguete_custom,
+    laenge_mm,
+    breite_mm,
+    hoehe_mm,
+    masse_kg,
+    liefer_datum_utc,
+    rueck_datum_utc,
+    liefer_art,
+    rueck_art,
+    promo_score,
+    verfahren_1,
+    verfahren_2,
+    specs,
+    images_count
+  `)
     .eq('published', true)
     .eq('status', 'open')
     .order('promo_score', { ascending: false })
