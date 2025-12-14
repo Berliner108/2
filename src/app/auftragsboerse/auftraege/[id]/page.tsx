@@ -8,12 +8,14 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 type Props = {
-  params: { id: string }
+  // ✅ Next (neuere Versionen): params kann als Promise typisiert sein
+  params: Promise<{ id: string }>
 }
 
 export default async function Page({ params }: Props) {
-  const auftrag = await fetchJobDetail(params.id)
+  const { id } = await params
 
+  const auftrag = await fetchJobDetail(id)
   if (!auftrag) notFound()
 
   return <AuftragDetailClient auftrag={auftrag} />
