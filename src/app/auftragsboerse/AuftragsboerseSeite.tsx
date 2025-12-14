@@ -414,14 +414,6 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
           <h3 className={styles.anfrageUeberschrift}>
             {sortierteAuftraege.length} offene Aufträge
           </h3>
-          <div style={{ padding: 12, border: '1px solid #ccc', marginBottom: 12, fontFamily: 'monospace' }}>
-  jobs: {jobs?.length ?? 'undefined'} <br />
-  data: {data.length} <br />
-  gefiltert: {gefilterteAuftraege.length} <br />
-  suchErgebnis: {suchErgebnis.length} <br />
-  sortiert: {sortierteAuftraege.length} <br />
-  anzeigen: {anzeigen.length}
-</div>
 
 
           <div className={styles.grid}>

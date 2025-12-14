@@ -31,13 +31,22 @@ type ProfileRow = {
   address: { zip?: string; city?: string } | null
 }
 
+type JobFileRow = {
+  job_id: string
+  kind: 'image' | 'document'
+  bucket: string
+  path: string
+  original_name: string | null
+}
+
 export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
   // 1) Jobs holen
   const { data: jobData, error: jobError } = await supabase
     .from('jobs')
-    .select(`
+    .select(
+      `
       id,
       user_id,
       description,
@@ -57,7 +66,8 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       specs,
       published,
       status
-    `)
+    `,
+    )
     .eq('published', true)
     .eq('status', 'open')
     .order('promo_score', { ascending: false })
@@ -72,7 +82,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   if (jobs.length === 0) return []
 
   // 2) Profiles separat holen
-  const userIds = Array.from(new Set(jobs.map(j => j.user_id)))
+  const userIds = Array.from(new Set(jobs.map((j) => j.user_id)))
   const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .select('id, account_type, address')
@@ -85,7 +95,25 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const profileById = new Map<string, ProfileRow>()
   for (const p of (profileData ?? []) as ProfileRow[]) profileById.set(p.id, p)
 
-  // 3) Mapping → Auftrag[]
+  // 3) job_files holen (Bilder + Dokumente)
+  const jobIds = jobs.map((j) => j.id)
+  const { data: filesData, error: filesError } = await supabase
+    .from('job_files')
+    .select('job_id, kind, bucket, path, original_name')
+    .in('job_id', jobIds)
+
+  if (filesError) {
+    console.error('fetchBoersenJobs job_files error:', filesError)
+  }
+
+  const filesByJob = new Map<string, JobFileRow[]>()
+  for (const f of ((filesData ?? []) as unknown as JobFileRow[])) {
+    const arr = filesByJob.get(f.job_id) ?? []
+    arr.push(f)
+    filesByJob.set(f.job_id, arr)
+  }
+
+  // 4) Mapping → Auftrag[]
   return jobs.map((job) => {
     const verfahren: Auftrag['verfahren'] = []
     if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
@@ -107,13 +135,29 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     const profile = profileById.get(job.user_id) ?? null
     const zip = profile?.address?.zip ?? ''
     const city = profile?.address?.city ?? ''
-    const standort = (zip || city) ? `${zip} ${city}`.trim() : 'Österreich'
+    const standort = zip || city ? `${zip} ${city}`.trim() : 'Österreich'
 
     const accountType = profile?.account_type ?? 'business'
     const gewerblich = accountType === 'business'
     const privat = accountType === 'private'
 
     const gesponsert = (job.promo_score ?? 0) > 0
+
+    const jobFiles = filesByJob.get(job.id) ?? []
+    const imageFiles = jobFiles.filter((f) => f.kind === 'image')
+    const docFiles = jobFiles.filter((f) => f.kind === 'document')
+
+    // ✅ Bilder aus Storage
+    const bilder = imageFiles.map((f) => {
+      const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
+      return data.publicUrl
+    })
+
+    // ✅ Dokumente (optional)
+    const dateien = docFiles.map((f) => {
+      const { data } = supabase.storage.from(f.bucket).getPublicUrl(f.path)
+      return { name: f.original_name ?? 'Datei', url: data.publicUrl }
+    })
 
     return {
       id: job.id,
@@ -127,13 +171,13 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       warenannahmeDatum,
       warenausgabeArt: job.liefer_art ?? '',
       warenannahmeArt: job.rueck_art ?? '',
-      bilder: ['/images/platzhalter.jpg'],  // Karten kommen sicher zurück
+      bilder, // ✅ echte Bilder aus dem Formular
       standort,
       gesponsert,
       gewerblich,
       privat,
       beschreibung: job.description ?? '',
-      dateien: [],
+      dateien,
       user: undefined,
     }
   })
