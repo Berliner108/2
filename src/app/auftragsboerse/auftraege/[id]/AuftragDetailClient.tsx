@@ -409,19 +409,23 @@ export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
 
               {/* User */}
               {auftrag.user && (
-                <div className={styles.metaItem}>
-                  <span className={styles.label}>User:</span>
-                  <span className={styles.value}>{auftrag.user}</span>
-                  <Link
-                    href={`/messages?empfaenger=${encodeURIComponent(
-                      auftrag.user
-                    )}`}
-                    className={styles.kontaktLink}
-                  >
-                    User kontaktieren
-                  </Link>
-                </div>
-              )}
+  <div className={styles.metaItem}>
+    <span className={styles.label}>User:</span>
+    <span className={styles.value}>
+      {auftrag.user}
+      {auftrag.userRatingAvg != null && (
+        <> • {auftrag.userRatingAvg.toFixed(2)} ({auftrag.userRatingCount ?? 0})</>
+      )}
+    </span>
+    <Link
+      href={`/messages?empfaenger=${encodeURIComponent(auftrag.user)}`}
+      className={styles.kontaktLink}
+    >
+      User kontaktieren
+    </Link>
+  </div>
+)}
+
             </div>
 
             {/* Downloads */}
