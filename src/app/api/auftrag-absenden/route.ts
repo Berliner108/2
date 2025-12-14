@@ -137,74 +137,68 @@ const { data: job, error: jobError } = await supabase
       )
     }
 
-    const jobId = job.id as string
+    const jobId = job.id as string// ---------- Dateien ins Storage hochladen ----------
+const BUCKET = 'job-files'
 
-    // ---------- Dateien ins Storage hochladen ----------
-    const fileRows: {
-      job_id: string
-      storage_path: string
-      file_name: string
-      file_type: 'image' | 'attachment'
-    }[] = []
+const fileRows: {
+  job_id: string
+  kind: 'image' | 'document'
+  bucket: string
+  path: string
+  original_name: string | null
+  mime_type: string | null
+  size_bytes: number | null
+}[] = []
 
-    // Alle FormData-Files durchgehen
-    for (const [key, value] of formData.entries()) {
-      if (!(value instanceof File)) continue
+for (const [key, value] of formData.entries()) {
+  if (!(value instanceof File)) continue
 
-      const isImage = key.startsWith('bilder[')
-      const isAttachment = key.startsWith('dateien[')
-      if (!isImage && !isAttachment) continue
+  const isImage = key.startsWith('bilder[')
+  const isDoc = key.startsWith('dateien[')
+  if (!isImage && !isDoc) continue
 
-      const kind: 'image' | 'attachment' = isImage ? 'image' : 'attachment'
+  const kind: 'image' | 'document' = isImage ? 'image' : 'document'
 
-      const random = Math.random().toString(36).slice(2)
-      const safeName = value.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')
-      const path = `${user.id}/${jobId}/${kind}/${Date.now()}-${random}-${safeName}`
+  const random = Math.random().toString(36).slice(2)
+  const safeName = value.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')
+  const path = `${user.id}/${jobId}/${kind}/${Date.now()}-${random}-${safeName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('job-files')
-        .upload(path, value, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: value.type || undefined,
-        })
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, value, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: value.type || undefined,
+    })
 
-      if (uploadError) {
-        console.error('storage upload error:', uploadError)
-        continue // Job bleibt trotzdem bestehen
-      }
+  if (uploadError) {
+    console.error('storage upload error:', uploadError)
+    continue
+  }
 
-      fileRows.push({
-        job_id: jobId,
-        storage_path: path,
-        file_name: value.name,
-        file_type: kind,
-      })
-    }
+  fileRows.push({
+    job_id: jobId,
+    kind,
+    bucket: BUCKET,
+    path,
+    original_name: value.name,
+    mime_type: value.type || null,
+    size_bytes: typeof value.size === 'number' ? value.size : null,
+  })
+}
 
-    if (fileRows.length > 0) {
-      const { error: filesError } = await supabase
-        .from('job_files')
-        .insert(fileRows)
+if (fileRows.length > 0) {
+  const { error: filesError } = await supabase.from('job_files').insert(fileRows)
+  if (filesError) console.error('job_files insert error:', filesError)
 
-      if (filesError) {
-        console.error('job_files insert error:', filesError)
-      }
+  const imagesCount = fileRows.filter((f) => f.kind === 'image').length
+  const filesCount = fileRows.filter((f) => f.kind === 'document').length
 
-      // optional: counts nachziehen
-      const imagesCount = fileRows.filter((f) => f.file_type === 'image').length
-      const filesCount = fileRows.filter(
-        (f) => f.file_type === 'attachment',
-      ).length
-
-      await supabase
-        .from('jobs')
-        .update({
-          images_count: imagesCount,
-          files_count: filesCount,
-        })
-        .eq('id', jobId)
-    }
+  await supabase
+    .from('jobs')
+    .update({ images_count: imagesCount, files_count: filesCount })
+    .eq('id', jobId)
+}
 
     return NextResponse.json({ ok: true, jobId }, { status: 200 })
   } catch (err: any) {
