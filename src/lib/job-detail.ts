@@ -2,37 +2,10 @@
 import { supabaseServer } from '@/lib/supabase-server'
 import type { Auftrag } from '@/lib/types/auftrag'
 
-type JobRow = {
-  id: string
-  description: string | null
-  material_guete: string | null
-  material_guete_custom: string | null
-  laenge_mm: number | null
-  breite_mm: number | null
-  hoehe_mm: number | null
-  masse_kg: number | null
-  liefer_datum_utc: string
-  rueck_datum_utc: string
-  liefer_art: string | null
-  rueck_art: string | null
-  promo_score: number | null
-  verfahren_1: string | null
-  verfahren_2: string | null
-  specs: any | null
-}
-
-
-type JobFileRow = {
-  job_id: string
-  storage_path: string
-  file_name: string
-  file_type: 'image' | 'attachment'
-}
-
 export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
   const supabase = await supabaseServer()
 
-  // 1️⃣ Job holen
+  // 1️⃣ Job + Profil holen
   const { data: row, error } = await supabase
     .from('jobs')
     .select(
@@ -52,7 +25,12 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
       promo_score,
       verfahren_1,
       verfahren_2,
-      specs
+      specs,
+      profiles (
+        plz,
+        ort,
+        account_type
+      )
     `,
     )
     .eq('id', jobId)
@@ -60,15 +38,15 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     .eq('status', 'open')
     .single()
 
-  if (error) {
+  if (error || !row) {
     console.error('fetchJobDetail job error', error)
     return null
   }
-  if (!row) return null
 
-  const job = row as JobRow
+  // bewusst locker typisieren, um keine Supabase-Typkonflikte zu bekommen
+  const job = row as any
 
-  // 2️⃣ Dateien holen (Bilder + Attachments)
+  // 2️⃣ Alle Dateien für diesen Job holen
   const { data: fileRows, error: filesError } = await supabase
     .from('job_files')
     .select('job_id, storage_path, file_name, file_type')
@@ -78,76 +56,118 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     console.error('fetchJobDetail job_files error', filesError)
   }
 
-  const files = (fileRows ?? []) as JobFileRow[]
-
+  const files = (fileRows ?? []) as any[]
   const imageFiles = files.filter((f) => f.file_type === 'image')
   const attachFiles = files.filter((f) => f.file_type === 'attachment')
 
-  const bilder =
+  const storage = supabase.storage.from('job-files')
+
+  // Bilder-URLs
+  const bilder: string[] =
     imageFiles.length > 0
       ? imageFiles.map((f) => {
-          const { data } = supabase.storage
-            .from('job-files')
-            .getPublicUrl(f.storage_path)
+          const { data } = storage.getPublicUrl(f.storage_path as string)
           return data.publicUrl
         })
       : ['/images/platzhalter.jpg']
 
+  // Attachments (PDF etc.)
   const dateien =
     attachFiles.length > 0
       ? attachFiles.map((f) => {
-          const { data } = supabase.storage
-            .from('job-files')
-            .getPublicUrl(f.storage_path)
+          const { data } = storage.getPublicUrl(f.storage_path as string)
           return {
-            name: f.file_name,
+            name: f.file_name as string,
             url: data.publicUrl,
           }
         })
       : []
 
-  // 3️⃣ Mapping DB → dein Auftrag-Typ
-
-  const verfahren: Auftrag['verfahren'] = []
-  if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
-  if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
-
+  // 3️⃣ Materialgüte
   const material =
     job.material_guete === 'Andere' && job.material_guete_custom
       ? `Andere (${job.material_guete_custom})`
-      : job.material_guete ?? 'k. A.'
+      : (job.material_guete as string | null) ?? 'k. A.'
 
-  const length = job.laenge_mm ?? 0
-  const width = job.breite_mm ?? 0
-  const height = job.hoehe_mm ?? 0
+  // 4️⃣ Maße & Masse
+  const length = (job.laenge_mm as number | null) ?? 0
+  const width = (job.breite_mm as number | null) ?? 0
+  const height = (job.hoehe_mm as number | null) ?? 0
   const masse =
     job.masse_kg !== null && job.masse_kg !== undefined
       ? String(job.masse_kg)
       : '0'
 
-  const warenausgabeDatum = new Date(job.liefer_datum_utc)
-  const warenannahmeDatum = new Date(job.rueck_datum_utc)
-  const warenausgabeArt = job.liefer_art ?? ''
-  const warenannahmeArt = job.rueck_art ?? ''
+  // 5️⃣ Logistikdaten
+  const warenausgabeDatum = new Date(job.liefer_datum_utc as string)
+  const warenannahmeDatum = new Date(job.rueck_datum_utc as string)
 
-  // TODO: später aus profiles ziehen
-  const standort = 'Österreich'
-  const user = undefined // oder Username aus profiles
+  const rawLieferArt = (job.liefer_art as string | null) ?? ''
+  const rawRueckArt = (job.rueck_art as string | null) ?? ''
 
-  const gesponsert = (job.promo_score ?? 0) > 0
-  const gewerblich = true
-  const privat = false
+  // Mapping auf die Werte, die deine Filter & Detailseite erwarten
+  const warenausgabeArt =
+    rawLieferArt === 'selbst'
+      ? 'selbstanlieferung'
+      : rawLieferArt || ''
 
-  const beschreibung = job.description ?? ''
+  const warenannahmeArt =
+    rawRueckArt === 'selbst'
+      ? 'selbstabholung'
+      : rawRueckArt || ''
 
-  // Spezifikationen: erstmal noch nicht zurückmappen → felder bleiben leer,
-  // dein Detail-UI zeigt dann einfach „keine Spezifikationen“.
-  // (Das können wir später aus job.specs → verfahren[].felder füllen.)
+  // 6️⃣ Spezifikationen auf die beiden Verfahren aufteilen
+  const felder1: Record<string, any> = {}
+  const felder2: Record<string, any> = {}
+
+  if (job.specs && typeof job.specs === 'object') {
+    const specsObj = job.specs as Record<string, any>
+
+    Object.entries(specsObj).forEach(([key, value]) => {
+      // Beispiel-Key: "v2__Einlagern__extra"
+      const prefixMatch = key.match(/^v(\d+)__/)
+      const verfahrenIndex = prefixMatch ? Number(prefixMatch[1]) - 1 : 0 // v1 → 0, v2 → 1
+
+      const withoutPrefix = key.replace(/^v\d+__/, '')
+      const parts = withoutPrefix.split('__')
+      const fieldKey = parts.length > 1 ? parts[1] : parts[0] // "extra", "zertifizierungen", ...
+
+      const target = verfahrenIndex === 1 ? felder2 : felder1
+      target[fieldKey] = value
+    })
+  }
+
+  // 7️⃣ Verfahren 1 & 2 → wie bei deinen Dummy-Aufträgen
+  const verfahren: Auftrag['verfahren'] = []
+  if (job.verfahren_1) {
+    verfahren.push({ name: job.verfahren_1 as string, felder: felder1 })
+  }
+  if (job.verfahren_2) {
+    verfahren.push({ name: job.verfahren_2 as string, felder: felder2 })
+  }
+
+  // 8️⃣ Standort aus profiles (PLZ + Ort)
+  const profile = job.profiles?.[0] as
+    | { plz?: string | null; ort?: string | null; account_type?: string | null }
+    | undefined
+
+  const plz = profile?.plz ?? ''
+  const ort = profile?.ort ?? ''
+  const standort =
+    plz || ort ? `${plz}${plz && ort ? ' ' : ''}${ort}` : 'k. A.'
+
+  const accountType = (profile?.account_type || '').toLowerCase()
+  const gewerblich = accountType === 'gewerblich' || !accountType
+  const privat = accountType === 'privat'
+
+  const beschreibung = (job.description as string | null) ?? ''
+
+  const gesponsert = (job.promo_score as number | null) && job.promo_score > 0
 
   const auftrag: Auftrag = {
-    id: job.id,
-    verfahren,
-    material,
+    id: job.id as string,
+    verfahren,              // → z.B. "Nasslackieren & Folieren" in der Überschrift
+    material,               // → Materialgüte
     length,
     width,
     height,
@@ -157,14 +177,14 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     warenausgabeArt,
     warenannahmeArt,
     bilder,
-    standort,
-    gesponsert,
+    standort,               // → "PLZ Ort" aus profiles
+    gesponsert: !!gesponsert,
     gewerblich,
     privat,
     beschreibung,
     dateien,
-    user, // optional in deinem Typ, sonst als any casten
-  } as Auftrag
+    user: undefined,        // später ggf. aus profiles/username
+  }
 
   return auftrag
 }
