@@ -66,7 +66,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       serienauftrag_aktiv,
       serien_rhythmus,
       serien_termine,
-      profiles!inner (
+      profiles (
         plz,
         ort,
         account_type
@@ -75,7 +75,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     )
     .eq('published', true)
     .eq('status', 'open')
-    // ⚠️ KEIN Datumsfilter mehr, damit garantiert etwas kommt
+    // 🔥 Kein Datums-Filter – sonst würden ältere Jobs verschwinden
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
@@ -86,11 +86,11 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
 
   const rows = (data ?? []) as unknown as JobRow[]
 
-  // Debug: siehst du im Server-Log, wie viele Jobs wir bekommen
+  // Debug: siehst du im Server-Log, wie viele Jobs es wirklich sind
   console.log('fetchBoersenJobs: rows from DB =', rows.length)
 
   const jobs: Auftrag[] = rows.map((job) => {
-    // 1) Verfahren1 & 2 → Überschrift in Karte
+    // 1) Verfahren 1 & 2 → Überschrift in Karte
     const verfahren: Auftrag['verfahren'] = []
     if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
     if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
@@ -128,11 +128,10 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     const gewerblich = accountType === 'gewerblich'
     const privat = accountType === 'privat'
 
-    // 7) Promo
+    // 7) Promo / gesponsert
     const gesponsert = (job.promo_score ?? 0) > 0
 
-    // 8) Bilder / Dateien – erstmal leer,
-    //    Karten verwenden dann Platzhalter-Bild
+    // 8) Bilder / Dateien – erstmal leer; Karte nimmt Platzhalterbild
     const bilder: string[] = []
     const dateien: { name: string; url: string }[] = []
 
@@ -157,7 +156,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       privat,
       beschreibung,
       dateien,
-      user: null, // später aus profiles.username o. Ä. füllen
+      user: null,
     }
   })
 
