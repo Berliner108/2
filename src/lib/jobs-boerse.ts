@@ -2,167 +2,201 @@
 import { supabaseServer } from '@/lib/supabase-server'
 import type { Auftrag } from '@/lib/types/auftrag'
 
-/**
- * Holt alle sichtbaren Jobs aus der jobs-Tabelle + Dateien aus job_files
- * und mappt sie auf deinen Auftrag-Typ für Auftragsbörse & Detailseite.
- */
+type JobRow = {
+  id: string
+  user_id: string
+  description: string | null
+  material_guete: string | null
+  material_guete_custom: string | null
+  materialguete: string | null
+  materialguete_custom: string | null
+  laenge_mm: number | null
+  breite_mm: number | null
+  hoehe_mm: number | null
+  masse_kg: number | null
+  liefer_datum_utc: string
+  rueck_datum_utc: string
+  liefer_art: string | null
+  rueck_art: string | null
+  promo_score: number | null
+  verfahren_1: string | null
+  verfahren_2: string | null
+  specs: any | null
+  images_count: number | null
+}
+
+type ProfileRow = {
+  id: string
+  plz: string | null
+  ort: string | null
+  account_type: string | null
+}
+
+type JobFileRow = {
+  job_id: string
+  storage_path: string
+  file_name: string
+  file_type: 'image' | 'attachment'
+}
+
 export async function fetchBoersenJobs(): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
-  // 1️⃣ Jobs + Profile holen
-  const { data: rows, error } = await supabase
+  // 1) Jobs holen
+  const { data: jobData, error: jobError } = await supabase
     .from('jobs')
     .select(
       `
-      id,
-      description,
-      material_guete,
-      material_guete_custom,
-      laenge_mm,
-      breite_mm,
-      hoehe_mm,
-      masse_kg,
-      liefer_datum_utc,
-      rueck_datum_utc,
-      liefer_art,
-      rueck_art,
-      promo_score,
-      verfahren_1,
-      verfahren_2,
-      specs,
-      profiles (
-        plz,
-        ort,
-        account_type
-      )
-    `,
+        id,
+        user_id,
+        description,
+        material_guete,
+        material_guete_custom,
+        materialguete,
+        materialguete_custom,
+        laenge_mm,
+        breite_mm,
+        hoehe_mm,
+        masse_kg,
+        liefer_datum_utc,
+        rueck_datum_utc,
+        liefer_art,
+        rueck_art,
+        promo_score,
+        verfahren_1,
+        verfahren_2,
+        specs,
+        images_count
+      `,
     )
     .eq('published', true)
     .eq('status', 'open')
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
-  if (error || !rows) {
-    console.error('fetchBoersenJobs error', error)
+  if (jobError || !jobData) {
+    console.error('fetchBoersenJobs jobs error', jobError)
     return []
   }
 
-  // Wir tippen rows bewusst als any[], um keinen Stress mit Supabase-Typen zu haben
-  const jobs = rows as any[]
+  const jobs = jobData as unknown as JobRow[]
 
-  const jobIds = jobs.map((j) => j.id as string)
+  if (jobs.length === 0) return []
 
-  // 2️⃣ Alle Dateien zu diesen Jobs holen
-  const { data: fileRows, error: filesError } = await supabase
+  // 2) Profile zu den Usern holen (PLZ/Ort, account_type)
+  const userIds = Array.from(new Set(jobs.map((j) => j.user_id)))
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, plz, ort, account_type')
+    .in('id', userIds)
+
+  if (profileError) {
+    console.error('fetchBoersenJobs profiles error', profileError)
+  }
+
+  const profiles = (profileData ?? []) as ProfileRow[]
+  const profileByUser = new Map<string, ProfileRow>()
+  for (const p of profiles) {
+    profileByUser.set(p.id, p)
+  }
+
+  // 3) Dateien für alle Jobs holen
+  const jobIds = jobs.map((j) => j.id)
+  let filesByJob = new Map<string, JobFileRow[]>()
+
+  const { data: fileData, error: filesError } = await supabase
     .from('job_files')
     .select('job_id, storage_path, file_name, file_type')
     .in('job_id', jobIds)
 
   if (filesError) {
     console.error('fetchBoersenJobs job_files error', filesError)
+  } else if (fileData) {
+    const files = fileData as unknown as JobFileRow[]
+    filesByJob = new Map<string, JobFileRow[]>()
+    for (const f of files) {
+      const arr = filesByJob.get(f.job_id) ?? []
+      arr.push(f)
+      filesByJob.set(f.job_id, arr)
+    }
   }
 
-  const files = (fileRows ?? []) as any[]
-
-  const filesByJob = new Map<string, any[]>()
-  for (const f of files) {
-    const arr = filesByJob.get(f.job_id) ?? []
-    arr.push(f)
-    filesByJob.set(f.job_id, arr)
-  }
-
-  const storage = supabase.storage.from('job-files')
-
-  // 3️⃣ Mapping DB → dein Frontend-Typ Auftrag
+  // 4) Mapping DB → Auftrag[]
   const result: Auftrag[] = jobs.map((job) => {
-    const fileList = filesByJob.get(job.id as string) ?? []
-    const imageFiles = fileList.filter((f) => f.file_type === 'image')
-    const attachFiles = fileList.filter((f) => f.file_type === 'attachment')
+    const jobFiles = filesByJob.get(job.id) ?? []
+    const imageFiles = jobFiles.filter((f) => f.file_type === 'image')
+    const attachFiles = jobFiles.filter((f) => f.file_type === 'attachment')
 
-    // Bilder-URLs aus dem Storage, sonst Platzhalter
-    const bilder: string[] =
+    const bilder =
       imageFiles.length > 0
         ? imageFiles.map((f) => {
-            const { data } = storage.getPublicUrl(f.storage_path as string)
+            const { data } = supabase.storage
+              .from('job-files')
+              .getPublicUrl(f.storage_path)
             return data.publicUrl
           })
         : ['/images/platzhalter.jpg']
 
-    // Attachments (PDF etc.)
     const dateien =
       attachFiles.length > 0
         ? attachFiles.map((f) => {
-            const { data } = storage.getPublicUrl(f.storage_path as string)
+            const { data } = supabase.storage
+              .from('job-files')
+              .getPublicUrl(f.storage_path)
             return {
-              name: f.file_name as string,
+              name: f.file_name,
               url: data.publicUrl,
             }
           })
         : []
 
-    // Material (Materialgüte)
-    const material =
-      job.material_guete === 'Andere' && job.material_guete_custom
-        ? `Andere (${job.material_guete_custom})`
-        : (job.material_guete as string | null) ?? 'k. A.'
+    // Verfahren 1 & 2
+    const verfahren: Auftrag['verfahren'] = []
+    if (job.verfahren_1) verfahren.push({ name: job.verfahren_1, felder: {} })
+    if (job.verfahren_2) verfahren.push({ name: job.verfahren_2, felder: {} })
 
-    const length = (job.laenge_mm as number | null) ?? 0
-    const width = (job.breite_mm as number | null) ?? 0
-    const height = (job.hoehe_mm as number | null) ?? 0
+    // Material aus material_guete / materialguete + *_custom
+    const rawMaterial =
+      job.material_guete ??
+      job.materialguete ??
+      null
+
+    const material =
+      rawMaterial === 'Andere' &&
+      (job.material_guete_custom ?? job.materialguete_custom)
+        ? `Andere (${job.material_guete_custom ?? job.materialguete_custom})`
+        : rawMaterial ?? 'k. A.'
+
+    const length = job.laenge_mm ?? 0
+    const width = job.breite_mm ?? 0
+    const height = job.hoehe_mm ?? 0
     const masse =
       job.masse_kg !== null && job.masse_kg !== undefined
         ? String(job.masse_kg)
         : '0'
 
-    // Datum + Logistikarten
-    const warenausgabeDatum = new Date(job.liefer_datum_utc as string)
-    const warenannahmeDatum = new Date(job.rueck_datum_utc as string)
+    const warenausgabeDatum = new Date(job.liefer_datum_utc)
+    const warenannahmeDatum = new Date(job.rueck_datum_utc)
+    const warenausgabeArt = job.liefer_art ?? ''
+    const warenannahmeArt = job.rueck_art ?? ''
 
-    const rawLieferArt = (job.liefer_art as string | null) ?? ''
-    const rawRueckArt = (job.rueck_art as string | null) ?? ''
-
-    // Mapping auf deine Filter-Werte
-    const warenausgabeArt =
-      rawLieferArt === 'selbst'
-        ? 'selbstanlieferung'
-        : rawLieferArt || ''
-
-    const warenannahmeArt =
-      rawRueckArt === 'selbst'
-        ? 'selbstabholung'
-        : rawRueckArt || ''
-
-    // Verfahren 1 & 2 → wie bei deinen Dummy-Aufträgen
-    const verfahren: Auftrag['verfahren'] = []
-    if (job.verfahren_1) {
-      verfahren.push({ name: job.verfahren_1 as string, felder: {} })
-    }
-    if (job.verfahren_2) {
-      verfahren.push({ name: job.verfahren_2 as string, felder: {} })
-    }
-
-    // Standort aus profiles (PLZ + Ort)
-    const profile = job.profiles?.[0] as
-      | { plz?: string | null; ort?: string | null; account_type?: string | null }
-      | undefined
-
-    const plz = profile?.plz ?? ''
-    const ort = profile?.ort ?? ''
+    const profile = profileByUser.get(job.user_id)
     const standort =
-      plz || ort ? `${plz}${plz && ort ? ' ' : ''}${ort}` : 'k. A.'
+      profile && (profile.plz || profile.ort)
+        ? `${profile.plz ?? ''} ${profile.ort ?? ''}`.trim()
+        : 'k. A.'
 
-    const accountType = (profile?.account_type || '').toLowerCase()
-    const gewerblich = accountType === 'gewerblich' || !accountType
+    const accountType = profile?.account_type ?? 'gewerblich'
+    const gewerblich = accountType === 'gewerblich'
     const privat = accountType === 'privat'
 
-    const beschreibung = (job.description as string | null) ?? ''
-
-    const gesponsert = (job.promo_score as number | null) && job.promo_score > 0
+    const gesponsert = (job.promo_score ?? 0) > 0
+    const beschreibung = job.description ?? ''
 
     const auftrag: Auftrag = {
-      id: job.id as string,
-      verfahren,                         // → in der Karte z.B. "Nasslackieren & Folieren"
-      material,                          // → Materialgüte aus DB
+      id: job.id,
+      verfahren,
+      material,
       length,
       width,
       height,
@@ -171,14 +205,14 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
       warenannahmeDatum,
       warenausgabeArt,
       warenannahmeArt,
-      bilder,                            // → erstes Bild für die Karte, alle für Detailseite
-      standort,                          // → "PLZ Ort" aus profiles
-      gesponsert: !!gesponsert,
+      bilder,
+      standort,
+      gesponsert,
       gewerblich,
       privat,
       beschreibung,
       dateien,
-      user: undefined,                   // später aus profiles.username o.ä.
+      user: undefined,
     }
 
     return auftrag

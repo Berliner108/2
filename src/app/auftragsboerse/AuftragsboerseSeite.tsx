@@ -1,44 +1,63 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Fuse from 'fuse.js';
-import styles from './auftragsboerse.module.css';
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import Fuse from 'fuse.js'
+import styles from './auftragsboerse.module.css'
 import Navbar from '../components/navbar/Navbar'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import ArtikelContainerAuftragsboerse from '../components/ArtikelContainerAuftragsboerse';
-import type { Auftrag } from '@/lib/types/auftrag';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import ArtikelContainerAuftragsboerse from '../components/ArtikelContainerAuftragsboerse'
+import type { Auftrag } from '@/lib/types/auftrag'
+
 // Feste Verfahren
 const VERFAHREN = [
-  'Nasslackieren','Pulverbeschichten','Verzinken','Eloxieren','Strahlen','Entlacken',
-  'Einlagern','Isolierstegverpressung','Folieren','Anodisieren','Verzinnen','Aluminieren',
-  'Entzinken','Entzinnen','Entnickeln','Vernickeln','Entanodisieren','Entaluminieren','Enteloxieren',
-] as const;
+  'Nasslackieren',
+  'Pulverbeschichten',
+  'Verzinken',
+  'Eloxieren',
+  'Strahlen',
+  'Entlacken',
+  'Einlagern',
+  'Isolierstegverpressung',
+  'Folieren',
+  'Anodisieren',
+  'Verzinnen',
+  'Aluminieren',
+  'Entzinken',
+  'Entzinnen',
+  'Entnickeln',
+  'Vernickeln',
+  'Entanodisieren',
+  'Entaluminieren',
+  'Enteloxieren',
+] as const
 
+// Feste Slider-Limits (großzügig gewählt)
 const LIMITS = {
-  length: 20000,
-  width: 6000,
-  height: 3000,
-  masse: 20000,
-};
+  length: 20000, // mm
+  width: 6000, // mm
+  height: 3000, // mm
+  masse: 20000, // kg
+}
 
+// Logistik normalisieren – jetzt direkt auf dem Auftrag-Typ
+function normLogistik(a: Auftrag) {
+  const waDatum: Date | undefined = a.warenausgabeDatum
+  const wnDatum: Date | undefined = a.warenannahmeDatum
 
-// Logistik normalisieren (neu bevorzugt, alte/abweichende Felder als Fallback)
-function normLogistik(a: any) {
-  const waDatum: Date | undefined = a.warenausgabeDatum ?? a.lieferdatum;
-  const wnDatum: Date | undefined = a.warenannahmeDatum ?? a.abholdatum;
+    // 👇 HIER ist die wichtige Änderung: null explizit erlauben
+  const lower = (s: string | null | undefined) =>
+    typeof s === 'string' ? s.trim().toLowerCase() : undefined
 
-  const waArtRaw: string | undefined = a.warenausgabeArt ?? a.warenausgabeart ?? a.lieferArt;
-  const wnArtRaw: string | undefined = a.warenannahmeArt ?? a.abholArt;
-
-  const lower = (s?: string) => (typeof s === 'string' ? s.trim().toLowerCase() : undefined);
+  const waArt = lower(a.warenausgabeArt)
+  const wnArt = lower(a.warenannahmeArt)
 
   return {
     waDatum,
     wnDatum,
-    waArt: lower(waArtRaw),   // 'selbstanlieferung' | 'abholung' | undefined
-    wnArt: lower(wnArtRaw),   // 'zustellung' | 'selbstabholung' | undefined
-  };
+    waArt, // 'selbstanlieferung' | 'abholung' | undefined (je nachdem, was du speicherst)
+    wnArt, // 'zustellung' | 'selbstabholung' | undefined
+  }
 }
 
 export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
