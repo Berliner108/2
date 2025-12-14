@@ -4,6 +4,10 @@ import { Loader2 } from 'lucide-react'
 import AuftragsboerseSeite from './AuftragsboerseSeite'
 import { fetchBoersenJobs } from '@/lib/jobs-boerse'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function Page() {
   const jobs = await fetchBoersenJobs()
 
