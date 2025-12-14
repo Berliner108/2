@@ -4,16 +4,17 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '*.supabase.co' },
-      { protocol: 'https', hostname: 'oxzcewynapbbzyojyjfl.supabase.co' },
+      {
+        protocol: 'https',
+        hostname: 'oxzcewynapbbzyojyjfl.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   eslint: { ignoreDuringBuilds: true },
 
-  // ✅ neu statt experimental.serverComponentsExternalPackages
   serverExternalPackages: ['pdfkit', 'fontkit', 'linebreak', 'png-js'],
 
-  // (Optional) dein bisheriges externals-Snippet kannst du lassen oder entfernen.
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = config.externals || []
@@ -24,4 +25,5 @@ const nextConfig = {
     return config
   },
 }
+
 module.exports = nextConfig
