@@ -27,6 +27,9 @@ type JobRow = {
 
 type ProfileRow = {
   id: string
+  username: string | null
+  rating_avg: number | string | null
+  rating_count: number | string | null
   account_type: string | null
   address: { zip?: string; city?: string } | null
 }
@@ -82,11 +85,11 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
   }
 
   // 2) Profile separat holen
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, account_type, address')
-    .eq('id', j.user_id)
-    .maybeSingle()
+const { data: profile, error: profileError } = await supabase
+  .from('profiles')
+  .select('id, username, rating_avg, rating_count, account_type, address')
+  .eq('id', j.user_id)
+  .maybeSingle()
 
   if (profileError) {
     console.error('fetchJobDetail profiles error:', profileError)
@@ -161,6 +164,13 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
   const privat = accountType === 'private'
 
   const gesponsert = (j.promo_score ?? 0) > 0
+  const username = p?.username ?? null
+
+  const ratingAvg =
+  p?.rating_avg == null ? null : Number(p.rating_avg)
+
+const ratingCount =
+  p?.rating_count == null ? null : Number(p.rating_count)
 
   return {
     id: j.id,
@@ -181,6 +191,8 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     gewerblich,
     privat,
     beschreibung: j.description ?? '',
-    user: undefined,
+    user: username,
+    userRatingAvg: Number.isFinite(ratingAvg) ? ratingAvg : null,
+  userRatingCount: Number.isFinite(ratingCount) ? ratingCount : null,
   }
 }
