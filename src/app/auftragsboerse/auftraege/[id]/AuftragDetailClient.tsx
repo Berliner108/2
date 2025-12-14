@@ -403,20 +403,32 @@ export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
               </div>
 
               <div className={styles.metaItem}>
-                <span className={styles.label}>Masse schwerstes Werkstück:</span>
-                <span className={styles.value}>{auftrag.masse}</span>
+                <span className={styles.label}>Masse schwerstes Werkstück :</span>
+                <span className={styles.value}>{auftrag.masse} kg</span>
               </div>
 
-              {/* User */}
-              {auftrag.user && (
+{/* User + Rating + Links */}
+{auftrag.user && (
   <div className={styles.metaItem}>
     <span className={styles.label}>User:</span>
+
     <span className={styles.value}>
-      {auftrag.user}
+      <Link
+        href={`/profil/${encodeURIComponent(auftrag.user)}`} // ✅ Ziel wie bei Lackanfragen anpassen
+        className={styles.userLink}
+      >
+        {auftrag.user}
+      </Link>
+
       {auftrag.userRatingAvg != null && (
-        <> • {auftrag.userRatingAvg.toFixed(2)} ({auftrag.userRatingCount ?? 0})</>
+        <>
+          {' '}
+          • {auftrag.userRatingAvg.toFixed(2)} / 5
+          {auftrag.userRatingCount != null ? ` · ${auftrag.userRatingCount} Bewertungen` : ''}
+        </>
       )}
     </span>
+
     <Link
       href={`/messages?empfaenger=${encodeURIComponent(auftrag.user)}`}
       className={styles.kontaktLink}
@@ -425,6 +437,7 @@ export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
     </Link>
   </div>
 )}
+
 
             </div>
 
