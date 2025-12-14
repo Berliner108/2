@@ -80,9 +80,18 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
   const verfahrenName = verfahren.map((v) => v.name).join(' & ');
   const imgSrc = bilder.length > 0 ? bilder[0] : '/images/platzhalter.jpg';
+const waDate =
+  warenausgabeDatum instanceof Date
+    ? warenausgabeDatum
+    : new Date(warenausgabeDatum as any)
 
-  const waInfo = getDeadlineInfo(warenausgabeDatum);
-  const wnInfo = getDeadlineInfo(warenannahmeDatum);
+const wnDate =
+  warenannahmeDatum instanceof Date
+    ? warenannahmeDatum
+    : new Date(warenannahmeDatum as any)
+
+const waInfo = getDeadlineInfo(waDate)
+const wnInfo = getDeadlineInfo(wnDate)
 
   return (
     <Link href={`/auftragsboerse/auftraege/${id}`} className={styles.cardLink}>
@@ -126,7 +135,8 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
           {/* Warenausgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText5}>
             Warenausgabe:{' '}
-            {warenausgabeDatum.toLocaleDateString('de-DE')}
+            {waDate.toLocaleDateString('de-DE')}
+
             {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
             {waInfo && (
               <span
@@ -146,7 +156,7 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
           {/* Warenrückgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText6}>
             Warenrückgabe:{' '}
-            {warenannahmeDatum.toLocaleDateString('de-DE')}
+            {wnDate.toLocaleDateString('de-DE')}
             {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
             {wnInfo && (
               <span

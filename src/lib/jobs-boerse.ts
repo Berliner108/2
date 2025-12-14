@@ -132,7 +132,7 @@ const privat = accountType === 'private'
     const gesponsert = (job.promo_score ?? 0) > 0
 
     // 8) Bilder / Dateien – erstmal leer; Karte nimmt Platzhalterbild
-    const bilder: string[] = []
+    const bilder: string[] = ['/images/platzhalter.jpg']
     const dateien: { name: string; url: string }[] = []
 
     const beschreibung = job.description ?? ''
