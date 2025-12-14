@@ -100,13 +100,13 @@ const wnInfo = getDeadlineInfo(wnDate)
           <div className={styles.cardBildWrapper}>
             {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
             <Image
-              className={styles.cardBild}
-              src={imgSrc}
-              alt={verfahrenName}
-              fill
-              priority={false}
-              loading="lazy"
-            />
+  className={styles.cardBild}
+  src={imgSrc}
+  alt={verfahrenName}
+  fill
+  loading="lazy"
+  unoptimized
+/>
           </div>
 
           {(gewerblich || privat) && (
