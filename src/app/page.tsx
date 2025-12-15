@@ -372,15 +372,12 @@ export default function Page() {
                       <div className={styles.articleText}>
                         <h3>{a.verfahren?.map((v: any) => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>
                         <p><strong>Material:</strong> {a.material ?? '-'}</p>
-                        <p><strong>Maße:</strong> {a.length ?? '-'} x {a.width ?? '-'} x {a.height ?? '-'} mm</p>
-                        <p><strong>Max. Masse:</strong> {a.masse ?? '-'} kg</p>
-                        <p><strong>Lieferdatum:</strong> {formatDate(toDate(a.warenausgabeDatum))}</p>
-                        <p><strong>Abholdatum:</strong> {formatDate(toDate(a.warenannahmeDatum))}</p>
-                        <p><strong>Warenausgabe per:</strong> {labelWarenausgabe(a.warenausgabeArt)}</p>
+                        <p><strong>Warenausgabe per:</strong> {labelWarenausgabe(a.warenausgabeArt)}</p>                        
+                        <p><strong>Datum Warenausgabe:</strong> {formatDate(toDate(a.warenausgabeDatum))}</p>                        
                         <p><strong>Warenrückgabe per:</strong> {labelWarenrueckgabe(a.warenannahmeArt)}</p>
-
-
-
+                        <p><strong>Datum Warenrückgabe:</strong> {formatDate(toDate(a.warenannahmeDatum))}</p>
+                        <p><strong>Max. Maße:</strong> {a.length ?? '-'} x {a.width ?? '-'} x {a.height ?? '-'} mm</p>
+                        <p><strong>Max. Masse:</strong> {a.masse ?? '-'} kg</p>
                         <p>
                           <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
                           {a.standort ?? '-'}
