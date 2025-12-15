@@ -929,11 +929,20 @@ if (hasPromo) {
   }, [lieferDatum]);
 
   /* ---------- Skeleton beim Initial-Load ---------- */
-  if (bootLoading) {
+  const [showBootUI, setShowBootUI] = useState(false);
+
+useEffect(() => {
+  if (!bootLoading) { setShowBootUI(false); return; }
+  const t = setTimeout(() => setShowBootUI(true), 250);
+  return () => clearTimeout(t);
+}, [bootLoading]);
+
+if (bootLoading) {
   return (
     <>
       <Navbar />
-      {showBootLoader ? (
+
+      {showBootUI ? (
         <>
           <TopLoader />
           <div className={styles.container}>
@@ -941,11 +950,11 @@ if (hasPromo) {
           </div>
         </>
       ) : (
-        // ✅ in den ersten 250ms kein Loader (damit es nicht “flackert”)
-        <div className={styles.container} />
+        // ✅ Platzhalter hält Footer unten – kein Loader sichtbar
+        <div className={styles.container} style={{ minHeight: '70vh' }} />
       )}
     </>
-  )
+  );
 }
 
 
