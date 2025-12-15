@@ -32,13 +32,7 @@ const VERFAHREN = [
   'Enteloxieren',
 ] as const
 
-// Feste Slider-Limits (großzügig gewählt)
-const LIMITS = {
-  length: 20000, // mm
-  width: 6000, // mm
-  height: 3000, // mm
-  masse: 20000, // kg
-}
+
 
 // Logistik normalisieren – jetzt direkt auf dem Auftrag-Typ
 function normLogistik(a: Auftrag) {
@@ -70,6 +64,22 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
     () => jobs.map(a => ({ ...a, dateien: a.dateien ?? [] })),
     [jobs]
   );
+  const LIMITS = useMemo(() => {
+  const maxNum = (arr: number[]) =>
+    Math.max(0, ...arr.filter(n => Number.isFinite(n)))
+
+  const masseNums = data
+    .map(a => Number(String(a.masse ?? '').replace(',', '.')))
+    .filter(n => Number.isFinite(n))
+
+  return {
+    length: Math.max(20000, maxNum(data.map(a => a.length))),
+    width:  Math.max(6000,  maxNum(data.map(a => a.width))),
+    height: Math.max(3000,  maxNum(data.map(a => a.height))),
+    masse:  Math.max(20000, maxNum(masseNums)),
+  }
+}, [data])
+
 
   // --- Refs & stabile Scroll-Position beim Filtern ---
   const contentRef  = useRef<HTMLDivElement>(null);
