@@ -39,19 +39,13 @@ function normLogistik(a: Auftrag) {
   const waDatum: Date | undefined = a.warenausgabeDatum
   const wnDatum: Date | undefined = a.warenannahmeDatum
 
-    // 👇 HIER ist die wichtige Änderung: null explizit erlauben
   const lower = (s: string | null | undefined) =>
     typeof s === 'string' ? s.trim().toLowerCase() : undefined
 
-  const waArt = lower(a.warenausgabeArt)
-  const wnArt = lower(a.warenannahmeArt)
+  const waArt = lower(a.warenausgabeArt) // 'selbst' | 'abholung'
+  const wnArt = lower(a.warenannahmeArt) // 'selbst' | 'anlieferung'
 
-  return {
-    waDatum,
-    wnDatum,
-    waArt, // 'selbstanlieferung' | 'abholung' | undefined (je nachdem, was du speicherst)
-    wnArt, // 'zustellung' | 'selbstabholung' | undefined
-  }
+  return { waDatum, wnDatum, waArt, wnArt }
 }
 
 export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
@@ -205,9 +199,8 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
     if (!wnZust && !wnSelbst) return true;
     const { wnArt } = normLogistik(a);
     if (!wnArt) return false;
-    return (
-      (wnZust   && wnArt === 'zustellung') ||
-(wnSelbst && wnArt === 'selbst')
+    return ((wnZust   && wnArt === 'anlieferung') ||
+  (wnSelbst && wnArt === 'selbst')
     );
   };
 
@@ -397,7 +390,7 @@ const sortierteAuftraege = useMemo(() => {
             <strong>Warenrückgabe</strong>
             <label className={styles.checkboxLabel}>
               <input type="checkbox" checked={wnZust} onChange={() => setWnZust(!wnZust)} />
-              Zustellung
+              Anlieferung
             </label>
             <label className={styles.checkboxLabel}>
               <input type="checkbox" checked={wnSelbst} onChange={() => setWnSelbst(!wnSelbst)} />

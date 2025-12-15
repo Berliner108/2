@@ -11,8 +11,22 @@ type ArtikelContainerAuftragsboerseProps = {
   artikel: Auftrag;
 };
 
-/* ===== Deadline-Helper – gleiche Logik wie bei Lackanfragen ===== */
+/* ===== Label-Mapping (nur Anzeige) ===== */
+const labelWarenausgabeArt = (v?: string | null) => {
+  const s = (v ?? '').trim().toLowerCase();
+  if (s === 'abholung') return 'Abholung';
+  if (s === 'selbst') return 'Selbstanlieferung';
+  return '';
+};
 
+const labelWarenrueckgabeArt = (v?: string | null) => {
+  const s = (v ?? '').trim().toLowerCase();
+  if (s === 'anlieferung') return 'Anlieferung';
+  if (s === 'selbst') return 'Selbstabholung';
+  return '';
+};
+
+/* ===== Deadline-Helper – gleiche Logik wie bei Lackanfragen ===== */
 type DeadlineVariant = 'ok' | 'warn' | 'danger';
 
 function daysBetweenToday(date: Date): number {
@@ -34,31 +48,22 @@ function getDeadlineInfo(
   const d = daysBetweenToday(date);
 
   let text: string;
-  if (d < -100) {
-    text = 'abgeschlossen vor über 100 Tagen';
-  } else if (d < -1) {
-    text = `abgeschlossen vor ${Math.abs(d)} Tagen`;
-  } else if (d === -1) {
-    text = 'abgeschlossen seit gestern';
-  } else if (d === 0) {
-    text = 'heute';
-  } else if (d === 1) {
-    text = 'in 1 Tag';
-  } else if (d <= 100) {
-    text = `in ${d} Tagen`;
-  } else {
-    text = 'in über 100 Tagen';
-  }
+  if (d < -100) text = 'abgeschlossen vor über 100 Tagen';
+  else if (d < -1) text = `abgeschlossen vor ${Math.abs(d)} Tagen`;
+  else if (d === -1) text = 'abgeschlossen seit gestern';
+  else if (d === 0) text = 'heute';
+  else if (d === 1) text = 'in 1 Tag';
+  else if (d <= 100) text = `in ${d} Tagen`;
+  else text = 'in über 100 Tagen';
 
-  const variant: DeadlineVariant =
-    d < 0 ? 'danger' : d <= 3 ? 'warn' : 'ok';
-
+  const variant: DeadlineVariant = d < 0 ? 'danger' : d <= 3 ? 'warn' : 'ok';
   return { text, variant };
 }
 
 /* ===== Komponente ===== */
-
-export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelContainerAuftragsboerseProps) {
+export default function ArtikelContainerAuftragsboerse({
+  artikel,
+}: ArtikelContainerAuftragsboerseProps) {
   const {
     id,
     verfahren,
@@ -80,18 +85,18 @@ export default function ArtikelContainerAuftragsboerse({ artikel }: ArtikelConta
 
   const verfahrenName = verfahren.map((v) => v.name).join(' & ');
   const imgSrc = bilder.length > 0 ? bilder[0] : '/images/platzhalter.jpg';
-const waDate =
-  warenausgabeDatum instanceof Date
-    ? warenausgabeDatum
-    : new Date(warenausgabeDatum as any)
 
-const wnDate =
-  warenannahmeDatum instanceof Date
-    ? warenannahmeDatum
-    : new Date(warenannahmeDatum as any)
+  const waDate =
+    warenausgabeDatum instanceof Date ? warenausgabeDatum : new Date(warenausgabeDatum as any);
+  const wnDate =
+    warenannahmeDatum instanceof Date ? warenannahmeDatum : new Date(warenannahmeDatum as any);
 
-const waInfo = getDeadlineInfo(waDate)
-const wnInfo = getDeadlineInfo(wnDate)
+  const waInfo = getDeadlineInfo(waDate);
+  const wnInfo = getDeadlineInfo(wnDate);
+
+  // ✅ Labels erst NACH Definition verwenden
+  const waArtText = labelWarenausgabeArt(warenausgabeArt);
+  const wnArtText = labelWarenrueckgabeArt(warenannahmeArt);
 
   return (
     <Link href={`/auftragsboerse/auftraege/${id}`} className={styles.cardLink}>
@@ -100,13 +105,13 @@ const wnInfo = getDeadlineInfo(wnDate)
           <div className={styles.cardBildWrapper}>
             {gesponsert && <div className={styles.gesponsertLabel}>Gesponsert</div>}
             <Image
-  className={styles.cardBild}
-  src={imgSrc}
-  alt={verfahrenName}
-  fill
-  loading="lazy"
-  unoptimized
-/>
+              className={styles.cardBild}
+              src={imgSrc}
+              alt={verfahrenName}
+              fill
+              loading="lazy"
+              unoptimized
+            />
           </div>
 
           {(gewerblich || privat) && (
@@ -132,12 +137,9 @@ const wnInfo = getDeadlineInfo(wnDate)
         <div className={styles.cardTextBlock}>
           <h4 className={styles.cardText1}>{verfahrenName}</h4>
 
-          {/* Warenausgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText5}>
-            Warenausgabe:{' '}
-            {waDate.toLocaleDateString('de-DE')}
-
-            {warenausgabeArt ? ` (${warenausgabeArt})` : ''}
+            Warenausgabe: {waDate.toLocaleDateString('de-DE')}
+            {waArtText ? ` – ${waArtText}` : ''}
             {waInfo && (
               <span
                 className={`${styles.deadlineBadge} ${
@@ -153,11 +155,9 @@ const wnInfo = getDeadlineInfo(wnDate)
             )}
           </p>
 
-          {/* Warenrückgabe: Datum + Art + Badge am Ende */}
           <p className={styles.cardText6}>
-            Warenrückgabe:{' '}
-            {wnDate.toLocaleDateString('de-DE')}
-            {warenannahmeArt ? ` (${warenannahmeArt})` : ''}
+            Warenrückgabe: {wnDate.toLocaleDateString('de-DE')}
+            {wnArtText ? ` – ${wnArtText}` : ''}
             {wnInfo && (
               <span
                 className={`${styles.deadlineBadge} ${
@@ -174,7 +174,9 @@ const wnInfo = getDeadlineInfo(wnDate)
           </p>
 
           <p className={styles.cardText2}>Material: {material}</p>
-          <p className={styles.cardText3}>Maße größtes Werkstück: {length} × {width} × {height} mm</p>
+          <p className={styles.cardText3}>
+            Maße größtes Werkstück: {length} × {width} × {height} mm
+          </p>
           <p className={styles.cardText4}>Masse schwerstes Werkstück: {masse} kg</p>
 
           <div className={styles.cardOrt}>
