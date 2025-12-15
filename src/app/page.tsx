@@ -30,6 +30,14 @@ const parseNum = (v: any): number | undefined => {
   }
   return undefined;
 };
+const prettyWarenausgabeArt = (v?: string | null) => {
+  const s = (v ?? '').trim();
+  if (!s) return '-';
+
+  // Variante A: exakter Wert "selbst"
+  if (s.toLowerCase() === 'selbst') return 'Selbstanlieferung'; // <- hier dein Wunschtext
+};
+
 
 const strOrEmpty = (...vals: any[]): string => {
   for (const v of vals) {
@@ -355,7 +363,8 @@ export default function Page() {
                         <p><strong>Max. Masse:</strong> {a.masse ?? '-'}</p>
                         <p><strong>Lieferdatum:</strong> {formatDate(toDate(a.warenausgabeDatum))}</p>
                         <p><strong>Abholdatum:</strong> {formatDate(toDate(a.warenannahmeDatum))}</p>
-                        <p><strong>Warenausgabe per:</strong> {a.warenausgabeArt || '-'}</p>
+                        <p><strong>Warenausgabe per:</strong> {prettyWarenausgabeArt(a.warenausgabeArt)}</p>
+
                         <p>
                           <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
                           {a.standort ?? '-'}
