@@ -7,8 +7,6 @@ import { ChevronRightIcon } from '@heroicons/react/24/solid';
 import Slideshow from './slideshow/slideshow';
 import CookieBanner from './components/CookieBanner';
 import Navbar from './components/navbar/Navbar';
-import { dummyAuftraege } from '@/data/dummyAuftraege';
-import type { Auftrag as RawAuftrag } from '@/data/dummyAuftraege';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
@@ -61,14 +59,29 @@ const formatZustand = (z?: string) => {
   if (n.includes('geoffnet') || n.includes('geöffnet') || n === 'offen') {
     return 'Geöffnet und einwandfrei';
   }
-  // sonst Capitalize
   const raw = (z ?? '').replace(/&/g, 'und');
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 };
 
-/* ================= Types ================= */
-type Auftrag = RawAuftrag;
+/* ================= Delayed Skeleton (kein Flash) ================= */
+function useDelayedSkeleton(loading: boolean, hasData: boolean, delayMs = 220) {
+  const [show, setShow] = useState(false);
 
+  useEffect(() => {
+    if (hasData || !loading) {
+      setShow(false);
+      return;
+    }
+    setShow(false);
+    const t = setTimeout(() => setShow(true), delayMs);
+    return () => clearTimeout(t);
+  }, [loading, hasData, delayMs]);
+
+  return show;
+}
+
+/* ================= Types ================= */
+type Auftrag = any; // kommt jetzt aus der echten Börse-API (Top 12)
 type Lackanfrage = {
   id: string | number;
   titel: string;
@@ -99,11 +112,6 @@ type ShopArtikel = {
   [key: string]: any;
 };
 
-/* Initial: gesponserte Aufträge aus den Dummies (unverändert) */
-const initialSponsored: Auftrag[] = dummyAuftraege
-  .filter(a => a.gesponsert)
-  .slice(0, 12);
-
 /* ---------- Skeleton-Karten (Horizontalscroller) ---------- */
 function SkeletonRow({ cards = 12 }: { cards?: number }) {
   return (
@@ -129,61 +137,32 @@ export default function Page() {
   const scrollRefShop = useRef<HTMLDivElement>(null);
   const scrollRefLackanfragen = useRef<HTMLDivElement>(null);
 
-  /* ===== Aufträge ===== */
-  const [auftraege, setAuftraege] = useState<Auftrag[]>(initialSponsored);
+  /* ===== Aufträge (Top 12 aus echter Börse) ===== */
+  const [auftraege, setAuftraege] = useState<Auftrag[]>([]);
   const [loadingAuftraege, setLoadingAuftraege] = useState(true);
+
   useEffect(() => {
     let active = true;
     const fetchAuftraege = async () => {
       try {
         setLoadingAuftraege(true);
-        const res = await fetch('/api/auftraege?sponsored=true&limit=12', { cache: 'no-store' });
+        // ✅ neuer, schneller Endpoint (Route: /api/auftraege/top)
+        const res = await fetch('/api/auftraege/top', { cache: 'no-store' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = (await res.json()) as any[];
-
+        const data = (await res.json()) as Auftrag[];
         if (!active) return;
-
-        setAuftraege(prev => {
-          const apiById = new Map<any, any>(data.map(x => [x.id, x]));
-          return prev.map(old => {
-            const a = apiById.get(old.id) ?? {};
-            const warenausgabeDatum =
-              toDate(a.warenausgabeDatum) ?? (old as any).warenausgabeDatum;
-            const warenannahmeDatum =
-              toDate(a.warenannahmeDatum) ?? (old as any).warenannahmeDatum;
-
-            const patch: Partial<Auftrag> = {
-              ...(a.verfahren ? { verfahren: a.verfahren } : {}),
-              ...(a.material ? { material: a.material } : {}),
-              ...(a.length ? { length: a.length } : {}),
-              ...(a.width ? { width: a.width } : {}),
-              ...(a.height ? { height: a.height } : {}),
-              ...(a.masse ? { masse: a.masse } : {}),
-              ...(a.standort ? { standort: a.standort } : {}),
-              ...(a.user ? { user: a.user } : {}),
-              ...(Array.isArray(a.bilder) ? { bilder: a.bilder } : {}),
-              ...(typeof a.gesponsert === 'boolean' ? { gesponsert: a.gesponsert } : {}),
-              ...(typeof a.gewerblich === 'boolean' ? { gewerblich: a.gewerblich } : {}),
-              ...(typeof a.privat === 'boolean' ? { privat: a.privat } : {}),
-              ...(a.beschreibung ? { beschreibung: a.beschreibung } : {}),
-              ...(warenausgabeDatum ? { warenausgabeDatum } : {}),
-              ...(warenannahmeDatum ? { warenannahmeDatum } : {}),
-            };
-
-            if (a.warenausgabeArt) (patch as any).warenausgabeArt = a.warenausgabeArt;
-            if (a.warenannahmeArt) (patch as any).warenannahmeArt = a.warenannahmeArt;
-
-            return { ...(old as any), ...patch };
-          });
-        });
-      } catch {
-        // keep initialSponsored
+        setAuftraege(data);
+      } catch (e) {
+        console.warn('Top-Aufträge konnten nicht geladen werden:', e);
+        if (active) setAuftraege([]);
       } finally {
         if (active) setLoadingAuftraege(false);
       }
     };
     fetchAuftraege();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   /* ===== Lackanfragen (TOP 12 aus der Börse) ===== */
@@ -195,26 +174,25 @@ export default function Page() {
     const fetchLack = async () => {
       try {
         setLoadingLack(true);
-        // >>> Änderung 1: exakt wie Börse (promo + desc + page=1 + limit=12)
-        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=12', { cache: 'no-store' });
+        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=12', {
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const json = await res.json();
         const rawList: any[] = Array.isArray(json)
           ? json
-          : (Array.isArray(json?.items) ? json.items : []);
+          : Array.isArray(json?.items)
+            ? json.items
+            : [];
 
-        // >>> Änderung 2: nur mappen – KEINE Sortierung/Slice im Client
         const mapped: Lackanfrage[] = rawList.map((a: any) => {
-          // === robustes Zusammenführen aus mehreren Backendshapes ===
           const attrs = a?.attributes || a?.data || {};
           const o = { ...attrs, ...a };
 
-          // Ort
           const ortKombi = [o.plz ?? o.zip, o.city ?? o.stadt].filter(Boolean).join(' ').trim();
           const ort = strOrEmpty(o.ort, o.location, ortKombi);
 
-          // Bilder
           let bilder: string[] = [];
           if (Array.isArray(o.bilder) && o.bilder.length) bilder = o.bilder;
           else if (Array.isArray(o.images) && o.images.length) bilder = o.images;
@@ -222,15 +200,13 @@ export default function Page() {
           else if (typeof o.thumbnail === 'string') bilder = [o.thumbnail];
           else bilder = ['/images/platzhalter.jpg'];
 
-          // Zeiten
           const createdAt = toDate(a.created_at ?? o.created_at ?? o.createdAt ?? o.created);
-          const lieferdatum = toDate(a.lieferdatum ?? a.delivery_at ?? o.lieferdatum ?? o.delivery_at ?? o.date);
+          const lieferdatum = toDate(
+            a.lieferdatum ?? a.delivery_at ?? o.lieferdatum ?? o.delivery_at ?? o.date,
+          );
 
-          // Mengen
-          const menge =
-            parseNum(o.menge ?? o.quantity ?? o.amount ?? o.kg ?? o.mass_kg) ?? 0;
+          const menge = parseNum(o.menge ?? o.quantity ?? o.amount ?? o.kg ?? o.mass_kg) ?? 0;
 
-          // Farbton
           const farbton = strOrEmpty(
             o.farbton,
             o.farbtonbezeichnung,
@@ -239,10 +215,9 @@ export default function Page() {
             o.color_name,
             o.color,
             o.ral,
-            o.ncs
+            o.ncs,
           );
 
-          // Gesponsert (Promo) – mehrere Fallbacks
           const gesponsert =
             Boolean(a.gesponsert) ||
             Boolean(o.gesponsert) ||
@@ -250,7 +225,12 @@ export default function Page() {
             (typeof a.promo_score === 'number' && a.promo_score > 0);
 
           return {
-            id: o.id ?? a.id ?? o._id ?? o.uuid ?? `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
+            id:
+              o.id ??
+              a.id ??
+              o._id ??
+              o.uuid ??
+              `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
             titel: strOrEmpty(o.titel, a.title, o.title, o.name, 'Unbenannt'),
             bilder,
             menge,
@@ -262,14 +242,16 @@ export default function Page() {
             preis:
               typeof o.preis === 'number'
                 ? o.preis
-                : (typeof o.min_price === 'number'
-                    ? o.min_price
-                    : (typeof o.price === 'number' ? o.price : undefined)),
+                : typeof o.min_price === 'number'
+                  ? o.min_price
+                  : typeof o.price === 'number'
+                    ? o.price
+                    : undefined,
             gesponsert,
             created_at: createdAt,
             farbton,
           };
-        }); // ← keine .sort() / .slice()
+        });
 
         if (active) setLackanfragen(mapped);
       } catch (e) {
@@ -280,15 +262,17 @@ export default function Page() {
       }
     };
     fetchLack();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   /* ===== Shop-Artikel ===== */
   const [shopArtikel, setShopArtikel] = useState<ShopArtikel[]>(
     artikelDatenShop
-      .filter(a => a.gesponsert)
+      .filter((a) => a.gesponsert)
       .slice(0, 12)
-      .map(a => ({ ...a, lieferdatum: toDate(a.lieferdatum)! }))
+      .map((a) => ({ ...a, lieferdatum: toDate(a.lieferdatum)! })),
   );
   const [loadingShop, setLoadingShop] = useState(true);
 
@@ -301,7 +285,7 @@ export default function Page() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (!active) return;
-        setShopArtikel((data as any[]).map(a => ({ ...a, lieferdatum: toDate(a.lieferdatum)! })));
+        setShopArtikel((data as any[]).map((a) => ({ ...a, lieferdatum: toDate(a.lieferdatum)! })));
       } catch {
         // keep dummy shop items
       } finally {
@@ -309,7 +293,9 @@ export default function Page() {
       }
     };
     fetchShop();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Scroll-Helper
@@ -317,10 +303,10 @@ export default function Page() {
     if (ref.current) ref.current.scrollLeft += dir * 200;
   };
 
-  // Boot-loading Flags: Skeleton nur, wenn *noch keine* Daten da sind
-  const bootLoadingAuftraege = loadingAuftraege && auftraege.length === 0;
-  const bootLoadingShop = loadingShop && shopArtikel.length === 0;
-  const bootLoadingLack = loadingLack && lackanfragen.length === 0;
+  // ✅ Skeleton nur, wenn Laden wirklich dauert (kein Flash)
+  const showSkeletonAuftraege = useDelayedSkeleton(loadingAuftraege, auftraege.length > 0, 220);
+  const showSkeletonShop = useDelayedSkeleton(loadingShop, shopArtikel.length > 0, 220);
+  const showSkeletonLack = useDelayedSkeleton(loadingLack, lackanfragen.length > 0, 220);
 
   return (
     <>
@@ -348,33 +334,38 @@ export default function Page() {
                 ref={scrollRefAuftraege}
                 style={loadingAuftraege ? { minHeight: 280 } : undefined}
               >
-                {bootLoadingAuftraege ? (
+                {showSkeletonAuftraege ? (
                   <SkeletonRow cards={12} />
                 ) : (
                   auftraege.map((a) => (
-                    <Link key={a.id} href={`/auftragsboerse/auftraege/${a.id}`} className={styles.articleBox}>
+                    <Link
+                      key={a.id}
+                      href={`/auftragsboerse/auftraege/${a.id}`}
+                      className={styles.articleBox}
+                    >
                       <img
                         src={a.bilder?.[0] ?? '/images/platzhalter.jpg'}
-                        alt={a.verfahren?.map(v => v.name).join(' & ') || 'Auftrag'}
+                        alt={a.verfahren?.map((v: any) => v.name).join(' & ') || 'Auftrag'}
                         className={styles.articleImg}
                       />
                       <div className={styles.articleText}>
-                        <h3>{a.verfahren?.map(v => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>
-                        <p><strong>Material:</strong> {(a as any).material}</p>
-                        <p><strong>Maße:</strong> {(a as any).length} x {(a as any).width} x {(a as any).height} mm</p>
-                        <p><strong>Max. Masse:</strong> {(a as any).masse}</p>
-                        <p><strong>Lieferdatum:</strong> {formatDate(toDate((a as any).warenausgabeDatum))}</p>
-                        <p><strong>Abholdatum:</strong> {formatDate(toDate((a as any).warenannahmeDatum))}</p>
-                        <p><strong>Warenausgabe per:</strong> {(a as any).warenausgabeArt || '-'}</p>
+                        <h3>{a.verfahren?.map((v: any) => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>
+                        <p><strong>Material:</strong> {a.material ?? '-'}</p>
+                        <p><strong>Maße:</strong> {a.length ?? '-'} x {a.width ?? '-'} x {a.height ?? '-'} mm</p>
+                        <p><strong>Max. Masse:</strong> {a.masse ?? '-'}</p>
+                        <p><strong>Lieferdatum:</strong> {formatDate(toDate(a.warenausgabeDatum))}</p>
+                        <p><strong>Abholdatum:</strong> {formatDate(toDate(a.warenannahmeDatum))}</p>
+                        <p><strong>Warenausgabe per:</strong> {a.warenausgabeArt || '-'}</p>
                         <p>
                           <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-                          {(a as any).standort}
+                          {a.standort ?? '-'}
                         </p>
                       </div>
                     </Link>
                   ))
                 )}
               </div>
+
               <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefAuftraege, -1)}>
                 <ChevronLeftIcon className="h-6 w-6 text-black" />
               </button>
@@ -402,12 +393,16 @@ export default function Page() {
                 ref={scrollRefShop}
                 style={loadingShop ? { minHeight: 280 } : undefined}
               >
-                {bootLoadingShop ? (
+                {showSkeletonShop ? (
                   <SkeletonRow cards={12} />
                 ) : (
                   shopArtikel.map((art) => (
                     <Link key={art.id} href={`/kaufen/artikel/${art.id}`} className={styles.articleBox2}>
-                      <img src={art.bilder?.[0] ?? '/images/platzhalter.jpg'} alt={art.titel} className={styles.articleImg} />
+                      <img
+                        src={art.bilder?.[0] ?? '/images/platzhalter.jpg'}
+                        alt={art.titel}
+                        className={styles.articleImg}
+                      />
                       <div className={styles.articleText}>
                         <h3>{art.titel}</h3>
                         <p><strong>Menge:</strong> {art.menge} kg</p>
@@ -423,6 +418,7 @@ export default function Page() {
                   ))
                 )}
               </div>
+
               <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefShop, -1)}>
                 <ChevronLeftIcon className="h-6 w-6 text-black" />
               </button>
@@ -450,7 +446,7 @@ export default function Page() {
                 ref={scrollRefLackanfragen}
                 style={loadingLack ? { minHeight: 280 } : undefined}
               >
-                {bootLoadingLack ? (
+                {showSkeletonLack ? (
                   <SkeletonRow cards={12} />
                 ) : lackanfragen.length === 0 ? (
                   <div className={styles.emptyState}>Keine Einträge gefunden.</div>
@@ -479,6 +475,7 @@ export default function Page() {
                   ))
                 )}
               </div>
+
               <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLackanfragen, -1)}>
                 <ChevronLeftIcon className="h-6 w-6 text-black" />
               </button>

@@ -40,11 +40,12 @@ type JobFileRow = {
   created_at?: string
 }
 
-export async function fetchBoersenJobs(): Promise<Auftrag[]> {
+// ✅ limit optional, Börse bleibt unverändert wenn nicht gesetzt
+export async function fetchBoersenJobs(opts?: { limit?: number }): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
   // 1) Jobs holen
-  const { data: jobData, error: jobError } = await supabase
+  let q = supabase
     .from('jobs')
     .select(
       `
@@ -74,6 +75,13 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
+  // ✅ nur wenn limit übergeben wurde, limitieren
+  if (typeof opts?.limit === 'number' && Number.isFinite(opts.limit)) {
+    q = q.limit(opts.limit)
+  }
+
+  const { data: jobData, error: jobError } = await q
+
   if (jobError) {
     console.error('fetchBoersenJobs jobs error:', jobError)
     return []
@@ -102,7 +110,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     .from('job_files')
     .select('job_id, kind, bucket, path, original_name, created_at')
     .in('job_id', jobIds)
-    .eq('kind', 'image') // ✅ Börse: nur Bilder
+    .eq('kind', 'image') // ✅ nur Bilder
     .order('created_at', { ascending: true }) // ✅ erstes Bild = Titelbild
 
   if (filesError) {
@@ -131,8 +139,7 @@ export async function fetchBoersenJobs(): Promise<Auftrag[]> {
     const profile = profileById.get(job.user_id) ?? null
     const zip = profile?.address?.zip ?? ''
     const city = profile?.address?.city ?? ''
-    const standort: Auftrag['standort'] =
-      zip || city ? `${zip} ${city}`.trim() : null
+    const standort: Auftrag['standort'] = zip || city ? `${zip} ${city}`.trim() : null
 
     const accountType = profile?.account_type ?? 'business'
     const gewerblich = accountType === 'business'
