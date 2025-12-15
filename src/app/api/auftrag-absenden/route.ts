@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const supabase = await supabaseServer()
 
     // User holen (damit wir user_id speichern können)
+    // User holen (damit wir user_id speichern können)
     const {
       data: { user },
       error: authError,
