@@ -336,7 +336,7 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
             value={sortierung}
             onChange={(e) => setSortierung(e.target.value)}
           >
-            <option value="">Sortieren</option>
+            <option value="">Nach Datum sortieren</option>
             <option value="warenausgabe-auf">Warenausgabe aufsteigend</option>
             <option value="warenausgabe-ab">Warenausgabe absteigend</option>
             <option value="warenannahme-auf">Warenrückgabe aufsteigend</option>
