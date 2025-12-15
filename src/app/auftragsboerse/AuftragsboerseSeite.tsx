@@ -259,30 +259,45 @@ export default function AuftragsboerseSeite({ jobs }: { jobs: Auftrag[] }) {
   const suchErgebnis = suchbegriff ? fuse.search(suchbegriff).map(r => r.item) : gefilterteAuftraege;
 
   // Sortierung (Warenausgabe/Warenannahme + Gesponsert-Priorität)
-  const sortierteAuftraege = useMemo(() => {
-    const arr = [...suchErgebnis];
-    const t = (d?: Date) => (d instanceof Date ? d.getTime() : undefined);
-    arr.sort((a, b) => {
-      if (a.gesponsert && !b.gesponsert) return -1;
-      if (!a.gesponsert && b.gesponsert) return 1;
+const sortierteAuftraege = useMemo(() => {
+  const arr = [...suchErgebnis]
 
-      const na = normLogistik(a);
-      const nb = normLogistik(b);
-      const waA = t(na.waDatum);
-      const waB = t(nb.waDatum);
-      const wnA = t(na.wnDatum);
-      const wnB = t(nb.wnDatum);
+  const t = (d?: Date) => (d instanceof Date ? d.getTime() : undefined)
 
-      switch (sortierung) {
-        case 'warenausgabe-auf': return (waA ?? Infinity) - (waB ?? Infinity);
-        case 'warenausgabe-ab':  return (waB ?? -Infinity) - (waA ?? -Infinity);
-        case 'warenannahme-auf': return (wnA ?? Infinity) - (wnB ?? Infinity);
-        case 'warenannahme-ab':  return (wnB ?? -Infinity) - (wnA ?? -Infinity);
-        default: return 0;
-      }
-    });
-    return arr;
-  }, [suchErgebnis, sortierung]);
+  arr.sort((a, b) => {
+    // ✅ Gesponsert NUR pinnen, wenn keine Sortierung gewählt ist
+    if (!sortierung) {
+      if (a.gesponsert && !b.gesponsert) return -1
+      if (!a.gesponsert && b.gesponsert) return 1
+    }
+
+    const na = normLogistik(a)
+    const nb = normLogistik(b)
+
+    const waA = t(na.waDatum)
+    const waB = t(nb.waDatum)
+    const wnA = t(na.wnDatum)
+    const wnB = t(nb.wnDatum)
+
+    switch (sortierung) {
+      case 'warenausgabe-auf':
+        return (waA ?? Infinity) - (waB ?? Infinity)
+      case 'warenausgabe-ab':
+        return (waB ?? -Infinity) - (waA ?? -Infinity)
+      case 'warenannahme-auf':
+        return (wnA ?? Infinity) - (wnB ?? Infinity)
+      case 'warenannahme-ab':
+        return (wnB ?? -Infinity) - (wnA ?? -Infinity)
+      default:
+        // ✅ Standard (wenn keine Sortierung): gesponsert zuerst (siehe oben),
+        // danach z.B. Warenrückgabe aufsteigend
+        return (wnA ?? Infinity) - (wnB ?? Infinity)
+    }
+  })
+
+  return arr
+}, [suchErgebnis, sortierung])
+
 
   // Infinite Scroll (nur Seite 1)
   useEffect(() => {
