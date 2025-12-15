@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './angebote.module.css'
-import { dummyAuftraege } from '@/data/dummyAuftraege'
 
 type Verfahren = { name: string; felder: Record<string, any> }
 type Job = {
@@ -36,17 +35,12 @@ function asDateLike(v: unknown): Date | undefined {
   return isNaN(+d) ? undefined : d
 }
 
+// ✅ OHNE RAL / farbton, Standort kommt aus Profil
 function computeJobTitle(job: Job): string {
   const procs = (job.verfahren ?? []).map(v => v.name).filter(Boolean).join(' & ')
-  const pb = (job.verfahren ?? []).find(v => /pulver/i.test(v.name))?.felder ?? {}
-  const farbe = (pb as any)?.farbbezeichnung || (pb as any)?.farbton
-  const extras = [farbe, job.material, job.standort].filter(Boolean).join(' · ')
-  let title = [procs, extras].filter(Boolean).join(' — ')
-  if (!title) {
-    title = job.beschreibung?.trim()?.slice(0, 60) || `Auftrag #${job.id}`
-    if (job.beschreibung && job.beschreibung.length > 60) title += '…'
-  }
-  return title
+  const extras = [job.material, job.standort].filter(Boolean).join(' · ')
+  const title = [procs, extras].filter(Boolean).join(' — ')
+  return title || `Auftrag #${job.id}`
 }
 
 const jobPath = (job: Job) => `/auftragsboerse/auftraege/${job.id}`
@@ -87,23 +81,6 @@ function formatRemaining(target?: Date) {
   const level = totalMinutes <= 60 ? 'critical' : (totalMinutes <= 24 * 60 ? 'soon' : 'ok')
   return { text, level: level as 'critical' | 'soon' | 'ok' }
 }
-
-/* ===== Zeit-Helper ===== */
-const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString()
-
-/* ===== Dummy-Angebote ===== */
-const initialReceived: Offer[] = [
-  { id:'r1a', jobId:3,   vendor:'Blank · 4.7',    priceCents:10000, createdAt: hoursAgo(20) },
-  { id:'r1b', jobId:3,   vendor:'ColorTec · 4.9', priceCents: 9500, createdAt: hoursAgo(10) },
-  { id:'r2a', jobId:12,  vendor:'AluPro · 4.6',   priceCents:15000, createdAt: hoursAgo(50) },
-  { id:'r3a', jobId:22,  vendor:'MetalX · 4.8',   priceCents:20000, createdAt: hoursAgo(30) },
-  { id:'r3b', jobId:22,  vendor:'CoatIt · 4.5',   priceCents:18900, createdAt: hoursAgo(28) },
-]
-const initialSubmitted: Offer[] = [
-  { id:'s1', jobId: 5,  vendor:'Du', priceCents:12000, createdAt: hoursAgo(12) },
-  { id:'s2', jobId: 15, vendor:'Du', priceCents:18000, createdAt: hoursAgo(60) },
-  { id:'s3', jobId: 18, vendor:'Du', priceCents:21000, createdAt: hoursAgo(6)  },
-]
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type TopSection = 'received' | 'submitted'
@@ -147,7 +124,6 @@ const Pagination: FC<{
           value={pageSize}
           onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
         >
-          {/* Du kannst hier 2 lassen zum Testen */}
           <option value={2}>2</option>
           <option value={10}>10</option>
           <option value={20}>20</option>
@@ -155,35 +131,11 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(1)}
-            disabled={page <= 1}
-            aria-label="Erste Seite"
-          >«</button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page - 1)}
-            disabled={page <= 1}
-            aria-label="Vorherige Seite"
-          >‹</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
           <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page + 1)}
-            disabled={page >= pages}
-            aria-label="Nächste Seite"
-          >›</button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(pages)}
-            disabled={page >= pages}
-            aria-label="Letzte Seite"
-          >»</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
         </div>
       </div>
     </div>
@@ -195,20 +147,13 @@ const Pagination: FC<{
 const Angebote: FC = () => {
   const router = useRouter()
 
-  const jobsById = useMemo(() => {
-    const map = new Map<string, Job>()
-    for (const j of dummyAuftraege as Job[]) map.set(String(j.id), j)
-    return map
-  }, [])
+  // ✅ Echte Jobs + Standort aus Profil
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loadingJobs, setLoadingJobs] = useState(true)
 
-  const OPEN_JOB_IDS = useMemo(() => {
-    const ids = new Set<string>(['1'])
-    for (const o of initialReceived) ids.add(String(o.jobId))
-    return Array.from(ids)
-  }, [])
-
-  const [receivedData, setReceivedData] = useState<Offer[]>(initialReceived)
-  const [submittedData, setSubmittedData] = useState<Offer[]>(initialSubmitted)
+  // ✅ Offers später → aktuell leer (keine offers Tabelle)
+  const [receivedData, setReceivedData] = useState<Offer[]>([])
+  const [submittedData, setSubmittedData] = useState<Offer[]>([])
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
   // Modal-Zustand
@@ -227,9 +172,56 @@ const Angebote: FC = () => {
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmOffer])
 
+  // ✅ Jobs laden
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      try {
+        setLoadingJobs(true)
+        const res = await fetch('/api/konto/jobs', { credentials: 'include' })
+        if (!res.ok) throw new Error('Jobs konnten nicht geladen werden')
+        const json = await res.json()
+
+        const loc = String(json?.standort ?? '')
+        const rows = Array.isArray(json?.jobs) ? json.jobs : []
+
+        const mapped: Job[] = rows.map((r: any) => {
+          const verfahren: Verfahren[] = [
+            r.verfahren_1 ? { name: String(r.verfahren_1), felder: {} } : null,
+            r.verfahren_2 ? { name: String(r.verfahren_2), felder: {} } : null,
+          ].filter(Boolean) as any
+
+          return {
+            id: String(r.id),
+            verfahren,
+            material: String(r.material_guete_custom || r.material_guete || ''),
+            standort: loc, // ✅ nur aus Profil
+          }
+        })
+
+        if (!alive) return
+        setJobs(mapped)
+      } catch (e) {
+        console.error(e)
+        if (alive) setJobs([])
+      } finally {
+        if (alive) setLoadingJobs(false)
+      }
+    })()
+    return () => { alive = false }
+  }, [])
+
+  const jobsById = useMemo(() => {
+    const map = new Map<string, Job>()
+    for (const j of jobs) map.set(String(j.id), j)
+    return map
+  }, [jobs])
+
+  // ✅ offene Jobs sind einfach die geladenen Jobs
+  const OPEN_JOB_IDS = useMemo(() => jobs.map(j => String(j.id)), [jobs])
+
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('date_desc')
-
   const [topSection, setTopSection] = useState<TopSection>('received')
 
   // Speichere Tab-Auswahl
@@ -237,7 +229,7 @@ const Angebote: FC = () => {
     try { localStorage.setItem('angeboteTop', topSection) } catch {}
   }, [topSection])
 
-  // Angebote bereinigen (abgelaufene)
+  // Angebote bereinigen (abgelaufene) – bleibt drin, später relevant
   const pruneExpiredOffers = () => {
     const now = Date.now()
     setReceivedData(prev =>
@@ -256,7 +248,6 @@ const Angebote: FC = () => {
     )
   }
 
-  // Preis-Comparator (Infinity robust)
   const compareBestPrice = (a: number, b: number, dir: 'asc' | 'desc') => {
     const aInf = !Number.isFinite(a), bInf = !Number.isFinite(b)
     if (aInf && bInf) return 0
@@ -271,7 +262,7 @@ const Angebote: FC = () => {
     const onVis = () => { if (!document.hidden) pruneExpiredOffers() }
     document.addEventListener('visibilitychange', onVis)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, [])
+  }, [jobsById])
 
   /* ===== Filter + Sort ===== */
   const receivedGroups = useMemo(() => {
@@ -279,6 +270,7 @@ const Angebote: FC = () => {
     const groups = OPEN_JOB_IDS.map(id => {
       const job = jobsById.get(String(id))
       const titleLC = job ? computeJobTitle(job).toLowerCase() : `auftrag #${id}`
+
       const offersForJob = receivedData.filter(o => String(o.jobId) === String(id))
       const offers = offersForJob.filter(o =>
         !q ||
@@ -286,12 +278,16 @@ const Angebote: FC = () => {
         o.vendor.toLowerCase().includes(q) ||
         titleLC.includes(q)
       )
+
       const showNoOffersGroup = offersForJob.length === 0 && (!q || titleLC.includes(q))
       const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
+
       return { jobId: String(id), job, offers, showNoOffersGroup, bestPrice, latest }
     })
+
     const visible = groups.filter(g => g.offers.length > 0 || g.showNoOffersGroup)
+
     visible.sort((a, b) => {
       if (sort === 'date_desc')  return b.latest - a.latest
       if (sort === 'date_asc')   return a.latest - b.latest
@@ -299,6 +295,7 @@ const Angebote: FC = () => {
       if (sort === 'price_asc')  return compareBestPrice(a.bestPrice, b.bestPrice, 'asc')
       return 0
     })
+
     return visible
   }, [OPEN_JOB_IDS, jobsById, receivedData, query, sort])
 
@@ -329,15 +326,12 @@ const Angebote: FC = () => {
     try {
       const params = new URLSearchParams(window.location.search)
 
-      // Query
       const q = params.get('q')
       if (q !== null) setQuery(q)
 
-      // Sort
       const s = params.get('sort') as SortKey | null
       if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
 
-      // Tab (URL bevorzugt, sonst localStorage)
       const tab = params.get('tab') as TopSection | null
       if (tab && (tab === 'received' || tab === 'submitted')) {
         setTopSection(tab)
@@ -346,7 +340,6 @@ const Angebote: FC = () => {
         if (saved === 'received' || saved === 'submitted') setTopSection(saved as TopSection)
       }
 
-      // PageSize (URL > localStorage > Default) + Validation
       const lPsRec = Number(localStorage.getItem('angebote:ps:received')) || DEFAULTS.psRec
       const lPsSub = Number(localStorage.getItem('angebote:ps:submitted')) || DEFAULTS.psSub
       const urlPsRec = Number(params.get('psRec'))
@@ -356,7 +349,6 @@ const Angebote: FC = () => {
       setPsRec(initPsRec)
       setPsSub(initPsSub)
 
-      // Page (URL > localStorage > Default)
       const lPageRec = Number(localStorage.getItem('angebote:page:received')) || DEFAULTS.pageRec
       const lPageSub = Number(localStorage.getItem('angebote:page:submitted')) || DEFAULTS.pageSub
       const urlPageRec = Number(params.get('pageRec')) || undefined
@@ -367,15 +359,10 @@ const Angebote: FC = () => {
   }, [])
 
   /* ===== Persistenzen ===== */
-  // PageSizes
   useEffect(() => { try { localStorage.setItem('angebote:ps:received', String(psRec)) } catch {} }, [psRec])
   useEffect(() => { try { localStorage.setItem('angebote:ps:submitted', String(psSub)) } catch {} }, [psSub])
-
-  // Pages
   useEffect(() => { try { localStorage.setItem('angebote:page:received', String(pageRec)) } catch {} }, [pageRec])
   useEffect(() => { try { localStorage.setItem('angebote:page:submitted', String(pageSub)) } catch {} }, [pageSub])
-
-  // bei Such-/Sort-Änderung Seite zurücksetzen
   useEffect(() => { setPageRec(1); setPageSub(1) }, [query, sort])
 
   /* ===== URL-Synchronisation ===== */
@@ -400,7 +387,6 @@ const Angebote: FC = () => {
     } catch {}
   }, [query, sort, topSection, psRec, psSub, pageRec, pageSub, router])
 
-  // Slice-Helfer
   function sliceByPage<T>(arr: T[], page: number, ps: number) {
     const total = arr.length
     const pages = Math.max(1, Math.ceil(total / ps))
@@ -417,14 +403,13 @@ const Angebote: FC = () => {
     }
   }
 
-  // Slices berechnen
   const rec = sliceByPage(receivedGroups, pageRec, psRec)
   useEffect(() => { if (rec.safePage !== pageRec) setPageRec(rec.safePage) }, [rec.safePage, pageRec])
 
   const sub = sliceByPage(submitted, pageSub, psSub)
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
-  /* ===== Payment + Modal ===== */
+  /* ===== Payment + Modal (später relevant, wenn offers da sind) ===== */
   function paymentUrl({ jobId, offerId, amountCents, vendor }: { jobId: string | number, offerId: string, amountCents: number, vendor: string }) {
     return (
       `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
@@ -451,14 +436,17 @@ const Angebote: FC = () => {
     <>
       <h2 className={styles.heading}>Erhaltene Angebote für deine zu vergebenden Aufträge</h2>
       <div className={styles.kontoContainer}>
-        {rec.total === 0 ? (
-          <div className={styles.emptyState}><strong>Keine Aufträge/Angebote sichtbar.</strong></div>
+        {loadingJobs ? (
+          <div className={styles.emptyState}><strong>Lade deine Aufträge…</strong></div>
+        ) : rec.total === 0 ? (
+          <div className={styles.emptyState}><strong>Keine offenen Aufträge gefunden.</strong></div>
         ) : (
           <>
             <ul className={styles.groupList}>
               {rec.pageItems.map(({ jobId, job, offers, showNoOffersGroup, bestPrice }) => {
                 const title = job ? computeJobTitle(job) : `Auftrag #${jobId}`
                 const href  = job ? jobPath(job) : jobPathById(jobId)
+
                 return (
                   <li key={jobId} className={styles.groupCard}>
                     <div className={styles.groupHeader}>
@@ -622,7 +610,6 @@ const Angebote: FC = () => {
     <>
       <Navbar />
       <div className={styles.wrapper}>
-        {/* Toolbar */}
         <div className={styles.toolbar}>
           <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
           <input
@@ -630,9 +617,10 @@ const Angebote: FC = () => {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Auftrags-Nr., Anbieter oder Titel…"
+            placeholder="Auftrags-Nr. oder Titel…"
             className={styles.search}
           />
+
           <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
           <select
             id="sort"
@@ -668,7 +656,6 @@ const Angebote: FC = () => {
           </div>
         </div>
 
-        {/* Reihenfolge nach Wahl */}
         {topSection === 'received' ? (
           <>
             <ReceivedSection />
@@ -684,7 +671,6 @@ const Angebote: FC = () => {
         )}
       </div>
 
-      {/* ===== Modal „Auftrag vergeben“ ===== */}
       {confirmOffer && (
         <div
           className={styles.modal}
@@ -708,11 +694,7 @@ const Angebote: FC = () => {
               <button type="button" className={styles.btnGhost} onClick={() => setConfirmOffer(null)}>
                 Abbrechen
               </button>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                onClick={confirmAccept}
-              >
+              <button type="button" className={styles.btnDanger} onClick={confirmAccept}>
                 Ja, endgültig vergeben
               </button>
             </div>
