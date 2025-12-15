@@ -238,6 +238,16 @@ function ArtikelEinstellen() {
 
   // Boot-Loading (Profil)
   const [bootLoading, setBootLoading] = useState(true);
+  const [showBootLoader, setShowBootLoader] = useState(false)
+
+useEffect(() => {
+  if (!bootLoading) {
+    setShowBootLoader(false)
+    return
+  }
+  const t = window.setTimeout(() => setShowBootLoader(true), 250) // <- Delay
+  return () => window.clearTimeout(t)
+}, [bootLoading])
 
   // Auswahl/Felder
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | null>(null);
@@ -920,16 +930,24 @@ if (hasPromo) {
 
   /* ---------- Skeleton beim Initial-Load ---------- */
   if (bootLoading) {
-    return (
-      <>
-        <Navbar />
-        <TopLoader />
-        <div className={styles.container}>
-          <FormSkeleton />
-        </div>
-      </>
-    );
-  }
+  return (
+    <>
+      <Navbar />
+      {showBootLoader ? (
+        <>
+          <TopLoader />
+          <div className={styles.container}>
+            <FormSkeleton />
+          </div>
+        </>
+      ) : (
+        // ✅ in den ersten 250ms kein Loader (damit es nicht “flackert”)
+        <div className={styles.container} />
+      )}
+    </>
+  )
+}
+
 
   return (
     <>
