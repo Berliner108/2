@@ -116,7 +116,6 @@ const fadeIn = {
 export default function Formular() {
   const router = useRouter()
   // ✅ standardmäßig sichtbar
-  const [bootLoading, setBootLoading] = useState(true)
   const [showSteps, setShowSteps] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
 
@@ -425,11 +424,7 @@ if (!res.ok) {
 }
 
 
-    useEffect(() => {
-    // Wenn du später async Daten lädst, setBootLoading(false) ins finally vom fetch verschieben
-    const t = setTimeout(() => setBootLoading(false), 400) // kleiner Delay, damit man den Loader sieht
-    return () => clearTimeout(t)
-  }, [])
+    
   // 🔄 selectedVerfahren immer aus Verfahren 1 + 2 ableiten
 useEffect(() => {
   const auswahl: string[] = []
@@ -555,17 +550,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-    if (bootLoading) {
-    return (
-      <div className={oswald.className}>
-        <Navbar />
-        <TopLoader />
-        <div className={styles.wrapper}>
-          <FormSkeleton />
-        </div>
-      </div>
-    )
-  }
+ 
   return (
     <div className={oswald.className}>
       <Navbar />

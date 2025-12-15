@@ -856,3 +856,16 @@
 .resetButton:hover {
   background-color: #ddd;
 }
+.delayed {
+  opacity: 0;
+  transform: translateY(2px);
+  animation: delayedIn 120ms ease-out forwards;
+  animation-delay: 200ms; /* <- ab hier “nur wenn nötig” */
+}
+
+@keyframes delayedIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
