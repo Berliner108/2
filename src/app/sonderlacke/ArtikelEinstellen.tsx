@@ -951,7 +951,7 @@ if (bootLoading) {
         </>
       ) : (
         // ✅ Platzhalter hält Footer unten – kein Loader sichtbar
-        <div className={styles.container} style={{ minHeight: '70vh' }} />
+        <div className={styles.container} style={{ minHeight: '85vh' }} />
       )}
     </>
   );
