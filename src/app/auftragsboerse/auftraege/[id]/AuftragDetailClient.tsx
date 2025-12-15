@@ -13,6 +13,19 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 
 import type { Auftrag } from '@/lib/types/auftrag';
+const labelWarenausgabeArt = (v?: string | null) => {
+  const s = (v ?? '').trim().toLowerCase();
+  if (s === 'abholung') return 'Abholung';
+  if (s === 'selbst') return 'Selbstanlieferung';
+  return '—';
+};
+
+const labelWarenrueckgabeArt = (v?: string | null) => {
+  const s = (v ?? '').trim().toLowerCase();
+  if (s === 'anlieferung') return 'Anlieferung';
+  if (s === 'selbst') return 'Selbstabholung';
+  return '—';
+};
 
 /* ===== Fancy Top Loader ===== */
 function TopLoader() {
@@ -197,11 +210,16 @@ const ratingCount =
   const [preisError, setPreisError] = useState<string | null>(null);
 
   // Logistik-Bedingung: nur wenn NICHT beides "Selbst..."
-  const warenausgabeArt = (auftrag.warenausgabeArt || '').toLowerCase();
-  const warenannahmeArt = (auftrag.warenannahmeArt || '').toLowerCase();
-  const selbstAnlieferung = warenausgabeArt.includes('selbst');
-  const selbstAbholung = warenannahmeArt.includes('selbst');
-  const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
+const warenausgabeArtRaw = (auftrag.warenausgabeArt ?? '').trim().toLowerCase();
+const warenannahmeArtRaw = (auftrag.warenannahmeArt ?? '').trim().toLowerCase();
+
+// ✅ Rohwerte: 'selbst' | 'abholung' | 'anlieferung'
+const selbstAnlieferung = warenausgabeArtRaw === 'selbst';
+const selbstAbholung = warenannahmeArtRaw === 'selbst';
+
+// ✅ nur wenn beides "selbst" ist, braucht man keinen Logistikpreis
+const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
+
 
   const handleGesamtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPreisError(null);
@@ -378,8 +396,8 @@ const ratingCount =
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenausgabe per:</span>
                 <span className={styles.value}>
-                  {auftrag.warenausgabeArt || '—'}
-                </span>
+  {labelWarenausgabeArt(auftrag.warenausgabeArt)}
+</span>
               </div>
 
               <div className={styles.metaItem1}>
@@ -395,8 +413,9 @@ const ratingCount =
               <div className={styles.metaItem}>
                 <span className={styles.label}>Warenrückgabe per:</span>
                 <span className={styles.value}>
-                  {auftrag.warenannahmeArt || '—'}
-                </span>
+  {labelWarenrueckgabeArt(auftrag.warenannahmeArt)}
+</span>
+
               </div>
 
               <div className={styles.metaItem1}>
