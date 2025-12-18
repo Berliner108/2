@@ -393,21 +393,74 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 
     const res = await fetch('/api/auftrag-absenden', {
-  method: 'POST',
-  body: formData,
-})
+      method: 'POST',
+      body: formData,
+    })
 
-if (!res.ok) {
-  let payload: any = null
-  try {
-    payload = await res.json()
-  } catch {}
+    if (!res.ok) {
+      let payload: any = null
+      try {
+        payload = await res.json()
+      } catch {}
 
-  console.error('API-Fehler:', res.status, payload)
-  throw new Error(payload?.details || 'Fehler beim Absenden')
-}
+      console.error('API-Fehler:', res.status, payload)
+      throw new Error(payload?.details || 'Fehler beim Absenden')
+    }
 
+    // 🔹 Wichtig: /api/auftrag-absenden sollte JSON mit jobId zurückgeben
+    const data = await res.json().catch(() => null)
+    const jobId: string | undefined = data?.jobId || data?.id
 
+    if (!jobId) {
+      console.warn('Kein jobId aus /api/auftrag-absenden zurückbekommen')
+    }
+
+    // 🔹 Falls Bewerbungspakete gewählt wurden → Stripe-Checkout starten
+    if (bewerbungOptionen.length > 0 && jobId) {
+      try {
+        const promoRes = await fetch('/api/job-promo/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId,
+            promoCodes: bewerbungOptionen, // z.B. ['homepage','search_boost']
+          }),
+        })
+
+        if (!promoRes.ok) {
+          const payload = await promoRes.json().catch(() => null)
+          console.error('Promo-Checkout Fehler:', promoRes.status, payload)
+          // Fallback: ohne Promo weiterleiten
+          setSuccessMessage(
+            '✅ Auftrag erfolgreich aufgegeben. Bewerbungsoptionen konnten nicht aktiviert werden.',
+          )
+          setTimeout(() => {
+            router.replace('/konto/angebote?promoJob=error')
+          }, 2000)
+          return
+        }
+
+        const { checkoutUrl } = await promoRes.json()
+
+        if (checkoutUrl) {
+          // 🔁 Redirect zu Stripe; Webhook kümmert sich um promo_score + job_promo_orders
+          window.location.href = checkoutUrl
+          return
+        }
+      } catch (err) {
+        console.error('Promo-Checkout Exception:', err)
+        // Fallback: ohne Promo weiter
+        setSuccessMessage(
+          '✅ Auftrag erfolgreich aufgegeben. Bewerbungsoptionen konnten nicht aktiviert werden.',
+        )
+        setTimeout(() => {
+          router.replace('/konto/angebote?promoJob=error')
+        }, 2000)
+        return
+      }
+    }
+
+    // 🔹 Kein Promo gewählt oder kein jobId → normaler Flow
     setSuccessMessage(
       '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
     )
@@ -415,6 +468,7 @@ if (!res.ok) {
     setTimeout(() => {
       router.replace('/konto/angebote')
     }, 2000)
+
   } catch (err) {
     console.error('❌ Fehler beim Absenden:', err)
     alert('Fehler beim Absenden. Bitte versuche es erneut.')
