@@ -263,10 +263,9 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
   let hasError = false
 
-  // 🔹 das visuell OBERSTE fehlerhafte Feld merken
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
 
-  // 1️⃣ BILDER (steht im Formular ganz oben)
+  // 1️⃣ BILDER
   if (photoFiles.length === 0) {
     setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
     if (!firstErrorRef) firstErrorRef = bilderRef
@@ -275,7 +274,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setWarnungBilder('')
   }
 
-  // 2️⃣ VERFAHREN (im Block "Verfahrensangaben machen")
+  // 2️⃣ VERFAHREN
   if (!selectedOption1) {
     setVerfahrenError(true)
     if (!firstErrorRef) firstErrorRef = verfahrenRef
@@ -302,7 +301,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setAbmessungError(false)
   }
 
-  // 5️⃣ BESCHREIBUNG (liegt im selben Block, aber unterhalb)
+  // 5️⃣ BESCHREIBUNG
   if (!beschreibung.trim()) {
     setBeschreibungError(true)
     if (!firstErrorRef) firstErrorRef = beschreibungRef
@@ -324,7 +323,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLogistikError(false)
   }
 
-  // 7️⃣ AGB (steht wirklich ganz unten → wird als letztes geprüft)
+  // 7️⃣ AGB
   if (!agbAccepted) {
     setAgbError(true)
     if (!firstErrorRef) firstErrorRef = agbRef
@@ -333,7 +332,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     setAgbError(false)
   }
 
-  // 👉 wenn irgendwas falsch ist → GENAU EIN Scroll zum obersten Fehler
   if (hasError) {
     if (firstErrorRef) {
       scrollToError(firstErrorRef)
@@ -341,7 +339,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     return
   }
 
-  // ⬇️ ab hier Absenden wie gehabt
   setIsLoading(true)
 
   const formData = new FormData()
@@ -363,17 +360,17 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (materialGuete === 'Andere') {
     formData.append('andereMaterialguete', customMaterial)
   }
+
   formData.append('lieferDatum', lieferDatum)
   formData.append('abholDatum', abholDatum)
   formData.append('lieferArt', lieferArt)
   formData.append('abholArt', abholArt)
-    formData.append('serienauftragAktiv', serienauftrag ? 'true' : 'false')
+  formData.append('serienauftragAktiv', serienauftrag ? 'true' : 'false')
   formData.append('serienRhythmus', rhythmus || '')
   formData.append('serienTermine', JSON.stringify(serienTermine))
 
-
   try {
-    // Spezifikationen als JSON bündeln (viel einfacher im Backend)
+    // Spezifikationen
     formData.append('specSelections', JSON.stringify(specSelections))
 
     // Verfahren
@@ -391,7 +388,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     formData.append('hoehe', hoehe)
     formData.append('masse', masse)
 
-
+    // 1️⃣ Immer zuerst: Auftrag in jobs anlegen
     const res = await fetch('/api/auftrag-absenden', {
       method: 'POST',
       body: formData,
@@ -403,81 +400,83 @@ const handleSubmit = async (e: React.FormEvent) => {
         payload = await res.json()
       } catch {}
 
-      console.error('API-Fehler:', res.status, payload)
+      console.error('API-Fehler /api/auftrag-absenden:', res.status, payload)
       throw new Error(payload?.details || 'Fehler beim Absenden')
     }
 
-    // 🔹 Wichtig: /api/auftrag-absenden sollte JSON mit jobId zurückgeben
-    const data = await res.json().catch(() => null)
-    const jobId: string | undefined = data?.jobId || data?.id
+    const data = await res.json().catch(() => null as any)
+    const jobId = data?.jobId as string | undefined
 
     if (!jobId) {
-      console.warn('Kein jobId aus /api/auftrag-absenden zurückbekommen')
+      console.error('Kein jobId im Response von /api/auftrag-absenden', data)
+      throw new Error('Auftrag konnte nicht eindeutig gespeichert werden.')
     }
 
-    // 🔹 Falls Bewerbungspakete gewählt wurden → Stripe-Checkout starten
-    if (bewerbungOptionen.length > 0 && jobId) {
+    // 2️⃣ Kein Promo-Paket gewählt → fertig wie bisher
+    if (bewerbungOptionen.length === 0) {
+      setSuccessMessage(
+        '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
+      )
+
+      setTimeout(() => {
+        router.replace('/konto/angebote')
+      }, 2000)
+
+      return
+    }
+
+    // 3️⃣ Promo-Pakete gewählt → Stripe Checkout starten
+    const promoRes = await fetch('/api/job-promo/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jobId,
+        packageCodes: bewerbungOptionen,
+      }),
+    })
+
+    if (!promoRes.ok) {
+      let payload: any = null
       try {
-        const promoRes = await fetch('/api/job-promo/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobId,
-            promoCodes: bewerbungOptionen, // z.B. ['homepage','search_boost']
-          }),
-        })
+        payload = await promoRes.json()
+      } catch {}
 
-        if (!promoRes.ok) {
-          const payload = await promoRes.json().catch(() => null)
-          console.error('Promo-Checkout Fehler:', promoRes.status, payload)
-          // Fallback: ohne Promo weiterleiten
-          setSuccessMessage(
-            '✅ Auftrag erfolgreich aufgegeben. Bewerbungsoptionen konnten nicht aktiviert werden.',
-          )
-          setTimeout(() => {
-            router.replace('/konto/angebote?promoJob=error')
-          }, 2000)
-          return
-        }
-
-        const { checkoutUrl } = await promoRes.json()
-
-        if (checkoutUrl) {
-          // 🔁 Redirect zu Stripe; Webhook kümmert sich um promo_score + job_promo_orders
-          window.location.href = checkoutUrl
-          return
-        }
-      } catch (err) {
-        console.error('Promo-Checkout Exception:', err)
-        // Fallback: ohne Promo weiter
-        setSuccessMessage(
-          '✅ Auftrag erfolgreich aufgegeben. Bewerbungsoptionen konnten nicht aktiviert werden.',
-        )
-        setTimeout(() => {
-          router.replace('/konto/angebote?promoJob=error')
-        }, 2000)
-        return
-      }
+      console.error(
+        'API-Fehler /api/job-promo/checkout:',
+        promoRes.status,
+        payload,
+      )
+      // Ganz wichtig: der Auftrag EXISTIERT bereits.
+      // Nur die Bewerbung hat nicht geklappt.
+      alert(
+        'Dein Auftrag wurde gespeichert, aber der Bezahlvorgang für die Bewerbung konnte nicht gestartet werden. Du kannst die Bewerbung später in deinem Konto erneut versuchen.',
+      )
+      router.replace('/konto/angebote')
+      return
     }
 
-    // 🔹 Kein Promo gewählt oder kein jobId → normaler Flow
-    setSuccessMessage(
-      '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
-    )
+    const promoData = (await promoRes.json()) as {
+      checkoutUrl?: string
+    }
 
-    setTimeout(() => {
+    if (promoData.checkoutUrl) {
+      // Redirect zu Stripe Checkout
+      window.location.href = promoData.checkoutUrl
+      return
+    } else {
+      // Fallback: Auftrag ohne Promo anzeigen
       router.replace('/konto/angebote')
-    }, 2000)
-
+      return
+    }
   } catch (err) {
-    console.error('❌ Fehler beim Absenden:', err)
-    alert('Fehler beim Absenden. Bitte versuche es erneut.')
+    console.error('❌ Fehler beim Absenden / Promo:', err)
+    alert(
+      'Fehler beim Absenden. Dein Auftrag wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.',
+    )
   } finally {
     setIsLoading(false)
   }
 }
-
-
     
   // 🔄 selectedVerfahren immer aus Verfahren 1 + 2 ableiten
 useEffect(() => {

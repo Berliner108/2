@@ -1,131 +1,259 @@
+// src/app/api/job-promo/checkout/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseServer } from '@/lib/supabase-server'
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  'http://localhost:3000'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+if (!STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY ist nicht gesetzt')
+}
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-export const dynamic = 'force-dynamic'
-
+/**
+ * Erwarteter Body (JSON):
+ * {
+ *   "jobId": "uuid",
+ *   "packageCodes": ["homepage", "search_boost", "premium"]
+ * }
+ *
+ * Die Codes müssen zu job_promo_packages.code passen.
+ */
 export async function POST(req: NextRequest) {
   try {
-    const { jobId, promoCodes } = await req.json()
+    const supabase = await supabaseServer()
 
-    if (!jobId || !Array.isArray(promoCodes) || promoCodes.length === 0) {
+    // 1) Auth
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      console.error('job-promo/checkout: not authenticated', userError)
       return NextResponse.json(
-        { error: 'jobId und mindestens ein Promo-Code erforderlich' },
+        { error: 'not_authenticated' },
+        { status: 401 },
+      )
+    }
+
+    // 2) Body lesen
+    const body = await req.json().catch(() => null) as
+      | { jobId?: string; packageCodes?: string[] }
+      | null
+
+    const jobId = body?.jobId
+    const packageCodes = (body?.packageCodes ?? []).filter(Boolean)
+
+    if (!jobId) {
+      return NextResponse.json(
+        { error: 'missing_job_id' },
         { status: 400 },
       )
     }
 
-    // 1️⃣ Job laden (Owner = buyer_id)
-    const { data: job, error: jobErr } = await supabase
+    if (!packageCodes.length) {
+      return NextResponse.json(
+        { error: 'no_packages_selected' },
+        { status: 400 },
+      )
+    }
+
+    // 3) Job laden & Ownership prüfen
+    const { data: job, error: jobError } = await supabase
       .from('jobs')
-      .select('id, user_id')
+      .select('id, user_id, status, promo_score, promo_options')
       .eq('id', jobId)
-      .maybeSingle()
+      .single()
 
-    if (jobErr) {
-      console.error('[job-promo-checkout] Failed to load job', jobErr)
-      return NextResponse.json({ error: 'Job-Ladevorgang fehlgeschlagen' }, { status: 500 })
-    }
-    if (!job) {
-      return NextResponse.json({ error: 'Job nicht gefunden' }, { status: 404 })
+    if (jobError || !job) {
+      console.error('job-promo/checkout: job not found', jobError)
+      return NextResponse.json(
+        { error: 'job_not_found' },
+        { status: 404 },
+      )
     }
 
-    // 2️⃣ Pakete laden
-    const { data: packages, error: pkgErr } = await supabase
+    if (job.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'forbidden', message: 'Job gehört nicht dir' },
+        { status: 403 },
+      )
+    }
+
+    if (job.status !== 'open') {
+      return NextResponse.json(
+        { error: 'job_not_open', message: 'Job ist nicht mehr offen' },
+        { status: 400 },
+      )
+    }
+
+    // 4) Job-Promo-Pakete aus DB ziehen
+    const { data: dbPackages, error: packagesError } = await supabase
       .from('job_promo_packages')
-      .select('code, score_delta, amount_cents, currency, stripe_price_id')
-      .in('code', promoCodes)
+      .select(
+        'code, title, description, score_delta, amount_cents, currency, active, stripe_price_id',
+      )
+      .in('code', packageCodes)
       .eq('active', true)
-      .order('sort_order', { ascending: true })
 
-    if (pkgErr) {
-      console.error('[job-promo-checkout] Failed to load packages', pkgErr)
-      return NextResponse.json({ error: 'Promo-Pakete konnten nicht geladen werden' }, { status: 500 })
-    }
-    if (!packages || packages.length === 0) {
-      return NextResponse.json({ error: 'Keine gültigen Promo-Pakete gefunden' }, { status: 400 })
+    if (packagesError) {
+      console.error('job-promo/checkout: packagesError', packagesError)
+      return NextResponse.json(
+        { error: 'packages_query_failed', details: packagesError.message },
+        { status: 500 },
+      )
     }
 
-    // Totale berechnen
-    const currency = packages[0].currency || 'EUR'
-    const scoreTotal = packages.reduce(
-      (sum, p) => sum + (p.score_delta ?? 0),
+    if (!dbPackages || dbPackages.length === 0) {
+      return NextResponse.json(
+        { error: 'no_valid_packages' },
+        { status: 400 },
+      )
+    }
+
+    // Prüfen, ob alle angefragten Codes auch wirklich existieren/aktiv sind
+    const validCodes = dbPackages.map((p) => p.code)
+    const missing = packageCodes.filter((c) => !validCodes.includes(c))
+
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: 'invalid_package_codes', missing },
+        { status: 400 },
+      )
+    }
+
+    // 5) Summen & Currency
+    const currency =
+      dbPackages[0].currency && dbPackages[0].currency.length > 0
+        ? dbPackages[0].currency
+        : 'EUR'
+
+    const scoreDeltaTotal = dbPackages.reduce(
+      (sum, p) => sum + Number(p.score_delta ?? 0),
       0,
     )
-    const amountTotal = packages.reduce(
-      (sum, p) => sum + (p.amount_cents ?? 0),
+
+    const amountCentsTotal = dbPackages.reduce(
+      (sum, p) => sum + Number(p.amount_cents ?? 0),
       0,
     )
-    const packageCodes = packages.map((p) => p.code)
 
-    // 3️⃣ Sammel-Order in job_promo_orders anlegen
-    const { data: order, error: orderErr } = await supabase
+    if (amountCentsTotal <= 0) {
+      return NextResponse.json(
+        { error: 'amount_zero', message: 'Gesamtbetrag ist 0' },
+        { status: 400 },
+      )
+    }
+
+    // 6) job_promo_orders-Eintrag anlegen (pending)
+    const { data: order, error: orderError } = await supabase
       .from('job_promo_orders')
       .insert({
-        job_id: job.id,
-        buyer_id: job.user_id,
+        job_id: jobId,
+        buyer_id: user.id,
         package_codes: packageCodes,
-        score_delta_total: scoreTotal,
-        amount_cents_total: amountTotal,
+        score_delta_total: scoreDeltaTotal,
+        amount_cents_total: amountCentsTotal,
         currency,
         status: 'pending',
       })
       .select('id')
       .single()
 
-    if (orderErr || !order) {
-      console.error('[job-promo-checkout] Failed to insert job_promo_orders', orderErr)
-      return NextResponse.json({ error: 'Promo-Order konnte nicht angelegt werden' }, { status: 500 })
+    if (orderError || !order) {
+      console.error('job-promo/checkout: orderError', orderError)
+      return NextResponse.json(
+        { error: 'create_order_failed', details: orderError?.message },
+        { status: 500 },
+      )
     }
 
-    const origin =
-      req.headers.get('origin') ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      'http://localhost:3000'
+    const orderId = order.id as string
 
-    // 4️⃣ Stripe-Checkout-Session erstellen
-    const line_items = packages.map((p) => ({
-      price: p.stripe_price_id,
-      quantity: 1,
-    }))
+    // 7) Stripe-Checkout-Session erstellen
+    const line_items = dbPackages.map((p) => {
+      if (!p.stripe_price_id) {
+        throw new Error(
+          `job_promo_package ${p.code} hat keine stripe_price_id`,
+        )
+      }
+
+      return {
+        price: p.stripe_price_id,
+        quantity: 1,
+      }
+    })
+
+    const successUrl = `${SITE_URL}/konto/angebote?jobId=${encodeURIComponent(
+      jobId,
+    )}&promo=success`
+    const cancelUrl = `${SITE_URL}/konto/angebote?jobId=${encodeURIComponent(
+      jobId,
+    )}&promo=cancel`
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      customer_email: user.email ?? undefined,
       line_items,
-      success_url: `${origin}/konto/angebote?promoJob=success&jobId=${job.id}`,
-      cancel_url: `${origin}/konto/angebote?promoJob=cancel&jobId=${job.id}`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      // wichtig für den Webhook:
       metadata: {
-        type: 'job_promo',
-        job_id: job.id,
-        job_promo_order_id: order.id,
+        scope: 'job_promo',
+        job_id: jobId,
+        buyer_id: user.id,
+        package_codes: packageCodes.join(','),
+        job_promo_order_id: orderId,
       },
+      client_reference_id: jobId,
+      // falls du automatische Steuer verwenden willst – kannst du auch weglassen,
+      // wenn du es in Stripe nicht aktiviert hast.
+      automatic_tax: { enabled: true },
     })
 
-    // 5️⃣ Session-ID in job_promo_orders speichern
-    const { error: updateOrderErr } = await supabase
+    if (!session.url) {
+      console.error('job-promo/checkout: session has no URL', session.id)
+      return NextResponse.json(
+        { error: 'session_creation_failed' },
+        { status: 500 },
+      )
+    }
+
+    // 8) Stripe-Session-ID in job_promo_orders speichern
+    const { error: updateOrderError } = await supabase
       .from('job_promo_orders')
       .update({
         stripe_session_id: session.id,
-        updated_at: new Date().toISOString(),
+        // payment_intent füllen wir sauber im Webhook nach,
+        // wenn checkout.session.completed / payment_intent.succeeded kommt.
       })
-      .eq('id', order.id)
+      .eq('id', orderId)
 
-    if (updateOrderErr) {
-      console.error('[job-promo-checkout] Failed to update job_promo_orders with session id', updateOrderErr)
-      // aber wir geben trotzdem die URL zurück
+    if (updateOrderError) {
+      console.error(
+        'job-promo/checkout: updateOrderError',
+        updateOrderError,
+      )
+      // Kein harter Abbruch, weil die Session schon existiert – aber loggen.
     }
 
-    return NextResponse.json({ checkoutUrl: session.url }, { status: 200 })
-  } catch (err) {
-    console.error('[job-promo-checkout] Unexpected error', err)
-    return NextResponse.json({ error: 'Unexpected error' }, { status: 500 })
+    // 9) URL zurückgeben → im Frontend mit router.push(checkoutUrl)
+    return NextResponse.json({
+      ok: true,
+      checkoutUrl: session.url,
+      orderId,
+    })
+  } catch (err: any) {
+    console.error('job-promo/checkout: unexpected error', err)
+    return NextResponse.json(
+      { error: 'internal_error', details: err?.message ?? String(err) },
+      { status: 500 },
+    )
   }
 }

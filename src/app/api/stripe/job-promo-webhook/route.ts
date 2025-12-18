@@ -1,176 +1,260 @@
-import { NextRequest, NextResponse } from 'next/server'
+// src/app/api/stripe/job-promo-webhook/route.ts
+import { NextResponse, type NextRequest } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// ⚠️ ggf. an dein Env-Schema anpassen:
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET_JOB_PROMO! // Vercel-Var
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+if (!process.env.STRIPE_WEBHOOK_SECRET_JOB_PROMO) {
+  throw new Error('STRIPE_WEBHOOK_SECRET_JOB_PROMO is not set')
+}
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const WEBHOOK_SECRET: string = process.env.STRIPE_WEBHOOK_SECRET_JOB_PROMO
+
+
+if (!STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is not set')
+}
+if (!WEBHOOK_SECRET) {
+  throw new Error('STRIPE_WEBHOOK_SECRET_JOB_PROMO is not set')
+}
 
 const stripe = new Stripe(STRIPE_SECRET_KEY)
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+// kleine Helper
+const nowISO = () => new Date().toISOString()
 
-export const dynamic = 'force-dynamic'
+/**
+ * Rechnet den Promo-Score & Promo-Optionen für einen Job
+ * aus ALLEN bezahlten job_promo_orders neu zusammen
+ * und schreibt sie in die Tabelle jobs.
+ */
+async function recomputeJobPromoFromOrders(admin: any, jobId: string) {
+  const { data: orders, error: ordErr } = await admin
+    .from('job_promo_orders')
+    .select('score_delta_total, package_codes')
+    .eq('job_id', jobId)
+    .eq('status', 'paid')
+
+  if (ordErr) throw ordErr
+
+  const list = orders ?? []
+
+  const totalScore = list.reduce(
+    (sum: number, o: any) => sum + (o.score_delta_total ?? 0),
+    0,
+  )
+
+  const allCodes = new Set<string>()
+  for (const o of list) {
+    for (const code of (o.package_codes ?? []) as string[]) {
+      if (code) allCodes.add(code)
+    }
+  }
+
+  const { error: jobErr } = await admin
+    .from('jobs')
+    .update({
+      promo_score: totalScore,
+      promo_options: Array.from(allCodes),
+      updated_at: nowISO(),
+    })
+    .eq('id', jobId)
+
+  if (jobErr) throw jobErr
+}
+
+/**
+ * Wird aufgerufen bei checkout.session.completed
+ * – legt / aktualisiert job_promo_orders
+ * – und aktualisiert danach den promo_score in jobs.
+ */
+async function handleCheckoutSessionCompleted(sess: Stripe.Checkout.Session) {
+  const admin = supabaseAdmin()
+
+  const jobId = (sess.metadata?.job_id as string | undefined)?.trim()
+  const buyerId = (sess.metadata?.user_id as string | undefined)?.trim()
+  const codesCsv = (sess.metadata?.package_ids as string | undefined)?.trim()
+
+  if (!jobId || !buyerId || !codesCsv) {
+    console.warn('job-promo webhook: fehlende Metadaten', {
+      jobId,
+      buyerId,
+      codesCsv,
+    })
+    return
+  }
+
+  const packageCodes = codesCsv
+    .split(',')
+    .map((c) => c.trim())
+    .filter(Boolean)
+
+  if (packageCodes.length === 0) {
+    console.warn('job-promo webhook: keine gültigen packageCodes', { codesCsv })
+    return
+  }
+
+  // Preise & Scores aus job_promo_packages ziehen
+  const { data: packages, error: pkgErr } = await admin
+    .from('job_promo_packages')
+    .select('code, score_delta, amount_cents')
+    .in('code', packageCodes)
+    .eq('active', true)
+
+  if (pkgErr) throw pkgErr
+
+  if (!packages || packages.length === 0) {
+    console.warn('job-promo webhook: keine passenden Packages gefunden', {
+      packageCodes,
+    })
+    return
+  }
+
+  const scoreTotal = packages.reduce(
+    (sum: number, p: any) => sum + (p.score_delta ?? 0),
+    0,
+  )
+
+  const amountFromStripe =
+    typeof sess.amount_total === 'number' ? sess.amount_total : null
+  const amountFallback = packages.reduce(
+    (sum: number, p: any) => sum + (p.amount_cents ?? 0),
+    0,
+  )
+  const amountTotal = amountFromStripe ?? amountFallback
+
+  const currency = (sess.currency || 'eur').toString().toUpperCase()
+
+  const piId =
+    typeof sess.payment_intent === 'string'
+      ? sess.payment_intent
+      : (sess.payment_intent as any)?.id ?? null
+
+  // job_promo_orders per Session-ID upserten (idempotent)
+  const adminClient = admin
+
+  const { data: existing, error: selErr } = await adminClient
+    .from('job_promo_orders')
+    .select('id, status')
+    .eq('stripe_session_id', sess.id)
+    .maybeSingle()
+
+  if (selErr) throw selErr
+
+  if (existing?.id) {
+    // Bestellung ist schon angelegt → nur aktualisieren
+    const patch: any = {
+      updated_at: nowISO(),
+      score_delta_total: scoreTotal,
+      amount_cents_total: amountTotal,
+      currency,
+      package_codes: packageCodes,
+    }
+    if (piId) patch.stripe_payment_intent = piId
+    patch.status = 'paid'
+
+    const { error: upErr } = await adminClient
+      .from('job_promo_orders')
+      .update(patch)
+      .eq('id', existing.id)
+
+    if (upErr) throw upErr
+  } else {
+    // Neue Bestellung anlegen
+    const { error: insErr } = await adminClient.from('job_promo_orders').insert({
+      job_id: jobId,
+      buyer_id: buyerId,
+      package_codes: packageCodes,
+      score_delta_total: scoreTotal,
+      amount_cents_total: amountTotal,
+      currency,
+      stripe_session_id: sess.id,
+      stripe_payment_intent: piId,
+      status: 'paid',
+      created_at: nowISO(),
+      updated_at: nowISO(),
+    })
+
+    if (insErr) throw insErr
+  }
+
+  // Promo-Score & Optionen für diesen Job neu berechnen
+  await recomputeJobPromoFromOrders(adminClient, jobId)
+}
+
+/** Falls Zahlung fehlschlägt oder Session abläuft → Bestellung als failed markieren */
+async function markOrderFailedBySessionId(sessionId: string, status: 'failed' | 'expired') {
+  const admin = supabaseAdmin()
+  const { data: existing, error: selErr } = await admin
+    .from('job_promo_orders')
+    .select('id, status')
+    .eq('stripe_session_id', sessionId)
+    .maybeSingle()
+
+  if (selErr) throw selErr
+  if (!existing?.id) return
+
+  if (existing.status === 'paid') {
+    // Schon bezahlt → nichts ändern
+    return
+  }
+
+  const { error: upErr } = await admin
+    .from('job_promo_orders')
+    .update({
+      status,
+      updated_at: nowISO(),
+    })
+    .eq('id', existing.id)
+
+  if (upErr) throw upErr
+}
 
 export async function POST(req: NextRequest) {
+  const body = await req.text()
   const sig = req.headers.get('stripe-signature')
+
   if (!sig) {
-    console.error('[job-promo-webhook] Missing stripe-signature header')
-    return new NextResponse('Bad Request', { status: 400 })
+    return new NextResponse('Missing stripe-signature header', { status: 400 })
   }
 
   let event: Stripe.Event
 
   try {
-    const rawBody = await req.arrayBuffer()
-    const buf = Buffer.from(rawBody)
-    event = stripe.webhooks.constructEvent(buf, sig, WEBHOOK_SECRET)
-  } catch (err) {
-    console.error('[job-promo-webhook] Signature verification failed', err)
-    return new NextResponse('Webhook Error', { status: 400 })
+    event = stripe.webhooks.constructEvent(body, sig, WEBHOOK_SECRET)
+  } catch (err: any) {
+    console.error('❌ Job-Promo Webhook: Signature verification failed', err)
+    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 })
   }
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-
-        // Nur unsere Job-Promo-Sessions behandeln
-        if (session.metadata?.type !== 'job_promo') {
-          return NextResponse.json({ received: true })
-        }
-
-        const promoOrderId = session.metadata.job_promo_order_id
-        const jobId = session.metadata.job_id
-
-        if (!promoOrderId || !jobId) {
-          console.error('[job-promo-webhook] Missing metadata (promoOrderId / jobId)')
-          return NextResponse.json({ received: true })
-        }
-
-        // 1️⃣ Job-Promo-Order laden
-        const { data: promoOrder, error: promoOrderErr } = await supabase
-          .from('job_promo_orders')
-          .select('id, job_id, status, score_delta_total, package_codes, amount_cents_total')
-          .eq('id', promoOrderId)
-          .maybeSingle()
-
-        if (promoOrderErr) {
-          console.error('[job-promo-webhook] Failed to load job_promo_orders', promoOrderErr)
-          return NextResponse.json({ received: true })
-        }
-        if (!promoOrder) {
-          console.error('[job-promo-webhook] job_promo_order not found', promoOrderId)
-          return NextResponse.json({ received: true })
-        }
-
-        // Wenn schon bezahlt → idempotent bleiben
-        if (promoOrder.status === 'paid') {
-          return NextResponse.json({ received: true })
-        }
-
-        // 2️⃣ Job laden (aktueller Score & Optionen)
-        const { data: job, error: jobErr } = await supabase
-          .from('jobs')
-          .select('id, promo_score, promo_options')
-          .eq('id', jobId)
-          .maybeSingle()
-
-        if (jobErr) {
-          console.error('[job-promo-webhook] Failed to load job', jobErr)
-          return NextResponse.json({ received: true })
-        }
-        if (!job) {
-          console.error('[job-promo-webhook] job not found', jobId)
-          return NextResponse.json({ received: true })
-        }
-
-        const currentScore = job.promo_score ?? 0
-        const currentOptions: string[] = (job.promo_options ?? []) as string[]
-
-        const newScore = currentScore + (promoOrder.score_delta_total ?? 0)
-
-        // alte + neue Paketcodes, ohne Duplikate
-        const newOptions = Array.from(
-          new Set([...(currentOptions || []), ...(promoOrder.package_codes ?? [])]),
-        )
-
-        const paymentIntent =
-          typeof session.payment_intent === 'string'
-            ? session.payment_intent
-            : session.payment_intent?.id ?? null
-
-        // 3️⃣ Order als "paid" markieren
-        const { error: updateOrderErr } = await supabase
-          .from('job_promo_orders')
-          .update({
-            status: 'paid',
-            stripe_session_id: session.id,
-            stripe_payment_intent: paymentIntent,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', promoOrder.id)
-
-        if (updateOrderErr) {
-          console.error('[job-promo-webhook] Failed to update job_promo_orders', updateOrderErr)
-          // nicht abbrechen, sondern trotzdem versuchen Job zu updaten
-        }
-
-        // 4️⃣ Job-Promo-Score & Optionen aktualisieren
-        const { error: updateJobErr } = await supabase
-          .from('jobs')
-          .update({
-            promo_score: newScore,
-            promo_options: newOptions,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', job.id)
-
-        if (updateJobErr) {
-          console.error('[job-promo-webhook] Failed to update jobs promo', updateJobErr)
-        }
-
-        return NextResponse.json({ received: true })
+        const sess = event.data.object as Stripe.Checkout.Session
+        await handleCheckoutSessionCompleted(sess)
+        break
       }
 
-      case 'checkout.session.expired':
-      case 'checkout.session.async_payment_failed': {
-        const session = event.data.object as Stripe.Checkout.Session
+      case 'checkout.session.expired': {
+        const sess = event.data.object as Stripe.Checkout.Session
+        await markOrderFailedBySessionId(sess.id, 'expired')
+        break
+      }
 
-        if (session.metadata?.type !== 'job_promo') {
-          return NextResponse.json({ received: true })
-        }
-
-        const promoOrderId = session.metadata.job_promo_order_id
-        if (!promoOrderId) {
-          return NextResponse.json({ received: true })
-        }
-
-        // Markiere Order als "canceled" / "failed", Job bleibt ohne Promo
-        const { error } = await supabase
-          .from('job_promo_orders')
-          .update({
-            status: 'canceled',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', promoOrderId)
-
-        if (error) {
-          console.error('[job-promo-webhook] Failed to mark order canceled', error)
-        }
-
-        return NextResponse.json({ received: true })
+      case 'payment_intent.payment_failed': {
+        // optional: wenn du willst, kannst du hier ebenfalls anhand von Metadaten job_promo_orders updaten
+        console.warn('Job-Promo: payment_intent.payment_failed')
+        break
       }
 
       default:
-        // alle anderen Events ignorieren
-        return NextResponse.json({ received: true })
+        // andere Events ignorieren wir
+        break
     }
+
+    return NextResponse.json({ received: true })
   } catch (err) {
-    console.error('[job-promo-webhook] Handler error', err)
-    return new NextResponse('Internal error', { status: 500 })
+    console.error('❌ Job-Promo Webhook Handler Error:', err)
+    return new NextResponse('Webhook handler failed', { status: 500 })
   }
 }
