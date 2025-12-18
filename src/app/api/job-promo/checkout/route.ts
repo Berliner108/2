@@ -197,25 +197,31 @@ export async function POST(req: NextRequest) {
       jobId,
     )}&promo=cancel`
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      customer_email: user.email ?? undefined,
-      line_items,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      // wichtig für den Webhook:
-      metadata: {
-        scope: 'job_promo',
-        job_id: jobId,
-        buyer_id: user.id,
-        package_codes: packageCodes.join(','),
-        job_promo_order_id: orderId,
-      },
-      client_reference_id: jobId,
-      // falls du automatische Steuer verwenden willst – kannst du auch weglassen,
-      // wenn du es in Stripe nicht aktiviert hast.
-      automatic_tax: { enabled: true },
-    })
+    const origin =
+  req.headers.get('origin') ??
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  'http://localhost:3000'
+
+const session = await stripe.checkout.sessions.create({
+  mode: 'payment',   // falls du das schon drin hast
+  line_items: line_items,                      // unverändert lassen
+  success_url:
+    `${origin}/konto/angebote` +
+    `?jobId=${encodeURIComponent(jobId)}` +
+    `&promo_status=success` +
+    `&session_id={CHECKOUT_SESSION_ID}`,
+  cancel_url:
+    `${origin}/konto/angebote` +
+    `?jobId=${encodeURIComponent(jobId)}` +
+    `&promo_status=cancel` +
+    `&session_id={CHECKOUT_SESSION_ID}`,
+  metadata: {
+    scope: 'job_promo',
+    job_id: jobId,
+    job_promo_order_id: orderId,             // falls du die ID gespeichert hast
+  },
+})
+
 
     if (!session.url) {
       console.error('job-promo/checkout: session has no URL', session.id)
