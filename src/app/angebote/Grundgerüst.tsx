@@ -115,6 +115,7 @@ const fadeIn = {
 
 export default function Formular() {
   const router = useRouter()
+  
   // ✅ standardmäßig sichtbar
   const [showSteps, setShowSteps] = useState(true)
   const [activeStep, setActiveStep] = useState(0)
@@ -136,10 +137,6 @@ export default function Formular() {
   const [beschreibung, setBeschreibung] = useState('')
     const [beschreibungError, setBeschreibungError] = useState(false)
   const beschreibungRef = useRef<HTMLDivElement>(null)
-
-  
-
-
 
   const [selectedOption1, setSelectedOption1] = useState('')
   const [selectedOption2, setSelectedOption2] = useState('')
