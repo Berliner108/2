@@ -142,21 +142,58 @@ const Pagination: FC<{
   )
 }
 
+/* ===== Tiny Toast Hook ===== */
+function useToast() {
+  const [msg, setMsg] = useState<string | null>(null)
+  const [variant, setVariant] = useState<'ok' | 'err'>('ok')
+
+  const ok = (text: string) => {
+    setVariant('ok')
+    setMsg(text)
+  }
+
+  const err = (text: string) => {
+    setVariant('err')
+    setMsg(text)
+  }
+
+  const View = () =>
+    msg ? (
+      <div
+        className={`${styles.toastRoot} ${
+          variant === 'err' ? styles.toastError : styles.toastOk
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {msg}
+      </div>
+    ) : null
+
+  useEffect(() => {
+    if (!msg) return
+    const t = setTimeout(() => setMsg(null), 4000)
+    return () => clearTimeout(t)
+  }, [msg])
+
+  return { ok, err, View }
+}
+
 /* ================= Component ================= */
 
 const Angebote: FC = () => {
   const router = useRouter()
+  const { ok: toastOk, err: toastErr, View: Toast } = useToast()
 
-  // ✅ Echte Jobs + Standort aus Profil
+  // ✅ Echte Jobs + Standort aus Profil (/api/konto/jobs)
   const [jobs, setJobs] = useState<Job[]>([])
   const [loadingJobs, setLoadingJobs] = useState(true)
 
-  // ✅ Offers später → aktuell leer (keine offers Tabelle)
+  // Offers später → aktuell leer (keine offers Tabelle)
   const [receivedData, setReceivedData] = useState<Offer[]>([])
   const [submittedData, setSubmittedData] = useState<Offer[]>([])
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
-  // Modal-Zustand
   const [confirmOffer, setConfirmOffer] = useState<null | {
     jobId: string | number
     offerId: string
@@ -195,7 +232,7 @@ const Angebote: FC = () => {
             id: String(r.id),
             verfahren,
             material: String(r.material_guete_custom || r.material_guete || ''),
-            standort: loc, // ✅ nur aus Profil
+            standort: loc,
           }
         })
 
@@ -217,19 +254,19 @@ const Angebote: FC = () => {
     return map
   }, [jobs])
 
-  // ✅ offene Jobs sind einfach die geladenen Jobs
+  // ✅ offene Jobs = alle geladenen Jobs
   const OPEN_JOB_IDS = useMemo(() => jobs.map(j => String(j.id)), [jobs])
 
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('date_desc')
   const [topSection, setTopSection] = useState<TopSection>('received')
 
-  // Speichere Tab-Auswahl
+  // Tab-Auswahl speichern
   useEffect(() => {
     try { localStorage.setItem('angeboteTop', topSection) } catch {}
   }, [topSection])
 
-  // Angebote bereinigen (abgelaufene) – bleibt drin, später relevant
+  // Angebote bereinigen (später, wenn echte Offers existieren)
   const pruneExpiredOffers = () => {
     const now = Date.now()
     setReceivedData(prev =>
@@ -358,6 +395,50 @@ const Angebote: FC = () => {
     } catch {}
   }, [])
 
+  // ✅ Erfolg / Fehler nach Job-Veröffentlichung & Promo-Checkout
+  useEffect(() => {
+    try {
+      const url   = new URL(window.location.href)
+      const params = url.searchParams
+      let changed = false
+
+      // 1) Job erfolgreich veröffentlicht
+      const published = params.get('job_published')
+      if (published === '1' || published === 'true') {
+        toastOk('Auftrag wurde erfolgreich veröffentlicht.')
+        params.delete('job_published')
+        changed = true
+      }
+
+      // 2) Promo-Status (Bewerbung)
+      const promo = params.get('job_promo')
+      if (promo) {
+        if (promo === 'success') {
+          toastOk('Bewerbung für deinen Auftrag ist jetzt aktiv.')
+        } else if (promo === 'canceled') {
+          toastErr('Bewerbung wurde abgebrochen.')
+        } else if (promo === 'failed') {
+          toastErr('Bewerbung konnte nicht abgeschlossen werden.')
+        }
+        params.delete('job_promo')
+        params.delete('session_id')
+        params.delete('job_id')
+        changed = true
+      }
+
+      if (changed) {
+        const nextSearch = params.toString()
+        const next = `${url.pathname}${nextSearch ? `?${nextSearch}` : ''}`
+        const curr = `${window.location.pathname}${window.location.search}`
+        if (next !== curr) {
+          router.replace(next, { scroll: false })
+        }
+      }
+    } catch {
+      // ignorieren
+    }
+  }, [router, toastOk, toastErr])
+
   /* ===== Persistenzen ===== */
   useEffect(() => { try { localStorage.setItem('angebote:ps:received', String(psRec)) } catch {} }, [psRec])
   useEffect(() => { try { localStorage.setItem('angebote:ps:submitted', String(psSub)) } catch {} }, [psSub])
@@ -409,7 +490,7 @@ const Angebote: FC = () => {
   const sub = sliceByPage(submitted, pageSub, psSub)
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
-  /* ===== Payment + Modal (später relevant, wenn offers da sind) ===== */
+  /* ===== Payment + Modal (vorbereitet für später) ===== */
   function paymentUrl({ jobId, offerId, amountCents, vendor }: { jobId: string | number, offerId: string, amountCents: number, vendor: string }) {
     return (
       `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
@@ -609,6 +690,9 @@ const Angebote: FC = () => {
   return (
     <>
       <Navbar />
+      {/* Toast oben einblenden */}
+      <Toast />
+
       <div className={styles.wrapper}>
         <div className={styles.toolbar}>
           <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
