@@ -81,7 +81,7 @@ const rhythmusLabel: Record<string, string> = {
 // Fiktive Promo-Pakete (nur Frontend)
 const promoPackages = [
   {
-    id: 'startseite',
+    id: 'homepage',
     title: 'Anzeige auf Startseite hervorheben',
     subtitle: 'Startseiten-Hervorhebung',
     priceCents: 6999,
@@ -89,7 +89,7 @@ const promoPackages = [
     icon: <Star size={18} className={styles.iconStar} aria-hidden />,
   },
   {
-    id: 'suche',
+    id: 'search_boost',
     title: 'Anzeige in Suche priorisieren',
     subtitle: 'Ranking-Boost in der Suche',
     priceCents: 4999,
