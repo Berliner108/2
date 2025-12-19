@@ -413,18 +413,22 @@ const Angebote: FC = () => {
       // 2) Promo-Status (Bewerbung)
       const promo = params.get('job_promo')
       if (promo) {
-        if (promo === 'success') {
-          toastOk('Bewerbung für deinen Auftrag ist jetzt aktiv.')
-        } else if (promo === 'canceled') {
-          toastErr('Bewerbung wurde abgebrochen.')
-        } else if (promo === 'failed') {
-          toastErr('Bewerbung konnte nicht abgeschlossen werden.')
-        }
-        params.delete('job_promo')
-        params.delete('session_id')
-        params.delete('job_id')
-        changed = true
-      }
+  if (promo === 'success') {
+    toastOk('Bewerbung für deinen Auftrag ist jetzt aktiv.')
+  } else if (promo === 'canceled') {
+    toastErr('Bewerbung wurde abgebrochen.')
+  } else if (promo === 'failed') {
+    toastErr('Bewerbung konnte nicht abgeschlossen werden.')
+  } else if (promo === 'pending') {
+    toastOk('Auftrag wurde veröffentlicht. Checkout wurde geöffnet – du kannst die Bewerbung hier jederzeit erneut starten.')
+  }
+
+  params.delete('job_promo')
+  params.delete('session_id')
+  params.delete('job_id')
+  changed = true
+}
+
 
       if (changed) {
         const nextSearch = params.toString()
