@@ -449,15 +449,18 @@ return
       checkoutUrl?: string
     }
 
-    if (promoData.checkoutUrl) {
-      // Redirect zu Stripe Checkout
-      window.location.href = promoData.checkoutUrl
-      return
-    } else {
-      // Fallback: Auftrag ohne Promo anzeigen
-      router.replace('/konto/angebote')
-      return
-    }
+ if (promoData.checkoutUrl) {
+  // ✅ Formular aus dem Browser-Verlauf ersetzen
+  window.history.replaceState(
+    null,
+    '',
+    `/konto/angebote?job_published=1&job_promo=pending&job_id=${encodeURIComponent(String(jobId))}`
+  )
+
+  // ✅ weiter zu Stripe
+  window.location.href = promoData.checkoutUrl
+  return
+}
   } catch (err) {
     console.error('❌ Fehler beim Absenden / Promo:', err)
     alert(

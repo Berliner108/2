@@ -190,13 +190,6 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    const successUrl = `${SITE_URL}/konto/angebote?jobId=${encodeURIComponent(
-      jobId,
-    )}&promo=success`
-    const cancelUrl = `${SITE_URL}/konto/angebote?jobId=${encodeURIComponent(
-      jobId,
-    )}&promo=cancel`
-
     const origin =
   req.headers.get('origin') ??
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -206,18 +199,21 @@ const session = await stripe.checkout.sessions.create({
   mode: 'payment',   // falls du das schon drin hast
   line_items: line_items,                      // unverändert lassen
   success_url:
-    `${origin}/konto/angebote` +
-    `?jobId=${encodeURIComponent(jobId)}` +
-    `&promo_status=success` +
-    `&session_id={CHECKOUT_SESSION_ID}`,
-  cancel_url:
-    `${origin}/konto/angebote` +
-    `?jobId=${encodeURIComponent(jobId)}` +
-    `&promo_status=cancel` +
-    `&session_id={CHECKOUT_SESSION_ID}`,
+  `${origin}/konto/angebote` +
+  `?job_published=1` +
+  `&job_promo=success` +
+  `&job_id=${encodeURIComponent(jobId)}` +
+  `&session_id={CHECKOUT_SESSION_ID}`,
+
+cancel_url:
+  `${origin}/konto/angebote` +
+  `?job_published=1` +
+  `&job_promo=canceled` +
+  `&job_id=${encodeURIComponent(jobId)}` +
+  `&session_id={CHECKOUT_SESSION_ID}`,
+
   metadata: {
     scope: 'job_promo',
-    job_id: jobId,
     job_promo_order_id: orderId,             // falls du die ID gespeichert hast
   },
 })

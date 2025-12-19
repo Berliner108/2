@@ -67,34 +67,50 @@ async function recomputeJobPromoFromOrders(admin: any, jobId: string) {
  * Wird aufgerufen bei checkout.session.completed
  * – legt / aktualisiert job_promo_orders
  * – und aktualisiert danach den promo_score in jobs.
- */
-async function handleCheckoutSessionCompleted(sess: Stripe.Checkout.Session) {
+ */async function handleCheckoutSessionCompleted(sess: Stripe.Checkout.Session) {
   const admin = supabaseAdmin()
 
-  const jobId = (sess.metadata?.job_id as string | undefined)?.trim()
-  const buyerId = (sess.metadata?.user_id as string | undefined)?.trim()
-  const codesCsv = (sess.metadata?.package_ids as string | undefined)?.trim()
-
-  if (!jobId || !buyerId || !codesCsv) {
-    console.warn('job-promo webhook: fehlende Metadaten', {
-      jobId,
-      buyerId,
-      codesCsv,
+  const orderId = (sess.metadata?.job_promo_order_id as string | undefined)?.trim()
+  if (!orderId) {
+    console.warn('job-promo webhook: missing job_promo_order_id in metadata', {
+      sessionId: sess.id,
+      metadata: sess.metadata,
     })
     return
   }
 
-  const packageCodes = codesCsv
-    .split(',')
-    .map((c) => c.trim())
-    .filter(Boolean)
+  // 1) Order aus DB holen (Single Source of Truth)
+  const { data: order, error: ordErr } = await admin
+    .from('job_promo_orders')
+    .select('id, job_id, buyer_id, package_codes, status, stripe_session_id')
+    .eq('id', orderId)
+    .maybeSingle()
 
-  if (packageCodes.length === 0) {
-    console.warn('job-promo webhook: keine gültigen packageCodes', { codesCsv })
+  if (ordErr) throw ordErr
+  if (!order) {
+    console.warn('job-promo webhook: order not found', { orderId, sessionId: sess.id })
     return
   }
 
-  // Preise & Scores aus job_promo_packages ziehen
+  const jobId = String(order.job_id || '').trim()
+  const packageCodes = Array.isArray(order.package_codes) ? order.package_codes : []
+
+  if (!jobId || packageCodes.length === 0) {
+    console.warn('job-promo webhook: order has no jobId/packageCodes', { orderId, jobId, packageCodes })
+    return
+  }
+
+  // 2) Optional: Session-ID abgleichen / setzen
+  if (order.stripe_session_id && order.stripe_session_id !== sess.id) {
+    console.warn('job-promo webhook: session mismatch', {
+      orderId,
+      orderSession: order.stripe_session_id,
+      webhookSession: sess.id,
+    })
+    return
+  }
+
+  // 3) Score/Amount aus Packages ziehen (serverseitig)
   const { data: packages, error: pkgErr } = await admin
     .from('job_promo_packages')
     .select('code, score_delta, amount_cents')
@@ -102,25 +118,15 @@ async function handleCheckoutSessionCompleted(sess: Stripe.Checkout.Session) {
     .eq('active', true)
 
   if (pkgErr) throw pkgErr
-
   if (!packages || packages.length === 0) {
-    console.warn('job-promo webhook: keine passenden Packages gefunden', {
-      packageCodes,
-    })
+    console.warn('job-promo webhook: no packages found for order', { orderId, packageCodes })
     return
   }
 
-  const scoreTotal = packages.reduce(
-    (sum: number, p: any) => sum + (p.score_delta ?? 0),
-    0,
-  )
+  const scoreTotal = packages.reduce((sum: number, p: any) => sum + (p.score_delta ?? 0), 0)
 
-  const amountFromStripe =
-    typeof sess.amount_total === 'number' ? sess.amount_total : null
-  const amountFallback = packages.reduce(
-    (sum: number, p: any) => sum + (p.amount_cents ?? 0),
-    0,
-  )
+  const amountFromStripe = typeof sess.amount_total === 'number' ? sess.amount_total : null
+  const amountFallback = packages.reduce((sum: number, p: any) => sum + (p.amount_cents ?? 0), 0)
   const amountTotal = amountFromStripe ?? amountFallback
 
   const currency = (sess.currency || 'eur').toString().toUpperCase()
@@ -130,57 +136,35 @@ async function handleCheckoutSessionCompleted(sess: Stripe.Checkout.Session) {
       ? sess.payment_intent
       : (sess.payment_intent as any)?.id ?? null
 
-  // job_promo_orders per Session-ID upserten (idempotent)
-  const adminClient = admin
-
-  const { data: existing, error: selErr } = await adminClient
-    .from('job_promo_orders')
-    .select('id, status')
-    .eq('stripe_session_id', sess.id)
-    .maybeSingle()
-
-  if (selErr) throw selErr
-
-  if (existing?.id) {
-    // Bestellung ist schon angelegt → nur aktualisieren
-    const patch: any = {
-      updated_at: nowISO(),
-      score_delta_total: scoreTotal,
-      amount_cents_total: amountTotal,
-      currency,
-      package_codes: packageCodes,
-    }
-    if (piId) patch.stripe_payment_intent = piId
-    patch.status = 'paid'
-
-    const { error: upErr } = await adminClient
-      .from('job_promo_orders')
-      .update(patch)
-      .eq('id', existing.id)
-
-    if (upErr) throw upErr
-  } else {
-    // Neue Bestellung anlegen
-    const { error: insErr } = await adminClient.from('job_promo_orders').insert({
-      job_id: jobId,
-      buyer_id: buyerId,
-      package_codes: packageCodes,
-      score_delta_total: scoreTotal,
-      amount_cents_total: amountTotal,
-      currency,
-      stripe_session_id: sess.id,
-      stripe_payment_intent: piId,
-      status: 'paid',
-      created_at: nowISO(),
-      updated_at: nowISO(),
-    })
-
-    if (insErr) throw insErr
+  // 4) Idempotent: wenn schon paid → nur recompute (oder return)
+  if (order.status === 'paid') {
+    await recomputeJobPromoFromOrders(admin, jobId)
+    return
   }
 
-  // Promo-Score & Optionen für diesen Job neu berechnen
-  await recomputeJobPromoFromOrders(adminClient, jobId)
+  // 5) Order auf paid setzen
+  const patch: any = {
+    updated_at: nowISO(),
+    status: 'paid',
+    score_delta_total: scoreTotal,
+    amount_cents_total: amountTotal,
+    currency,
+    package_codes: packageCodes,
+    stripe_session_id: sess.id, // falls vorher null
+  }
+  if (piId) patch.stripe_payment_intent = piId
+
+  const { error: upErr } = await admin
+    .from('job_promo_orders')
+    .update(patch)
+    .eq('id', orderId)
+
+  if (upErr) throw upErr
+
+  // 6) Promo-Score & Optionen im Job neu berechnen
+  await recomputeJobPromoFromOrders(admin, jobId)
 }
+
 
 /** Falls Zahlung fehlschlägt oder Session abläuft → Bestellung als failed markieren */
 async function markOrderFailedBySessionId(sessionId: string, status: 'failed' | 'expired') {
