@@ -203,14 +203,13 @@ const step3Ref = useRef<HTMLDivElement>(null)
   const [selectedVerfahren, setSelectedVerfahren] = useState<string[]>([]) // oder später aus deinem Verfahren-Block
 
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([])
-  const toggleBewerbung = (option: string) => {
-    setBewerbungOptionen((prev) =>
-      prev.includes(option)
-        ? prev.filter((o) => o !== option)
-        : [...prev, option],
-    )
-  }
-
+const toggleBewerbung = (option: string) => {
+  setBewerbungOptionen(prev =>
+    prev.includes(option)
+      ? prev.filter(o => o !== option)
+      : [...prev, option]
+  )
+}
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % 3)
@@ -421,7 +420,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       return
     }
-
+const packageCodes = Array.from(
+  new Set(bewerbungOptionen.filter((x): x is string => typeof x === "string" && x.length > 0))
+)
     // 3️⃣ Promo-Pakete gewählt → Stripe Checkout starten
     const promoRes = await fetch('/api/job-promo/checkout', {
       method: 'POST',
@@ -434,22 +435,14 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     if (!promoRes.ok) {
       let payload: any = null
-      try {
-        payload = await promoRes.json()
-      } catch {}
+try { payload = await promoRes.json() } catch {}
 
-      console.error(
-        'API-Fehler /api/job-promo/checkout:',
-        promoRes.status,
-        payload,
-      )
-      // Ganz wichtig: der Auftrag EXISTIERT bereits.
-      // Nur die Bewerbung hat nicht geklappt.
-      alert(
-        'Dein Auftrag wurde gespeichert, aber der Bezahlvorgang für die Bewerbung konnte nicht gestartet werden. Du kannst die Bewerbung später in deinem Konto erneut versuchen.',
-      )
-      router.replace('/konto/angebote')
-      return
+console.error('Checkout Fehler:', promoRes.status, payload)
+
+alert(payload?.message || payload?.details || payload?.error || `Checkout Fehler (HTTP ${promoRes.status})`)
+router.replace('/konto/angebote')
+return
+
     }
 
     const promoData = (await promoRes.json()) as {
