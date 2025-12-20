@@ -284,8 +284,8 @@
   will-change: transform;
 }
 
-/* ✅ Hover-Zoom nur auf Desktop/Mouse/Trackpad */
-@media (hover: hover) and (pointer: fine) {
+/* ✅ Desktop: erst ab 1025px Hover-Zoom */
+@media (min-width: 1380px){
   .articleBox:hover,
   .articleBox2:hover,
   .articleBox3:hover{
@@ -293,8 +293,8 @@
   }
 }
 
-/* ✅ Mobile/Touch: kein Hover-Zoom */
-@media (hover: none), (pointer: coarse) {
+/* ✅ bis max. 1024px: kein Hover-Zoom */
+@media (max-width: 1379px){
   .articleBox:hover,
   .articleBox2:hover,
   .articleBox3:hover{
