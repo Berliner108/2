@@ -157,18 +157,28 @@ function useToast() {
     setMsg(text)
   }
 
-  const View = () =>
-    msg ? (
-      <div
-        className={`${styles.toastRoot} ${
-          variant === 'err' ? styles.toastError : styles.toastOk
-        }`}
-        role="status"
-        aria-live="polite"
+const View = () =>
+  msg ? (
+    <div
+      className={`${styles.toastRoot} ${
+        variant === 'err' ? styles.toastError : styles.toastOk
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      <span className={styles.toastText}>{msg}</span>
+
+      <button
+        type="button"
+        className={styles.toastClose}
+        onClick={() => setMsg(null)}
+        aria-label="Toast schließen"
       >
-        {msg}
-      </div>
-    ) : null
+        ×
+      </button>
+    </div>
+  ) : null
+
 
   useEffect(() => {
     if (!msg) return
@@ -428,8 +438,6 @@ const Angebote: FC = () => {
   params.delete('job_id')
   changed = true
 }
-
-
       if (changed) {
         const nextSearch = params.toString()
         const next = `${url.pathname}${nextSearch ? `?${nextSearch}` : ''}`
