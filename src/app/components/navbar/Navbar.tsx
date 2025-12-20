@@ -6,7 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import styles from './navbar.module.css'
 import { NAV_ITEMS } from './nav.config'
 
-
+const getScrollKey = (pathname: string | null) =>
+  pathname?.startsWith('/konto') ? 'nav_scroll_left_konto' : 'nav_scroll_left_public'
 type ForAccountResponseOffers = {
   received?: Array<{ id: string; createdAt?: string; created_at?: string }>
 }
@@ -32,7 +33,6 @@ export default function Navbar() {
 
   // Refs für Overlay/Erkennung
   const navbarRef = useRef<HTMLDivElement | null>(null)       // scrollbarer Container
-  const NAV_SCROLL_KEY = 'nav_scroll_left'
   const kontoLinkRef = useRef<HTMLAnchorElement | null>(null) // "Mein Konto"-Link
   const [showEdgeBadge, setShowEdgeBadge] = useState(false)
   const [edgeTop, setEdgeTop] = useState<number>(8)
@@ -57,18 +57,17 @@ export default function Navbar() {
   useLayoutEffect(() => {
   const nav = navbarRef.current
   if (!nav) return
-
-  // nur bis 1024px (mobil/tablet)
   if (window.innerWidth > 1024) return
-
-  const saved = sessionStorage.getItem(NAV_SCROLL_KEY)
+const key = getScrollKey(pathname)
+const saved = sessionStorage.getItem(key)
   if (!saved) return
 
   const x = Number(saved)
   if (!Number.isFinite(x)) return
 
   nav.scrollLeft = x
-}, [])
+}, [pathname])
+
 
 
   useEffect(() => {
@@ -215,18 +214,21 @@ export default function Navbar() {
       // ignore
     }
   }, [pathname])
-  useEffect(() => {
+useEffect(() => {
   const nav = navbarRef.current
   if (!nav) return
   if (window.innerWidth > 1024) return
 
+  const key = getScrollKey(pathname)
+
   const onScroll = () => {
-    sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollLeft))
+    sessionStorage.setItem(key, String(nav.scrollLeft))
   }
 
   nav.addEventListener('scroll', onScroll, { passive: true })
   return () => nav.removeEventListener('scroll', onScroll)
-}, [])
+}, [pathname])
+
 
 
   const displayCounter = kontoNew > 9 ? '9+' : String(kontoNew)
