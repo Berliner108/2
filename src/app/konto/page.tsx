@@ -55,7 +55,13 @@ export default function Page() {
         if (!res.ok) return
         const j: ForAccountResponseOffers = await res.json()
         const received = Array.isArray(j?.received) ? j.received : []
-        const lastSeen = Number(localStorage.getItem('offers:lastSeen') || '0')
+        const now = Date.now()
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+const sevenDaysAgo = now - SEVEN_DAYS
+
+const rawLastSeen = Number(localStorage.getItem('offers:lastSeen') || '0')
+const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
         const count = received.reduce((acc, o) => {
           const ts = +new Date((o as any).createdAt || (o as any).created_at)
           return ts > lastSeen ? acc + 1 : acc
@@ -77,10 +83,21 @@ export default function Page() {
         if (!res.ok) return
         const j: OrdersResp = await res.json()
         const merged = [...(j.vergeben ?? []), ...(j.angenommen ?? [])]
-        const lastSeen = Number(localStorage.getItem('lackOrders:lastSeen') || '0')
+        const now = Date.now()
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+const sevenDaysAgo = now - SEVEN_DAYS
 
-        const newEvents = merged.reduce((n, o) => n + (lastEventTs(o) > lastSeen ? 1 : 0), 0)
-        const pending   = merged.reduce((n, o) => n + (needsAction(o) ? 1 : 0), 0)
+const rawLastSeen = Number(localStorage.getItem('lackOrders:lastSeen') || '0')
+const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+const newEvents = merged.reduce((n, o) => n + (lastEventTs(o) > lastSeen ? 1 : 0), 0)
+
+// pending nur, wenn das letzte Event jünger als 7 Tage ist (wie Navbar)
+const pending = merged.reduce(
+  (n, o) => n + (needsAction(o) && lastEventTs(o) > sevenDaysAgo ? 1 : 0),
+  0
+)
+
 
         if (alive) setOrdersBadge(newEvents + pending)
 

@@ -1,4 +1,4 @@
-// /src/app/konto/verkaufte-artikel/page.tsx
+// /src/app/konto/verkaufen/page.tsx
 'use client';  // Markiert diese Datei als Client Component
 
 import { FC, useState } from 'react';
