@@ -256,11 +256,11 @@
   display: inline-block;
   margin-left: 8px;
   margin-top: -5px;
-  padding: 9px;
-  border-radius: 9999px;
-  font-size: 12px;
-  line-height: 20px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1;
   vertical-align: middle;
 }
 
@@ -284,12 +284,13 @@
 /* Badge für Lieferdatum */
 .deadlineBadge {
   display: inline-block;
-  padding: 5px;
   margin-top: 4px;
-  border-radius: 9999px;
-  font-size: 12px;
   line-height: 20px;
   font-weight: 600;
+  
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
 }}
 @media (max-width: 601px){
 .cardText1 {
