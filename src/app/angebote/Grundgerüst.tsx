@@ -446,6 +446,7 @@ setOverlayText('Wir leiten gleich weiter.')
     console.error('Checkout Fehler:', promoRes.status, payload)
 
     alert(payload?.message || payload?.details || payload?.error || `Checkout Fehler (HTTP ${promoRes.status})`)
+    willNavigate = true
     router.replace('/konto/angebote')
     return
 
@@ -466,6 +467,7 @@ setOverlayText('Wir leiten gleich weiter.')
   // ✅ weiter zu Stripe
   // ✅ direkt vor dem Redirect
 willNavigate = true
+await nextFrame()
 window.location.assign(promoData.checkoutUrl)
 return
 
@@ -1208,16 +1210,13 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
                 <div style={{ textAlign: 'center' }}>
           <button
-            type="submit"
-            className={styles.absendenButton}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className={styles.spinner}></span>
-            ) : (
-              'Jetzt Angebote einholen'
-            )}
-          </button>
+  type="submit"
+  className={styles.absendenButton}
+  disabled={isLoading}
+>
+  {isLoading ? 'Bitte warten…' : 'Jetzt Angebote einholen'}
+</button>
+
           {successMessage && (
             <p className={styles.erfolg}>{successMessage}</p>
           )}
