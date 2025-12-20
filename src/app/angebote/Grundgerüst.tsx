@@ -3,7 +3,7 @@ import type React from 'react'   // ⬅️ NEU
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, HelpCircle, Truck } from 'lucide-react'
+import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, HelpCircle, Truck, Loader2} from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import styles from './Grundgeruest.module.css'
 import Navbar from '../components/navbar/Navbar'
@@ -59,6 +59,8 @@ function FormSkeleton() {
     </div>
   );
 }
+// ✅ 1 Frame warten, damit Overlay sicher gerendert wird (keine echte Verzögerung)
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
 
 const stepIcons = [
@@ -154,6 +156,8 @@ export default function Formular() {
     { nr: number; liefer: string; abhol: string }[]
   >([])
 
+const [overlayTitle, setOverlayTitle] = useState('Wir veröffentlichen deinen Auftrag …')
+const [overlayText, setOverlayText]   = useState('Wir leiten gleich weiter.')
 
   const [verfahrenError, setVerfahrenError] = useState(false)
   const verfahrenRef = useRef<HTMLDivElement>(null)
@@ -337,6 +341,11 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   setIsLoading(true)
 
+  let willNavigate = false
+setOverlayTitle('Wir veröffentlichen deinen Auftrag …')
+setOverlayText('Wir leiten gleich weiter.')
+
+
   const formData = new FormData()
   formData.append('agbAccepted', agbAccepted ? 'true' : 'false')
 
@@ -410,38 +419,35 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // 2️⃣ Kein Promo-Paket gewählt → fertig wie bisher
     if (bewerbungOptionen.length === 0) {
-      setSuccessMessage(
-        '✅ Auftrag erfolgreich aufgegeben! Du wirst weitergeleitet …',
-      )
-
-      setTimeout(() => {
-        router.replace('/konto/angebote')
-      }, 2000)
-
+      willNavigate = true
+      await nextFrame()
+      router.replace(`/konto/angebote?job_published=1&job_id=${encodeURIComponent(jobId)}`)
       return
     }
-const packageCodes = Array.from(
-  new Set(bewerbungOptionen.filter((x): x is string => typeof x === "string" && x.length > 0))
-)
+    setOverlayTitle('Auftrag gespeichert')
+    setOverlayText('Wir öffnen den Checkout …')
+    const packageCodes = Array.from(
+      new Set(bewerbungOptionen.filter((x): x is string => typeof x === "string" && x.length > 0))
+    )
     // 3️⃣ Promo-Pakete gewählt → Stripe Checkout starten
     const promoRes = await fetch('/api/job-promo/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jobId,
-        packageCodes: bewerbungOptionen,
+        packageCodes: packageCodes,
       }),
     })
 
     if (!promoRes.ok) {
       let payload: any = null
-try { payload = await promoRes.json() } catch {}
+    try { payload = await promoRes.json() } catch {}
 
-console.error('Checkout Fehler:', promoRes.status, payload)
+    console.error('Checkout Fehler:', promoRes.status, payload)
 
-alert(payload?.message || payload?.details || payload?.error || `Checkout Fehler (HTTP ${promoRes.status})`)
-router.replace('/konto/angebote')
-return
+    alert(payload?.message || payload?.details || payload?.error || `Checkout Fehler (HTTP ${promoRes.status})`)
+    router.replace('/konto/angebote')
+    return
 
     }
 
@@ -458,8 +464,11 @@ return
   )
 
   // ✅ weiter zu Stripe
-  window.location.href = promoData.checkoutUrl
-  return
+  // ✅ direkt vor dem Redirect
+willNavigate = true
+window.location.assign(promoData.checkoutUrl)
+return
+
 }
   } catch (err) {
     console.error('❌ Fehler beim Absenden / Promo:', err)
@@ -467,8 +476,8 @@ return
       'Fehler beim Absenden. Dein Auftrag wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.',
     )
   } finally {
-    setIsLoading(false)
-  }
+  if (!willNavigate) setIsLoading(false)
+}
 }
     
   // 🔄 selectedVerfahren immer aus Verfahren 1 + 2 ableiten
@@ -1225,6 +1234,31 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </button>
         </div>
       </form>
+      <AnimatePresence>
+  {isLoading && (
+    <motion.div
+      className={styles.modalOverlay}
+      role="dialog"
+      aria-modal="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={styles.modalCard}
+        initial={{ y: 10, scale: 0.98, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        exit={{ y: 10, scale: 0.98, opacity: 0 }}
+        transition={{ duration: 0.18 }}
+      >
+        <Loader2 className={styles.modalIcon} />
+        <h3 className={styles.modalTitle}>{overlayTitle}</h3>
+        <p className={styles.modalText}>{overlayText}</p>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
     </div>
   )
