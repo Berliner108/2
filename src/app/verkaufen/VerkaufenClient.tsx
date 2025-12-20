@@ -5,10 +5,10 @@ import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
 import Navbar from '../components/navbar/Navbar'
 import { AnimatePresence, motion } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
-import { Star, Search, Crown } from 'lucide-react';
+import { Star, Search, Crown, Loader2 } from 'lucide-react';
 
 /* ---------------- Fancy Loader Components ---------------- */
 
@@ -65,6 +65,7 @@ function FormSkeleton() {
     </div>
   );
 }
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
 
 function istGueltigeDatei(file: File): boolean {
@@ -108,6 +109,9 @@ const heute = new Date().toISOString().split('T')[0];
 
 
 function ArtikelEinstellen() {
+  const router = useRouter()
+const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
+const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const searchParams = useSearchParams(); // <-- HIER
   const [bootLoading, setBootLoading] = useState(true);
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
@@ -484,6 +488,11 @@ useEffect(() => {
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setLadeStatus(true);
+  let willNavigate = false
+setOverlayTitle('Wir stellen deinen Artikel ein …')
+setOverlayText('Wir leiten gleich weiter.')
+  
+
     let hasError = false; // ← Diese Zeile neu einfügen
 
   let fehler = false;
@@ -622,7 +631,6 @@ if (!aufLager) {
 
 
   if (fehler) {
-    setLadeStatus(false);
     return;
   }
  
@@ -672,46 +680,59 @@ if (!aufLager) {
   formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
 
 
-  try {
-    const res = await fetch('/api/verkaufen', {
-      method: 'POST',
-      body: formData,
-    });
+try {
+  const res = await fetch('/api/verkaufen', {
+    method: 'POST',
+    body: formData,
+  });
 
-    if (res.ok) {
-      alert('Erfolgreich hochgeladen!');
-      setBilder([]);
-      setDateien([]);
-      setWarnung('');
-      setWarnungKategorie('');
-      setWarnungBilder('');
-      setWarnungPalette('');
-      setWarnungZustand('');
-      setFarbton('');
-      setGlanzgrad('');
-      setKategorie(null);
-      setPreis('');
-      setLieferWerktage('');
-      setVersandKosten('');
-      setWarnungPreis('');
-      setWarnungWerktage('');
-      setWarnungVersand('');
-      setMengeStueck(0);
-      setGroesse('');
-      setWarnungMengeStueck('');
-      setWarnungGroesse('');
-      setStueckProEinheit('');
-      setWarnungStueckProEinheit('');
+  if (res.ok) {
+    // ✅ Resets beibehalten (wie bei dir)
+    setBilder([]);
+    setDateien([]);
+    setWarnung('');
+    setWarnungKategorie('');
+    setWarnungBilder('');
+    setWarnungPalette('');
+    setWarnungZustand('');
+    setFarbton('');
+    setGlanzgrad('');
+    setKategorie(null);
+    setPreis('');
+    setLieferWerktage('');
+    setVersandKosten('');
+    setWarnungPreis('');
+    setWarnungWerktage('');
+    setWarnungVersand('');
+    setMengeStueck(0);
+    setGroesse('');
+    setWarnungMengeStueck('');
+    setWarnungGroesse('');
+    setStueckProEinheit('');
+    setWarnungStueckProEinheit('');
 
-    } else {
-      alert('Fehler beim Hochladen');
-    }
-  } catch (error) {
-    console.error(error);
-    alert('Serverfehler');
-  } finally {
-    setLadeStatus(false);
+    // ✅ Overlay-Text (identisch)
+    setOverlayTitle('Artikel gespeichert');
+    setOverlayText('Wir leiten gleich weiter.');
+
+    // ✅ Overlay bleibt bis zur Navigation sichtbar
+    willNavigate = true;
+
+    // ✅ 1 Frame warten, damit Overlay sicher sichtbar wird
+    await nextFrame();
+
+    // ✅ Weiterleitung
+    router.replace('/konto/verkaufen?artikel_published=1');
+    return;
+  } else {
+    alert('Fehler beim Hochladen');
   }
+} catch (error) {
+  console.error(error);
+  alert('Serverfehler');
+} finally {
+  if (!willNavigate) setLadeStatus(false);
+}
 };
 const toggleBewerbung = (option: string) => {
   setBewerbungOptionen(prev =>
@@ -1898,15 +1919,8 @@ const toggleBewerbung = (option: string) => {
   )}
 </AnimatePresence>
 
-    <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
-  {ladeStatus ? (
-    <>
-      Artikel wird eingestellt
-      <span className={styles.spinner}></span>
-    </>
-  ) : (
-    'Artikel kostenlos einstellen'
-  )}
+ <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
+  {ladeStatus ? 'Bitte warten…' : 'Artikel kostenlos einstellen'}
 </button>
 <div className={styles.buttonRechts}>
   <button
@@ -1928,6 +1942,31 @@ const toggleBewerbung = (option: string) => {
   </div>
 </div>
       </form>
+      <AnimatePresence>
+  {ladeStatus && (
+    <motion.div
+      className={styles.modalOverlay}
+      role="dialog"
+      aria-modal="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={styles.modalCard}
+        initial={{ y: 10, scale: 0.98, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        exit={{ y: 10, scale: 0.98, opacity: 0 }}
+        transition={{ duration: 0.18 }}
+      >
+        <Loader2 className={styles.modalIcon} />
+        <h3 className={styles.modalTitle}>{overlayTitle}</h3>
+        <p className={styles.modalText}>{overlayText}</p>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
     </>
   );
 }
