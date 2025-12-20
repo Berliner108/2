@@ -397,7 +397,7 @@ export default function Page() {
             </div>
 
             <div className={styles.imageContainer}>
-              <img src="/images/slide245.webp" alt="Artikelbild" className={styles.articleImage} />
+              <img src="/images/werbung.jpg" alt="Artikelbild" className={styles.articleImage} />
             </div>
           </section>
 
