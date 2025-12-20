@@ -276,10 +276,32 @@
   box-sizing: border-box;
   background: white;
 }
-.articleBox:hover {
-  transform: scale(1.05);
-  text-decoration: none;
+/* Alle Karten: gleiche Transition */
+.articleBox,
+.articleBox2,
+.articleBox3{
+  transition: transform 0.2s ease-in-out;
+  will-change: transform;
 }
+
+/* ✅ Hover-Zoom nur auf Desktop/Mouse/Trackpad */
+@media (hover: hover) and (pointer: fine) {
+  .articleBox:hover,
+  .articleBox2:hover,
+  .articleBox3:hover{
+    transform: scale(1.05);
+  }
+}
+
+/* ✅ Mobile/Touch: kein Hover-Zoom */
+@media (hover: none), (pointer: coarse) {
+  .articleBox:hover,
+  .articleBox2:hover,
+  .articleBox3:hover{
+    transform: none;
+  }
+}
+
 /* Bilder in den Artikeln */
 .articleImg {
   width: 100%;
