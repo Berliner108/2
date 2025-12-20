@@ -863,3 +863,55 @@
   margin-bottom: 0.5rem;
   text-align: center;
 }}
+
+/* Vollflächiger, nicht klickbarer Overlay-Hintergrund */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45); /* slate-900/45 */
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  pointer-events: all;   /* blockiert Klicks auf die Seite */
+  cursor: progress;      /* signalisiert: wir leiten weiter */
+}
+/* Karte im Overlay (keine Interaktion nötig) */
+.modalCard {
+  width: min(92vw, 440px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  user-select: none;
+}
+/* Icon + Texte */
+.modalIcon {
+  width: 40px;
+  height: 40px;
+  color: #10b981; /* grün */
+  display: block;
+  margin: 2px auto 8px;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 0 0 6px;
+  color: #0f172a; /* slate-900 */
+}
+
+.modalText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569; /* slate-600 */
+}
+/* Motion-User achten */
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay, .modalCard {
+    animation: none !important;
+    transition: none !important;
+  }
+}
