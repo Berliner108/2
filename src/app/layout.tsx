@@ -1,10 +1,9 @@
 import '../styles/layout.css'
 import React, { Suspense } from 'react'
 import { Oswald } from 'next/font/google'
-
-import Header from './Header'
-import Footer from './Footer'
+import Chrome from './Chrome'
 import NavbarGate from './components/navbar/NavbarGate'
+
 
 const oswald = Oswald({
   subsets: ['latin'],
@@ -24,16 +23,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="192x192" href="/web-app-manifest-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
       </head>
-
+      <NavbarGate />
       <body className={oswald.className}>
         <Suspense fallback={null}>
-          <Header />
-          <NavbarGate />
-          <main>{children}</main>
-          <Footer />
+          <Chrome>{children}</Chrome>
         </Suspense>
 
-        {/* Tracking bleibt wie bei dir */}
+        {/* Tracking auf ALLEN Seiten – schickt Secret im Body (sendBeacon) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){
