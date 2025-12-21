@@ -1,10 +1,11 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
 import Navbar from '../../../components/navbar/Navbar';
+import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
 import { FaFilePdf } from 'react-icons/fa';
 import Lightbox from 'yet-another-react-lightbox';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -13,6 +14,9 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 
 import type { Auftrag } from '@/lib/types/auftrag';
+
+type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
+
 const labelWarenausgabeArt = (v?: string | null) => {
   const s = (v ?? '').trim().toLowerCase();
   if (s === 'abholung') return 'Abholung';
@@ -166,9 +170,63 @@ function hasMinWholeDigits(value: string, minDigits: number): boolean {
   return wholePart.length >= minDigits;
 }
 
-export default function AuftragDetailClient({ auftrag }: { auftrag: Auftrag }) {
+function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading] = useState(false);
+
+  const { error: toastError } = useLocalToast();
+
+  // Connect (Stripe) Status – identisch zur Lackanfragen-Detailseite
+  const [connect, setConnect] = useState<ConnectStatus | null>(null);
+  const [connectLoaded, setConnectLoaded] = useState(false);
+
+  const fetchConnect = useCallback(async () => {
+    try {
+      const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+      const j: ConnectStatus = await r.json().catch(() => ({ ready: false } as ConnectStatus));
+      setConnect(r.ok ? j : { ready: false });
+    } finally {
+      setConnectLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConnect();
+  }, [fetchConnect]);
+
+  useEffect(() => {
+    const onFocus = () => fetchConnect();
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('pageshow', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('pageshow', onFocus);
+    };
+  }, [fetchConnect]);
+
+  const goToStripeOnboarding = useCallback(async () => {
+    try {
+      const r = await fetch('/api/connect/account-link', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          return_to: typeof window !== 'undefined' ? window.location.href : undefined,
+        }),
+      });
+
+      const j = await r.json().catch(() => ({} as any));
+      if (!r.ok || !j?.url) {
+        const msg = j?.reason || j?.error || 'Onboarding-Link konnte nicht erstellt werden.';
+        const extra = [j?.code, j?.mode].filter(Boolean).join(' · ');
+        throw new Error(extra ? `${msg} (${extra})` : msg);
+      }
+
+      window.location.assign(j.url as string);
+    } catch (e: any) {
+      toastError(String(e?.message || 'Onboarding-Link konnte nicht erstellt werden.'));
+    }
+  }, [toastError]);
 
   if (loading) {
     return (
@@ -285,7 +343,7 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
     return true;
   })();
 
-  const onPreisSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPreisError(null);
 
@@ -311,6 +369,25 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
         return;
       }
       logistik = l;
+    }
+
+    // Connect-Ready prüfen (wie bei Lackanfragen)
+    try {
+      const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+      const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
+
+      if (!stRes.ok) {
+        toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
+        return;
+      }
+
+      if (!st.ready) {
+        await goToStripeOnboarding();
+        return;
+      }
+    } catch {
+      toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
+      return;
     }
 
     // TODO: später API-Call (z. B. POST /api/auftraege/{id}/angebote)
@@ -386,6 +463,22 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                 )}
               </div>
             </div>
+
+            {connectLoaded && connect?.ready === false && (
+              <div className={styles.connectNotice} role="status" aria-live="polite">
+                <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
+
+                {connect?.reason ? (
+                  <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
+                ) : null}
+
+                <div className={styles.connectActions}>
+                  <button type="button" className={styles.connectBtn} onClick={goToStripeOnboarding}>
+                    Jetzt bei Stripe verifizieren
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Meta-Grid: alle allgemeinen Eingaben */}
             <div className={styles.metaGrid}>
@@ -641,5 +734,13 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
         />
       )}
     </>
+  );
+}
+
+export default function AuftragDetailClient(props: { auftrag: Auftrag }) {
+  return (
+    <LocalToastProvider>
+      <AuftragDetailClientBody {...props} />
+    </LocalToastProvider>
   );
 }
