@@ -539,29 +539,29 @@ useEffect(() => {
 
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-  setLadeStatus(true);
   let willNavigate = false
 setOverlayTitle('Wir stellen deinen Artikel ein …')
 setOverlayText('Wir leiten gleich weiter.')
   
 
-    let hasError = false; // ← Diese Zeile neu einfügen
-  let fehler = false;
+let fehler = false;
 
-  // Pflichtfelder prüfen
-  if (!kategorie) {
-    setWarnungKategorie('Bitte wähle eine Kategorie aus.');
-    fehler = true;
-  } else {
-    setWarnungKategorie('');
-  }
-  if (!agbAccepted) {
-  setAgbError(true)
-  agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  hasError = true
+// Pflichtfelder prüfen
+if (!kategorie) {
+  setWarnungKategorie('Bitte wähle eine Kategorie aus.');
+  fehler = true;
 } else {
-  setAgbError(false)
+  setWarnungKategorie('');
 }
+
+if (!agbAccepted) {
+  setAgbError(true);
+  agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  fehler = true;   // ⬅️ wichtig!
+} else {
+  setAgbError(false);
+}
+
 
 
   if (bilder.length === 0) {
