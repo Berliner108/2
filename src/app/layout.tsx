@@ -1,7 +1,6 @@
 import '../styles/layout.css'
 import React, { Suspense } from 'react'
 import { Oswald } from 'next/font/google'
-import NavbarGate from './components/navbar/NavbarGate'
 import Chrome from './Chrome'
 
 const oswald = Oswald({
@@ -24,7 +23,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className={oswald.className}>
         <Suspense fallback={null}>
-          <NavbarGate />
           <Chrome>{children}</Chrome>
         </Suspense>
 
