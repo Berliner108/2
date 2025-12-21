@@ -578,24 +578,40 @@ if (!agbAccepted) {
   setWarnungTitel('');
 }
 
-if (!farbpaletteWert) {
-  setWarnungPalette('Bitte wähle eine Farbpalette aus.');
-  fehler = true;
-} else {
-  setWarnungPalette('');
-}
+// Nur für Lack-Kategorien prüfen
+if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
+  if (!farbpaletteWert) {
+    setWarnungPalette('Bitte wähle eine Farbpalette aus.');
+    fehler = true;
+  } else {
+    setWarnungPalette('');
+  }
 
-if (!oberflaeche) {
-  fehler = true;
-}
-    if (!anwendung) {fehler = true;}
+  if (!oberflaeche) {
+    fehler = true;
+  }
 
-    if (!zustand) {
-      setWarnungZustand('Bitte wähle den Zustand aus.');
+  if (!anwendung) {
+    fehler = true;
+  }
+
+  if (!zustand) {
+    setWarnungZustand('Bitte wähle den Zustand aus.');
+    fehler = true;
+  } else {
+    setWarnungZustand('');
+  }
+
+  if (kategorie === 'pulverlack') {
+    if (aufladung.length === 0) {
+      setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
       fehler = true;
     } else {
-      setWarnungZustand('');
+      setWarnungAufladung('');
     }
+  }
+}
+
     if (kategorie === 'pulverlack') {
     if (aufladung.length === 0) {
       setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
