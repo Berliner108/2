@@ -721,9 +721,9 @@
 .connectNotice {
   margin-top: 12px;
   padding: 12px 14px;
-  border: 2px solid #faad14;
-  background: #fffbe6;
-  color: #613400;
+  border: 2px solid #faad14;      /* Amber */
+  background: #613400;            /* Soft gelb */
+  color: #fffbe6;                  /* Dunkles Braun */
   border-radius: 12px;
   font-weight: 600;
   text-align: center;
