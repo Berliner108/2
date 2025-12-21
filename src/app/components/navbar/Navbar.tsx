@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useLayoutEffect, useState } from 'react'
 import styles from './navbar.module.css'
 import { NAV_ITEMS } from './nav.config'
 
@@ -25,6 +25,7 @@ type LackOrder = {
 
 type OrdersResp = { vergeben: LackOrder[]; angenommen: LackOrder[] }
 
+const NAV_SCROLL_KEY = 'navbar:scrollLeft'
 export default function Navbar() {
   const pathname = usePathname()
   const [kontoNew, setKontoNew] = useState(0)
@@ -140,6 +141,41 @@ export default function Navbar() {
       window.removeEventListener('navbar:badge', onBadge as any)
     }
   }, [])
+
+  useEffect(() => {
+  const nav = navbarRef.current
+  if (!nav) return
+
+  const save = () => {
+    try {
+      sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollLeft))
+    } catch {
+      // ignore
+    }
+  }
+
+  nav.addEventListener('scroll', save, { passive: true })
+  return () => nav.removeEventListener('scroll', save)
+}, [])
+useLayoutEffect(() => {
+  const nav = navbarRef.current
+  if (!nav) return
+
+  let x = 0
+  try {
+    x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
+  } catch {
+    // ignore
+  }
+
+  // 2 Frames warten, damit active-styles + Layout fertig sind
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      nav.scrollTo({ left: x, behavior: 'auto' })
+    })
+  })
+}, [pathname])
+
 
   // --- Sichtbarkeitsprüfung per BoundingClientRect ---
   useEffect(() => {
