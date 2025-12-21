@@ -39,8 +39,16 @@ const materialOptions = [
   'Andere'
 ]
 
-const allowOnlyDigits = (value: string, max: number) =>
-  value.replace(/\D/g, '').slice(0, max)
+const sanitizePositiveInt = (raw: string, maxDigits: number) => {
+  const digits = raw.replace(/\D/g, "").slice(0, maxDigits)
+  const noLeadingZeros = digits.replace(/^0+/, "") // 00012 -> 12
+
+  // wenn leer oder 0 -> leer (damit dein abmessungError greift)
+  if (!noLeadingZeros) return ""
+  if (Number(noLeadingZeros) === 0) return ""
+
+  return noLeadingZeros
+}
 
 const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
   if (['e', 'E', '+', '-', '.'].includes(e.key)) {
@@ -173,13 +181,19 @@ useEffect(() => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                maxLength={5}
                 onKeyDown={handleKeyDown}
                 value={laenge}
-                onChange={(e) => setLaenge(allowOnlyDigits(e.target.value, 6))}
+                onChange={(e) => setLaenge(sanitizePositiveInt(e.target.value, 5))}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  setLaenge(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                }}
                 className={`${styles.inputField} ${
-                  abmessungError && !laenge ? styles.inputError : ''
+                  abmessungError && !laenge ? styles.inputError : ""
                 }`}
               />
+
               <span>mm</span>
             </div>
           </div>
@@ -194,13 +208,19 @@ useEffect(() => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                maxLength={5}
                 onKeyDown={handleKeyDown}
                 value={breite}
-                onChange={(e) => setBreite(allowOnlyDigits(e.target.value, 6))}
+                onChange={(e) => setBreite(sanitizePositiveInt(e.target.value, 5))}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  setBreite(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                }}
                 className={`${styles.inputField} ${
-                  abmessungError && !breite ? styles.inputError : ''
+                  abmessungError && !breite ? styles.inputError : ""
                 }`}
               />
+
               <span>mm</span>
             </div>
           </div>
@@ -215,13 +235,19 @@ useEffect(() => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                maxLength={5}
                 onKeyDown={handleKeyDown}
                 value={hoehe}
-                onChange={(e) => setHoehe(allowOnlyDigits(e.target.value, 6))}
+                onChange={(e) => setHoehe(sanitizePositiveInt(e.target.value, 5))}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  setHoehe(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                }}
                 className={`${styles.inputField} ${
-                  abmessungError && !hoehe ? styles.inputError : ''
+                  abmessungError && !hoehe ? styles.inputError : ""
                 }`}
               />
+
               <span>mm</span>
             </div>
           </div>
@@ -236,13 +262,19 @@ useEffect(() => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                maxLength={5}
                 onKeyDown={handleKeyDown}
                 value={masse}
-                onChange={(e) => setMasse(allowOnlyDigits(e.target.value, 5))}
+                onChange={(e) => setMasse(sanitizePositiveInt(e.target.value, 5))}
+                onPaste={(e) => {
+                  e.preventDefault()
+                  setMasse(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                }}
                 className={`${styles.inputField} ${
-                  abmessungError && !masse ? styles.inputError : ''
+                  abmessungError && !masse ? styles.inputError : ""
                 }`}
               />
+
               <span>kg</span>
             </div>
           </div>
