@@ -4,7 +4,7 @@ import { Oswald } from 'next/font/google'
 
 import Header from './Header'
 import Footer from './Footer'
-import NavbarGate from '@/components/navbar/NavbarGate'
+import NavbarGate from './components/navbar/NavbarGate'
 
 const oswald = Oswald({
   subsets: ['latin'],
