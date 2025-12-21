@@ -722,8 +722,8 @@
   margin-top: 12px;
   padding: 12px 14px;
   border: 2px solid #faad14;      /* Amber */
-  background: #613400;            /* Soft gelb */
-  color: #fffbe6;                  /* Dunkles Braun */
+  background: #fffbe6;            /* Soft gelb */
+  color: #613400;                  /* Dunkles Braun */
   border-radius: 12px;
   font-weight: 600;
   text-align: center;
@@ -798,4 +798,12 @@
 @keyframes connectFadeIn {
   from { opacity: 0; transform: translateY(-2px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-color-scheme: dark) {
+  .connectNotice {
+    border-color: #d89614;
+    background: #2b2a16;
+    color: #ffe58f;
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
 }
