@@ -2,12 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './navbar.module.css'
 import { NAV_ITEMS } from './nav.config'
 
-const getScrollKey = (pathname: string | null) =>
-  pathname?.startsWith('/konto') ? 'nav_scroll_left_konto' : 'nav_scroll_left_public'
 type ForAccountResponseOffers = {
   received?: Array<{ id: string; createdAt?: string; created_at?: string }>
 }
@@ -54,21 +52,6 @@ export default function Navbar() {
     if (o.kind === 'angenommen') return (o.status ?? 'in_progress') === 'in_progress'
     return o.status === 'reported'
   }
-  useLayoutEffect(() => {
-  const nav = navbarRef.current
-  if (!nav) return
-  if (window.innerWidth > 1024) return
-const key = getScrollKey(pathname)
-const saved = sessionStorage.getItem(key)
-  if (!saved) return
-
-  const x = Number(saved)
-  if (!Number.isFinite(x)) return
-
-  nav.scrollLeft = x
-}, [pathname])
-
-
 
   useEffect(() => {
     let alive = true
@@ -214,22 +197,6 @@ const saved = sessionStorage.getItem(key)
       // ignore
     }
   }, [pathname])
-useEffect(() => {
-  const nav = navbarRef.current
-  if (!nav) return
-  if (window.innerWidth > 1024) return
-
-  const key = getScrollKey(pathname)
-
-  const onScroll = () => {
-    sessionStorage.setItem(key, String(nav.scrollLeft))
-  }
-
-  nav.addEventListener('scroll', onScroll, { passive: true })
-  return () => nav.removeEventListener('scroll', onScroll)
-}, [pathname])
-
-
 
   const displayCounter = kontoNew > 9 ? '9+' : String(kontoNew)
 
