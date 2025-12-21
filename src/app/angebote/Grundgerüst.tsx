@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, ChevronUp, Star, Search, Crown, Upload, Settings, HelpCircle, Truck, Loader2} from 'lucide-react'
 import { Oswald } from 'next/font/google'
 import styles from './Grundgeruest.module.css'
-import Navbar from '../components/navbar/Navbar'
 import Dropzone from './Dropzone'
 import DateiVorschau from './DateiVorschau'
 import BeschreibungsBox from './BeschreibungsBox'
@@ -610,7 +609,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
  
   return (
     <div className={oswald.className}>
-      <Navbar />
       <motion.div {...fadeIn} className={styles.progressContainer}>
         <div className={styles.progressBarWrapper}>
           <div
