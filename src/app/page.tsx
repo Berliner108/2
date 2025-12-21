@@ -6,7 +6,6 @@ import { ChevronLeftIcon } from '@heroicons/react/24/solid';
 import { ChevronRightIcon } from '@heroicons/react/24/solid';
 import Slideshow from './slideshow/slideshow';
 import CookieBanner from './components/CookieBanner';
-import Navbar from './components/navbar/Navbar';
 import styles from '../styles/Home.module.css';
 import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
@@ -331,7 +330,6 @@ export default function Page() {
 
   return (
     <>
-      <Navbar />
       <Suspense fallback={<div>Seite lädt...</div>}>
         <div className={styles.wrapper}>
           {/* Suchformular */}
