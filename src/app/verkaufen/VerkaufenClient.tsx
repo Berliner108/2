@@ -1,6 +1,6 @@
 'use client'; 
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
 import Navbar from '../components/navbar/Navbar'
@@ -107,6 +107,7 @@ const heute = new Date().toISOString().split('T')[0];
   { name: 'Hochglanz', value: 'Hochglanz' },
 ];
 
+type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 
 function ArtikelEinstellen() {
   const router = useRouter()
@@ -161,6 +162,8 @@ const [warnungStueckProEinheit, setWarnungStueckProEinheit] = useState<string>('
 const [agbAccepted, setAgbAccepted] = useState(false)
 const [agbError, setAgbError] = useState(false)
 const agbRef = useRef<HTMLDivElement>(null)
+const [connect, setConnect] = useState<ConnectStatus | null>(null);
+const [connectLoaded, setConnectLoaded] = useState(false);
 
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
@@ -364,6 +367,55 @@ useEffect(() => {
   document.addEventListener('mousedown', handleClickOutside);
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, []);  
+const fetchConnect = useCallback(async () => {
+  try {
+    const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+    const j: ConnectStatus = await r.json().catch(() => ({ ready: false }));
+    setConnect(r.ok ? j : { ready: false });
+  } catch {
+    setConnect({ ready: false, reason: 'Dein Anbieter-Status konnte nicht geprüft werden.' });
+  } finally {
+    setConnectLoaded(true);
+  }
+}, []);
+
+useEffect(() => {
+  fetchConnect();
+}, [fetchConnect]);
+
+useEffect(() => {
+  const onFocus = () => {
+    fetchConnect();
+  };
+  window.addEventListener('focus', onFocus);
+  window.addEventListener('pageshow', onFocus);
+  return () => {
+    window.removeEventListener('focus', onFocus);
+    window.removeEventListener('pageshow', onFocus);
+  };
+}, [fetchConnect]);
+
+const goToStripeOnboarding = useCallback(async () => {
+  try {
+    const r = await fetch('/api/connect/account-link', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        return_to: typeof window !== 'undefined' ? window.location.href : undefined,
+      }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j?.url) {
+      const msg = j?.reason || j?.error || 'Onboarding-Link konnte nicht erstellt werden.';
+      const extra = [j?.code, j?.mode].filter(Boolean).join(' · ');
+      throw new Error(extra ? `${msg} (${extra})` : msg);
+    }
+    window.location.assign(j.url as string);
+  } catch (e: any) {
+    alert(e?.message || 'Onboarding-Link konnte nicht erstellt werden.');
+  }
+}, []);
 
 
   useEffect(() => {
@@ -494,7 +546,6 @@ setOverlayText('Wir leiten gleich weiter.')
   
 
     let hasError = false; // ← Diese Zeile neu einfügen
-
   let fehler = false;
 
   // Pflichtfelder prüfen
@@ -630,13 +681,38 @@ if (!aufLager) {
 }
 
 
-  if (fehler) {
+if (fehler) {
+  return;
+}
+
+// ===== Stripe Connect-Status prüfen =====
+try {
+  const stRes = await fetch('/api/connect/status', {
+    cache: 'no-store',
+    credentials: 'include',
+  });
+  const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false }));
+
+  if (!stRes.ok) {
+    alert('Dein Anbieter-Status konnte nicht geprüft werden. Bitte versuche es erneut.');
     return;
   }
- 
 
-  const formData = new FormData();
-  formData.append('kategorie', kategorie!);
+  if (!st.ready) {
+    await goToStripeOnboarding();
+    return;
+  }
+} catch {
+  alert('Dein Anbieter-Status konnte nicht geprüft werden.');
+  return;
+}
+
+// ab hier darfst du erst wirklich senden
+setLadeStatus(true);
+
+const formData = new FormData();
+formData.append('kategorie', kategorie!);
+
   formData.append('zertifizierungen', zertifizierungen.join(', '));
   formData.append('titel', titel);
     formData.append('farbton', farbton);
@@ -754,17 +830,41 @@ const toggleBewerbung = (option: string) => {
   }
   return (
     <>
-      <Navbar />
-      
-      <form onSubmit={handleSubmit} className={styles.container}>
-        <motion.div
-  {...fadeIn}
-  className={styles.infoBox}
-  viewport={{ once: true }}
->
-  💡 Ab sofort ist das Einstellen von Artikeln <strong>kostenlos</strong>!
-  <a href="/agb" className={styles.infoLink}>Mehr erfahren</a>
-</motion.div>        
+     <Navbar />
+
+<form onSubmit={handleSubmit} className={styles.container}>
+  <motion.div
+    {...fadeIn}
+    className={styles.infoBox}
+    viewport={{ once: true }}
+  >
+    💡 Ab sofort ist das Einstellen von Artikeln <strong>kostenlos</strong>!
+    <a href="/agb" className={styles.infoLink}>Mehr erfahren</a>
+  </motion.div>
+
+  {/* Hinweis Onboarding – stabil sichtbar, wenn nicht ready */}
+  {connectLoaded && connect?.ready === false && (
+    <div className={styles.connectNotice} role="status" aria-live="polite">
+      <p>
+        Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.
+      </p>
+
+      {connect?.reason && (
+        <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
+      )}
+
+      <div className={styles.connectActions}>
+        <button
+          type="button"
+          className={styles.connectBtn}
+          onClick={goToStripeOnboarding}
+        >
+          Jetzt bei Stripe verifizieren
+        </button>
+      </div>
+    </div>
+  )}
+     
         <h1 className={styles.heading}>Artikel verkaufen </h1>
         <p className={styles.description}>
           Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.
