@@ -1106,4 +1106,8 @@
     padding-block: 0;      /* kein extra Platz oben/unten */
   }
 }
-
+.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
+/* Mobile leicht kompakter */
+@media (max-width: 599px) {
+  .bewerbungText { font-size: .95rem; }
+}
