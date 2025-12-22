@@ -982,8 +982,7 @@
 @keyframes connectFadeIn {
   from { opacity: 0; transform: translateY(-2px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-/* === Promo-Panel exakt wie im Grundgerüst === */
+}/* === Promo-Panel exakt wie im Grundgerüst === */
 .bewerbungPanel {
   margin-top: 2.5rem;
   padding: 1.25rem 1.5rem 1.5rem 1.5rem;
@@ -1008,6 +1007,8 @@
   font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
+  margin: 0;
+  line-height: 1.45;
 }
 
 .bewerbungGruppe {
@@ -1024,6 +1025,8 @@
   gap: 0.5rem;
   font-size: 0.95rem;
   line-height: 1.4;
+  margin: 0;
+  padding: 0;
 }
 
 .bewerbungOption input[type='checkbox'] {
@@ -1036,30 +1039,38 @@
   margin-top: 0.5rem;
 }
 
+/* ==== Bereich unter "Deine Auswahl:" – ohne Linie ==== */
 .promoHinweis {
-  margin-top: 1.4rem;
-  padding-top: 0.75rem;
+  margin-top: 0.4rem;
+  padding-top: 0.2rem;
   font-size: 0.85rem;
   color: black;
+  border: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
 }
 
 .promoHinweisRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
+  border: none !important;
+  border-top: none !important;
 }
 
-.promoScore {
-  font-weight: 700;
-  color: black; /* leichtes Grünblau für „+Promo-Punkte“ */
+/* Falls irgendwo noch eine Linie auf dem Text / small hängt → hart weg */
+.promoHinweis * {
+  border: none !important;
 }
 
-.promoSumme {
-  font-weight: 700;
+.promoHinweis small {
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 
-/* Iconfarben exakt wie Grundgerüst */
+/* Iconfarben */
 .iconStar {
   color: #f59e0b;
 }
@@ -1072,7 +1083,7 @@
   color: #a78bfa;
 }
 
-
+/* Mobile: Promo-Checkboxen sehr kompakt */
 @media (max-width: 768px) {
   .bewerbungPanel {
     padding: 1rem;
@@ -1080,51 +1091,21 @@
 
   .bewerbungGruppe {
     flex-direction: column;
-    gap: 0.25rem;          /* kleiner Abstand */
+    gap: 0;                 /* kein Abstand über gap */
   }
 
   .bewerbungOption {
     align-items: flex-start;
-    padding-block: 0;      /* kein extra Platz oben/unten */
-  }
-}
-.bewerbungText { margin: 0; line-height: 1.45; color: #0f172a; }
-/* Mobile leicht kompakter */
-@media (max-width: 599px) {
-  .bewerbungText { font-size: .95rem; }
-}
-/* --- HARDCUT: Keine Linie über "Deine Auswahl" --- */
-.promoHinweis {
-  border: none !important;
-  border-top: none !important;
-  box-shadow: none !important;
-  margin-top: 0.5rem;   /* ggf. auf 0 setzen, wenn du es ganz eng willst */
-  padding-top: 0.5rem;
-}
-
-.promoHinweisRow {
-  border: none !important;
-  border-top: none !important;
-}
-
-.promoHinweis::before,
-.promoHinweis::after {
-  content: none !important;
-}
-/* --- Mobile: Promo-Checkboxen super kompakt --- */
-@media (max-width: 768px) {
-  .bewerbungGruppe {
-    flex-direction: column;
-    gap: 0.1rem;              /* fast kein Abstand */
-  }
-
-  .bewerbungOption {
+    padding: 0;
     margin: 0;
-    padding-block: 0;
     line-height: 1.2;
   }
 
-  .bewerbungOption input[type='checkbox'] {
-    margin-top: 0.1rem;
+  .bewerbungOption + .bewerbungOption {
+    margin-top: 2px;       /* minimaler Abstand zwischen den Zeilen */
+  }
+
+  .bewerbungText {
+    font-size: 0.95rem;
   }
 }
