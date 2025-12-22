@@ -1957,15 +1957,9 @@ const toggleBewerbung = (option: string) => {
 
 <div className={styles.bewerbungPanel}>
   <div className={styles.bewerbungHeader}>
-    <div className={styles.bewerbungIcon}>
-      <Crown size={18} />
-    </div>
     <div className={styles.bewerbungText}>
-      <h3>Anzeige hervorheben</h3>
-      <p>
-        Mit Promo-Paketen kannst du deine Sichtbarkeit erhöhen und mehr passende Käufer
-        erreichen.
-      </p>
+      <h3>Erhöhe deine Sichtbarkeit und steigere deine Verkäufe</h3>
+     
     </div>
   </div>
 
