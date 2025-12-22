@@ -136,6 +136,7 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
+// Fiktive Promo-Pakete (nur Frontend – 1:1 wie Grundgerüst)
 const promoPackages = [
   {
     id: 'homepage',
@@ -161,20 +162,31 @@ const promoPackages = [
     score: 12,
     icon: <Crown size={18} className={styles.iconCrown} aria-hidden />,
   },
-] as const;
+] as const
 
 const formatEUR = (cents: number) =>
   (cents / 100).toLocaleString('de-DE', {
     style: 'currency',
     currency: 'EUR',
-  });
+  })
+const toggleBewerbung = (option: string) => {
+  setBewerbungOptionen(prev =>
+    prev.includes(option)
+      ? prev.filter(o => o !== option)
+      : [...prev, option]
+  )
+}
+
+// ⬇️ NEU: Promo-Score + Gesamtpreis wie im Grundgerüst
 const selectedPromoScore = promoPackages
   .filter((p) => bewerbungOptionen.includes(p.id))
-  .reduce((sum, p) => sum + p.score, 0);
+  .reduce((sum, p) => sum + p.score, 0)
 
 const selectedTotalCents = promoPackages
   .filter((p) => bewerbungOptionen.includes(p.id))
-  .reduce((sum, p) => sum + p.priceCents, 0);
+  .reduce((sum, p) => sum + p.priceCents, 0)
+
+
 
 
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
@@ -867,13 +879,7 @@ try {
   if (!willNavigate) setLadeStatus(false);
 }
 };
-const toggleBewerbung = (option: string) => {
-  setBewerbungOptionen(prev =>
-    prev.includes(option)
-      ? prev.filter(o => o !== option)
-      : [...prev, option]
-  )
-}
+
  if (bootLoading) {
     return (
       <>

@@ -983,87 +983,86 @@
   from { opacity: 0; transform: translateY(-2px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* === Promo-Panel exakt wie im Grundgerüst === */
 .bewerbungPanel {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.5rem 1.5rem 1.5rem;
+  border-radius: 16px;
+  background-color: #e0f7ff; /* hellblau wie Grundgerüst */
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .bewerbungHeader {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  font-size: 1.2rem;
-  font-weight: 900;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .bewerbungIcon {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #fde68a, #facc15);
-  box-shadow: 0 4px 10px rgba(251, 191, 36, 0.5);
+  display: none; /* im Grundgerüst KEIN gelber Kreis */
 }
 
 .bewerbungText {
-  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .bewerbungGruppe {
-  margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 2rem;
+  gap: 1.5rem;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .bewerbungOption {
   display: inline-flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
-.bewerbungOption input {
-  margin-top: 0.2rem;
+.bewerbungOption input[type='checkbox'] {
+  margin: 0;
 }
 
 .steuerHinweis {
-  margin-top: 1rem;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #64748b;
+  margin-top: 0.5rem;
 }
 
 .promoHinweis {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  font-size: 0.9rem;
+  margin-top: 1.4rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.4);
+  font-size: 0.85rem;
   color: #475569;
 }
 
 .promoHinweisRow {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: .25rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
 }
 
 .promoScore {
-  font-weight: 600;
-  color: #0f766e;
+  font-weight: 700;
+  color: #0f766e; /* leichtes Grünblau für „+Promo-Punkte“ */
 }
 
 .promoSumme {
   font-weight: 700;
 }
 
+/* Iconfarben exakt wie Grundgerüst */
 .iconStar {
-  color: #f5b400;
+  color: #f59e0b;
 }
 
 .iconSearch {
@@ -1071,5 +1070,25 @@
 }
 
 .iconCrown {
-  color: #f97316;
+  color: #a78bfa;
+}
+
+/* Mobile: Optionen untereinander */
+@media (max-width: 768px) {
+  .bewerbungPanel {
+    padding: 1rem;
+  }
+
+  .bewerbungGruppe {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bewerbungOption {
+    align-items: flex-start;
+  }
+
+  .bewerbungText {
+    font-size: 0.98rem;
+  }
 }
