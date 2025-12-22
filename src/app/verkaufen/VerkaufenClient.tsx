@@ -1248,33 +1248,7 @@ try {
     ))}
   </select>
 
-  {/* Benutzerdefiniertes Dropdown */}
-  <div
-    ref={glanzgradRef}
-    className={styles.customSelect}
-    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
-  >
-    <div className={styles.selectedValue}>
-      {glanzgradListe.find(g => g.value === glanzgrad)?.name || 'Bitte wählen'}
-    </div>
-    {glanzgradDropdownOffen && (
-      <div className={styles.optionList}>
-        {glanzgradListe.map(g => (
-          <div
-            key={g.value}
-            className={`${styles.optionItem} ${glanzgrad === g.value ? styles.activeOption : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setGlanzgrad(g.value);
-              setGlanzgradDropdownOffen(false);
-            }}
-          >
-            {g.name}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
+ 
 </label>
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
