@@ -1039,9 +1039,8 @@
 .promoHinweis {
   margin-top: 1.4rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.4);
   font-size: 0.85rem;
-  color: #475569;
+  color: black;
 }
 
 .promoHinweisRow {
