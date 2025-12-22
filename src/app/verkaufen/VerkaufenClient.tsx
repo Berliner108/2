@@ -1074,7 +1074,6 @@ try {
     maxLength={60}
     value={titel}
     onChange={(e) => setTitel(e.target.value)}
-    required
   />
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
@@ -1172,7 +1171,6 @@ try {
   {/* Unsichtbares echtes Pflichtfeld für native Validierung */}
   <select
   value={farbpaletteWert}
-  required
   onChange={() => {}}
   style={{
     position: 'absolute',
@@ -1193,11 +1191,11 @@ try {
   </select>
 
   {/* Benutzerdefiniertes Dropdown */}
-  <div
-    ref={farbpaletteRef}
-    className={styles.customSelect}
-    onClick={() => setFarbpaletteDropdownOffen(!farbpaletteDropdownOffen)}
-  >
+<div
+  ref={farbpaletteRef}
+  className={`${styles.customSelect} ${warnungPalette ? styles.selectError : ''}`}
+  onClick={() => setFarbpaletteDropdownOffen(!farbpaletteDropdownOffen)}
+>
     <div className={styles.selectedValue}>
       {farbpalette.find(f => f.value === farbpaletteWert)?.name || 'Bitte wählen'}
     </div>
@@ -1255,7 +1253,6 @@ try {
   {/* Unsichtbares echtes Select für Validierung */}
   <select
     value={glanzgrad}
-    required
     onChange={() => {}}
     style={{
       position: 'absolute',
@@ -1376,10 +1373,8 @@ try {
 
 {/* Radio: Zustand */}
 {/* Radio: Zustand */}
-<fieldset className={styles.radioGroup}>
-  <legend className={styles.radioLegend}>
-    Zustand: <span style={{ color: 'red' }}>*</span>
-  </legend>
+<fieldset className={`${styles.radioGroup} ${warnungZustand ? styles.radioGroupError : ''}`}>
+  <legend className={styles.radioLegend}>Zustand: <span style={{ color: 'red' }}>*</span></legend>
   <div className={styles.radioOptionsHorizontal}>
     <label className={styles.radioLabel}>
   <input
@@ -1399,7 +1394,6 @@ try {
         value="geöffnet"
         checked={zustand === 'geöffnet'}
         onChange={() => setZustand('geöffnet')}
-        required
       />
       <span>Geöffnet & Einwandfrei</span>
     </label>
@@ -1417,7 +1411,6 @@ try {
         value="glatt"
         checked={oberflaeche === 'glatt'}
         onChange={() => setOberflaeche('glatt')}
-        required
       />
       <span>Glatt</span>
     </label>
@@ -1428,7 +1421,6 @@ try {
         value="feinstruktur"
         checked={oberflaeche === 'feinstruktur'}
         onChange={() => setOberflaeche('feinstruktur')}
-        required
       />
       <span>Feinstruktur</span>
     </label>
@@ -1439,7 +1431,6 @@ try {
         value="grobstruktur"
         checked={oberflaeche === 'grobstruktur'}
         onChange={() => setOberflaeche('grobstruktur')}
-        required
       />
       <span>Grobstruktur</span>
     </label>
@@ -1457,7 +1448,6 @@ try {
         value="universal"
         checked={anwendung === 'universal'}
         onChange={() => setAnwendung('universal')}
-        required
       />
       <span>Universal</span>
     </label>
@@ -1468,7 +1458,6 @@ try {
         value="innen"
         checked={anwendung === 'innen'}
         onChange={() => setAnwendung('innen')}
-        required
       />
       <span>Innen</span>
     </label>
@@ -1479,7 +1468,6 @@ try {
         value="außen"
         checked={anwendung === 'außen'}
         onChange={() => setAnwendung('außen')}
-        required
       />
       <span>Außen</span>
     </label>
@@ -1490,7 +1478,6 @@ try {
         value="industrie"
         checked={anwendung === 'industrie'}
         onChange={() => setAnwendung('industrie')}
-        required
       />
       <span>Industrie</span>
     </label>
@@ -1718,7 +1705,7 @@ try {
 
 
 {kategorie === 'pulverlack' && (
-<fieldset className={styles.radioGroup}>
+<fieldset className={`${styles.radioGroup} ${warnungAufladung ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
     Aufladung: <span style={{ color: 'red' }}>*</span>
   </legend>
@@ -1727,7 +1714,6 @@ try {
   {aufladung.length === 0 && (
     <input
       type="checkbox"
-      required
       style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
       tabIndex={-1}
       onChange={() => {}}
@@ -1796,20 +1782,19 @@ try {
   </span>
 
   <input
-    type="text"
-    className={styles.input}
-    maxLength={60}
-    value={titel}
-    onChange={(e) => setTitel(e.target.value)}
-    required
-  />
+  type="text"
+  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+  maxLength={60}
+  value={titel}
+  onChange={(e) => setTitel(e.target.value)}
+/>
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
     
 
     {/* Stückzahl */}
     { kategorie === 'arbeitsmittel' && (
-  <fieldset className={styles.mengeSection}>
+  <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
     <legend className={styles.mengeLegend}>
       Menge (Stück): <span style={{ color: 'red' }}>*</span>
     </legend>
@@ -1902,7 +1887,6 @@ try {
       setGroesse(val);
     }}
     placeholder="z. B. XS, S, M, L, XL oder L×B×H in cm"
-    required
   />
 </label>
 {warnungGroesse && <p className={styles.validierungsfehler}>{warnungGroesse}</p>}
@@ -1914,14 +1898,13 @@ try {
   Beschreibung: <span style={{ color: 'red' }}>*</span>
 </span>
   <textarea
-    className={styles.textarea}
-    maxLength={600}
-    rows={6}
-    value={beschreibung}
-    onChange={(e) => setBeschreibung(e.target.value)}
-    placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
-  />
-  <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
+  className={`${styles.textarea} ${warnungBeschreibung ? styles.textareaError : ''}`}
+  maxLength={1200}
+  rows={6}
+  value={beschreibung}
+  onChange={(e) => setBeschreibung(e.target.value)}
+/>
+  <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
 </label>
     {warnungBeschreibung && <p className={styles.validierungsfehler}>{warnungBeschreibung}</p>}
   </>
@@ -1937,10 +1920,10 @@ try {
   Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
   <input
     type="number"
-    min={0}
+    className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
+    min={1}
     step={0.01}
     max={999}
-    className={styles.dateInput}
     value={preis}
     onChange={(e) => {
       const value = e.target.value;
@@ -1958,10 +1941,10 @@ try {
   Versandkosten (€)
   <input
     type="number"
-    min={0}
+    className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
+    min={1}
     step={0.01}
     max={999}
-    className={styles.dateInput}
     value={versandKosten}
     onChange={(e) => {
       const value = e.target.value;
@@ -1978,10 +1961,10 @@ try {
   Werktage bis Lieferung
   <input
     type="number"
+    className={`${styles.dateInput} ${warnungWerktage ? styles.numberInputError : ''}`}
     min={1}
     step={1}
     max={999}
-    className={styles.dateInput}
     value={lieferWerktage}
     onChange={(e) => {
       const value = e.target.value;
@@ -1996,7 +1979,7 @@ try {
 
 </fieldset> {/* <- dein Feldset mit Preis / Versand / Werktage endet hier */}
 
-<fieldset className={styles.radioGroup}>
+<fieldset className={`${styles.radioGroup} ${warnungVerkaufAn ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
     Verkauf an: <span style={{ color: 'red' }}>*</span>
   </legend>

@@ -1103,3 +1103,22 @@
     font-size: 0.95rem;
   }
 }
+.inputError,
+.textareaError,
+.selectError,
+.numberInputError {
+  border-color: #e11d48 !important;
+  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.3);
+}
+
+.radioGroupError {
+  border: 1px solid #e11d48;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
+
+.mengeSectionError {
+  border: 1px solid #e11d48;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+}
