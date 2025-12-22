@@ -1967,7 +1967,7 @@ try {
 >
   <div className={styles.bewerbungHeader}>
     <span className={styles.bewerbungIcon} aria-hidden></span>
-    <h1>Erhöhe deine Sichtbarkeit und erreiche mehr passende Käufer!</h1>
+    <h3>Erhöhe deine Sichtbarkeit und erreiche mehr passende Käufer!</h3>
       
   </div>
 

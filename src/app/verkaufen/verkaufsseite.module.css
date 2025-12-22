@@ -1091,3 +1091,14 @@
     font-size: 0.98rem;
   }
 }
+@media (max-width: 768px) {
+  .bewerbungGruppe {
+    flex-direction: column;
+    gap: 0.5rem;          /* kleiner machen */
+  }
+
+  .bewerbungOption {
+    margin-bottom: 0;     /* extra-Abstand weg */
+    padding-block: 0.25rem;
+  }
+}
