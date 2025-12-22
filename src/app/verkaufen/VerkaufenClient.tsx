@@ -124,6 +124,7 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [warnungBilder, setWarnungBilder] = useState('');
   const [warnungTitel, setWarnungTitel] = useState('');
   const [warnungPalette, setWarnungPalette] = useState('');
+  const [warnungGlanzgrad, setWarnungGlanzgrad] = useState(''); // ⬅️ NEU
   const [warnungZustand, setWarnungZustand] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
@@ -268,12 +269,7 @@ if (parseFloat(preis) > 0) filled++;
 total++;
 if (parseFloat(versandKosten) >= 0) filled++;
 
-// 11. AGB akzeptiert
-  total++;
-  if (agbAccepted) filled++;
-// Verkauf an
-  total++;
-  if (verkaufAn) filled++;
+
 
   } else {
     // Lack-Pflichtfelder
@@ -371,6 +367,7 @@ const formularZuruecksetzen = () => {
   setWarnungKategorie('');
   setWarnungBilder('');
   setWarnungPalette('');
+  setWarnungGlanzgrad(''); // ⬅️ NEU
   setWarnungZustand('');
   setWarnungBeschreibung('');
   setWarnungPreis('');
@@ -648,6 +645,13 @@ if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
     fehler = true;
   } else {
     setWarnungPalette('');
+  }
+    // ⬇️ NEU: Glanzgrad prüfen
+  if (!glanzgrad) {
+    setWarnungGlanzgrad('Bitte wähle einen Glanzgrad aus.');
+    fehler = true;
+  } else {
+    setWarnungGlanzgrad('');
   }
 
   if (!oberflaeche) {
@@ -1011,7 +1015,8 @@ try {
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
             <h2 className={styles.centeredHeading}>Ich verkaufe</h2>
-            <div className={`${styles.iconRow} ${!kategorie && warnung.includes('Kategorie') ? styles.kategorieFehler : ''}`}>
+            <div className={`${styles.iconRow} ${!kategorie && warnungKategorie ? styles.kategorieFehler : ''}`}>
+
                 <div
                 className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''}`}
                      onClick={() => {
@@ -1165,61 +1170,33 @@ try {
 
 
 
-<label className={styles.label}>
-  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.0rem' }}>
-    Farbpalette: <span style={{ color: 'red' }}>*</span>
-  </span>
-
-  {/* Unsichtbares echtes Pflichtfeld für native Validierung */}
-  <select
-  value={farbpaletteWert}
-  onChange={() => {}}
-  style={{
-    position: 'absolute',
-    opacity: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    zIndex: -1,
-  }}
->
-
-    <option value="">Bitte wählen</option>
-    {farbpalette.map(f => (
-      <option key={f.value} value={f.value}>
-        {f.name}
-      </option>
-    ))}
-  </select>
-
   {/* Benutzerdefiniertes Dropdown */}
-<div
-  ref={farbpaletteRef}
-  className={`${styles.customSelect} ${warnungPalette ? styles.selectError : ''}`}
-  onClick={() => setFarbpaletteDropdownOffen(!farbpaletteDropdownOffen)}
->
+  <div
+    ref={glanzgradRef}
+    className={`${styles.customSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
+    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+  >
     <div className={styles.selectedValue}>
-      {farbpalette.find(f => f.value === farbpaletteWert)?.name || 'Bitte wählen'}
+      {glanzgradListe.find(g => g.value === glanzgrad)?.name || 'Bitte wählen'}
     </div>
-    {farbpaletteDropdownOffen && (
+    {glanzgradDropdownOffen && (
       <div className={styles.optionList}>
-        {farbpalette.map(farbe => (
+        {glanzgradListe.map(g => (
           <div
-            key={farbe.value}
-            className={`${styles.optionItem} ${farbpaletteWert === farbe.value ? styles.activeOption : ''}`}
+            key={g.value}
+            className={`${styles.optionItem} ${glanzgrad === g.value ? styles.activeOption : ''}`}
             onClick={(e) => {
               e.stopPropagation();
-              setFarbpaletteWert(farbe.value);
-              setFarbpaletteDropdownOffen(false);
+              setGlanzgrad(g.value);
+              setGlanzgradDropdownOffen(false);
             }}
           >
-            {farbe.name}
+            {g.name}
           </div>
         ))}
       </div>
     )}
   </div>
-</label>
 
 
     {/* Dropdown: Farbton */}
@@ -1944,7 +1921,7 @@ try {
   <input
     type="number"
     className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
-    min={1}
+    min={0}
     step={0.01}
     max={999}
     value={versandKosten}
@@ -1964,7 +1941,7 @@ try {
   <input
     type="number"
     className={`${styles.dateInput} ${warnungWerktage ? styles.numberInputError : ''}`}
-    min={0}
+    min={1}
     step={1}
     max={999}
     value={lieferWerktage}
