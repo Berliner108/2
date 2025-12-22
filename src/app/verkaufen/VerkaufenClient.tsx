@@ -135,7 +135,50 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [qualitaetOffen, setQualitaetOffen] = useState(false);
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
-  const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([])
+  const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
+    const promoPackages = [
+    {
+      id: 'startseite',
+      title: 'Anzeige auf Startseite hervorheben',
+      subtitle: 'Hebe deine Anzeige prominent auf der Startseite hervor.',
+      priceCents: 6999,
+      score: 30,
+      icon: <Star size={18} />,
+    },
+    {
+      id: 'suche',
+      title: 'Anzeige in Suche priorisieren',
+      subtitle: 'Werde in den Suchergebnissen weiter oben angezeigt.',
+      priceCents: 4999,
+      score: 15,
+      icon: <Search size={18} />,
+    },
+    {
+      id: 'premium',
+      title: 'Premium-Anzeige aktivieren',
+      subtitle: 'Markiere dein Angebot als Premium-Anzeige.',
+      priceCents: 3499,
+      score: 12,
+      icon: <Crown size={18} />,
+    },
+  ] as const
+
+  const formatEUR = (cents: number) =>
+    (cents / 100).toLocaleString('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+
+  const selectedPromoScore = promoPackages
+    .filter((p) => bewerbungOptionen.includes(p.id))
+    .reduce((sum, p) => sum + p.score, 0)
+
+  const selectedTotalCents = promoPackages
+    .filter((p) => bewerbungOptionen.includes(p.id))
+    .reduce((sum, p) => sum + p.priceCents, 0)
+
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
   const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
   const [menge, setMenge] = useState<number>(0);
@@ -1912,61 +1955,57 @@ const toggleBewerbung = (option: string) => {
 
 </fieldset>
 
-{/* Bewerbung – optisch wie Grundgerüst, Logik bleibt gleich */}
-<div
-  className={styles.bewerbungPanel}
-  role="region"
-  aria-label="Bewerbung deiner Anzeige"
->
+<div className={styles.bewerbungPanel}>
   <div className={styles.bewerbungHeader}>
-    <span className={styles.bewerbungIcon} aria-hidden />
-    <p className={styles.bewerbungText}>
-      Erhöhe die Sichtbarkeit deines Artikels und erreiche mehr Käufer.
-    </p>
+    <div className={styles.bewerbungIcon}>
+      <Crown size={18} />
+    </div>
+    <div className={styles.bewerbungText}>
+      <h3>Anzeige hervorheben</h3>
+      <p>
+        Mit Promo-Paketen kannst du deine Sichtbarkeit erhöhen und mehr passende Käufer
+        erreichen.
+      </p>
+    </div>
   </div>
 
   <div className={styles.bewerbungGruppe}>
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('startseite')}
-        checked={bewerbungOptionen.includes('startseite')}
-      />
-      <Star size={18} className={styles.iconStar} aria-hidden />
-      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-        <span>Anzeige auf Startseite hervorheben — 39,99 €</span>
-        <small style={{ color: '#64748b' }}>Startseiten-Hervorhebung</small>
-      </span>
-    </label>
+    {promoPackages.map((p) => (
+      <label key={p.id} className={styles.bewerbungOption}>
+        <input
+          type="checkbox"
+          onChange={() => toggleBewerbung(p.id)}
+          checked={bewerbungOptionen.includes(p.id)}
+        />
+        {p.icon}
+        <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+          <span>
+            {p.title} — {formatEUR(p.priceCents)}
+          </span>
+          <small style={{ color: '#64748b' }}>{p.subtitle}</small>
+        </span>
+      </label>
+    ))}
 
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('suche')}
-        checked={bewerbungOptionen.includes('suche')}
-      />
-      <Search size={18} className={styles.iconSearch} aria-hidden />
-      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-        <span>Anzeige in Suche priorisieren — 17,99 €</span>
-        <small style={{ color: '#64748b' }}>Ranking-Boost in der Suche</small>
-      </span>
-    </label>
-
-    <label className={styles.bewerbungOption}>
-      <input
-        type="checkbox"
-        onChange={() => toggleBewerbung('premium')}
-        checked={bewerbungOptionen.includes('premium')}
-      />
-      <Crown size={18} className={styles.iconCrown} aria-hidden />
-      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
-        <span>Premium-Anzeige aktivieren — 19,99 €</span>
-        <small style={{ color: '#64748b' }}>Premium-Badge & Listing</small>
-      </span>
-    </label>
+    <p className={styles.steuerHinweis}>
+      Steuern werden im Checkout berechnet.
+    </p>
   </div>
 
-  <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
+  <div className={styles.promoHinweis}>
+    <div className={styles.promoHinweisRow}>
+      <span className={styles.promoScore}>
+        Deine Auswahl: +{selectedPromoScore} Promo-Punkte
+      </span>
+      <span className={styles.promoSumme}>
+        Gesamt: {selectedTotalCents > 0 ? formatEUR(selectedTotalCents) : '0,00 €'}
+      </span>
+    </div>
+    <small>
+      Pakete addieren sich. Du kannst mehrere Optionen kombinieren, um deine Anzeige
+      maximal zu pushen.
+    </small>
+  </div>
 </div>
 
 <div className={styles.agbContainer} ref={agbRef}>
