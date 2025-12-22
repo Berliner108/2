@@ -751,8 +751,26 @@ if (!aufLager) {
 
 
 if (fehler) {
+  // 🔽 zum obersten Fehler scrollen
+  setTimeout(() => {
+    const selector = [
+      `.${styles.validierungsfehler}`,
+      `.${styles.warnung}`,
+      `.${styles.mengeWarning}`,
+    ].join(', ');
+
+    const firstError = document.querySelector(selector);
+    if (firstError instanceof HTMLElement) {
+      firstError.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, 0);
+
   return;
 }
+
 
 // ===== Stripe Connect-Status prüfen =====
 try {
