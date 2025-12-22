@@ -1,8 +1,7 @@
 .container {
   max-width: 95%;
-  min-width: 95%;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 2rem;
 }
 
 .heading {
@@ -1093,4 +1092,39 @@
 /* Mobile leicht kompakter */
 @media (max-width: 599px) {
   .bewerbungText { font-size: .95rem; }
+}
+/* --- HARDCUT: Keine Linie über "Deine Auswahl" --- */
+.promoHinweis {
+  border: none !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  margin-top: 0.5rem;   /* ggf. auf 0 setzen, wenn du es ganz eng willst */
+  padding-top: 0.5rem;
+}
+
+.promoHinweisRow {
+  border: none !important;
+  border-top: none !important;
+}
+
+.promoHinweis::before,
+.promoHinweis::after {
+  content: none !important;
+}
+/* --- Mobile: Promo-Checkboxen super kompakt --- */
+@media (max-width: 768px) {
+  .bewerbungGruppe {
+    flex-direction: column;
+    gap: 0.1rem;              /* fast kein Abstand */
+  }
+
+  .bewerbungOption {
+    margin: 0;
+    padding-block: 0;
+    line-height: 1.2;
+  }
+
+  .bewerbungOption input[type='checkbox'] {
+    margin-top: 0.1rem;
+  }
 }
