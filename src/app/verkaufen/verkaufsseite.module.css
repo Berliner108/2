@@ -1122,3 +1122,10 @@
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
 }
+/* verkaufsseite.module.css */
+
+/* Alle Checkboxen & Radios innerhalb der Verkaufsseite */
+.container input[type="checkbox"],
+.container input[type="radio"] {
+  accent-color: #06b6d4; /* das Türkis wie im Bewerbungspanel */
+}
