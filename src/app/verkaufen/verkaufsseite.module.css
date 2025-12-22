@@ -1109,3 +1109,28 @@
     font-size: 0.95rem;
   }
 }
+/* --- Mobile-Layout für Promo-Optionen sauber machen --- */
+@media (max-width: 768px) {
+  .bewerbungGruppe {
+    display: block !important;              /* kein Flex, keine Verteilung */
+    gap: 0 !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+  }
+
+  .bewerbungOption {
+    display: flex !important;
+    align-items: flex-start;
+    margin: 0 0 4px 0 !important;          /* kleiner Abstand zwischen den Labels */
+    padding: 0 !important;
+    line-height: 1.2;
+  }
+
+  .bewerbungOption:last-of-type {
+    margin-bottom: 0 !important;
+  }
+
+  .bewerbungOption input[type='checkbox'] {
+    margin-top: 2px;
+  }
+}
