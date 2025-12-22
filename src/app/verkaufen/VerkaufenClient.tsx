@@ -127,6 +127,9 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [warnungZustand, setWarnungZustand] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
+  const [verkaufAn, setVerkaufAn] = useState('');
+const [warnungVerkaufAn, setWarnungVerkaufAn] = useState('');
+
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
   const glanzgradRef = useRef<HTMLDivElement>(null);
   const [sondereffekte, setSondereffekte] = useState<string[]>([]);
@@ -748,6 +751,12 @@ if (!aufLager) {
   // Auf Lager → immer gültig
   setWarnungMenge('');
 }
+if (!verkaufAn) {
+  setWarnungVerkaufAn('Bitte wähle, an wen du verkaufst.');
+  fehler = true;
+} else {
+  setWarnungVerkaufAn('');
+}
 
 
 if (fehler) {
@@ -799,7 +808,8 @@ setLadeStatus(true);
 
 const formData = new FormData();
 formData.append('kategorie', kategorie!);
-
+formData.append('bewerbung', bewerbungOptionen.join(','));
+formData.append('verkaufAn', verkaufAn);
   formData.append('zertifizierungen', zertifizierungen.join(', '));
   formData.append('titel', titel);
     formData.append('farbton', farbton);
@@ -873,6 +883,8 @@ try {
     setWarnungGroesse('');
     setStueckProEinheit('');
     setWarnungStueckProEinheit('');
+     setVerkaufAn('');
+  setWarnungVerkaufAn('');
 
     // ✅ Overlay-Text (identisch)
     setOverlayTitle('Artikel gespeichert');
@@ -1975,6 +1987,40 @@ try {
 {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
 
 
+</fieldset> {/* <- dein Feldset mit Preis / Versand / Werktage endet hier */}
+
+/* Verkauf an */
+<fieldset className={styles.radioGroup}>
+  <legend className={styles.radioLegend}>
+    Verkauf an: <span style={{ color: 'red' }}>*</span>
+  </legend>
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="verkaufAn"
+        value="gewerblich"
+        checked={verkaufAn === 'gewerblich'}
+        onChange={() => setVerkaufAn('gewerblich')}
+      />
+      <span>Nur gewerbliche Käufer</span>
+    </label>
+
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="verkaufAn"
+        value="beide"
+        checked={verkaufAn === 'beide'}
+        onChange={() => setVerkaufAn('beide')}
+      />
+      <span>Privat & gewerblich</span>
+    </label>
+  </div>
+
+  {warnungVerkaufAn && (
+    <p className={styles.validierungsfehler}>{warnungVerkaufAn}</p>
+  )}
 </fieldset>
 
 {/* Bewerbung – identisch wie im Grundgerüst */}
@@ -2116,6 +2162,7 @@ try {
       )}
 
       {/* Felder für beide Kategorien */}
+      <p><strong>Verkauf an:</strong> {verkaufAn || '–'}</p>
       <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage || '–'} Werktag{parseInt(lieferWerktage) > 1 ? 'e' : ''}</p>
       <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} € / ${kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'}` : '–'}</p>
       <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
