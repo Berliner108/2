@@ -1912,39 +1912,63 @@ const toggleBewerbung = (option: string) => {
 
 </fieldset>
 
-<div className={styles.bewerbungGruppe}>
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('startseite')}
-      checked={bewerbungOptionen.includes('startseite')}
-    />
-    <Star size={18} color="#f5b400" />
-    Anzeige auf Startseite hervorheben (39,99 €)
-  </label>
+{/* Bewerbung – optisch wie Grundgerüst, Logik bleibt gleich */}
+<div
+  className={styles.bewerbungPanel}
+  role="region"
+  aria-label="Bewerbung deiner Anzeige"
+>
+  <div className={styles.bewerbungHeader}>
+    <span className={styles.bewerbungIcon} aria-hidden />
+    <p className={styles.bewerbungText}>
+      Erhöhe die Sichtbarkeit deines Artikels und erreiche mehr Käufer.
+    </p>
+  </div>
 
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('suche')}
-      checked={bewerbungOptionen.includes('suche')}
-    />
-    <Search size={18} color="#0070f3" />
-    Anzeige in Suche priorisieren (17,99 €)
-  </label>
+  <div className={styles.bewerbungGruppe}>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('startseite')}
+        checked={bewerbungOptionen.includes('startseite')}
+      />
+      <Star size={18} className={styles.iconStar} aria-hidden />
+      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+        <span>Anzeige auf Startseite hervorheben — 39,99 €</span>
+        <small style={{ color: '#64748b' }}>Startseiten-Hervorhebung</small>
+      </span>
+    </label>
 
-  <label className={styles.bewerbungOption}>
-    <input
-      type="checkbox"
-      onChange={() => toggleBewerbung('premium')}
-      checked={bewerbungOptionen.includes('premium')}
-    />
-    <Crown size={18} color="#9b59b6" />
-    Premium-Anzeige aktivieren (19,99 €)
-  </label>
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('suche')}
+        checked={bewerbungOptionen.includes('suche')}
+      />
+      <Search size={18} className={styles.iconSearch} aria-hidden />
+      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+        <span>Anzeige in Suche priorisieren — 17,99 €</span>
+        <small style={{ color: '#64748b' }}>Ranking-Boost in der Suche</small>
+      </span>
+    </label>
+
+    <label className={styles.bewerbungOption}>
+      <input
+        type="checkbox"
+        onChange={() => toggleBewerbung('premium')}
+        checked={bewerbungOptionen.includes('premium')}
+      />
+      <Crown size={18} className={styles.iconCrown} aria-hidden />
+      <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+        <span>Premium-Anzeige aktivieren — 19,99 €</span>
+        <small style={{ color: '#64748b' }}>Premium-Badge & Listing</small>
+      </span>
+    </label>
+  </div>
 
   <p className={styles.steuerHinweis}>Preise inkl. MwSt.</p>
 </div>
+
 <div className={styles.agbContainer} ref={agbRef}>
 
   <motion.label
