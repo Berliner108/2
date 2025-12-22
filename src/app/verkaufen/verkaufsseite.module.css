@@ -1072,25 +1072,7 @@
   color: #a78bfa;
 }
 
-/* Mobile: Optionen untereinander */
-@media (max-width: 768px) {
-  .bewerbungPanel {
-    padding: 1rem;
-  }
 
-  .bewerbungGruppe {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .bewerbungOption {
-    align-items: flex-start;
-  }
-
-  .bewerbungText {
-    font-size: 0.98rem;
-  }
-}
 @media (max-width: 768px) {
   .bewerbungPanel {
     padding: 1rem;
