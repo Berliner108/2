@@ -271,6 +271,9 @@ if (parseFloat(versandKosten) >= 0) filled++;
 // 11. AGB akzeptiert
   total++;
   if (agbAccepted) filled++;
+// Verkauf an
+  total++;
+  if (verkaufAn) filled++;
 
   } else {
     // Lack-Pflichtfelder
@@ -335,6 +338,8 @@ if (parseFloat(versandKosten) >= 0) filled++;
   }
    total++;
   if (agbAccepted) filled++;
+  total++;
+  if (verkaufAn) filled++;
 
 
   return Math.round((filled / total) * 100);
@@ -371,6 +376,8 @@ const formularZuruecksetzen = () => {
   setWarnungPreis('');
   setWarnungWerktage('');
   setWarnungVersand('');
+  setVerkaufAn('');
+  setWarnungVerkaufAn('');
   };
 
   const [aufladung, setAufladung] = useState<string[]>([]);
@@ -1989,7 +1996,6 @@ try {
 
 </fieldset> {/* <- dein Feldset mit Preis / Versand / Werktage endet hier */}
 
-/* Verkauf an */
 <fieldset className={styles.radioGroup}>
   <legend className={styles.radioLegend}>
     Verkauf an: <span style={{ color: 'red' }}>*</span>
