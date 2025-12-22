@@ -1202,34 +1202,8 @@ try {
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Glanzgrad: <span style={{ color: 'red' }}>*</span>
   </span>
-  {/* Benutzerdefiniertes Dropdown */}
-  <div
-    ref={glanzgradRef}
-    className={`${styles.customSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
-    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
-  >
-    <div className={styles.selectedValue}>
-      {glanzgradListe.find(g => g.value === glanzgrad)?.name || 'Bitte wählen'}
-    </div>
-    {glanzgradDropdownOffen && (
-      <div className={styles.optionList}>
-        {glanzgradListe.map(g => (
-          <div
-            key={g.value}
-            className={`${styles.optionItem} ${glanzgrad === g.value ? styles.activeOption : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setGlanzgrad(g.value);
-              setGlanzgradDropdownOffen(false);
-            }}
-          >
-            {g.name}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-  {/* Unsichtbares echtes Select für Validierung */}
+
+  {/* Unsichtbares echtes Select für Pflicht/Keyboard/Screenreader */}
   <select
     value={glanzgrad}
     onChange={() => {}}
@@ -1243,13 +1217,44 @@ try {
     }}
   >
     <option value="">Bitte wählen</option>
-    {glanzgradListe.map(g => (
-      <option key={g.value} value={g.value}>{g.name}</option>
+    {glanzgradListe.map((g) => (
+      <option key={g.value} value={g.value}>
+        {g.name}
+      </option>
     ))}
   </select>
 
- 
+  {/* EIN benutzerdefiniertes Dropdown */}
+  <div
+    ref={glanzgradRef}
+    className={`${styles.customSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
+    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+  >
+    <div className={styles.selectedValue}>
+      {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
+    </div>
+    {glanzgradDropdownOffen && (
+      <div className={styles.optionList}>
+        {glanzgradListe.map((g) => (
+          <div
+            key={g.value}
+            className={`${styles.optionItem} ${
+              glanzgrad === g.value ? styles.activeOption : ''
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setGlanzgrad(g.value);
+              setGlanzgradDropdownOffen(false);
+            }}
+          >
+            {g.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
 </label>
+
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
