@@ -1068,13 +1068,14 @@ try {
     Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
   </span>
 
-  <input
-    type="text"
-    className={styles.input}
-    maxLength={60}
-    value={titel}
-    onChange={(e) => setTitel(e.target.value)}
-  />
+<input
+  type="text"
+  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+  maxLength={60}
+  value={titel}
+  onChange={(e) => setTitel(e.target.value)}
+/>
+
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
 
@@ -1115,7 +1116,8 @@ try {
     )}
   </div>
 </label>
-<fieldset className={styles.mengeSection}>
+<fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
+
   <legend className={styles.mengeLegend}>
     Menge (kg): <span style={{ color: 'red' }}>*</span>
   </legend>
@@ -1757,14 +1759,14 @@ try {
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
   Beschreibung: <span style={{ color: 'red' }}>*</span>
 </span>
-  <textarea
-    className={styles.textarea}
-    maxLength={600}
-    rows={6}
-    value={beschreibung}
-    onChange={(e) => setBeschreibung(e.target.value)}
-    placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
-  />
+ <textarea
+  className={`${styles.textarea} ${warnungBeschreibung ? styles.textareaError : ''}`}
+  maxLength={600}
+  rows={6}
+  value={beschreibung}
+  onChange={(e) => setBeschreibung(e.target.value)}
+  placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
+/>
   <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
 </label>
 {warnungBeschreibung && (
@@ -1962,7 +1964,7 @@ try {
   <input
     type="number"
     className={`${styles.dateInput} ${warnungWerktage ? styles.numberInputError : ''}`}
-    min={1}
+    min={0}
     step={1}
     max={999}
     value={lieferWerktage}
