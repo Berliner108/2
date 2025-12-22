@@ -136,48 +136,46 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
-    const promoPackages = [
-    {
-      id: 'startseite',
-      title: 'Anzeige auf Startseite hervorheben',
-      subtitle: 'Hebe deine Anzeige prominent auf der Startseite hervor.',
-      priceCents: 6999,
-      score: 30,
-      icon: <Star size={18} />,
-    },
-    {
-      id: 'suche',
-      title: 'Anzeige in Suche priorisieren',
-      subtitle: 'Werde in den Suchergebnissen weiter oben angezeigt.',
-      priceCents: 4999,
-      score: 15,
-      icon: <Search size={18} />,
-    },
-    {
-      id: 'premium',
-      title: 'Premium-Anzeige aktivieren',
-      subtitle: 'Markiere dein Angebot als Premium-Anzeige.',
-      priceCents: 3499,
-      score: 12,
-      icon: <Crown size={18} />,
-    },
-  ] as const
+const promoPackages = [
+  {
+    id: 'homepage',
+    title: 'Anzeige auf Startseite hervorheben',
+    subtitle: 'Startseiten-Hervorhebung',
+    priceCents: 6999,
+    score: 30,
+    icon: <Star size={18} className={styles.iconStar} aria-hidden />,
+  },
+  {
+    id: 'search_boost',
+    title: 'Anzeige in Suche priorisieren',
+    subtitle: 'Ranking-Boost in der Suche',
+    priceCents: 4999,
+    score: 15,
+    icon: <Search size={18} className={styles.iconSearch} aria-hidden />,
+  },
+  {
+    id: 'premium',
+    title: 'Premium-Anzeige aktivieren',
+    subtitle: 'Premium-Badge & Listing',
+    priceCents: 3499,
+    score: 12,
+    icon: <Crown size={18} className={styles.iconCrown} aria-hidden />,
+  },
+] as const;
 
-  const formatEUR = (cents: number) =>
-    (cents / 100).toLocaleString('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
+const formatEUR = (cents: number) =>
+  (cents / 100).toLocaleString('de-DE', {
+    style: 'currency',
+    currency: 'EUR',
+  });
+const selectedPromoScore = promoPackages
+  .filter((p) => bewerbungOptionen.includes(p.id))
+  .reduce((sum, p) => sum + p.score, 0);
 
-  const selectedPromoScore = promoPackages
-    .filter((p) => bewerbungOptionen.includes(p.id))
-    .reduce((sum, p) => sum + p.score, 0)
+const selectedTotalCents = promoPackages
+  .filter((p) => bewerbungOptionen.includes(p.id))
+  .reduce((sum, p) => sum + p.priceCents, 0);
 
-  const selectedTotalCents = promoPackages
-    .filter((p) => bewerbungOptionen.includes(p.id))
-    .reduce((sum, p) => sum + p.priceCents, 0)
 
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
   const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
@@ -1955,12 +1953,17 @@ const toggleBewerbung = (option: string) => {
 
 </fieldset>
 
-<div className={styles.bewerbungPanel}>
+{/* Bewerbung – identisch wie im Grundgerüst */}
+<div
+  className={styles.bewerbungPanel}
+  role="region"
+  aria-label="Bewerbung deiner Anzeige"
+>
   <div className={styles.bewerbungHeader}>
-    <div className={styles.bewerbungText}>
-      <h3>Erhöhe deine Sichtbarkeit und steigere deine Verkäufe</h3>
-     
-    </div>
+    <span className={styles.bewerbungIcon} aria-hidden></span>
+    <p className={styles.bewerbungText}>
+      Erhöhe deine Sichtbarkeit und erreiche mehr passende Käufer!
+    </p>
   </div>
 
   <div className={styles.bewerbungGruppe}>
@@ -1972,7 +1975,12 @@ const toggleBewerbung = (option: string) => {
           checked={bewerbungOptionen.includes(p.id)}
         />
         {p.icon}
-        <span style={{ display: 'inline-flex', flexDirection: 'column' }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            flexDirection: 'column',
+          }}
+        >
           <span>
             {p.title} — {formatEUR(p.priceCents)}
           </span>
@@ -1986,18 +1994,20 @@ const toggleBewerbung = (option: string) => {
     </p>
   </div>
 
-  <div className={styles.promoHinweis}>
+  <div className={styles.promoHinweis} role="note" aria-live="polite">
     <div className={styles.promoHinweisRow}>
       <span className={styles.promoScore}>
         Deine Auswahl: +{selectedPromoScore} Promo-Punkte
       </span>
       <span className={styles.promoSumme}>
-        Gesamt: {selectedTotalCents > 0 ? formatEUR(selectedTotalCents) : '0,00 €'}
+        Gesamt: {formatEUR(selectedTotalCents)}
       </span>
     </div>
     <small>
-      Pakete addieren sich. Du kannst mehrere Optionen kombinieren, um deine Anzeige
-      maximal zu pushen.
+      Pakete addieren sich. Die Sortierung der Anzeigen erfolgt nach dem
+      Promo-Score. Eine Startseiten-Platzierung ist{' '}
+      <em>nicht garantiert</em> – wenn andere zeitgleich einen höheren
+      Gesamtwert haben, erscheinen deren Anzeigen zuerst.
     </small>
   </div>
 </div>
