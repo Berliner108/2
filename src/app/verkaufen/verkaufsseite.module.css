@@ -1052,7 +1052,7 @@
 
 .promoScore {
   font-weight: 700;
-  color: #0f766e; /* leichtes Grünblau für „+Promo-Punkte“ */
+  color: black; /* leichtes Grünblau für „+Promo-Punkte“ */
 }
 
 .promoSumme {
