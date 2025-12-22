@@ -1092,13 +1092,18 @@
   }
 }
 @media (max-width: 768px) {
+  .bewerbungPanel {
+    padding: 1rem;
+  }
+
   .bewerbungGruppe {
     flex-direction: column;
-    gap: 0.5rem;          /* kleiner machen */
+    gap: 0.25rem;          /* kleiner Abstand */
   }
 
   .bewerbungOption {
-    margin-bottom: 0;     /* extra-Abstand weg */
-    padding-block: 0.25rem;
+    align-items: flex-start;
+    padding-block: 0;      /* kein extra Platz oben/unten */
   }
 }
+
