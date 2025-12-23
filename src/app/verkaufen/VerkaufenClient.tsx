@@ -1996,54 +1996,60 @@ setWarnungStaffeln('');
     </motion.div>    
   </AnimatePresence>
 )} 
-<fieldset className={`${styles.radioGroup} ${warnungVerkaufsArt ? styles.radioGroupError : ''}`}>
-  <legend className={styles.radioLegend}>
-    Verkaufsart: <span style={{ color: 'red' }}>*</span>
-  </legend>
+{kategorie && (
+  <fieldset
+    className={`${styles.radioGroup} ${
+      warnungVerkaufsArt ? styles.radioGroupError : ''
+    }`}
+  >
+    <legend className={styles.radioLegend}>
+      Verkaufsart: <span style={{ color: 'red' }}>*</span>
+    </legend>
 
-  <div className={styles.radioOptionsHorizontal}>
-    <label className={styles.radioLabel}>
-      <input
-        type="radio"
-        name="verkaufsArt"
-        value="gesamt"
-        checked={verkaufsArt === 'gesamt'}
-        onChange={() => setVerkaufsArt('gesamt')}
-      />
-      <span>Nur als Gesamtmenge</span>
-    </label>
-
-    {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+    <div className={styles.radioOptionsHorizontal}>
       <label className={styles.radioLabel}>
         <input
           type="radio"
           name="verkaufsArt"
-          value="pro_kg"
-          checked={verkaufsArt === 'pro_kg'}
-          onChange={() => setVerkaufsArt('pro_kg')}
+          value="gesamt"
+          checked={verkaufsArt === 'gesamt'}
+          onChange={() => setVerkaufsArt('gesamt')}
         />
-        <span>Verkauf pro kg</span>
+        <span>Nur als Gesamtmenge</span>
       </label>
-    )}
 
-    {kategorie === 'arbeitsmittel' && (
-      <label className={styles.radioLabel}>
-        <input
-          type="radio"
-          name="verkaufsArt"
-          value="pro_stueck"
-          checked={verkaufsArt === 'pro_stueck'}
-          onChange={() => setVerkaufsArt('pro_stueck')}
-        />
-        <span>Verkauf pro Stück</span>
-      </label>
-    )}
-  </div>
+      {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            name="verkaufsArt"
+            value="pro_kg"
+            checked={verkaufsArt === 'pro_kg'}
+            onChange={() => setVerkaufsArt('pro_kg')}
+          />
+          <span>Verkauf pro kg</span>
+        </label>
+      )}
 
-  {warnungVerkaufsArt && (
-    <p className={styles.validierungsfehler}>{warnungVerkaufsArt}</p>
-  )}
-</fieldset>
+      {kategorie === 'arbeitsmittel' && (
+        <label className={styles.radioLabel}>
+          <input
+            type="radio"
+            name="verkaufsArt"
+            value="pro_stueck"
+            checked={verkaufsArt === 'pro_stueck'}
+            onChange={() => setVerkaufsArt('pro_stueck')}
+          />
+          <span>Verkauf pro Stück</span>
+        </label>
+      )}
+    </div>
+
+    {warnungVerkaufsArt && (
+      <p className={styles.validierungsfehler}>{warnungVerkaufsArt}</p>
+    )}
+  </fieldset>
+)}
 
 {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') && (
   <div className={styles.staffelContainer}>
@@ -2054,66 +2060,68 @@ setWarnungStaffeln('');
     {staffeln.map((row, index) => (
       <div key={index} className={styles.staffelRow}>
         <div className={styles.staffelGroup}>
+          {/* Ab Menge – nur ganze Zahlen */}
           <label className={styles.staffelLabel}>
             <span>Ab Menge</span>
             <input
-              type="number"
-              min={0}
-              step={verkaufsArt === 'pro_kg' ? 0.01 : 1}
+              type="text"
+              inputMode="numeric"
               className={styles.staffelInput}
               value={row.minMenge}
               onChange={(e) => {
-                const value = e.target.value;
+                const cleaned = e.target.value.replace(/[^\d]/g, ''); // nur Ziffern
                 setStaffeln((prev) =>
                   prev.map((r, i) =>
-                    i === index ? { ...r, minMenge: value } : r
+                    i === index ? { ...r, minMenge: cleaned } : r
                   )
                 );
               }}
-              placeholder={verkaufsArt === 'pro_kg' ? 'z. B. 0.50' : 'z. B. 1'}
+              placeholder="z. B. 1"
             />
           </label>
 
+          {/* Bis Menge – nur ganze Zahlen + nächstes „Ab“ = Bis + 1 */}
           <label className={styles.staffelLabel}>
             <span>Bis Menge (optional)</span>
             <input
-              type="number"
-              min={0}
-              step={verkaufsArt === 'pro_kg' ? 0.01 : 1}
+              type="text"
+              inputMode="numeric"
               className={styles.staffelInput}
               value={row.maxMenge}
               onChange={(e) => {
-                const value = e.target.value;
-                const num = Number(value.replace(',', '.'));
-                const step =
-                  verkaufsArt === 'pro_kg'
-                    ? 0.01
-                    : 1;
+                const cleaned = e.target.value.replace(/[^\d]/g, '');
+                setStaffeln((prev) => {
+                  const copy = prev.map((r, i) =>
+                    i === index ? { ...r, maxMenge: cleaned } : r
+                  );
 
-                setStaffeln((prev) =>
-                  prev.map((r, i) => {
-                    if (i === index) {
-                      return { ...r, maxMenge: value };
+                  const num =
+                    cleaned === '' ? NaN : parseInt(cleaned, 10);
+
+                  // nächste Zeile automatisch setzen, wenn leer
+                  if (!Number.isNaN(num) && index + 1 < copy.length) {
+                    const next = copy[index + 1];
+                    if (!next.minMenge) {
+                      copy[index + 1] = {
+                        ...next,
+                        minMenge: String(num + 1),
+                      };
                     }
-                    if (i === index + 1 && !prev[i].minMenge && !isNaN(num)) {
-                      const nextMin =
-                        verkaufsArt === 'pro_kg'
-                          ? (num + step).toFixed(2)
-                          : String(num + step);
-                      return { ...r, minMenge: nextMin };
-                    }
-                    return r;
-                  })
-                );
+                  }
+
+                  return copy;
+                });
               }}
-              placeholder={verkaufsArt === 'pro_kg' ? 'z. B. 1.00' : 'z. B. 10'}
+              placeholder="z. B. 10"
             />
           </label>
         </div>
 
         <div className={styles.staffelGroup}>
           <label className={styles.staffelLabel}>
-            <span>Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}</span>
+            <span>
+              Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}
+            </span>
             <input
               type="number"
               min={0}
@@ -2165,71 +2173,71 @@ setWarnungStaffeln('');
   </div>
 )}
 
-<fieldset className={styles.radioGroup}>
-  {/* Werktage bis Lieferung */}
-{/* Preis */}
-<label className={styles.inputLabel}>
-  Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
-  <input
-    type="number"
-    className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
-    min={1}
-    step={0.01}
-    max={999}
-    value={preis}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === '' || Number(value) <= 999) {
-        setPreis(value);
-      }
-    }}
-  />
-</label>
-{warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
+<div className={styles.preisVersandContainer}>
+  <label className={styles.inputLabel}>
+    Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
+    <input
+      type="number"
+      className={`${styles.dateInput} ${
+        warnungPreis ? styles.numberInputError : ''
+      }`}
+      min={1}
+      step={0.01}
+      max={999}
+      value={preis}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value === '' || Number(value) <= 999) {
+          setPreis(value);
+        }
+      }}
+    />
+  </label>
+  {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
 
+  <label className={styles.inputLabel}>
+    Versandkosten (€)
+    <input
+      type="number"
+      className={`${styles.dateInput} ${
+        warnungVersand ? styles.numberInputError : ''
+      }`}
+      min={0}
+      step={0.01}
+      max={999}
+      value={versandKosten}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value === '' || Number(value) <= 999) {
+          setVersandKosten(value);
+        }
+      }}
+    />
+  </label>
+  {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
 
-{/* Versandkosten */}
-<label className={styles.inputLabel}>
-  Versandkosten (€)
-  <input
-    type="number"
-    className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
-    min={0}
-    step={0.01}
-    max={999}
-    value={versandKosten}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === '' || Number(value) <= 999) {
-        setVersandKosten(value);
-      }
-    }}
-  />
-</label>
-{warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
+  <label className={styles.inputLabel}>
+    Werktage bis Lieferung
+    <input
+      type="number"
+      className={`${styles.dateInput} ${
+        warnungWerktage ? styles.numberInputError : ''
+      }`}
+      min={1}
+      step={1}
+      max={999}
+      value={lieferWerktage}
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value === '' || Number(value) <= 999) {
+          setLieferWerktage(value);
+        }
+      }}
+    />
+  </label>
+  {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
+</div>
 
-{/* Werktage bis Lieferung */}
-<label className={styles.inputLabel}>
-  Werktage bis Lieferung
-  <input
-    type="number"
-    className={`${styles.dateInput} ${warnungWerktage ? styles.numberInputError : ''}`}
-    min={1}
-    step={1}
-    max={999}
-    value={lieferWerktage}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === '' || Number(value) <= 999) {
-        setLieferWerktage(value);
-      }
-    }}
-  />
-</label>
-{warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
-
-
-</fieldset> {/* <- dein Feldset mit Preis / Versand / Werktage endet hier */}
 
 <fieldset className={`${styles.radioGroup} ${warnungVerkaufAn ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
