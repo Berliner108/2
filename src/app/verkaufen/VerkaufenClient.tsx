@@ -890,6 +890,7 @@ if (fehler) {
       `.${styles.radioGroupError}`,
       `.${styles.mengeSectionError}`,
       `.${styles.selectError}`,
+      `.${styles.inputError}`,  
     ].join(', ');
 
     const firstError = document.querySelector(selector);
@@ -1205,21 +1206,26 @@ setWarnungStaffeln('');
 
       { (kategorie === 'pulverlack' || kategorie === 'nasslack') && (
   <>
-  <label>
+<label>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
   </span>
 
-<input
-  type="text"
-  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
-  maxLength={60}
-  value={titel}
-  onChange={(e) => setTitel(e.target.value)}
-/>
-
+  <input
+    type="text"
+    className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+    maxLength={60}
+    value={titel}
+    onChange={(e) => setTitel(e.target.value)}
+  />
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
+
+{/* ⬇️ NEU */}
+{warnungTitel && (
+  <p className={styles.validierungsfehler}>{warnungTitel}</p>
+)}
+
 
 <label className={styles.label1}>
   Hersteller (optional):
@@ -1883,20 +1889,26 @@ setWarnungStaffeln('');
 {kategorie === 'arbeitsmittel' && (
   <>
     {/* Titel */}
-    <label>
+<label>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
   </span>
 
   <input
-  type="text"
-  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
-  maxLength={60}
-  value={titel}
-  onChange={(e) => setTitel(e.target.value)}
-/>
+    type="text"
+    className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+    maxLength={60}
+    value={titel}
+    onChange={(e) => setTitel(e.target.value)}
+  />
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
+
+{/* ⬇️ NEU */}
+{warnungTitel && (
+  <p className={styles.validierungsfehler}>{warnungTitel}</p>
+)}
+
     
 
     {/* Stückzahl */}
