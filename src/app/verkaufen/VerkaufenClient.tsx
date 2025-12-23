@@ -1190,6 +1190,41 @@ setWarnungStaffeln('');
             </div>
             {!kategorie && warnungKategorie && (
                         <p className={styles.validierungsfehler}>{warnungKategorie}</p>)}
+            {kategorie && (
+  <fieldset className={`${styles.radioGroup} ${warnungVerkaufAn ? styles.radioGroupError : ''}`}>
+    <legend className={styles.radioLegend}>
+      Verkauf an: <span style={{ color: 'red' }}>*</span>
+    </legend>
+    <div className={styles.radioOptionsHorizontal}>
+      <label className={styles.radioLabel}>
+        <input
+          type="radio"
+          name="verkaufAn"
+          value="gewerblich"
+          checked={verkaufAn === 'gewerblich'}
+          onChange={() => setVerkaufAn('gewerblich')}
+        />
+        <span>Nur gewerbliche Käufer</span>
+      </label>
+
+      <label className={styles.radioLabel}>
+        <input
+          type="radio"
+          name="verkaufAn"
+          value="beide"
+          checked={verkaufAn === 'beide'}
+          onChange={() => setVerkaufAn('beide')}
+        />
+        <span>Privat & gewerblich</span>
+      </label>
+    </div>
+
+    {warnungVerkaufAn && (
+      <p className={styles.validierungsfehler}>{warnungVerkaufAn}</p>
+    )}
+  </fieldset>
+)}
+
                         
           {/* Dynamische Felder animiert */}
         {kategorie && (
@@ -2273,39 +2308,6 @@ setWarnungStaffeln('');
   {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
 </div>
 
-
-<fieldset className={`${styles.radioGroup} ${warnungVerkaufAn ? styles.radioGroupError : ''}`}>
-  <legend className={styles.radioLegend}>
-    Verkauf an: <span style={{ color: 'red' }}>*</span>
-  </legend>
-  <div className={styles.radioOptionsHorizontal}>
-    <label className={styles.radioLabel}>
-      <input
-        type="radio"
-        name="verkaufAn"
-        value="gewerblich"
-        checked={verkaufAn === 'gewerblich'}
-        onChange={() => setVerkaufAn('gewerblich')}
-      />
-      <span>Nur gewerbliche Käufer</span>
-    </label>
-
-    <label className={styles.radioLabel}>
-      <input
-        type="radio"
-        name="verkaufAn"
-        value="beide"
-        checked={verkaufAn === 'beide'}
-        onChange={() => setVerkaufAn('beide')}
-      />
-      <span>Privat & gewerblich</span>
-    </label>
-  </div>
-
-  {warnungVerkaufAn && (
-    <p className={styles.validierungsfehler}>{warnungVerkaufAn}</p>
-  )}
-</fieldset>
 
 {/* Bewerbung – identisch wie im Grundgerüst */}
 <div
