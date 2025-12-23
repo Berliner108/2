@@ -132,6 +132,8 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [warnungPalette, setWarnungPalette] = useState('');
   const [warnungGlanzgrad, setWarnungGlanzgrad] = useState(''); // ⬅️ NEU
   const [warnungZustand, setWarnungZustand] = useState('');
+  const [warnungAnwendung, setWarnungAnwendung] = useState('');
+  const [warnungOberflaeche, setWarnungOberflaeche] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
   const [verkaufAn, setVerkaufAn] = useState('');
@@ -388,6 +390,8 @@ const formularZuruecksetzen = () => {
   setWarnungPalette('');
   setWarnungGlanzgrad(''); // ⬅️ NEU
   setWarnungZustand('');
+  setWarnungOberflaeche('');
+  setWarnungAnwendung('');
   setWarnungBeschreibung('');
   setWarnungPreis('');
   setWarnungWerktage('');
@@ -681,15 +685,19 @@ if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
   } else {
     setWarnungGlanzgrad('');
   }
-
-  if (!oberflaeche) {
+if (!oberflaeche) {
+    setWarnungOberflaeche('Bitte wähle die Oberfläche aus.');
     fehler = true;
+  } else {
+    setWarnungOberflaeche('');
   }
 
   if (!anwendung) {
+    setWarnungAnwendung('Bitte wähle die Anwendung aus.');
     fehler = true;
+  } else {
+    setWarnungAnwendung('');
   }
-
   if (!zustand) {
     setWarnungZustand('Bitte wähle den Zustand aus.');
     fehler = true;
@@ -879,6 +887,9 @@ if (fehler) {
       `.${styles.validierungsfehler}`,
       `.${styles.warnung}`,
       `.${styles.mengeWarning}`,
+      `.${styles.radioGroupError}`,
+      `.${styles.mengeSectionError}`,
+      `.${styles.selectError}`,
     ].join(', ');
 
     const firstError = document.querySelector(selector);
@@ -1380,7 +1391,9 @@ setWarnungStaffeln('');
     )}
   </div>
 </label>
-
+ {warnungGlanzgrad && (
+   <p className={styles.validierungsfehler}>{warnungGlanzgrad}</p>
+ )}
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
@@ -1482,8 +1495,12 @@ setWarnungStaffeln('');
       <span>Geöffnet & Einwandfrei</span>
     </label>
   </div>
-</fieldset>   
-<fieldset className={styles.radioGroup}>
+</fieldset>  
+{warnungZustand && (
+     <p className={styles.validierungsfehler}>{warnungZustand}</p>
+ )}
+
+ <fieldset className={`${styles.radioGroup} ${warnungOberflaeche ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
     Oberfläche: <span style={{ color: 'red' }}>*</span>
   </legend>
@@ -1520,7 +1537,10 @@ setWarnungStaffeln('');
     </label>
   </div>
 </fieldset>
-<fieldset className={styles.radioGroup}>
+{warnungOberflaeche && (
+   <p className={styles.validierungsfehler}>{warnungOberflaeche}</p>
+ )}
+<fieldset className={`${styles.radioGroup} ${warnungAnwendung ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
     Anwendung: <span style={{ color: 'red' }}>*</span>
   </legend>
@@ -1567,6 +1587,9 @@ setWarnungStaffeln('');
     </label>
   </div>
 </fieldset>
+{warnungAnwendung && (
+   <p className={styles.validierungsfehler}>{warnungAnwendung}</p>
+ )}
 {kategorie === 'pulverlack' && (
 <fieldset className={styles.radioGroup}>
   <legend className={styles.radioLegend}>Zertifizierungen (optional):</legend>
@@ -1843,13 +1866,13 @@ setWarnungStaffeln('');
 </span>
  <textarea
   className={`${styles.textarea} ${warnungBeschreibung ? styles.textareaError : ''}`}
-  maxLength={600}
+  maxLength={1200}
   rows={6}
   value={beschreibung}
   onChange={(e) => setBeschreibung(e.target.value)}
   placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
 />
-  <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
+  <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
 </label>
 {warnungBeschreibung && (
   <p className={styles.validierungsfehler}>{warnungBeschreibung}</p>
