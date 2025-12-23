@@ -1129,3 +1129,55 @@
 .container input[type="radio"] {
   accent-color: #06b6d4; /* das Türkis wie im Bewerbungspanel */
 }
+.staffelContainer {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.staffelHeading {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.staffelRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.staffelGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.staffelLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.staffelInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  font-size: 0.875rem;
+}
+
+.staffelInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+.staffelHinweis {
+  font-size: 0.75rem;
+  color: #64748b;
+}

@@ -106,6 +106,12 @@ const heute = new Date().toISOString().split('T')[0];
   { name: 'Seidenglanz', value: 'Seidenglanz' },
   { name: 'Hochglanz', value: 'Hochglanz' },
 ];
+type Staffelzeile = {
+  minMenge: string;   // "ab"
+  maxMenge: string;   // "bis" (optional)
+  preis: string;      // Preis pro kg / Stück
+  versand: string;    // Versandkosten für diese Staffel
+};
 
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 
@@ -130,6 +136,19 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [farbcode, setFarbcode] = useState('');
   const [verkaufAn, setVerkaufAn] = useState('');
 const [warnungVerkaufAn, setWarnungVerkaufAn] = useState('');
+const [verkaufsArt, setVerkaufsArt] = useState<
+  '' | 'gesamt' | 'pro_kg' | 'pro_stueck'
+>('');
+
+const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
+
+const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+]);
+
+const [warnungStaffeln, setWarnungStaffeln] = useState('');
 
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
   const glanzgradRef = useRef<HTMLDivElement>(null);
@@ -375,6 +394,15 @@ const formularZuruecksetzen = () => {
   setWarnungVersand('');
   setVerkaufAn('');
   setWarnungVerkaufAn('');
+    setVerkaufsArt('');
+  setWarnungVerkaufsArt('');
+  setStaffeln([
+    { minMenge: '', maxMenge: '', preis: '', versand: '' },
+    { minMenge: '', maxMenge: '', preis: '', versand: '' },
+    { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  ]);
+  setWarnungStaffeln('');
+
   };
 
   const [aufladung, setAufladung] = useState<string[]>([]);
@@ -721,32 +749,106 @@ if (!groesse.trim()) {
 
 
 
-    if (!beschreibung.trim()) {
-      setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+// Beschreibung bleibt Pflicht
+if (!beschreibung.trim()) {
+  setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+  fehler = true;
+} else {
+  setWarnungBeschreibung('');
+}
+
+// Verkaufsart prüfen
+if (!verkaufsArt) {
+  setWarnungVerkaufsArt('Bitte wähle die Verkaufsart.');
+  fehler = true;
+} else {
+  setWarnungVerkaufsArt('');
+}
+
+// Preis / Versand vs. Staffeln prüfen
+if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
+  const aktiveStaffeln = staffeln.filter((s) =>
+    (s.minMenge && s.minMenge.trim() !== '') ||
+    (s.maxMenge && s.maxMenge.trim() !== '') ||
+    (s.preis && s.preis.trim() !== '') ||
+    (s.versand && s.versand.trim() !== '')
+  );
+
+  if (aktiveStaffeln.length === 0) {
+    setWarnungStaffeln('Bitte gib mindestens eine Staffel mit gültigem Preis an.');
+    fehler = true;
+  } else {
+    let staffelFehler = false;
+
+    for (const s of aktiveStaffeln) {
+      const min = Number(s.minMenge.replace(',', '.'));
+      const preisNum = Number(s.preis.replace(',', '.'));
+
+      if (
+        !s.minMenge ||
+        isNaN(min) ||
+        min <= 0 ||
+        !s.preis ||
+        isNaN(preisNum) ||
+        preisNum <= 0
+      ) {
+        staffelFehler = true;
+        break;
+      }
+
+      if (s.maxMenge) {
+        const max = Number(s.maxMenge.replace(',', '.'));
+        if (isNaN(max) || max <= min) {
+          staffelFehler = true;
+          break;
+        }
+      }
+    }
+
+    if (staffelFehler) {
+      setWarnungStaffeln(
+        'Bitte prüfe deine Staffel: "Ab Menge" > 0, Preis > 0 und "Bis" größer als "Ab".'
+      );
       fehler = true;
     } else {
-      setWarnungBeschreibung('');
+      setWarnungStaffeln('');
     }
-    if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
-  setWarnungPreis('Bitte gib einen gültigen Preis ein.');
-  fehler = true;
-} else {
+  }
+
+  // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
   setWarnungPreis('');
-}
-
-if (versandKosten === '' || parseFloat(versandKosten) < 0) {
-  setWarnungVersand('Bitte gib gültige Versandkosten ein.');
-  fehler = true;
-} else {
   setWarnungVersand('');
+} else {
+  // klassische Einzelpreis-Variante
+  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
+    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
+    fehler = true;
+  } else {
+    setWarnungPreis('');
+  }
+
+  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
+    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
+    fehler = true;
+  } else {
+    setWarnungVersand('');
+  }
+
+  setWarnungStaffeln('');
 }
 
-if (!lieferWerktage.trim() || isNaN(parseInt(lieferWerktage)) || parseInt(lieferWerktage) < 1) {
+// Werktage bleiben Pflicht
+if (
+  !lieferWerktage.trim() ||
+  isNaN(parseInt(lieferWerktage)) ||
+  parseInt(lieferWerktage) < 1
+) {
   setWarnungWerktage('Bitte mach eine gültige Angabe.');
   fehler = true;
 } else {
   setWarnungWerktage('');
 }
+
 
 
   // ─── Menge / „Auf Lager” prüfen ───
@@ -856,12 +958,27 @@ formData.append('verkaufAn', verkaufAn);
   formData.append('groesse', groesse);
 }
 
+bilder.forEach((file) => formData.append('bilder', file));
+dateien.forEach((file) => formData.append('dateien', file));
 
-  bilder.forEach((file) => formData.append('bilder', file));
-  dateien.forEach((file) => formData.append('dateien', file));
+formData.append('verkaufsArt', verkaufsArt);
+
+if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
+  const aktiveStaffeln = staffeln.filter((s) =>
+    (s.minMenge && s.minMenge.trim() !== '') ||
+    (s.maxMenge && s.maxMenge.trim() !== '') ||
+    (s.preis && s.preis.trim() !== '') ||
+    (s.versand && s.versand.trim() !== '')
+  );
+
+  formData.append('preisStaffeln', JSON.stringify(aktiveStaffeln));
+} else {
   formData.append('preis', (parseFloat(preis) || 0).toString());
   formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
-  formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
+}
+
+formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
+
 
 
 try {
@@ -896,6 +1013,15 @@ try {
     setWarnungStueckProEinheit('');
      setVerkaufAn('');
   setWarnungVerkaufAn('');
+  setVerkaufsArt('');
+setWarnungVerkaufsArt('');
+setStaffeln([
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+]);
+setWarnungStaffeln('');
+
 
     // ✅ Overlay-Text (identisch)
     setOverlayTitle('Artikel gespeichert');
@@ -1870,6 +1996,174 @@ try {
     </motion.div>    
   </AnimatePresence>
 )} 
+<fieldset className={`${styles.radioGroup} ${warnungVerkaufsArt ? styles.radioGroupError : ''}`}>
+  <legend className={styles.radioLegend}>
+    Verkaufsart: <span style={{ color: 'red' }}>*</span>
+  </legend>
+
+  <div className={styles.radioOptionsHorizontal}>
+    <label className={styles.radioLabel}>
+      <input
+        type="radio"
+        name="verkaufsArt"
+        value="gesamt"
+        checked={verkaufsArt === 'gesamt'}
+        onChange={() => setVerkaufsArt('gesamt')}
+      />
+      <span>Nur als Gesamtmenge</span>
+    </label>
+
+    {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+      <label className={styles.radioLabel}>
+        <input
+          type="radio"
+          name="verkaufsArt"
+          value="pro_kg"
+          checked={verkaufsArt === 'pro_kg'}
+          onChange={() => setVerkaufsArt('pro_kg')}
+        />
+        <span>Verkauf pro kg</span>
+      </label>
+    )}
+
+    {kategorie === 'arbeitsmittel' && (
+      <label className={styles.radioLabel}>
+        <input
+          type="radio"
+          name="verkaufsArt"
+          value="pro_stueck"
+          checked={verkaufsArt === 'pro_stueck'}
+          onChange={() => setVerkaufsArt('pro_stueck')}
+        />
+        <span>Verkauf pro Stück</span>
+      </label>
+    )}
+  </div>
+
+  {warnungVerkaufsArt && (
+    <p className={styles.validierungsfehler}>{warnungVerkaufsArt}</p>
+  )}
+</fieldset>
+
+{(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') && (
+  <div className={styles.staffelContainer}>
+    <h3 className={styles.staffelHeading}>
+      Preis- & Versandstaffel ({verkaufsArt === 'pro_kg' ? 'pro kg' : 'pro Stück'})
+    </h3>
+
+    {staffeln.map((row, index) => (
+      <div key={index} className={styles.staffelRow}>
+        <div className={styles.staffelGroup}>
+          <label className={styles.staffelLabel}>
+            <span>Ab Menge</span>
+            <input
+              type="number"
+              min={0}
+              step={verkaufsArt === 'pro_kg' ? 0.01 : 1}
+              className={styles.staffelInput}
+              value={row.minMenge}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStaffeln((prev) =>
+                  prev.map((r, i) =>
+                    i === index ? { ...r, minMenge: value } : r
+                  )
+                );
+              }}
+              placeholder={verkaufsArt === 'pro_kg' ? 'z. B. 0.50' : 'z. B. 1'}
+            />
+          </label>
+
+          <label className={styles.staffelLabel}>
+            <span>Bis Menge (optional)</span>
+            <input
+              type="number"
+              min={0}
+              step={verkaufsArt === 'pro_kg' ? 0.01 : 1}
+              className={styles.staffelInput}
+              value={row.maxMenge}
+              onChange={(e) => {
+                const value = e.target.value;
+                const num = Number(value.replace(',', '.'));
+                const step =
+                  verkaufsArt === 'pro_kg'
+                    ? 0.01
+                    : 1;
+
+                setStaffeln((prev) =>
+                  prev.map((r, i) => {
+                    if (i === index) {
+                      return { ...r, maxMenge: value };
+                    }
+                    if (i === index + 1 && !prev[i].minMenge && !isNaN(num)) {
+                      const nextMin =
+                        verkaufsArt === 'pro_kg'
+                          ? (num + step).toFixed(2)
+                          : String(num + step);
+                      return { ...r, minMenge: nextMin };
+                    }
+                    return r;
+                  })
+                );
+              }}
+              placeholder={verkaufsArt === 'pro_kg' ? 'z. B. 1.00' : 'z. B. 10'}
+            />
+          </label>
+        </div>
+
+        <div className={styles.staffelGroup}>
+          <label className={styles.staffelLabel}>
+            <span>Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}</span>
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              className={styles.staffelInput}
+              value={row.preis}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStaffeln((prev) =>
+                  prev.map((r, i) =>
+                    i === index ? { ...r, preis: value } : r
+                  )
+                );
+              }}
+              placeholder="z. B. 3.50"
+            />
+          </label>
+
+          <label className={styles.staffelLabel}>
+            <span>Versandkosten (€)</span>
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              className={styles.staffelInput}
+              value={row.versand}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStaffeln((prev) =>
+                  prev.map((r, i) =>
+                    i === index ? { ...r, versand: value } : r
+                  )
+                );
+              }}
+              placeholder="z. B. 5.90"
+            />
+          </label>
+        </div>
+      </div>
+    ))}
+
+    {warnungStaffeln && (
+      <p className={styles.validierungsfehler}>{warnungStaffeln}</p>
+    )}
+
+    <p className={styles.staffelHinweis}>
+      Du kannst nur eine Staffel ausfüllen oder mehrere. Leere Zeilen werden ignoriert.
+    </p>
+  </div>
+)}
 
 <fieldset className={styles.radioGroup}>
   {/* Werktage bis Lieferung */}
