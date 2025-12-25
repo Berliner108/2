@@ -2415,7 +2415,8 @@ setWarnungStaffeln('');
       <h3>📝 Vorschau deiner Angaben</h3>
 
       <p><strong>Kategorie:</strong> {kategorie || '–'}</p>
-      <p><strong>Titel:</strong> {titel || '–'}</p>
+      <p><strong>Titel:</strong> {titel || '–'}</p>      
+      <p><strong>Verkauf an:</strong> {verkaufAn || '–'}</p>
 
       {/* Lack-Vorschau */}
       {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
@@ -2448,7 +2449,6 @@ setWarnungStaffeln('');
       )}
 
       {/* Felder für beide Kategorien */}
-      <p><strong>Verkauf an:</strong> {verkaufAn || '–'}</p>
       <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage || '–'} Werktag{parseInt(lieferWerktage) > 1 ? 'e' : ''}</p>
       <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} € / ${kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'}` : '–'}</p>
       <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
