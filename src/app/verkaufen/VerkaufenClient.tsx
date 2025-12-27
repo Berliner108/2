@@ -257,6 +257,10 @@ const selectedTotalCents = promoPackages
   const [menge, setMenge] = useState<number>(0);
  const [versandKosten, setVersandKosten] = useState<string>(''); 
 const [lieferWerktage, setLieferWerktage] = useState<string>(''); 
+useEffect(() => {
+  if (kategorie && !lieferWerktage) setLieferWerktage('1');
+}, [kategorie, lieferWerktage]);
+
   // Verkaufspreis in Euro
 const [preis, setPreis] = useState<string>(''); 
 const [warnungPreis, setWarnungPreis] = useState('');
@@ -316,19 +320,24 @@ if (parseInt(stueckProEinheit) > 0) filled++;
     if (beschreibung.trim() !== '') filled++;
 
     // 8. Werktage bis Lieferung
-    // 8. Werktage bis Lieferung
+// Werktage bleiben Pflicht
 total++;
 if (parseInt(lieferWerktage) >= 1) filled++;
 
-// 9. Preis
+// Verkaufsart + Preislogik abhängig von Verkaufsart
 total++;
-if (parseFloat(preis) > 0) filled++;
+if (verkaufsArt) filled++;
 
-// 10. Versandkosten
-total++;
-if (parseFloat(versandKosten) >= 0) filled++;
+if (verkaufsArt === 'gesamt') {
+  total++; // Preis
+  if (parseFloat(preis) > 0) filled++;
 
-
+  total++; // Versand
+  if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
+} else if (verkaufsArt === 'pro_stueck') {
+  total++; // Staffeln
+  if (hatGueltigeStaffel(staffeln)) filled++;
+}
 
   } else {
     // Lack-Pflichtfelder
@@ -373,16 +382,25 @@ if (aufLager || menge >= 0.1) filled++;
     if (beschreibung.trim() !== '') filled++;
 
    // 11. Werktage bis Lieferung
+// Werktage bleiben Pflicht
 total++;
 if (parseInt(lieferWerktage) >= 1) filled++;
 
-// 12. Preis
+// Verkaufsart + Preislogik abhängig von Verkaufsart
 total++;
-if (parseFloat(preis) > 0) filled++;
+if (verkaufsArt) filled++;
 
-// 13. Versandkosten
-total++;
-if (parseFloat(versandKosten) >= 0) filled++;
+if (verkaufsArt === 'gesamt') {
+  total++; // Preis
+  if (parseFloat(preis) > 0) filled++;
+
+  total++; // Versand
+  if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
+} else if (verkaufsArt === 'pro_kg') {
+  total++; // Staffeln
+  if (hatGueltigeStaffel(staffeln)) filled++;
+}
+
 
 
     // Pulverlack-spezifisch: Aufladung
@@ -1060,6 +1078,19 @@ setWarnungStaffeln('');
       </>
     );
   }
+  const hatGueltigeStaffel = (rows: Staffelzeile[]) => {
+  const aktive = rows.filter((s) => (s.minMenge || s.preis || s.maxMenge || s.versand).trim?.() !== '');
+  if (aktive.length === 0) return false;
+
+  return aktive.every((s) => {
+    const min = Number((s.minMenge || '').replace(',', '.'));
+    const preis = Number((s.preis || '').replace(',', '.'));
+    // Versand darf 0 sein, aber wenn eingegeben, dann >= 0
+    const versand = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
+    return min > 0 && preis > 0 && versand >= 0;
+  });
+};
+
   const progress = berechneFortschritt();
 
   return (
@@ -2239,6 +2270,30 @@ setWarnungStaffeln('');
     </p>
   </div>
 )}
+{kategorie && (
+  <div className={styles.preisVersandContainer}>
+    <label className={styles.inputLabel}>
+      Werktage bis Lieferung <span style={{ color: 'red' }}>*</span>
+      <input
+        type="number"
+        className={`${styles.dateInput} ${
+          warnungWerktage ? styles.numberInputError : ''
+        }`}
+        min={1}
+        step={1}
+        max={999}
+        value={lieferWerktage}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) <= 999) {
+            setLieferWerktage(value);
+          }
+        }}
+      />
+    </label>
+    {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
+  </div>
+)}
 
 {verkaufsArt === 'gesamt' && (
   <div className={styles.preisVersandContainer}>
@@ -2284,26 +2339,6 @@ setWarnungStaffeln('');
     </label>
     {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
 
-    <label className={styles.inputLabel}>
-      Werktage bis Lieferung
-      <input
-        type="number"
-        className={`${styles.dateInput} ${
-          warnungWerktage ? styles.numberInputError : ''
-        }`}
-        min={1}
-        step={1}
-        max={999}
-        value={lieferWerktage}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === '' || Number(value) <= 999) {
-            setLieferWerktage(value);
-          }
-        }}
-      />
-    </label>
-    {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
   </div>
 )}
 
