@@ -67,6 +67,22 @@ function FormSkeleton() {
 }
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
+function useOnClickOutside(
+  ref: React.RefObject<HTMLElement>,
+  handler: () => void
+) {
+  useEffect(() => {
+    const listener = (event: MouseEvent) => {
+      const el = ref.current;
+      if (!el) return;
+      if (el.contains(event.target as Node)) return;
+      handler();
+    };
+
+    document.addEventListener('mousedown', listener);
+    return () => document.removeEventListener('mousedown', listener);
+  }, [ref, handler]);
+}
 
 function istGueltigeDatei(file: File): boolean {
   const erlaubteMimeTypen = [
@@ -149,6 +165,27 @@ const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
 ]);
+useEffect(() => {
+  if (!verkaufsArt) return;
+
+  // ✅ Wechsel auf Staffelverkauf: Einzelpreis/Versand leeren
+  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
+    setPreis('');
+    setVersandKosten('');
+    setWarnungPreis('');
+    setWarnungVersand('');
+  }
+
+  // ✅ Wechsel auf Gesamtverkauf: Staffeln zurücksetzen
+  if (verkaufsArt === 'gesamt') {
+    setStaffeln([
+      { minMenge: '', maxMenge: '', preis: '', versand: '' },
+      { minMenge: '', maxMenge: '', preis: '', versand: '' },
+      { minMenge: '', maxMenge: '', preis: '', versand: '' },
+    ]);
+    setWarnungStaffeln('');
+  }
+}, [verkaufsArt]);
 
 const [warnungStaffeln, setWarnungStaffeln] = useState('');
 
@@ -156,6 +193,7 @@ const [warnungStaffeln, setWarnungStaffeln] = useState('');
   const glanzgradRef = useRef<HTMLDivElement>(null);
   const [sondereffekte, setSondereffekte] = useState<string[]>([]);
   const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
+  const [effekt, setEffekt] = useState<string[]>([]);
   const [qualitaet, setQualitaet] = useState('');
   const [qualitaetOffen, setQualitaetOffen] = useState(false);
   const [lieferdatum, setLieferdatum] = useState('');
@@ -303,8 +341,8 @@ if (parseFloat(versandKosten) >= 0) filled++;
     if (bilder.length > 0) filled++;
 
     // 3. Menge (kg)
-    total++;
-    if (menge > 0) filled++;
+total++;
+if (aufLager || menge >= 0.1) filled++;
 
     // 4. Titel
     total++;
@@ -448,15 +486,7 @@ const resetFieldsExceptCategory = () => {
   setWarnungVersand('');
 };
 
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (herstellerRef.current && !herstellerRef.current.contains(event.target as Node)) {
-      setHerstellerDropdownOffen(false);
-    }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);  
+ 
 const fetchConnect = useCallback(async () => {
   try {
     const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
@@ -573,15 +603,10 @@ const aktuelleHerstellerListe =
 const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState(false);
 const farbpaletteRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (glanzgradRef.current && !glanzgradRef.current.contains(event.target as Node)) {
-      setGlanzgradDropdownOffen(false);
-    }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+useOnClickOutside(herstellerRef, () => setHerstellerDropdownOffen(false));
+useOnClickOutside(glanzgradRef, () => setGlanzgradDropdownOffen(false));
+useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
+
 
   function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>) {
   const val = e.target.value;
@@ -600,15 +625,7 @@ useEffect(() => {
   transition: { duration: 0.3 },
 };
 
-  useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (farbpaletteRef.current && !farbpaletteRef.current.contains(event.target as Node)) {
-      setFarbpaletteDropdownOffen(false);
-    }
-  };
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
+
 
   useEffect(() => {
     const urls = bilder.map(file => URL.createObjectURL(file));
@@ -656,6 +673,13 @@ if (!agbAccepted) {
   fehler = true;
 } else {
   setWarnungTitel('');
+}
+// ✅ Menge (kg) prüfen: entweder Auf Lager oder mind. 0.1 kg
+if (!aufLager && menge < 0.1) {
+  setWarnungMenge('Bitte gib mindestens 0.1 kg an oder wähle „Auf Lager“.');
+  fehler = true;
+} else {
+  setWarnungMenge('');
 }
 
 // Nur für Lack-Kategorien prüfen
@@ -837,19 +861,7 @@ if (
 
 
 
-  // ─── Menge / „Auf Lager” prüfen ───
-if (!aufLager) {
-  // begrenzte Menge → muss ≥ 1 sein
-  if (menge < 1) {
-    setWarnungMenge('Bitte gib eine Stückzahl ≥ 1 ein.');
-    fehler = true;
-  } else {
-    setWarnungMenge('');
-  }
-} else {
-  // Auf Lager → immer gültig
-  setWarnungMenge('');
-}
+
 if (!verkaufAn) {
   setWarnungVerkaufAn('Bitte wähle, an wen du verkaufst.');
   fehler = true;
@@ -1048,6 +1060,8 @@ setWarnungStaffeln('');
       </>
     );
   }
+  const progress = berechneFortschritt();
+
   return (
     <>
      <Navbar />
@@ -1110,17 +1124,21 @@ setWarnungStaffeln('');
           previews={bildPreviews}
           onRemove={(idx) => setBilder(prev => prev.filter((_, i) => i !== idx))}
         />
-          <Dropzone
-          type="dateien"
-          label="Dateien hierher ziehen oder klicken (max. 8)"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
-          maxFiles={8}
-          files={dateien}
-          setFiles={setDateien}
-          istGueltig={istGueltigeDatei}
-          setWarnung={setWarnung}
-          id="dateiUpload"
-        />
+   <Dropzone
+  type="dateien"
+  label="Dateien hierher ziehen oder klicken (max. 8)"
+  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
+  maxFiles={8}
+  files={dateien}
+  setFiles={setDateien}
+  istGueltig={istGueltigeDatei}
+  setWarnung={setWarnung}
+  id="dateiUpload"
+/>
+
+{warnung && (
+  <p className={styles.validierungsfehler}>{warnung}</p>
+)}
 
         {/* Vorschau Dateien */}
         <DateiVorschau
@@ -1360,18 +1378,19 @@ setWarnungStaffeln('');
   </span>
 
   {/* Unsichtbares echtes Select für Pflicht/Keyboard/Screenreader */}
-  <select
-    value={glanzgrad}
-    onChange={() => {}}
-    style={{
-      position: 'absolute',
-      opacity: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      zIndex: -1,
-    }}
-  >
+<select
+  value={glanzgrad}
+  onChange={(e) => setGlanzgrad(e.target.value)}
+  style={{
+    position: 'absolute',
+    opacity: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+    zIndex: -1,
+  }}
+>
+
     <option value="">Bitte wählen</option>
     {glanzgradListe.map((g) => (
       <option key={g.value} value={g.value}>
@@ -2452,16 +2471,17 @@ setWarnungStaffeln('');
     Alle Eingaben zurücksetzen
   </button>
 </div>
-    <div className={styles.progressContainer}>
+<div className={styles.progressContainer}>
   <div className={styles.progressBarWrapper}>
     <div
       className={styles.progressBar}
-      style={{ width: `${berechneFortschritt()}%` }}
+      style={{ width: `${progress}%` }}
     >
-      <span className={styles.progressValue}>{berechneFortschritt()}%</span>
+      <span className={styles.progressValue}>{progress}%</span>
     </div>
   </div>
 </div>
+
       </form>
       <AnimatePresence>
   {ladeStatus && (
