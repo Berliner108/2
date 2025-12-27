@@ -104,6 +104,7 @@ const [verkaufsArt, setVerkaufsArt] = useState<
 
 const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
 
+
 const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
@@ -376,6 +377,7 @@ const formularZuruecksetzen = () => {
   setGlanzgrad('');
   setFarbcode('');
   setHersteller('');
+  setHerstellerAndere('');
   setBeschreibung('');
   setMenge(0);
   setZustand('');
@@ -424,6 +426,7 @@ const [warnungBeschreibung, setWarnungBeschreibung] = useState('');
 const resetFieldsExceptCategory = () => {
   setTitel('');
   setHersteller('');
+  setHerstellerAndere('');
   setWarnungHersteller('');
 
   // ✅ Menge nur einmal setzen
@@ -520,6 +523,9 @@ const goToStripeOnboarding = useCallback(async () => {
   const [farbton, setFarbton] = useState('');
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
+  const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
+const [herstellerAndere, setHerstellerAndere] = useState('');
+
 
 
 
@@ -542,9 +548,9 @@ const goToStripeOnboarding = useCallback(async () => {
 // 2. In deinem JSX-Dropdown wählst du die Liste dynamisch aus:
 const aktuelleHerstellerListe =
   kategorie === 'nasslack'
-    ? herstellerListeNass
+    ? [...herstellerListeNass, 'Andere…']
     : kategorie === 'pulverlack'
-    ? herstellerListePulver
+    ? [...herstellerListePulver, 'Andere…']
     : [];
 
     const farbpalette = [
@@ -900,7 +906,13 @@ formData.append('verkaufAn', verkaufAn);
   formData.append('titel', titel);
     formData.append('farbton', farbton);
     formData.append('glanzgrad', glanzgrad);
-    formData.append('hersteller', hersteller);
+    const finalHersteller =
+  hersteller === HERSTELLER_ANDERE_VALUE
+    ? herstellerAndere.trim()
+    : hersteller.trim();
+
+formData.append('hersteller', finalHersteller);
+
     formData.append('zustand', zustand);
     formData.append('farbpalette', farbpaletteWert);
     formData.append('beschreibung', beschreibung);    
@@ -1240,7 +1252,12 @@ const submitDisabled = ladeStatus || !stripeReady;
     className={styles.customSelect}
     onClick={() => setHerstellerDropdownOffen(prev => !prev)}
   >
-    <div className={styles.selectedValue}>{hersteller || 'Alle'}</div>
+    <div className={styles.selectedValue}>
+  {hersteller === HERSTELLER_ANDERE_VALUE
+    ? (herstellerAndere ? `Andere: ${herstellerAndere}` : 'Andere…')
+    : (hersteller || 'Alle')}
+</div>
+
     {herstellerDropdownOffen && (
       <div className={styles.optionList}>
         <div
@@ -1257,11 +1274,20 @@ const submitDisabled = ladeStatus || !stripeReady;
           <div
             key={option}
             className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
-            onClick={e => {
-              e.stopPropagation();
-              setHersteller(option);
-              setHerstellerDropdownOffen(false);
-            }}
+           onClick={e => {
+  e.stopPropagation();
+
+  if (option === 'Andere…') {
+    setHersteller(HERSTELLER_ANDERE_VALUE);
+    setHerstellerDropdownOffen(false);
+    return;
+  }
+
+  setHersteller(option);
+  setHerstellerAndere(''); // Freitext leeren wenn normal gewählt
+  setHerstellerDropdownOffen(false);
+}}
+
           >
             {option}
           </div>
@@ -1270,6 +1296,21 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
   </div>
 </label>
+{hersteller === HERSTELLER_ANDERE_VALUE && (
+  <label className={styles.label1}>
+    Hersteller (Andere):
+    <input
+      type="text"
+      className={styles.input}
+      maxLength={30}
+      value={herstellerAndere}
+      onChange={(e) => setHerstellerAndere(e.target.value)}
+      placeholder="Hersteller eingeben…"
+    />
+    <div className={styles.counter}>{herstellerAndere.length} / 30 Zeichen</div>
+  </label>
+)}
+
 <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
 
   <legend className={styles.mengeLegend}>
@@ -2483,7 +2524,12 @@ const submitDisabled = ladeStatus || !stripeReady;
           <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
           <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
           <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-          <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+          <p><strong>Hersteller:</strong> {
+  hersteller === HERSTELLER_ANDERE_VALUE
+    ? (herstellerAndere || '–')
+    : (hersteller || '–')
+}</p>
+
           <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
           <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
           <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>
