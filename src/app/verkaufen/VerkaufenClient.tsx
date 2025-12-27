@@ -1092,7 +1092,60 @@ setWarnungStaffeln('');
 };
 
   const progress = berechneFortschritt();
+useEffect(() => {
+  const checks: Record<string, boolean> = {
+    kategorie: !!kategorie,
+    bilder: bilder.length > 0,
+    titel: titel.trim() !== '',
+    beschreibung: beschreibung.trim() !== '',
+    verkaufAn: !!verkaufAn,
+    agb: agbAccepted,
+    werktage: Number.isFinite(parseInt(lieferWerktage)) && parseInt(lieferWerktage) >= 1,
+    verkaufsArt: !!verkaufsArt,
 
+    // Menge je Kategorie:
+    menge_ok:
+      kategorie === 'arbeitsmittel'
+        ? (aufLager || menge >= 1)
+        : (aufLager || menge >= 0.1),
+
+    // Lack-Pflichtfelder:
+    farbpalette: (kategorie === 'nasslack' || kategorie === 'pulverlack') ? !!farbpaletteWert : true,
+    glanzgrad:   (kategorie === 'nasslack' || kategorie === 'pulverlack') ? !!glanzgrad : true,
+    zustand:     (kategorie === 'nasslack' || kategorie === 'pulverlack') ? !!zustand : true,
+    oberflaeche: (kategorie === 'nasslack' || kategorie === 'pulverlack') ? !!oberflaeche : true,
+    anwendung:   (kategorie === 'nasslack' || kategorie === 'pulverlack') ? !!anwendung : true,
+    aufladung:   (kategorie === 'pulverlack') ? aufladung.length > 0 : true,
+
+    // Arbeitsmittel-Pflichtfelder:
+    stueckProEinheit: kategorie === 'arbeitsmittel' ? parseInt(stueckProEinheit) > 0 : true,
+    groesse:          kategorie === 'arbeitsmittel' ? groesse.trim() !== '' : true,
+
+    // Preislogik:
+    preis_ok:
+      verkaufsArt === 'gesamt'
+        ? parseFloat(preis) > 0
+        : true,
+    versand_ok:
+      verkaufsArt === 'gesamt'
+        ? (versandKosten !== '' && parseFloat(versandKosten) >= 0)
+        : true,
+    staffeln_ok:
+      (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck')
+        ? hatGueltigeStaffel(staffeln)
+        : true,
+  };
+
+  const missing = Object.entries(checks).filter(([, ok]) => !ok).map(([k]) => k);
+  console.log('PROGRESS FEHLT:', missing);
+}, [
+  kategorie, bilder, titel, beschreibung, verkaufAn, agbAccepted, lieferWerktage, verkaufsArt,
+  aufLager, menge, farbpaletteWert, glanzgrad, zustand, oberflaeche, anwendung, aufladung,
+  stueckProEinheit, groesse, preis, versandKosten, staffeln
+]);
+useEffect(() => {
+  if (verkaufsArt === 'gesamt' && versandKosten === '') setVersandKosten('0');
+}, [verkaufsArt, versandKosten]);
   return (
     <>
      <Navbar />
