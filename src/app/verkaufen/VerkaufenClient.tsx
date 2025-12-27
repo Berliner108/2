@@ -284,6 +284,7 @@ const [agbError, setAgbError] = useState(false)
 const agbRef = useRef<HTMLDivElement>(null)
 const [connect, setConnect] = useState<ConnectStatus | null>(null);
 const [connectLoaded, setConnectLoaded] = useState(false);
+const [warnungHersteller, setWarnungHersteller] = useState('');
 
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
@@ -306,9 +307,13 @@ const berechneFortschritt = () => {
     total++;
     if (titel.trim() !== '') filled++;
 
+
  // 5. Stück pro Verkaufseinheit
 total++;
 if (parseInt(stueckProEinheit) > 0) filled++;
+// Hersteller (Pflicht)
+total++;
+if (hersteller.trim() !== '') filled++;
 
 
     // 6. Größe
@@ -752,6 +757,12 @@ if (kategorie === 'arbeitsmittel') {
   } else {
     setWarnungMenge('');
   }
+if (!hersteller.trim()) {
+  setWarnungHersteller('Bitte gib den Hersteller an.');
+  fehler = true;
+} else {
+  setWarnungHersteller('');
+}
 
  // Stück pro Einheit prüfen
 if (parseInt(stueckProEinheit) < 1 || isNaN(parseInt(stueckProEinheit))) {
@@ -2032,10 +2043,28 @@ setWarnungStaffeln('');
 {warnungTitel && (
   <p className={styles.validierungsfehler}>{warnungTitel}</p>
 )}
+<label>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Hersteller: <span style={{ color: 'red' }}>*</span>
+  </span>
 
-    
+  <input
+    type="text"
+    className={`${styles.input} ${warnungHersteller ? styles.inputError : ''}`}
+    maxLength={30}
+    value={hersteller}
+    onChange={(e) => setHersteller(e.target.value)}
+    placeholder="z. B. Bosch, Makita, …"
+  />
 
-    {/* Stückzahl */}
+  <div className={styles.counter}>{hersteller.length} / 30 Zeichen</div>
+</label>
+
+{warnungHersteller && (
+  <p className={styles.validierungsfehler}>{warnungHersteller}</p>
+)}
+
+   {/* Stückzahl */}
     { kategorie === 'arbeitsmittel' && (
   <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
     <legend className={styles.mengeLegend}>
@@ -2540,6 +2569,8 @@ setWarnungStaffeln('');
           <p><strong>Menge (Stück):</strong> {aufLager ? 'Auf Lager' : (menge || '–')}</p>
           <p><strong>Stück pro Verkaufseinheit:</strong> {stueckProEinheit || '–'}</p>
           <p><strong>Größe:</strong> {groesse || '–'}</p>
+          <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
+
         </>
       )}
 
