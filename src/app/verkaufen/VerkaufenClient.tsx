@@ -301,7 +301,7 @@ const berechneFortschritt = () => {
 
     // 3. Menge (Stück)
     total++;
-    if (aufLager || menge > 0) filled++;
+    if (aufLager || menge >= 1) filled++;
 
     // 4. Titel
     total++;
@@ -458,6 +458,7 @@ const formularZuruecksetzen = () => {
   setWarnungWerktage('');
   setWarnungVersand('');
   setVerkaufAn('');
+  setWarnungHersteller('');
   setWarnungVerkaufAn('');
     setVerkaufsArt('');
   setWarnungVerkaufsArt('');
@@ -479,6 +480,7 @@ const [warnungBeschreibung, setWarnungBeschreibung] = useState('');
 const resetFieldsExceptCategory = () => {
   setTitel('');
   setHersteller('');
+  setWarnungHersteller('');
 
   // ✅ Menge nur einmal setzen
   setMenge(0);
@@ -1038,6 +1040,7 @@ try {
     setWarnungVersand('');
     setMengeStueck(0);
     setGroesse('');
+    setWarnungHersteller('');
     setWarnungMengeStueck('');
     setWarnungGroesse('');
     setStueckProEinheit('');
