@@ -1092,55 +1092,6 @@ setWarnungStaffeln('');
 };
 
   const progress = berechneFortschritt();
-const fehlendePflichtfelder = () => {
-  const missing: string[] = [];
-
-  const need = (ok: boolean, label: string) => { if (!ok) missing.push(label); };
-
-  // immer
-  need(!!kategorie, 'Kategorie');
-  need(bilder.length > 0, 'Mindestens 1 Bild');
-  need(titel.trim() !== '', 'Titel');
-  need(beschreibung.trim() !== '', 'Beschreibung');
-  need(parseInt(lieferWerktage) >= 1, 'Werktage bis Lieferung');
-  need(!!verkaufsArt, 'Verkaufsart');
-  need(agbAccepted, 'AGB');
-  need(!!verkaufAn, 'Verkauf an');
-
-  if (kategorie === 'arbeitsmittel') {
-    need(aufLager || menge >= 1, 'Menge (Stück) oder Auf Lager');
-    need(parseInt(stueckProEinheit) > 0, 'Stück pro Verkauf');
-    need(groesse.trim() !== '', 'Größe');
-
-    if (verkaufsArt === 'gesamt') {
-      need(parseFloat(preis) > 0, 'Preis');
-      need(versandKosten !== '' && parseFloat(versandKosten) >= 0, 'Versandkosten (0 erlaubt)');
-    } else if (verkaufsArt === 'pro_stueck') {
-      need(hatGueltigeStaffel(staffeln), 'Mindestens 1 gültige Staffel');
-    }
-  } else {
-    // nasslack / pulverlack
-    need(aufLager || menge >= 0.1, 'Menge (kg) oder Auf Lager');
-    need(!!farbpaletteWert, 'Farbpalette');
-    need(!!glanzgrad, 'Glanzgrad');
-    need(!!zustand, 'Zustand');
-    need(!!oberflaeche, 'Oberfläche');
-    need(!!anwendung, 'Anwendung');
-
-    if (verkaufsArt === 'gesamt') {
-      need(parseFloat(preis) > 0, 'Preis');
-      need(versandKosten !== '' && parseFloat(versandKosten) >= 0, 'Versandkosten (0 erlaubt)');
-    } else if (verkaufsArt === 'pro_kg') {
-      need(hatGueltigeStaffel(staffeln), 'Mindestens 1 gültige Staffel');
-    }
-
-    if (kategorie === 'pulverlack') {
-      need(aufladung.length > 0, 'Aufladung');
-    }
-  }
-
-  return missing;
-};
 
   return (
     <>
@@ -1452,6 +1403,67 @@ const fehlendePflichtfelder = () => {
   />
   <div className={styles.counter}>{farbcode.length} / 20 Zeichen</div>
 </label>
+{/* Dropdown: Farbpalette (Pflicht) */}
+<label className={styles.label}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Farbpalette: <span style={{ color: 'red' }}>*</span>
+  </span>
+
+  {/* Unsichtbares echtes Select (optional, aber gut für Accessibility) */}
+  <select
+    value={farbpaletteWert}
+    onChange={(e) => setFarbpaletteWert(e.target.value)}
+    style={{
+      position: 'absolute',
+      opacity: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: -1,
+    }}
+  >
+    <option value="">Bitte wählen</option>
+    {farbpalette.map((p) => (
+      <option key={p.value} value={p.value}>
+        {p.name}
+      </option>
+    ))}
+  </select>
+
+  <div
+    ref={farbpaletteRef}
+    className={`${styles.customSelect} ${warnungPalette ? styles.selectError : ''}`}
+    onClick={() => setFarbpaletteDropdownOffen((prev) => !prev)}
+  >
+    <div className={styles.selectedValue}>
+      {farbpalette.find((p) => p.value === farbpaletteWert)?.name || 'Bitte wählen'}
+    </div>
+
+    {farbpaletteDropdownOffen && (
+      <div className={styles.optionList}>
+        {farbpalette.map((p) => (
+          <div
+            key={p.value}
+            className={`${styles.optionItem} ${
+              farbpaletteWert === p.value ? styles.activeOption : ''
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setFarbpaletteWert(p.value);
+              setFarbpaletteDropdownOffen(false);
+              setWarnungPalette('');
+            }}
+          >
+            {p.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</label>
+
+{warnungPalette && <p className={styles.validierungsfehler}>{warnungPalette}</p>}
+
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Glanzgrad: <span style={{ color: 'red' }}>*</span>
@@ -2565,11 +2577,6 @@ const fehlendePflichtfelder = () => {
     </div>
   </div>
 </div>
-{fehlendePflichtfelder().length > 0 && (
-  <div className={styles.validierungsfehler}>
-    Fehlt noch: {fehlendePflichtfelder().join(' · ')}
-  </div>
-)}
 
       </form>
       <AnimatePresence>
