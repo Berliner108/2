@@ -6,10 +6,7 @@ import styles from './verkaufsseite.module.css'
 function FancyFallback() {
   return (
     <>
-      {/* Navbar sofort sichtbar */}
-      <Navbar />
-
-      {/* Dein Fancy Loader / Skeleton als Suspense-Fallback */}
+      {/* Fancy Loader / Skeleton (OHNE Navbar!) */}
       <div className={styles.topLoader} aria-hidden>
         <div className={styles.topLoaderInner} />
       </div>
@@ -52,9 +49,14 @@ function FancyFallback() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<FancyFallback />}>
-      {/* In VerkaufenClient darf dann KEIN eigener Boot-Loader + KEINE Navbar mehr sein */}
-      <Verkaufsseite />
-    </Suspense>
+    <>
+      {/* ✅ Navbar ist IMMER sichtbar */}
+      <Navbar />
+
+      {/* ✅ Fancy Loader nur wenn VerkaufenClient noch lädt */}
+      <Suspense fallback={<FancyFallback />}>
+        <Verkaufsseite />
+      </Suspense>
+    </>
   )
 }
