@@ -3,68 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
-import Navbar from '../components/navbar/Navbar'
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
 
-/* ---------------- Fancy Loader Components ---------------- */
 
-function TopLoader() {
-  return (
-    <div className={styles.topLoader} aria-hidden>
-      <div className={styles.topLoaderInner} />
-    </div>
-  );
-}
-
-function FormSkeleton() {
-  return (
-    <div
-      className={styles.skeletonPage}
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      {/* Header */}
-      <div className={styles.skelHeader}>
-        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-        <div className={styles.skelLine} />
-      </div>
-
-      {/* Info-/Hinweisbox */}
-      <div className={styles.skelBlock} />
-
-      {/* Dropzone-Bereich */}
-      <div className={styles.skelDrop} />
-      <div className={styles.skelDropSmall} />
-
-      {/* Kategorie-Icons */}
-      <div className={styles.skelThreeCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      {/* Ein paar Eingabefelder */}
-      <div className={styles.skelGrid}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      {/* Preis / Versand / Werktage */}
-      <div className={styles.skelThreeCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-    </div>
-  );
-}
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
 function useOnClickOutside(
@@ -136,7 +81,6 @@ function ArtikelEinstellen() {
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const searchParams = useSearchParams(); // <-- HIER
-  const [bootLoading, setBootLoading] = useState(true);
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
@@ -578,11 +522,7 @@ const goToStripeOnboarding = useCallback(async () => {
   const [hersteller, setHersteller] = useState('');
 
 
-  // ⬇️ NEU: kleines Boot-Loading mit Skeleton
-  useEffect(() => {
-    const t = setTimeout(() => setBootLoading(false), 400);
-    return () => clearTimeout(t);
-  }, []);
+
 
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
@@ -1080,18 +1020,6 @@ setWarnungStaffeln('');
   if (!willNavigate) setLadeStatus(false);
 }
 };
-
- if (bootLoading) {
-    return (
-      <>
-        <Navbar />
-        <TopLoader />
-        <div className={styles.container}>
-          <FormSkeleton />
-        </div>
-      </>
-    );
-  }
   const hatGueltigeStaffel = (rows: Staffelzeile[]) => {
   const aktive = rows.filter((s) => (s.minMenge || s.preis || s.maxMenge || s.versand).trim?.() !== '');
   if (aktive.length === 0) return false;
@@ -1112,7 +1040,6 @@ const submitDisabled = ladeStatus || !stripeReady;
 
   return (
     <>
-     <Navbar />
 
 <form onSubmit={handleSubmit} className={styles.container}>
   <motion.div
@@ -1165,8 +1092,8 @@ const submitDisabled = ladeStatus || !stripeReady;
   <p className={styles.validierungsfehler}>{warnungBilder}</p>
 )}       
 
-                {/* Vorschau Bilder */}
-                <DateiVorschau
+          {/* Vorschau Bilder */}
+          <DateiVorschau
           bilder
           files={bilder}
           previews={bildPreviews}
