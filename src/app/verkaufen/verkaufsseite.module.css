@@ -308,6 +308,9 @@
 .label1 {
   margin-top: -20px;
 }
+.label2 {
+  margin-top: -1px;
+}
 .dynamicFields input,
 .dynamicFields select {
   padding: 0.5rem;

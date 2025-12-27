@@ -1297,7 +1297,7 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </label>
 {hersteller === HERSTELLER_ANDERE_VALUE && (
-  <label className={styles.label1}>
+  <label className={styles.label2}>
     Hersteller (Andere):
     <input
       type="text"
