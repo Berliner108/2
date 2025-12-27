@@ -415,11 +415,15 @@ const formularZuruecksetzen = () => {
 const [warnungAufladung, setWarnungAufladung] = useState('');
   const [beschreibung, setBeschreibung] = useState('');
 const [warnungBeschreibung, setWarnungBeschreibung] = useState('');
-
 const resetFieldsExceptCategory = () => {
   setTitel('');
   setHersteller('');
-  setMenge(0);  
+
+  // ✅ Menge nur einmal setzen
+  setMenge(0);
+  setAufLager(false);
+  setWarnungMenge('');
+
   setFarbpaletteWert('');
   setFarbton('');
   setFarbcode('');
@@ -429,27 +433,21 @@ const resetFieldsExceptCategory = () => {
   setOberflaeche('');
   setAnwendung('');
   setZertifizierungen([]);
-  setEffekt([]);  
+  setEffekt([]);
   setSondereffekte([]);
   setBeschreibung('');
   setAufladung([]);
+
   setPreis('');
   setLieferWerktage('1');
   setVersandKosten('');
 
-  setMenge(1);
-  setAufLager(false);
-  setWarnungMenge('');
-
-  // ─── Warnungen leeren ───
+  // ✅ Warnungen leeren
   setWarnungPreis('');
   setWarnungWerktage('');
   setWarnungVersand('');
-
-  // ─── Optional: „Auf Lager“-Status zurücksetzen ───
-  setAufLager(false);
-
 };
+
 useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
     if (herstellerRef.current && !herstellerRef.current.contains(event.target as Node)) {
@@ -523,17 +521,7 @@ const goToStripeOnboarding = useCallback(async () => {
   const [farbton, setFarbton] = useState('');
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
-  const [effekt, setEffekt] = useState<string[]>([]);
-  useEffect(() => {
-    const vorausgewaehlt = searchParams.get('kategorie');
-    if (
-      vorausgewaehlt === 'nasslack' ||
-      vorausgewaehlt === 'pulverlack' ||
-      vorausgewaehlt === 'arbeitsmittel'
-    ) {
-      setKategorie(vorausgewaehlt);
-    }
-  }, [searchParams]);
+
 
   // ⬇️ NEU: kleines Boot-Loading mit Skeleton
   useEffect(() => {
@@ -714,16 +702,6 @@ if (!oberflaeche) {
     }
   }
 }
-
-    if (kategorie === 'pulverlack') {
-    if (aufladung.length === 0) {
-      setWarnungAufladung('Bitte wähle mindestens eine Option bei der Aufladung.');
-      fehler = true;
-    } else {
-      setWarnungAufladung('');
-    }}
-
-
 if (kategorie === 'arbeitsmittel') {
   // Menge prüfen (nur wenn nicht "Auf Lager")
   if (!aufLager && menge < 1) {
@@ -2243,70 +2221,72 @@ setWarnungStaffeln('');
   </div>
 )}
 
-<div className={styles.preisVersandContainer}>
-  <label className={styles.inputLabel}>
-    Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
-    <input
-      type="number"
-      className={`${styles.dateInput} ${
-        warnungPreis ? styles.numberInputError : ''
-      }`}
-      min={1}
-      step={0.01}
-      max={999}
-      value={preis}
-      onChange={(e) => {
-        const value = e.target.value;
-        if (value === '' || Number(value) <= 999) {
-          setPreis(value);
-        }
-      }}
-    />
-  </label>
-  {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
+{verkaufsArt === 'gesamt' && (
+  <div className={styles.preisVersandContainer}>
+    <label className={styles.inputLabel}>
+      Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
+      <input
+        type="number"
+        className={`${styles.dateInput} ${
+          warnungPreis ? styles.numberInputError : ''
+        }`}
+        min={1}
+        step={0.01}
+        max={999}
+        value={preis}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) <= 999) {
+            setPreis(value);
+          }
+        }}
+      />
+    </label>
+    {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
 
-  <label className={styles.inputLabel}>
-    Versandkosten (€)
-    <input
-      type="number"
-      className={`${styles.dateInput} ${
-        warnungVersand ? styles.numberInputError : ''
-      }`}
-      min={0}
-      step={0.01}
-      max={999}
-      value={versandKosten}
-      onChange={(e) => {
-        const value = e.target.value;
-        if (value === '' || Number(value) <= 999) {
-          setVersandKosten(value);
-        }
-      }}
-    />
-  </label>
-  {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
+    <label className={styles.inputLabel}>
+      Versandkosten (€)
+      <input
+        type="number"
+        className={`${styles.dateInput} ${
+          warnungVersand ? styles.numberInputError : ''
+        }`}
+        min={0}
+        step={0.01}
+        max={999}
+        value={versandKosten}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) <= 999) {
+            setVersandKosten(value);
+          }
+        }}
+      />
+    </label>
+    {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
 
-  <label className={styles.inputLabel}>
-    Werktage bis Lieferung
-    <input
-      type="number"
-      className={`${styles.dateInput} ${
-        warnungWerktage ? styles.numberInputError : ''
-      }`}
-      min={1}
-      step={1}
-      max={999}
-      value={lieferWerktage}
-      onChange={(e) => {
-        const value = e.target.value;
-        if (value === '' || Number(value) <= 999) {
-          setLieferWerktage(value);
-        }
-      }}
-    />
-  </label>
-  {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
-</div>
+    <label className={styles.inputLabel}>
+      Werktage bis Lieferung
+      <input
+        type="number"
+        className={`${styles.dateInput} ${
+          warnungWerktage ? styles.numberInputError : ''
+        }`}
+        min={1}
+        step={1}
+        max={999}
+        value={lieferWerktage}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === '' || Number(value) <= 999) {
+            setLieferWerktage(value);
+          }
+        }}
+      />
+    </label>
+    {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
+  </div>
+)}
 
 
 {/* Bewerbung – identisch wie im Grundgerüst */}
