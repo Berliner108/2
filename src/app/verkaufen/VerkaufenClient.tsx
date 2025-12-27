@@ -1092,6 +1092,55 @@ setWarnungStaffeln('');
 };
 
   const progress = berechneFortschritt();
+const fehlendePflichtfelder = () => {
+  const missing: string[] = [];
+
+  const need = (ok: boolean, label: string) => { if (!ok) missing.push(label); };
+
+  // immer
+  need(!!kategorie, 'Kategorie');
+  need(bilder.length > 0, 'Mindestens 1 Bild');
+  need(titel.trim() !== '', 'Titel');
+  need(beschreibung.trim() !== '', 'Beschreibung');
+  need(parseInt(lieferWerktage) >= 1, 'Werktage bis Lieferung');
+  need(!!verkaufsArt, 'Verkaufsart');
+  need(agbAccepted, 'AGB');
+  need(!!verkaufAn, 'Verkauf an');
+
+  if (kategorie === 'arbeitsmittel') {
+    need(aufLager || menge >= 1, 'Menge (Stück) oder Auf Lager');
+    need(parseInt(stueckProEinheit) > 0, 'Stück pro Verkauf');
+    need(groesse.trim() !== '', 'Größe');
+
+    if (verkaufsArt === 'gesamt') {
+      need(parseFloat(preis) > 0, 'Preis');
+      need(versandKosten !== '' && parseFloat(versandKosten) >= 0, 'Versandkosten (0 erlaubt)');
+    } else if (verkaufsArt === 'pro_stueck') {
+      need(hatGueltigeStaffel(staffeln), 'Mindestens 1 gültige Staffel');
+    }
+  } else {
+    // nasslack / pulverlack
+    need(aufLager || menge >= 0.1, 'Menge (kg) oder Auf Lager');
+    need(!!farbpaletteWert, 'Farbpalette');
+    need(!!glanzgrad, 'Glanzgrad');
+    need(!!zustand, 'Zustand');
+    need(!!oberflaeche, 'Oberfläche');
+    need(!!anwendung, 'Anwendung');
+
+    if (verkaufsArt === 'gesamt') {
+      need(parseFloat(preis) > 0, 'Preis');
+      need(versandKosten !== '' && parseFloat(versandKosten) >= 0, 'Versandkosten (0 erlaubt)');
+    } else if (verkaufsArt === 'pro_kg') {
+      need(hatGueltigeStaffel(staffeln), 'Mindestens 1 gültige Staffel');
+    }
+
+    if (kategorie === 'pulverlack') {
+      need(aufladung.length > 0, 'Aufladung');
+    }
+  }
+
+  return missing;
+};
 
   return (
     <>
@@ -2516,6 +2565,11 @@ setWarnungStaffeln('');
     </div>
   </div>
 </div>
+{fehlendePflichtfelder().length > 0 && (
+  <div className={styles.validierungsfehler}>
+    Fehlt noch: {fehlendePflichtfelder().join(' · ')}
+  </div>
+)}
 
       </form>
       <AnimatePresence>
