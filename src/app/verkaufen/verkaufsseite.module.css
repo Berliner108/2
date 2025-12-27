@@ -1132,58 +1132,92 @@
 .container input[type="radio"] {
   accent-color: #06b6d4; /* das Türkis wie im Bewerbungspanel */
 }
-.staffelContainer {
-  margin-top: 1.5rem;
-  padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
-  background: rgba(15, 23, 42, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.staffelHeaderRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
 }
 
-.staffelHeading {
-  font-size: 1rem;
-  font-weight: 600;
+.staffelAddBtn{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  padding:10px 12px;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
 }
 
-.staffelRow {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.75rem 1rem;
+.staffelTableHead{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap:10px;
+  font-weight:700;
+  color:#334155;
+  font-size:13px;
+  padding:10px 6px;
 }
 
-.staffelGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.staffelTableRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap:10px;
+  padding:10px 6px;
+  border-top:1px solid #e2e8f0;
+  align-items:end;
 }
 
-.staffelLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
+.staffelCell{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
-.staffelInput {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid #cbd5e1;
-  font-size: 0.875rem;
+.staffelCellEnd{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
 }
 
-.staffelInput:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 1px #4f46e5;
+.staffelMobileLabel{
+  display:none;
+  font-size:12px;
+  font-weight:700;
+  color:#475569;
 }
 
-.staffelHinweis {
-  font-size: 0.75rem;
-  color: #64748b;
+.staffelRemoveBtn{
+  border:1px solid #e2e8f0;
+  background:#fff;
+  padding:9px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  white-space:nowrap;
 }
+
+/* Mobile: aus „Tabelle“ wird „Karte“ */
+@media (max-width: 900px){
+  .staffelTableHead{ display:none; }
+
+  .staffelTableRow{
+    grid-template-columns: 1fr 1fr;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+
+  .staffelMobileLabel{ display:block; }
+
+  .staffelCellEnd{
+    grid-column: 1 / -1;
+    justify-content:flex-end;
+    margin-top:4px;
+  }
+}
+
 .preisVersandContainer {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

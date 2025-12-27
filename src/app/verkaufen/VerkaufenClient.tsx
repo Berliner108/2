@@ -107,8 +107,6 @@ const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
 
 const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
 ]);
 useEffect(() => {
   if (!verkaufsArt) return;
@@ -123,11 +121,8 @@ useEffect(() => {
 
   // ✅ Wechsel auf Gesamtverkauf: Staffeln zurücksetzen
   if (verkaufsArt === 'gesamt') {
-    setStaffeln([
-      { minMenge: '', maxMenge: '', preis: '', versand: '' },
-      { minMenge: '', maxMenge: '', preis: '', versand: '' },
-      { minMenge: '', maxMenge: '', preis: '', versand: '' },
-    ]);
+    setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+
     setWarnungStaffeln('');
   }
 }, [verkaufsArt]);
@@ -408,11 +403,8 @@ const formularZuruecksetzen = () => {
   setWarnungVerkaufAn('');
     setVerkaufsArt('');
   setWarnungVerkaufsArt('');
-  setStaffeln([
-    { minMenge: '', maxMenge: '', preis: '', versand: '' },
-    { minMenge: '', maxMenge: '', preis: '', versand: '' },
-    { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  ]);
+  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+
   setWarnungStaffeln('');
 
   };
@@ -1001,11 +993,8 @@ try {
   setWarnungVerkaufAn('');
   setVerkaufsArt('');
 setWarnungVerkaufsArt('');
-setStaffeln([
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
-]);
+setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+
 setWarnungStaffeln('');
 
 
@@ -1043,6 +1032,20 @@ setWarnungStaffeln('');
     const versand = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
     return min > 0 && preis > 0 && versand >= 0;
   });
+};
+const addStaffel = () => {
+  setStaffeln(prev => [
+    ...prev,
+    { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  ]);
+};
+
+const removeStaffel = (index: number) => {
+  setStaffeln(prev => prev.filter((_, i) => i !== index));
+};
+
+const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
+  setStaffeln(prev => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
 };
 
   const progress = berechneFortschritt();
@@ -2189,7 +2192,7 @@ const submitDisabled = ladeStatus || !stripeReady;
             checked={verkaufsArt === 'pro_kg'}
             onChange={() => setVerkaufsArt('pro_kg')}
           />
-          <span>Verkauf pro kg</span>
+          <span>Verkauf mit gestaffelten Preisen</span>
         </label>
       )}
 
@@ -2212,115 +2215,118 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
   </fieldset>
 )}
-
 {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') && (
   <div className={styles.staffelContainer}>
-    <h3 className={styles.staffelHeading}>
-      Preis- & Versandstaffel ({verkaufsArt === 'pro_kg' ? 'pro kg' : 'pro Stück'})
-    </h3>
+    <div className={styles.staffelHeaderRow}>
+      <h3 className={styles.staffelHeading}>
+        Preis- & Versandstaffel ({verkaufsArt === 'pro_kg' ? 'pro kg' : 'pro Stück'})
+      </h3>
+
+      <button
+        type="button"
+        className={styles.staffelAddBtn}
+        onClick={addStaffel}
+      >
+        + Staffel hinzufügen
+      </button>
+    </div>
+
+    {/* Kopfzeile nur am Desktop */}
+    <div className={styles.staffelTableHead} aria-hidden>
+      <div>Ab</div>
+      <div>Bis (optional)</div>
+      <div>Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}</div>
+      <div>Versand (€)</div>
+      <div></div>
+    </div>
 
     {staffeln.map((row, index) => (
-      <div key={index} className={styles.staffelRow}>
-        <div className={styles.staffelGroup}>
-          {/* Ab Menge – nur ganze Zahlen */}
-          <label className={styles.staffelLabel}>
-            <span>Ab Menge</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              className={styles.staffelInput}
-              value={row.minMenge}
-              onChange={(e) => {
-                const cleaned = e.target.value.replace(/[^\d]/g, ''); // nur Ziffern
-                setStaffeln((prev) =>
-                  prev.map((r, i) =>
-                    i === index ? { ...r, minMenge: cleaned } : r
-                  )
-                );
-              }}
-              placeholder="z. B. 1"
-            />
-          </label>
-
-          {/* Bis Menge – nur ganze Zahlen + nächstes „Ab“ = Bis + 1 */}
-          <label className={styles.staffelLabel}>
-            <span>Bis Menge (optional)</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              className={styles.staffelInput}
-              value={row.maxMenge}
-              onChange={(e) => {
-                const cleaned = e.target.value.replace(/[^\d]/g, '');
-                setStaffeln((prev) => {
-                  const copy = prev.map((r, i) =>
-                    i === index ? { ...r, maxMenge: cleaned } : r
-                  );
-
-                  const num =
-                    cleaned === '' ? NaN : parseInt(cleaned, 10);
-
-                  // nächste Zeile automatisch setzen, wenn leer
-                  if (!Number.isNaN(num) && index + 1 < copy.length) {
-                    const next = copy[index + 1];
-                    if (!next.minMenge) {
-                      copy[index + 1] = {
-                        ...next,
-                        minMenge: String(num + 1),
-                      };
-                    }
-                  }
-
-                  return copy;
-                });
-              }}
-              placeholder="z. B. 10"
-            />
-          </label>
+      <div key={index} className={styles.staffelTableRow}>
+        {/* Ab */}
+        <div className={styles.staffelCell}>
+          <span className={styles.staffelMobileLabel}>Ab</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            className={styles.staffelInput}
+            value={row.minMenge}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^\d]/g, '');
+              updateStaffel(index, { minMenge: cleaned });
+            }}
+            placeholder="z. B. 1"
+          />
         </div>
 
-        <div className={styles.staffelGroup}>
-          <label className={styles.staffelLabel}>
-            <span>
-              Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}
-            </span>
-            <input
-              type="number"
-              min={0}
-              step={0.01}
-              className={styles.staffelInput}
-              value={row.preis}
-              onChange={(e) => {
-                const value = e.target.value;
-                setStaffeln((prev) =>
-                  prev.map((r, i) =>
-                    i === index ? { ...r, preis: value } : r
-                  )
+        {/* Bis */}
+        <div className={styles.staffelCell}>
+          <span className={styles.staffelMobileLabel}>Bis</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            className={styles.staffelInput}
+            value={row.maxMenge}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^\d]/g, '');
+              setStaffeln((prev) => {
+                const copy = prev.map((r, i) =>
+                  i === index ? { ...r, maxMenge: cleaned } : r
                 );
-              }}
-              placeholder="z. B. 3.50"
-            />
-          </label>
 
-          <label className={styles.staffelLabel}>
-            <span>Versandkosten (€)</span>
-            <input
-              type="number"
-              min={0}
-              step={0.01}
-              className={styles.staffelInput}
-              value={row.versand}
-              onChange={(e) => {
-                const value = e.target.value;
-                setStaffeln((prev) =>
-                  prev.map((r, i) =>
-                    i === index ? { ...r, versand: value } : r
-                  )
-                );
-              }}
-              placeholder="z. B. 5.90"
-            />
-          </label>
+                const num = cleaned === '' ? NaN : parseInt(cleaned, 10);
+                if (!Number.isNaN(num) && index + 1 < copy.length) {
+                  const next = copy[index + 1];
+                  if (!next.minMenge) {
+                    copy[index + 1] = { ...next, minMenge: String(num + 1) };
+                  }
+                }
+                return copy;
+              });
+            }}
+            placeholder="z. B. 10"
+          />
+        </div>
+
+        {/* Preis */}
+        <div className={styles.staffelCell}>
+          <span className={styles.staffelMobileLabel}>Preis</span>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            className={styles.staffelInput}
+            value={row.preis}
+            onChange={(e) => updateStaffel(index, { preis: e.target.value })}
+            placeholder="z. B. 3.50"
+          />
+        </div>
+
+        {/* Versand */}
+        <div className={styles.staffelCell}>
+          <span className={styles.staffelMobileLabel}>Versand</span>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            className={styles.staffelInput}
+            value={row.versand}
+            onChange={(e) => updateStaffel(index, { versand: e.target.value })}
+            placeholder="z. B. 5.90"
+          />
+        </div>
+
+        {/* Remove */}
+        <div className={styles.staffelCellEnd}>
+          {staffeln.length > 1 && (
+            <button
+              type="button"
+              className={styles.staffelRemoveBtn}
+              onClick={() => removeStaffel(index)}
+              aria-label={`Staffel ${index + 1} entfernen`}
+            >
+              Entfernen
+            </button>
+          )}
         </div>
       </div>
     ))}
@@ -2330,10 +2336,11 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
 
     <p className={styles.staffelHinweis}>
-      Du kannst nur eine Staffel ausfüllen oder mehrere. Leere Zeilen werden ignoriert.
+      Tipp: Lass Felder leer, die du nicht brauchst. Leere Staffeln werden ignoriert.
     </p>
   </div>
 )}
+
 {kategorie && (
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
