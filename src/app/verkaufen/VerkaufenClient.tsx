@@ -1106,6 +1106,9 @@ setWarnungStaffeln('');
 };
 
   const progress = berechneFortschritt();
+  const stripeReady = connectLoaded && connect?.ready === true;
+const submitDisabled = ladeStatus || !stripeReady;
+
 
   return (
     <>
@@ -2589,9 +2592,20 @@ setWarnungStaffeln('');
   )}
 </AnimatePresence>
 
- <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
-  {ladeStatus ? 'Bitte warten…' : 'Artikel kostenlos einstellen'}
+<button type="submit" className={styles.submitBtn} disabled={submitDisabled}>
+  {ladeStatus
+    ? 'Bitte warten…'
+    : !stripeReady
+    ? 'Stripe-Verifizierung erforderlich'
+    : 'Artikel kostenlos einstellen'}
 </button>
+
+{connectLoaded && connect?.ready === false && (
+  <p className={styles.validierungsfehler}>
+    Bitte zuerst bei Stripe verifizieren – danach kannst du den Artikel einstellen.
+  </p>
+)}
+
 <div className={styles.buttonRechts}>
   <button
     type="button"
