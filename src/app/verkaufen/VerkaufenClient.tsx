@@ -107,43 +107,7 @@ const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
 
 const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
-]);useEffect(() => {
-  if (!verkaufsArt) return;
-
-  // gestaffelt
-  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-    if (!staffelnSindGueltig(staffeln)) {
-      setWarnungStaffeln(
-        'Staffel ungültig: Ab/Bis nur ganze Zahlen, keine Lücken (nächste Staffel startet bei Bis+1), Bis muss größer als Ab sein, und eine offene Staffel (Bis leer) darf nur die letzte sein.'
-      );
-    } else {
-      setWarnungStaffeln('');
-    }
-
-    setWarnungPreis('');
-    setWarnungVersand('');
-    return;
-  }
-
-  // gesamt
-  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
-    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
-  } else {
-    setWarnungPreis('');
-  }
-
-  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
-    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
-  } else {
-    setWarnungVersand('');
-  }
-
-  setWarnungStaffeln('');
-}, [verkaufsArt, staffeln]);
-
-
-
-const [warnungStaffeln, setWarnungStaffeln] = useState('');
+]);
 
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
   const glanzgradRef = useRef<HTMLDivElement>(null);
@@ -222,6 +186,49 @@ const [preis, setPreis] = useState<string>('');
 const [warnungPreis, setWarnungPreis] = useState('');
 const [warnungWerktage, setWarnungWerktage] = useState('');
 const [warnungVersand, setWarnungVersand] = useState('');
+const [warnungStaffeln, setWarnungStaffeln] = useState('');
+
+useEffect(() => {
+  // Wenn Verkaufsart noch nicht gewählt ist → alles sauber leeren
+  if (!verkaufsArt) {
+    setWarnungStaffeln('');
+    setWarnungPreis('');
+    setWarnungVersand('');
+    return;
+  }
+
+  // gestaffelt
+  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
+    if (!staffelnSindGueltig(staffeln)) {
+      setWarnungStaffeln(
+        'Staffel ungültig: Ab/Bis nur ganze Zahlen, keine Lücken (nächste Staffel startet bei Bis+1), Bis muss größer als Ab sein, und eine offene Staffel (Bis leer) darf nur die letzte sein.'
+      );
+    } else {
+      setWarnungStaffeln('');
+    }
+
+    // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
+    setWarnungPreis('');
+    setWarnungVersand('');
+    return;
+  }
+
+  // gesamt
+  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
+    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
+  } else {
+    setWarnungPreis('');
+  }
+
+  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
+    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
+  } else {
+    setWarnungVersand('');
+  }
+
+  setWarnungStaffeln('');
+}, [verkaufsArt, staffeln, preis, versandKosten]);
+
 // Auf-Lager-Option für Menge
 const [aufLager, setAufLager] = useState<boolean>(false);
 // Für Arbeitsmittel-Mengen in Stück
