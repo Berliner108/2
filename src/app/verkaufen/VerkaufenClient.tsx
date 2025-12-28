@@ -111,21 +111,26 @@ const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
 useEffect(() => {
   if (!verkaufsArt) return;
 
-  // ✅ Wechsel auf Staffelverkauf: Einzelpreis/Versand leeren
   if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-    setPreis('');
-    setVersandKosten('');
+    if (!staffelnSindGueltig(staffeln)) {
+      setWarnungStaffeln(
+        'Staffel ungültig: Ab/Bis nur ganze Zahlen, keine Lücken (nächste Staffel startet bei Bis+1), Bis muss größer als Ab sein, und eine offene Staffel (Bis leer) darf nur die letzte sein.'
+      );
+    } else {
+      setWarnungStaffeln('');
+    }
+
+    // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
     setWarnungPreis('');
     setWarnungVersand('');
   }
 
-  // ✅ Wechsel auf Gesamtverkauf: Staffeln zurücksetzen
   if (verkaufsArt === 'gesamt') {
     setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
-
     setWarnungStaffeln('');
   }
-}, [verkaufsArt]);
+}, [verkaufsArt, staffeln]);
+
 
 const [warnungStaffeln, setWarnungStaffeln] = useState('');
 
@@ -226,6 +231,7 @@ const [connect, setConnect] = useState<ConnectStatus | null>(null);
 const [connectLoaded, setConnectLoaded] = useState(false);
 const [warnungHersteller, setWarnungHersteller] = useState('');
 
+
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
 
@@ -281,7 +287,8 @@ if (verkaufsArt === 'gesamt') {
   if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
 } else if (verkaufsArt === 'pro_stueck') {
   total++; // Staffeln
-  if (hatGueltigeStaffel(staffeln)) filled++;
+  if (staffelnSindGueltig(staffeln)) filled++;
+
 }
 
   } else {
@@ -343,7 +350,8 @@ if (verkaufsArt === 'gesamt') {
   if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
 } else if (verkaufsArt === 'pro_kg') {
   total++; // Staffeln
-  if (hatGueltigeStaffel(staffeln)) filled++;
+  if (staffelnSindGueltig(staffeln)) filled++;
+
 }
 
 
@@ -519,6 +527,7 @@ const goToStripeOnboarding = useCallback(async () => {
 const [herstellerAndere, setHerstellerAndere] = useState('');
 
 
+const lastMaxEmpty =  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
 
 
 
@@ -892,7 +901,6 @@ setLadeStatus(true);
 
 const formData = new FormData();
 formData.append('kategorie', kategorie!);
-formData.append('bewerbung', bewerbungOptionen.join(','));
 formData.append('verkaufAn', verkaufAn);
   formData.append('zertifizierungen', zertifizierungen.join(', '));
   formData.append('titel', titel);
@@ -1021,31 +1029,172 @@ setWarnungStaffeln('');
   if (!willNavigate) setLadeStatus(false);
 }
 };
-  const hatGueltigeStaffel = (rows: Staffelzeile[]) => {
-  const aktive = rows.filter((s) => (s.minMenge || s.preis || s.maxMenge || s.versand).trim?.() !== '');
+const staffelnSindGueltig = (rows: Staffelzeile[]) => {
+  // aktive Reihen = mind. ein Feld befüllt
+  const aktive = rows.filter((s) =>
+    [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
+  );
+
   if (aktive.length === 0) return false;
 
-  return aktive.every((s) => {
-    const min = Number((s.minMenge || '').replace(',', '.'));
-    const preis = Number((s.preis || '').replace(',', '.'));
-    // Versand darf 0 sein, aber wenn eingegeben, dann >= 0
-    const versand = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
-    return min > 0 && preis > 0 && versand >= 0;
+  for (let i = 0; i < aktive.length; i++) {
+    const s = aktive[i];
+
+    // Ab/Bis: nur ganze Zahlen
+    const min = toInt(s.minMenge);
+    const max = toInt(s.maxMenge);
+
+    if (min === null || min < 1) return false;
+
+    // Staffel 1 startet sinnvollerweise bei 1 (wenn du das zwingend willst)
+    if (i === 0 && min !== 1) return false;
+
+    // Preis Pflicht > 0
+    const preisNum = Number((s.preis || '').replace(',', '.'));
+    if (!s.preis || Number.isNaN(preisNum) || preisNum <= 0) return false;
+
+    // Versand optional, aber wenn gesetzt dann >= 0
+    const versandNum = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
+    if (Number.isNaN(versandNum) || versandNum < 0) return false;
+
+    // Bis-Regeln
+    if (max !== null) {
+      if (max <= min) return false; // Bis muss > Ab
+    } else {
+      // Bis leer => nur letzte Staffel darf offen sein
+      if (i !== aktive.length - 1) return false;
+    }
+
+    // Keine Lücken: Ab muss genau prevMax + 1 sein (ab Reihe 2)
+    if (i > 0) {
+      const prevMax = toInt(aktive[i - 1].maxMenge);
+      if (prevMax === null) return false; // vorher offen -> darf nichts danach kommen
+      if (min !== prevMax + 1) return false;
+    }
+  }
+
+  return true;
+};
+
+const cleanInt = (v: string) => v.replace(/\D/g, ''); // nur Ziffern (keine Nachkommastellen)
+const toInt = (v: string) => (v === '' ? null : parseInt(v, 10));
+
+const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
+  // sorgt ab startIndex für fortlaufende Ab-Werte und gültige Bis-Werte
+  for (let i = startIndex; i < rows.length; i++) {
+    // Ab für i>0 ist immer prev.max + 1
+    if (i > 0) {
+      const prevMax = toInt(rows[i - 1].maxMenge);
+      if (prevMax === null) {
+        // vorherige Staffel ist "offen" -> danach darf nichts kommen
+        rows.splice(i);
+        break;
+      }
+      rows[i].minMenge = String(prevMax + 1);
+    }
+
+    const min = toInt(rows[i].minMenge);
+    const max = toInt(rows[i].maxMenge);
+
+    // Wenn min fehlt aber max gesetzt wurde -> min = 1 (nur bei erster Zeile sinnvoll)
+    if (i === 0 && min === null && max !== null) {
+      rows[i].minMenge = '1';
+    }
+
+    const min2 = toInt(rows[i].minMenge);
+    const max2 = toInt(rows[i].maxMenge);
+
+    // Regel: Ab < Bis (wenn Bis existiert)
+    if (min2 !== null && max2 !== null && max2 <= min2) {
+      rows[i].maxMenge = String(min2 + 1);
+    }
+
+    // Wenn Bis leer ist -> offen -> danach keine weiteren Reihen
+    const maxFinal = toInt(rows[i].maxMenge);
+    if (maxFinal === null && i < rows.length - 1) {
+      rows.splice(i + 1);
+      break;
+    }
+  }
+  return rows;
+};
+
+const updateStaffelRange = (
+  index: number,
+  field: 'minMenge' | 'maxMenge',
+  raw: string
+) => {
+  const cleaned = cleanInt(raw);
+
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+
+    // Ab nur in der ersten Reihe editierbar (keine Lücken möglich)
+    if (field === 'minMenge' && index > 0) {
+      return prev; // ignorieren
+    }
+
+    copy[index][field] = cleaned;
+
+    // Wenn in Reihe 0 "Ab" gelöscht wird -> optional auch "Bis" löschen,
+    // damit es nicht komisch aussieht (kannst du weglassen wenn du willst)
+    if (index === 0 && field === 'minMenge' && cleaned === '') {
+      // copy[0].maxMenge = '';
+    }
+
+    return normalizeFromIndex(copy, index);
   });
 };
+
 const addStaffel = () => {
-  setStaffeln(prev => [
-    ...prev,
-    { minMenge: '', maxMenge: '', preis: '', versand: '' },
-  ]);
+  setStaffeln((prev) => {
+    const last = prev[prev.length - 1];
+    const lastMax = toInt(last.maxMenge);
+
+    // Ohne "Bis" in der letzten Reihe macht eine neue Staffel keinen Sinn
+    if (lastMax === null) {
+      setWarnungStaffeln('Bitte zuerst bei der letzten Staffel ein "Bis" angeben – sonst ist sie offen und die letzte.');
+      return prev;
+    }
+
+    const nextMin = String(lastMax + 1);
+    const copy = [...prev, { minMenge: nextMin, maxMenge: '', preis: '', versand: '' }];
+    setWarnungStaffeln('');
+    return copy;
+  });
 };
 
 const removeStaffel = (index: number) => {
-  setStaffeln(prev => prev.filter((_, i) => i !== index));
+  setStaffeln((prev) => {
+    const copy = prev.filter((_, i) => i !== index);
+
+    // mindestens eine Reihe behalten
+    if (copy.length === 0) return [{ minMenge: '', maxMenge: '', preis: '', versand: '' }];
+
+    // nach dem Löschen: alles ab der gelöschten Stelle neu normalisieren
+    const start = Math.max(0, index - 1);
+    return normalizeFromIndex(copy.map((r) => ({ ...r })), start);
+  });
+};
+const cleanMoney = (v: string) => {
+  // erlaubt: 12, 12.3, 12.34, 12,34  (max 2 Nachkommastellen)
+  const raw = v.replace(',', '.');
+  if (raw === '') return '';
+  if (!/^\d{0,6}(\.\d{0,2})?$/.test(raw)) return v; // lässt "falsche" Eingaben erstmal stehen
+  return raw;
 };
 
 const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
-  setStaffeln(prev => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+    const next = { ...copy[index], ...patch };
+
+    if (patch.preis !== undefined) next.preis = cleanMoney(patch.preis);
+    if (patch.versand !== undefined) next.versand = cleanMoney(patch.versand);
+
+    copy[index] = next;
+    return copy;
+  });
 };
 
   const progress = berechneFortschritt();
@@ -2222,13 +2371,18 @@ const submitDisabled = ladeStatus || !stripeReady;
         Preis- & Versandstaffel ({verkaufsArt === 'pro_kg' ? 'pro kg' : 'pro Stück'})
       </h3>
 
-      <button
-        type="button"
-        className={styles.staffelAddBtn}
-        onClick={addStaffel}
-      >
-        + Staffel hinzufügen
-      </button>
+      
+
+<button
+  type="button"
+  className={styles.staffelAddBtn}
+  onClick={addStaffel}
+  disabled={lastMaxEmpty}
+  aria-disabled={lastMaxEmpty}
+>
+  + Staffel hinzufügen
+</button>
+
     </div>
 
     {/* Kopfzeile nur am Desktop */}
@@ -2246,45 +2400,29 @@ const submitDisabled = ladeStatus || !stripeReady;
         <div className={styles.staffelCell}>
           <span className={styles.staffelMobileLabel}>Ab</span>
           <input
-            type="text"
-            inputMode="numeric"
-            className={styles.staffelInput}
-            value={row.minMenge}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/[^\d]/g, '');
-              updateStaffel(index, { minMenge: cleaned });
-            }}
-            placeholder="z. B. 1"
-          />
+  type="text"
+  inputMode="numeric"
+  className={styles.staffelInput}
+  value={row.minMenge}
+  readOnly={index > 0}
+  onChange={(e) => updateStaffelRange(index, 'minMenge', e.target.value)}
+  placeholder="z. B. 1"
+/>
+
         </div>
 
         {/* Bis */}
         <div className={styles.staffelCell}>
           <span className={styles.staffelMobileLabel}>Bis</span>
           <input
-            type="text"
-            inputMode="numeric"
-            className={styles.staffelInput}
-            value={row.maxMenge}
-            onChange={(e) => {
-              const cleaned = e.target.value.replace(/[^\d]/g, '');
-              setStaffeln((prev) => {
-                const copy = prev.map((r, i) =>
-                  i === index ? { ...r, maxMenge: cleaned } : r
-                );
+  type="text"
+  inputMode="numeric"
+  className={styles.staffelInput}
+  value={row.maxMenge}
+  onChange={(e) => updateStaffelRange(index, 'maxMenge', e.target.value)}
+  placeholder="z. B. 10"
+/>
 
-                const num = cleaned === '' ? NaN : parseInt(cleaned, 10);
-                if (!Number.isNaN(num) && index + 1 < copy.length) {
-                  const next = copy[index + 1];
-                  if (!next.minMenge) {
-                    copy[index + 1] = { ...next, minMenge: String(num + 1) };
-                  }
-                }
-                return copy;
-              });
-            }}
-            placeholder="z. B. 10"
-          />
         </div>
 
         {/* Preis */}
@@ -2336,8 +2474,9 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
 
     <p className={styles.staffelHinweis}>
-      Tipp: Lass Felder leer, die du nicht brauchst. Leere Staffeln werden ignoriert.
-    </p>
+  Hinweis: „Bis“ leer bedeutet „offene letzte Staffel“. Weitere Staffeln sind dann nicht möglich. Ab/Bis sind nur ganze Zahlen und lückenlos.
+</p>
+
   </div>
 )}
 

@@ -1217,6 +1217,10 @@
     margin-top:4px;
   }
 }
+.staffelAddBtn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
 
 .preisVersandContainer {
   display: grid;
