@@ -107,10 +107,10 @@ const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
 
 const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '', maxMenge: '', preis: '', versand: '' },
-]);
-useEffect(() => {
+]);useEffect(() => {
   if (!verkaufsArt) return;
 
+  // gestaffelt
   if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     if (!staffelnSindGueltig(staffeln)) {
       setWarnungStaffeln(
@@ -120,16 +120,27 @@ useEffect(() => {
       setWarnungStaffeln('');
     }
 
-    // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
     setWarnungPreis('');
+    setWarnungVersand('');
+    return;
+  }
+
+  // gesamt
+  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
+    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
+  } else {
+    setWarnungPreis('');
+  }
+
+  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
+    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
+  } else {
     setWarnungVersand('');
   }
 
-  if (verkaufsArt === 'gesamt') {
-    setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
-    setWarnungStaffeln('');
-  }
+  setWarnungStaffeln('');
 }, [verkaufsArt, staffeln]);
+
 
 
 const [warnungStaffeln, setWarnungStaffeln] = useState('');
@@ -2702,8 +2713,26 @@ const submitDisabled = ladeStatus || !stripeReady;
       {/* Felder für beide Kategorien */}
       <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage || '–'} Werktag{parseInt(lieferWerktage) > 1 ? 'e' : ''}</p>
       <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} € / ${kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'}` : '–'}</p>
-      <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
-      <p><strong>Bewerbung:</strong> {bewerbungOptionen.join(', ') || 'Keine ausgewählt'}</p>
+      {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
+  <>
+    <p><strong>Preisstaffeln:</strong></p>
+    <ul>
+      {staffeln
+        .filter(s => [s.minMenge, s.maxMenge, s.preis, s.versand].some(x => (x ?? '').trim() !== ''))
+        .map((s, i) => (
+          <li key={i}>
+            Ab {s.minMenge || '-'} bis {s.maxMenge || 'offen'}: {s.preis || '-'} €, Versand {s.versand || '0'} €
+          </li>
+        ))}
+    </ul>
+  </>
+) : (
+  <>
+    <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
+    <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
+  </>
+)}
+
       <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
       <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
       <p><strong>AGB:</strong> {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}</p>
