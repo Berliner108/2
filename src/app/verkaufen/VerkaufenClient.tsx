@@ -185,66 +185,6 @@ const [warnungWerktage, setWarnungWerktage] = useState('');
 const [warnungVersand, setWarnungVersand] = useState('');
 const [warnungStaffeln, setWarnungStaffeln] = useState('');
 
-useEffect(() => {
-  if (!verkaufsArt) {
-    setWarnungStaffeln('');
-    setWarnungPreis('');
-    setWarnungVersand('');
-    return;
-  }
-
-  // gestaffelt
-  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-    const aktive = staffeln.filter((s) =>
-      [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
-    );
-
-    // nichts begonnen -> keine Warnung
-    if (aktive.length === 0) {
-      setWarnungStaffeln('');
-      setWarnungPreis('');
-      setWarnungVersand('');
-      return;
-    }
-
-    // NUR prüfen, wenn JEDE aktive Zeile komplett ist
-    const komplett = aktive.every((s) =>
-      s.minMenge.trim() !== '' &&
-      s.maxMenge.trim() !== '' &&
-      s.preis.trim() !== '' &&
-      s.versand.trim() !== ''
-    );
-
-    if (!komplett) {
-      setWarnungStaffeln('');
-      setWarnungPreis('');
-      setWarnungVersand('');
-      return;
-    }
-
-    // jetzt erst validieren
-    if (!staffelnSindGueltig(staffeln)) {
-      setWarnungStaffeln('Staffel ungültig – bitte prüfe Ab/Bis/Preis/Versand und die Reihenfolge.');
-    } else {
-      setWarnungStaffeln('');
-    }
-
-    setWarnungPreis('');
-    setWarnungVersand('');
-    return;
-  }
-
-  // gesamt
-  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) setWarnungPreis('Bitte gib einen gültigen Preis ein.');
-  else setWarnungPreis('');
-
-  if (versandKosten === '' || parseFloat(versandKosten) < 0) setWarnungVersand('Bitte gib gültige Versandkosten ein.');
-  else setWarnungVersand('');
-
-  setWarnungStaffeln('');
-}, [verkaufsArt, staffeln, preis, versandKosten, menge, kategorie]);
-
-
 // Auf-Lager-Option für Menge
 const [aufLager, setAufLager] = useState<boolean>(false);
 // Für Arbeitsmittel-Mengen in Stück
