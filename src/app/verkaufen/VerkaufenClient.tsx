@@ -177,10 +177,6 @@ const selectedTotalCents = promoPackages
   const [menge, setMenge] = useState<number>(0);
  const [versandKosten, setVersandKosten] = useState<string>(''); 
 const [lieferWerktage, setLieferWerktage] = useState<string>(''); 
-useEffect(() => {
-  if (kategorie && !lieferWerktage) setLieferWerktage('1');
-}, [kategorie, lieferWerktage]);
-
   // Verkaufspreis in Euro
 const [preis, setPreis] = useState<string>(''); 
 const [warnungPreis, setWarnungPreis] = useState('');
@@ -334,7 +330,7 @@ if (verkaufsArt === 'gesamt') {
 
     // 3. Menge (kg)
 total++;
-if (aufLager || menge >= 0.1) filled++;
+if (aufLager || menge >= 1) filled++;
 
     // 4. Titel
     total++;
@@ -480,7 +476,7 @@ const resetFieldsExceptCategory = () => {
   setAufladung([]);
 
   setPreis('');
-  setLieferWerktage('1');
+  setLieferWerktage('');
   setVersandKosten('');
 
   // ✅ Warnungen leeren
@@ -557,6 +553,19 @@ const goToStripeOnboarding = useCallback(async () => {
   const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
   const [herstellerAndere, setHerstellerAndere] = useState('');
 const lastMaxEmpty =  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
+const limitMenge = !aufLager
+  ? (kategorie === 'arbeitsmittel' ? Number(menge) : Math.floor(Number(menge)))
+  : 0;
+
+const lastMaxNum =
+  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() !== ''
+    ? parseInt(staffeln[staffeln.length - 1].maxMenge, 10)
+    : null;
+
+const reachedLimit = !aufLager && limitMenge >= 1 && lastMaxNum !== null && lastMaxNum >= limitMenge;
+
+const staffelAddDisabled = lastMaxEmpty || staffeln.length >= MAX_STAFFELN || reachedLimit;
+
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
     const herstellerListePulver = [
@@ -673,8 +682,8 @@ if (!agbAccepted) {
   setWarnungTitel('');
 }
 // ✅ Menge (kg) prüfen: entweder Auf Lager oder mind. 0.1 kg
-if (!aufLager && menge < 0.1) {
-  setWarnungMenge('Bitte gib mindestens 0.1 kg an oder wähle „Auf Lager“.');
+if (!aufLager && menge < 1) {
+  setWarnungMenge('Bitte gib mindestens 1 kg an oder wähle „Auf Lager“.');
   fehler = true;
 } else {
   setWarnungMenge('');
@@ -832,6 +841,28 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
   // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
   setWarnungPreis('');
   setWarnungVersand('');
+  // ✅ Begrenzte Menge darf bei Staffeln nicht überschritten werden (nur wenn NICHT "Auf Lager")
+if (!aufLager) {
+  const limit = Number(menge); // kg jetzt ganze Zahl
+  const last = aktiveStaffeln[aktiveStaffeln.length - 1];
+  const lastMax = toInt(last.maxMenge);
+
+  if (!limit || limit < 1) {
+    setWarnungStaffeln('Bitte zuerst eine gültige begrenzte Menge eingeben.');
+    fehler = true;
+  } else if (lastMax === null) {
+    setWarnungStaffeln(`Bei begrenzter Menge muss die letzte Staffel ein "Bis" haben (max. ${limit}).`);
+    fehler = true;
+    } else if (lastMax > limit) {
+    setWarnungStaffeln(`Deine letzte Staffel geht bis ${lastMax}, erlaubt sind max. ${limit}.`);
+    fehler = true;
+  } else if (lastMax < limit) {
+    setWarnungStaffeln(`Deine letzte Staffel endet bei ${lastMax}, sie muss aber exakt bis ${limit} gehen.`);
+    fehler = true;
+  }
+
+}
+
 } else {
   // klassische Einzelpreis-Variante
   if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
@@ -847,6 +878,7 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
   } else {
     setWarnungVersand('');
   }
+  
 
   setWarnungStaffeln('');
 }
@@ -1054,49 +1086,63 @@ setWarnungStaffeln('');
 } finally {
   if (!willNavigate) setLadeStatus(false);
 }
-};
-const staffelnSindGueltig = (rows: Staffelzeile[]) => {
-  // aktive Reihen = mind. ein Feld befüllt
+};const staffelnSindGueltig = (rows: Staffelzeile[]) => {
   const aktive = rows.filter((s) =>
     [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
   );
-
   if (aktive.length === 0) return false;
+
+  // 🔥 Begrenzte Menge => letzte Staffel MUSS bis exakt Menge gehen
+  const limit = !aufLager
+    ? (kategorie === 'arbeitsmittel' ? Number(menge) : Math.floor(Number(menge)))
+    : null;
+
+  if (limit !== null) {
+    if (!limit || limit < 1) return false;
+  }
 
   for (let i = 0; i < aktive.length; i++) {
     const s = aktive[i];
 
-    // Ab/Bis: nur ganze Zahlen
     const min = toInt(s.minMenge);
     const max = toInt(s.maxMenge);
 
     if (min === null || min < 1) return false;
-
-    // Staffel 1 startet sinnvollerweise bei 1 (wenn du das zwingend willst)
     if (i === 0 && min !== 1) return false;
 
-    // Preis Pflicht > 0
     const preisNum = Number((s.preis || '').replace(',', '.'));
     if (!s.preis || Number.isNaN(preisNum) || preisNum <= 0) return false;
 
-    // Versand optional, aber wenn gesetzt dann >= 0
     const versandNum = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
     if (Number.isNaN(versandNum) || versandNum < 0) return false;
 
     // Bis-Regeln
-    if (max !== null) {
-      if (max <= min) return false; // Bis muss > Ab
-    } else {
-      // Bis leer => nur letzte Staffel darf offen sein
+    if (max === null) {
+      // bei begrenzter Menge NIE erlaubt
+      if (limit !== null) return false;
+
+      // bei Auf Lager: nur letzte darf offen sein
       if (i !== aktive.length - 1) return false;
+    } else {
+      if (max <= min) return false; // Bis muss > Ab
+
+      // bei begrenzter Menge darf kein max > limit sein
+      if (limit !== null && max > limit) return false;
     }
 
-    // Keine Lücken: Ab muss genau prevMax + 1 sein (ab Reihe 2)
+    // Keine Lücken / Reihenfolge
     if (i > 0) {
       const prevMax = toInt(aktive[i - 1].maxMenge);
-      if (prevMax === null) return false; // vorher offen -> darf nichts danach kommen
+      if (prevMax === null) return false; // vorher offen => darf nichts mehr kommen
       if (min !== prevMax + 1) return false;
     }
+  }
+
+  // Finale Pflicht: letzte Staffel endet exakt bei limit
+  if (limit !== null) {
+    const lastMax = toInt(aktive[aktive.length - 1].maxMenge);
+    if (lastMax === null) return false;
+    if (lastMax !== limit) return false;
   }
 
   return true;
@@ -1150,58 +1196,60 @@ const updateStaffelRange = (
   field: 'minMenge' | 'maxMenge',
   raw: string
 ) => {
-  const cleaned = cleanInt(raw);
+  let cleaned = cleanInt(raw);
+
+  // ✅ HIER DIREKT NACH cleanInt(raw): "Bis" darf bei begrenzter Menge nicht größer sein als Menge
+  if (field === 'maxMenge' && !aufLager) {
+    const limit =
+      kategorie === 'arbeitsmittel'
+        ? Number(menge) // Stück
+        : Math.floor(Number(menge)); // kg -> Staffeln sind ganze Zahlen
+
+    if (limit > 0 && cleaned !== '') {
+      const val = parseInt(cleaned, 10);
+      if (!Number.isNaN(val) && val > limit) cleaned = String(limit);
+    }
+  }
 
   setStaffeln((prev) => {
-    const addStaffel = () => {
-  setStaffeln((prev) => {
-
-    // ✅ HIER GANZ OBEN: Max. 3 Staffeln
-    if (prev.length >= MAX_STAFFELN) {
-      setWarnungStaffeln('Maximal 3 Staffeln sind erlaubt.');
-      return prev;
-    }
-
-    const last = prev[prev.length - 1];
-    const lastMax = toInt(last.maxMenge);
-
-    if (lastMax === null) {
-      setWarnungStaffeln(
-        'Bitte zuerst bei der letzten Staffel ein "Bis" angeben – sonst ist sie offen und die letzte.'
-      );
-      return prev;
-    }
-
-    const nextMin = String(lastMax + 1);
-    const copy = [...prev, { minMenge: nextMin, maxMenge: '', preis: '', versand: '' }];
-    setWarnungStaffeln('');
-    return copy;
-  });
-};
-
     const copy = prev.map((r) => ({ ...r }));
 
-    // Ab nur in der ersten Reihe editierbar (keine Lücken möglich)
     if (field === 'minMenge' && index > 0) {
-      return prev; // ignorieren
+      return prev;
     }
 
     copy[index][field] = cleaned;
-
-    // Wenn in Reihe 0 "Ab" gelöscht wird -> optional auch "Bis" löschen,
-    // damit es nicht komisch aussieht (kannst du weglassen wenn du willst)
-    if (index === 0 && field === 'minMenge' && cleaned === '') {
-      // copy[0].maxMenge = '';
-    }
-
     return normalizeFromIndex(copy, index);
   });
 };
+
 
 const addStaffel = () => {
   setStaffeln((prev) => {
     const last = prev[prev.length - 1];
     const lastMax = toInt(last.maxMenge);
+    // ✅ HIER NACH "prev.length >= MAX_STAFFELN"
+if (!aufLager) {
+  const limit =
+    kategorie === 'arbeitsmittel'
+      ? Number(menge)
+      : Math.floor(Number(menge));
+
+  const last = prev[prev.length - 1];
+  const lastMax = toInt(last.maxMenge);
+
+  // wenn limit ungültig oder schon erreicht -> keine neue Staffel
+  if (!limit || limit < 1) {
+    setWarnungStaffeln('Bitte zuerst eine gültige begrenzte Menge eingeben.');
+    return prev;
+  }
+
+  if (lastMax !== null && lastMax >= limit) {
+    setWarnungStaffeln(`Weitere Staffeln nicht möglich: letzte Staffel endet bereits bei ${limit}.`);
+    return prev;
+  }
+}
+
 
     // Ohne "Bis" in der letzten Reihe macht eine neue Staffel keinen Sinn
     if (lastMax === null) {
@@ -2435,8 +2483,9 @@ const submitDisabled = ladeStatus || !stripeReady;
   type="button"
   className={styles.staffelAddBtn}
   onClick={addStaffel}
-  disabled={lastMaxEmpty || staffeln.length >= MAX_STAFFELN}
-  aria-disabled={lastMaxEmpty || staffeln.length >= MAX_STAFFELN}
+  disabled={staffelAddDisabled}
+  aria-disabled={staffelAddDisabled}
+
 >
   + Staffel hinzufügen
 </button>
@@ -2533,7 +2582,7 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
 
     <p className={styles.staffelHinweis}>
-  Hinweis: „Bis“ leer bedeutet „offene letzte Staffel“. Weitere Staffeln sind dann nicht möglich. Ab/Bis sind nur ganze Zahlen und lückenlos.
+  Hinweis: Bei „Auf Lager“ darf die letzte Staffel offen sein (Bis leer). Bei „Begrenzte Menge“ ist „Bis“ Pflicht und die letzte Staffel muss exakt bis zur Menge gehen.
 </p>
 
   </div>
