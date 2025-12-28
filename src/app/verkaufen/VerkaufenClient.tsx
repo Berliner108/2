@@ -73,7 +73,7 @@ type Staffelzeile = {
   preis: string;      // Preis pro kg / Stück
   versand: string;    // Versandkosten für diese Staffel
 };
-
+const MAX_STAFFELN = 3;
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 
 function ArtikelEinstellen() {
@@ -555,13 +555,8 @@ const goToStripeOnboarding = useCallback(async () => {
   const [glanzgrad, setGlanzgrad] = useState('');
   const [hersteller, setHersteller] = useState('');
   const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
-const [herstellerAndere, setHerstellerAndere] = useState('');
-
-
+  const [herstellerAndere, setHerstellerAndere] = useState('');
 const lastMaxEmpty =  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
-
-
-
 
   const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
     const herstellerListePulver = [
@@ -1158,6 +1153,32 @@ const updateStaffelRange = (
   const cleaned = cleanInt(raw);
 
   setStaffeln((prev) => {
+    const addStaffel = () => {
+  setStaffeln((prev) => {
+
+    // ✅ HIER GANZ OBEN: Max. 3 Staffeln
+    if (prev.length >= MAX_STAFFELN) {
+      setWarnungStaffeln('Maximal 3 Staffeln sind erlaubt.');
+      return prev;
+    }
+
+    const last = prev[prev.length - 1];
+    const lastMax = toInt(last.maxMenge);
+
+    if (lastMax === null) {
+      setWarnungStaffeln(
+        'Bitte zuerst bei der letzten Staffel ein "Bis" angeben – sonst ist sie offen und die letzte.'
+      );
+      return prev;
+    }
+
+    const nextMin = String(lastMax + 1);
+    const copy = [...prev, { minMenge: nextMin, maxMenge: '', preis: '', versand: '' }];
+    setWarnungStaffeln('');
+    return copy;
+  });
+};
+
     const copy = prev.map((r) => ({ ...r }));
 
     // Ab nur in der ersten Reihe editierbar (keine Lücken möglich)
@@ -1527,15 +1548,21 @@ const submitDisabled = ladeStatus || !stripeReady;
     <label className={styles.mengeNumberLabel}>
       <span>Menge (kg):</span>
       <input
-        type="number"
-        step="0.1"
-        min="0.1"
-        max="99999.9"
-        className={styles.mengeNumberInput}
-        value={menge === 0 ? '' : menge}
-        onChange={handleMengeChange}
-        placeholder="z. B. 5.5"
-      />
+  type="number"
+  step={1}
+  min={1}
+  max={999999}
+  className={styles.mengeNumberInput}
+  value={menge === 0 ? '' : menge}
+  onChange={(e) => {
+    const v = e.target.value;
+    if (v === '' || (/^\d+$/.test(v) && Number(v) <= 999999)) {
+      setMenge(v === '' ? 0 : Number(v));
+    }
+  }}
+  placeholder="z. B. 10"
+/>
+
     </label>
   )}
   {warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
@@ -2408,11 +2435,12 @@ const submitDisabled = ladeStatus || !stripeReady;
   type="button"
   className={styles.staffelAddBtn}
   onClick={addStaffel}
-  disabled={lastMaxEmpty}
-  aria-disabled={lastMaxEmpty}
+  disabled={lastMaxEmpty || staffeln.length >= MAX_STAFFELN}
+  aria-disabled={lastMaxEmpty || staffeln.length >= MAX_STAFFELN}
 >
   + Staffel hinzufügen
 </button>
+
 
     </div>
 
