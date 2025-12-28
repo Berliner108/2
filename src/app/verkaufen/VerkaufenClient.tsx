@@ -186,58 +186,64 @@ const [warnungVersand, setWarnungVersand] = useState('');
 const [warnungStaffeln, setWarnungStaffeln] = useState('');
 
 useEffect(() => {
-  // Wenn Verkaufsart noch nicht gewählt ist → alles sauber leeren
   if (!verkaufsArt) {
     setWarnungStaffeln('');
     setWarnungPreis('');
     setWarnungVersand('');
     return;
   }
-  
-// gestaffelt
-if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 
-  // ✅ HIER EINFÜGEN (vor staffelnSindGueltig)
-  const hasAnyInput = staffeln.some((s) =>
-    [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
-  );
+  // gestaffelt
+  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
+    const aktive = staffeln.filter((s) =>
+      [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
+    );
 
-  // solange noch nichts eingegeben wurde -> keine Warnung anzeigen
-  if (!hasAnyInput) {
-    setWarnungStaffeln('');
+    // nichts begonnen -> keine Warnung
+    if (aktive.length === 0) {
+      setWarnungStaffeln('');
+      setWarnungPreis('');
+      setWarnungVersand('');
+      return;
+    }
+
+    // NUR prüfen, wenn JEDE aktive Zeile komplett ist
+    const komplett = aktive.every((s) =>
+      s.minMenge.trim() !== '' &&
+      s.maxMenge.trim() !== '' &&
+      s.preis.trim() !== '' &&
+      s.versand.trim() !== ''
+    );
+
+    if (!komplett) {
+      setWarnungStaffeln('');
+      setWarnungPreis('');
+      setWarnungVersand('');
+      return;
+    }
+
+    // jetzt erst validieren
+    if (!staffelnSindGueltig(staffeln)) {
+      setWarnungStaffeln('Staffel ungültig – bitte prüfe Ab/Bis/Preis/Versand und die Reihenfolge.');
+    } else {
+      setWarnungStaffeln('');
+    }
+
     setWarnungPreis('');
     setWarnungVersand('');
     return;
   }
 
-  // ab hier erst validieren
-  if (!staffelnSindGueltig(staffeln)) {
-    setWarnungStaffeln('Staffel ungültig: ...');
-  } else {
-    setWarnungStaffeln('');
-  }
-
-  setWarnungPreis('');
-  setWarnungVersand('');
-  return;
-}
-
-
   // gesamt
-  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
-    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
-  } else {
-    setWarnungPreis('');
-  }
+  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) setWarnungPreis('Bitte gib einen gültigen Preis ein.');
+  else setWarnungPreis('');
 
-  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
-    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
-  } else {
-    setWarnungVersand('');
-  }
+  if (versandKosten === '' || parseFloat(versandKosten) < 0) setWarnungVersand('Bitte gib gültige Versandkosten ein.');
+  else setWarnungVersand('');
 
   setWarnungStaffeln('');
-}, [verkaufsArt, staffeln, preis, versandKosten]);
+}, [verkaufsArt, staffeln, preis, versandKosten, menge, kategorie]);
+
 
 // Auf-Lager-Option für Menge
 const [aufLager, setAufLager] = useState<boolean>(false);
@@ -806,81 +812,36 @@ if (!verkaufsArt) {
   setWarnungVerkaufsArt('');
 }
 
-// Preis / Versand vs. Staffeln prüfen
+// Preis / Versand vs. Staffeln prüfen (NUR beim Submit!)
 if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-  const aktiveStaffeln = staffeln.filter((s) =>
-    (s.minMenge && s.minMenge.trim() !== '') ||
-    (s.maxMenge && s.maxMenge.trim() !== '') ||
-    (s.preis && s.preis.trim() !== '') ||
-    (s.versand && s.versand.trim() !== '')
+  const aktive = staffeln.filter((s) =>
+    [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
   );
 
-  if (aktiveStaffeln.length === 0) {
-    setWarnungStaffeln('Bitte gib mindestens eine Staffel mit gültigem Preis an.');
+  if (aktive.length === 0) {
+    setWarnungStaffeln('Bitte gib mindestens eine Staffel an.');
     fehler = true;
   } else {
-    let staffelFehler = false;
+    const komplett = aktive.every((s) =>
+      s.minMenge.trim() !== '' &&
+      s.maxMenge.trim() !== '' &&
+      s.preis.trim() !== '' &&
+      s.versand.trim() !== ''
+    );
 
-    for (const s of aktiveStaffeln) {
-      const min = Number(s.minMenge.replace(',', '.'));
-      const preisNum = Number(s.preis.replace(',', '.'));
-
-      if (
-        !s.minMenge ||
-        isNaN(min) ||
-        min <= 0 ||
-        !s.preis ||
-        isNaN(preisNum) ||
-        preisNum <= 0
-      ) {
-        staffelFehler = true;
-        break;
-      }
-
-      if (s.maxMenge) {
-        const max = Number(s.maxMenge.replace(',', '.'));
-        if (isNaN(max) || max <= min) {
-          staffelFehler = true;
-          break;
-        }
-      }
-    }
-
-    if (staffelFehler) {
-      setWarnungStaffeln(
-        'Bitte prüfe deine Staffel: "Ab Menge" > 0, Preis > 0 und "Bis" größer als "Ab".'
-      );
+    if (!komplett) {
+      setWarnungStaffeln('Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis, Versand).');
+      fehler = true;
+    } else if (!staffelnSindGueltig(staffeln)) {
+      setWarnungStaffeln('Staffel ungültig – bitte prüfe Ab/Bis/Preis/Versand und die Reihenfolge.');
       fehler = true;
     } else {
       setWarnungStaffeln('');
     }
   }
 
-  // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
   setWarnungPreis('');
   setWarnungVersand('');
-  // ✅ Begrenzte Menge darf bei Staffeln nicht überschritten werden (nur wenn NICHT "Auf Lager")
-if (!aufLager) {
-  const limit = Number(menge); // kg jetzt ganze Zahl
-  const last = aktiveStaffeln[aktiveStaffeln.length - 1];
-  const lastMax = toInt(last.maxMenge);
-
-  if (!limit || limit < 1) {
-    setWarnungStaffeln('Bitte zuerst eine gültige begrenzte Menge eingeben.');
-    fehler = true;
-  } else if (lastMax === null) {
-    setWarnungStaffeln(`Bei begrenzter Menge muss die letzte Staffel ein "Bis" haben (max. ${limit}).`);
-    fehler = true;
-    } else if (lastMax > limit) {
-    setWarnungStaffeln(`Deine letzte Staffel geht bis ${lastMax}, erlaubt sind max. ${limit}.`);
-    fehler = true;
-  } else if (lastMax < limit) {
-    setWarnungStaffeln(`Deine letzte Staffel endet bei ${lastMax}, sie muss aber exakt bis ${limit} gehen.`);
-    fehler = true;
-  }
-
-}
-
 } else {
   // klassische Einzelpreis-Variante
   if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
@@ -896,10 +857,10 @@ if (!aufLager) {
   } else {
     setWarnungVersand('');
   }
-  
 
   setWarnungStaffeln('');
 }
+
 
 // Werktage bleiben Pflicht
 if (
@@ -1104,7 +1065,8 @@ setWarnungStaffeln('');
 } finally {
   if (!willNavigate) setLadeStatus(false);
 }
-};const staffelnSindGueltig = (rows: Staffelzeile[]) => {
+};
+const staffelnSindGueltig = (rows: Staffelzeile[]) => {
   const aktive = rows.filter((s) =>
     [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
   );
