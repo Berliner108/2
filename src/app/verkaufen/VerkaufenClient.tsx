@@ -196,22 +196,35 @@ useEffect(() => {
     setWarnungVersand('');
     return;
   }
+  
+// gestaffelt
+if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 
-  // gestaffelt
-  if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-    if (!staffelnSindGueltig(staffeln)) {
-      setWarnungStaffeln(
-        'Staffel ungültig: Ab/Bis nur ganze Zahlen, keine Lücken (nächste Staffel startet bei Bis+1), Bis muss größer als Ab sein, und eine offene Staffel (Bis leer) darf nur die letzte sein.'
-      );
-    } else {
-      setWarnungStaffeln('');
-    }
+  // ✅ HIER EINFÜGEN (vor staffelnSindGueltig)
+  const hasAnyInput = staffeln.some((s) =>
+    [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
+  );
 
-    // Einzelpreis/Versand nicht Pflicht, wenn gestaffelt
+  // solange noch nichts eingegeben wurde -> keine Warnung anzeigen
+  if (!hasAnyInput) {
+    setWarnungStaffeln('');
     setWarnungPreis('');
     setWarnungVersand('');
     return;
   }
+
+  // ab hier erst validieren
+  if (!staffelnSindGueltig(staffeln)) {
+    setWarnungStaffeln('Staffel ungültig: ...');
+  } else {
+    setWarnungStaffeln('');
+  }
+
+  setWarnungPreis('');
+  setWarnungVersand('');
+  return;
+}
+
 
   // gesamt
   if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
@@ -2501,7 +2514,9 @@ const submitDisabled = ladeStatus || !stripeReady;
 {kategorie && (
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
-      Werktage bis Lieferung <span style={{ color: 'red' }}>*</span>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+    Werktage bis Lieferung <span style={{ color: 'red' }}>*</span>
+  </span>
       <input
         type="number"
         className={`${styles.dateInput} ${
