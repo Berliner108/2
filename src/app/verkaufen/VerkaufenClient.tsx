@@ -1,5 +1,6 @@
 'use client'; 
 
+import type React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
@@ -513,6 +514,23 @@ useEffect(() => {
     window.removeEventListener('pageshow', onFocus);
   };
 }, [fetchConnect]);
+useEffect(() => {
+  if (!kategorie) return;
+
+  // Verkaufsart & Staffel-Logik hart zurücksetzen bei Kategorie-Wechsel
+  setVerkaufsArt('');
+  setWarnungVerkaufsArt('');
+  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  setWarnungStaffeln('');
+
+  // klassische Preisfelder ebenfalls leeren
+  setPreis('');
+  setVersandKosten('');
+
+  // optional: Verkauf an auch leeren, wenn du es pro Kategorie neu wählen willst
+  // setVerkaufAn('');
+  // setWarnungVerkaufAn('');
+}, [kategorie]);
 
 const goToStripeOnboarding = useCallback(async () => {
   try {
@@ -2841,10 +2859,13 @@ const submitDisabled = ladeStatus || !stripeReady;
 
 <button type="submit" className={styles.submitBtn} disabled={submitDisabled}>
   {ladeStatus
-    ? 'Bitte warten…'
-    : !stripeReady
-    ? 'Stripe-Verifizierung erforderlich'
-    : 'Artikel kostenlos einstellen'}
+  ? 'Bitte warten…'
+  : !connectLoaded
+  ? 'Stripe-Status wird geprüft…'
+  : !stripeReady
+  ? 'Stripe-Verifizierung erforderlich'
+  : 'Artikel kostenlos einstellen'}
+
 </button>
 
 {connectLoaded && connect?.ready === false && (
