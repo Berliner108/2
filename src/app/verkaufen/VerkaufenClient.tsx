@@ -551,7 +551,6 @@ const goToStripeOnboarding = useCallback(async () => {
   const [hersteller, setHersteller] = useState('');
   const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
   const [herstellerAndere, setHerstellerAndere] = useState('');
-const lastMaxEmpty =  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
 
 
 const limit = getStaffelLimit();
@@ -569,9 +568,6 @@ const reachedLimit =
 
 const staffelAddDisabled =
   lastMaxEmpty || staffeln.length >= MAX_STAFFELN || reachedLimit;
-
-
-
 
 
 // 2. In deinem JSX-Dropdown wählst du die Liste dynamisch aus:
@@ -1088,18 +1084,20 @@ const limit = getStaffelLimit();
   return true;
 };
 
-const cleanInt = (v: string) => v.replace(/\D/g, ''); // nur Ziffern (keine Nachkommastellen)
-const toInt = (v: string) => (v === '' ? null : parseInt(v, 10));
+function cleanInt(v: string) {
+  return v.replace(/\D/g, '');
+}
 
-const getStaffelLimit = () => {
+function toInt(v: string) {
+  return v === '' ? null : parseInt(v, 10);
+}
+
+function getStaffelLimit() {
   if (aufLager) return null;
+  if (kategorie === 'arbeitsmittel') return Number(mengeStueck) || 0;
+  return Math.floor(Number(menge) || 0);
+}
 
-  if (kategorie === 'arbeitsmittel') {
-    return Number(mengeStueck) || 0;        // Stück
-  }
-
-  return Math.floor(Number(menge) || 0);   // kg (ganze Zahlen)
-};
 
 const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
   // sorgt ab startIndex für fortlaufende Ab-Werte und gültige Bis-Werte
