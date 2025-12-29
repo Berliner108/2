@@ -1,7 +1,7 @@
 'use client'; 
 
 import type React from 'react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import styles from './verkaufsseite.module.css';
 import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,6 +10,63 @@ import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
 
+
+    const herstellerListePulver = [
+    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
+    'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
+    'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
+    'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
+    'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
+    'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
+    ];
+    const herstellerListeNass = [
+  'Sherwin‑Williams', 'Brillux','PPG Industries',  'Akzo Nobel',  'Nippon Paint',  'RPM International',  'Axalta',  'BASF',  'Kansai',  'Asian Paints',  'Jotun',  'Hempel',  'Adler Lacke',
+  'Berger',  'Nerolac',  'Benjamin Moore'
+];
+    const farbpalette = [
+  { name: 'Nach Vorlage ', value: 'Nach Vorlage' },
+  { name: 'RAL ', value: 'RAL' },
+  { name: 'NCS', value: 'NCS' },
+  { name: 'MCS', value: 'MCS' },
+  { name: 'Candy', value: 'Candy' },
+  { name: 'Neon', value: 'Neon' },
+  { name: 'Pantone', value: 'Pantone' },
+  { name: 'Sikkens', value: 'Sikkens' },
+  { name: 'Munsell', value: 'Munsell' },
+  { name: 'HKS', value: 'HKS' },
+  { name: 'DB', value: 'DB' },
+  { name: 'BS', value: 'BS' },
+  { name: 'Klarlack', value: 'Klarlack' },
+  { name: 'RAL D2-Design', value: 'RAL D2-Design' },
+  { name: 'RAL E4-Effekt', value: 'RAL E4-Effekt' },
+];
+// Fiktive Promo-Pakete (nur Frontend – 1:1 wie Grundgerüst)
+const promoPackages = [
+  {
+    id: 'homepage',
+    title: 'Anzeige auf Startseite hervorheben',
+    subtitle: 'Startseiten-Hervorhebung',
+    priceCents: 6999,
+    score: 30,
+    icon: <Star size={18} className={styles.iconStar} aria-hidden />,
+  },
+  {
+    id: 'search_boost',
+    title: 'Anzeige in Suche priorisieren',
+    subtitle: 'Ranking-Boost in der Suche',
+    priceCents: 4999,
+    score: 15,
+    icon: <Search size={18} className={styles.iconSearch} aria-hidden />,
+  },
+  {
+    id: 'premium',
+    title: 'Premium-Anzeige aktivieren',
+    subtitle: 'Premium-Badge & Listing',
+    priceCents: 3499,
+    score: 12,
+    icon: <Crown size={18} className={styles.iconCrown} aria-hidden />,
+  },
+] as const
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
@@ -97,6 +154,7 @@ const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const [warnungOberflaeche, setWarnungOberflaeche] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
+    const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
   const [verkaufAn, setVerkaufAn] = useState('');
 const [warnungVerkaufAn, setWarnungVerkaufAn] = useState('');
 const [verkaufsArt, setVerkaufsArt] = useState<
@@ -120,33 +178,7 @@ const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
-// Fiktive Promo-Pakete (nur Frontend – 1:1 wie Grundgerüst)
-const promoPackages = [
-  {
-    id: 'homepage',
-    title: 'Anzeige auf Startseite hervorheben',
-    subtitle: 'Startseiten-Hervorhebung',
-    priceCents: 6999,
-    score: 30,
-    icon: <Star size={18} className={styles.iconStar} aria-hidden />,
-  },
-  {
-    id: 'search_boost',
-    title: 'Anzeige in Suche priorisieren',
-    subtitle: 'Ranking-Boost in der Suche',
-    priceCents: 4999,
-    score: 15,
-    icon: <Search size={18} className={styles.iconSearch} aria-hidden />,
-  },
-  {
-    id: 'premium',
-    title: 'Premium-Anzeige aktivieren',
-    subtitle: 'Premium-Badge & Listing',
-    priceCents: 3499,
-    score: 12,
-    icon: <Crown size={18} className={styles.iconCrown} aria-hidden />,
-  },
-] as const
+
 
 const formatEUR = (cents: number) =>
   (cents / 100).toLocaleString('de-DE', {
@@ -162,16 +194,17 @@ const toggleBewerbung = (option: string) => {
 }
 
 // ⬇️ NEU: Promo-Score + Gesamtpreis wie im Grundgerüst
-const selectedPromoScore = promoPackages
-  .filter((p) => bewerbungOptionen.includes(p.id))
-  .reduce((sum, p) => sum + p.score, 0)
+const selectedPromoScore = useMemo(() => {
+  return promoPackages
+    .filter((p) => bewerbungOptionen.includes(p.id))
+    .reduce((sum, p) => sum + p.score, 0)
+}, [bewerbungOptionen])
 
-const selectedTotalCents = promoPackages
-  .filter((p) => bewerbungOptionen.includes(p.id))
-  .reduce((sum, p) => sum + p.priceCents, 0)
-
-
-
+const selectedTotalCents = useMemo(() => {
+  return promoPackages
+    .filter((p) => bewerbungOptionen.includes(p.id))
+    .reduce((sum, p) => sum + p.priceCents, 0)
+}, [bewerbungOptionen])
 
   const [vorschauAktiv, setVorschauAktiv] = useState(false);
   const [zertifizierungen, setZertifizierungen] = useState<string[]>([]);
@@ -221,7 +254,7 @@ const berechneFortschritt = () => {
 
     // 3. Menge (Stück)
     total++;
-    if (aufLager || menge >= 1) filled++;
+    if (aufLager || mengeStueck >= 1) filled++;
 
     // 4. Titel
     total++;
@@ -357,6 +390,7 @@ const formularZuruecksetzen = () => {
   setHerstellerAndere('');
   setBeschreibung('');
   setMenge(0);
+  setMengeStueck(0);
   setZustand('');
   setOberflaeche('');
   setAnwendung('');
@@ -405,6 +439,7 @@ const resetFieldsExceptCategory = () => {
 
   // ✅ Menge nur einmal setzen
   setMenge(0);
+  setMengeStueck(0);
   setAufLager(false);
   setWarnungMenge('');
 
@@ -517,33 +552,27 @@ const goToStripeOnboarding = useCallback(async () => {
   const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
   const [herstellerAndere, setHerstellerAndere] = useState('');
 const lastMaxEmpty =  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
-const limitMenge = !aufLager
-  ? (kategorie === 'arbeitsmittel' ? Number(menge) : Math.floor(Number(menge)))
-  : 0;
+
+
+const limit = getStaffelLimit();
+
+const lastMaxEmpty =
+  staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() === '';
 
 const lastMaxNum =
   staffeln.length > 0 && staffeln[staffeln.length - 1].maxMenge.trim() !== ''
     ? parseInt(staffeln[staffeln.length - 1].maxMenge, 10)
     : null;
 
-const reachedLimit = !aufLager && limitMenge >= 1 && lastMaxNum !== null && lastMaxNum >= limitMenge;
+const reachedLimit =
+  limit !== null && limit >= 1 && lastMaxNum !== null && lastMaxNum >= limit;
 
-const staffelAddDisabled = lastMaxEmpty || staffeln.length >= MAX_STAFFELN || reachedLimit;
+const staffelAddDisabled =
+  lastMaxEmpty || staffeln.length >= MAX_STAFFELN || reachedLimit;
 
 
-  const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
-    const herstellerListePulver = [
-    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
-    'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
-    'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
-    'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
-    'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
-    'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
-    ];
-    const herstellerListeNass = [
-  'Sherwin‑Williams', 'Brillux','PPG Industries',  'Akzo Nobel',  'Nippon Paint',  'RPM International',  'Axalta',  'BASF',  'Kansai',  'Asian Paints',  'Jotun',  'Hempel',  'Adler Lacke',
-  'Berger',  'Nerolac',  'Benjamin Moore'
-];
+
+
 
 // 2. In deinem JSX-Dropdown wählst du die Liste dynamisch aus:
 const aktuelleHerstellerListe =
@@ -553,23 +582,7 @@ const aktuelleHerstellerListe =
     ? [...herstellerListePulver, 'Andere…']
     : [];
 
-    const farbpalette = [
-  { name: 'Nach Vorlage ', value: 'Nach Vorlage' },
-  { name: 'RAL ', value: 'RAL' },
-  { name: 'NCS', value: 'NCS' },
-  { name: 'MCS', value: 'MCS' },
-  { name: 'Candy', value: 'Candy' },
-  { name: 'Neon', value: 'Neon' },
-  { name: 'Pantone', value: 'Pantone' },
-  { name: 'Sikkens', value: 'Sikkens' },
-  { name: 'Munsell', value: 'Munsell' },
-  { name: 'HKS', value: 'HKS' },
-  { name: 'DB', value: 'DB' },
-  { name: 'BS', value: 'BS' },
-  { name: 'Klarlack', value: 'Klarlack' },
-  { name: 'RAL D2-Design', value: 'RAL D2-Design' },
-  { name: 'RAL E4-Effekt', value: 'RAL E4-Effekt' },
-];
+
 
 const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState(false);
 const farbpaletteRef = useRef<HTMLDivElement>(null);
@@ -607,6 +620,7 @@ useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
 
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+  if (submitDisabled) return;
   let willNavigate = false
 setOverlayTitle('Wir stellen deinen Artikel ein …')
 setOverlayText('Wir leiten gleich weiter.')
@@ -645,16 +659,16 @@ if (!agbAccepted) {
 } else {
   setWarnungTitel('');
 }
-// ✅ Menge (kg) prüfen: entweder Auf Lager oder mind. 0.1 kg
-if (!aufLager && menge < 1) {
-  setWarnungMenge('Bitte gib mindestens 1 kg an oder wähle „Auf Lager“.');
-  fehler = true;
-} else {
-  setWarnungMenge('');
-}
 
 // Nur für Lack-Kategorien prüfen
 if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
+   // ✅ NEU: Menge prüfen (nur wenn nicht "Auf Lager")
+  if (!aufLager && menge < 1) {
+    setWarnungMenge('Bitte gib mindestens 1 kg an.');
+    fehler = true;
+  } else {
+    setWarnungMenge('');
+  }
   if (!farbpaletteWert) {
     setWarnungPalette('Bitte wähle eine Farbpalette aus.');
     fehler = true;
@@ -699,7 +713,7 @@ if (!oberflaeche) {
 }
 if (kategorie === 'arbeitsmittel') {
   // Menge prüfen (nur wenn nicht "Auf Lager")
-  if (!aufLager && menge < 1) {
+  if (!aufLager && mengeStueck < 1) {
     setWarnungMenge('Bitte gib mindestens 1 Stück an.');
     fehler = true;
   } else {
@@ -877,48 +891,54 @@ try {
 setLadeStatus(true);
 
 const formData = new FormData();
+
+// immer
 formData.append('kategorie', kategorie!);
 formData.append('verkaufAn', verkaufAn);
-  formData.append('zertifizierungen', zertifizierungen.join(', '));
-  formData.append('titel', titel);
-    formData.append('farbton', farbton);
-    formData.append('glanzgrad', glanzgrad);
-    const finalHersteller =
-  hersteller === HERSTELLER_ANDERE_VALUE
-    ? herstellerAndere.trim()
-    : hersteller.trim();
+formData.append('titel', titel);
 
+const finalHersteller =
+  hersteller === HERSTELLER_ANDERE_VALUE ? herstellerAndere.trim() : hersteller.trim();
 formData.append('hersteller', finalHersteller);
 
-    formData.append('zustand', zustand);
-    formData.append('farbpalette', farbpaletteWert);
-    formData.append('beschreibung', beschreibung);    
-    formData.append('anwendung', anwendung);
-    formData.append('oberflaeche', oberflaeche);
-    formData.append('farbcode', farbcode);
-    formData.append('effekt', effekt.join(', '));
-    formData.append('sondereffekte', sondereffekte.join(', '));
-    formData.append('qualitaet', qualitaet);
-    formData.append('bewerbung', bewerbungOptionen.join(','));
-    if (aufLager) {
-  formData.append('mengeStatus', 'auf Lager');
+formData.append('beschreibung', beschreibung);
+formData.append('bewerbung', JSON.stringify(bewerbungOptionen));
+
+// menge (einheitlich)
+formData.append('mengeStatus', aufLager ? 'auf_lager' : 'begrenzt');
+
+if (!aufLager) {
+  if (kategorie === 'arbeitsmittel') {
+    formData.append('mengeStueck', String(mengeStueck)); // ✅
+  } else {
+    formData.append('mengeKg', String(menge)); // ✅ (kg)
+  }
+}
+
+
+// kategorie-spezifisch
+if (kategorie === 'arbeitsmittel') {
+  formData.append('stueckProEinheit', String(stueckProEinheit));
+  formData.append('groesse', groesse);
 } else {
-  formData.append('menge', menge.toString());
-}   
+  formData.append('farbpalette', farbpaletteWert);
+  formData.append('glanzgrad', glanzgrad);
+  formData.append('zustand', zustand);
+  formData.append('anwendung', anwendung);
+  formData.append('oberflaeche', oberflaeche);
+  formData.append('farbton', farbton);
+  formData.append('farbcode', farbcode);
+  formData.append('qualitaet', qualitaet);
+
+  formData.append('effekt', JSON.stringify(effekt));
+  formData.append('sondereffekte', JSON.stringify(sondereffekte));
+  formData.append('zertifizierungen', JSON.stringify(zertifizierungen));
 
   if (kategorie === 'pulverlack') {
-    formData.append('aufladung', aufladung.join(', '));
+    formData.append('aufladung', JSON.stringify(aufladung));
   }
- if (kategorie === 'arbeitsmittel') {
-  if (aufLager) {
-    formData.append('mengeStatus', 'Auf Lager');
-  } else {
-    formData.append('mengeStueck', menge.toString());
-  }
-  
-  formData.append('stueckProEinheit', stueckProEinheit.toString());
-  formData.append('groesse', groesse);
 }
+
 
 bilder.forEach((file) => formData.append('bilder', file));
 dateien.forEach((file) => formData.append('dateien', file));
@@ -947,6 +967,7 @@ try {
   const res = await fetch('/api/verkaufen', {
     method: 'POST',
     body: formData,
+    credentials: 'include',
   });
 
   if (res.ok) {
@@ -1013,9 +1034,8 @@ const staffelnSindGueltig = (rows: Staffelzeile[]) => {
   if (aktive.length === 0) return false;
 
   // 🔥 Begrenzte Menge => letzte Staffel MUSS bis exakt Menge gehen
-  const limit = !aufLager
-    ? (kategorie === 'arbeitsmittel' ? Number(menge) : Math.floor(Number(menge)))
-    : null;
+const limit = getStaffelLimit();
+
 
   if (limit !== null) {
     if (!limit || limit < 1) return false;
@@ -1071,6 +1091,16 @@ const staffelnSindGueltig = (rows: Staffelzeile[]) => {
 const cleanInt = (v: string) => v.replace(/\D/g, ''); // nur Ziffern (keine Nachkommastellen)
 const toInt = (v: string) => (v === '' ? null : parseInt(v, 10));
 
+const getStaffelLimit = () => {
+  if (aufLager) return null;
+
+  if (kategorie === 'arbeitsmittel') {
+    return Number(mengeStueck) || 0;        // Stück
+  }
+
+  return Math.floor(Number(menge) || 0);   // kg (ganze Zahlen)
+};
+
 const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
   // sorgt ab startIndex für fortlaufende Ab-Werte und gültige Bis-Werte
   for (let i = startIndex; i < rows.length; i++) {
@@ -1119,17 +1149,14 @@ const updateStaffelRange = (
   let cleaned = cleanInt(raw);
 
   // ✅ HIER DIREKT NACH cleanInt(raw): "Bis" darf bei begrenzter Menge nicht größer sein als Menge
-  if (field === 'maxMenge' && !aufLager) {
-    const limit =
-      kategorie === 'arbeitsmittel'
-        ? Number(menge) // Stück
-        : Math.floor(Number(menge)); // kg -> Staffeln sind ganze Zahlen
-
-    if (limit > 0 && cleaned !== '') {
-      const val = parseInt(cleaned, 10);
-      if (!Number.isNaN(val) && val > limit) cleaned = String(limit);
-    }
+if (field === 'maxMenge') {
+  const limit = getStaffelLimit();
+  if (limit !== null && limit > 0 && cleaned !== '') {
+    const val = parseInt(cleaned, 10);
+    if (!Number.isNaN(val) && val > limit) cleaned = String(limit);
   }
+}
+
 
   setStaffeln((prev) => {
     const copy = prev.map((r) => ({ ...r }));
@@ -1149,16 +1176,11 @@ const addStaffel = () => {
     const last = prev[prev.length - 1];
     const lastMax = toInt(last.maxMenge);
     // ✅ HIER NACH "prev.length >= MAX_STAFFELN"
-if (!aufLager) {
-  const limit =
-    kategorie === 'arbeitsmittel'
-      ? Number(menge)
-      : Math.floor(Number(menge));
-
+const limit = getStaffelLimit();
+if (limit !== null) {
   const last = prev[prev.length - 1];
   const lastMax = toInt(last.maxMenge);
 
-  // wenn limit ungültig oder schon erreicht -> keine neue Staffel
   if (!limit || limit < 1) {
     setWarnungStaffeln('Bitte zuerst eine gültige begrenzte Menge eingeben.');
     return prev;
@@ -1169,6 +1191,7 @@ if (!aufLager) {
     return prev;
   }
 }
+
 
 
     // Ohne "Bis" in der letzten Reihe macht eine neue Staffel keinen Sinn
@@ -2255,14 +2278,14 @@ const submitDisabled = ladeStatus || !stripeReady;
       min={1}
       max={999999}
       className={styles.mengeNumberInput}
-      value={menge === 0 ? '' : menge}
-      onChange={(e) => {
-        const value = e.target.value;
-        // Nur ganze Zahlen erlauben
-        if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
-          setMenge(Number(value));
-        }
-      }}
+      value={mengeStueck === 0 ? '' : mengeStueck}
+onChange={(e) => {
+  const value = e.target.value;
+  if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
+    setMengeStueck(value === '' ? 0 : Number(value));
+  }
+}}
+
       placeholder="z. B. 10"
     />
   </label>
@@ -2538,7 +2561,7 @@ const submitDisabled = ladeStatus || !stripeReady;
 {verkaufsArt === 'gesamt' && (
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
-      Preis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
+      Gesamtpreis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
       <input
         type="number"
         className={`${styles.dateInput} ${
@@ -2721,7 +2744,7 @@ const submitDisabled = ladeStatus || !stripeReady;
       {/* Arbeitsmittel-Vorschau */}
       {kategorie === 'arbeitsmittel' && (
         <>
-          <p><strong>Menge (Stück):</strong> {aufLager ? 'Auf Lager' : (menge || '–')}</p>
+          <p><strong>Menge (Stück):</strong> {aufLager ? 'Auf Lager' : (mengeStueck || '–')}</p>
           <p><strong>Stück pro Verkaufseinheit:</strong> {stueckProEinheit || '–'}</p>
           <p><strong>Größe:</strong> {groesse || '–'}</p>
           <p><strong>Hersteller:</strong> {hersteller || '–'}</p>
@@ -2747,7 +2770,7 @@ const submitDisabled = ladeStatus || !stripeReady;
   </>
 ) : (
   <>
-    <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
+    <p><strong>Gesamtpreis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
     <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
   </>
 )}
