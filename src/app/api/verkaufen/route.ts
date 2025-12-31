@@ -105,7 +105,7 @@ async function insertPriceTiersWithFallback(opts: {
 
 export async function POST(req: Request) {
   try {
-    const supabase = createSupabaseRouteClient();
+    const supabase = await createSupabaseRouteClient();
 
     // Auth nötig (Owner/RLS & später Konto-Seiten)
 const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
