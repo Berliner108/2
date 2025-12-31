@@ -175,6 +175,7 @@ if (!user) {
       category,
       sell_to: sellTo,
       manufacturer,
+      sale_type: verkaufsArt,
       promo_score: promoScore,
       delivery_days: deliveryDays,
       stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),
