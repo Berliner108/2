@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
 
-type SupabaseClientType = ReturnType<typeof createSupabaseRouteClient>;
+type SupabaseClientType = Awaited<ReturnType<typeof createSupabaseRouteClient>>;
+
 
 type StaffelRow = {
   minMenge?: string;
