@@ -4,6 +4,54 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+function getBerlinTodayISO(): string {
+  // YYYY-MM-DD in Europe/Berlin
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return fmt.format(new Date());
+}
+
+function parseISODateToUTC(iso: string): Date {
+  // iso = YYYY-MM-DD
+  return new Date(`${iso}T00:00:00Z`);
+}
+
+function formatUTCToISODate(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addBusinessDaysISO(
+  startISO: string,
+  businessDays: number,
+  holidays: Set<string>
+): string {
+  if (!businessDays || businessDays <= 0) return startISO;
+
+  let remaining = businessDays;
+  let cur = parseISODateToUTC(startISO);
+
+  while (remaining > 0) {
+    cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000); // +1 day
+    const iso = formatUTCToISODate(cur);
+    const dow = cur.getUTCDay(); // 0=Sun ... 6=Sat
+    const isWeekend = dow === 0 || dow === 6;
+    const isHoliday = holidays.has(iso);
+
+    if (!isWeekend && !isHoliday) {
+      remaining--;
+    }
+  }
+
+  return formatUTCToISODate(cur);
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -29,9 +77,45 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // 1b) Feiertage laden (für Lieferdatum-Berechnung)
+    const todayISO = getBerlinTodayISO();
+
+    const maxDeliveryDays =
+      (articles ?? []).reduce((max: number, a: any) => {
+        const d =
+          typeof a.delivery_days === "number"
+            ? a.delivery_days
+            : Number(a.delivery_days ?? 0);
+        return d > max ? d : max;
+      }, 0) || 0;
+
+    // Buffer, weil wir beim Iterieren Wochenenden/Feiertage überspringen
+    const endDate = new Date(
+      parseISODateToUTC(todayISO).getTime() +
+        (maxDeliveryDays + 40) * 24 * 60 * 60 * 1000
+    );
+    const endISO = formatUTCToISODate(endDate);
+
+    const { data: holidayRows, error: holidayError } = await admin
+      .from("delivery_holidays")
+      .select("holiday_date")
+      .gte("holiday_date", todayISO)
+      .lte("holiday_date", endISO);
+
+    if (holidayError) {
+      return NextResponse.json({ error: holidayError.message }, { status: 500 });
+    }
+
+    const holidaySet = new Set<string>(
+      (holidayRows ?? []).map((h: any) => h.holiday_date)
+    );
+
     // 2) price_from (Brutto) für diese Artikel ermitteln
     const ids = (articles ?? []).map((a) => a.id);
-    let minPriceByArticle: Record<string, { price_from: number | null; unit: "kg" | "stueck" | null }> = {};
+    let minPriceByArticle: Record<
+      string,
+      { price_from: number | null; unit: "kg" | "stueck" | null }
+    > = {};
 
     if (ids.length) {
       const { data: tiers, error: tierError } = await admin
@@ -56,11 +140,19 @@ export async function GET(req: Request) {
     }
 
     // 3) MVP: promo oben lassen, Rest randomisieren (nur promo_score==0)
-    const list = (articles ?? []).map((a: any) => ({
-      ...a,
-      price_from: minPriceByArticle[a.id]?.price_from ?? null,
-      price_unit: minPriceByArticle[a.id]?.unit ?? null,
-    }));
+    const list = (articles ?? []).map((a: any) => {
+      const dDays =
+        typeof a.delivery_days === "number"
+          ? a.delivery_days
+          : Number(a.delivery_days ?? 0);
+
+      return {
+        ...a,
+        price_from: minPriceByArticle[a.id]?.price_from ?? null,
+        price_unit: minPriceByArticle[a.id]?.unit ?? null,
+        delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
+      };
+    });
 
     const sponsored = list.filter((a) => (a.promo_score ?? 0) > 0);
     const rest = list.filter((a) => !((a.promo_score ?? 0) > 0));
