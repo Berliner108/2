@@ -4,6 +4,9 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
+
+type SupabaseClientType = ReturnType<typeof createSupabaseRouteClient>;
+
 type StaffelRow = {
   minMenge?: string;
   maxMenge?: string;
@@ -45,7 +48,7 @@ function extFromName(name: string) {
 }
 
 async function uploadPublicFiles(opts: {
-  supabase: Awaited<ReturnType<typeof supabaseRoute>>;
+  supabase: SupabaseClientType;
   bucket: string;
   basePath: string; // e.g. `${articleId}/images`
   files: File[];
@@ -78,7 +81,7 @@ async function uploadPublicFiles(opts: {
 }
 
 async function insertPriceTiersWithFallback(opts: {
-  supabase: Awaited<ReturnType<typeof supabaseRoute>>;
+  supabase: SupabaseClientType;
   tiers: any[];
 }) {
   const { supabase, tiers } = opts;
