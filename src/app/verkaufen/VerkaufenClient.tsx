@@ -1011,7 +1011,7 @@ setWarnungStaffeln('');
     await nextFrame();
 
     // ✅ Weiterleitung
-    router.replace('/konto/verkaufen?artikel_published=1');
+    router.replace('/kaufen');
     return;
   } else {
     alert('Fehler beim Hochladen');
