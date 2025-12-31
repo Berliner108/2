@@ -1014,8 +1014,14 @@ setWarnungStaffeln('');
     router.replace('/kaufen');
     return;
   } else {
-    alert('Fehler beim Hochladen');
-  }
+  let msg = 'Fehler beim Hochladen';
+  try {
+    const data = await res.json();
+    if (data?.error) msg = data.error;
+  } catch {}
+  alert(msg);
+}
+
 } catch (error) {
   console.error(error);
   alert('Serverfehler');
