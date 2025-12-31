@@ -108,14 +108,18 @@ export async function POST(req: Request) {
     const supabase = createSupabaseRouteClient();
 
     // Auth nötig (Owner/RLS & später Konto-Seiten)
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr) {
-      return NextResponse.json({ error: userErr.message }, { status: 401 });
-    }
-    const user = userRes?.user;
-    if (!user) {
-      return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
-    }
+const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
+if (sessionErr) {
+  return NextResponse.json({ error: sessionErr.message }, { status: 401 });
+}
+const user = sessionRes?.session?.user;
+if (!user) {
+  return NextResponse.json(
+    { error: "NOT_AUTHENTICATED", hint: "No session cookie received by route" },
+    { status: 401 }
+  );
+}
+
 
     const fd = await req.formData();
 
