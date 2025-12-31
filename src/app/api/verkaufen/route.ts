@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { supabaseRoute } from "@/lib/supabase-route";
+import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
 type StaffelRow = {
   minMenge?: string;
@@ -102,7 +102,7 @@ async function insertPriceTiersWithFallback(opts: {
 
 export async function POST(req: Request) {
   try {
-    const supabase = await supabaseRoute();
+    const supabase = createSupabaseRouteClient();
 
     // Auth nötig (Owner/RLS & später Konto-Seiten)
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
