@@ -260,7 +260,16 @@ if (!user) {
 
       const tiers = staffeln
         .map((s) => {
-          const minQty = s.minMenge?.trim() ? toInt(s.minMenge.trim(), 0) : null;
+          const minQty = s.minMenge?.trim() ? Math.max(1, toInt(s.minMenge.trim(), 1)) : 1;
+
+let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
+
+// ✅ wenn max gesetzt ist und kleiner als min → auf min anheben
+if (maxQty !== null && maxQty < minQty) {
+  maxQty = minQty;
+}
+          
+
           const maxQty = s.maxMenge?.trim() ? toInt(s.maxMenge.trim(), 0) : null;
           const price = toNum(s.preis?.trim() ?? "", 0);
           const shipping = toNum(s.versand?.trim() ?? "", 0);
@@ -296,7 +305,7 @@ if (!user) {
         {
           article_id: articleId,
           unit,
-          min_qty: null,
+          min_qty: 1,
           max_qty: null,
           price,    // Brutto
           shipping, // Brutto Versand (falls Spalte existiert)
