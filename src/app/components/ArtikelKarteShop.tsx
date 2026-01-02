@@ -49,6 +49,8 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
   const kLower = (kategorie ?? '').toLowerCase();
   const einheit = kLower.includes('arbeitsmittel') ? 'Stück' : 'kg';
   const katAnzeige = formatKategorie(kategorie);
+  const einheitLabel = artikel.einheit === "stueck" ? "Stück" : "kg";
+
 
   return (
     <Link href={`/kaufen/artikel/${id}`} className={styles.cardLink}>
@@ -93,7 +95,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
         <div className={styles.cardTextBlock}>
           <div className={styles.cardText1}>{titel}</div>
           <div className={styles.cardText2}>
-            Verfügbare Menge: {menge} {einheit}
+            Verfügbare Menge: {menge} {einheitLabel}
           </div>
           <div className={styles.cardText3}>
             Lieferdatum: {lieferdatum.toLocaleDateString('de-DE')}
@@ -104,7 +106,8 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
           {/* Preis ist bei dir jetzt "Preis ab" (Brutto) */}
           <div className={styles.cardText7}>
-            Preis ab: {preis.toFixed(2)} € / {einheit}
+            Preis ab: {preis.toFixed(2)} € / {einheitLabel}
+
           </div>
         </div>
       </div>
