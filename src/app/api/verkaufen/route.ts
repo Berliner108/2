@@ -269,8 +269,6 @@ if (maxQty !== null && maxQty < minQty) {
   maxQty = minQty;
 }
           
-
-          const maxQty = s.maxMenge?.trim() ? toInt(s.maxMenge.trim(), 0) : null;
           const price = toNum(s.preis?.trim() ?? "", 0);
           const shipping = toNum(s.versand?.trim() ?? "", 0);
 
