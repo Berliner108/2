@@ -86,6 +86,9 @@ type ShopArtikel = {
   gesponsert?: boolean;
   gewerblich?: boolean;
   privat?: boolean;
+  einheit: "kg" | "stueck";
+
+  
 };
 
 function safeNumber(v: any, fallback = 0) {
@@ -157,6 +160,8 @@ export default function Shopseite() {
 
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
+            einheit: a.price_unit === "stueck" ? "stueck" : "kg",
+
 
             gesponsert: safeNumber(a.promo_score, 0) > 0,
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
