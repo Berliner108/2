@@ -14,13 +14,15 @@ type ArtikelProps = {
     hersteller: string;
     zustand: string;
     kategorie: string;
-    preis: number; // = price_from (Brutto)
+    preis: number;
     bilder: string[];
+    einheit: "kg" | "stueck";
     gesponsert?: boolean;
     gewerblich?: boolean;
     privat?: boolean;
   };
 };
+
 
 function formatKategorie(kategorie: string) {
   const k = (kategorie ?? '').toLowerCase().trim();
