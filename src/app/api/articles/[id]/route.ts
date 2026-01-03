@@ -34,19 +34,23 @@ function addBusinessDaysISO(startISO: string, businessDays: number, holidays: Se
   while (remaining > 0) {
     cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
     const iso = formatUTCToISODate(cur);
-    const dow = cur.getUTCDay(); // 0=Sun ... 6=Sat
+    const dow = cur.getUTCDay();
     const isWeekend = dow === 0 || dow === 6;
     const isHoliday = holidays.has(iso);
-
     if (!isWeekend && !isHoliday) remaining--;
   }
 
   return formatUTCToISODate(cur);
 }
 
-export async function GET(_req: Request, ctx: { params: { id: string } }) {
+export async function GET(req: Request) {
   try {
-    const id = ctx.params.id;
+    const url = new URL(req.url);
+    const parts = url.pathname.split("/").filter(Boolean);
+    const id = parts[parts.length - 1]; // .../api/articles/{id}
+
+    if (!id) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+
     const admin = supabaseAdmin();
 
     const { data: article, error } = await admin
@@ -61,7 +65,8 @@ export async function GET(_req: Request, ctx: { params: { id: string } }) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: error.code === "PGRST116" ? 404 : 500 });
+      const status = error.code === "PGRST116" ? 404 : 500;
+      return NextResponse.json({ error: error.message }, { status });
     }
     if (!article) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
@@ -92,7 +97,7 @@ export async function GET(_req: Request, ctx: { params: { id: string } }) {
     const holidaySet = new Set<string>((holidayRows ?? []).map((h: any) => h.holiday_date));
     const delivery_date_iso = addBusinessDaysISO(todayISO, dDays, holidaySet);
 
-    // price_from + price_unit (günstigste Staffel über alle Units)
+    // price_from + price_unit
     let price_from: number | null = null;
     let price_unit: "kg" | "stueck" | null = null;
 
@@ -106,12 +111,7 @@ export async function GET(_req: Request, ctx: { params: { id: string } }) {
     }
 
     return NextResponse.json({
-      article: {
-        ...article,
-        delivery_date_iso,
-        price_from,
-        price_unit,
-      },
+      article: { ...article, delivery_date_iso, price_from, price_unit },
       tiers: tiers ?? [],
     });
   } catch (e: any) {
