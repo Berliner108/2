@@ -9,20 +9,19 @@ type ArtikelProps = {
   artikel: {
     id: string | number;
     titel: string;
-    menge: number;
-    lieferdatum: Date;
-    hersteller: string;
-    zustand: string;
-    kategorie: string;
-    preis: number;
-    bilder: string[];
+    menge?: number; // optional
+    lieferdatum?: Date; // optional
+    hersteller?: string | null;
+    zustand?: string | null;
+    kategorie?: string | null;
+    preis?: number; // optional
+    bilder?: string[] | null;
     einheit: "kg" | "stueck";
     gesponsert?: boolean;
     gewerblich?: boolean;
     privat?: boolean;
   };
 };
-
 
 function formatKategorie(kategorie: string) {
   const k = (kategorie ?? '').toLowerCase().trim();
@@ -48,8 +47,6 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
     privat,
   } = artikel;
 
-  const kLower = (kategorie ?? '').toLowerCase();
-  const einheit = kLower.includes('arbeitsmittel') ? 'Stück' : 'kg';
   const katAnzeige = formatKategorie(kategorie);
   const einheitLabel = artikel.einheit === "stueck" ? "Stück" : "kg";
 
@@ -78,7 +75,8 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
                 gewerblich ? styles.gewerblichLabel : styles.privatLabel
               } ${styles.desktopOnly}`}
             >
-              {gewerblich ? 'Gewerblich' : 'Privat'}
+              {gewerblich && privat ? 'Privat & Gewerblich' : gewerblich ? 'Gewerblich' : 'Privat'}
+
             </div>
           )}
 
@@ -89,7 +87,8 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
                 gewerblich ? styles.gewerblichLabel : styles.privatLabel
               } ${styles.mobileOnly}`}
             >
-              {gewerblich ? 'Gewerblich' : 'Privat'}
+              {gewerblich && privat ? 'Privat & Gewerblich' : gewerblich ? 'Gewerblich' : 'Privat'}
+
             </div>
           )}
         </div>
