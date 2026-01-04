@@ -9,26 +9,31 @@ type ArtikelProps = {
   artikel: {
     id: string | number;
     titel: string;
-    menge?: number; // optional
-    lieferdatum?: Date; // optional
+
+    // robust (DB kann null/undefined liefern)
+    menge?: number;
+    lieferdatum?: Date;
     hersteller?: string | null;
     zustand?: string | null;
     kategorie?: string | null;
-    preis?: number; // optional
+    preis?: number;
     bilder?: string[] | null;
-    einheit: "kg" | "stueck";
+
+    // kommt aus DB (price_unit)
+    einheit: 'kg' | 'stueck';
+
     gesponsert?: boolean;
     gewerblich?: boolean;
     privat?: boolean;
   };
 };
 
-function formatKategorie(kategorie: string) {
+function formatKategorie(kategorie?: string | null) {
   const k = (kategorie ?? '').toLowerCase().trim();
   if (k === 'pulverlack') return 'Pulverlack';
   if (k === 'nasslack') return 'Nasslack';
   if (k === 'arbeitsmittel') return 'Arbeitsmittel';
-  return kategorie;
+  return (kategorie ?? '').trim();
 }
 
 export default function ArtikelCard({ artikel }: ArtikelProps) {
@@ -48,8 +53,18 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
   } = artikel;
 
   const katAnzeige = formatKategorie(kategorie);
-  const einheitLabel = artikel.einheit === "stueck" ? "Stück" : "kg";
+  const einheitLabel = artikel.einheit === 'stueck' ? 'Stück' : 'kg';
 
+  const verkaufLabel =
+    gewerblich && privat
+      ? 'Privat & Gewerblich'
+      : gewerblich
+      ? 'Gewerblich'
+      : privat
+      ? 'Privat'
+      : '';
+
+  const showSellLabel = Boolean(verkaufLabel);
 
   return (
     <Link href={`/kaufen/artikel/${id}`} className={styles.cardLink}>
@@ -60,7 +75,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
             <Image
               className={styles.cardBild}
-              src={bilder?.[0] || '/images/platzhalter.jpg'}
+              src={(bilder?.[0] as string) || '/images/platzhalter.jpg'}
               alt={titel}
               fill
               priority={false}
@@ -69,46 +84,45 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           </div>
 
           {/* Desktop Label */}
-          {(gewerblich || privat) && (
+          {showSellLabel && (
             <div
               className={`${styles.verkaufsTypLabel} ${
                 gewerblich ? styles.gewerblichLabel : styles.privatLabel
               } ${styles.desktopOnly}`}
             >
-              {gewerblich && privat ? 'Privat & Gewerblich' : gewerblich ? 'Gewerblich' : 'Privat'}
-
+              {verkaufLabel}
             </div>
           )}
 
           {/* Mobile Label */}
-          {(gewerblich || privat) && (
+          {showSellLabel && (
             <div
               className={`${styles.verkaufsTypLabel} ${
                 gewerblich ? styles.gewerblichLabel : styles.privatLabel
               } ${styles.mobileOnly}`}
             >
-              {gewerblich && privat ? 'Privat & Gewerblich' : gewerblich ? 'Gewerblich' : 'Privat'}
-
+              {verkaufLabel}
             </div>
           )}
         </div>
 
         <div className={styles.cardTextBlock}>
           <div className={styles.cardText1}>{titel}</div>
+
           <div className={styles.cardText2}>
-            Verfügbare Menge: {menge} {einheitLabel}
+            Verfügbare Menge: {typeof menge === 'number' ? menge : 0} {einheitLabel}
           </div>
+
           <div className={styles.cardText3}>
-            Lieferdatum: {lieferdatum.toLocaleDateString('de-DE')}
+            Lieferdatum: {lieferdatum ? lieferdatum.toLocaleDateString('de-DE') : '—'}
           </div>
-          <div className={styles.cardText4}>Hersteller: {hersteller}</div>
-          <div className={styles.cardText5}>Zustand: {zustand}</div>
-          <div className={styles.cardText6}>Kategorie: {katAnzeige}</div>
 
-          {/* Preis ist bei dir jetzt "Preis ab" (Brutto) */}
+          <div className={styles.cardText4}>Hersteller: {hersteller ?? '—'}</div>
+          <div className={styles.cardText5}>Zustand: {zustand ?? '—'}</div>
+          <div className={styles.cardText6}>Kategorie: {katAnzeige || '—'}</div>
+
           <div className={styles.cardText7}>
-            Preis ab: {preis.toFixed(2)} € / {einheitLabel}
-
+            Preis ab: {typeof preis === 'number' ? preis.toFixed(2) : '—'} € / {einheitLabel}
           </div>
         </div>
       </div>
