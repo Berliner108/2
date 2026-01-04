@@ -83,7 +83,6 @@ function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | nul
     if (qty >= t.min_qty && maxOk) return t;
   }
 
-  // falls qty über der letzten Staffel liegt
   if (list.length) return list[list.length - 1];
   return null;
 }
@@ -98,24 +97,22 @@ export default function ArtikelDetailPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [tiers, setTiers] = useState<Tier[]>([]);
 
-  // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
-
-  const cat = (article?.category ?? "").trim();
-  const catLabel =
-  cat.toLowerCase() === "arbeitsmittel" ? "Arbeitsmittel"
-  : cat.toLowerCase() === "pulverlack" ? "Pulverlack"
-  : cat.toLowerCase() === "nasslack" ? "Nasslack"
-  : cat;
-
-const manufacturerLabel = String(article?.manufacturer ?? "—");
-
-
 
   // Kaufen UI
   const [unit, setUnit] = useState<"kg" | "stueck">("kg");
   const [qty, setQty] = useState<number>(1);
+
+  // Labels (null-safe!)
+  const cat = (article?.category ?? "").trim();
+  const catLabel =
+    cat.toLowerCase() === "arbeitsmittel" ? "Arbeitsmittel" :
+    cat.toLowerCase() === "pulverlack" ? "Pulverlack" :
+    cat.toLowerCase() === "nasslack" ? "Nasslack" :
+    cat;
+
+  const manufacturerLabel = String(article?.manufacturer ?? "—");
 
   useEffect(() => {
     let cancelled = false;
@@ -144,12 +141,13 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
           setArticle(a);
           setTiers(t);
 
-          // Default unit: API liefert günstigste unit (price_unit)
+          // Default unit
           if (a.sale_type === "pro_stueck") setUnit("stueck");
           else if (a.sale_type === "pro_kg") setUnit("kg");
           else if (a.price_unit) setUnit(a.price_unit);
 
           setQty(1);
+          setPhotoIndex(0);
         }
       } catch (e: any) {
         if (!cancelled) {
@@ -185,17 +183,12 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
   const stockLimit = useMemo(() => {
     if (!article) return null;
     if (article.stock_status !== "begrenzt") return null;
-    if (unit === "kg") return article.qty_kg ?? null;
-    return article.qty_piece ?? null;
+    return unit === "kg" ? (article.qty_kg ?? null) : (article.qty_piece ?? null);
   }, [article, unit]);
 
   const chosenTier = useMemo(() => {
     if (!article) return null;
-
-    if (article.sale_type === "gesamt") {
-      // bei gesamt nehmen wir einfach die erste Staffel (i.d.R. 1 Zeile)
-      return tiers[0] ?? null;
-    }
+    if (article.sale_type === "gesamt") return tiers[0] ?? null;
     return pickTier(tiers, unit, qty);
   }, [article, tiers, unit, qty]);
 
@@ -217,7 +210,7 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
     if (!article) return true;
     if (!chosenTier) return true;
     if (qty < 1) return true;
-    if (stockLimit != null && qty > stockLimit) return true;
+    if (article.sale_type !== "gesamt" && stockLimit != null && qty > stockLimit) return true;
     return false;
   }, [article, chosenTier, qty, stockLimit]);
 
@@ -247,6 +240,11 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
     );
   }
 
+  const sellToLabel =
+    article.sell_to === "gewerblich" ? "Gewerblich" :
+    article.sell_to === "beide" ? "Beide" :
+    "—";
+
   return (
     <>
       <Navbar />
@@ -259,7 +257,6 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
         )}
 
         <div className={styles.grid}>
-          {/* Linke Spalte: Bilder */}
           <div className={styles.leftColumn}>
             <img
               src={bilder?.[photoIndex] || "/images/platzhalter.jpg"}
@@ -282,7 +279,6 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
             </div>
           </div>
 
-          {/* Rechte Spalte: Infos */}
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
               <h1 className={styles.title}>{article.title}</h1>
@@ -309,13 +305,14 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Verkauf an:</span>
-                <span className={styles.value}>{article.sell_to === "gewerblich" ? "Gewerblich" : "Beide"}</span>
+                <span className={styles.value}>{sellToLabel}</span>
               </div>
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Preis ab:</span>
                 <span className={styles.value}>
-                  {Number(article.price_from ?? 0).toFixed(2)} € {article.price_unit ? `/ ${unitLabel(article.price_unit)}` : ""}
+                  {Number(article.price_from ?? 0).toFixed(2)} €{" "}
+                  {article.price_unit ? `/ ${unitLabel(article.price_unit)}` : ""}
                 </span>
               </div>
 
@@ -327,16 +324,15 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
                   </span>
                 </div>
               )}
-
-              {article.description && (
-                <div className={styles.beschreibung}>
-                  <h2>Beschreibung</h2>
-                  <p>{article.description}</p>
-                </div>
-              )}
             </div>
 
-            {/* Staffelpreise / Gesamtpreis */}
+            {article.description && (
+              <div className={styles.beschreibung}>
+                <h2>Beschreibung</h2>
+                <p>{article.description}</p>
+              </div>
+            )}
+
             <div className={styles.beschreibung}>
               <h2>{article.sale_type === "gesamt" ? "Preis" : "Staffelpreise"}</h2>
 
@@ -372,7 +368,6 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
               )}
             </div>
 
-            {/* Kaufen UI */}
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
                 <strong>Kaufen</strong>
@@ -405,27 +400,41 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
                   <span style={{ opacity: 0.8 }}>{article.sale_type === "gesamt" ? "" : unitLabel(unit)}</span>
                 </div>
 
-                {stockLimit != null && (
+                {stockLimit != null && article.sale_type !== "gesamt" && (
                   <div style={{ marginTop: 8, opacity: 0.85 }}>
                     Max verfügbar: {stockLimit} {unitLabel(unit)}
                   </div>
                 )}
 
+                {/* Staffel-Info NUR bei Staffelpreisen */}
                 {article.sale_type !== "gesamt" && chosenTier && (
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ opacity: 0.9 }}>
-                        Staffel aktiv: {chosenTier.min_qty}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ opacity: 0.9 }}>
+                      Staffel aktiv: {chosenTier.min_qty}
                       {chosenTier.max_qty != null ? `–${chosenTier.max_qty}` : "+"} {unitLabel(chosenTier.unit)}
                     </div>
-                    {priceCalc && (
-                      <div style={{ marginTop: 6 }}>
-                        <div>Einzelpreis: <strong>{priceCalc.unitPrice.toFixed(2)} €</strong>{article.sale_type === "gesamt" ? "" : ` / ${unitLabel(unit)}`}</div>
-                        <div>Versand: <strong>{priceCalc.shipping.toFixed(2)} €</strong></div>
-                        <div style={{ marginTop: 4, fontSize: "1.05rem" }}>
-                          Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
-                        </div>
-                      </div>
-                    )}
+                  </div>
+                )}
+
+                {priceCalc && (
+                  <div style={{ marginTop: 10 }}>
+                    <div>
+                      {article.sale_type === "gesamt" ? (
+                        <>
+                          Preis: <strong>{priceCalc.unitPrice.toFixed(2)} €</strong>
+                        </>
+                      ) : (
+                        <>
+                          Einzelpreis: <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit)}
+                        </>
+                      )}
+                    </div>
+                    <div>
+                      Versand: <strong>{priceCalc.shipping.toFixed(2)} €</strong>
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: "1.05rem" }}>
+                      Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
+                    </div>
                   </div>
                 )}
 
@@ -436,6 +445,15 @@ const manufacturerLabel = String(article?.manufacturer ?? "—");
                     onClick={() => alert("✅ UI steht. Checkout/Orders bauen wir als nächstes.")}
                   >
                     Jetzt kaufen
+                  </button>
+
+                  <button
+                    className={styles.submitOfferButton}
+                    style={{ opacity: 0.9 }}
+                    disabled={disableBuy}
+                    onClick={() => alert("✅ Gemerkt (UI)")}
+                  >
+                    Merken
                   </button>
                 </div>
 
