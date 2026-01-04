@@ -109,7 +109,8 @@ export default function ArtikelDetailPage() {
   : cat.toLowerCase() === "nasslack" ? "Nasslack"
   : cat;
 
-const manufacturerLabel = String(article.manufacturer ?? "—");
+const manufacturerLabel = String(article?.manufacturer ?? "—");
+
 
 
   // Kaufen UI
@@ -298,12 +299,12 @@ const manufacturerLabel = String(article.manufacturer ?? "—");
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Hersteller:</span>
-                <span className={styles.value}>{article.manufacturer ?? "—"}</span>
+                <span className={styles.value}>{manufacturerLabel}</span>
               </div>
 
               <div className={styles.metaItem}>
                 <span className={styles.label}>Kategorie:</span>
-                <span className={styles.value}>{article.category ?? "—"}</span>
+                <span className={styles.value}>{catLabel || "—"}</span>
               </div>
 
               <div className={styles.metaItem}>
@@ -410,10 +411,10 @@ const manufacturerLabel = String(article.manufacturer ?? "—");
                   </div>
                 )}
 
-                {chosenTier && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ opacity: 0.9 }}>
-                      Staffel aktiv: {chosenTier.min_qty}
+                {article.sale_type !== "gesamt" && chosenTier && (
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ opacity: 0.9 }}>
+                        Staffel aktiv: {chosenTier.min_qty}
                       {chosenTier.max_qty != null ? `–${chosenTier.max_qty}` : "+"} {unitLabel(chosenTier.unit)}
                     </div>
                     {priceCalc && (
@@ -435,15 +436,6 @@ const manufacturerLabel = String(article.manufacturer ?? "—");
                     onClick={() => alert("✅ UI steht. Checkout/Orders bauen wir als nächstes.")}
                   >
                     Jetzt kaufen
-                  </button>
-
-                  <button
-                    className={styles.submitOfferButton}
-                    style={{ opacity: 0.9 }}
-                    disabled={disableBuy}
-                    onClick={() => alert("🛒 Warenkorb kommt als nächster Schritt.")}
-                  >
-                    In den Warenkorb
                   </button>
                 </div>
 
