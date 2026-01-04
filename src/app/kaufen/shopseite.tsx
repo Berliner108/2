@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
@@ -68,7 +68,6 @@ const herstellerFilter = [
   'Pulverlackshop.de',
 ];
 
-// exakt der Typ, den ArtikelKarteShop erwartet (menge & lieferdatum sind Pflicht)
 type ShopArtikel = {
   id: string | number;
   titel: string;
@@ -91,21 +90,31 @@ function safeNumber(v: any, fallback = 0) {
 }
 
 function isoToDate(iso: any): Date {
-  if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    return new Date(`${iso}T00:00:00`);
-  }
+  if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso)) return new Date(`${iso}T00:00:00`);
   return new Date();
 }
 
-// Erkennung "Gewerblich" aus user_metadata (du kannst später die Keys anpassen)
+// robust: erkennt Strings + booleans
 function isBusinessUserFromMetadata(meta: any): boolean {
+  if (!meta) return false;
+
+  // boolean flags
+  const boolKeys = ['is_business', 'business', 'isCompany', 'company', 'gewerblich', 'is_gewerblich'];
+  for (const k of boolKeys) {
+    if (meta?.[k] === true) return true;
+  }
+
+  // string fields
   const raw =
     meta?.account_type ??
+    meta?.accountType ??
     meta?.kundentyp ??
     meta?.user_type ??
     meta?.type ??
     meta?.rolle ??
+    meta?.role ??
     '';
+
   return String(raw).toLowerCase().includes('gewerb');
 }
 
@@ -114,12 +123,16 @@ export default function Shopseite() {
   const searchParams = useSearchParams();
 
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
+  const [rawCount, setRawCount] = useState(0);
+  const [hiddenBusinessCount, setHiddenBusinessCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Viewer (um sell_to=gewerblich zu filtern)
+  // Viewer status
+  const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
-  const [viewerLoaded, setViewerLoaded] = useState(false);
+  const [viewerLoggedIn, setViewerLoggedIn] = useState(false);
 
   const [suchbegriff, setSuchbegriff] = useState(() => searchParams.get('search') ?? '');
   useEffect(() => {
@@ -133,19 +146,28 @@ export default function Shopseite() {
 
   // 1) Viewer laden
   useEffect(() => {
-    const supa = supabaseBrowser();
-    supa.auth
-      .getUser()
-      .then(({ data }) => {
-        const isBiz = isBusinessUserFromMetadata(data.user?.user_metadata);
-        setViewerIsBusiness(isBiz);
-      })
-      .finally(() => setViewerLoaded(true));
+    let cancelled = false;
+    async function loadViewer() {
+      try {
+        const supa = supabaseBrowser();
+        const { data } = await supa.auth.getUser();
+        if (cancelled) return;
+
+        setViewerLoggedIn(Boolean(data.user));
+        setViewerIsBusiness(isBusinessUserFromMetadata(data.user?.user_metadata));
+      } finally {
+        if (!cancelled) setViewerChecked(true);
+      }
+    }
+    loadViewer();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // 2) Artikel laden (nach Viewer-Check, damit sell_to korrekt gefiltert wird)
+  // 2) Artikel laden (nach Viewer-Check → damit gewerblich-only nicht kurz “durchblitzt”)
   useEffect(() => {
-    if (!viewerLoaded) return;
+    if (!viewerChecked) return;
 
     let cancelled = false;
 
@@ -159,24 +181,24 @@ export default function Shopseite() {
 
         if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
 
-        const raw: any[] = Array.isArray(json?.articles) ? json.articles : [];
+        const rows: any[] = Array.isArray(json?.articles) ? json.articles : [];
+        setRawCount(rows.length);
 
-        // sell_to Filter: gewerblich-only nur für Business-Viewer
-        const visible = raw.filter((a: any) => {
+        // sell_to filter
+        const visibleRows = rows.filter((a: any) => {
           const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
           if (sellTo === 'gewerblich') return viewerIsBusiness;
           return true;
         });
 
-        const mapped: ShopArtikel[] = visible.map((a: any) => {
+        const hidden = rows.length - visibleRows.length;
+        setHiddenBusinessCount(hidden);
+
+        const mapped: ShopArtikel[] = visibleRows.map((a: any) => {
           const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
 
-          const priceFrom = safeNumber(a.price_from, 0);
-
-          // Einheit: aus DB (price_unit). Fallback kg.
           const unit: 'kg' | 'stueck' = a.price_unit === 'stueck' ? 'stueck' : 'kg';
 
-          // Menge passend zur Einheit (falls DB beide hat)
           const qty =
             unit === 'stueck'
               ? a.qty_piece != null
@@ -186,19 +208,16 @@ export default function Shopseite() {
               ? safeNumber(a.qty_kg, 0)
               : 0;
 
-          const deliveryDate = isoToDate(a.delivery_date_iso);
-
           return {
             id: a.id,
             titel: a.title ?? '',
             hersteller: a.manufacturer ?? '—',
-            // Zustand: falls API/DB noch nix liefert -> '—'
             zustand: (a.condition ?? a.zustand ?? '—') || '—',
             kategorie: a.category ?? '—',
 
-            preis: priceFrom,
+            preis: safeNumber(a.price_from, 0),
             menge: qty,
-            lieferdatum: deliveryDate,
+            lieferdatum: isoToDate(a.delivery_date_iso),
 
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
@@ -214,6 +233,8 @@ export default function Shopseite() {
         if (!cancelled) {
           setLoadError(e?.message ?? 'Unbekannter Fehler');
           setArtikelDaten([]);
+          setRawCount(0);
+          setHiddenBusinessCount(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -224,7 +245,7 @@ export default function Shopseite() {
     return () => {
       cancelled = true;
     };
-  }, [viewerLoaded, viewerIsBusiness]);
+  }, [viewerChecked, viewerIsBusiness]);
 
   const maxAvailablePrice = Math.max(0, ...artikelDaten.map((a) => safeNumber(a.preis, 0)));
   const [maxPreis, setMaxPreis] = useState(0);
@@ -274,10 +295,15 @@ export default function Shopseite() {
     .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller ?? ''))
     .filter((a) => safeNumber(a.preis, 0) <= maxPreis);
 
-  const fuse = new Fuse(gefilterteArtikel, {
-    keys: ['titel', 'hersteller', 'zustand', 'kategorie'],
-    threshold: 0.35,
-  });
+  const fuse = useMemo(
+    () =>
+      new Fuse(gefilterteArtikel, {
+        keys: ['titel', 'hersteller', 'zustand', 'kategorie'],
+        threshold: 0.35,
+      }),
+    [gefilterteArtikel]
+  );
+
   const suchErgebnis = suchbegriff ? fuse.search(suchbegriff).map((r) => r.item) : gefilterteArtikel;
 
   const sortierteArtikel = (() => {
@@ -323,23 +349,14 @@ export default function Shopseite() {
     return () => observerRef.current?.disconnect();
   }, [sortierteArtikel, page]);
 
-  useEffect(() => {
-    if (page !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('page');
-      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
-      router.replace(neueUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
-
+  const totalPages = Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse));
   const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
 
   return (
     <>
       <Navbar />
 
-      <button className={styles.hamburger} onClick={() => setSidebarOpen((open) => !open)} aria-label="Sidebar öffnen">
+      <button className={styles.hamburger} onClick={() => setSidebarOpen((o) => !o)} aria-label="Sidebar öffnen">
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
@@ -413,7 +430,9 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={hersteller.includes(h)}
-                  onChange={() => setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))}
+                  onChange={() =>
+                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))
+                  }
                 />
                 {h}
               </label>
@@ -444,6 +463,17 @@ export default function Shopseite() {
             </div>
           )}
 
+          {/* Hinweis, falls alles weggefiltert wurde */}
+          {!loading && !loadError && sortierteArtikel.length === 0 && rawCount > 0 && hiddenBusinessCount > 0 && (
+            <div style={{ padding: '10px 0', opacity: 0.9 }}>
+              <strong>Hinweis:</strong> Aktuell sind {hiddenBusinessCount} Artikel nur für <strong>gewerbliche</strong>{' '}
+              Nutzer sichtbar.
+              <div style={{ marginTop: 6 }}>
+                Status: {viewerLoggedIn ? (viewerIsBusiness ? 'Gewerblich ✅' : 'Privat/Unbekannt') : 'Nicht eingeloggt'}
+              </div>
+            </div>
+          )}
+
           <div className={styles.grid}>
             {(page === 1 ? sortierteArtikel.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => (
               <ArtikelCard key={String(a.id)} artikel={a} />
@@ -452,7 +482,7 @@ export default function Shopseite() {
           </div>
 
           <div className={styles.seitenInfo}>
-            Seite {page} von {Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse))}
+            Seite {page} von {totalPages}
           </div>
 
           <div className={styles.pagination}>
@@ -462,7 +492,7 @@ export default function Shopseite() {
               </Link>
             )}
 
-            {Array.from({ length: Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse)) }, (_, i) => {
+            {Array.from({ length: totalPages }, (_, i) => {
               const p = i + 1;
               const href = p === 1 ? location.pathname : `?page=${p}`;
               return (
@@ -472,7 +502,7 @@ export default function Shopseite() {
               );
             })}
 
-            {page < Math.ceil(sortierteArtikel.length / seitenGroesse) && (
+            {page < totalPages && (
               <Link href={`?page=${page + 1}`} className={styles.pageArrow}>
                 →
               </Link>
