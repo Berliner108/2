@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Fuse from 'fuse.js';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
@@ -9,6 +9,7 @@ import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
+// ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
 const CAT_MAP: Record<string, 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'> = {
   nasslack: 'Nasslack',
@@ -78,10 +79,28 @@ type ShopArtikel = {
   kategorie: string;
   preis: number;
   bilder: string[];
+  einheit: 'kg' | 'stueck';
   gesponsert?: boolean;
   gewerblich?: boolean;
   privat?: boolean;
-  einheit: 'kg' | 'stueck';
+};
+
+type ApiArticle = {
+  id: string;
+  title: string;
+  category?: string | null;
+  manufacturer?: string | null;
+  promo_score?: number | null;
+  delivery_date_iso?: string | null;
+  stock_status?: 'auf_lager' | 'begrenzt' | null;
+  qty_kg?: number | null;
+  qty_piece?: number | null;
+  image_urls?: string[] | null;
+  sell_to?: 'gewerblich' | 'beide' | null;
+  price_from?: number | null;
+  price_unit?: 'kg' | 'stueck' | null;
+  condition?: string | null; // optional, falls API liefert
+  zustand?: string | null;   // optional fallback
 };
 
 function safeNumber(v: any, fallback = 0) {
@@ -94,169 +113,25 @@ function isoToDate(iso: any): Date {
   return new Date();
 }
 
-// robust: erkennt Strings + booleans
-function isBusinessUserFromMetadata(meta: any): boolean {
-  if (!meta) return false;
-
-  // boolean flags
-  const boolKeys = ['is_business', 'business', 'isCompany', 'company', 'gewerblich', 'is_gewerblich'];
-  for (const k of boolKeys) {
-    if (meta?.[k] === true) return true;
-  }
-
-  // string fields
-  const raw =
-    meta?.account_type ??
-    meta?.accountType ??
-    meta?.kundentyp ??
-    meta?.user_type ??
-    meta?.type ??
-    meta?.rolle ??
-    meta?.role ??
-    '';
-
-  return String(raw).toLowerCase().includes('gewerb');
-}
-
 export default function Shopseite() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
-  const [rawCount, setRawCount] = useState(0);
-  const [hiddenBusinessCount, setHiddenBusinessCount] = useState(0);
-
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Viewer status
   const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
-  const [viewerLoggedIn, setViewerLoggedIn] = useState(false);
 
+  const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
+
+  // Suchfeld aus URL (?search=...)
   const [suchbegriff, setSuchbegriff] = useState(() => searchParams.get('search') ?? '');
   useEffect(() => {
     setSuchbegriff(searchParams.get('search') ?? '');
   }, [searchParams]);
 
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const seitenGroesse = 50;
-  const startIndex = (page - 1) * seitenGroesse;
-  const endIndex = page * seitenGroesse;
-
-  // 1) Viewer laden
-  useEffect(() => {
-    let cancelled = false;
-    async function loadViewer() {
-      try {
-        const supa = supabaseBrowser();
-        const { data } = await supa.auth.getUser();
-        if (cancelled) return;
-
-        setViewerLoggedIn(Boolean(data.user));
-        setViewerIsBusiness(isBusinessUserFromMetadata(data.user?.user_metadata));
-      } finally {
-        if (!cancelled) setViewerChecked(true);
-      }
-    }
-    loadViewer();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // 2) Artikel laden (nach Viewer-Check → damit gewerblich-only nicht kurz “durchblitzt”)
-  useEffect(() => {
-    if (!viewerChecked) return;
-
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setLoadError(null);
-
-        const res = await fetch(`/api/articles?limit=200&offset=0`, { cache: 'no-store' });
-        const json = await res.json();
-
-        if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
-
-        const rows: any[] = Array.isArray(json?.articles) ? json.articles : [];
-        setRawCount(rows.length);
-
-        // sell_to filter
-        const visibleRows = rows.filter((a: any) => {
-          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
-          if (sellTo === 'gewerblich') return viewerIsBusiness;
-          return true;
-        });
-
-        const hidden = rows.length - visibleRows.length;
-        setHiddenBusinessCount(hidden);
-
-        const mapped: ShopArtikel[] = visibleRows.map((a: any) => {
-          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
-
-          const unit: 'kg' | 'stueck' = a.price_unit === 'stueck' ? 'stueck' : 'kg';
-
-          const qty =
-            unit === 'stueck'
-              ? a.qty_piece != null
-                ? safeNumber(a.qty_piece, 0)
-                : 0
-              : a.qty_kg != null
-              ? safeNumber(a.qty_kg, 0)
-              : 0;
-
-          return {
-            id: a.id,
-            titel: a.title ?? '',
-            hersteller: a.manufacturer ?? '—',
-            zustand: (a.condition ?? a.zustand ?? '—') || '—',
-            kategorie: a.category ?? '—',
-
-            preis: safeNumber(a.price_from, 0),
-            menge: qty,
-            lieferdatum: isoToDate(a.delivery_date_iso),
-
-            gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
-            privat: sellTo === 'beide',
-
-            einheit: unit,
-            gesponsert: safeNumber(a.promo_score, 0) > 0,
-            bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
-          };
-        });
-
-        if (!cancelled) setArtikelDaten(mapped);
-      } catch (e: any) {
-        if (!cancelled) {
-          setLoadError(e?.message ?? 'Unbekannter Fehler');
-          setArtikelDaten([]);
-          setRawCount(0);
-          setHiddenBusinessCount(0);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [viewerChecked, viewerIsBusiness]);
-
-  const maxAvailablePrice = Math.max(0, ...artikelDaten.map((a) => safeNumber(a.preis, 0)));
-  const [maxPreis, setMaxPreis] = useState(0);
-
-  useEffect(() => {
-    setMaxPreis((prev) => {
-      if (prev === 0) return maxAvailablePrice;
-      return Math.min(prev, maxAvailablePrice);
-    });
-  }, [maxAvailablePrice]);
-
+  // Filter-States
   const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'>('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
@@ -266,6 +141,13 @@ export default function Shopseite() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
 
+  // Pagination aus URL
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const seitenGroesse = 50;
+  const startIndex = (page - 1) * seitenGroesse;
+  const endIndex = page * seitenGroesse;
+
+  // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
     const qKat = searchParams.get('kategorie');
     const normalized = normalizeKategorie(qKat);
@@ -273,6 +155,7 @@ export default function Shopseite() {
     else if (!qKat) setKategorie('');
   }, [searchParams]);
 
+  // ---- URL mit der gewählten Kategorie synchron halten ----
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
     if (kategorie) params.set('kategorie', kategorie);
@@ -285,16 +168,149 @@ export default function Shopseite() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kategorie]);
 
+  // 1) Viewer Account-Type aus profiles holen (business/private)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadViewer() {
+      try {
+        const supa = supabaseBrowser();
+        const { data } = await supa.auth.getUser();
+        const user = data.user;
+
+        if (!user) {
+          if (!cancelled) setViewerIsBusiness(false);
+          return;
+        }
+
+        const { data: prof, error } = await supa
+          .from('profiles')
+          .select('account_type')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          // falls RLS blockt, bleiben wir vorsichtig bei "private"
+          if (!cancelled) setViewerIsBusiness(false);
+          return;
+        }
+
+        if (!cancelled) setViewerIsBusiness(prof?.account_type === 'business');
+      } finally {
+        if (!cancelled) setViewerChecked(true);
+      }
+    }
+
+    loadViewer();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 2) Artikel aus DB laden (nach Viewer-Check, damit sell_to Filter korrekt ist)
+  useEffect(() => {
+    if (!viewerChecked) return;
+
+    let cancelled = false;
+
+    async function loadArticles() {
+      try {
+        setLoading(true);
+        setLoadError(null);
+
+        const res = await fetch(`/api/articles?limit=200&offset=0`, { cache: 'no-store' });
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
+
+        const rows = (json.articles ?? []) as ApiArticle[];
+
+        // sell_to Filter (MVP):
+        const visible = rows.filter((a) => {
+          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
+          if (sellTo === 'gewerblich') return viewerIsBusiness;
+          return true;
+        });
+
+        const mapped: ShopArtikel[] = visible.map((a) => {
+          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
+
+          // Einheit aus DB, fallback: Arbeitsmittel => Stück, sonst kg
+          const unit: 'kg' | 'stueck' =
+            a.price_unit === 'stueck'
+              ? 'stueck'
+              : a.price_unit === 'kg'
+              ? 'kg'
+              : norm(a.category) === 'arbeitsmittel'
+              ? 'stueck'
+              : 'kg';
+
+          // Menge passend zur Einheit (Fallback 0)
+          const qty =
+            unit === 'stueck'
+              ? safeNumber(a.qty_piece, 0)
+              : safeNumber(a.qty_kg, 0);
+
+          return {
+            id: a.id,
+            titel: a.title ?? '',
+            hersteller: a.manufacturer ?? '—',
+            zustand: (a.condition ?? a.zustand ?? '—') || '—',
+            kategorie: a.category ?? '—',
+            preis: safeNumber(a.price_from, 0),
+            menge: qty,
+            lieferdatum: isoToDate(a.delivery_date_iso),
+            bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
+            einheit: unit,
+            gesponsert: safeNumber(a.promo_score, 0) > 0,
+            gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
+            privat: sellTo === 'beide',
+          };
+        });
+
+        if (!cancelled) {
+          setArtikelDaten(mapped);
+          setAnzahlAnzeigen(50);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setLoadError(e?.message ?? 'Unbekannter Fehler');
+          setArtikelDaten([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadArticles();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewerChecked, viewerIsBusiness]);
+
+  // Dynamisch höchsten Preis (wenn keine Artikel -> 0)
+  const maxAvailablePrice = useMemo(() => {
+    if (!artikelDaten.length) return 0;
+    return Math.max(...artikelDaten.map((a) => safeNumber(a.preis, 0)));
+  }, [artikelDaten]);
+
+  const [maxPreis, setMaxPreis] = useState(0);
+  useEffect(() => {
+    setMaxPreis((prev) => (prev === 0 ? maxAvailablePrice : Math.min(prev, maxAvailablePrice)));
+  }, [maxAvailablePrice]);
+
+  // Artikel filtern – Kategorie robust vergleichen
   const gefilterteArtikel = artikelDaten
     .filter((a) => {
       if (!kategorie) return true;
       return normalizeKategorie(a.kategorie) === kategorie;
     })
-    .filter((a) => zustand.length === 0 || zustand.includes(a.zustand ?? ''))
+    .filter((a) => zustand.length === 0 || zustand.includes(a.zustand))
     .filter((a) => (!gewerblich && !privat) || (gewerblich && a.gewerblich) || (privat && a.privat))
-    .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller ?? ''))
+    .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller))
     .filter((a) => safeNumber(a.preis, 0) <= maxPreis);
 
+  // Suche
   const fuse = useMemo(
     () =>
       new Fuse(gefilterteArtikel, {
@@ -306,10 +322,18 @@ export default function Shopseite() {
 
   const suchErgebnis = suchbegriff ? fuse.search(suchbegriff).map((r) => r.item) : gefilterteArtikel;
 
-  const sortierteArtikel = (() => {
-    if (!sortierung) return suchErgebnis;
+  // Default: sponsored first, rest in API order (stable partition)
+  const sponsoredFirst = useMemo(() => {
+    const sponsored = suchErgebnis.filter((a) => a.gesponsert);
+    const rest = suchErgebnis.filter((a) => !a.gesponsert);
+    return [...sponsored, ...rest];
+  }, [suchErgebnis]);
 
-    const arr = [...suchErgebnis];
+  // Sortierung (optional)
+  const sortierteArtikel = useMemo(() => {
+    if (!sortierung) return sponsoredFirst;
+
+    const arr = [...sponsoredFirst];
     arr.sort((a, b) => {
       switch (sortierung) {
         case 'lieferdatum-auf':
@@ -317,9 +341,9 @@ export default function Shopseite() {
         case 'lieferdatum-ab':
           return b.lieferdatum.getTime() - a.lieferdatum.getTime();
         case 'titel-az':
-          return (a.titel ?? '').localeCompare(b.titel ?? '');
+          return a.titel.localeCompare(b.titel);
         case 'titel-za':
-          return (b.titel ?? '').localeCompare(a.titel ?? '');
+          return b.titel.localeCompare(a.titel);
         case 'menge-auf':
           return (a.menge ?? 0) - (b.menge ?? 0);
         case 'menge-ab':
@@ -329,11 +353,11 @@ export default function Shopseite() {
       }
     });
     return arr;
-  })();
+  }, [sponsoredFirst, sortierung]);
 
+  // Infinite-Scroll
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (page !== 1) return;
     observerRef.current?.disconnect();
@@ -349,22 +373,34 @@ export default function Shopseite() {
     return () => observerRef.current?.disconnect();
   }, [sortierteArtikel, page]);
 
-  const totalPages = Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse));
+  // Seite zurücksetzen, wenn andere Filter ändern (außer page)
+  useEffect(() => {
+    if (page !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
+      router.replace(neueUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
+
+  // für Pagination
   const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
 
   return (
     <>
       <Navbar />
 
-      <button className={styles.hamburger} onClick={() => setSidebarOpen((o) => !o)} aria-label="Sidebar öffnen">
+      {/* Hamburger / Sidebar toggle */}
+      <button className={styles.hamburger} onClick={() => setSidebarOpen((open) => !open)} aria-label="Sidebar öffnen">
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
       </button>
-
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
       <div className={styles.wrapper}>
+        {/* SIDEBAR */}
         <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
           <input
             className={styles.input}
@@ -374,6 +410,7 @@ export default function Shopseite() {
             onChange={(e) => setSuchbegriff(e.target.value)}
           />
 
+          {/* Sortierung */}
           <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
             <option value="">Sortieren</option>
             <option value="lieferdatum-auf">Lieferdatum ↑</option>
@@ -384,6 +421,7 @@ export default function Shopseite() {
             <option value="menge-ab">Menge ↓</option>
           </select>
 
+          {/* Preis-Slider */}
           <input
             className={styles.range}
             type="range"
@@ -393,8 +431,9 @@ export default function Shopseite() {
             value={maxPreis}
             onChange={(e) => setMaxPreis(Number(e.target.value))}
           />
-          <div className={styles.mengeText}>Max. Preis: {Number(maxPreis).toFixed(2)} €</div>
+          <div className={styles.mengeText}>Max. Preis: {maxPreis.toFixed(2)} €</div>
 
+          {/* Kategorie */}
           <div className={styles.checkboxGroup}>
             <strong>Kategorie</strong>
             {kategorien.map((k) => (
@@ -409,6 +448,7 @@ export default function Shopseite() {
             </label>
           </div>
 
+          {/* Zustand */}
           <div className={styles.checkboxGroup}>
             <strong>Zustand</strong>
             {zustandFilter.map((z) => (
@@ -423,6 +463,7 @@ export default function Shopseite() {
             ))}
           </div>
 
+          {/* Hersteller */}
           <div className={styles.checkboxGroup}>
             <strong>Hersteller</strong>
             {herstellerFilter.map((h) => (
@@ -439,6 +480,7 @@ export default function Shopseite() {
             ))}
           </div>
 
+          {/* Verkaufstyp */}
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
@@ -452,6 +494,7 @@ export default function Shopseite() {
           </div>
         </div>
 
+        {/* CONTENT */}
         <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
             {loading ? 'Lade Artikel…' : `${sortierteArtikel.length} Artikel im Shop`}
@@ -463,14 +506,9 @@ export default function Shopseite() {
             </div>
           )}
 
-          {/* Hinweis, falls alles weggefiltert wurde */}
-          {!loading && !loadError && sortierteArtikel.length === 0 && rawCount > 0 && hiddenBusinessCount > 0 && (
+          {!loading && !loadError && sortierteArtikel.length === 0 && (
             <div style={{ padding: '10px 0', opacity: 0.9 }}>
-              <strong>Hinweis:</strong> Aktuell sind {hiddenBusinessCount} Artikel nur für <strong>gewerbliche</strong>{' '}
-              Nutzer sichtbar.
-              <div style={{ marginTop: 6 }}>
-                Status: {viewerLoggedIn ? (viewerIsBusiness ? 'Gewerblich ✅' : 'Privat/Unbekannt') : 'Nicht eingeloggt'}
-              </div>
+              <strong>Keine Artikel sichtbar.</strong> (Wenn du private bist, können „nur Gewerblich“-Artikel verborgen sein.)
             </div>
           )}
 
@@ -481,18 +519,17 @@ export default function Shopseite() {
             {page === 1 && <div ref={loadMoreRef} />}
           </div>
 
+          {/* Pagination */}
           <div className={styles.seitenInfo}>
-            Seite {page} von {totalPages}
+            Seite {page} von {Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse))}
           </div>
-
           <div className={styles.pagination}>
             {page > 1 && (
               <Link href={page - 1 === 1 ? location.pathname : `?page=${page - 1}`} className={styles.pageArrow}>
                 ←
               </Link>
             )}
-
-            {Array.from({ length: totalPages }, (_, i) => {
+            {Array.from({ length: Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse)) }, (_, i) => {
               const p = i + 1;
               const href = p === 1 ? location.pathname : `?page=${p}`;
               return (
@@ -501,8 +538,7 @@ export default function Shopseite() {
                 </Link>
               );
             })}
-
-            {page < totalPages && (
+            {page < Math.ceil(sortierteArtikel.length / seitenGroesse) && (
               <Link href={`?page=${page + 1}`} className={styles.pageArrow}>
                 →
               </Link>
