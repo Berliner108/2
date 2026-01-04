@@ -53,10 +53,11 @@ export async function GET(req: Request) {
 
     const admin = supabaseAdmin();
 
+    // ✅ WICHTIG: hier nur erweitert (owner_id + condition)
     const { data: article, error } = await admin
       .from("articles")
       .select(
-        "id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, created_at"
+        "id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, created_at, owner_id, condition"
       )
       .eq("id", id)
       .eq("published", true)
@@ -79,7 +80,7 @@ export async function GET(req: Request) {
 
     if (tierErr) return NextResponse.json({ error: tierErr.message }, { status: 500 });
 
-    // delivery date (Berlin + delivery_holidays)
+    // delivery date (Berlin + delivery_holidays) – unverändert
     const todayISO = getBerlinTodayISO();
     const dDays = typeof article.delivery_days === "number" ? article.delivery_days : Number(article.delivery_days ?? 0);
 
@@ -97,7 +98,7 @@ export async function GET(req: Request) {
     const holidaySet = new Set<string>((holidayRows ?? []).map((h: any) => h.holiday_date));
     const delivery_date_iso = addBusinessDaysISO(todayISO, dDays, holidaySet);
 
-    // price_from + price_unit
+    // price_from + price_unit – unverändert
     let price_from: number | null = null;
     let price_unit: "kg" | "stueck" | null = null;
 
@@ -110,9 +111,38 @@ export async function GET(req: Request) {
       }
     }
 
+    // ✅ Seller-Profil aus profiles (username + rating)
+    let seller: null | {
+      id: string;
+      username: string | null;
+      account_type: "business" | "private" | string | null;
+      rating_avg: number | null;
+      rating_count: number | null;
+    } = null;
+
+    const ownerId = (article as any).owner_id as string | null | undefined;
+    if (ownerId) {
+      const { data: prof, error: profErr } = await admin
+        .from("profiles")
+        .select("id, username, account_type, rating_avg, rating_count")
+        .eq("id", ownerId)
+        .maybeSingle();
+
+      if (!profErr && prof) {
+        seller = {
+          id: prof.id,
+          username: prof.username ?? null,
+          account_type: prof.account_type ?? null,
+          rating_avg: prof.rating_avg != null ? Number(prof.rating_avg) : null,
+          rating_count: prof.rating_count != null ? Number(prof.rating_count) : null,
+        };
+      }
+    }
+
     return NextResponse.json({
       article: { ...article, delivery_date_iso, price_from, price_unit },
       tiers: tiers ?? [],
+      seller,
     });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "UNKNOWN_ERROR" }, { status: 500 });
