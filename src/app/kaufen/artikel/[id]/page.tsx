@@ -102,12 +102,13 @@ export default function ArtikelDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
 
-  const cat = (article.category ?? "").trim();
-const catLabel =
+  const cat = (article?.category ?? "").trim();
+  const catLabel =
   cat.toLowerCase() === "arbeitsmittel" ? "Arbeitsmittel"
   : cat.toLowerCase() === "pulverlack" ? "Pulverlack"
   : cat.toLowerCase() === "nasslack" ? "Nasslack"
   : cat;
+
 const manufacturerLabel = String(article.manufacturer ?? "—");
 
 
