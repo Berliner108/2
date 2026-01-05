@@ -131,6 +131,13 @@ if (!user) {
     const manufacturer = toStr(fd.get("hersteller")).trim();
     const description = toStr(fd.get("beschreibung")).trim();
 
+    const conditionRaw = toStr(fd.get("zustand")).trim(); // kommt aus VerkaufenClient
+    const condition =
+    conditionRaw === "neu" ? "Neu & Ungeöffnet"
+    : conditionRaw === "geöffnet" ? "Geöffnet & Einwandfrei"
+    : conditionRaw || null;
+
+
     const deliveryDays = toInt(toStr(fd.get("lieferWerktage")), 0);
     const stockStatus = toStr(fd.get("mengeStatus")).trim(); // "auf_lager" | "begrenzt"
 
@@ -142,6 +149,10 @@ if (!user) {
     if (!category || !sellTo || !title || !manufacturer) {
       return NextResponse.json({ error: "MISSING_REQUIRED_FIELDS" }, { status: 400 });
     }
+    if (!conditionRaw) {
+    return NextResponse.json({ error: "MISSING_CONDITION" }, { status: 400 });
+    }
+
     if (!images.length) {
       return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
     }
@@ -175,6 +186,7 @@ if (!user) {
       category,
       sell_to: sellTo,
       manufacturer,
+      condition, // ✅ schreibt in articles.condition
       sale_type: verkaufsArt,
       promo_score: promoScore,
       delivery_days: deliveryDays,
