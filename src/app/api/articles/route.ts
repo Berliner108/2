@@ -174,7 +174,7 @@ if (articleIds.length) {
         ...a,
         price_from: minPriceByArticle[a.id]?.price_from ?? null,
         price_unit: minPriceByArticle[a.id]?.unit ?? null,        
-        seller_account_type: a.owner_id ? (sellerById[a.owner_id]?.account_type ?? null) : neull,
+        seller_account_type: a.owner_id ? (sellerById[a.owner_id]?.account_type ?? null) : null,
         delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
       };
     });
