@@ -132,10 +132,15 @@ if (!user) {
     const description = toStr(fd.get("beschreibung")).trim();
 
     const conditionRaw = toStr(fd.get("zustand")).trim(); // kommt aus VerkaufenClient
-    const condition =
-    conditionRaw === "neu" ? "Neu und ungeöffnet"
-    : conditionRaw === "geöffnet" ? "Geöffnet und einwandfrei"
-    : conditionRaw || null;
+    const zustandRaw = toStr(fd.get("zustand")).trim();
+
+const condition =
+  zustandRaw === "neu" || zustandRaw === "Neu & Ungeöffnet" || zustandRaw === "Neu und ungeöffnet"
+    ? "Neu und ungeöffnet"
+    : zustandRaw === "geöffnet" || zustandRaw === "Geöffnet & Einwandfrei" || zustandRaw === "Geöffnet und einwandfrei"
+    ? "Geöffnet und einwandfrei"
+    : (zustandRaw || null);
+
 
 
     const deliveryDays = toInt(toStr(fd.get("lieferWerktage")), 0);
