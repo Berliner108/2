@@ -136,34 +136,32 @@ if (ownerIds.length) {
 }
 
 
-    // 2) price_from (Brutto) für diese Artikel ermitteln
-    const ids = (articles ?? []).map((a) => a.id);
-    let minPriceByArticle: Record<
-      string,
-      { price_from: number | null; unit: "kg" | "stueck" | null }
-    > = {};
+   // 2) price_from (Brutto) für diese Artikel ermitteln
+const articleIds = (articles ?? []).map((a: any) => a.id);
+let minPriceByArticle: Record<string, { price_from: number | null; unit: "kg" | "stueck" | null }> = {};
 
-    if (ids.length) {
-      const { data: tiers, error: tierError } = await admin
-        .from("article_price_tiers")
-        .select("article_id, unit, price")
-        .in("article_id", ids);
+if (articleIds.length) {
+  const { data: tiers, error: tierError } = await admin
+    .from("article_price_tiers")
+    .select("article_id, unit, price")
+    .in("article_id", articleIds);
 
-      if (tierError) {
-        return NextResponse.json({ error: tierError.message }, { status: 500 });
-      }
+  if (tierError) {
+    return NextResponse.json({ error: tierError.message }, { status: 500 });
+  }
 
-      for (const t of tiers ?? []) {
-        const key = t.article_id;
-        const price = typeof t.price === "number" ? t.price : Number(t.price);
-        const unit = t.unit as "kg" | "stueck";
+  for (const t of tiers ?? []) {
+    const key = t.article_id;
+    const price = typeof t.price === "number" ? t.price : Number(t.price);
+    const unit = t.unit as "kg" | "stueck";
 
-        const current = minPriceByArticle[key];
-        if (!current || current.price_from === null || price < current.price_from) {
-          minPriceByArticle[key] = { price_from: price, unit };
-        }
-      }
+    const current = minPriceByArticle[key];
+    if (!current || current.price_from === null || price < current.price_from) {
+      minPriceByArticle[key] = { price_from: price, unit };
     }
+  }
+}
+
 
     // 3) MVP: promo oben lassen, Rest randomisieren (nur promo_score==0)
     const list = (articles ?? []).map((a: any) => {
