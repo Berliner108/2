@@ -84,6 +84,8 @@ type ShopArtikel = {
   gesponsert?: boolean;
   gewerblich?: boolean;
   privat?: boolean;
+  sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+
 };
 
 type ApiArticle = {
@@ -102,6 +104,8 @@ type ApiArticle = {
   price_unit?: 'kg' | 'stueck' | null;
   condition?: string | null; // optional, falls API liefert
   zustand?: string | null;   // optional fallback
+  sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+
 };
 
 function safeNumber(v: any, fallback = 0) {
@@ -274,6 +278,7 @@ export default function Shopseite() {
             gesponsert: safeNumber(a.promo_score, 0) > 0,
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
+            sale_type: (a.sale_type ?? null),
           };
         });
 

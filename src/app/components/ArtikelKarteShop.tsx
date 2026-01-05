@@ -18,9 +18,9 @@ type ArtikelProps = {
     kategorie?: string | null;
     preis?: number;
     bilder?: string[] | null;
-
     // kommt aus DB (price_unit)
     einheit: 'kg' | 'stueck';
+    sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
 
     // ✅ Verkäufer-Typ (profiles.account_type)
     seller_account_type?: 'business' | 'private' | null;
@@ -121,8 +121,13 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <div className={styles.cardText6}>Kategorie: {katAnzeige || '—'}</div>
 
           <div className={styles.cardText7}>
-            Preis ab: {typeof preis === 'number' ? preis.toFixed(2) : '—'} € / {einheitLabel}
+            {artikel.sale_type === "gesamt" ? (
+              <>Preis: {typeof preis === "number" ? preis.toFixed(2) : "—"} €</>
+            ) : (
+              <>Preis ab: {typeof preis === "number" ? preis.toFixed(2) : "—"} € / {einheitLabel}</>
+            )}
           </div>
+
         </div>
       </div>
     </Link>
