@@ -80,6 +80,7 @@ type ShopArtikel = {
   preis: number;
   bilder: string[];
   einheit: 'kg' | 'stueck';
+  seller_account_type?: "business" | "private" | null;
   gesponsert?: boolean;
   gewerblich?: boolean;
   privat?: boolean;
@@ -261,6 +262,7 @@ export default function Shopseite() {
             menge: qty,
             lieferdatum: isoToDate(a.delivery_date_iso),
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
+            seller_account_type: (a as any).seller_account_type ?? null,
             einheit: unit,
             gesponsert: safeNumber(a.promo_score, 0) > 0,
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',

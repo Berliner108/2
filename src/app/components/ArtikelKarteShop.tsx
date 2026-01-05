@@ -22,7 +22,12 @@ type ArtikelProps = {
     // kommt aus DB (price_unit)
     einheit: 'kg' | 'stueck';
 
+    // ✅ Verkäufer-Typ (profiles.account_type)
+    seller_account_type?: 'business' | 'private' | null;
+
     gesponsert?: boolean;
+
+    // legacy (kann bleiben, wird hier nicht mehr verwendet)
     gewerblich?: boolean;
     privat?: boolean;
   };
@@ -48,23 +53,23 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
     preis,
     bilder,
     gesponsert,
-    gewerblich,
-    privat,
   } = artikel;
 
   const katAnzeige = formatKategorie(kategorie);
   const einheitLabel = artikel.einheit === 'stueck' ? 'Stück' : 'kg';
 
-  const verkaufLabel =
-    gewerblich && privat
-      ? 'Privat & Gewerblich'
-      : gewerblich
+  // ✅ Badge-Text + Klasse = Verkäufer-Typ
+  const sellerLabel =
+    artikel.seller_account_type === 'business'
       ? 'Gewerblich'
-      : privat
+      : artikel.seller_account_type === 'private'
       ? 'Privat'
-      : '';
+      : null;
 
-  const showSellLabel = Boolean(verkaufLabel);
+  const sellerClass =
+    artikel.seller_account_type === 'business' ? styles.gewerblichLabel : styles.privatLabel;
+
+  const showSellLabel = Boolean(sellerLabel);
 
   return (
     <Link href={`/kaufen/artikel/${id}`} className={styles.cardLink}>
@@ -85,23 +90,15 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
           {/* Desktop Label */}
           {showSellLabel && (
-            <div
-              className={`${styles.verkaufsTypLabel} ${
-                gewerblich ? styles.gewerblichLabel : styles.privatLabel
-              } ${styles.desktopOnly}`}
-            >
-              {verkaufLabel}
+            <div className={`${styles.verkaufsTypLabel} ${sellerClass} ${styles.desktopOnly}`}>
+              {sellerLabel}
             </div>
           )}
 
           {/* Mobile Label */}
           {showSellLabel && (
-            <div
-              className={`${styles.verkaufsTypLabel} ${
-                gewerblich ? styles.gewerblichLabel : styles.privatLabel
-              } ${styles.mobileOnly}`}
-            >
-              {verkaufLabel}
+            <div className={`${styles.verkaufsTypLabel} ${sellerClass} ${styles.mobileOnly}`}>
+              {sellerLabel}
             </div>
           )}
         </div>

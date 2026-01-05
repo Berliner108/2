@@ -236,13 +236,15 @@ export default function ArtikelDetailPage() {
     return new Date(`${article.delivery_date_iso}T00:00:00`).toLocaleDateString("de-DE");
   }, [article?.delivery_date_iso]);
 
-  const badges = useMemo(() => {
-    const sellTo = (article?.sell_to ?? "beide") as "gewerblich" | "beide";
-    return {
-      gewerblich: sellTo === "gewerblich" || sellTo === "beide",
-      privat: sellTo === "beide",
-    };
-  }, [article?.sell_to]);
+  const sellerTypeLabel =
+    seller?.account_type === "business"
+      ? "Gewerblich"
+      : seller?.account_type === "private"
+      ? "Privat"
+      : null;
+
+  const sellerTypeClass =
+    seller?.account_type === "business" ? styles.gewerblich : styles.privat;
 
   const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
@@ -386,13 +388,16 @@ export default function ArtikelDetailPage() {
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
               <h1 className={styles.title}>{article.title}</h1>
-              {(article.promo_score ?? 0) > 0 && <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>}
+              {(article.promo_score ?? 0) > 0 && (
+                <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
+              )}
             </div>
 
-            {/* Badges Privat/Gewerblich (wie Lackanfragen) */}
+            {/* ✅ Badge = Usertyp des VERKÄUFERS */}
             <div className={styles.badges}>
-              {badges.gewerblich && <span className={`${styles.badge} ${styles.gewerblich}`}>Gewerblich</span>}
-              {badges.privat && <span className={`${styles.badge} ${styles.privat}`}>Privat</span>}
+              {sellerTypeLabel && (
+                <span className={`${styles.badge} ${sellerTypeClass}`}>{sellerTypeLabel}</span>
+              )}
             </div>
 
             <div className={styles.meta}>
@@ -429,7 +434,7 @@ export default function ArtikelDetailPage() {
                 <span className={styles.label}>Verfügbarkeit:</span>
                 <span className={styles.value}>
                   {article.stock_status === "begrenzt" ? "Begrenzt" : "Auf Lager"}
-                  {(article.qty_kg != null || article.qty_piece != null) ? (
+                  {article.qty_kg != null || article.qty_piece != null ? (
                     <>
                       {" "}
                       · {article.qty_kg != null ? `${Number(article.qty_kg)} kg` : null}
@@ -440,7 +445,7 @@ export default function ArtikelDetailPage() {
                 </span>
               </div>
 
-              {/* Seller Box: Username + Rating + Kontakt-Link (wie Lackanfragen) */}
+              {/* Seller Box: Username + Rating + Kontakt-Link */}
               {seller?.username && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>User:</span>

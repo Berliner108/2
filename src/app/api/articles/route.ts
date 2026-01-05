@@ -64,7 +64,7 @@ export async function GET(req: Request) {
     const { data: articles, error } = await admin
       .from("articles")
       .select(
-        "id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, created_at"
+        "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, created_at"
       )
       .eq("published", true)
       .eq("sold_out", false)
@@ -76,6 +76,7 @@ export async function GET(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+    const ids = (articles ?? []).map((a) => a.id);
 
     // 1b) Feiertage laden (für Lieferdatum-Berechnung)
     const todayISO = getBerlinTodayISO();
@@ -109,6 +110,31 @@ export async function GET(req: Request) {
     const holidaySet = new Set<string>(
       (holidayRows ?? []).map((h: any) => h.holiday_date)
     );
+    // --- Seller-Profile (account_type) für Badges holen ---
+const ownerIds = Array.from(
+  new Set((articles ?? []).map((a: any) => a.owner_id).filter(Boolean))
+) as string[];
+
+const sellerById: Record<
+  string,
+  { account_type: "business" | "private" | string | null }
+> = {};
+
+if (ownerIds.length) {
+  const { data: profs, error: profErr } = await admin
+    .from("profiles")
+    .select("id, account_type")
+    .in("id", ownerIds);
+
+  if (profErr) {
+    return NextResponse.json({ error: profErr.message }, { status: 500 });
+  }
+
+  for (const p of profs ?? []) {
+    sellerById[p.id] = { account_type: p.account_type ?? null };
+  }
+}
+
 
     // 2) price_from (Brutto) für diese Artikel ermitteln
     const ids = (articles ?? []).map((a) => a.id);
@@ -149,7 +175,8 @@ export async function GET(req: Request) {
       return {
         ...a,
         price_from: minPriceByArticle[a.id]?.price_from ?? null,
-        price_unit: minPriceByArticle[a.id]?.unit ?? null,
+        price_unit: minPriceByArticle[a.id]?.unit ?? null,        
+        seller_account_type: a.owner_id ? (sellerById[a.owner_id]?.account_type ?? null) : neull,
         delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
       };
     });
