@@ -22,7 +22,7 @@ const CAT_MAP: Record<string, 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'> = {
 const normalizeKategorie = (s?: string | null) => CAT_MAP[norm(s)] ?? '';
 
 const kategorien: Array<'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'> = ['Nasslack', 'Pulverlack', 'Arbeitsmittel'];
-const zustandFilter = ['Neu & Ungeöffnet', 'Geöffnet & Einwandfrei'];
+const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
 const herstellerFilter = [
   'Brillux',
