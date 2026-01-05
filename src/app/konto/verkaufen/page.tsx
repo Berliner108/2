@@ -34,8 +34,6 @@ const formatEUR = (c: number) => (c / 100).toLocaleString('de-AT', { style: 'cur
 const formatDateTime = (v?: string) => (v ? new Date(v).toLocaleString('de-AT') : '—')
 const salePathBy = (id: string) => `/konto/verkaeufe/${encodeURIComponent(String(id))}`
 
-const salePathBy = (id: string) => `/konto/verkaeufe/${encodeURIComponent(String(id))}` // <- ggf. anpassen
-
 const fetcher = (url: string) =>
   fetch(url, { credentials: 'include', cache: 'no-store' }).then(async r => {
     const json = await r.json().catch(() => ({}))
