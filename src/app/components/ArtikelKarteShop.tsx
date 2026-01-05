@@ -117,7 +117,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           </div>
 
           <div className={styles.cardText4}>Hersteller: {hersteller ?? '—'}</div>
-          <div className={styles.cardText5}>Zustand: {zustand ?? '—'}</div>
+          <div className={styles.cardText5}>Zustand: {(zustand ?? "").trim() || "—"}</div>
           <div className={styles.cardText6}>Kategorie: {katAnzeige || '—'}</div>
 
           <div className={styles.cardText7}>

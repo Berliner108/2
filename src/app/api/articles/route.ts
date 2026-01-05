@@ -64,7 +64,7 @@ export async function GET(req: Request) {
     const { data: articles, error } = await admin
       .from("articles")
       .select(
-        "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, created_at"
+        "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, condition, created_at"
       )
       .eq("published", true)
       .eq("sold_out", false)

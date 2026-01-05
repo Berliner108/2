@@ -267,7 +267,7 @@ export default function Shopseite() {
             id: a.id,
             titel: a.title ?? '',
             hersteller: a.manufacturer ?? '—',
-            zustand: (a.condition ?? a.zustand ?? '—') || '—',
+            zustand: String(a.condition ?? a.zustand ?? "").trim() || "—",
             kategorie: a.category ?? '—',
             preis: safeNumber(a.price_from, 0),
             menge: displayQty,
