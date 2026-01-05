@@ -6,6 +6,9 @@ import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './konto.module.css' // <- kopierte lackanfragen.module.css
 
+
+const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`;
+
 /* ================= Types ================= */
 type MyArticle = {
   id: string
