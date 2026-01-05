@@ -3,7 +3,7 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
-import styles from '../lackangebote/lackangebote.module.css'
+import styles from './kaufen.module.css'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -469,11 +469,12 @@ const KontoVerkaufenPage: FC = () => {
                             ) : (
                               <button
                                 type="button"
-                                className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                                className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
                                 onClick={() => alert('Dummy: Aktivieren später anbinden.')}
                               >
                                 Aktivieren
                               </button>
+
                             )}
                           </aside>
                         </div>
