@@ -898,6 +898,8 @@ const finalHersteller =
 formData.append('hersteller', finalHersteller);
 
 formData.append('beschreibung', beschreibung);
+formData.append('zustand', zustand || 'neu');
+
 formData.append('bewerbung', JSON.stringify(bewerbungOptionen));
 
 // menge (einheitlich)
