@@ -3,7 +3,7 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
-import styles from './konto.module.css' // <- ggf. anpassen (z.B. './konto.module.css')
+import styles from './konto.module.css' // ✅ Buttons + Modal wie konto/lackangebote
 
 /* ================= Types ================= */
 type MyArticle = {
@@ -23,6 +23,7 @@ type MySale = {
   totalCents: number
   createdAt: string
   status: 'paid' | 'shipped' | 'completed' | 'canceled' | 'refunded'
+  myReview?: { stars: 1 | 2 | 3 | 4 | 5; text: string } | null
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -34,11 +35,11 @@ const formatEUR = (c: number) =>
 
 const formatDateTime = (v?: string) => (v ? new Date(v).toLocaleString('de-AT') : '—')
 
-// ✅ Deine Artikel-Route:
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
 
-// (optional) falls du später eine Verkaufs-Detailseite machst:
-const salePathBy = (id: string) => `/konto/verkaeufe/${encodeURIComponent(String(id))}`
+// ✅ Rechnung-Download (wie bei konto/lackangebote)
+// Wenn du später echte IDs hast: hier einfach anpassen (sale.id oder orderId).
+const invoiceUrl = (s: MySale) => `/api/invoices/${encodeURIComponent(String(s.id))}/download`
 
 /* ================= Dummy Data ================= */
 const now = Date.now()
@@ -52,30 +53,23 @@ const DUMMY_ARTICLES: MyArticle[] = [
   { id: 'A-1005', title: 'Sonderfarbe Kupfer', priceCents: 19900, createdAt: daysAgo(13), status: 'archived', views: 21 },
   { id: 'A-1006', title: 'Feinstruktur grau', priceCents: 10500, createdAt: daysAgo(16), status: 'active', views: 33 },
   { id: 'A-1007', title: 'Glanzlack weiß', priceCents: 7400, createdAt: daysAgo(20), status: 'sold', views: 210 },
-  { id: 'A-1008', title: 'Industrie-Set (B2B)', priceCents: 24900, createdAt: daysAgo(28), status: 'active', views: 18 },
 ]
 
-const DUMMY_SALES: MySale[] = [
-  { id: 'S-2001', articleId: 'A-1007', articleTitle: 'Glanzlack weiß', buyerHandle: 'kunde_017', totalCents: 7400, createdAt: daysAgo(1), status: 'paid' },
-  { id: 'S-2002', articleId: 'A-1001', articleTitle: 'Vaillant Weiss glatt matt', buyerHandle: 'max.m', totalCents: 12900, createdAt: daysAgo(6), status: 'shipped' },
-  { id: 'S-2003', articleId: 'A-1002', articleTitle: 'IGP Anthrazit metallic', buyerHandle: 'b2b_buyer', totalCents: 8900, createdAt: daysAgo(12), status: 'completed' },
+const DUMMY_SALES_INIT: MySale[] = [
+  { id: 'S-2001', articleId: 'A-1007', articleTitle: 'Glanzlack weiß', buyerHandle: 'kunde_017', totalCents: 7400, createdAt: daysAgo(1), status: 'paid', myReview: null },
+  { id: 'S-2002', articleId: 'A-1001', articleTitle: 'Vaillant Weiss glatt matt', buyerHandle: 'max.m', totalCents: 12900, createdAt: daysAgo(6), status: 'shipped', myReview: null },
+  { id: 'S-2003', articleId: 'A-1002', articleTitle: 'IGP Anthrazit metallic', buyerHandle: 'b2b_buyer', totalCents: 8900, createdAt: daysAgo(12), status: 'completed', myReview: { stars: 5, text: 'Top, schnell bezahlt.' } },
 ]
 
 /* ================= Pagination ================= */
-function sliceByPage<T>(arr: T[], page: number, ps: number) {
+type Slice<T> = { pageItems: T[]; from: number; to: number; total: number; safePage: number; pages: number }
+function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const total = arr.length
   const pages = Math.max(1, Math.ceil(total / ps))
   const safePage = Math.min(Math.max(1, page), pages)
   const start = (safePage - 1) * ps
   const end = Math.min(start + ps, total)
-  return {
-    pageItems: arr.slice(start, end),
-    from: total === 0 ? 0 : start + 1,
-    to: end,
-    total,
-    safePage,
-    pages,
-  }
+  return { pageItems: arr.slice(start, end), from: total === 0 ? 0 : start + 1, to: end, total, safePage, pages }
 }
 
 const Pagination: FC<{
@@ -89,153 +83,97 @@ const Pagination: FC<{
   idPrefix: string
 }> = ({ page, setPage, pageSize, setPageSize, total, from, to, idPrefix }) => {
   const pages = Math.max(1, Math.ceil(total / pageSize))
-
   return (
     <div className={styles.pagination} aria-label="Seitensteuerung">
       <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
-        {total === 0 ? (
-          'Keine Einträge'
-        ) : (
-          <>
-            Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong>
-          </>
-        )}
+        {total === 0 ? 'Keine Einträge' : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
       </div>
-
       <div className={styles.pagiControls}>
-        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>
-          Pro Seite:
-        </label>
-
+        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
         <select
           id={`${idPrefix}-ps`}
           className={styles.pageSize}
           value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value))
-            setPage(1)
-          }}
+          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
         >
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
         </select>
-
         <div className={styles.pageButtons}>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">
-            «
-          </button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">
-            ‹
-          </button>
-
-          <span className={styles.pageNow} aria-live="polite">
-            Seite {page} / {pages}
-          </span>
-
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">
-            ›
-          </button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">
-            »
-          </button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
+          <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
         </div>
       </div>
     </div>
   )
 }
 
-/* ================= Page ================= */
-const DEFAULTS = {
-  q: '',
-  sort: 'date_desc' as SortKey,
-  tab: 'articles' as TopSection,
-  psA: 10,
-  psS: 10,
-  pageA: 1,
-  pageS: 1,
+/* ================= Status Badge Mapping ================= */
+function articleBadgeClass(status: MyArticle['status']) {
+  if (status === 'active') return styles.statusActive
+  if (status === 'draft') return styles.statusPending
+  if (status === 'sold') return styles.statusDone
+  return styles.statusDisputed // archived -> rot-ish (passt optisch)
 }
 
-const ALLOWED_SORTS: SortKey[] = ['date_desc', 'date_asc', 'price_desc', 'price_asc']
+function saleBadgeClass(status: MySale['status']) {
+  if (status === 'paid' || status === 'shipped') return styles.statusPending
+  if (status === 'completed') return styles.statusDone
+  return styles.statusDisputed // canceled/refunded
+}
 
+function saleLabel(status: MySale['status']) {
+  if (status === 'paid') return 'Bezahlt'
+  if (status === 'shipped') return 'Versandt'
+  if (status === 'completed') return 'Abgeschlossen'
+  if (status === 'refunded') return 'Erstattet'
+  return 'Storniert'
+}
+
+/* ================= Page ================= */
 const VerkaufenKontoPage: FC = () => {
-  // Dummy-Daten statt API
-  const articlesRaw = DUMMY_ARTICLES
-  const salesRaw = DUMMY_SALES // wenn du gar keine willst: []
+  const [articles] = useState<MyArticle[]>(DUMMY_ARTICLES)
+  const [sales, setSales] = useState<MySale[]>(DUMMY_SALES_INIT)
 
-  const [query, setQuery] = useState(DEFAULTS.q)
-  const [sort, setSort] = useState<SortKey>(DEFAULTS.sort)
-  const [topSection, setTopSection] = useState<TopSection>(DEFAULTS.tab)
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<SortKey>('date_desc')
+  const [topSection, setTopSection] = useState<TopSection>('articles')
 
-  // Pagination State (separat)
-  const [pageA, setPageA] = useState(DEFAULTS.pageA)
-  const [psA, setPsA] = useState(DEFAULTS.psA)
-  const [pageS, setPageS] = useState(DEFAULTS.pageS)
-  const [psS, setPsS] = useState(DEFAULTS.psS)
+  // Pagination getrennt
+  const [pageA, setPageA] = useState(1)
+  const [psA, setPsA] = useState(10)
+  const [pageS, setPageS] = useState(1)
+  const [psS, setPsS] = useState(10)
 
-  // URL + localStorage (wie bei deiner Stil-Seite)
+  // ✅ Bewertung Modal (wie konto/lackangebote)
+  const [rateSaleId, setRateSaleId] = useState<string | null>(null)
+  const [ratingStars, setRatingStars] = useState<1 | 2 | 3 | 4 | 5>(5)
+  const [ratingText, setRatingText] = useState('')
+  const MAX_REVIEW = 400
+
+  const activeSale = useMemo(
+    () => (rateSaleId ? sales.find(s => s.id === rateSaleId) ?? null : null),
+    [rateSaleId, sales]
+  )
+
+  // ESC schließt Modal
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const q = params.get('q')
-      if (q !== null) setQuery(q)
+    if (!rateSaleId) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setRateSaleId(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [rateSaleId])
 
-      const s = params.get('sort') as SortKey | null
-      if (s && ALLOWED_SORTS.includes(s)) setSort(s)
-
-      const tab = params.get('tab') as TopSection | null
-      if (tab === 'articles' || tab === 'sales') setTopSection(tab)
-      else {
-        const saved = localStorage.getItem('konto:top')
-        if (saved === 'articles' || saved === 'sales') setTopSection(saved as TopSection)
-      }
-
-      const lPsA = Number(localStorage.getItem('konto:ps:articles')) || 10
-      const lPsS = Number(localStorage.getItem('konto:ps:sales')) || 10
-      setPsA([10, 20, 50].includes(Number(params.get('psA'))) ? Number(params.get('psA')) : ([10, 20, 50].includes(lPsA) ? lPsA : 10))
-      setPsS([10, 20, 50].includes(Number(params.get('psS'))) ? Number(params.get('psS')) : ([10, 20, 50].includes(lPsS) ? lPsS : 10))
-
-      const lPageA = Number(localStorage.getItem('konto:page:articles')) || 1
-      const lPageS = Number(localStorage.getItem('konto:page:sales')) || 1
-      setPageA(Number(params.get('pageA')) > 0 ? Number(params.get('pageA')) : (lPageA > 0 ? lPageA : 1))
-      setPageS(Number(params.get('pageS')) > 0 ? Number(params.get('pageS')) : (lPageS > 0 ? lPageS : 1))
-    } catch {}
-  }, [])
-
-  useEffect(() => { try { localStorage.setItem('konto:top', topSection) } catch {} }, [topSection])
-  useEffect(() => { try { localStorage.setItem('konto:ps:articles', String(psA)) } catch {} }, [psA])
-  useEffect(() => { try { localStorage.setItem('konto:ps:sales', String(psS)) } catch {} }, [psS])
-  useEffect(() => { try { localStorage.setItem('konto:page:articles', String(pageA)) } catch {} }, [pageA])
-  useEffect(() => { try { localStorage.setItem('konto:page:sales', String(pageS)) } catch {} }, [pageS])
-
-  useEffect(() => {
-    setPageA(1)
-    setPageS(1)
-  }, [query, sort])
-
-  useEffect(() => {
-    try {
-      const p = new URLSearchParams()
-      if (query) p.set('q', query)
-      if (sort !== 'date_desc') p.set('sort', sort)
-      if (topSection !== 'articles') p.set('tab', topSection)
-      if (psA !== 10) p.set('psA', String(psA))
-      if (psS !== 10) p.set('psS', String(psS))
-      if (pageA !== 1) p.set('pageA', String(pageA))
-      if (pageS !== 1) p.set('pageS', String(pageS))
-
-      const qs = p.toString()
-      const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
-      const curr = `${window.location.pathname}${window.location.search}`
-      if (next !== curr) window.history.replaceState(null, '', next)
-    } catch {}
-  }, [query, sort, topSection, psA, psS, pageA, pageS])
+  useEffect(() => { setPageA(1); setPageS(1) }, [query, sort])
 
   const filteredArticles = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let arr = [...articlesRaw]
-    if (q) arr = arr.filter((a) => a.title.toLowerCase().includes(q) || a.id.toLowerCase().includes(q))
-
+    let arr = [...articles]
+    if (q) arr = arr.filter(a => a.title.toLowerCase().includes(q) || a.id.toLowerCase().includes(q))
     arr.sort((a, b) => {
       if (sort === 'date_desc') return +new Date(b.createdAt) - +new Date(a.createdAt)
       if (sort === 'date_asc') return +new Date(a.createdAt) - +new Date(b.createdAt)
@@ -244,20 +182,18 @@ const VerkaufenKontoPage: FC = () => {
       return 0
     })
     return arr
-  }, [articlesRaw, query, sort])
+  }, [articles, query, sort])
 
   const filteredSales = useMemo(() => {
     const q = query.trim().toLowerCase()
-    let arr = [...salesRaw]
+    let arr = [...sales]
     if (q) {
-      arr = arr.filter(
-        (s) =>
-          s.articleTitle.toLowerCase().includes(q) ||
-          s.id.toLowerCase().includes(q) ||
-          (s.buyerHandle ?? '').toLowerCase().includes(q)
+      arr = arr.filter(s =>
+        s.articleTitle.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q) ||
+        (s.buyerHandle ?? '').toLowerCase().includes(q)
       )
     }
-
     arr.sort((a, b) => {
       if (sort === 'date_desc') return +new Date(b.createdAt) - +new Date(a.createdAt)
       if (sort === 'date_asc') return +new Date(a.createdAt) - +new Date(b.createdAt)
@@ -266,7 +202,7 @@ const VerkaufenKontoPage: FC = () => {
       return 0
     })
     return arr
-  }, [salesRaw, query, sort])
+  }, [sales, query, sort])
 
   const pagA = sliceByPage(filteredArticles, pageA, psA)
   useEffect(() => { if (pagA.safePage !== pageA) setPageA(pagA.safePage) }, [pagA.safePage, pageA])
@@ -274,20 +210,39 @@ const VerkaufenKontoPage: FC = () => {
   const pagS = sliceByPage(filteredSales, pageS, psS)
   useEffect(() => { if (pagS.safePage !== pageS) setPageS(pagS.safePage) }, [pagS.safePage, pageS])
 
+  const alreadyRated = (s: MySale) => !!s.myReview
+
+  function openRate(s: MySale) {
+    if (alreadyRated(s)) return
+    setRateSaleId(s.id)
+    setRatingStars(5)
+    setRatingText('')
+  }
+
+  function saveRating() {
+    if (!activeSale) return
+    const text = ratingText.trim().slice(0, MAX_REVIEW)
+    setSales(prev =>
+      prev.map(s =>
+        s.id === activeSale.id ? { ...s, myReview: { stars: ratingStars, text } } : s
+      )
+    )
+    setRateSaleId(null)
+    setRatingText('')
+  }
+
   const ArticlesSection = () => (
     <>
       <h2 className={styles.heading}>Meine eingestellten Artikel</h2>
 
       <div className={styles.kontoContainer}>
         {pagA.total === 0 ? (
-          <div className={styles.emptyState}>
-            <strong>Keine Artikel gefunden.</strong>
-          </div>
+          <div className={styles.emptyState}><strong>Keine Artikel gefunden.</strong></div>
         ) : (
           <>
             <ul className={styles.list}>
               {pagA.pageItems.map((a) => (
-                <li key={a.id} className={`${styles.card} ${styles.isLackanfrage}`}>
+                <li key={a.id} className={`${styles.card} ${styles.cardCyan}`}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardTitle}>
                       <Link href={articlePathBy(a.id)} className={styles.titleLink}>
@@ -295,30 +250,37 @@ const VerkaufenKontoPage: FC = () => {
                       </Link>
                     </div>
 
-                    <div className={styles.price}>{formatEUR(a.priceCents)}</div>
+                    <span className={`${styles.statusBadge} ${articleBadgeClass(a.status)}`}>
+                      {a.status === 'active' ? 'Aktiv' : a.status === 'draft' ? 'Entwurf' : a.status === 'sold' ? 'Verkauft' : 'Archiviert'}
+                    </span>
                   </div>
 
-                  <div className={styles.cardMeta}>
-                    <span className={styles.metaItem}>
-                      Artikel-Nr.: <strong>{a.id}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Status: <strong>{a.status}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Erstellt: <strong>{formatDateTime(a.createdAt)}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Aufrufe: <strong>{Number.isFinite(a.views as any) ? a.views : '—'}</strong>
-                    </span>
+                  <div className={styles.meta}>
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Preis</div>
+                      <div className={styles.metaValue}>{formatEUR(a.priceCents)}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Artikel-Nr.</div>
+                      <div className={styles.metaValue}>{a.id}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Erstellt</div>
+                      <div className={styles.metaValue}>{formatDateTime(a.createdAt)}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Aufrufe</div>
+                      <div className={styles.metaValue}>{Number.isFinite(a.views as any) ? a.views : '—'}</div>
+                    </div>
                   </div>
 
                   <div className={styles.actions}>
-                    <Link className={styles.jobLink} href={articlePathBy(a.id)}>
+                    <Link className={styles.primaryBtn} href={articlePathBy(a.id)}>
                       Ansehen
                     </Link>
-                    {/* optional */}
-                    {/* <Link className={styles.jobLink} href={`/konto/artikel/${a.id}/bearbeiten`}>Bearbeiten</Link> */}
                   </div>
                 </li>
               ))}
@@ -346,58 +308,74 @@ const VerkaufenKontoPage: FC = () => {
 
       <div className={styles.kontoContainer}>
         {pagS.total === 0 ? (
-          <div className={styles.emptyState}>
-            <strong>Noch keine Verkäufe.</strong>
-          </div>
+          <div className={styles.emptyState}><strong>Noch keine Verkäufe.</strong></div>
         ) : (
           <>
             <ul className={styles.list}>
               {pagS.pageItems.map((s) => (
-                <li key={s.id} className={`${styles.card} ${styles.isLackanfrage}`}>
+                <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
                   <div className={styles.cardHeader}>
                     <div className={styles.cardTitle}>
-                      {/* Wenn du KEINE Verkaufsdetailseite willst: einfach articleId-Link nutzen */}
-                      <Link href={salePathBy(s.id)} className={styles.titleLink}>
-                        {s.articleTitle}
-                      </Link>
+                      {s.articleId ? (
+                        <Link href={articlePathBy(s.articleId)} className={styles.titleLink}>
+                          {s.articleTitle}
+                        </Link>
+                      ) : (
+                        <span>{s.articleTitle}</span>
+                      )}
                     </div>
 
-                    <div className={styles.price}>{formatEUR(s.totalCents)}</div>
+                    <span className={`${styles.statusBadge} ${saleBadgeClass(s.status)}`}>
+                      {saleLabel(s.status)}
+                    </span>
                   </div>
 
-                  <div className={styles.cardMeta}>
-                    <span className={styles.metaItem}>
-                      Verkauf-Nr.: <strong>{s.id}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Status: <strong>{s.status}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Datum: <strong>{formatDateTime(s.createdAt)}</strong>
-                    </span>
-                    <span className={styles.metaItem}>
-                      Käufer: <strong>{s.buyerHandle || '—'}</strong>
-                    </span>
-                    {s.articleId ? (
-                      <span className={styles.metaItem}>
-                        Artikel:{' '}
-                        <Link className={styles.titleLink} href={articlePathBy(s.articleId)}>
-                          <strong>{s.articleId}</strong>
-                        </Link>
-                      </span>
-                    ) : null}
+                  <div className={styles.meta}>
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Gesamt</div>
+                      <div className={styles.metaValue}>{formatEUR(s.totalCents)}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Verkauf-Nr.</div>
+                      <div className={styles.metaValue}>{s.id}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Datum</div>
+                      <div className={styles.metaValue}>{formatDateTime(s.createdAt)}</div>
+                    </div>
+
+                    <div className={styles.metaCol}>
+                      <div className={styles.metaLabel}>Käufer</div>
+                      <div className={styles.metaValue}>{s.buyerHandle || '—'}</div>
+                    </div>
                   </div>
 
+                  {/* ✅ Actions wie in konto/lackangebote: CTA Buttons rechts/untereinander */}
                   <div className={styles.actions}>
-                    <Link className={styles.jobLink} href={salePathBy(s.id)}>
-                      Details
-                    </Link>
+                    <a
+                      href={invoiceUrl(s)}
+                      className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      Rechnung herunterladen (PDF)
+                    </a>
 
-                    {s.articleId ? (
-                      <Link className={styles.jobLink} href={articlePathBy(s.articleId)}>
-                        Zum Artikel
-                      </Link>
-                    ) : null}
+                    {!alreadyRated(s) ? (
+                      <button
+                        type="button"
+                        className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                        onClick={() => openRate(s)}
+                      >
+                        Bewertung abgeben
+                      </button>
+                    ) : (
+                      <div className={styles.btnHint}>
+                        Bewertung abgegeben: <strong>{s.myReview?.stars}/5</strong>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
@@ -424,10 +402,7 @@ const VerkaufenKontoPage: FC = () => {
       <Navbar />
       <div className={styles.wrapper}>
         <div className={styles.toolbar}>
-          <label className={styles.visuallyHidden} htmlFor="search">
-            Suchen
-          </label>
-
+          <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
           <input
             id="search"
             type="search"
@@ -437,10 +412,7 @@ const VerkaufenKontoPage: FC = () => {
             className={styles.search}
           />
 
-          <label className={styles.visuallyHidden} htmlFor="sort">
-            Sortierung
-          </label>
-
+          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
           <select
             id="sort"
             value={sort}
@@ -460,7 +432,6 @@ const VerkaufenKontoPage: FC = () => {
               className={`${styles.segmentedBtn} ${topSection === 'articles' ? styles.segmentedActive : ''}`}
               onClick={() => setTopSection('articles')}
               type="button"
-              title={`Artikel oben – ${pagA.total} Einträge`}
             >
               Artikel oben <span className={styles.chip}>{pagA.total}</span>
             </button>
@@ -471,7 +442,6 @@ const VerkaufenKontoPage: FC = () => {
               className={`${styles.segmentedBtn} ${topSection === 'sales' ? styles.segmentedActive : ''}`}
               onClick={() => setTopSection('sales')}
               type="button"
-              title={`Verkäufe oben – ${pagS.total} Einträge`}
             >
               Verkäufe oben <span className={styles.chip}>{pagS.total}</span>
             </button>
@@ -492,6 +462,62 @@ const VerkaufenKontoPage: FC = () => {
           </>
         )}
       </div>
+
+      {/* ================= Bewertung Modal (Popup) ================= */}
+      {rateSaleId && activeSale && (
+        <div
+          className={styles.modal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Bewertung abgeben"
+          onMouseDown={(e) => {
+            // Klick auf Backdrop schließt
+            if (e.target === e.currentTarget) setRateSaleId(null)
+          }}
+        >
+          <div className={styles.modalContent}>
+            <h3 className={styles.modalTitle}>Bewertung abgeben</h3>
+            <p className={styles.modalText}>
+              Für: <strong>{activeSale.articleTitle}</strong>
+            </p>
+
+            <div className={styles.stars} aria-label="Sterne auswählen">
+              {([1, 2, 3, 4, 5] as const).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={styles.starBtn}
+                  onClick={() => setRatingStars(n)}
+                  aria-label={`${n} Sterne`}
+                >
+                  {n <= ratingStars ? '★' : '☆'}
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              className={styles.reviewBox}
+              value={ratingText}
+              maxLength={MAX_REVIEW}
+              onChange={(e) => setRatingText(e.target.value)}
+              placeholder="Kurzfeedback (optional)…"
+            />
+
+            <div className={styles.counter}>
+              {ratingText.length}/{MAX_REVIEW}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnGhost} onClick={() => setRateSaleId(null)}>
+                Abbrechen
+              </button>
+              <button type="button" className={styles.btnDanger} onClick={saveRating}>
+                Bewertung speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
