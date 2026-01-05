@@ -72,7 +72,7 @@ const herstellerFilter = [
 type ShopArtikel = {
   id: string | number;
   titel: string;
-  menge: number;
+  menge?: number;
   lieferdatum: Date;
   hersteller: string;
   zustand: string;
@@ -247,10 +247,17 @@ export default function Shopseite() {
               : 'kg';
 
           // Menge passend zur Einheit (Fallback 0)
-          const qty =
-            unit === 'stueck'
-              ? safeNumber(a.qty_piece, 0)
-              : safeNumber(a.qty_kg, 0);
+          // Menge passend zur Einheit:
+// - begrenzt => Zahl anzeigen
+// - auf_lager => undefined, damit Karte "Auf Lager" zeigen kann
+            const qtyForUnit =
+              unit === "stueck" ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
+
+            const displayQty =
+              a.stock_status === "begrenzt"
+                ? (typeof qtyForUnit === "number" ? qtyForUnit : safeNumber(qtyForUnit, 0))
+                : undefined;
+
 
           return {
             id: a.id,
@@ -259,7 +266,7 @@ export default function Shopseite() {
             zustand: (a.condition ?? a.zustand ?? '—') || '—',
             kategorie: a.category ?? '—',
             preis: safeNumber(a.price_from, 0),
-            menge: qty,
+            menge: displayQty,
             lieferdatum: isoToDate(a.delivery_date_iso),
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
             seller_account_type: (a as any).seller_account_type ?? null,

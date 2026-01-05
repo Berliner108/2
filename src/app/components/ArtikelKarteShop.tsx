@@ -107,7 +107,9 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <div className={styles.cardText1}>{titel}</div>
 
           <div className={styles.cardText2}>
-            Verfügbare Menge: {typeof menge === 'number' ? menge : 0} {einheitLabel}
+            {typeof menge === "number"
+            ? <>Verfügbare Menge: {menge} {einheitLabel}</>
+            : <>Verfügbarkeit: Auf Lager</>}
           </div>
 
           <div className={styles.cardText3}>
