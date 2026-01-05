@@ -885,6 +885,8 @@ try {
 
 // ab hier darfst du erst wirklich senden
 setLadeStatus(true);
+const zustandForSubmit =
+  kategorie === "arbeitsmittel" ? "Neu & Ungeöffnet" : zustand;
 
 const formData = new FormData();
 
@@ -898,7 +900,8 @@ const finalHersteller =
 formData.append('hersteller', finalHersteller);
 
 formData.append('beschreibung', beschreibung);
-formData.append('zustand', zustand || 'neu');
+formData.append("zustand", zustandForSubmit);
+
 
 formData.append('bewerbung', JSON.stringify(bewerbungOptionen));
 

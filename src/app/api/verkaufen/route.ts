@@ -133,8 +133,8 @@ if (!user) {
 
     const conditionRaw = toStr(fd.get("zustand")).trim(); // kommt aus VerkaufenClient
     const condition =
-    conditionRaw === "neu" ? "Neu & Ungeöffnet"
-    : conditionRaw === "geöffnet" ? "Geöffnet & Einwandfrei"
+    conditionRaw === "neu" ? "Neu und ungeöffnet"
+    : conditionRaw === "geöffnet" ? "Geöffnet und einwandfrei"
     : conditionRaw || null;
 
 
