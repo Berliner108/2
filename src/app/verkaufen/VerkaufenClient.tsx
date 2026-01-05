@@ -1806,7 +1806,7 @@ const submitDisabled = ladeStatus || !stripeReady;
     checked={zustand === 'neu'}
     onChange={() => setZustand('neu')}
   />
-  <span>Neu & Ungeöffnet</span>
+  <span>Neu und ungeöffnet</span>
 </label>
 
     <label className={styles.radioLabel}>
@@ -1817,7 +1817,7 @@ const submitDisabled = ladeStatus || !stripeReady;
         checked={zustand === 'geöffnet'}
         onChange={() => setZustand('geöffnet')}
       />
-      <span>Geöffnet & Einwandfrei</span>
+      <span>Geöffnet und einwandfrei</span>
     </label>
   </div>
 </fieldset>  
