@@ -158,42 +158,56 @@ const KontoVerkaufenPage: FC = () => {
   const [mineLoading, setMineLoading] = useState(true)
   const [mineError, setMineError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
+  // ========= API Helpers (wichtig für Refresh nach PATCH) =========
+  async function loadMine(cancelledRef?: { current: boolean }) {
+    try {
+      setMineLoading(true)
+      setMineError(null)
 
-    async function loadMine() {
-      try {
-        setMineLoading(true)
-        setMineError(null)
+      const res = await fetch('/api/konto/verkaufen', { cache: 'no-store' })
+      const json = await res.json().catch(() => ({}))
 
-        const res = await fetch('/api/konto/verkaufen', { cache: 'no-store' })
-        const json = await res.json().catch(() => ({}))
-
-        if (!res.ok) {
-          const msg = json?.error ?? `Fehler beim Laden (${res.status})`
-          throw new Error(msg)
-        }
-
-        if (!cancelled) {
-          setArticles(Array.isArray(json?.articles) ? json.articles : [])
-          // Orders/Verkäufe kommen später -> vorerst leer
-          setSales([])
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setArticles([])
-          setSales([])
-          setMineError(e?.message ?? 'Unbekannter Fehler')
-        }
-      } finally {
-        if (!cancelled) setMineLoading(false)
+      if (!res.ok) {
+        const msg = json?.error ?? `Fehler beim Laden (${res.status})`
+        throw new Error(msg)
       }
-    }
 
-    loadMine()
-    return () => {
-      cancelled = true
+      if (!cancelledRef?.current) {
+        setArticles(Array.isArray(json?.articles) ? json.articles : [])
+        setSales([]) // Orders/Verkäufe kommen später -> vorerst leer
+      }
+    } catch (e: any) {
+      if (!cancelledRef?.current) {
+        setArticles([])
+        setSales([])
+        setMineError(e?.message ?? 'Unbekannter Fehler')
+      }
+    } finally {
+      if (!cancelledRef?.current) setMineLoading(false)
     }
+  }
+
+  async function patchArticle(id: string, patch: { published?: boolean }) {
+    const res = await fetch(`/api/konto/articles/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(patch),
+    })
+
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(json?.error ?? 'PATCH_FAILED')
+    return json?.article
+  }
+
+  useEffect(() => {
+    const cancelledRef = { current: false }
+    loadMine(cancelledRef)
+
+    return () => {
+      cancelledRef.current = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* -------- Toolbar State -------- */
@@ -418,6 +432,8 @@ const KontoVerkaufenPage: FC = () => {
                   <ul className={styles.list}>
                     {sliceArtikel.pageItems.map((a) => {
                       const badge = artikelBadge(a)
+                      const isActive = a.status === 'aktiv'
+
                       return (
                         <li key={a.id} className={`${styles.card} ${styles.cardCyan}`}>
                           <div className={styles.cardHeader}>
@@ -459,28 +475,25 @@ const KontoVerkaufenPage: FC = () => {
                               <button
                                 type="button"
                                 className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                                onClick={() => alert('Bearbeiten kommt als nächster Schritt (PATCH + RLS).')}
+                                onClick={() => alert('Bearbeiten kommt nach Publish/Pause (als nächstes).')}
                               >
                                 Artikel bearbeiten
                               </button>
 
-                              {a.status === 'aktiv' ? (
-                                <button
-                                  type="button"
-                                  className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-                                  onClick={() => alert('Deaktivieren kommt als nächster Schritt (published=false).')}
-                                >
-                                  Deaktivieren
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
-                                  onClick={() => alert('Aktivieren kommt als nächster Schritt (published=true).')}
-                                >
-                                  Aktivieren
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                className={isActive ? `${styles.ctaBtn} ${styles.ctaSecondary}` : `${styles.ctaBtn} ${styles.ctaSuccess}`}
+                                onClick={async () => {
+                                  try {
+                                    await patchArticle(a.id, { published: !isActive })
+                                    await loadMine()
+                                  } catch (e: any) {
+                                    alert(e?.message ?? 'Fehler beim Aktualisieren')
+                                  }
+                                }}
+                              >
+                                {isActive ? 'Deaktivieren' : 'Aktivieren'}
+                              </button>
                             </aside>
                           </div>
                         </li>
