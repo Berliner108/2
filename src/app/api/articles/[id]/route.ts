@@ -25,7 +25,11 @@ function formatUTCToISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function addBusinessDaysISO(startISO: string, businessDays: number, holidays: Set<string>): string {
+function addBusinessDaysISO(
+  startISO: string,
+  businessDays: number,
+  holidays: Set<string>
+): string {
   if (!businessDays || businessDays <= 0) return startISO;
 
   let remaining = businessDays;
@@ -41,6 +45,21 @@ function addBusinessDaysISO(startISO: string, businessDays: number, holidays: Se
   }
 
   return formatUTCToISODate(cur);
+}
+
+// ✅ Kategorie-Mapper: exakt 3 Kategorien sauber ausgeben
+function normalizeCategory(cat: unknown): string | null {
+  if (cat == null) return null;
+
+  const key = String(cat).trim().toLowerCase();
+
+  const map: Record<string, string> = {
+    nasslack: "Nasslack",
+    pulverlack: "Pulverlack",
+    arbeitsmittel: "Arbeitsmittel",
+  };
+
+  return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
 }
 
 export async function GET(req: Request) {
@@ -82,9 +101,14 @@ export async function GET(req: Request) {
 
     // delivery date (Berlin + delivery_holidays) – unverändert
     const todayISO = getBerlinTodayISO();
-    const dDays = typeof article.delivery_days === "number" ? article.delivery_days : Number(article.delivery_days ?? 0);
+    const dDays =
+      typeof article.delivery_days === "number"
+        ? article.delivery_days
+        : Number(article.delivery_days ?? 0);
 
-    const endDate = new Date(parseISODateToUTC(todayISO).getTime() + (dDays + 40) * 24 * 60 * 60 * 1000);
+    const endDate = new Date(
+      parseISODateToUTC(todayISO).getTime() + (dDays + 40) * 24 * 60 * 60 * 1000
+    );
     const endISO = formatUTCToISODate(endDate);
 
     const { data: holidayRows, error: holidayErr } = await admin
@@ -140,7 +164,13 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      article: { ...article, delivery_date_iso, price_from, price_unit },
+      article: {
+        ...article,
+        category: normalizeCategory((article as any).category), // ✅ HIER
+        delivery_date_iso,
+        price_from,
+        price_unit,
+      },
       tiers: tiers ?? [],
       seller,
     });
