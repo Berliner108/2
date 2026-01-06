@@ -1,3 +1,4 @@
+/* src/app/konto/verkaufen/page.tsx */
 'use client'
 
 import React, { FC, useEffect, useMemo, useState } from 'react'
@@ -72,7 +73,13 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(1)}
+            disabled={page <= 1}
+            aria-label="Erste Seite"
+          >
             «
           </button>
           <button
@@ -160,15 +167,63 @@ const KontoVerkaufenPage: FC = () => {
     const day = 24 * 60 * 60 * 1000
 
     setArticles([
-      { id: 'a-1001', title: 'Vaillant Weiss glatt matt', category: 'Pulverlack', priceCents: 8900, createdAtIso: new Date(now - 3 * day).toISOString(), status: 'aktiv', views: 128 },
-      { id: 'a-1002', title: 'RAL 7016 Anthrazit Struktur', category: 'Pulverlack', priceCents: 10900, createdAtIso: new Date(now - 10 * day).toISOString(), status: 'aktiv', views: 302 },
-      { id: 'a-1003', title: 'Eloxal Schwarz (Probe)', category: 'Eloxieren', priceCents: 4900, createdAtIso: new Date(now - 1 * day).toISOString(), status: 'pausiert', views: 44 },
-      { id: 'a-1004', title: 'Grundierung hellgrau', category: 'Nasslack', priceCents: 7600, createdAtIso: new Date(now - 21 * day).toISOString(), status: 'aktiv', views: 91 },
-      { id: 'a-1005', title: 'Pulver Transparent glänzend', category: 'Pulverlack', priceCents: 12900, createdAtIso: new Date(now - 35 * day).toISOString(), status: 'verkauft', views: 510 },
-      { id: 'a-1006', title: 'Sondereffekt Metallic Silber', category: 'Pulverlack', priceCents: 13900, createdAtIso: new Date(now - 6 * day).toISOString(), status: 'aktiv', views: 210 },
+      {
+        id: 'a-1001',
+        title: 'Vaillant Weiss glatt matt',
+        category: 'Pulverlack',
+        priceCents: 8900,
+        createdAtIso: new Date(now - 3 * day).toISOString(),
+        status: 'aktiv',
+        views: 128,
+      },
+      {
+        id: 'a-1002',
+        title: 'RAL 7016 Anthrazit Struktur',
+        category: 'Pulverlack',
+        priceCents: 10900,
+        createdAtIso: new Date(now - 10 * day).toISOString(),
+        status: 'aktiv',
+        views: 302,
+      },
+      {
+        id: 'a-1003',
+        title: 'Eloxal Schwarz (Probe)',
+        category: 'Eloxieren',
+        priceCents: 4900,
+        createdAtIso: new Date(now - 1 * day).toISOString(),
+        status: 'pausiert',
+        views: 44,
+      },
+      {
+        id: 'a-1004',
+        title: 'Grundierung hellgrau',
+        category: 'Nasslack',
+        priceCents: 7600,
+        createdAtIso: new Date(now - 21 * day).toISOString(),
+        status: 'aktiv',
+        views: 91,
+      },
+      {
+        id: 'a-1005',
+        title: 'Pulver Transparent glänzend',
+        category: 'Pulverlack',
+        priceCents: 12900,
+        createdAtIso: new Date(now - 35 * day).toISOString(),
+        status: 'verkauft',
+        views: 510,
+      },
+      {
+        id: 'a-1006',
+        title: 'Sondereffekt Metallic Silber',
+        category: 'Pulverlack',
+        priceCents: 13900,
+        createdAtIso: new Date(now - 6 * day).toISOString(),
+        status: 'aktiv',
+        views: 210,
+      },
     ])
 
-    // Verkäufe: Dummy (du hast gesagt, real noch nicht)
+    // Verkäufe: Dummy (real noch nicht)
     setSales([
       {
         id: 's-9001',
@@ -217,7 +272,9 @@ const KontoVerkaufenPage: FC = () => {
     try {
       const t = params.get('tab')
       if (t === 'artikel' || t === 'verkaeufe') setTab(t)
-    } catch {}
+    } catch {
+      // ignore
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -237,7 +294,9 @@ const KontoVerkaufenPage: FC = () => {
       const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
       const curr = `${window.location.pathname}${window.location.search}`
       if (next !== curr) router.replace(next, { scroll: false })
-    } catch {}
+    } catch {
+      // ignore
+    }
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
   // Page reset bei Suche / Sort
@@ -282,8 +341,14 @@ const KontoVerkaufenPage: FC = () => {
     return base
   }, [sales, query, sortSales])
 
-  const sliceArtikel = useMemo(() => sliceByPage(filteredArticles, pageArtikel, psArtikel), [filteredArticles, pageArtikel, psArtikel])
-  const sliceSales = useMemo(() => sliceByPage(filteredSales, pageSales, psSales), [filteredSales, pageSales, psSales])
+  const sliceArtikel = useMemo(
+    () => sliceByPage(filteredArticles, pageArtikel, psArtikel),
+    [filteredArticles, pageArtikel, psArtikel]
+  )
+  const sliceSales = useMemo(
+    () => sliceByPage(filteredSales, pageSales, psSales),
+    [filteredSales, pageSales, psSales]
+  )
 
   useEffect(() => {
     if (sliceArtikel.safePage !== pageArtikel) setPageArtikel(sliceArtikel.safePage)
@@ -324,7 +389,6 @@ const KontoVerkaufenPage: FC = () => {
   }
   function submitReview() {
     if (!reviewSale) return
-    // Dummy: markiere als bewertet
     setSales((prev) => prev.map((x) => (x.id === reviewSale.id ? { ...x, rated: true } : x)))
     closeReview()
     alert('Bewertung gespeichert (Dummy). Backend kannst du später anbinden.')
@@ -332,346 +396,353 @@ const KontoVerkaufenPage: FC = () => {
 
   /* -------- Invoice Download (Dummy Link) -------- */
   function invoiceHref(s: MySale) {
-    // später: echte Route -> /api/invoices/:id/download
     return `/api/invoices/${encodeURIComponent(s.invoiceId)}/download`
   }
 
   /* ================= Render ================= */
   return (
     <>
-    <Navbar />
-    <div className={styles.wrapper}>
-      {/* Toolbar (wie lackangebote) */}
-      <div className={styles.toolbar}>
-        <label className={styles.visuallyHidden} htmlFor="q">
-          Suchen
-        </label>
-        <input
-          id="q"
-          className={styles.search}
-          placeholder={tab === 'artikel' ? 'Artikel suchen (Titel, Kategorie, Status)…' : 'Verkäufe suchen (Titel, Käufer, Status)…'}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      <Navbar />
+      <div className={styles.wrapper}>
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <label className={styles.visuallyHidden} htmlFor="q">
+            Suchen
+          </label>
+          <input
+            id="q"
+            className={styles.search}
+            placeholder={
+              tab === 'artikel'
+                ? 'Artikel suchen (Titel, Kategorie, Status)…'
+                : 'Verkäufe suchen (Titel, Käufer, Status)…'
+            }
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
-        {/* Sort */}
-        {tab === 'artikel' ? (
-          <select className={styles.select} value={sortArtikel} onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}>
-            <option value="date_desc">Neueste zuerst</option>
-            <option value="date_asc">Älteste zuerst</option>
-            <option value="price_desc">Preis: hoch → niedrig</option>
-            <option value="price_asc">Preis: niedrig → hoch</option>
-            <option value="views_desc">Aufrufe: hoch → niedrig</option>
-          </select>
-        ) : (
-          <select className={styles.select} value={sortSales} onChange={(e) => setSortSales(e.target.value as SortKeySales)}>
-            <option value="date_desc">Neueste zuerst</option>
-            <option value="date_asc">Älteste zuerst</option>
-            <option value="price_desc">Preis: hoch → niedrig</option>
-            <option value="price_asc">Preis: niedrig → hoch</option>
-          </select>
-        )}
+          {/* Sort */}
+          {tab === 'artikel' ? (
+            <select
+              className={styles.select}
+              value={sortArtikel}
+              onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}
+            >
+              <option value="date_desc">Neueste zuerst</option>
+              <option value="date_asc">Älteste zuerst</option>
+              <option value="price_desc">Preis: hoch → niedrig</option>
+              <option value="price_asc">Preis: niedrig → hoch</option>
+              <option value="views_desc">Aufrufe: hoch → niedrig</option>
+            </select>
+          ) : (
+            <select
+              className={styles.select}
+              value={sortSales}
+              onChange={(e) => setSortSales(e.target.value as SortKeySales)}
+            >
+              <option value="date_desc">Neueste zuerst</option>
+              <option value="date_asc">Älteste zuerst</option>
+              <option value="price_desc">Preis: hoch → niedrig</option>
+              <option value="price_asc">Preis: niedrig → hoch</option>
+            </select>
+          )}
 
-        {/* Spacer (damit Grid wie CSS passt) */}
-        <div />
+          {/* Spacer */}
+          <div />
 
-        {/* Segmented */}
-        <div className={styles.segmented} role="tablist" aria-label="Ansicht wählen">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'artikel'}
-            className={`${styles.segmentedBtn} ${tab === 'artikel' ? styles.segmentedActive : ''}`}
-            onClick={() => setTab('artikel')}
-          >
-            Artikel <span className={styles.chip}>{filteredArticles.length}</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'verkaeufe'}
-            className={`${styles.segmentedBtn} ${tab === 'verkaeufe' ? styles.segmentedActive : ''}`}
-            onClick={() => setTab('verkaeufe')}
-          >
-            Verkäufe <span className={styles.chip}>{filteredSales.length}</span>
-          </button>
-        </div>
-      </div>
-
-      <hr className={styles.divider} />
-
-      {/* ===== Artikel ===== */}
-      {tab === 'artikel' && (
-        <>
-          <h2 className={styles.heading}>Meine eingestellten Artikel</h2>
-          <div className={styles.kontoContainer}>
-            {sliceArtikel.total === 0 ? (
-              <div className={styles.emptyState}>
-                <strong>Keine Artikel sichtbar.</strong>
-              </div>
-            ) : (
-              <>
-                <ul className={styles.list}>
-                  {sliceArtikel.pageItems.map((a) => {
-                    const badge = artikelBadge(a)
-                    return (
-                      <li key={a.id} className={`${styles.card} ${styles.cardCyan}`}>
-                        <div className={styles.cardHeader}>
-                          <div className={styles.cardTitle}>
-                            <Link href={articlePathBy(a.id)} className={styles.titleLink}>
-                              {a.title}
-                            </Link>
-                          </div>
-                          <span className={`${styles.statusBadge} ${badge.cls}`}>{badge.label}</span>
-                        </div>
-
-                        <div className={styles.meta}>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Kategorie</div>
-                            <div className={styles.metaValue}>{a.category}</div>
-                          </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Preis</div>
-                            <div className={styles.metaValue}>{formatEUR(a.priceCents)}</div>
-                          </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Erstellt</div>
-                            <div className={styles.metaValue}>{formatDate(a.createdAtIso)}</div>
-                          </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Aufrufe</div>
-                            <div className={styles.metaValue}>{a.views}</div>
-                          </div>
-                        </div>
-
-                        {/* Wie bei lackangebote Orders: 3-Spalten-Zeile, rechts Actions */}
-                        <div className={styles.detailsRow}>
-                          <div />
-                          <div />
-                          <aside className={styles.sideCol}>
-                            <Link href={articlePathBy(a.id)} className={`${styles.ctaBtn} ${styles.ctaPrimary}`}>
-                              Im Shop öffnen
-                            </Link>
-
-                            <button
-                              type="button"
-                              className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                              onClick={() => alert('Dummy: Bearbeiten-Flow später anbinden.')}
-                            >
-                              Artikel bearbeiten
-                            </button>
-
-                            {a.status === 'aktiv' ? (
-                              <button
-                                type="button"
-                                className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-                                onClick={() => alert('Dummy: Deaktivieren später anbinden.')}
-                              >
-                                Deaktivieren
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
-                                onClick={() => alert('Dummy: Aktivieren später anbinden.')}
-                              >
-                                Aktivieren
-                              </button>
-
-                            )}
-                          </aside>
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-
-                <Pagination
-                  page={pageArtikel}
-                  setPage={setPageArtikel}
-                  pageSize={psArtikel}
-                  setPageSize={setPsArtikel}
-                  total={sliceArtikel.total}
-                  from={sliceArtikel.from}
-                  to={sliceArtikel.to}
-                  idPrefix="my-articles"
-                />
-              </>
-            )}
+          {/* Segmented */}
+          <div className={styles.segmented} role="tablist" aria-label="Ansicht wählen">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'artikel'}
+              className={`${styles.segmentedBtn} ${tab === 'artikel' ? styles.segmentedActive : ''}`}
+              onClick={() => setTab('artikel')}
+            >
+              Artikel <span className={styles.chip}>{filteredArticles.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'verkaeufe'}
+              className={`${styles.segmentedBtn} ${tab === 'verkaeufe' ? styles.segmentedActive : ''}`}
+              onClick={() => setTab('verkaeufe')}
+            >
+              Verkäufe <span className={styles.chip}>{filteredSales.length}</span>
+            </button>
           </div>
-        </>
-      )}
+        </div>
 
-      {/* ===== Verkäufe ===== */}
-      {tab === 'verkaeufe' && (
-        <>
-          <h2 className={styles.heading}>Meine Verkäufe</h2>
-          <div className={styles.kontoContainer}>
-            {sliceSales.total === 0 ? (
-              <div className={styles.emptyState}>
-                <strong>Keine Verkäufe sichtbar.</strong>
-              </div>
-            ) : (
-              <>
-                <ul className={styles.list}>
-                  {sliceSales.pageItems.map((s) => {
-                    const badge = saleBadge(s)
-                    const buyerTxt =
-                      typeof s.buyerRating === 'number' && typeof s.buyerRatingCount === 'number'
-                        ? `${s.buyerRating.toFixed(1)} ★ (${s.buyerRatingCount})`
-                        : '—'
+        <hr className={styles.divider} />
 
-                    return (
-                      <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
-                        <div className={styles.cardHeader}>
-                          <div className={styles.cardTitle}>
-                            <Link href={articlePathBy(s.articleId)} className={styles.titleLink}>
-                              {s.title}
-                            </Link>
+        {/* ===== Artikel ===== */}
+        {tab === 'artikel' && (
+          <>
+            <h2 className={styles.heading}>Meine eingestellten Artikel</h2>
+            <div className={styles.kontoContainer}>
+              {sliceArtikel.total === 0 ? (
+                <div className={styles.emptyState}>
+                  <strong>Keine Artikel sichtbar.</strong>
+                </div>
+              ) : (
+                <>
+                  <ul className={styles.list}>
+                    {sliceArtikel.pageItems.map((a) => {
+                      const badge = artikelBadge(a)
+                      return (
+                        <li key={a.id} className={`${styles.card} ${styles.cardCyan}`}>
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardTitle}>
+                              <Link href={articlePathBy(a.id)} className={styles.titleLink}>
+                                {a.title}
+                              </Link>
+                            </div>
+                            <span className={`${styles.statusBadge} ${badge.cls}`}>{badge.label}</span>
                           </div>
-                          <span className={`${styles.statusBadge} ${badge.cls}`}>{badge.label}</span>
-                        </div>
 
-                        <div className={styles.meta}>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Käufer</div>
-                            <div className={styles.metaValue}>
-                              {s.buyerName}
-                              <span className={styles.vendorRatingSmall}> · {buyerTxt}</span>
+                          <div className={styles.meta}>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Kategorie</div>
+                              <div className={styles.metaValue}>{a.category}</div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Preis</div>
+                              <div className={styles.metaValue}>{formatEUR(a.priceCents)}</div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Erstellt</div>
+                              <div className={styles.metaValue}>{formatDate(a.createdAtIso)}</div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Aufrufe</div>
+                              <div className={styles.metaValue}>{a.views}</div>
                             </div>
                           </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Preis</div>
-                            <div className={styles.metaValue}>{formatEUR(s.amountCents)}</div>
+
+                          <div className={styles.detailsRow}>
+                            <div />
+                            <div />
+                            <aside className={styles.sideCol}>
+                              <Link href={articlePathBy(a.id)} className={`${styles.ctaBtn} ${styles.ctaPrimary}`}>
+                                Im Shop öffnen
+                              </Link>
+
+                              <button
+                                type="button"
+                                className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+                                onClick={() => alert('Dummy: Bearbeiten-Flow später anbinden.')}
+                              >
+                                Artikel bearbeiten
+                              </button>
+
+                              {a.status === 'aktiv' ? (
+                                <button
+                                  type="button"
+                                  className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                                  onClick={() => alert('Dummy: Deaktivieren später anbinden.')}
+                                >
+                                  Deaktivieren
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
+                                  onClick={() => alert('Dummy: Aktivieren später anbinden.')}
+                                >
+                                  Aktivieren
+                                </button>
+                              )}
+                            </aside>
                           </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Datum</div>
-                            <div className={styles.metaValue}>{formatDate(s.dateIso)}</div>
-                          </div>
-                          <div className={styles.metaCol}>
-                            <div className={styles.metaLabel}>Artikel-ID</div>
-                            <div className={styles.metaValue}>{s.articleId}</div>
-                          </div>
-                        </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
 
-                        {/* Rechts: Rechnung + Bewertung (wie verlangt) */}
-                        <div className={styles.detailsRow}>
-                          <div />
-                          <div />
-                          <aside className={styles.sideCol}>
-                            <a
-                              href={invoiceHref(s)}
-                              className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-                              target="_blank"
-                              rel="noopener"
-                            >
-                              Rechnung herunterladen (PDF)
-                            </a>
-
-                            <button
-                              type="button"
-                              className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-                              onClick={() => openReview(s)}
-                              disabled={!!s.rated}
-                              aria-disabled={!!s.rated}
-                              style={s.rated ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-                            >
-                              {s.rated ? 'Bewertung bereits abgegeben' : 'Bewertung abgeben'}
-                            </button>
-
-                            <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
-                              Zum Artikel
-                            </Link>
-                          </aside>
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-
-                <Pagination
-                  page={pageSales}
-                  setPage={setPageSales}
-                  pageSize={psSales}
-                  setPageSize={setPsSales}
-                  total={sliceSales.total}
-                  from={sliceSales.from}
-                  to={sliceSales.to}
-                  idPrefix="my-sales"
-                />
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ===== Review Modal (identisches CSS aus lackangebote) ===== */}
-      {reviewOpen && reviewSale && (
-        <div
-          className={styles.modal}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Bewertung abgeben"
-          onMouseDown={(e) => {
-            // Klick auf Overlay schließt (aber nicht beim Klick in Content)
-            if (e.target === e.currentTarget) closeReview()
-          }}
-        >
-          <div className={styles.modalContent}>
-            <h3 className={styles.modalTitle}>Bewertung abgeben</h3>
-            <p className={styles.modalText}>
-              Verkauf: <strong>{reviewSale.title}</strong>
-              <br />
-              Käufer: <strong>{reviewSale.buyerName}</strong>
-            </p>
-
-            <div className={styles.stars} aria-label="Sterne auswählen">
-              {Array.from({ length: 5 }).map((_, i) => {
-                const v = i + 1
-                const active = v <= stars
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    className={styles.starBtn}
-                    onClick={() => setStars(v)}
-                    aria-label={`${v} Sterne`}
-                    title={`${v} Sterne`}
-                    style={active ? { transform: 'translateY(-1px)' } : undefined}
-                  >
-                    {active ? '★' : '☆'}
-                  </button>
-                )
-              })}
+                  <Pagination
+                    page={pageArtikel}
+                    setPage={setPageArtikel}
+                    pageSize={psArtikel}
+                    setPageSize={setPsArtikel}
+                    total={sliceArtikel.total}
+                    from={sliceArtikel.from}
+                    to={sliceArtikel.to}
+                    idPrefix="my-articles"
+                  />
+                </>
+              )}
             </div>
+          </>
+        )}
 
-            <textarea
-              className={styles.reviewBox}
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value.slice(0, 600))}
-              placeholder="Kurzer Text (optional)…"
-            />
-            <div className={styles.counter}>{reviewText.length} / 600</div>
+        {/* ===== Verkäufe ===== */}
+        {tab === 'verkaeufe' && (
+          <>
+            <h2 className={styles.heading}>Meine Verkäufe</h2>
+            <div className={styles.kontoContainer}>
+              {sliceSales.total === 0 ? (
+                <div className={styles.emptyState}>
+                  <strong>Keine Verkäufe sichtbar.</strong>
+                </div>
+              ) : (
+                <>
+                  <ul className={styles.list}>
+                    {sliceSales.pageItems.map((s) => {
+                      const badge = saleBadge(s)
+                      const buyerTxt =
+                        typeof s.buyerRating === 'number' && typeof s.buyerRatingCount === 'number'
+                          ? `${s.buyerRating.toFixed(1)} ★ (${s.buyerRatingCount})`
+                          : '—'
 
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} onClick={closeReview}>
-                Abbrechen
-              </button>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                onClick={submitReview}
-                disabled={stars === 0}
-                aria-disabled={stars === 0}
-                style={stars === 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-              >
-                Bewertung senden
-              </button>
+                      return (
+                        <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
+                          <div className={styles.cardHeader}>
+                            <div className={styles.cardTitle}>
+                              <Link href={articlePathBy(s.articleId)} className={styles.titleLink}>
+                                {s.title}
+                              </Link>
+                            </div>
+                            <span className={`${styles.statusBadge} ${badge.cls}`}>{badge.label}</span>
+                          </div>
+
+                          <div className={styles.meta}>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Käufer</div>
+                              <div className={styles.metaValue}>
+                                {s.buyerName}
+                                <span className={styles.vendorRatingSmall}> · {buyerTxt}</span>
+                              </div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Preis</div>
+                              <div className={styles.metaValue}>{formatEUR(s.amountCents)}</div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Datum</div>
+                              <div className={styles.metaValue}>{formatDate(s.dateIso)}</div>
+                            </div>
+                            <div className={styles.metaCol}>
+                              <div className={styles.metaLabel}>Artikel-ID</div>
+                              <div className={styles.metaValue}>{s.articleId}</div>
+                            </div>
+                          </div>
+
+                          <div className={styles.detailsRow}>
+                            <div />
+                            <div />
+                            <aside className={styles.sideCol}>
+                              <a
+                                href={invoiceHref(s)}
+                                className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                                target="_blank"
+                                rel="noopener"
+                              >
+                                Rechnung herunterladen (PDF)
+                              </a>
+
+                              <button
+                                type="button"
+                                className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                                onClick={() => openReview(s)}
+                                disabled={!!s.rated}
+                                aria-disabled={!!s.rated}
+                                style={s.rated ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                              >
+                                {s.rated ? 'Bewertung bereits abgegeben' : 'Bewertung abgeben'}
+                              </button>
+
+                              <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
+                                Zum Artikel
+                              </Link>
+                            </aside>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+
+                  <Pagination
+                    page={pageSales}
+                    setPage={setPageSales}
+                    pageSize={psSales}
+                    setPageSize={setPsSales}
+                    total={sliceSales.total}
+                    from={sliceSales.from}
+                    to={sliceSales.to}
+                    idPrefix="my-sales"
+                  />
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ===== Review Modal ===== */}
+        {reviewOpen && reviewSale && (
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Bewertung abgeben"
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) closeReview()
+            }}
+          >
+            <div className={styles.modalContent}>
+              <h3 className={styles.modalTitle}>Bewertung abgeben</h3>
+              <p className={styles.modalText}>
+                Verkauf: <strong>{reviewSale.title}</strong>
+                <br />
+                Käufer: <strong>{reviewSale.buyerName}</strong>
+              </p>
+
+              <div className={styles.stars} aria-label="Sterne auswählen">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const v = i + 1
+                  const active = v <= stars
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      className={styles.starBtn}
+                      onClick={() => setStars(v)}
+                      aria-label={`${v} Sterne`}
+                      title={`${v} Sterne`}
+                      style={active ? { transform: 'translateY(-1px)' } : undefined}
+                    >
+                      {active ? '★' : '☆'}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <textarea
+                className={styles.reviewBox}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value.slice(0, 600))}
+                placeholder="Kurzer Text (optional)…"
+              />
+              <div className={styles.counter}>{reviewText.length} / 600</div>
+
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.btnGhost} onClick={closeReview}>
+                  Abbrechen
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnDanger}
+                  onClick={submitReview}
+                  disabled={stars === 0}
+                  aria-disabled={stars === 0}
+                  style={stars === 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                >
+                  Bewertung senden
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </>
   )
 }
