@@ -4,6 +4,7 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import styles from './kaufen.module.css'
+import Navbar from '../../components/navbar/Navbar'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -337,6 +338,8 @@ const KontoVerkaufenPage: FC = () => {
 
   /* ================= Render ================= */
   return (
+    <>
+    <Navbar />
     <div className={styles.wrapper}>
       {/* Toolbar (wie lackangebote) */}
       <div className={styles.toolbar}>
@@ -669,6 +672,7 @@ const KontoVerkaufenPage: FC = () => {
         </div>
       )}
     </div>
+    </>
   )
 }
 
