@@ -7,10 +7,11 @@ import styles from './kaufen.module.css'
 import Navbar from '../../components/navbar/Navbar'
 
 /* ================= Helpers ================= */
-function formatEUR(cents?: number) {
-  const v = (typeof cents === 'number' ? cents : 0) / 100
-  return v.toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
+function formatEUR(value?: number) {
+  const v = typeof value === "number" ? value : 0;
+  return v.toLocaleString("de-AT", { style: "currency", currency: "EUR" });
 }
+
 function formatDate(iso?: string) {
   if (!iso) return '–'
   const d = new Date(iso)
@@ -159,44 +160,89 @@ const KontoVerkaufenPage: FC = () => {
     const now = Date.now()
     const day = 24 * 60 * 60 * 1000
 
-    setArticles([
-      { id: 'a-1001', title: 'Vaillant Weiss glatt matt', category: 'Pulverlack', priceCents: 8900, createdAtIso: new Date(now - 3 * day).toISOString(), status: 'aktiv', views: 128 },
-      { id: 'a-1002', title: 'RAL 7016 Anthrazit Struktur', category: 'Pulverlack', priceCents: 10900, createdAtIso: new Date(now - 10 * day).toISOString(), status: 'aktiv', views: 302 },
-      { id: 'a-1003', title: 'Eloxal Schwarz (Probe)', category: 'Eloxieren', priceCents: 4900, createdAtIso: new Date(now - 1 * day).toISOString(), status: 'pausiert', views: 44 },
-      { id: 'a-1004', title: 'Grundierung hellgrau', category: 'Nasslack', priceCents: 7600, createdAtIso: new Date(now - 21 * day).toISOString(), status: 'aktiv', views: 91 },
-      { id: 'a-1005', title: 'Pulver Transparent glänzend', category: 'Pulverlack', priceCents: 12900, createdAtIso: new Date(now - 35 * day).toISOString(), status: 'verkauft', views: 510 },
-      { id: 'a-1006', title: 'Sondereffekt Metallic Silber', category: 'Pulverlack', priceCents: 13900, createdAtIso: new Date(now - 6 * day).toISOString(), status: 'aktiv', views: 210 },
-    ])
+    type ApiMyArticle = {
+  id: string;
+  title: string;
+  category: string | null;
+  promo_score: number | null;
+  published: boolean;
+  sold_out: boolean;
+  archived: boolean;
+  created_at: string;
+  price_from: number | null;
+};
 
-    // Verkäufe: Dummy (du hast gesagt, real noch nicht)
-    setSales([
-      {
-        id: 's-9001',
-        articleId: 'a-1005',
-        title: 'Pulver Transparent glänzend',
-        buyerName: 'Max Mustermann',
-        buyerRating: 4.7,
-        buyerRatingCount: 18,
-        amountCents: 12900,
-        dateIso: new Date(now - 5 * day).toISOString(),
-        status: 'geliefert',
-        invoiceId: 'inv-9001',
-        rated: false,
-      },
-      {
-        id: 's-9002',
-        articleId: 'a-1002',
-        title: 'RAL 7016 Anthrazit Struktur',
-        buyerName: 'Anna Beispiel',
-        buyerRating: 4.9,
-        buyerRatingCount: 6,
-        amountCents: 10900,
-        dateIso: new Date(now - 2 * day).toISOString(),
-        status: 'versandt',
-        invoiceId: 'inv-9002',
-        rated: false,
-      },
-    ])
+useEffect(() => {
+  let cancelled = false;
+
+  async function loadMyArticles() {
+    try {
+      const res = await fetch("/api/my-articles?limit=200&offset=0", { cache: "no-store" });
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // Seite bleibt nutzbar, aber zeigt leer + optional Meldung
+        if (!cancelled) setArticles([]);
+        return;
+      }
+
+      const rows = (json.articles ?? []) as ApiMyArticle[];
+
+      const mapped: MyArticle[] = rows.map((a) => {
+        // Status-Mapping auf dein UI:
+        // verkauft = sold_out
+        // pausiert = !published oder archived
+        // aktiv = published && !sold_out && !archived
+        const status: ArtikelStatus =
+          a.sold_out ? "verkauft" : (!a.published || a.archived) ? "pausiert" : "aktiv";
+
+        return {
+          id: a.id,
+          title: a.title ?? "",
+          category: a.category ?? "—",
+          priceCents: 0, // wird unten nicht mehr als cents benutzt (siehe Hinweis)
+          createdAtIso: a.created_at,
+          status,
+          views: 0,
+          // optional: falls du es anzeigen willst, müsstest du MyArticle erweitern:
+          // promo_score: a.promo_score ?? 0,
+          // price: a.price_from ?? 0,
+        } as any;
+      });
+
+      // WICHTIG: du nutzt später in der Anzeige "a.priceCents" -> das stellen wir im nächsten Mini-Step um
+      // Für sofort: wir können priceCents als "EUR*100" setzen, damit nichts kaputt geht:
+      const mappedCompat: MyArticle[] = rows.map((a) => {
+        const status: ArtikelStatus =
+          a.sold_out ? "verkauft" : (!a.published || a.archived) ? "pausiert" : "aktiv";
+
+        const eur = typeof a.price_from === "number" ? a.price_from : 0;
+
+        return {
+          id: a.id,
+          title: a.title ?? "",
+          category: a.category ?? "—",
+          priceCents: Math.round(eur * 100), // kompatibel zu deinem bisherigen Layout
+          createdAtIso: a.created_at,
+          status,
+          views: 0,
+        };
+      });
+
+      if (!cancelled) setArticles(mappedCompat);
+    } catch {
+      if (!cancelled) setArticles([]);
+    }
+  }
+
+  loadMyArticles();
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
+
+
   }, [])
 
   /* -------- Toolbar State -------- */
