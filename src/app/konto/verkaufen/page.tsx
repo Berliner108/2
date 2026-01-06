@@ -1,4 +1,3 @@
-/* src/app/konto/verkaufen/page.tsx */
 'use client'
 
 import React, { FC, useEffect, useMemo, useState } from 'react'
@@ -73,13 +72,7 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(1)}
-            disabled={page <= 1}
-            aria-label="Erste Seite"
-          >
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">
             «
           </button>
           <button
@@ -127,7 +120,7 @@ type MyArticle = {
   title: string
   category: string
   priceCents: number
-  createdAtIso: string
+  createdAtIso: string | null
   status: ArtikelStatus
   views: number
 }
@@ -158,100 +151,49 @@ const KontoVerkaufenPage: FC = () => {
   const router = useRouter()
   const params = useSearchParams()
 
-  /* -------- Dummy Data (für jetzt) -------- */
+  /* -------- DB Data -------- */
   const [articles, setArticles] = useState<MyArticle[]>([])
   const [sales, setSales] = useState<MySale[]>([])
 
+  const [mineLoading, setMineLoading] = useState(true)
+  const [mineError, setMineError] = useState<string | null>(null)
+
   useEffect(() => {
-    const now = Date.now()
-    const day = 24 * 60 * 60 * 1000
+    let cancelled = false
 
-    setArticles([
-      {
-        id: 'a-1001',
-        title: 'Vaillant Weiss glatt matt',
-        category: 'Pulverlack',
-        priceCents: 8900,
-        createdAtIso: new Date(now - 3 * day).toISOString(),
-        status: 'aktiv',
-        views: 128,
-      },
-      {
-        id: 'a-1002',
-        title: 'RAL 7016 Anthrazit Struktur',
-        category: 'Pulverlack',
-        priceCents: 10900,
-        createdAtIso: new Date(now - 10 * day).toISOString(),
-        status: 'aktiv',
-        views: 302,
-      },
-      {
-        id: 'a-1003',
-        title: 'Eloxal Schwarz (Probe)',
-        category: 'Eloxieren',
-        priceCents: 4900,
-        createdAtIso: new Date(now - 1 * day).toISOString(),
-        status: 'pausiert',
-        views: 44,
-      },
-      {
-        id: 'a-1004',
-        title: 'Grundierung hellgrau',
-        category: 'Nasslack',
-        priceCents: 7600,
-        createdAtIso: new Date(now - 21 * day).toISOString(),
-        status: 'aktiv',
-        views: 91,
-      },
-      {
-        id: 'a-1005',
-        title: 'Pulver Transparent glänzend',
-        category: 'Pulverlack',
-        priceCents: 12900,
-        createdAtIso: new Date(now - 35 * day).toISOString(),
-        status: 'verkauft',
-        views: 510,
-      },
-      {
-        id: 'a-1006',
-        title: 'Sondereffekt Metallic Silber',
-        category: 'Pulverlack',
-        priceCents: 13900,
-        createdAtIso: new Date(now - 6 * day).toISOString(),
-        status: 'aktiv',
-        views: 210,
-      },
-    ])
+    async function loadMine() {
+      try {
+        setMineLoading(true)
+        setMineError(null)
 
-    // Verkäufe: Dummy (real noch nicht)
-    setSales([
-      {
-        id: 's-9001',
-        articleId: 'a-1005',
-        title: 'Pulver Transparent glänzend',
-        buyerName: 'Max Mustermann',
-        buyerRating: 4.7,
-        buyerRatingCount: 18,
-        amountCents: 12900,
-        dateIso: new Date(now - 5 * day).toISOString(),
-        status: 'geliefert',
-        invoiceId: 'inv-9001',
-        rated: false,
-      },
-      {
-        id: 's-9002',
-        articleId: 'a-1002',
-        title: 'RAL 7016 Anthrazit Struktur',
-        buyerName: 'Anna Beispiel',
-        buyerRating: 4.9,
-        buyerRatingCount: 6,
-        amountCents: 10900,
-        dateIso: new Date(now - 2 * day).toISOString(),
-        status: 'versandt',
-        invoiceId: 'inv-9002',
-        rated: false,
-      },
-    ])
+        const res = await fetch('/api/konto/verkaufen', { cache: 'no-store' })
+        const json = await res.json().catch(() => ({}))
+
+        if (!res.ok) {
+          const msg = json?.error ?? `Fehler beim Laden (${res.status})`
+          throw new Error(msg)
+        }
+
+        if (!cancelled) {
+          setArticles(Array.isArray(json?.articles) ? json.articles : [])
+          // Orders/Verkäufe kommen später -> vorerst leer
+          setSales([])
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setArticles([])
+          setSales([])
+          setMineError(e?.message ?? 'Unbekannter Fehler')
+        }
+      } finally {
+        if (!cancelled) setMineLoading(false)
+      }
+    }
+
+    loadMine()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   /* -------- Toolbar State -------- */
@@ -272,9 +214,7 @@ const KontoVerkaufenPage: FC = () => {
     try {
       const t = params.get('tab')
       if (t === 'artikel' || t === 'verkaeufe') setTab(t)
-    } catch {
-      // ignore
-    }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -294,9 +234,7 @@ const KontoVerkaufenPage: FC = () => {
       const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
       const curr = `${window.location.pathname}${window.location.search}`
       if (next !== curr) router.replace(next, { scroll: false })
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
   // Page reset bei Suche / Sort
@@ -308,13 +246,11 @@ const KontoVerkaufenPage: FC = () => {
   /* -------- Filtering + Sorting -------- */
   const filteredArticles = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const base = q
-      ? articles.filter((a) => `${a.title} ${a.category} ${a.status}`.toLowerCase().includes(q))
-      : articles.slice()
+    const base = q ? articles.filter((a) => `${a.title} ${a.category} ${a.status}`.toLowerCase().includes(q)) : articles.slice()
 
     base.sort((a, b) => {
-      if (sortArtikel === 'date_desc') return +new Date(b.createdAtIso) - +new Date(a.createdAtIso)
-      if (sortArtikel === 'date_asc') return +new Date(a.createdAtIso) - +new Date(b.createdAtIso)
+      if (sortArtikel === 'date_desc') return +new Date(b.createdAtIso ?? 0) - +new Date(a.createdAtIso ?? 0)
+      if (sortArtikel === 'date_asc') return +new Date(a.createdAtIso ?? 0) - +new Date(b.createdAtIso ?? 0)
       if (sortArtikel === 'price_desc') return b.priceCents - a.priceCents
       if (sortArtikel === 'price_asc') return a.priceCents - b.priceCents
       if (sortArtikel === 'views_desc') return b.views - a.views
@@ -326,9 +262,7 @@ const KontoVerkaufenPage: FC = () => {
 
   const filteredSales = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const base = q
-      ? sales.filter((s) => `${s.title} ${s.buyerName} ${s.status}`.toLowerCase().includes(q))
-      : sales.slice()
+    const base = q ? sales.filter((s) => `${s.title} ${s.buyerName} ${s.status}`.toLowerCase().includes(q)) : sales.slice()
 
     base.sort((a, b) => {
       if (sortSales === 'date_desc') return +new Date(b.dateIso) - +new Date(a.dateIso)
@@ -341,14 +275,8 @@ const KontoVerkaufenPage: FC = () => {
     return base
   }, [sales, query, sortSales])
 
-  const sliceArtikel = useMemo(
-    () => sliceByPage(filteredArticles, pageArtikel, psArtikel),
-    [filteredArticles, pageArtikel, psArtikel]
-  )
-  const sliceSales = useMemo(
-    () => sliceByPage(filteredSales, pageSales, psSales),
-    [filteredSales, pageSales, psSales]
-  )
+  const sliceArtikel = useMemo(() => sliceByPage(filteredArticles, pageArtikel, psArtikel), [filteredArticles, pageArtikel, psArtikel])
+  const sliceSales = useMemo(() => sliceByPage(filteredSales, pageSales, psSales), [filteredSales, pageSales, psSales])
 
   useEffect(() => {
     if (sliceArtikel.safePage !== pageArtikel) setPageArtikel(sliceArtikel.safePage)
@@ -369,7 +297,7 @@ const KontoVerkaufenPage: FC = () => {
     return { cls: styles.statusDone, label: 'Geliefert' }
   }
 
-  /* -------- Review Modal (wie konto/lackangebote) -------- */
+  /* -------- Review Modal (Dummy) -------- */
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewSale, setReviewSale] = useState<MySale | null>(null)
   const [stars, setStars] = useState(0)
@@ -394,12 +322,10 @@ const KontoVerkaufenPage: FC = () => {
     alert('Bewertung gespeichert (Dummy). Backend kannst du später anbinden.')
   }
 
-  /* -------- Invoice Download (Dummy Link) -------- */
   function invoiceHref(s: MySale) {
     return `/api/invoices/${encodeURIComponent(s.invoiceId)}/download`
   }
 
-  /* ================= Render ================= */
   return (
     <>
       <Navbar />
@@ -412,22 +338,14 @@ const KontoVerkaufenPage: FC = () => {
           <input
             id="q"
             className={styles.search}
-            placeholder={
-              tab === 'artikel'
-                ? 'Artikel suchen (Titel, Kategorie, Status)…'
-                : 'Verkäufe suchen (Titel, Käufer, Status)…'
-            }
+            placeholder={tab === 'artikel' ? 'Artikel suchen (Titel, Kategorie, Status)…' : 'Verkäufe suchen (Titel, Käufer, Status)…'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
 
           {/* Sort */}
           {tab === 'artikel' ? (
-            <select
-              className={styles.select}
-              value={sortArtikel}
-              onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}
-            >
+            <select className={styles.select} value={sortArtikel} onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}>
               <option value="date_desc">Neueste zuerst</option>
               <option value="date_asc">Älteste zuerst</option>
               <option value="price_desc">Preis: hoch → niedrig</option>
@@ -435,11 +353,7 @@ const KontoVerkaufenPage: FC = () => {
               <option value="views_desc">Aufrufe: hoch → niedrig</option>
             </select>
           ) : (
-            <select
-              className={styles.select}
-              value={sortSales}
-              onChange={(e) => setSortSales(e.target.value as SortKeySales)}
-            >
+            <select className={styles.select} value={sortSales} onChange={(e) => setSortSales(e.target.value as SortKeySales)}>
               <option value="date_desc">Neueste zuerst</option>
               <option value="date_asc">Älteste zuerst</option>
               <option value="price_desc">Preis: hoch → niedrig</option>
@@ -447,7 +361,6 @@ const KontoVerkaufenPage: FC = () => {
             </select>
           )}
 
-          {/* Spacer */}
           <div />
 
           {/* Segmented */}
@@ -475,8 +388,24 @@ const KontoVerkaufenPage: FC = () => {
 
         <hr className={styles.divider} />
 
+        {/* Global state */}
+        {mineLoading && (
+          <div className={styles.emptyState}>
+            <strong>Lade deine Artikel…</strong>
+          </div>
+        )}
+
+        {!mineLoading && mineError && (
+          <div className={styles.emptyState}>
+            <strong>Fehler:</strong> {mineError}
+            <div style={{ marginTop: 10, opacity: 0.9 }}>
+              Wenn du nicht eingeloggt bist, kommt hier oft <code>NOT_AUTHENTICATED</code>.
+            </div>
+          </div>
+        )}
+
         {/* ===== Artikel ===== */}
-        {tab === 'artikel' && (
+        {!mineLoading && !mineError && tab === 'artikel' && (
           <>
             <h2 className={styles.heading}>Meine eingestellten Artikel</h2>
             <div className={styles.kontoContainer}>
@@ -506,12 +435,12 @@ const KontoVerkaufenPage: FC = () => {
                               <div className={styles.metaValue}>{a.category}</div>
                             </div>
                             <div className={styles.metaCol}>
-                              <div className={styles.metaLabel}>Preis</div>
+                              <div className={styles.metaLabel}>Preis ab</div>
                               <div className={styles.metaValue}>{formatEUR(a.priceCents)}</div>
                             </div>
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Erstellt</div>
-                              <div className={styles.metaValue}>{formatDate(a.createdAtIso)}</div>
+                              <div className={styles.metaValue}>{formatDate(a.createdAtIso ?? undefined)}</div>
                             </div>
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Aufrufe</div>
@@ -530,7 +459,7 @@ const KontoVerkaufenPage: FC = () => {
                               <button
                                 type="button"
                                 className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                                onClick={() => alert('Dummy: Bearbeiten-Flow später anbinden.')}
+                                onClick={() => alert('Bearbeiten kommt als nächster Schritt (PATCH + RLS).')}
                               >
                                 Artikel bearbeiten
                               </button>
@@ -539,7 +468,7 @@ const KontoVerkaufenPage: FC = () => {
                                 <button
                                   type="button"
                                   className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-                                  onClick={() => alert('Dummy: Deaktivieren später anbinden.')}
+                                  onClick={() => alert('Deaktivieren kommt als nächster Schritt (published=false).')}
                                 >
                                   Deaktivieren
                                 </button>
@@ -547,7 +476,7 @@ const KontoVerkaufenPage: FC = () => {
                                 <button
                                   type="button"
                                   className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
-                                  onClick={() => alert('Dummy: Aktivieren später anbinden.')}
+                                  onClick={() => alert('Aktivieren kommt als nächster Schritt (published=true).')}
                                 >
                                   Aktivieren
                                 </button>
@@ -576,13 +505,14 @@ const KontoVerkaufenPage: FC = () => {
         )}
 
         {/* ===== Verkäufe ===== */}
-        {tab === 'verkaeufe' && (
+        {!mineLoading && !mineError && tab === 'verkaeufe' && (
           <>
             <h2 className={styles.heading}>Meine Verkäufe</h2>
             <div className={styles.kontoContainer}>
               {sliceSales.total === 0 ? (
                 <div className={styles.emptyState}>
                   <strong>Keine Verkäufe sichtbar.</strong>
+                  <div style={{ marginTop: 8, opacity: 0.9 }}>Kommt sobald Orders/Checkout existieren.</div>
                 </div>
               ) : (
                 <>
@@ -677,7 +607,7 @@ const KontoVerkaufenPage: FC = () => {
           </>
         )}
 
-        {/* ===== Review Modal ===== */}
+        {/* ===== Review Modal (Dummy) ===== */}
         {reviewOpen && reviewSale && (
           <div
             className={styles.modal}
