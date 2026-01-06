@@ -479,6 +479,11 @@ const fetchConnect = useCallback(async () => {
     setConnectLoaded(true);
   }
 }, []);
+useEffect(() => {
+  if (aufLager && verkaufsArt === "gesamt") {
+    setVerkaufsArt("");
+  }
+}, [aufLager, verkaufsArt]);
 
 useEffect(() => {
   fetchConnect();
@@ -2379,16 +2384,22 @@ onChange={(e) => {
     </legend>
 
     <div className={styles.radioOptionsHorizontal}>
-      <label className={styles.radioLabel}>
+      <label
+        className={styles.radioLabel}
+        style={aufLager ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+        title={aufLager ? 'Bei "Auf Lager" ist "Nur als Gesamtmenge" deaktiviert.' : undefined}
+      >
         <input
           type="radio"
           name="verkaufsArt"
           value="gesamt"
           checked={verkaufsArt === 'gesamt'}
           onChange={() => setVerkaufsArt('gesamt')}
+          disabled={aufLager}
         />
         <span>Nur als Gesamtmenge</span>
       </label>
+
 
       {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
         <label className={styles.radioLabel}>
