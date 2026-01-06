@@ -255,6 +255,13 @@ export default function ArtikelDetailPage() {
     return Array.from(set);
   }, [tiers]);
 
+  // ✅ NEU: echte Staffelpreise? (mind. 2 Tiers für die aktuell gewählte Einheit)
+  const hasStaffelpreise = useMemo(() => {
+    if (!article) return false;
+    if (article.sale_type === "gesamt") return false;
+    return tiers.filter((t) => t.unit === unit).length > 1;
+  }, [article, tiers, unit]);
+
   const stockLimit = useMemo(() => {
     if (!article) return null;
     if (article.stock_status !== "begrenzt") return null;
@@ -341,7 +348,11 @@ export default function ArtikelDetailPage() {
           >
             Dieser Artikel ist nur für <strong>gewerbliche</strong> Nutzer sichtbar.
           </div>
-          <button className={styles.submitOfferButton} style={{ marginTop: 12 }} onClick={() => router.push("/kaufen")}>
+          <button
+            className={styles.submitOfferButton}
+            style={{ marginTop: 12 }}
+            onClick={() => router.push("/kaufen")}
+          >
             Zurück zum Shop
           </button>
         </div>
@@ -421,8 +432,9 @@ export default function ArtikelDetailPage() {
                 <span className={styles.value}>{article.condition ?? "—"}</span>
               </div>
 
+              {/* ✅ FIX: Preis ab -> Preis, wenn keine Staffelpreise */}
               <div className={styles.metaItem}>
-                <span className={styles.label}>Preis ab:</span>
+                <span className={styles.label}>{hasStaffelpreise ? "Preis ab:" : "Preis:"}</span>
                 <span className={styles.value}>
                   {article.price_from != null ? Number(article.price_from).toFixed(2) : "—"} €
                   {article.price_unit ? ` / ${unitLabel(article.price_unit)}` : ""}
@@ -488,7 +500,7 @@ export default function ArtikelDetailPage() {
 
             {/* Staffelpreise / Gesamtpreis */}
             <div className={styles.beschreibung}>
-              <h2>{article.sale_type === "gesamt" ? "Preis" : "Staffelpreise"}</h2>
+              <h2>{article.sale_type === "gesamt" || !hasStaffelpreise ? "Preis" : "Staffelpreise"}</h2>
 
               {tiers.length === 0 ? (
                 <p>Keine Preisinformationen gefunden.</p>
@@ -563,10 +575,13 @@ export default function ArtikelDetailPage() {
 
                 {chosenTier && priceCalc && (
                   <div style={{ marginTop: 12 }}>
-                    <div style={{ opacity: 0.9 }}>
-                      Staffel aktiv: {chosenTier.min_qty}
-                      {chosenTier.max_qty != null ? `–${chosenTier.max_qty}` : "+"} {unitLabel(chosenTier.unit)}
-                    </div>
+                    {/* ✅ FIX: "Staffel aktiv" nur bei echten Staffelpreisen */}
+                    {hasStaffelpreise && (
+                      <div style={{ opacity: 0.9 }}>
+                        Staffel aktiv: {chosenTier.min_qty}
+                        {chosenTier.max_qty != null ? `–${chosenTier.max_qty}` : "+"} {unitLabel(chosenTier.unit)}
+                      </div>
+                    )}
 
                     <div style={{ marginTop: 6 }}>
                       <div>
