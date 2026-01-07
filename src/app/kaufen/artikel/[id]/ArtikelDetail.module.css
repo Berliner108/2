@@ -151,6 +151,22 @@
   flex-direction: column;
   gap: 1rem;
 }
+/* fehlt oft, wird aber in TSX genutzt */
+.activeThumbnail {
+  border-color: #888;
+}
+
+.userRating {
+  font-size: 0.9rem;
+  color: #333;
+}
+.tierRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 
 .detailGrid {
   display: grid;

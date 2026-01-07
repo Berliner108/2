@@ -248,7 +248,12 @@ export default function ArtikelDetailPage() {
       : null;
 
   const sellerTypeClass =
-    seller?.account_type === "business" ? styles.gewerblich : styles.privat;
+  seller?.account_type === "business"
+    ? styles.gewerblich
+    : seller?.account_type === "private"
+    ? styles.privat
+    : "";
+
 
   const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
@@ -375,7 +380,7 @@ export default function ArtikelDetailPage() {
           </div>
         )}
 
-        <div className={styles.grid}>
+        <div className={styles.detailGrid}>
           {/* Linke Spalte: Bilder */}
           <div className={styles.leftColumn}>
             <img
@@ -523,7 +528,7 @@ export default function ArtikelDetailPage() {
                   {tiers
                     .filter((t) => t.unit === unit)
                     .map((t) => (
-                      <div key={t.id} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <div key={t.id} className={styles.tierRow}>
                         <span>
                           {t.min_qty}
                           {t.max_qty != null ? `–${t.max_qty}` : "+"} {unitLabel(t.unit)}
@@ -574,7 +579,7 @@ export default function ArtikelDetailPage() {
                 <strong>Kaufen</strong>
 
                 {article.sale_type !== "gesamt" && availableUnits.length > 0 && (
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10 }}>
+                  <div className={styles.inputRow}>
                     <label style={{ fontWeight: 600 }}>Einheit:</label>
                     <select value={unit} onChange={(e) => setUnit(e.target.value as any)} className={styles.priceField}>
                       {availableUnits.map((u) => (
@@ -586,7 +591,7 @@ export default function ArtikelDetailPage() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10 }}>
+                <div className={styles.inputRow}>
                   <label style={{ fontWeight: 600 }}>Menge:</label>
                   <input
                     type="number"
@@ -632,7 +637,7 @@ export default function ArtikelDetailPage() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                <div className={styles.inputRow}>
                   <button
                     className={styles.submitOfferButton}
                     disabled={disableBuy}
