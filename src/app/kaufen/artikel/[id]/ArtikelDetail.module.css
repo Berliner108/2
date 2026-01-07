@@ -39,9 +39,6 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-
-.titleRow { display: flex; flex-wrap: wrap; gap: 1rem; }
-.badges   { display: flex; gap: .5rem; flex-wrap: wrap; }
 .downloadItem { display: flex; flex-wrap: wrap; gap: .3rem; }
 
 .thumbnails {
@@ -82,22 +79,6 @@
 .kontaktLink:hover {
   color: #0051a3;
 }
-
-.titleRow {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.title {
-  font-size: 1.7rem;
-  font-weight: bold;
-  color: #333;
-  margin: 5px;
-  margin-bottom: -30px;
-}
-
 .label {
   font-weight: bold;
   display: inline-block;
@@ -113,21 +94,6 @@
 .value {
   color: #222;
 }
-
-.badges {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  background-color: #eee;
-  color: #555;
-}
-
 /* ✅ CSS-Modules-safe: lieber als eigene Klassen verwenden */
 .gewerblich { background-color: #28a745; color: white; }
 .privat     { background-color: #007acc; color: white; }
