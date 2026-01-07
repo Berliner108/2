@@ -670,6 +670,17 @@ if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
   } else {
     setWarnungMenge('');
   }
+  // Hersteller Pflicht bei Nasslack/Pulverlack
+const finalHerstellerLack =
+  hersteller === HERSTELLER_ANDERE_VALUE ? herstellerAndere.trim() : hersteller.trim();
+
+if (!finalHerstellerLack) {
+  setWarnungHersteller('Bitte wähle einen Hersteller aus.');
+  fehler = true;
+} else {
+  setWarnungHersteller('');
+}
+
   if (!farbpaletteWert) {
     setWarnungPalette('Bitte wähle eine Farbpalette aus.');
     fehler = true;
@@ -1455,7 +1466,9 @@ const submitDisabled = ladeStatus || !stripeReady;
 
 
 <label className={styles.label1}>
-  Hersteller (optional):
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Hersteller: <span style={{ color: 'red' }}>*</span>
+  </span>
   <div
     ref={herstellerRef}
     className={styles.customSelect}
@@ -1517,8 +1530,12 @@ const submitDisabled = ladeStatus || !stripeReady;
       placeholder="Hersteller eingeben…"
     />
     <div className={styles.counter}>{herstellerAndere.length} / 30 Zeichen</div>
+    {warnungHersteller && (
+  <p className={styles.validierungsfehler}>{warnungHersteller}</p>
+)}
   </label>
 )}
+
 
 <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
 
