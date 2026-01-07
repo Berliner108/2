@@ -4,9 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
-
 type SupabaseClientType = Awaited<ReturnType<typeof createSupabaseRouteClient>>;
-
 
 type StaffelRow = {
   minMenge?: string;
@@ -51,7 +49,7 @@ function extFromName(name: string) {
 async function uploadPublicFiles(opts: {
   supabase: SupabaseClientType;
   bucket: string;
-  basePath: string; // e.g. `${articleId}/images`
+  basePath: string; // e.g. `articles/${articleId}/images`
   files: File[];
 }) {
   const { supabase, bucket, basePath, files } = opts;
@@ -87,11 +85,9 @@ async function insertPriceTiersWithFallback(opts: {
 }) {
   const { supabase, tiers } = opts;
 
-  // 1) Erst “voll” versuchen (falls min_qty/max_qty/shipping existieren)
   const fullTry = await supabase.from("article_price_tiers").insert(tiers);
   if (!fullTry.error) return;
 
-  // 2) Fallback: nur die Felder, die wir sicher kennen (article_id, unit, price)
   const minimal = tiers.map((t) => ({
     article_id: t.article_id,
     unit: t.unit,
@@ -108,39 +104,37 @@ export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseRouteClient();
 
-    // Auth nötig (Owner/RLS & später Konto-Seiten)
-const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
-if (sessionErr) {
-  return NextResponse.json({ error: sessionErr.message }, { status: 401 });
-}
-const user = sessionRes?.session?.user;
-if (!user) {
-  return NextResponse.json(
-    { error: "NOT_AUTHENTICATED", hint: "No session cookie received by route" },
-    { status: 401 }
-  );
-}
-
+    // Auth nötig
+    const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr) {
+      return NextResponse.json({ error: sessionErr.message }, { status: 401 });
+    }
+    const user = sessionRes?.session?.user;
+    if (!user) {
+      return NextResponse.json(
+        { error: "NOT_AUTHENTICATED", hint: "No session cookie received by route" },
+        { status: 401 }
+      );
+    }
 
     const fd = await req.formData();
 
-    // Pflichtfelder (aus deinem VerkaufenClient)
     const category = toStr(fd.get("kategorie")).trim();
     const sellTo = toStr(fd.get("verkaufAn")).trim();
     const title = toStr(fd.get("titel")).trim();
     const manufacturer = toStr(fd.get("hersteller")).trim();
     const description = toStr(fd.get("beschreibung")).trim();
 
-    const conditionRaw = toStr(fd.get("zustand")).trim(); // kommt aus VerkaufenClient
+    const conditionRaw = toStr(fd.get("zustand")).trim();
     const condition =
-    conditionRaw === "neu" ? "Neu und ungeöffnet"
-    : conditionRaw === "geöffnet" ? "Geöffnet und einwandfrei"
-    : conditionRaw || null;
-
+      conditionRaw === "neu"
+        ? "Neu und ungeöffnet"
+        : conditionRaw === "geöffnet"
+        ? "Geöffnet und einwandfrei"
+        : conditionRaw || null;
 
     const deliveryDays = toInt(toStr(fd.get("lieferWerktage")), 0);
     const stockStatus = toStr(fd.get("mengeStatus")).trim(); // "auf_lager" | "begrenzt"
-
     const verkaufsArt = toStr(fd.get("verkaufsArt")).trim(); // "gesamt" | "pro_kg" | "pro_stueck"
 
     const images = fd.getAll("bilder").filter((x) => x instanceof File) as File[];
@@ -150,9 +144,8 @@ if (!user) {
       return NextResponse.json({ error: "MISSING_REQUIRED_FIELDS" }, { status: 400 });
     }
     if (!conditionRaw) {
-    return NextResponse.json({ error: "MISSING_CONDITION" }, { status: 400 });
+      return NextResponse.json({ error: "MISSING_CONDITION" }, { status: 400 });
     }
-
     if (!images.length) {
       return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
     }
@@ -163,7 +156,7 @@ if (!user) {
       return NextResponse.json({ error: "MISSING_VERKAUFSART" }, { status: 400 });
     }
 
-    // Mengen (je nach Kategorie + stockStatus)
+    // Mengen
     const qtyKg =
       stockStatus === "begrenzt" && category !== "arbeitsmittel"
         ? toNum(toStr(fd.get("mengeKg")), 0)
@@ -174,19 +167,19 @@ if (!user) {
         ? toInt(toStr(fd.get("mengeStueck")), 0)
         : null;
 
-    // Promo score aus "bewerbung" (IDs)
+    // Promo score (kannst du später ignorieren)
     const bewerbungRaw = toStr(fd.get("bewerbung"));
     const bewerbungIds = safeJson<string[]>(bewerbungRaw, []);
     const promoScore = (bewerbungIds ?? []).reduce((sum, id) => sum + (PROMO_SCORE_BY_ID[id] ?? 0), 0);
 
-    // 1) Artikel anlegen (ohne image_urls – die kommen nach Upload)
+    // 1) Artikel anlegen
     const insertPayload: any = {
       title,
       description,
       category,
       sell_to: sellTo,
       manufacturer,
-      condition, // ✅ schreibt in articles.condition
+      condition,
       sale_type: verkaufsArt,
       promo_score: promoScore,
       delivery_days: deliveryDays,
@@ -200,35 +193,34 @@ if (!user) {
       sold_out: false,
       archived: false,
 
-      // falls deine Tabelle owner_id hat (üblich)
       owner_id: user.id,
     };
 
-    const { data: created, error: createErr } = await supabase
-      .from("articles")
-      .insert(insertPayload)
-      .select("id")
-      .single();
+    let createdId: string | null = null;
 
-    // Wenn owner_id-Spalte nicht existiert, retry ohne owner_id
-    if (createErr && /owner_id/i.test(createErr.message)) {
-      delete insertPayload.owner_id;
-      const retry = await supabase.from("articles").insert(insertPayload).select("id").single();
-      if (retry.error) {
-        return NextResponse.json({ error: retry.error.message }, { status: 500 });
+    const firstInsert = await supabase.from("articles").insert(insertPayload).select("id").single();
+    if (firstInsert.error) {
+      // Wenn owner_id-Spalte nicht existiert, retry ohne owner_id
+      if (/owner_id/i.test(firstInsert.error.message)) {
+        delete insertPayload.owner_id;
+        const retry = await supabase.from("articles").insert(insertPayload).select("id").single();
+        if (retry.error) {
+          return NextResponse.json({ error: retry.error.message }, { status: 500 });
+        }
+        createdId = (retry.data as any)?.id ?? null;
+      } else {
+        return NextResponse.json({ error: firstInsert.error.message }, { status: 500 });
       }
-      // @ts-ignore
-      created = retry.data;
-    } else if (createErr) {
-      return NextResponse.json({ error: createErr.message }, { status: 500 });
+    } else {
+      createdId = (firstInsert.data as any)?.id ?? null;
     }
 
-    const articleId = (created as any)?.id as string;
+    const articleId = createdId;
     if (!articleId) {
       return NextResponse.json({ error: "ARTICLE_CREATE_FAILED" }, { status: 500 });
     }
 
-    // 2) Upload: Bilder (public bucket: articles)
+    // 2) Upload: Bilder
     let imageUrls: string[] = [];
     try {
       imageUrls = await uploadPublicFiles({
@@ -238,39 +230,34 @@ if (!user) {
         files: images,
       });
     } catch (e: any) {
-      // best effort: Artikel verstecken, falls Upload fehlschlägt
       await supabase.from("articles").update({ published: false, archived: true }).eq("id", articleId);
       return NextResponse.json({ error: e?.message ?? "UPLOAD_FAILED" }, { status: 500 });
     }
 
-    // optional: Dateien hochladen + URLs speichern
-let fileUrls: string[] = [];
-if (files.length) {
-  try {
-    fileUrls = await uploadPublicFiles({
-      supabase,
-      bucket: "articles",
-      basePath: `articles/${articleId}/files`,
-      files,
-    });
-  } catch {
-    // Dateien optional -> nicht abbrechen
-    fileUrls = [];
-  }
-}
+    // 2b) Upload: Dateien + URLs sammeln
+    let fileUrls: string[] = [];
+    if (files.length) {
+      try {
+        fileUrls = await uploadPublicFiles({
+          supabase,
+          bucket: "articles",
+          basePath: `articles/${articleId}/files`,
+          files,
+        });
+      } catch {
+        // Dateien optional -> nicht abbrechen
+        fileUrls = [];
+      }
+    }
 
-// 3) Artikel updaten: image_urls + file_urls
-const { error: updErr } = await supabase
-  .from("articles")
-  .update({ image_urls: imageUrls, file_urls: fileUrls })
-  .eq("id", articleId);
+    // 3) Artikel updaten: image_urls + file_urls  ✅ (TS-sicher)
+    const upd = await supabase
+      .from("articles")
+      .update({ image_urls: imageUrls, file_urls: fileUrls })
+      .eq("id", articleId);
 
-if (updErr) {
-  return NextResponse.json({ error: updErr.message }, { status: 500 });
-}
-
-    if (updErr) {
-      return NextResponse.json({ error: updErr.message }, { status: 500 });
+    if (upd.error) {
+      return NextResponse.json({ error: upd.error.message }, { status: 500 });
     }
 
     // 4) Preise / Staffeln
@@ -285,13 +272,13 @@ if (updErr) {
         .map((s) => {
           const minQty = s.minMenge?.trim() ? Math.max(1, toInt(s.minMenge.trim(), 1)) : 1;
 
-let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
+          let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
 
-// ✅ wenn max gesetzt ist und kleiner als min → auf min anheben
-if (maxQty !== null && maxQty < minQty) {
-  maxQty = minQty;
-}
-          
+          // wenn max gesetzt ist und kleiner als min → auf min anheben
+          if (maxQty !== null && maxQty < minQty) {
+            maxQty = minQty;
+          }
+
           const price = toNum(s.preis?.trim() ?? "", 0);
           const shipping = toNum(s.versand?.trim() ?? "", 0);
 
@@ -302,8 +289,8 @@ if (maxQty !== null && maxQty < minQty) {
             unit,
             min_qty: minQty,
             max_qty: maxQty,
-            price,      // Brutto
-            shipping,   // Brutto Versand (falls Spalte existiert -> wird gespeichert; sonst fallback ignoriert)
+            price,
+            shipping,
           };
         })
         .filter(Boolean);
@@ -314,7 +301,6 @@ if (maxQty !== null && maxQty < minQty) {
 
       await insertPriceTiersWithFallback({ supabase, tiers });
     } else {
-      // "gesamt": Einzelpreis + Versand
       const price = toNum(toStr(fd.get("preis")), 0);
       const shipping = toNum(toStr(fd.get("versandKosten")), 0);
 
@@ -328,8 +314,8 @@ if (maxQty !== null && maxQty < minQty) {
           unit,
           min_qty: 1,
           max_qty: null,
-          price,    // Brutto
-          shipping, // Brutto Versand (falls Spalte existiert)
+          price,
+          shipping,
         },
       ];
 
