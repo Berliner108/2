@@ -10,6 +10,8 @@ import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { FileText, FileSpreadsheet, FileImage, File, Download } from "lucide-react";
+
 
 /* ===================== Typen ===================== */
 type Tier = {
@@ -99,6 +101,30 @@ function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | nul
   }
   if (list.length) return list[list.length - 1];
   return null;
+}
+function getFileNameFromUrl(url: string) {
+  try {
+    const last = url.split("/").pop() || "Datei";
+    return decodeURIComponent(last);
+  } catch {
+    return "Datei";
+  }
+}
+
+function getExt(url: string) {
+  const clean = url.split("?")[0].toLowerCase();
+  const m = clean.match(/\.([a-z0-9]+)$/);
+  return m?.[1] ?? "";
+}
+
+function iconForUrl(url: string) {
+  const ext = getExt(url);
+
+  if (ext === "pdf") return <FileText size={18} aria-hidden />;
+  if (ext === "xls" || ext === "xlsx" || ext === "csv") return <FileSpreadsheet size={18} aria-hidden />;
+  if (ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp") return <FileImage size={18} aria-hidden />;
+
+  return <File size={18} aria-hidden />;
 }
 
 /* ===== Handle/Reviews/Kontakt (wie Lackanfragen) ===== */
@@ -536,29 +562,51 @@ export default function ArtikelDetailPage() {
               )}
             </div>
             <div className={styles.beschreibung}>
-            <h2>Dateien</h2>
+  <h2>Dateien</h2>
 
-            {dateien.length === 0 ? (
-              <p>Keine Dateien vorhanden.</p>
-            ) : (
-              <div style={{ display: "grid", gap: 8 }}>
-                {dateien.map((url, i) => {
-                  const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
-                  return (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={styles.kontaktLink}
-                    >
-                      {name}
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+  {dateien.length === 0 ? (
+    <p>Keine Dateien vorhanden.</p>
+  ) : (
+    <div style={{ display: "grid", gap: 8 }}>
+      {dateien.map((url, i) => {
+        const name = getFileNameFromUrl(url) || `Datei-${i + 1}`;
+
+        return (
+          <div
+            key={`${url}-${i}`}
+            style={{ display: "flex", alignItems: "center", gap: 10 }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center" }}>
+              {iconForUrl(url)}
+            </span>
+
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.kontaktLink}
+              style={{ flex: 1 }}
+            >
+              {name}
+            </a>
+
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              title="Download"
+              aria-label="Download"
+              style={{ display: "inline-flex", alignItems: "center" }}
+            >
+              <Download size={18} aria-hidden />
+            </a>
           </div>
+        );
+      })}
+    </div>
+  )}
+</div>
+
 
 
             {/* Kaufen UI (ohne Warenkorb) */}
