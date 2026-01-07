@@ -2,7 +2,7 @@
 
 .container {
   width: 100%;
-  margin: 2rem auto;
+  margin: 0.5rem auto;
   padding: 1rem;
   background: #fff;
   font-family: 'Oswald', sans-serif;
@@ -874,4 +874,13 @@
   .badges::-webkit-scrollbar {
     display: none;
   }
+}
+.buttonRow {
+  width: 100%;
+}
+
+.submitOfferButton {
+  width: 100%;        /* ✅ erzwingt volle Breite */
+  min-width: 100%;
+  display: block;
 }
