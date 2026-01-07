@@ -101,30 +101,7 @@ function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | nul
   if (list.length) return list[list.length - 1];
   return null;
 }
-function getFileNameFromUrl(url: string) {
-  try {
-    const last = url.split("/").pop() || "Datei";
-    return decodeURIComponent(last);
-  } catch {
-    return "Datei";
-  }
-}
 
-function getExt(url: string) {
-  const clean = url.split("?")[0].toLowerCase();
-  const m = clean.match(/\.([a-z0-9]+)$/);
-  return m?.[1] ?? "";
-}
-
-function iconForUrl(url: string) {
-  const ext = getExt(url);
-
-  if (ext === "pdf") return <FileText size={18} aria-hidden />;
-  if (ext === "xls" || ext === "xlsx" || ext === "csv") return <FileSpreadsheet size={18} aria-hidden />;
-  if (ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp") return <FileImage size={18} aria-hidden />;
-
-  return <File size={18} aria-hidden />;
-}
 
 /* ===== Handle/Reviews/Kontakt (wie Lackanfragen) ===== */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
