@@ -46,6 +46,8 @@ function extFromName(name: string) {
   return m?.[1] ?? "bin";
 }
 
+// OPTIONAL: Fallback-Upload (wenn du doch mal Dateien über die Route sendest)
+// -> Achtung: bei großen PDFs kann die Route trotzdem an Limits stoßen.
 async function uploadPublicFiles(opts: {
   supabase: SupabaseClientType;
   bucket: string;
@@ -100,6 +102,16 @@ async function insertPriceTiersWithFallback(opts: {
   }
 }
 
+function parseUrlList(fd: FormData, keys: string[]) {
+  for (const k of keys) {
+    const raw = toStr(fd.get(k)).trim();
+    if (!raw) continue;
+    const arr = safeJson<string[]>(raw, []);
+    if (Array.isArray(arr)) return arr.filter(Boolean);
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseRouteClient();
@@ -137,6 +149,13 @@ export async function POST(req: Request) {
     const stockStatus = toStr(fd.get("mengeStatus")).trim(); // "auf_lager" | "begrenzt"
     const verkaufsArt = toStr(fd.get("verkaufsArt")).trim(); // "gesamt" | "pro_kg" | "pro_stueck"
 
+    // ✅ NEU: Wir akzeptieren jetzt URLs (vom Client hochgeladen)
+    const imageUrlsFromClient =
+      parseUrlList(fd, ["imageUrls", "image_urls", "image_urls_json"]) ?? [];
+    const fileUrlsFromClient =
+      parseUrlList(fd, ["fileUrls", "file_urls", "file_urls_json"]) ?? [];
+
+    // Fallback: falls doch noch Dateien über FormData kommen (kleine Dateien ok)
     const images = fd.getAll("bilder").filter((x) => x instanceof File) as File[];
     const files = fd.getAll("dateien").filter((x) => x instanceof File) as File[];
 
@@ -146,14 +165,17 @@ export async function POST(req: Request) {
     if (!conditionRaw) {
       return NextResponse.json({ error: "MISSING_CONDITION" }, { status: 400 });
     }
-    if (!images.length) {
-      return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
-    }
     if (!deliveryDays || deliveryDays < 1) {
       return NextResponse.json({ error: "INVALID_DELIVERY_DAYS" }, { status: 400 });
     }
     if (!verkaufsArt) {
       return NextResponse.json({ error: "MISSING_VERKAUFSART" }, { status: 400 });
+    }
+
+    // ✅ Bildpflicht: entweder URLs ODER Dateien
+    const hasImages = imageUrlsFromClient.length > 0 || images.length > 0;
+    if (!hasImages) {
+      return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
     }
 
     // Mengen
@@ -167,7 +189,7 @@ export async function POST(req: Request) {
         ? toInt(toStr(fd.get("mengeStueck")), 0)
         : null;
 
-    // Promo score (kannst du später ignorieren)
+    // Promo score
     const bewerbungRaw = toStr(fd.get("bewerbung"));
     const bewerbungIds = safeJson<string[]>(bewerbungRaw, []);
     const promoScore = (bewerbungIds ?? []).reduce((sum, id) => sum + (PROMO_SCORE_BY_ID[id] ?? 0), 0);
@@ -186,6 +208,8 @@ export async function POST(req: Request) {
       stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),
       qty_kg: qtyKg,
       qty_piece: qtyPiece,
+
+      // kommen nachher rein:
       image_urls: [],
       file_urls: [],
 
@@ -200,13 +224,10 @@ export async function POST(req: Request) {
 
     const firstInsert = await supabase.from("articles").insert(insertPayload).select("id").single();
     if (firstInsert.error) {
-      // Wenn owner_id-Spalte nicht existiert, retry ohne owner_id
       if (/owner_id/i.test(firstInsert.error.message)) {
         delete insertPayload.owner_id;
         const retry = await supabase.from("articles").insert(insertPayload).select("id").single();
-        if (retry.error) {
-          return NextResponse.json({ error: retry.error.message }, { status: 500 });
-        }
+        if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
         createdId = (retry.data as any)?.id ?? null;
       } else {
         return NextResponse.json({ error: firstInsert.error.message }, { status: 500 });
@@ -220,23 +241,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "ARTICLE_CREATE_FAILED" }, { status: 500 });
     }
 
-    // 2) Upload: Bilder
-    let imageUrls: string[] = [];
-    try {
-      imageUrls = await uploadPublicFiles({
-        supabase,
-        bucket: "articles",
-        basePath: `articles/${articleId}/images`,
-        files: images,
-      });
-    } catch (e: any) {
-      await supabase.from("articles").update({ published: false, archived: true }).eq("id", articleId);
-      return NextResponse.json({ error: e?.message ?? "UPLOAD_FAILED" }, { status: 500 });
+    // 2) URLs bestimmen:
+    //    - bevorzugt: vom Client hochgeladene URLs
+    //    - fallback: Upload über Route (nur wenn Dateien vorhanden)
+    let imageUrls: string[] = imageUrlsFromClient;
+    let fileUrls: string[] = fileUrlsFromClient;
+
+    if (!imageUrls.length && images.length) {
+      try {
+        imageUrls = await uploadPublicFiles({
+          supabase,
+          bucket: "articles",
+          basePath: `articles/${articleId}/images`,
+          files: images,
+        });
+      } catch (e: any) {
+        await supabase.from("articles").update({ published: false, archived: true }).eq("id", articleId);
+        return NextResponse.json({ error: e?.message ?? "UPLOAD_FAILED" }, { status: 500 });
+      }
     }
 
-    // 2b) Upload: Dateien + URLs sammeln
-    let fileUrls: string[] = [];
-    if (files.length) {
+    if (!fileUrls.length && files.length) {
       try {
         fileUrls = await uploadPublicFiles({
           supabase,
@@ -250,7 +275,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3) Artikel updaten: image_urls + file_urls  ✅ (TS-sicher)
+    // 3) Artikel updaten
     const upd = await supabase
       .from("articles")
       .update({ image_urls: imageUrls, file_urls: fileUrls })
@@ -273,15 +298,10 @@ export async function POST(req: Request) {
           const minQty = s.minMenge?.trim() ? Math.max(1, toInt(s.minMenge.trim(), 1)) : 1;
 
           let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
-
-          // wenn max gesetzt ist und kleiner als min → auf min anheben
-          if (maxQty !== null && maxQty < minQty) {
-            maxQty = minQty;
-          }
+          if (maxQty !== null && maxQty < minQty) maxQty = minQty;
 
           const price = toNum(s.preis?.trim() ?? "", 0);
           const shipping = toNum(s.versand?.trim() ?? "", 0);
-
           if (!price || price <= 0) return null;
 
           return {

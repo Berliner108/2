@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
-
+import { supabaseBrowser } from "@/lib/supabase-browser";
 
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
@@ -956,9 +956,36 @@ if (kategorie === 'arbeitsmittel') {
   }
 }
 
+async function uploadPublicFilesBrowser(bucket: string, basePath: string, files: File[]) {
+  const supa = supabaseBrowser();
+  const urls: string[] = [];
 
-bilder.forEach((file) => formData.append('bilder', file));
-dateien.forEach((file) => formData.append('dateien', file));
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+
+    // Optional: Limit im Frontend (z.B. 25 MB)
+    const MAX = 25 * 1024 * 1024;
+    if (f.size > MAX) {
+      throw new Error(`Datei zu groß: ${f.name} (max. 25 MB)`);
+    }
+
+    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${basePath}/${String(i + 1).padStart(2, "0")}-${Date.now()}-${safeName}`;
+
+    const { error } = await supa.storage.from(bucket).upload(path, f, {
+      contentType: f.type || "application/octet-stream",
+      upsert: false,
+    });
+
+    if (error) throw new Error(error.message);
+
+    const { data } = supa.storage.from(bucket).getPublicUrl(path);
+    urls.push(data.publicUrl);
+  }
+
+  return urls;
+}
+
 
 formData.append('verkaufsArt', verkaufsArt);
 
@@ -978,6 +1005,14 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 
 formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
 
+const folder = `uploads/${crypto.randomUUID()}`;
+
+const imageUrls = await uploadPublicFilesBrowser("articles", `${folder}/images`, bilder);
+const fileUrls  = await uploadPublicFilesBrowser("articles", `${folder}/files`, dateien);
+
+// Statt Dateien -> URLs schicken:
+formData.append("imageUrls", JSON.stringify(imageUrls));
+formData.append("fileUrls", JSON.stringify(fileUrls));
 
 
 try {
