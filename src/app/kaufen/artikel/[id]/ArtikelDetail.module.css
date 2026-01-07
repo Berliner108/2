@@ -665,3 +665,8 @@
     background-position: 200% 0, 0 0;
   }
 }
+.pdfIcon {
+  color: #e53935;         /* rot wie PDF */
+  margin-right: 0.4rem;
+  flex: 0 0 auto;
+}

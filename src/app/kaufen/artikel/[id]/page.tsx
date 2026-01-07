@@ -554,9 +554,10 @@ export default function ArtikelDetailPage() {
               rel="noopener noreferrer"
               className={styles.downloadLink}
             >
-              <FaFilePdf style={{ marginRight: "0.4rem" }} />
+              <FaFilePdf className={styles.pdfIcon} aria-hidden />
               {name}
             </a>
+
           </li>
         );
       })}
