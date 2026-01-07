@@ -132,15 +132,10 @@ if (!user) {
     const description = toStr(fd.get("beschreibung")).trim();
 
     const conditionRaw = toStr(fd.get("zustand")).trim(); // kommt aus VerkaufenClient
-    const zustandRaw = toStr(fd.get("zustand")).trim();
-
-const condition =
-  zustandRaw === "neu" || zustandRaw === "Neu & Ungeöffnet" || zustandRaw === "Neu und ungeöffnet"
-    ? "Neu und ungeöffnet"
-    : zustandRaw === "geöffnet" || zustandRaw === "Geöffnet & Einwandfrei" || zustandRaw === "Geöffnet und einwandfrei"
-    ? "Geöffnet und einwandfrei"
-    : (zustandRaw || null);
-
+    const condition =
+    conditionRaw === "neu" ? "Neu und ungeöffnet"
+    : conditionRaw === "geöffnet" ? "Geöffnet und einwandfrei"
+    : conditionRaw || null;
 
 
     const deliveryDays = toInt(toStr(fd.get("lieferWerktage")), 0);
@@ -199,6 +194,7 @@ const condition =
       qty_kg: qtyKg,
       qty_piece: qtyPiece,
       image_urls: [],
+      file_urls: [],
 
       published: true,
       sold_out: false,
@@ -247,22 +243,32 @@ const condition =
       return NextResponse.json({ error: e?.message ?? "UPLOAD_FAILED" }, { status: 500 });
     }
 
-    // optional: Dateien auch hochladen (noch nicht im Artikel gespeichert – je nach deiner DB später)
-    if (files.length) {
-      try {
-        await uploadPublicFiles({
-          supabase,
-          bucket: "articles",
-          basePath: `articles/${articleId}/files`,
-          files,
-        });
-      } catch {
-        // Dateien sind optional -> wir brechen nicht ab
-      }
-    }
+    // optional: Dateien hochladen + URLs speichern
+let fileUrls: string[] = [];
+if (files.length) {
+  try {
+    fileUrls = await uploadPublicFiles({
+      supabase,
+      bucket: "articles",
+      basePath: `articles/${articleId}/files`,
+      files,
+    });
+  } catch {
+    // Dateien optional -> nicht abbrechen
+    fileUrls = [];
+  }
+}
 
-    // 3) Artikel updaten: image_urls
-    const { error: updErr } = await supabase.from("articles").update({ image_urls: imageUrls }).eq("id", articleId);
+// 3) Artikel updaten: image_urls + file_urls
+const { error: updErr } = await supabase
+  .from("articles")
+  .update({ image_urls: imageUrls, file_urls: fileUrls })
+  .eq("id", articleId);
+
+if (updErr) {
+  return NextResponse.json({ error: updErr.message }, { status: 500 });
+}
+
     if (updErr) {
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }

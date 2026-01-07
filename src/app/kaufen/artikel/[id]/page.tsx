@@ -43,6 +43,7 @@ type Article = {
   qty_kg?: number | null;
   qty_piece?: number | null;
   image_urls?: string[] | null;
+  file_urls?: string[] | null;
   sale_type: "gesamt" | "pro_kg" | "pro_stueck";
   condition?: string | null;
 
@@ -229,6 +230,7 @@ export default function ArtikelDetailPage() {
   }, [params.id]);
 
   const bilder = article?.image_urls ?? [];
+  const dateien = article?.file_urls ?? [];
   const slides = bilder.map((src) => ({ src }));
 
   const deliveryDateText = useMemo(() => {
@@ -533,6 +535,31 @@ export default function ArtikelDetailPage() {
                 </div>
               )}
             </div>
+            <div className={styles.beschreibung}>
+            <h2>Dateien</h2>
+
+            {dateien.length === 0 ? (
+              <p>Keine Dateien vorhanden.</p>
+            ) : (
+              <div style={{ display: "grid", gap: 8 }}>
+                {dateien.map((url, i) => {
+                  const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
+                  return (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.kontaktLink}
+                    >
+                      {name}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
 
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
