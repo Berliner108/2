@@ -542,17 +542,15 @@ export default function ArtikelDetailPage() {
                 </div>
               )}
             </div>
-            <div className={styles.beschreibung}>
-  <h2>Dateien</h2>
+            {dateien.length > 0 && (
+  <div className={styles.beschreibung}>
+    <h2>Dateien</h2>
 
-  {dateien.length === 0 ? (
-    <p>Keine Dateien vorhanden.</p>
-  ) : (
     <ul className={styles.downloadList}>
       {dateien.map((url, i) => {
         const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
         return (
-          <li key={url} className={styles.downloadItem}>
+          <li key={`${url}-${i}`} className={styles.downloadItem}>
             <a
               href={url}
               target="_blank"
@@ -562,16 +560,12 @@ export default function ArtikelDetailPage() {
               <FaFilePdf className={styles.pdfIcon} aria-hidden />
               {name}
             </a>
-
           </li>
         );
       })}
     </ul>
-  )}
-</div>
-
-
-
+  </div>
+)}
 
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
