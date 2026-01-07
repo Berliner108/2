@@ -632,7 +632,7 @@ export default function ArtikelDetailPage() {
                   </div>
                 )}
 
-                <div className={styles.inputRow}>
+                <div className={styles.buttonRow}>
                   <button
                     className={styles.submitOfferButton}
                     disabled={disableBuy}
