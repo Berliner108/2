@@ -403,13 +403,6 @@ export default function ArtikelDetailPage() {
           {/* Rechte Spalte: Infos */}
           <div className={styles.rightColumn}>
             <div className={styles.titleRow}>
-              <h1 className={styles.title}>{article.title}</h1>
-              {(article.promo_score ?? 0) > 0 && (
-                <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
-              )}
-            </div>
-
-            <div className={styles.titleRow}>
   <h1 className={styles.title}>{article.title}</h1>
 
   <div className={styles.badges}>
