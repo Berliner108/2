@@ -409,12 +409,20 @@ export default function ArtikelDetailPage() {
               )}
             </div>
 
-            {/* ✅ Badge = Usertyp des VERKÄUFERS */}
-            <div className={styles.badges}>
-              {sellerTypeLabel && (
-                <span className={`${styles.badge} ${sellerTypeClass}`}>{sellerTypeLabel}</span>
-              )}
-            </div>
+            <div className={styles.titleRow}>
+  <h1 className={styles.title}>{article.title}</h1>
+
+  <div className={styles.badges}>
+    {(article.promo_score ?? 0) > 0 && (
+      <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
+    )}
+
+    {sellerTypeLabel && (
+      <span className={`${styles.badge} ${sellerTypeClass}`}>{sellerTypeLabel}</span>
+    )}
+  </div>
+</div>
+
 
             <div className={styles.meta}>
               <div className={styles.metaItem}>

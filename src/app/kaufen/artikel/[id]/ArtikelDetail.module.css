@@ -848,3 +848,76 @@
   min-width: 100%;
   display: block;
 }
+/* Titel + Badges (wie detailseite.module.css) */
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.7rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0; /* wichtig: KEIN negatives margin */
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Basis-Badge */
+.badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Gewerblich (grün) */
+.gewerblich {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Privat (blau) */
+.privat {
+  background-color: #007acc;
+  color: #fff;
+}
+
+/* Gesponsert – gleiche Form wie andere */
+.gesponsert {
+  background-color: #f0f0f0;
+  color: #888;
+}
+@media (max-width: 768px) {
+  .titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .title {
+    font-size: 1.3rem;
+    margin: 0;
+  }
+
+  .badges {
+    gap: 0.3rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+  }
+}
