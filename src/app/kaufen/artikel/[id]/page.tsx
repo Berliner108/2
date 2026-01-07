@@ -90,9 +90,7 @@ function unitLabel(u: "kg" | "stueck") {
 }
 
 function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | null {
-  const list = tiers
-    .filter((t) => t.unit === unit)
-    .sort((a, b) => a.min_qty - b.min_qty);
+  const list = tiers.filter((t) => t.unit === unit).sort((a, b) => a.min_qty - b.min_qty);
 
   for (const t of list) {
     const maxOk = t.max_qty == null ? true : qty <= t.max_qty;
@@ -101,7 +99,6 @@ function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | nul
   if (list.length) return list[list.length - 1];
   return null;
 }
-
 
 /* ===== Handle/Reviews/Kontakt (wie Lackanfragen) ===== */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
@@ -248,12 +245,11 @@ export default function ArtikelDetailPage() {
       : null;
 
   const sellerTypeClass =
-  seller?.account_type === "business"
-    ? styles.gewerblich
-    : seller?.account_type === "private"
-    ? styles.privat
-    : "";
-
+    seller?.account_type === "business"
+      ? styles.gewerblich
+      : seller?.account_type === "private"
+      ? styles.privat
+      : "";
 
   const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
@@ -264,7 +260,7 @@ export default function ArtikelDetailPage() {
     return Array.from(set);
   }, [tiers]);
 
-  // ✅ NEU: echte Staffelpreise? (mind. 2 Tiers für die aktuell gewählte Einheit)
+  // ✅ echte Staffelpreise? (mind. 2 Tiers für die aktuell gewählte Einheit)
   const hasStaffelpreise = useMemo(() => {
     if (!article) return false;
     if (article.sale_type === "gesamt") return false;
@@ -450,7 +446,7 @@ export default function ArtikelDetailPage() {
                 </span>
               </div>
 
-              {/* Verfügbarkeit: immer anzeigen (kg + Stück), wenn vorhanden */}
+              {/* Verfügbarkeit */}
               <div className={styles.metaItem}>
                 <span className={styles.label}>Verfügbarkeit:</span>
                 <span className={styles.value}>
@@ -466,7 +462,7 @@ export default function ArtikelDetailPage() {
                 </span>
               </div>
 
-              {/* Seller Box: Username + Rating + Kontakt-Link */}
+              {/* Seller Box */}
               {seller?.username && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>User:</span>
@@ -496,6 +492,32 @@ export default function ArtikelDetailPage() {
                       User kontaktieren
                     </Link>
                   </div>
+                </div>
+              )}
+
+              {/* ✅ Dateien: nur anzeigen, wenn vorhanden (als metaItem wie Lackanfragen) */}
+              {dateien.length > 0 && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Dateien:</span>
+
+                  <ul className={styles.downloadList} style={{ marginTop: 6 }}>
+                    {dateien.map((url, i) => {
+                      const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
+                      return (
+                        <li key={`${url}-${i}`} className={styles.downloadItem}>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.downloadLink}
+                          >
+                            <FaFilePdf className={styles.pdfIcon} aria-hidden />
+                            {name}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               )}
             </div>
@@ -542,30 +564,6 @@ export default function ArtikelDetailPage() {
                 </div>
               )}
             </div>
-            {dateien.length > 0 && (
-  <div className={styles.beschreibung}>
-    <h2>Dateien</h2>
-
-    <ul className={styles.downloadList}>
-      {dateien.map((url, i) => {
-        const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
-        return (
-          <li key={`${url}-${i}`} className={styles.downloadItem}>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.downloadLink}
-            >
-              <FaFilePdf className={styles.pdfIcon} aria-hidden />
-              {name}
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-  </div>
-)}
 
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
@@ -575,7 +573,11 @@ export default function ArtikelDetailPage() {
                 {article.sale_type !== "gesamt" && availableUnits.length > 0 && (
                   <div className={styles.inputRow}>
                     <label style={{ fontWeight: 600 }}>Einheit:</label>
-                    <select value={unit} onChange={(e) => setUnit(e.target.value as any)} className={styles.priceField}>
+                    <select
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value as any)}
+                      className={styles.priceField}
+                    >
                       {availableUnits.map((u) => (
                         <option key={u} value={u}>
                           {unitLabel(u)}
@@ -608,7 +610,6 @@ export default function ArtikelDetailPage() {
 
                 {chosenTier && priceCalc && (
                   <div style={{ marginTop: 12 }}>
-                    {/* ✅ FIX: "Staffel aktiv" nur bei echten Staffelpreisen */}
                     {hasStaffelpreise && (
                       <div style={{ opacity: 0.9 }}>
                         Staffel aktiv: {chosenTier.min_qty}

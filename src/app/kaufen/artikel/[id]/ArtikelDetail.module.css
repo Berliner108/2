@@ -166,6 +166,38 @@
   gap: 12px;
   flex-wrap: wrap;
 }
+/* ✅ Dateiliste im metaItem sauber wie bei Lackanfragen */
+.downloadList {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.35rem 0 0 0; /* kleiner Abstand nach dem Label */
+}
+
+.downloadItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.downloadLink {
+  color: #0070f3;
+  text-decoration: underline;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  word-break: break-word;
+}
+
+.downloadLink:hover {
+  text-decoration: underline;
+}
+
+/* Icon */
+.pdfIcon {
+  color: #e53935;
+  flex: 0 0 auto;
+}
 
 
 .detailGrid {
