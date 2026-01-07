@@ -10,8 +10,7 @@ import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { FileText, FileSpreadsheet, FileImage, File, Download } from "lucide-react";
-
+import { FaFilePdf } from "react-icons/fa";
 
 /* ===================== Typen ===================== */
 type Tier = {
@@ -567,45 +566,27 @@ export default function ArtikelDetailPage() {
   {dateien.length === 0 ? (
     <p>Keine Dateien vorhanden.</p>
   ) : (
-    <div style={{ display: "grid", gap: 8 }}>
+    <ul className={styles.downloadList}>
       {dateien.map((url, i) => {
-        const name = getFileNameFromUrl(url) || `Datei-${i + 1}`;
-
+        const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
         return (
-          <div
-            key={`${url}-${i}`}
-            style={{ display: "flex", alignItems: "center", gap: 10 }}
-          >
-            <span style={{ display: "inline-flex", alignItems: "center" }}>
-              {iconForUrl(url)}
-            </span>
-
+          <li key={url} className={styles.downloadItem}>
             <a
               href={url}
               target="_blank"
-              rel="noreferrer"
-              className={styles.kontaktLink}
-              style={{ flex: 1 }}
+              rel="noopener noreferrer"
+              className={styles.downloadLink}
             >
+              <FaFilePdf style={{ marginRight: "0.4rem" }} />
               {name}
             </a>
-
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              title="Download"
-              aria-label="Download"
-              style={{ display: "inline-flex", alignItems: "center" }}
-            >
-              <Download size={18} aria-hidden />
-            </a>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ul>
   )}
 </div>
+
 
 
 
