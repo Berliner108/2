@@ -348,12 +348,12 @@
 }
 
 .stepBtn{
-  width:20px;
-  height:20px;
+  width:28px;
+  height:28px;
   border-radius:10px;
   border:1px solid #d6d6d6;
   background:#f5f5f5;
-  font-size:22px;
+  font-size:0.95rem;
   font-weight:800;
   cursor:pointer;
   line-height:1;
@@ -1061,31 +1061,31 @@
   }
 }
 /* =========================
-   Offerbox: nur hier kleiner
+   Offerbox: nur hier skalieren
    ========================= */
 .offerBox .inputGroup{
-  font-size: 1rem;      /* kleiner */
-  font-weight: 600;     /* statt bolder */
-  margin-top: 0;        /* weniger Luft oben */
-  gap: .6rem;           /* enger */
+  font-size: 1.15rem;   /* +15% */
+  font-weight: 600;
+  margin-top: 0;
+  gap: .6rem;
 }
 
 .offerBox .inputRow1 label{
-  font-size: .95rem;
+  font-size: 1.09rem;   /* 0.95 * 1.15 */
   font-weight: 600;
 }
 
 .offerBox .priceField{
-  font-size: 1rem;
+  font-size: 1.15rem;   /* +15% */
   padding: .45rem .55rem;
 }
 
 .offerBox .inputRow1 span{
-  font-size: .95rem;
+  font-size: 1.09rem;
 }
 
 /* Gesamt bleibt prominent */
 .offerBox .buyTotal{
-  font-size: 1.1rem;
+  font-size: 1.265rem;  /* 1.1 * 1.15 */
   font-weight: 800;
 }
