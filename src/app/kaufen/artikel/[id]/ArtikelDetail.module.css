@@ -320,8 +320,8 @@
 .offerBox {
   border: 2px solid black;
   border-radius: 8px;
-  padding: 1rem;
-  margin-top: 2rem;
+  padding: 0.1rem;
+  margin-top: 0.2rem;
   background-color: #fff;
   text-align: left;
 }
