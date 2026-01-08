@@ -467,7 +467,7 @@ export default function ArtikelDetailPage() {
               </div>
               {article.pieces_per_unit != null && (
                 <div className={styles.metaItem}>
-                  <span className={styles.label}>Stück / Verkauf:</span>
+                  <span className={styles.label}>Enthaltene Stück:</span>
                   <span className={styles.value}>{article.pieces_per_unit}</span>
                 </div>
               )}
