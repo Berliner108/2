@@ -134,7 +134,12 @@ export default function ArtikelDetailPage() {
   const [photoIndex, setPhotoIndex] = useState(0);
 
   // Kaufen UI
-  const [unit, setUnit] = useState<"kg" | "stueck">("kg");
+  const unit: "kg" | "stueck" = useMemo(() => {
+  if (!article) return "kg";
+  if (article.sale_type === "pro_stueck") return "stueck";
+  return "kg"; // pro_kg oder default
+}, [article]);
+
   const [qty, setQty] = useState<number>(1);
 
   // 1) Viewer laden (profiles.account_type)
@@ -206,12 +211,6 @@ export default function ArtikelDetailPage() {
           setTiers(t);
           setSeller(s);
 
-          // Default unit
-          if (a.sale_type === "pro_stueck") setUnit("stueck");
-          else if (a.sale_type === "pro_kg") setUnit("kg");
-          else if (a.price_unit) setUnit(a.price_unit);
-
-          setQty(1);
         }
       } catch (e: any) {
         if (!cancelled) {
@@ -270,18 +269,18 @@ export default function ArtikelDetailPage() {
     return tiers.filter((t) => t.unit === unit).length > 1;
   }, [article, tiers, unit]);
 
-  const stockLimit = useMemo(() => {
-    if (!article) return null;
-    if (article.stock_status !== "begrenzt") return null;
-    if (unit === "kg") return article.qty_kg ?? null;
-    return article.qty_piece ?? null;
-  }, [article, unit]);
+const stockLimit = useMemo(() => {
+  if (!article) return null;
+  if (article.stock_status !== "begrenzt") return null;
+  return unit === "kg" ? article.qty_kg ?? null : article.qty_piece ?? null;
+}, [article, unit]);
 
-  const chosenTier = useMemo(() => {
-    if (!article) return null;
-    if (article.sale_type === "gesamt") return tiers[0] ?? null;
-    return pickTier(tiers, unit, qty);
-  }, [article, tiers, unit, qty]);
+const chosenTier = useMemo(() => {
+  if (!article) return null;
+  if (article.sale_type === "gesamt") return tiers[0] ?? null;
+  return pickTier(tiers, unit, qty);
+}, [article, tiers, unit, qty]);
+
 
   const priceCalc = useMemo(() => {
     if (!article || !chosenTier) return null;
@@ -625,24 +624,6 @@ export default function ArtikelDetailPage() {
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
-                <strong>Kaufen</strong>
-
-                {article.sale_type !== "gesamt" && availableUnits.length > 0 && (
-                  <div className={styles.inputRow}>
-                    <label style={{ fontWeight: 600 }}>Einheit:</label>
-                    <select
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value as any)}
-                      className={styles.priceField}
-                    >
-                      {availableUnits.map((u) => (
-                        <option key={u} value={u}>
-                          {unitLabel(u)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 <div className={styles.inputRow}>
                   <label style={{ fontWeight: 600 }}>Menge:</label>
