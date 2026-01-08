@@ -639,32 +639,73 @@ const chosenTier = useMemo(() => {
               <div className={styles.inputGroup}>
 
                 <div className={styles.inputRow1}>
-                  <label style={{ fontWeight: 600 }}>Menge:</label>
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={article.sale_type === "gesamt" ? 1 : qty}
-                    disabled={article.sale_type === "gesamt"}
-                    onChange={(e) => {
-                    const raw = Number(e.target.value || 1);
-                    let next = Math.max(1, raw);
+                    <label style={{ fontWeight: 600 }}>Menge:</label>
 
-                    if (stockLimit != null && next > stockLimit) {
-                      next = stockLimit;
-                      setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
-                    } else {
-                      setQtyHint(null);
-                    }
+                    <div className={styles.qtyStepper}>
+                      <button
+                        type="button"
+                        className={styles.stepBtn}
+                        onClick={() => setQty((q) => {
+                          const next = Math.max(1, (Number.isFinite(q) ? q : 1) - 1);
+                          return next;
+                        })}
+                        disabled={article.sale_type === "gesamt" || qty <= 1}
+                        aria-label="Menge verringern"
+                      >
+                        –
+                      </button>
 
-                    setQty(next);
-                  }}
+                      <input
+                        className={styles.qtyInput}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={article.sale_type === "gesamt" ? 1 : qty}
+                        disabled={article.sale_type === "gesamt"}
+                        onChange={(e) => {
+                          const raw = String(e.target.value).replace(/\D/g, "");
+                          const num = raw ? parseInt(raw, 10) : 1;
 
-                    className={styles.priceField}
-                    placeholder="Menge"
-                  />
-                  <span style={{ opacity: 0.8 }}>{article.sale_type === "gesamt" ? "" : unitLabel(unit)}</span>
-                </div>
+                          let next = Math.max(1, num);
+
+                          if (stockLimit != null && next > stockLimit) {
+                            next = stockLimit;
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                          } else {
+                            setQtyHint(null);
+                          }
+
+                          setQty(next);
+                        }}
+                        aria-label="Menge"
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.stepBtn}
+                        onClick={() => setQty((q) => {
+                          let next = (Number.isFinite(q) ? q : 1) + 1;
+
+                          if (stockLimit != null && next > stockLimit) {
+                            next = stockLimit;
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                          } else {
+                            setQtyHint(null);
+                          }
+
+                          return next;
+                        })}
+                        disabled={article.sale_type === "gesamt" || (stockLimit != null && qty >= stockLimit)}
+                        aria-label="Menge erhöhen"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span className={styles.unitSuffix}>
+                      {article.sale_type === "gesamt" ? "" : unitLabel(unit)}
+                    </span>
+                  </div>
+
 
                 {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
 
