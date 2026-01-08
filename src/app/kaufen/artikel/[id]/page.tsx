@@ -52,6 +52,19 @@ type Article = {
   price_unit?: "kg" | "stueck" | null;
   pieces_per_unit?: number | null;
   size?: string | null;
+    color_palette?: string | null;
+  gloss_level?: string | null;
+  surface?: string | null;
+  application?: string | null;
+  color_tone?: string | null;
+  color_code?: string | null;
+  quality?: string | null;
+
+  effect?: string[] | string | null;
+  special_effects?: string[] | string | null;
+  certifications?: string[] | string | null;
+  charge?: string[] | string | null;
+
 
 };
 
@@ -90,6 +103,26 @@ function DetailSkeleton() {
 
 function unitLabel(u: "kg" | "stueck") {
   return u === "stueck" ? "Stück" : "kg";
+}
+function normalizeStringArray(v: any): string[] {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(Boolean).map(String);
+
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+
+    // falls Supabase/Route JSON-String liefert
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean).map(String);
+    } catch {}
+
+    // fallback: komma-separiert
+    return s.split(",").map((x) => x.trim()).filter(Boolean);
+  }
+
+  return [];
 }
 
 function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | null {
@@ -234,6 +267,11 @@ export default function ArtikelDetailPage() {
 
   const bilder = article?.image_urls ?? [];
   const dateien = article?.file_urls ?? [];
+  const effectList = useMemo(() => normalizeStringArray(article?.effect), [article?.effect]);
+const specialEffectsList = useMemo(() => normalizeStringArray(article?.special_effects), [article?.special_effects]);
+const certificationsList = useMemo(() => normalizeStringArray(article?.certifications), [article?.certifications]);
+const chargeList = useMemo(() => normalizeStringArray(article?.charge), [article?.charge]);
+
   const slides = bilder.map((src) => ({ src }));
 
   const deliveryDateText = useMemo(() => {
@@ -452,6 +490,83 @@ const chosenTier = useMemo(() => {
                 <span className={styles.label}>Zustand:</span>
                 <span className={styles.value}>{article.condition ?? "—"}</span>
               </div>
+              {article.color_palette && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbpalette:</span>
+    <span className={styles.value}>{article.color_palette}</span>
+  </div>
+)}
+
+{article.gloss_level && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Glanzgrad:</span>
+    <span className={styles.value}>{article.gloss_level}</span>
+  </div>
+)}
+
+{article.surface && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Oberfläche:</span>
+    <span className={styles.value}>{article.surface}</span>
+  </div>
+)}
+
+{article.application && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Anwendung:</span>
+    <span className={styles.value}>{article.application}</span>
+  </div>
+)}
+
+{article.color_tone && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbton:</span>
+    <span className={styles.value}>{article.color_tone}</span>
+  </div>
+)}
+
+{article.color_code && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbcode:</span>
+    <span className={styles.value}>{article.color_code}</span>
+  </div>
+)}
+
+{article.quality && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Qualität:</span>
+    <span className={styles.value}>{article.quality}</span>
+  </div>
+)}
+
+{effectList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Effekt:</span>
+    <span className={styles.value}>{effectList.join(", ")}</span>
+  </div>
+)}
+
+{specialEffectsList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Sondereffekte:</span>
+    <span className={styles.value}>{specialEffectsList.join(", ")}</span>
+  </div>
+)}
+
+{certificationsList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Zertifizierungen:</span>
+    <span className={styles.value}>{certificationsList.join(", ")}</span>
+  </div>
+)}
+
+{chargeList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Aufladung:</span>
+    <span className={styles.value}>{chargeList.join(", ")}</span>
+  </div>
+)}
+
 
               {/* ✅ FIX: Preis ab -> Preis, wenn keine Staffelpreise */}
               <div className={styles.metaItem}>
