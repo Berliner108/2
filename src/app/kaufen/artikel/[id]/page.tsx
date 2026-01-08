@@ -50,6 +50,9 @@ type Article = {
 
   price_from?: number | null;
   price_unit?: "kg" | "stueck" | null;
+  pieces_per_unit?: number | null;
+  size?: string | null;
+
 };
 
 /* ===================== UI Helper ===================== */
@@ -462,6 +465,20 @@ export default function ArtikelDetailPage() {
                   ) : null}
                 </span>
               </div>
+              {article.pieces_per_unit != null && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Stück / Verkauf:</span>
+                  <span className={styles.value}>{article.pieces_per_unit}</span>
+                </div>
+              )}
+
+              {article.size && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Größe:</span>
+                  <span className={styles.value}>{article.size}</span>
+                </div>
+              )}
+
 
               {/* Seller Box */}
               {seller?.username && (
