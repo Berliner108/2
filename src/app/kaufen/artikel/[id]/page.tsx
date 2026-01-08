@@ -674,28 +674,9 @@ const chosenTier = useMemo(() => {
                     Max verfügbar: {stockLimit} {unitLabel(unit)}
                   </div>
                 )}
-
                 {chosenTier && priceCalc && (
-                  <div style={{ marginTop: 12 }}>
-                    {hasStaffelpreise && (
-                      <div style={{ opacity: 0.9 }}>
-                        Staffel aktiv: {chosenTier.min_qty}
-                        {chosenTier.max_qty != null ? `–${chosenTier.max_qty}` : "+"} {unitLabel(chosenTier.unit)}
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: 6 }}>
-                      <div>
-                        Einzelpreis: <strong>{priceCalc.unitPrice.toFixed(2)} €</strong>
-                        {article.sale_type === "gesamt" ? "" : ` / ${unitLabel(unit)}`}
-                      </div>
-                      <div>
-                        Versand: <strong>{priceCalc.shipping.toFixed(2)} €</strong>
-                      </div>
-                      <div style={{ marginTop: 4, fontSize: "1.05rem" }}>
-                        Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
-                      </div>
-                    </div>
+                  <div className={styles.buyTotal}>
+                    Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
                   </div>
                 )}
 

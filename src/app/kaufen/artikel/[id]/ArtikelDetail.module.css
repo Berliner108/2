@@ -322,6 +322,11 @@
   border: 1px solid #ffd59e;
   color: #8a4b00;
 }
+.buyTotal{
+  margin-top: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
 
 .extraTextarea {
   width: 100%;
