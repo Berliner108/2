@@ -136,6 +136,23 @@ export async function POST(req: Request) {
     const title = toStr(fd.get("titel")).trim();
     const manufacturer = toStr(fd.get("hersteller")).trim();
     const description = toStr(fd.get("beschreibung")).trim();
+    // Arbeitsmittel-spezifisch
+const size =
+  category === "arbeitsmittel" ? toStr(fd.get("groesse")).trim() : "";
+
+const piecesPerUnit =
+  category === "arbeitsmittel" ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
+
+// optional, aber sinnvoll: nur bei Arbeitsmittel hart validieren
+if (category === "arbeitsmittel") {
+  if (!size) {
+    return NextResponse.json({ error: "MISSING_SIZE" }, { status: 400 });
+  }
+  if (!piecesPerUnit || piecesPerUnit < 1) {
+    return NextResponse.json({ error: "MISSING_PIECES_PER_UNIT" }, { status: 400 });
+  }
+}
+
 
     const conditionRaw = toStr(fd.get("zustand")).trim();
     const condition =
@@ -216,6 +233,8 @@ export async function POST(req: Request) {
       published: true,
       sold_out: false,
       archived: false,
+      size: category === "arbeitsmittel" ? (size || null) : null,
+      pieces_per_unit: category === "arbeitsmittel" ? (piecesPerUnit || null) : null,
 
       owner_id: user.id,
     };
