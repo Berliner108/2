@@ -449,22 +449,20 @@ export default function ArtikelDetailPage() {
                   {article.price_unit ? ` / ${unitLabel(article.price_unit)}` : ""}
                 </span>
               </div>
+                {/* Verfügbarkeit */}
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Verfügbarkeit:</span>
+                  <span className={styles.value}>
+                    {article.stock_status === "auf_lager"
+                      ? "Auf Lager"
+                      : article.qty_kg != null
+                      ? `${Number(article.qty_kg)} kg verfügbar`
+                      : article.qty_piece != null
+                      ? `${Number(article.qty_piece)} Stück verfügbar`
+                      : "Verfügbar"}
+                  </span>
+                </div>
 
-              {/* Verfügbarkeit */}
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Verfügbarkeit:</span>
-                <span className={styles.value}>
-                  {article.stock_status === "begrenzt" ? "Begrenzt" : "Auf Lager"}
-                  {article.qty_kg != null || article.qty_piece != null ? (
-                    <>
-                      {" "}
-                      · {article.qty_kg != null ? `${Number(article.qty_kg)} kg` : null}
-                      {article.qty_kg != null && article.qty_piece != null ? " · " : null}
-                      {article.qty_piece != null ? `${Number(article.qty_piece)} Stück` : null}
-                    </>
-                  ) : null}
-                </span>
-              </div>
               {article.pieces_per_unit != null && (
                 <div className={styles.metaItem}>
                   <span className={styles.label}>Enthaltene Stück:</span>
