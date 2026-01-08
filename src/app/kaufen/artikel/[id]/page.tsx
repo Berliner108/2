@@ -529,42 +529,83 @@ export default function ArtikelDetailPage() {
                 <p className={styles.preserveNewlines}>{article.description}</p>
               </div>
             )}
+{/* Staffelpreise / Preisübersicht (userfreundlich) */}
+<div className={styles.priceCard}>
+  <div className={styles.priceHeader}>
+    <h2 className={styles.priceTitle}>
+      {article.sale_type === "gesamt" ? "Preisübersicht" : "Staffelpreise"}
+    </h2>
 
-            {/* Staffelpreise / Gesamtpreis */}
-            <div className={styles.beschreibung}>
-              <h2>{article.sale_type === "gesamt" || !hasStaffelpreise ? "Preis" : "Staffelpreise"}</h2>
+    {/* Live-Zusammenfassung zur aktuellen Auswahl */}
+    {article.sale_type !== "gesamt" && chosenTier && priceCalc && (
+      <div className={styles.priceSummary}>
+        Deine Auswahl: <strong>{qty} {unitLabel(unit)}</strong> ·{" "}
+        <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit)} ·{" "}
+        Versand <strong>{priceCalc.shipping.toFixed(2)} €</strong> ·{" "}
+        Gesamt <strong>{priceCalc.total.toFixed(2)} €</strong>
+      </div>
+    )}
+  </div>
 
-              {tiers.length === 0 ? (
-                <p>Keine Preisinformationen gefunden.</p>
-              ) : article.sale_type === "gesamt" ? (
-                <p>
-                  Gesamtpreis: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
-                  {tiers[0]?.shipping != null ? (
-                    <>
-                      {" "}
-                      + Versand: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
-                    </>
-                  ) : null}
-                </p>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {tiers
-                    .filter((t) => t.unit === unit)
-                    .map((t) => (
-                      <div key={t.id} className={styles.tierRow}>
-                        <span>
-                          {t.min_qty}
-                          {t.max_qty != null ? `–${t.max_qty}` : "+"} {unitLabel(t.unit)}
-                        </span>
-                        <span>
-                          <strong>{Number(t.price).toFixed(2)} €</strong> / {unitLabel(t.unit)}
-                          {t.shipping != null ? ` · Versand ${Number(t.shipping).toFixed(2)} €` : ""}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
+  {tiers.length === 0 ? (
+    <p>Keine Preisinformationen gefunden.</p>
+  ) : article.sale_type === "gesamt" ? (
+    <div className={styles.singlePriceBox}>
+      <div>
+        Gesamtpreis: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
+      </div>
+      <div>
+        Versand: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
+      </div>
+      <div className={styles.totalLine}>
+        Gesamt:{" "}
+        <strong>
+          {(Number(tiers[0]?.price ?? 0) + Number(tiers[0]?.shipping ?? 0)).toFixed(2)} €
+        </strong>
+      </div>
+    </div>
+  ) : (
+    <div className={styles.tiersTable}>
+      <div className={styles.tiersHead}>
+        <span>Menge</span>
+        <span>Preis / {unitLabel(unit)}</span>
+        <span>Versand</span>
+      </div>
+
+      {tiers
+        .filter((t) => t.unit === unit)
+        .map((t) => {
+          const isActive = chosenTier?.id === t.id;
+          const range =
+            t.max_qty != null
+              ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit)}`
+              : `ab ${t.min_qty} ${unitLabel(t.unit)}`;
+
+          return (
+            <div
+              key={t.id}
+              className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
+              aria-current={isActive ? "true" : undefined}
+            >
+              <span className={styles.tiersRange}>
+                {range}
+                {isActive ? <span className={styles.activePill}>aktiv</span> : null}
+              </span>
+
+              <span><strong>{Number(t.price).toFixed(2)} €</strong></span>
+
+              <span>{t.shipping != null ? `${Number(t.shipping).toFixed(2)} €` : "—"}</span>
             </div>
+          );
+        })}
+    </div>
+  )}
+
+  <div className={styles.vatNote}>
+    Preise sind <strong>Brutto</strong>.
+  </div>
+</div>
+
 
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
