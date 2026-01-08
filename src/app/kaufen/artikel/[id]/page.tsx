@@ -625,7 +625,7 @@ const chosenTier = useMemo(() => {
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
 
-                <div className={styles.inputRow}>
+                <div className={styles.inputRow1}>
                   <label style={{ fontWeight: 600 }}>Menge:</label>
                   <input
                     type="number"
