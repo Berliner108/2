@@ -170,7 +170,7 @@
   grid-template-columns: 1fr 2fr;
   gap: 2rem;
   align-items: start;
-  margin-top: 2rem;
+  margin-top: 0.2rem;
 }
 
 .leftColumn {
