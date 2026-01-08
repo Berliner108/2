@@ -627,10 +627,6 @@ const chosenTier = useMemo(() => {
         })}
     </div>
   )}
-
-  <div className={styles.vatNote}>
-    Preise sind <strong>Brutto</strong>.
-  </div>
 </div>
 
 

@@ -40,6 +40,12 @@ function safeJson<T>(raw: string, fallback: T): T {
     return fallback;
   }
 }
+function jsonStringArray(fd: FormData, key: string): string[] {
+  const raw = toStr(fd.get(key)).trim();
+  if (!raw) return [];
+  const parsed = safeJson<any>(raw, []);
+  return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+}
 
 function extFromName(name: string) {
   const m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
@@ -130,6 +136,20 @@ export async function POST(req: Request) {
     }
 
     const fd = await req.formData();
+    // ✅ Lack-Felder (Formular-Keys) -> DB-Spalten
+const color_palette = toStr(fd.get("farbpalette")).trim() || null;
+const gloss_level   = toStr(fd.get("glanzgrad")).trim() || null;
+const surface       = toStr(fd.get("oberflaeche")).trim() || null;
+const application   = toStr(fd.get("anwendung")).trim() || null;
+const color_tone    = toStr(fd.get("farbton")).trim() || null;
+const color_code    = toStr(fd.get("farbcode")).trim() || null;
+const quality       = toStr(fd.get("qualitaet")).trim() || null;
+
+const effect          = jsonStringArray(fd, "effekt");
+const special_effects = jsonStringArray(fd, "sondereffekte");
+const certifications  = jsonStringArray(fd, "zertifizierungen");
+const charge          = jsonStringArray(fd, "aufladung"); // Pulverlack
+
 
     const category = toStr(fd.get("kategorie")).trim();
     const sellTo = toStr(fd.get("verkaufAn")).trim();
@@ -220,6 +240,20 @@ if (category === "arbeitsmittel") {
       manufacturer,
       condition,
       sale_type: verkaufsArt,
+      // ✅ nur für Lacke (arbeitsmittel bekommt automatisch null/[])
+color_palette: category === "arbeitsmittel" ? null : color_palette,
+gloss_level:   category === "arbeitsmittel" ? null : gloss_level,
+surface:       category === "arbeitsmittel" ? null : surface,
+application:   category === "arbeitsmittel" ? null : application,
+color_tone:    category === "arbeitsmittel" ? null : color_tone,
+color_code:    category === "arbeitsmittel" ? null : color_code,
+quality:       category === "arbeitsmittel" ? null : quality,
+
+effect:          category === "arbeitsmittel" ? [] : effect,
+special_effects: category === "arbeitsmittel" ? [] : special_effects,
+certifications:  category === "arbeitsmittel" ? [] : certifications,
+charge:          category === "pulverlack" ? charge : [],
+
       promo_score: promoScore,
       delivery_days: deliveryDays,
       stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),

@@ -76,7 +76,7 @@ export async function GET(req: Request) {
     const { data: article, error } = await admin
       .from("articles")
       .select(
-        "id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, file_urls, sale_type, created_at, owner_id, condition, pieces_per_unit, size"
+        "id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, file_urls, sale_type, created_at, owner_id, condition, pieces_per_unit, size, color_palette, gloss_level, surface, application, color_tone, color_code, quality, effect, special_effects, certifications, charge"
       )
       .eq("id", id)
       .eq("published", true)
