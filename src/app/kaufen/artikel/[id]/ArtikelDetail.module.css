@@ -312,6 +312,16 @@
   gap: 0.5rem;
   width: 100%;
 }
+.qtyHint{
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: #fff4e5;
+  border: 1px solid #ffd59e;
+  color: #8a4b00;
+}
 
 .extraTextarea {
   width: 100%;

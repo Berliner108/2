@@ -142,6 +142,8 @@ export default function ArtikelDetailPage() {
 
   const [qty, setQty] = useState<number>(1);
 
+  const [qtyHint, setQtyHint] = useState<string | null>(null);
+
   // 1) Viewer laden (profiles.account_type)
   useEffect(() => {
     let cancelled = false;
@@ -274,6 +276,17 @@ const stockLimit = useMemo(() => {
   if (article.stock_status !== "begrenzt") return null;
   return unit === "kg" ? article.qty_kg ?? null : article.qty_piece ?? null;
 }, [article, unit]);
+
+useEffect(() => {
+  if (stockLimit != null && qty > stockLimit) {
+    setQty(stockLimit);
+    setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+  } else if (qtyHint) {
+    setQtyHint(null);
+  }
+  if (qty < 1) setQty(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [stockLimit]);
 
 const chosenTier = useMemo(() => {
   if (!article) return null;
@@ -633,12 +646,28 @@ const chosenTier = useMemo(() => {
                     step={1}
                     value={article.sale_type === "gesamt" ? 1 : qty}
                     disabled={article.sale_type === "gesamt"}
-                    onChange={(e) => setQty(Math.max(1, Number(e.target.value || 1)))}
+                    onChange={(e) => {
+                    const raw = Number(e.target.value || 1);
+                    let next = Math.max(1, raw);
+
+                    if (stockLimit != null && next > stockLimit) {
+                      next = stockLimit;
+                      setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                    } else {
+                      setQtyHint(null);
+                    }
+
+                    setQty(next);
+                  }}
+
                     className={styles.priceField}
                     placeholder="Menge"
                   />
                   <span style={{ opacity: 0.8 }}>{article.sale_type === "gesamt" ? "" : unitLabel(unit)}</span>
                 </div>
+
+                {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
+
 
                 {stockLimit != null && (
                   <div style={{ marginTop: 8, opacity: 0.85 }}>
