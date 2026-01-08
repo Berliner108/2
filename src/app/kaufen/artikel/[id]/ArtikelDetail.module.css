@@ -337,6 +337,55 @@
   font-size: 1rem;
   resize: vertical;
 }
+.qtyStepper{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.35rem;
+  border:1px solid #ccc;
+  border-radius:10px;
+  background:#fff;
+}
+
+.stepBtn{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  border:1px solid #d6d6d6;
+  background:#f5f5f5;
+  font-size:22px;
+  font-weight:800;
+  cursor:pointer;
+  line-height:1;
+}
+
+.stepBtn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.qtyInput{
+  width:70px;
+  height:40px;
+  text-align:center;
+  border:none;
+  outline:none;
+  font-family:'Oswald', sans-serif;
+  font-size:1.05rem;
+  font-weight:700;
+  background:transparent;
+}
+
+.unitSuffix{
+  opacity:.85;
+}
+
+.qtyHint{
+  margin-top:.25rem;
+  font-size:.9rem;
+  font-weight:600;
+  color:#b00020;
+}
 
 .offerBox {
   border: 2px solid black;
