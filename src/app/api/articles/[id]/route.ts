@@ -62,6 +62,34 @@ function normalizeCategory(cat: unknown): string | null {
   return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
 }
 
+// ✅ Oberfläche/Anwendung sauber ausgeben (statt "glatt", "innen", ...)
+function normalizeSurface(v: unknown): string | null {
+  if (v == null) return null;
+  const key = String(v).trim().toLowerCase();
+
+  const map: Record<string, string> = {
+    glatt: "Glatt",
+    feinstruktur: "Feinstruktur",
+    grobstruktur: "Grobstruktur",
+  };
+
+  return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
+}
+
+function normalizeApplication(v: unknown): string | null {
+  if (v == null) return null;
+  const key = String(v).trim().toLowerCase();
+
+  const map: Record<string, string> = {
+    universal: "Universal",
+    innen: "Innen",
+    "außen": "Außen",
+    industrie: "Industrie",
+  };
+
+  return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -72,7 +100,6 @@ export async function GET(req: Request) {
 
     const admin = supabaseAdmin();
 
-    // ✅ WICHTIG: hier nur erweitert (owner_id + condition)
     const { data: article, error } = await admin
       .from("articles")
       .select(
@@ -85,7 +112,7 @@ export async function GET(req: Request) {
       .single();
 
     if (error) {
-      const status = error.code === "PGRST116" ? 404 : 500;
+      const status = (error as any).code === "PGRST116" ? 404 : 500;
       return NextResponse.json({ error: error.message }, { status });
     }
     if (!article) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
@@ -99,12 +126,12 @@ export async function GET(req: Request) {
 
     if (tierErr) return NextResponse.json({ error: tierErr.message }, { status: 500 });
 
-    // delivery date (Berlin + delivery_holidays) – unverändert
+    // delivery date (Berlin + delivery_holidays)
     const todayISO = getBerlinTodayISO();
     const dDays =
-      typeof article.delivery_days === "number"
-        ? article.delivery_days
-        : Number(article.delivery_days ?? 0);
+      typeof (article as any).delivery_days === "number"
+        ? (article as any).delivery_days
+        : Number((article as any).delivery_days ?? 0);
 
     const endDate = new Date(
       parseISODateToUTC(todayISO).getTime() + (dDays + 40) * 24 * 60 * 60 * 1000
@@ -122,20 +149,20 @@ export async function GET(req: Request) {
     const holidaySet = new Set<string>((holidayRows ?? []).map((h: any) => h.holiday_date));
     const delivery_date_iso = addBusinessDaysISO(todayISO, dDays, holidaySet);
 
-    // price_from + price_unit – unverändert
+    // price_from + price_unit
     let price_from: number | null = null;
     let price_unit: "kg" | "stueck" | null = null;
 
     for (const t of tiers ?? []) {
-      const p = typeof t.price === "number" ? t.price : Number(t.price);
+      const p = typeof (t as any).price === "number" ? (t as any).price : Number((t as any).price);
       if (!Number.isFinite(p)) continue;
       if (price_from === null || p < price_from) {
         price_from = p;
-        price_unit = t.unit as "kg" | "stueck";
+        price_unit = (t as any).unit as "kg" | "stueck";
       }
     }
 
-    // ✅ Seller-Profil aus profiles (username + rating)
+    // Seller-Profil aus profiles (username + rating)
     let seller: null | {
       id: string;
       username: string | null;
@@ -154,11 +181,12 @@ export async function GET(req: Request) {
 
       if (!profErr && prof) {
         seller = {
-          id: prof.id,
-          username: prof.username ?? null,
-          account_type: prof.account_type ?? null,
-          rating_avg: prof.rating_avg != null ? Number(prof.rating_avg) : null,
-          rating_count: prof.rating_count != null ? Number(prof.rating_count) : null,
+          id: (prof as any).id,
+          username: (prof as any).username ?? null,
+          account_type: (prof as any).account_type ?? null,
+          rating_avg: (prof as any).rating_avg != null ? Number((prof as any).rating_avg) : null,
+          rating_count:
+            (prof as any).rating_count != null ? Number((prof as any).rating_count) : null,
         };
       }
     }
@@ -166,7 +194,12 @@ export async function GET(req: Request) {
     return NextResponse.json({
       article: {
         ...article,
-        category: normalizeCategory((article as any).category), // ✅ HIER
+        category: normalizeCategory((article as any).category),
+
+        // ✅ HIER: Oberfläche/Anwendung normalisieren
+        surface: normalizeSurface((article as any).surface),
+        application: normalizeApplication((article as any).application),
+
         delivery_date_iso,
         price_from,
         price_unit,
