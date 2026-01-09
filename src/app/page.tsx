@@ -8,7 +8,6 @@ import Slideshow from './slideshow/slideshow';
 import CookieBanner from './components/CookieBanner';
 import Navbar from './components/navbar/Navbar';
 import styles from '../styles/Home.module.css';
-import { artikelDaten as artikelDatenShop } from '@/data/ArtikelimShop';
 import { MapPin } from 'lucide-react';
 import SearchBox from './components/SearchBox';
 
@@ -123,14 +122,20 @@ type ShopArtikel = {
   id: string | number;
   titel: string;
   bilder: string[];
-  menge: number;
-  lieferdatum?: Date;
-  hersteller?: string;
-  zustand?: string;
-  kategorie?: string;
-  preis?: number;
-  farbton?: string;
-  [key: string]: any;
+
+  lieferdatumISO: string | null;
+
+  hersteller: string;
+  zustand: string;
+  kategorie: string;
+
+  stock_status: "auf_lager" | "begrenzt" | null;
+  qty_kg: number | null;
+  qty_piece: number | null;
+
+  price_from: number | null;
+  price_unit: "kg" | "stueck" | null;
+  price_is_from: boolean;
 };
 
 /* ---------- Skeleton-Karten (Horizontalscroller) ---------- */
@@ -189,6 +194,7 @@ export default function Page() {
   /* ===== Lackanfragen (TOP 12 aus der Börse) ===== */
   const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>([]);
   const [loadingLack, setLoadingLack] = useState(true);
+
 
   useEffect(() => {
     let active = true;
@@ -287,37 +293,61 @@ export default function Page() {
       active = false;
     };
   }, []);
+  const [shopArtikel, setShopArtikel] = useState<ShopArtikel[]>([]);
+const [loadingShop, setLoadingShop] = useState(true);
 
-  /* ===== Shop-Artikel ===== */
-  const [shopArtikel, setShopArtikel] = useState<ShopArtikel[]>(
-    artikelDatenShop
-      .filter((a) => a.gesponsert)
-      .slice(0, 12)
-      .map((a) => ({ ...a, lieferdatum: toDate(a.lieferdatum)! })),
-  );
-  const [loadingShop, setLoadingShop] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    const fetchShop = async () => {
-      try {
-        setLoadingShop(true);
-        const res = await fetch('/api/artikel?gesponsert=true&limit=12', { cache: 'no-store' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        if (!active) return;
-        setShopArtikel((data as any[]).map((a) => ({ ...a, lieferdatum: toDate(a.lieferdatum)! })));
-      } catch {
-        // keep dummy shop items
-      } finally {
-        if (active) setLoadingShop(false);
-      }
-    };
-    fetchShop();
-    return () => {
-      active = false;
-    };
-  }, []);
+
+useEffect(() => {
+  let active = true;
+
+  const fetchShop = async () => {
+    try {
+      setLoadingShop(true);
+
+      // ✅ IMMER Top 12 – unabhängig von gesponsert
+      const res = await fetch(`/api/artikel?limit=12&v=${Date.now()}`, { cache: "no-store" });
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const json = await res.json().catch(() => ({}));
+      const raw = Array.isArray(json?.items) ? (json.items as any[]) : [];
+
+      const mapped: ShopArtikel[] = raw.map((a) => ({
+        id: a.id,
+        titel: a.title ?? "Unbenannt",
+        bilder: Array.isArray(a.image_urls) && a.image_urls.length ? a.image_urls : ["/images/platzhalter.jpg"],
+
+        lieferdatumISO: a.delivery_date_iso ?? null,
+
+        hersteller: a.manufacturer ?? "—",
+        zustand: a.condition ?? "—",
+        kategorie: a.category ?? "—",
+
+        stock_status: a.stock_status ?? null,
+        qty_kg: a.qty_kg ?? null,
+        qty_piece: a.qty_piece ?? null,
+
+        price_from: a.price_from ?? null,
+        price_unit: a.price_unit ?? null,
+        price_is_from: !!a.price_is_from,
+      }));
+
+      if (active) setShopArtikel(mapped);
+    } catch (e) {
+      console.warn("Shop-Artikel konnten nicht geladen werden:", e);
+      if (active) setShopArtikel([]); // kein Dummy-Fallback
+    } finally {
+      if (active) setLoadingShop(false);
+    }
+  };
+
+  fetchShop();
+  return () => {
+    active = false;
+  };
+}, []);
+
 
   // Scroll-Helper
   const handleScroll = (ref: React.RefObject<HTMLDivElement>, dir: number) => {
@@ -416,30 +446,56 @@ export default function Page() {
                 style={loadingShop ? { minHeight: 280 } : undefined}
               >
                 {showSkeletonShop ? (
-                  <SkeletonRow cards={12} />
-                ) : (
-                  shopArtikel.map((art) => (
-                    <Link key={art.id} href={`/kaufen/artikel/${art.id}`} className={styles.articleBox2}>
-                      <img
-                        src={art.bilder?.[0] ?? '/images/platzhalter.jpg'}
-                        alt={art.titel}
-                        className={styles.articleImg}
-                      />
-                      <div className={styles.articleText}>
-                        <h3>{art.titel}</h3>
-                        <p><strong>Verfügbarge Menge:</strong> {art.menge} kg</p>
-                        <p><strong>Lieferdatum:</strong> {formatDate(art.lieferdatum)}</p>
-                        <p><strong>Hersteller:</strong> {art.hersteller}</p>
-                        <p><strong>Zustand:</strong> {formatZustand(art.zustand) || '—'}</p>
-                        <p><strong>Kategorie:</strong> {normKategorie(art.kategorie)}</p>
-                        <p style={{ fontSize: '1rem', fontWeight: 500, color: 'gray' }}>
-                          <strong>Preis ab:</strong> {art.preis?.toFixed?.(2) ?? '–'} €
-                        </p>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
+  <SkeletonRow cards={12} />
+) : (
+  shopArtikel.map((art) => {
+    const href = `/kaufen/artikel/${encodeURIComponent(String(art.id))}`;
+
+    const deliveryDate = art.lieferdatumISO
+      ? new Date(`${art.lieferdatumISO}T00:00:00`)
+      : undefined;
+
+    const availability =
+      art.stock_status === "auf_lager"
+        ? "Auf Lager"
+        : art.qty_kg != null
+        ? `${art.qty_kg} kg verfügbar`
+        : art.qty_piece != null
+        ? `${art.qty_piece} Stück verfügbar`
+        : "Verfügbar";
+
+    const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
+    const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
+    const unitSuffix = art.price_unit ? ` / ${art.price_unit === "stueck" ? "Stück" : "kg"}` : "";
+
+    return (
+      <Link key={art.id} href={href} className={styles.articleBox2}>
+        <img
+          src={art.bilder?.[0] ?? "/images/platzhalter.jpg"}
+          alt={art.titel}
+          className={styles.articleImg}
+        />
+
+        <div className={styles.articleText}>
+          <h3>{art.titel}</h3>
+
+          <p><strong>Verfügbarkeit:</strong> {availability}</p>
+          <p><strong>Lieferdatum bis:</strong> {formatDate(deliveryDate)}</p>
+
+          <p><strong>Hersteller:</strong> {art.hersteller}</p>
+          <p><strong>Zustand:</strong> {formatZustand(art.zustand) || "—"}</p>
+          <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>
+
+          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray" }}>
+            <strong>{priceLabel}</strong> {priceText}{unitSuffix}
+          </p>
+        </div>
+      </Link>
+    );
+  })
+)}
+</div>
+                
 
               <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefShop, -1)}>
                 <ChevronLeftIcon className="h-6 w-6 text-black" />
