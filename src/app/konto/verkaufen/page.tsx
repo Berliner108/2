@@ -123,6 +123,7 @@ type MyArticle = {
   createdAtIso: string | null
   status: ArtikelStatus
   views: number
+  hasStaffelpreise?: boolean // ✅ neu
 }
 
 type MySale = {
@@ -448,12 +449,16 @@ const KontoVerkaufenPage: FC = () => {
                           <div className={styles.meta}>
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Kategorie</div>
-                              <div className={styles.metaValue}>{a.category}</div>
+                              <div className={styles.metaValue}>
+                                {a.category ? a.category.charAt(0).toUpperCase() + a.category.slice(1) : "—"}
+                              </div>
                             </div>
+
                             <div className={styles.metaCol}>
-                              <div className={styles.metaLabel}>Preis ab</div>
+                              <div className={styles.metaLabel}>{a.hasStaffelpreise ? "Preis ab" : "Preis"}</div>
                               <div className={styles.metaValue}>{formatEUR(a.priceCents)}</div>
                             </div>
+
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Erstellt</div>
                               <div className={styles.metaValue}>{formatDate(a.createdAtIso ?? undefined)}</div>
