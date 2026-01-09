@@ -427,7 +427,7 @@ export default function Page() {
                       />
                       <div className={styles.articleText}>
                         <h3>{art.titel}</h3>
-                        <p><strong>Menge:</strong> {art.menge} kg</p>
+                        <p><strong>Verfügbarge Menge:</strong> {art.menge} kg</p>
                         <p><strong>Lieferdatum:</strong> {formatDate(art.lieferdatum)}</p>
                         <p><strong>Hersteller:</strong> {art.hersteller}</p>
                         <p><strong>Zustand:</strong> {formatZustand(art.zustand) || '—'}</p>
