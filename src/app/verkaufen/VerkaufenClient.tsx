@@ -1050,8 +1050,8 @@ try {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        articleId,
-        promoCodes: bewerbungOptionen, // z.B. ["homepage","premium"]
+        article_id: articleId,
+        promo_codes: bewerbungOptionen, // z.B. ["homepage","premium"]
       }),
     });
 

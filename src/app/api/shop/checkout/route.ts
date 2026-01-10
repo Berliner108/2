@@ -7,7 +7,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2025-07-30.basil",
+
 });
 
 const PROMO_PACKAGES: Record<
@@ -37,7 +38,7 @@ function getOrigin(req: Request) {
   if (origin) return origin;
   const host = h.get("x-forwarded-host") || h.get("host");
   const proto = h.get("x-forwarded-proto") || "https";
-  return host ? `${proto}://${host}` : "https://mein-shop.de";
+  return host ? `${proto}://${host}` : "https://beschichterscout.com";
 }
 
 export async function POST(req: Request) {
