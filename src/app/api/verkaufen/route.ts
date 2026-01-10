@@ -245,7 +245,7 @@ special_effects: category === "arbeitsmittel" ? [] : special_effects,
 certifications:  category === "arbeitsmittel" ? [] : certifications,
 charge:          category === "pulverlack" ? charge : [],
 
-      promo_score,
+      promo_score: promoScore,
       delivery_days: deliveryDays,
       stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),
       qty_kg: qtyKg,
