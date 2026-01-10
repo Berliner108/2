@@ -96,13 +96,11 @@ export async function POST(req: Request) {
     // Summe + PromoScore serverseitig berechnen
     const promoScore = validCodes.reduce((sum: number, c: string) => sum + PROMO_PACKAGES[c].score, 0);
 const amountCents = validCodes.reduce((sum: number, c: string) => sum + PROMO_PACKAGES[c].amount_cents, 0);
+const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = validCodes.map((c: string) => ({
+  price: PROMO_PACKAGES[c].stripe_price_id,
+  quantity: 1,
+}));
 
-
-    // Stripe line_items
-    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = validCodes.map((c) => ({
-      price: PROMO_PACKAGES[c].stripe_price_id,
-      quantity: 1,
-    }));
 
     const origin = getOrigin(req);
 
