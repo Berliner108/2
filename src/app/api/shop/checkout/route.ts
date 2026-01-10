@@ -72,7 +72,8 @@ export async function POST(req: Request) {
     }
 
     // ✅ fälschungssicher: nur erlaubte Codes zählen
-    const validCodes = cleanedCodes.filter((c) => PROMO_PACKAGES[c]);
+    const validCodes = cleanedCodes.filter((c: string) => Boolean(PROMO_PACKAGES[c]));
+
     if (validCodes.length === 0) {
       return NextResponse.json({ error: "NO_VALID_PROMO_CODES" }, { status: 400 });
     }
