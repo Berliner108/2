@@ -1045,7 +1045,7 @@ try {
 
     await nextFrame();
 
-    const r2 = await fetch('/api/checkout', {
+    const r2 = await fetch('/api/shop/checkout', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
