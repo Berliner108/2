@@ -480,8 +480,7 @@ useEffect(() => {
           <h3>{art.titel}</h3>
 
           <p><strong>Verfügbarkeit:</strong> {availability}</p>
-          <p><strong>Lieferdatum bis:</strong> {formatDate(deliveryDate)}</p>
-
+          <p><strong>Lieferdatum:</strong> {formatDate(deliveryDate)}</p>
           <p><strong>Hersteller:</strong> {art.hersteller}</p>
           <p><strong>Zustand:</strong> {formatZustand(art.zustand) || "—"}</p>
           <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>

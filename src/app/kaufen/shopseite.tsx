@@ -130,6 +130,39 @@ export default function Shopseite() {
 
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
 
+    // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
+  const [promoToast, setPromoToast] = useState<{
+    type: "success" | "info" | "error";
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const promo = searchParams.get("promo");
+    if (!promo) return;
+
+    if (promo === "success") {
+      setPromoToast({ type: "success", text: "Bewerbung erfolgreich – dein Promo-Score wurde erhöht." });
+    } else if (promo === "cancel") {
+      setPromoToast({ type: "info", text: "Zahlung abgebrochen – keine Bewerbung durchgeführt." });
+    } else if (promo === "failed") {
+      setPromoToast({ type: "error", text: "Zahlung fehlgeschlagen – keine Bewerbung durchgeführt." });
+    }
+
+    // nach ein paar Sekunden automatisch ausblenden
+    const t = window.setTimeout(() => setPromoToast(null), 4500);
+
+    // URL bereinigen, damit Toast bei Reload nicht erneut kommt
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("promo");
+    params.delete("session_id"); // optional
+    const next = params.toString() ? `?${params.toString()}` : location.pathname;
+    router.replace(next, { scroll: false });
+
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+
   // Suchfeld aus URL (?search=...)
   const [suchbegriff, setSuchbegriff] = useState(() => searchParams.get('search') ?? '');
   useEffect(() => {
@@ -404,6 +437,38 @@ export default function Shopseite() {
   return (
     <>
       <Navbar />
+            {promoToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            right: 16,
+            bottom: 16,
+            zIndex: 9999,
+            maxWidth: 420,
+          }}
+        >
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+              color: "#fff",
+              background:
+                promoToast.type === "success"
+                  ? "#16a34a"
+                  : promoToast.type === "error"
+                  ? "#dc2626"
+                  : "#334155",
+              fontWeight: 600,
+            }}
+          >
+            {promoToast.text}
+          </div>
+        </div>
+      )}
+
 
       {/* Hamburger / Sidebar toggle */}
       <button className={styles.hamburger} onClick={() => setSidebarOpen((open) => !open)} aria-label="Sidebar öffnen">

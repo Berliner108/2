@@ -1014,7 +1014,6 @@ const fileUrls  = await uploadPublicFilesBrowser("articles", `${folder}/files`, 
 formData.append("imageUrls", JSON.stringify(imageUrls));
 formData.append("fileUrls", JSON.stringify(fileUrls));
 
-
 try {
   const res = await fetch('/api/verkaufen', {
     method: 'POST',
@@ -1022,68 +1021,98 @@ try {
     credentials: 'include',
   });
 
-  if (res.ok) {
-    // ✅ Resets beibehalten (wie bei dir)
-    setBilder([]);
-    setDateien([]);
-    setWarnung('');
-    setWarnungKategorie('');
-    setWarnungBilder('');
-    setWarnungPalette('');
-    setWarnungZustand('');
-    setFarbton('');
-    setGlanzgrad('');
-    setKategorie(null);
-    setPreis('');
-    setLieferWerktage('');
-    setVersandKosten('');
-    setWarnungPreis('');
-    setWarnungWerktage('');
-    setWarnungVersand('');
-    setMengeStueck(0);
-    setGroesse('');
-    setWarnungHersteller('');
-    setWarnungMengeStueck('');
-    setWarnungGroesse('');
-    setStueckProEinheit('');
-    setWarnungStueckProEinheit('');
-     setVerkaufAn('');
-  setWarnungVerkaufAn('');
-  setVerkaufsArt('');
-setWarnungVerkaufsArt('');
-setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  // ✅ Immer JSON lesen, damit du im Erfolg die articleId bekommst
+  const data = await res.json().catch(() => ({} as any));
 
-setWarnungStaffeln('');
+  // ❌ Fehlerfall: "Fehler beim Hochladen" bleibt drin
+  if (!res.ok) {
+    const msg = data?.error || 'Fehler beim Hochladen';
+    alert(msg);
+    return;
+  }
 
+  const articleId = data?.id as string | undefined;
+  if (!articleId) {
+    alert('Artikel gespeichert, aber keine ID vom Server erhalten.');
+    return;
+  }
 
-    // ✅ Overlay-Text (identisch)
+  // ✅ Wenn Promo ausgewählt wurde -> NICHT nach /kaufen, sondern Stripe Checkout starten
+  if (selectedTotalCents > 0 && bewerbungOptionen.length > 0) {
     setOverlayTitle('Artikel gespeichert');
-    setOverlayText('Wir leiten gleich weiter.');
-
-    // ✅ Overlay bleibt bis zur Navigation sichtbar
+    setOverlayText('Weiterleitung zur Zahlung …');
     willNavigate = true;
 
-    // ✅ 1 Frame warten, damit Overlay sicher sichtbar wird
     await nextFrame();
 
-    // ✅ Weiterleitung
-    router.replace('/kaufen');
-    return;
-  } else {
-  let msg = 'Fehler beim Hochladen';
-  try {
-    const data = await res.json();
-    if (data?.error) msg = data.error;
-  } catch {}
-  alert(msg);
-}
+    const r2 = await fetch('/api/checkout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        articleId,
+        promoCodes: bewerbungOptionen, // z.B. ["homepage","premium"]
+      }),
+    });
 
+    const j2 = await r2.json().catch(() => ({} as any));
+    if (!r2.ok || !j2?.url) {
+      alert(j2?.error || 'Checkout konnte nicht gestartet werden.');
+      willNavigate = false;
+      setLadeStatus(false);
+      return;
+    }
+
+    // ✅ Redirect zu Stripe
+    window.location.assign(j2.url);
+    return;
+  }
+
+  // ✅ KEINE Promo -> so wie bisher: Resets + Weiterleitung zu /kaufen
+  setBilder([]);
+  setDateien([]);
+  setWarnung('');
+  setWarnungKategorie('');
+  setWarnungBilder('');
+  setWarnungPalette('');
+  setWarnungZustand('');
+  setFarbton('');
+  setGlanzgrad('');
+  setKategorie(null);
+  setPreis('');
+  setLieferWerktage('');
+  setVersandKosten('');
+  setWarnungPreis('');
+  setWarnungWerktage('');
+  setWarnungVersand('');
+  setMengeStueck(0);
+  setGroesse('');
+  setWarnungHersteller('');
+  setWarnungMengeStueck('');
+  setWarnungGroesse('');
+  setStueckProEinheit('');
+  setWarnungStueckProEinheit('');
+  setVerkaufAn('');
+  setWarnungVerkaufAn('');
+  setVerkaufsArt('');
+  setWarnungVerkaufsArt('');
+  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  setWarnungStaffeln('');
+
+  setOverlayTitle('Artikel gespeichert');
+  setOverlayText('Wir leiten gleich weiter.');
+  willNavigate = true;
+
+  await nextFrame();
+  router.replace('/kaufen');
+  return;
 } catch (error) {
   console.error(error);
   alert('Serverfehler');
 } finally {
   if (!willNavigate) setLadeStatus(false);
 }
+
 };
 const staffelnSindGueltig = (rows: Staffelzeile[]) => {
   const aktive = rows.filter((s) =>

@@ -13,12 +13,6 @@ type StaffelRow = {
   versand?: string;
 };
 
-const PROMO_SCORE_BY_ID: Record<string, number> = {
-  homepage: 30,
-  search_boost: 15,
-  premium: 12,
-};
-
 function toStr(v: FormDataEntryValue | null): string {
   return typeof v === "string" ? v : "";
 }
@@ -226,10 +220,7 @@ if (category === "arbeitsmittel") {
         ? toInt(toStr(fd.get("mengeStueck")), 0)
         : null;
 
-    // Promo score
-    const bewerbungRaw = toStr(fd.get("bewerbung"));
-    const bewerbungIds = safeJson<string[]>(bewerbungRaw, []);
-    const promoScore = (bewerbungIds ?? []).reduce((sum, id) => sum + (PROMO_SCORE_BY_ID[id] ?? 0), 0);
+    const promoScore = 0;
 
     // 1) Artikel anlegen
     const insertPayload: any = {
@@ -254,7 +245,7 @@ special_effects: category === "arbeitsmittel" ? [] : special_effects,
 certifications:  category === "arbeitsmittel" ? [] : certifications,
 charge:          category === "pulverlack" ? charge : [],
 
-      promo_score: promoScore,
+      promo_score,
       delivery_days: deliveryDays,
       stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),
       qty_kg: qtyKg,
