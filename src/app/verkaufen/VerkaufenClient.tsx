@@ -789,11 +789,12 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     fehler = true;
   } else {
     const komplett = aktive.every((s) =>
-      s.minMenge.trim() !== '' &&
-      s.maxMenge.trim() !== '' &&
-      s.preis.trim() !== '' &&
-      s.versand.trim() !== ''
-    );
+  s.minMenge.trim() !== '' &&
+  s.maxMenge.trim() !== '' &&
+  s.preis.trim() !== ''
+  // Versand darf leer sein (= 0)
+);
+
 
     if (!komplett) {
       setWarnungStaffeln('Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis, Versand).');
@@ -1235,35 +1236,54 @@ const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
   return rows;
 };
 
+const fixStaffelMaxOnBlur = (index: number) => {
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+    const row = copy[index];
 
+    const min = toInt(row.minMenge);
+    let max = toInt(row.maxMenge);
+
+    // wenn leer -> lassen (bei Auf Lager darf die letzte offen sein)
+    if (row.maxMenge.trim() === '') return copy;
+
+    // wenn min fehlt -> abbrechen
+    if (min === null) return copy;
+
+    // ✅ Regel: Bis muss > Ab sein
+    if (max === null || max <= min) {
+      max = min + 1;
+    }
+
+    // ✅ Begrenzte Menge: Bis darf nicht über Limit
+    const limit = getStaffelLimit();
+    if (limit !== null && limit > 0 && max > limit) {
+      max = limit;
+    }
+
+    row.maxMenge = String(max);
+
+    return normalizeFromIndex(copy, index);
+  });
+};
 const updateStaffelRange = (
   index: number,
   field: 'minMenge' | 'maxMenge',
   raw: string
 ) => {
-  let cleaned = cleanInt(raw);
-
-  // ✅ HIER DIREKT NACH cleanInt(raw): "Bis" darf bei begrenzter Menge nicht größer sein als Menge
-if (field === 'maxMenge') {
-  const limit = getStaffelLimit();
-  if (limit !== null && limit > 0 && cleaned !== '') {
-    const val = parseInt(cleaned, 10);
-    if (!Number.isNaN(val) && val > limit) cleaned = String(limit);
-  }
-}
-
+  const cleaned = cleanInt(raw);
 
   setStaffeln((prev) => {
     const copy = prev.map((r) => ({ ...r }));
 
-    if (field === 'minMenge' && index > 0) {
-      return prev;
-    }
+    // minMenge ab Zeile 2 bleibt readOnly
+    if (field === 'minMenge' && index > 0) return prev;
 
     copy[index][field] = cleaned;
     return normalizeFromIndex(copy, index);
   });
 };
+
 
 
 const addStaffel = () => {
@@ -2573,13 +2593,15 @@ onChange={(e) => {
         <div className={styles.staffelCell}>
           <span className={styles.staffelMobileLabel}>Bis</span>
           <input
-  type="text"
-  inputMode="numeric"
-  className={styles.staffelInput}
-  value={row.maxMenge}
-  onChange={(e) => updateStaffelRange(index, 'maxMenge', e.target.value)}
-  placeholder="z. B. 10"
-/>
+            type="text"
+            inputMode="numeric"
+            className={styles.staffelInput}
+            value={row.maxMenge}
+            onChange={(e) => updateStaffelRange(index, 'maxMenge', e.target.value)}
+            onBlur={() => fixStaffelMaxOnBlur(index)}   // ✅ NEU
+            placeholder="z. B. 10"
+          />
+
 
         </div>
 
