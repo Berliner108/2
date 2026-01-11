@@ -165,7 +165,7 @@ const [warnungVerkaufsArt, setWarnungVerkaufsArt] = useState('');
 
 
 const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
-  { minMenge: '', maxMenge: '', preis: '', versand: '' },
+  { minMenge: '1', maxMenge: '', preis: '', versand: '' },
 ]);
 
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
@@ -419,7 +419,7 @@ const formularZuruecksetzen = () => {
   setWarnungVerkaufAn('');
     setVerkaufsArt('');
   setWarnungVerkaufsArt('');
-  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  setStaffeln([{ minMenge: '1', maxMenge: '', preis: '', versand: '' }]);
 
   setWarnungStaffeln('');
 
@@ -506,7 +506,7 @@ useEffect(() => {
   // Verkaufsart & Staffel-Logik hart zurücksetzen bei Kategorie-Wechsel
   setVerkaufsArt('');
   setWarnungVerkaufsArt('');
-  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  setStaffeln([{ minMenge: '1', maxMenge: '', preis: '', versand: '' }]);
   setWarnungStaffeln('');
 
   // klassische Preisfelder ebenfalls leeren
@@ -990,14 +990,15 @@ async function uploadPublicFilesBrowser(bucket: string, basePath: string, files:
 formData.append('verkaufsArt', verkaufsArt);
 
 if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
-  const aktiveStaffeln = staffeln.filter((s) =>
-    (s.minMenge && s.minMenge.trim() !== '') ||
-    (s.maxMenge && s.maxMenge.trim() !== '') ||
-    (s.preis && s.preis.trim() !== '') ||
-    (s.versand && s.versand.trim() !== '')
-  );
+ const aktiveStaffeln = staffeln
+  .filter((s) => [s.minMenge, s.maxMenge, s.preis, s.versand].some(x => (x ?? '').trim() !== ''))
+  .map((s) => ({
+    ...s,
+    versand: (s.versand ?? '').trim() === '' ? '0' : s.versand, // ✅ kostenlos möglich
+  }));
 
-  formData.append('preisStaffeln', JSON.stringify(aktiveStaffeln));
+formData.append('preisStaffeln', JSON.stringify(aktiveStaffeln));
+
 } else {
   formData.append('preis', (parseFloat(preis) || 0).toString());
   formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
@@ -1096,7 +1097,7 @@ try {
   setWarnungVerkaufAn('');
   setVerkaufsArt('');
   setWarnungVerkaufsArt('');
-  setStaffeln([{ minMenge: '', maxMenge: '', preis: '', versand: '' }]);
+  setStaffeln([{ minMenge: '1', maxMenge: '', preis: '', versand: '' }]);
   setWarnungStaffeln('');
 
   setOverlayTitle('Artikel gespeichert');
@@ -1189,15 +1190,16 @@ function getStaffelLimit() {
   return Math.floor(Number(menge) || 0);
 }
 
-
 const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
+  // ✅ Staffel 1 muss immer bei 1 beginnen
+  if (rows.length > 0) rows[0].minMenge = '1';
+
   // sorgt ab startIndex für fortlaufende Ab-Werte und gültige Bis-Werte
   for (let i = startIndex; i < rows.length; i++) {
     // Ab für i>0 ist immer prev.max + 1
     if (i > 0) {
       const prevMax = toInt(rows[i - 1].maxMenge);
       if (prevMax === null) {
-        // vorherige Staffel ist "offen" -> danach darf nichts kommen
         rows.splice(i);
         break;
       }
@@ -1212,13 +1214,15 @@ const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
       rows[i].minMenge = '1';
     }
 
+    // ❌ WICHTIG: diesen Block NICHT mehr drin lassen,
+    // sonst springt "Bis" beim Tippen.
+    /*
     const min2 = toInt(rows[i].minMenge);
     const max2 = toInt(rows[i].maxMenge);
-
-    // Regel: Ab < Bis (wenn Bis existiert)
     if (min2 !== null && max2 !== null && max2 <= min2) {
       rows[i].maxMenge = String(min2 + 1);
     }
+    */
 
     // Wenn Bis leer ist -> offen -> danach keine weiteren Reihen
     const maxFinal = toInt(rows[i].maxMenge);
@@ -1227,8 +1231,10 @@ const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
       break;
     }
   }
+
   return rows;
 };
+
 
 const updateStaffelRange = (
   index: number,
