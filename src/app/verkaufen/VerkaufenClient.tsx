@@ -2837,11 +2837,11 @@ onChange={(e) => {
         className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
         min={1}
         step={0.01}
-        max={999}
+        max={99999.99}
         value={preis}
         onChange={(e) => {
           const value = e.target.value;
-          if (value === '' || Number(value) <= 999) setPreis(value);
+          if (value === '' || Number(value) <= 99999.99) setPreis(value);
         }}
       />
     </label>
@@ -2856,11 +2856,11 @@ onChange={(e) => {
         className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
         min={0}
         step={0.01}
-        max={999}
+        max={99999.99}
         value={versandKosten}
         onChange={(e) => {
           const value = e.target.value;
-          if (value === '' || Number(value) <= 999) setVersandKosten(value);
+          if (value === '' || Number(value) <= 99999.99) setVersandKosten(value);
         }}
       />
     </label>
