@@ -2983,7 +2983,6 @@ onChange={(e) => {
       {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
         <>
           <p><strong>Farbton:</strong> {farbton || '–'}</p>
-          <p><strong>Menge (kg):</strong> {menge || '–'}</p>
           <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
           <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
           <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
@@ -3057,26 +3056,6 @@ onChange={(e) => {
     </ul>
   </>
 ) : null}
-
-      {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
-  <>
-    <p><strong>Preisstaffeln:</strong></p>
-    <ul>
-      {staffeln
-        .filter(s => [s.minMenge, s.maxMenge, s.preis, s.versand].some(x => (x ?? '').trim() !== ''))
-        .map((s, i) => (
-          <li key={i}>
-            Ab {s.minMenge || '-'} bis {s.maxMenge || 'offen'}: {s.preis || '-'} €, Versand {s.versand || '0'} €
-          </li>
-        ))}
-    </ul>
-  </>
-) : (
-  <>
-    <p><strong>Gesamtpreis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
-    <p><strong>Versandkosten:</strong> {versandKosten ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
-  </>
-)}
 
       <p><strong>Bilder:</strong> {bilder.length} Bild(er) ausgewählt</p>
       <p><strong>Dateien:</strong> {dateien.length} Datei(en) ausgewählt</p>
