@@ -821,15 +821,16 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     fehler = true;
   } else {
     const komplett = aktive.every((s) =>
-  s.minMenge.trim() !== '' &&
-  s.maxMenge.trim() !== '' &&
-  s.preis.trim() !== ''
-  // Versand darf leer sein (= 0)
-);
-
+      s.minMenge.trim() !== '' &&
+      s.maxMenge.trim() !== '' &&
+      s.preis.trim() !== ''
+      // Versand darf leer sein (= 0)
+    );
 
     if (!komplett) {
-      setWarnungStaffeln('Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis). Versand kann kostenlos sein.');
+      setWarnungStaffeln(
+        'Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis). Versand kann kostenlos sein.'
+      );
       fehler = true;
     } else if (!staffelnSindGueltig(staffeln)) {
       setWarnungStaffeln('Staffel ungültig – bitte prüfe Ab/Bis/Preis/Versand und die Reihenfolge.');
@@ -839,10 +840,13 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     }
   }
 
+  // bei Staffel: Einzelpreis-Warnungen leeren
   setWarnungPreis('');
   setWarnungVersand('');
-} else {
-  // klassische Einzelpreis-Variante
+}
+
+else if (verkaufsArt === 'gesamt') {
+  // klassische Einzelpreis-Variante NUR bei "gesamt"
   if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
     setWarnungPreis('Bitte gib einen gültigen Preis ein.');
     fehler = true;
@@ -857,6 +861,7 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     setWarnungVersand('');
   }
 
+  // bei gesamt: Staffelwarnung leeren
   setWarnungStaffeln('');
 }
 
@@ -2824,49 +2829,45 @@ onChange={(e) => {
 {verkaufsArt === 'gesamt' && (
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
-      Gesamtpreis (€ / {kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'})
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        Gesamtpreis (€) <span style={{ color: 'red' }}>*</span>
+      </span>
       <input
         type="number"
-        className={`${styles.dateInput} ${
-          warnungPreis ? styles.numberInputError : ''
-        }`}
+        className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
         min={1}
         step={0.01}
         max={999}
         value={preis}
         onChange={(e) => {
           const value = e.target.value;
-          if (value === '' || Number(value) <= 999) {
-            setPreis(value);
-          }
+          if (value === '' || Number(value) <= 999) setPreis(value);
         }}
       />
     </label>
     {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
 
     <label className={styles.inputLabel}>
-      Versandkosten (€)
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        Versandkosten (€) <span style={{ color: 'red' }}>*</span>
+      </span>
       <input
         type="number"
-        className={`${styles.dateInput} ${
-          warnungVersand ? styles.numberInputError : ''
-        }`}
+        className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
         min={0}
         step={0.01}
         max={999}
         value={versandKosten}
         onChange={(e) => {
           const value = e.target.value;
-          if (value === '' || Number(value) <= 999) {
-            setVersandKosten(value);
-          }
+          if (value === '' || Number(value) <= 999) setVersandKosten(value);
         }}
       />
     </label>
     {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
-
   </div>
 )}
+
 
 
 {/* Bewerbung – identisch wie im Grundgerüst */}
@@ -3017,7 +3018,46 @@ onChange={(e) => {
 
       {/* Felder für beide Kategorien */}
       <p><strong>Werktage bis Lieferung:</strong> {lieferWerktage || '–'} Werktag{parseInt(lieferWerktage) > 1 ? 'e' : ''}</p>
-      <p><strong>Preis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} € / ${kategorie === 'arbeitsmittel' ? 'Verkaufseinheit' : 'kg'}` : '–'}</p>
+      <p><strong>Verkaufsart:</strong> {
+  verkaufsArt === 'gesamt'
+    ? 'Nur als Gesamtmenge'
+    : verkaufsArt === 'pro_kg'
+    ? 'Gestaffelte Preise (pro kg)'
+    : verkaufsArt === 'pro_stueck'
+    ? 'Verkauf pro Stück (Staffeln)'
+    : '–'
+}</p>
+
+{/* Menge in der Vorschau sauber */}
+{(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
+  <p><strong>Menge:</strong> {aufLager ? 'Auf Lager' : `${menge || '–'} kg`}</p>
+)}
+
+{kategorie === 'arbeitsmittel' && (
+  <p><strong>Menge:</strong> {aufLager ? 'Auf Lager' : `${mengeStueck || '–'} Stück`}</p>
+)}
+
+{/* Preisblock nach Verkaufsart */}
+{verkaufsArt === 'gesamt' ? (
+  <>
+    <p><strong>Gesamtpreis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
+    <p><strong>Versandkosten:</strong> {versandKosten !== '' ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
+  </>
+) : (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
+  <>
+    <p><strong>Preisstaffeln ({verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}):</strong></p>
+    <ul>
+      {staffeln
+        .filter(s => [s.minMenge, s.maxMenge, s.preis, s.versand].some(x => (x ?? '').trim() !== ''))
+        .map((s, i) => (
+          <li key={i}>
+            Ab {s.minMenge || '-'} bis {s.maxMenge || 'offen'}: {s.preis || '-'} €, Versand {s.versand?.trim() ? s.versand : '0'} €
+          </li>
+        ))}
+    </ul>
+  </>
+) : null}
+
       {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
   <>
     <p><strong>Preisstaffeln:</strong></p>
