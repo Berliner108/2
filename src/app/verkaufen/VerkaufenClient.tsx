@@ -490,6 +490,34 @@ useEffect(() => {
 }, [aufLager, verkaufsArt]);
 
 useEffect(() => {
+  if (!(verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck")) return;
+
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+    const limit = getStaffelLimit();
+    const isLimited = limit !== null && limit > 0;
+
+    if (isLimited) {
+      // max auf limit begrenzen
+      for (const r of copy) {
+        const max = toInt(r.maxMenge);
+        if (max !== null && max > limit) r.maxMenge = String(limit);
+      }
+
+      // wenn letzte offen war (von Auf Lager) -> jetzt schließen
+      const last = copy[copy.length - 1];
+      if (last && last.maxMenge.trim() === "") {
+        const min = toInt(last.minMenge) ?? 1;
+        last.maxMenge = String(Math.min(limit, min + 1));
+      }
+    }
+
+    return normalizeFromIndex(copy, 0);
+  });
+}, [aufLager, menge, mengeStueck, verkaufsArt]);
+
+
+useEffect(() => {
   fetchConnect();
 }, [fetchConnect]);
 
@@ -801,7 +829,7 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 
 
     if (!komplett) {
-      setWarnungStaffeln('Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis, Versand).');
+      setWarnungStaffeln('Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis). Versand kann kostenlos sein.');
       fehler = true;
     } else if (!staffelnSindGueltig(staffeln)) {
       setWarnungStaffeln('Staffel ungültig – bitte prüfe Ab/Bis/Preis/Versand und die Reihenfolge.');
@@ -1248,32 +1276,34 @@ const normalizeFromIndex = (rows: Staffelzeile[], startIndex: number) => {
 
   return rows;
 };
-
 const fixStaffelMaxOnBlur = (index: number) => {
   setStaffeln((prev) => {
     const copy = prev.map((r) => ({ ...r }));
     const row = copy[index];
 
     const min = toInt(row.minMenge);
-    let max = toInt(row.maxMenge);
+    const limit = getStaffelLimit();                 // ✅ direkt am Anfang
+    const isLimited = limit !== null && limit > 0;   // ✅ begrenzte Menge aktiv?
 
-    // leer lassen erlaubt (bei Auf Lager kann letzte offen sein)
-    if (row.maxMenge.trim() === "") return copy;
+    // wenn min fehlt -> abbrechen
     if (min === null) return copy;
 
-    // Bis muss > Ab
-    if (max === null || max <= min) max = min + 1;
+    // ✅ FALL 1: Bis ist leer
+    if (row.maxMenge.trim() === "") {
+      // Auf Lager: leer lassen erlaubt (offen)
+      if (!isLimited) {
+        setWarnungStaffeln("");
+        return normalizeFromIndex(copy, index);
+      }
 
-    // Limit beachten (bei begrenzter Menge)
-    const limit = getStaffelLimit();
-    if (limit !== null && limit > 0 && max > limit) max = limit;
+      // Begrenzte Menge: leer NICHT erlaubt -> automatisch setzen
+      // Standard: min+1, aber niemals > limit
+      const proposed = Math.min(limit!, min + 1);
+      row.maxMenge = String(proposed);
 
-    row.maxMenge = String(max);
+      const normalized = normalizeFromIndex(copy, index);
 
-    const normalized = normalizeFromIndex(copy, index);
-
-    // Hinweis falls begrenzt und letzte Staffel nicht bis Limit geht
-    if (limit !== null && limit > 0) {
+      // Hinweis falls letzte Staffel nicht exakt bis limit geht
       const aktive = normalized.filter((s) =>
         [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? "").trim() !== "")
       );
@@ -1281,9 +1311,38 @@ const fixStaffelMaxOnBlur = (index: number) => {
       if (aktive.length > 0) {
         const lastMax = toInt(aktive[aktive.length - 1].maxMenge);
         if (lastMax !== null && lastMax !== limit) {
-          setWarnungStaffeln(
-            `Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen.`
-          );
+          setWarnungStaffeln(`Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen.`);
+        } else {
+          setWarnungStaffeln("");
+        }
+      }
+
+      return normalized;
+    }
+
+    // ✅ FALL 2: Bis ist gesetzt -> normal fixen
+    let max = toInt(row.maxMenge);
+
+    // Bis muss > Ab
+    if (max === null || max <= min) max = min + 1;
+
+    // Limit beachten
+    if (isLimited && max > limit!) max = limit!;
+
+    row.maxMenge = String(max);
+
+    const normalized = normalizeFromIndex(copy, index);
+
+    // Hinweis falls letzte Staffel nicht exakt bis limit geht
+    if (isLimited) {
+      const aktive = normalized.filter((s) =>
+        [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? "").trim() !== "")
+      );
+
+      if (aktive.length > 0) {
+        const lastMax = toInt(aktive[aktive.length - 1].maxMenge);
+        if (lastMax !== null && lastMax !== limit) {
+          setWarnungStaffeln(`Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen.`);
         } else {
           setWarnungStaffeln("");
         }
@@ -1295,6 +1354,7 @@ const fixStaffelMaxOnBlur = (index: number) => {
     return normalized;
   });
 };
+
 
 const updateStaffelRange = (
   index: number,
