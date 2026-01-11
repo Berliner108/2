@@ -1263,6 +1263,55 @@ const fixStaffelMaxOnBlur = (index: number) => {
 
     row.maxMenge = String(max);
 
+    const fixStaffelMaxOnBlur = (index: number) => {
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+    const row = copy[index];
+
+    const min = toInt(row.minMenge);
+    let max = toInt(row.maxMenge);
+
+    if (row.maxMenge.trim() === '') return copy;
+    if (min === null) return copy;
+
+    if (max === null || max <= min) max = min + 1;
+
+    const limit = getStaffelLimit();
+    if (limit !== null && limit > 0 && max > limit) max = limit;
+
+    row.maxMenge = String(max);
+
+    const normalized = normalizeFromIndex(copy, index);
+
+    // ✅ NEU: Sofort-Hinweis, wenn begrenzte Menge und letzte Staffel noch nicht bis Limit geht
+    if (limit !== null && limit > 0) {
+      const aktive = normalized.filter((s) =>
+        [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
+      );
+
+      if (aktive.length > 0) {
+        const lastIndex = aktive.length - 1;
+        const lastMax = toInt(aktive[lastIndex].maxMenge);
+
+        // Nur warnen, wenn der User gerade in der letzten Zeile arbeitet
+        if (index === lastIndex && lastMax !== null && lastMax !== limit) {
+          setWarnungStaffeln(
+            `Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen. ` +
+            `Setze „Bis“ auf ${limit} oder füge eine weitere Staffel hinzu.`
+          );
+        } else {
+          setWarnungStaffeln('');
+        }
+      }
+    } else {
+      setWarnungStaffeln('');
+    }
+
+    return normalized;
+  });
+};
+
+
     return normalizeFromIndex(copy, index);
   });
 };
