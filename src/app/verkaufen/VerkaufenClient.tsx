@@ -2833,16 +2833,13 @@ onChange={(e) => {
         Gesamtpreis (€) <span style={{ color: 'red' }}>*</span>
       </span>
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
-        min={1}
-        step={0.01}
-        max={99999.99}
         value={preis}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === '' || Number(value) <= 99999.99) setPreis(value);
-        }}
+        onChange={(e) => setPreis(cleanMoney(e.target.value))}
+        onBlur={() => setPreis(formatMoneyOnBlur(preis))}
+        placeholder="z. B. 1299,90"
       />
     </label>
     {warnungPreis && <p className={styles.warnung}>{warnungPreis}</p>}
@@ -2852,16 +2849,13 @@ onChange={(e) => {
         Versandkosten (€) <span style={{ color: 'red' }}>*</span>
       </span>
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
-        min={0}
-        step={0.01}
-        max={99999.99}
         value={versandKosten}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === '' || Number(value) <= 99999.99) setVersandKosten(value);
-        }}
+        onChange={(e) => setVersandKosten(cleanMoney(e.target.value))}
+        onBlur={() => setVersandKosten(formatMoneyOnBlur(versandKosten))}
+        placeholder="z. B. 0,00"
       />
     </label>
     {warnungVersand && <p className={styles.warnung}>{warnungVersand}</p>}
