@@ -132,6 +132,10 @@ type Staffelzeile = {
   versand: string;    // Versandkosten für diese Staffel
 };
 const MAX_STAFFELN = 3;
+
+const STAFFEL_HARD_MAX = 99999;     // Ab/Bis max 99 999
+const MONEY_HARD_MAX   = 99999.99;  // Preis/Versand max 99 999.99
+
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 
 function ArtikelEinstellen() {
@@ -1136,14 +1140,23 @@ const limit = getStaffelLimit();
     const min = toInt(s.minMenge);
     const max = toInt(s.maxMenge);
 
+    const maxAllowed = (limit !== null && limit > 0) ? limit : STAFFEL_HARD_MAX;
+
+if (min !== null && min > maxAllowed) return false;
+if (max !== null && max > maxAllowed) return false;
+
+
     if (min === null || min < 1) return false;
     if (i === 0 && min !== 1) return false;
 
-    const preisNum = Number((s.preis || '').replace(',', '.'));
-    if (!s.preis || Number.isNaN(preisNum) || preisNum <= 0) return false;
+   const preisNum = Number((s.preis || '').replace(',', '.'));
+if (!s.preis || Number.isNaN(preisNum) || preisNum <= 0) return false;
+if (preisNum > MONEY_HARD_MAX) return false;
 
-    const versandNum = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
-    if (Number.isNaN(versandNum) || versandNum < 0) return false;
+const versandNum = s.versand === '' ? 0 : Number((s.versand || '').replace(',', '.'));
+if (Number.isNaN(versandNum) || versandNum < 0) return false;
+if (versandNum > MONEY_HARD_MAX) return false;
+
 
     // Bis-Regeln
     if (max === null) {
@@ -1178,7 +1191,7 @@ const limit = getStaffelLimit();
 };
 
 function cleanInt(v: string) {
-  return v.replace(/\D/g, '');
+  return v.replace(/\D/g, '').slice(0, 5); // max 5 Stellen
 }
 
 function toInt(v: string) {
@@ -1244,38 +1257,14 @@ const fixStaffelMaxOnBlur = (index: number) => {
     const min = toInt(row.minMenge);
     let max = toInt(row.maxMenge);
 
-    // wenn leer -> lassen (bei Auf Lager darf die letzte offen sein)
-    if (row.maxMenge.trim() === '') return copy;
-
-    // wenn min fehlt -> abbrechen
+    // leer lassen erlaubt (bei Auf Lager kann letzte offen sein)
+    if (row.maxMenge.trim() === "") return copy;
     if (min === null) return copy;
 
-    // ✅ Regel: Bis muss > Ab sein
-    if (max === null || max <= min) {
-      max = min + 1;
-    }
-
-    // ✅ Begrenzte Menge: Bis darf nicht über Limit
-    const limit = getStaffelLimit();
-    if (limit !== null && limit > 0 && max > limit) {
-      max = limit;
-    }
-
-    row.maxMenge = String(max);
-
-    const fixStaffelMaxOnBlur = (index: number) => {
-  setStaffeln((prev) => {
-    const copy = prev.map((r) => ({ ...r }));
-    const row = copy[index];
-
-    const min = toInt(row.minMenge);
-    let max = toInt(row.maxMenge);
-
-    if (row.maxMenge.trim() === '') return copy;
-    if (min === null) return copy;
-
+    // Bis muss > Ab
     if (max === null || max <= min) max = min + 1;
 
+    // Limit beachten (bei begrenzter Menge)
     const limit = getStaffelLimit();
     if (limit !== null && limit > 0 && max > limit) max = limit;
 
@@ -1283,38 +1272,30 @@ const fixStaffelMaxOnBlur = (index: number) => {
 
     const normalized = normalizeFromIndex(copy, index);
 
-    // ✅ NEU: Sofort-Hinweis, wenn begrenzte Menge und letzte Staffel noch nicht bis Limit geht
+    // Hinweis falls begrenzt und letzte Staffel nicht bis Limit geht
     if (limit !== null && limit > 0) {
       const aktive = normalized.filter((s) =>
-        [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? '').trim() !== '')
+        [s.minMenge, s.maxMenge, s.preis, s.versand].some((x) => (x ?? "").trim() !== "")
       );
 
       if (aktive.length > 0) {
-        const lastIndex = aktive.length - 1;
-        const lastMax = toInt(aktive[lastIndex].maxMenge);
-
-        // Nur warnen, wenn der User gerade in der letzten Zeile arbeitet
-        if (index === lastIndex && lastMax !== null && lastMax !== limit) {
+        const lastMax = toInt(aktive[aktive.length - 1].maxMenge);
+        if (lastMax !== null && lastMax !== limit) {
           setWarnungStaffeln(
-            `Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen. ` +
-            `Setze „Bis“ auf ${limit} oder füge eine weitere Staffel hinzu.`
+            `Letzte Staffel muss bei „Begrenzte Menge“ exakt bis ${limit} gehen.`
           );
         } else {
-          setWarnungStaffeln('');
+          setWarnungStaffeln("");
         }
       }
     } else {
-      setWarnungStaffeln('');
+      setWarnungStaffeln("");
     }
 
     return normalized;
   });
 };
 
-
-    return normalizeFromIndex(copy, index);
-  });
-};
 const updateStaffelRange = (
   index: number,
   field: 'minMenge' | 'maxMenge',
@@ -1382,13 +1363,44 @@ const removeStaffel = (index: number) => {
     const start = Math.max(0, index - 1);
     return normalizeFromIndex(copy.map((r) => ({ ...r })), start);
   });
-};
-const cleanMoney = (v: string) => {
-  // erlaubt: 12, 12.3, 12.34, 12,34  (max 2 Nachkommastellen)
-  const raw = v.replace(',', '.');
+};const cleanMoney = (v: string) => {
+  // erlaubt: 0-99999.99 (max 5 Stellen + max 2 Nachkommastellen)
+  let raw = (v ?? '').replace(',', '.').trim();
+
   if (raw === '') return '';
-  if (!/^\d{0,6}(\.\d{0,2})?$/.test(raw)) return v; // lässt "falsche" Eingaben erstmal stehen
-  return raw;
+
+  // nur Ziffern + max 1 Punkt
+  raw = raw.replace(/[^0-9.]/g, '');
+  const firstDot = raw.indexOf('.');
+  if (firstDot !== -1) {
+    raw =
+      raw.slice(0, firstDot + 1) +
+      raw.slice(firstDot + 1).replace(/\./g, '');
+  }
+
+  // max 5 Stellen vor dem Punkt
+  const [intPartRaw, decPartRaw = ''] = raw.split('.');
+  const intPart = intPartRaw.replace(/^0+(?=\d)/, '').slice(0, 5) || '0';
+
+  // max 2 Nachkommastellen
+  const decPart = decPartRaw.slice(0, 2);
+
+  const normalized = decPart.length > 0 ? `${intPart}.${decPart}` : intPart;
+
+  // harte Obergrenze
+  const num = Number(normalized);
+  if (!Number.isNaN(num) && num > MONEY_HARD_MAX) {
+    return String(MONEY_HARD_MAX);
+  }
+
+  return normalized;
+};
+const formatMoneyOnBlur = (v: string) => {
+  const cleaned = cleanMoney(v);
+  if (cleaned === '') return '';
+  const n = Number(cleaned);
+  if (Number.isNaN(n)) return '';
+  return Math.min(n, MONEY_HARD_MAX).toFixed(2);
 };
 
 const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
@@ -1403,6 +1415,15 @@ const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
     return copy;
   });
 };
+
+const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
+  setStaffeln((prev) => {
+    const copy = prev.map((r) => ({ ...r }));
+    copy[index][field] = formatMoneyOnBlur(copy[index][field]);
+    return copy;
+  });
+};
+
 
   const progress = berechneFortschritt();
   const stripeReady = connectLoaded && connect?.ready === true;
@@ -2658,28 +2679,32 @@ onChange={(e) => {
         <div className={styles.staffelCell}>
           <span className={styles.staffelMobileLabel}>Preis</span>
           <input
-            type="number"
-            min={0}
-            step={0.01}
-            className={styles.staffelInput}
-            value={row.preis}
-            onChange={(e) => updateStaffel(index, { preis: e.target.value })}
-            placeholder="z. B. 3.50"
-          />
+  type="text"
+  inputMode="decimal"
+  className={styles.staffelInput}
+  value={row.preis}
+  onChange={(e) => updateStaffel(index, { preis: e.target.value })}
+  onBlur={() => blurStaffelMoney(index, 'preis')}
+  placeholder="z. B. 12,90"
+/>
+
+
         </div>
 
         {/* Versand */}
         <div className={styles.staffelCell}>
           <span className={styles.staffelMobileLabel}>Versand</span>
           <input
-            type="number"
-            min={0}
-            step={0.01}
-            className={styles.staffelInput}
-            value={row.versand}
-            onChange={(e) => updateStaffel(index, { versand: e.target.value })}
-            placeholder="z. B. 5.90"
-          />
+  type="text"
+  inputMode="decimal"
+  className={styles.staffelInput}
+  value={row.versand}
+  onChange={(e) => updateStaffel(index, { versand: e.target.value })}
+  onBlur={() => blurStaffelMoney(index, 'versand')}
+  placeholder="z. B. 0,00"
+/>
+
+
         </div>
 
         {/* Remove */}
