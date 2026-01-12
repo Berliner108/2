@@ -87,7 +87,10 @@ export function useArticleEditPrefill() {
     const cat = String(pick(article, ['kategorie', 'category'], '')).toLowerCase();
 
     const mengeStatus = String(pick(article, ['mengeStatus', 'stock_status', 'menge_status'], ''));
-    const aufLager = mengeStatus === 'auf_lager' || pick(article, ['aufLager'], false) === true;
+    const aufLager =
+  mengeStatus === 'auf_lager' ||
+  !!pick<boolean>(article, ['aufLager', 'auf_lager', 'mengeStatus'], false);
+
 
     const id = String(pick(article, ['id', 'articleId'], editId ?? ''));
 
