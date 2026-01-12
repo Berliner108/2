@@ -2569,37 +2569,36 @@ const submitDisabled = ladeStatus || !stripeReady;
     Begrenzte Menge
   </label>
 </div>
-
 {/* Eingabe nur wenn "Begrenzte Menge" */}
 {!aufLager && (
   <label className={styles.mengeNumberLabel}>
     <span>Menge (Stück):</span>
     <input
       type="number"
-      step={1}           // ❗ nur ganze Zahlen
+      step={1}
       min={1}
       max={999999}
       className={styles.mengeNumberInput}
       value={mengeStueck === 0 ? '' : mengeStueck}
-onChange={(e) => {
-  const value = e.target.value;
+      onChange={(e) => {
+        const value = e.target.value;
 
-  if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
-    const next = value === '' ? 0 : Number(value);
-    setMengeStueck(next);
+        if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
+          const next = value === '' ? 0 : Number(value);
+          setMengeStueck(next);
 
-    // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
-    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
-      setStueckProEinheit(next >= 1 ? String(next) : '');
-      setWarnungStueckProEinheit('');
-    }
-  }
-}}
-
+          // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
+          if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
+            setStueckProEinheit(next >= 1 ? String(next) : '');
+            setWarnungStueckProEinheit('');
+          }
+        }
+      }}
       placeholder="z. B. 10"
     />
   </label>
 )}
+
 
 {warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
 </fieldset>
