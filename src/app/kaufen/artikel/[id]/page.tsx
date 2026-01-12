@@ -569,17 +569,18 @@ const chosenTier = useMemo(() => {
 
 
               {/* ✅ FIX: Preis ab -> Preis, wenn keine Staffelpreise */}
-              <div className={styles.metaItem}>
-                <div className={styles.metaItem}>
-                  <span className={styles.label}>{hasStaffelpreise ? "Preis ab:" : "Preis:"}</span>
-                  <span className={styles.value}>
-                    {article.price_from != null ? Number(article.price_from).toFixed(2) : "—"} €
-                    {article.sale_type === "gesamt"
-                      ? ""
-                      : (article.price_unit ? ` / ${unitLabel(article.price_unit)}` : "")
-                    }
-                  </span>
-                </div>
+          <div className={styles.metaItem}>
+  <span className={styles.label}>{hasStaffelpreise ? "Preis ab:" : "Preis:"}</span>
+  <span className={styles.value}>
+    {article.price_from != null ? Number(article.price_from).toFixed(2) : "—"} €
+    {article.sale_type === "gesamt"
+      ? ""
+      : (article.price_unit ? ` / ${unitLabel(article.price_unit)}` : "")
+    }
+  </span>
+</div>
+
+
 
 
                 {/* Verfügbarkeit */}
