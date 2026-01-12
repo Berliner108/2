@@ -2583,8 +2583,16 @@ const submitDisabled = ladeStatus || !stripeReady;
       value={mengeStueck === 0 ? '' : mengeStueck}
 onChange={(e) => {
   const value = e.target.value;
+
   if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
-    setMengeStueck(value === '' ? 0 : Number(value));
+    const next = value === '' ? 0 : Number(value);
+    setMengeStueck(next);
+
+    // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
+    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
+      setStueckProEinheit(next >= 1 ? String(next) : '');
+      setWarnungStueckProEinheit('');
+    }
   }
 }}
 
