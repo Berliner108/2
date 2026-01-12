@@ -465,8 +465,14 @@ useEffect(() => {
         : "Verfügbar";
 
     const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
-    const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
-    const unitSuffix = art.price_unit ? ` / ${art.price_unit === "stueck" ? "Stück" : "kg"}` : "";
+const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
+
+// ✅ nur bei "Preis ab:" Einheit zeigen
+const unitSuffix =
+  art.price_is_from && art.price_unit
+    ? ` / ${art.price_unit === "stueck" ? "Stück" : "kg"}`
+    : "";
+
 
     return (
       <Link key={art.id} href={href} className={styles.articleBox2}>
