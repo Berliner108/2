@@ -1435,14 +1435,18 @@ const removeStaffel = (index: number) => {
     const start = Math.max(0, index - 1);
     return normalizeFromIndex(copy.map((r) => ({ ...r })), start);
   });
-};const cleanMoney = (v: string) => {
-  // erlaubt: 0-99999.99 (max 5 Stellen + max 2 Nachkommastellen)
+};
+const cleanMoney = (v: string) => {
   let raw = (v ?? '').replace(',', '.').trim();
-
   if (raw === '') return '';
 
-  // nur Ziffern + max 1 Punkt
+  // Merken, ob der User gerade mit Punkt endet (z.B. "12.")
+  const endsWithDot = raw.endsWith('.');
+
+  // nur Ziffern + Punkt
   raw = raw.replace(/[^0-9.]/g, '');
+
+  // nur den ersten Punkt erlauben
   const firstDot = raw.indexOf('.');
   if (firstDot !== -1) {
     raw =
@@ -1450,30 +1454,39 @@ const removeStaffel = (index: number) => {
       raw.slice(firstDot + 1).replace(/\./g, '');
   }
 
-  // max 5 Stellen vor dem Punkt
   const [intPartRaw, decPartRaw = ''] = raw.split('.');
-  const intPart = intPartRaw.replace(/^0+(?=\d)/, '').slice(0, 5) || '0';
+
+  // max 5 Stellen vor dem Punkt
+  const intPart = (intPartRaw.replace(/^0+(?=\d)/, '').slice(0, 5) || '0');
 
   // max 2 Nachkommastellen
   const decPart = decPartRaw.slice(0, 2);
 
-  const normalized = decPart.length > 0 ? `${intPart}.${decPart}` : intPart;
+  // ✅ Punkt behalten, wenn er gerade getippt wurde
+  let normalized = intPart;
+  if (firstDot !== -1) {
+    if (decPart.length > 0) normalized = `${intPart}.${decPart}`;
+    else if (endsWithDot) normalized = `${intPart}.`;
+  }
 
-  // harte Obergrenze
-  const num = Number(normalized);
-  if (!Number.isNaN(num) && num > MONEY_HARD_MAX) {
-    return String(MONEY_HARD_MAX);
+  // harte Obergrenze (nur wenn wirklich eine Zahl, nicht "12.")
+  if (!normalized.endsWith('.')) {
+    const num = Number(normalized);
+    if (!Number.isNaN(num) && num > MONEY_HARD_MAX) return String(MONEY_HARD_MAX);
   }
 
   return normalized;
 };
+
 const formatMoneyOnBlur = (v: string) => {
   const cleaned = cleanMoney(v);
-  if (cleaned === '') return '';
+  if (cleaned === '' || cleaned.endsWith('.')) return cleaned === '' ? '' : cleaned.replace('.', '');
   const n = Number(cleaned);
   if (Number.isNaN(n)) return '';
-  return Math.min(n, MONEY_HARD_MAX).toFixed(2);
+  return Math.min(n, MONEY_HARD_MAX).toFixed(2).replace('.', ',');
+
 };
+
 
 const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
   setStaffeln((prev) => {
@@ -2810,7 +2823,7 @@ onChange={(e) => {
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-    Werktage bis Lieferung <span style={{ color: 'red' }}>*</span>
+    Werktage bis zur Lieferung <span style={{ color: 'red' }}>*</span>
   </span>
       <input
   type="text"
