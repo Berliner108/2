@@ -2864,6 +2864,7 @@ onChange={(e) => {
 
 
 
+
 {/* Bewerbung – identisch wie im Grundgerüst */}
 <div
   className={styles.bewerbungPanel}
