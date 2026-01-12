@@ -88,8 +88,8 @@ export function useArticleEditPrefill() {
 
     const mengeStatus = String(pick(article, ['mengeStatus', 'stock_status', 'menge_status'], ''));
     const aufLager =
-  mengeStatus === 'auf_lager' ||
-  !!pick<boolean>(article, ['aufLager', 'auf_lager', 'mengeStatus'], false);
+    mengeStatus === 'auf_lager' ||
+    !!pick<boolean>(article, ['aufLager', 'auf_lager', 'mengeStatus'], false);
 
 
     const id = String(pick(article, ['id', 'articleId'], editId ?? ''));
@@ -126,7 +126,7 @@ export function useArticleEditPrefill() {
       ]),
       bewerbung: pick(article, ['bewerbung'], []) as string[],
 
-      // Arbeitsmittel extras (wenn du sie gespeichert hast)
+      // Arbeitsmittel extras (wenn du sie gespeichert hast)asdf
       stueckProEinheit: String(pick(article, ['stueckProEinheit'], '')),
       groesse: pick(article, ['groesse'], ''),
 
