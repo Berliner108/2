@@ -476,14 +476,15 @@ const KontoVerkaufenPage: FC = () => {
                               <Link href={articlePathBy(a.id)} className={`${styles.ctaBtn} ${styles.ctaPrimary}`}>
                                 Im Shop öffnen
                               </Link>
-
                               <button
                                 type="button"
                                 className={`${styles.ctaBtn} ${styles.ctaGhost}`}
-                                onClick={() => alert('Bearbeiten kommt nach Publish/Pause (als nächstes).')}
+                                onClick={() => router.push(`/verkaufen?edit=${encodeURIComponent(a.id)}`)}
                               >
                                 Artikel bearbeiten
                               </button>
+
+
 
                               <button
                                 type="button"

@@ -391,3 +391,204 @@ charge:          category === "pulverlack" ? charge : [],
     return NextResponse.json({ error: e?.message ?? "UNKNOWN_ERROR" }, { status: 500 });
   }
 }
+export async function PUT(req: Request) {
+  try {
+    const supabase = await createSupabaseRouteClient();
+
+    // Auth nötig
+    const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr) return NextResponse.json({ error: sessionErr.message }, { status: 401 });
+
+    const user = sessionRes?.session?.user;
+    if (!user) {
+      return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
+    }
+
+    const fd = await req.formData();
+    const id = toStr(fd.get("id")).trim();
+    if (!id) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+
+    // Ownership check
+    const ownerCheck = await supabase.from("articles").select("owner_id").eq("id", id).single();
+    if (ownerCheck.error) return NextResponse.json({ error: ownerCheck.error.message }, { status: 404 });
+    if ((ownerCheck.data as any)?.owner_id && (ownerCheck.data as any).owner_id !== user.id) {
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
+    // Lack-Felder
+    const category = toStr(fd.get("kategorie")).trim();
+    const sellTo = toStr(fd.get("verkaufAn")).trim();
+    const title = toStr(fd.get("titel")).trim();
+    const manufacturer = toStr(fd.get("hersteller")).trim();
+    const description = toStr(fd.get("beschreibung")).trim();
+
+    const color_palette = toStr(fd.get("farbpalette")).trim() || null;
+    const gloss_level   = toStr(fd.get("glanzgrad")).trim() || null;
+    const surface       = toStr(fd.get("oberflaeche")).trim() || null;
+    const application   = toStr(fd.get("anwendung")).trim() || null;
+    const color_tone    = toStr(fd.get("farbton")).trim() || null;
+    const color_code    = toStr(fd.get("farbcode")).trim() || null;
+    const quality       = toStr(fd.get("qualitaet")).trim() || null;
+
+    const effect          = jsonStringArray(fd, "effekt");
+    const special_effects = jsonStringArray(fd, "sondereffekte");
+    const certifications  = jsonStringArray(fd, "zertifizierungen");
+    const charge          = jsonStringArray(fd, "aufladung");
+
+    // Arbeitsmittel-Felder
+    const size = category === "arbeitsmittel" ? toStr(fd.get("groesse")).trim() : "";
+    const piecesPerUnit =
+      category === "arbeitsmittel" ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
+
+    const conditionRaw = toStr(fd.get("zustand")).trim();
+    const condition =
+      conditionRaw === "neu"
+        ? "Neu und ungeöffnet"
+        : conditionRaw === "geöffnet"
+        ? "Geöffnet und einwandfrei"
+        : conditionRaw || null;
+
+    const deliveryDays = toInt(toStr(fd.get("lieferWerktage")), 0);
+    const stockStatus = toStr(fd.get("mengeStatus")).trim();
+    const verkaufsArt = toStr(fd.get("verkaufsArt")).trim();
+
+    // URLs vom Client
+    const imageUrlsFromClient =
+      parseUrlList(fd, ["imageUrls", "image_urls", "image_urls_json"]) ?? [];
+    const fileUrlsFromClient =
+      parseUrlList(fd, ["fileUrls", "file_urls", "file_urls_json"]) ?? [];
+
+    // Fallback: falls doch Dateien kommen
+    const images = fd.getAll("bilder").filter((x) => x instanceof File) as File[];
+    const files = fd.getAll("dateien").filter((x) => x instanceof File) as File[];
+
+    if (!category || !sellTo || !title || !manufacturer) {
+      return NextResponse.json({ error: "MISSING_REQUIRED_FIELDS" }, { status: 400 });
+    }
+    if (!deliveryDays || deliveryDays < 1) {
+      return NextResponse.json({ error: "INVALID_DELIVERY_DAYS" }, { status: 400 });
+    }
+    if (!verkaufsArt) {
+      return NextResponse.json({ error: "MISSING_VERKAUFSART" }, { status: 400 });
+    }
+
+    // Mengen
+    const qtyKg =
+      stockStatus === "begrenzt" && category !== "arbeitsmittel"
+        ? toNum(toStr(fd.get("mengeKg")), 0)
+        : null;
+
+    const qtyPiece =
+      stockStatus === "begrenzt" && category === "arbeitsmittel"
+        ? toInt(toStr(fd.get("mengeStueck")), 0)
+        : null;
+
+    // URLs bestimmen (Client bevorzugt, sonst fallback upload)
+    let imageUrls: string[] = imageUrlsFromClient;
+    let fileUrls: string[] = fileUrlsFromClient;
+
+    if (!imageUrls.length && images.length) {
+      imageUrls = await uploadPublicFiles({
+        supabase,
+        bucket: "articles",
+        basePath: `articles/${id}/images`,
+        files: images,
+      });
+    }
+    if (!fileUrls.length && files.length) {
+      try {
+        fileUrls = await uploadPublicFiles({
+          supabase,
+          bucket: "articles",
+          basePath: `articles/${id}/files`,
+          files,
+        });
+      } catch {
+        fileUrls = [];
+      }
+    }
+
+    // Bildpflicht beim Update: entweder vorhandene URLs oder neue
+    if (!imageUrls.length) {
+      return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
+    }
+
+    const updatePayload: any = {
+      title,
+      description,
+      category,
+      sell_to: sellTo,
+      manufacturer,
+      condition,
+      sale_type: verkaufsArt,
+
+      color_palette: category === "arbeitsmittel" ? null : color_palette,
+      gloss_level:   category === "arbeitsmittel" ? null : gloss_level,
+      surface:       category === "arbeitsmittel" ? null : surface,
+      application:   category === "arbeitsmittel" ? null : application,
+      color_tone:    category === "arbeitsmittel" ? null : color_tone,
+      color_code:    category === "arbeitsmittel" ? null : color_code,
+      quality:       category === "arbeitsmittel" ? null : quality,
+
+      effect:          category === "arbeitsmittel" ? [] : effect,
+      special_effects: category === "arbeitsmittel" ? [] : special_effects,
+      certifications:  category === "arbeitsmittel" ? [] : certifications,
+      charge:          category === "pulverlack" ? charge : [],
+
+      delivery_days: deliveryDays,
+      stock_status: stockStatus || (qtyKg || qtyPiece ? "begrenzt" : "auf_lager"),
+      qty_kg: qtyKg,
+      qty_piece: qtyPiece,
+
+      image_urls: imageUrls,
+      file_urls: fileUrls,
+
+      size: category === "arbeitsmittel" ? (size || null) : null,
+      pieces_per_unit: category === "arbeitsmittel" ? (piecesPerUnit || null) : null,
+
+      updated_at: new Date().toISOString(),
+    };
+
+    const upd = await supabase.from("articles").update(updatePayload).eq("id", id);
+    if (upd.error) return NextResponse.json({ error: upd.error.message }, { status: 500 });
+
+    // Preisstaffeln ersetzen
+    await supabase.from("article_price_tiers").delete().eq("article_id", id);
+
+    const unit: "kg" | "stueck" =
+      verkaufsArt === "pro_stueck" || category === "arbeitsmittel" ? "stueck" : "kg";
+
+    if (verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck") {
+      const staffelnRaw = toStr(fd.get("preisStaffeln"));
+      const staffeln = safeJson<StaffelRow[]>(staffelnRaw, []);
+
+      const tiers = staffeln
+        .map((s) => {
+          const minQty = s.minMenge?.trim() ? Math.max(1, toInt(s.minMenge.trim(), 1)) : 1;
+          let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
+          if (maxQty !== null && maxQty < minQty) maxQty = minQty;
+
+          const price = toNum(s.preis?.trim() ?? "", 0);
+          const shipping = toNum(s.versand?.trim() ?? "", 0);
+          if (!price || price <= 0) return null;
+
+          return { article_id: id, unit, min_qty: minQty, max_qty: maxQty, price, shipping };
+        })
+        .filter(Boolean);
+
+      if (!tiers.length) return NextResponse.json({ error: "NO_VALID_TIERS" }, { status: 400 });
+      await insertPriceTiersWithFallback({ supabase, tiers });
+    } else {
+      const price = toNum(toStr(fd.get("preis")), 0);
+      const shipping = toNum(toStr(fd.get("versandKosten")), 0);
+      if (!price || price <= 0) return NextResponse.json({ error: "INVALID_PRICE" }, { status: 400 });
+
+      const tiers = [{ article_id: id, unit, min_qty: 1, max_qty: null, price, shipping }];
+      await insertPriceTiersWithFallback({ supabase, tiers });
+    }
+
+    return NextResponse.json({ ok: true, id }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? "UNKNOWN_ERROR" }, { status: 500 });
+  }
+}

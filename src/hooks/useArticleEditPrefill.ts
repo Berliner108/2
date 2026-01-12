@@ -21,7 +21,6 @@ function mapConditionToState(cond: string) {
 }
 
 export type EditArticle = {
-  // wir lassen es bewusst flexibel, weil dein API-Shape evtl. noch angepasst wird
   [key: string]: any;
 };
 
@@ -36,12 +35,12 @@ export function useArticleEditPrefill() {
   const [error, setError] = useState<string | null>(null);
 
   const existingImageUrls = useMemo<string[]>(
-    () => pick(article, ['image_urls', 'imageUrls'], [] as string[]),
+    () => pick(article, ['imageUrls', 'image_urls', 'image_urls'], [] as string[]),
     [article]
   );
 
   const existingFileUrls = useMemo<string[]>(
-    () => pick(article, ['file_urls', 'fileUrls'], [] as string[]),
+    () => pick(article, ['fileUrls', 'file_urls', 'file_urls'], [] as string[]),
     [article]
   );
 
@@ -52,7 +51,7 @@ export function useArticleEditPrefill() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/konto/articles/${editId}`, {
+      const res = await fetch(`/api/verkaufen/prefill?id=${encodeURIComponent(editId)}`, {
         cache: 'no-store',
         credentials: 'include',
       });
@@ -60,8 +59,8 @@ export function useArticleEditPrefill() {
       const json = (await res.json().catch(() => ({}))) as AnyObj;
       if (!res.ok) throw new Error(json?.error || 'LOAD_FAILED');
 
-      // API kann { article: {...} } oder direkt das Objekt liefern
-      const a = (json?.article ?? json) as EditArticle;
+      // ✅ unsere Prefill-Route liefert: { article: {...} }
+      const a = (json?.article ?? null) as EditArticle | null;
       setArticle(a);
     } catch (e: any) {
       setError(e?.message || 'Konnte Artikel nicht laden');
@@ -81,46 +80,72 @@ export function useArticleEditPrefill() {
     reload();
   }, [editId, reload]);
 
-  // Helper, damit du im Formular *nur 1 Zeile* brauchst
   const getPrefill = useCallback(() => {
     if (!article) return null;
 
-    const cat = String(pick(article, ['category', 'kategorie'], '')).toLowerCase();
-    const stock = String(pick(article, ['stock_status', 'mengeStatus'], ''));
+    // Prefill kommt schon “normalisiert”, aber wir bleiben robust:
+    const cat = String(pick(article, ['kategorie', 'category'], '')).toLowerCase();
+
+    const mengeStatus = String(pick(article, ['mengeStatus', 'stock_status', 'menge_status'], ''));
+    const aufLager = mengeStatus === 'auf_lager' || pick(article, ['aufLager'], false) === true;
+
+    const id = String(pick(article, ['id', 'articleId'], editId ?? ''));
 
     return {
+      // ✅ WICHTIG für Edit
+      id,
+      articleId: id,
+
       kategorie:
-        cat === 'nasslack' || cat === 'pulverlack' || cat === 'arbeitsmittel' ? (cat as any) : null,
+        cat === 'nasslack' || cat === 'pulverlack' || cat === 'arbeitsmittel'
+          ? (cat as any)
+          : null,
 
-      titel: pick(article, ['title', 'titel'], ''),
-      beschreibung: pick(article, ['description', 'beschreibung'], ''),
+      titel: pick(article, ['titel', 'title'], ''),
+      beschreibung: pick(article, ['beschreibung', 'description'], ''),
 
-      verkaufAn: pick(article, ['sell_to', 'verkaufAn'], ''),
+      verkaufAn: pick(article, ['verkaufAn', 'sell_to', 'verkauf_an'], ''),
+      hersteller: pick(article, ['hersteller', 'manufacturer'], ''),
+      zustand: mapConditionToState(String(pick(article, ['zustand', 'condition'], ''))),
 
-      hersteller: pick(article, ['manufacturer', 'hersteller'], ''),
-      zustand: mapConditionToState(String(pick(article, ['condition', 'zustand'], ''))),
+      aufLager,
+      mengeKg: Number(pick(article, ['mengeKg', 'qty_kg'], 0)) || 0,
+      mengeStueck: Number(pick(article, ['mengeStueck', 'qty_piece'], 0)) || 0,
 
-      aufLager: stock === 'auf_lager',
-      mengeKg: Number(pick(article, ['qty_kg', 'mengeKg'], 0)) || 0,
-      mengeStueck: Number(pick(article, ['qty_piece', 'mengeStueck'], 0)) || 0,
+      lieferWerktage: String(pick(article, ['lieferWerktage', 'delivery_days'], '')),
 
-      lieferWerktage: pick(article, ['delivery_days', 'lieferWerktage'], ''),
+      // ✅ Verkaufslogik (falls du sie prefillen willst)
+      verkaufsArt: pick(article, ['verkaufsArt', 'sale_type', 'verkaufs_art'], ''),
+      preis: pick(article, ['preis', 'price'], null),
+      versandKosten: pick(article, ['versandKosten', 'shipping', 'versand_kosten'], null),
+      staffeln: pick(article, ['staffeln'], [
+        { minMenge: '1', maxMenge: '', preis: '', versand: '' },
+      ]),
+      bewerbung: pick(article, ['bewerbung'], []) as string[],
+
+      // Arbeitsmittel extras (wenn du sie gespeichert hast)
+      stueckProEinheit: String(pick(article, ['stueckProEinheit'], '')),
+      groesse: pick(article, ['groesse'], ''),
 
       // Lack-Felder
-      farbpalette: pick(article, ['color_palette', 'farbpalette'], ''),
-      glanzgrad: pick(article, ['gloss_level', 'glanzgrad'], ''),
-      oberflaeche: pick(article, ['surface', 'oberflaeche'], ''),
-      anwendung: pick(article, ['application', 'anwendung'], ''),
-      farbton: pick(article, ['color_tone', 'farbton'], ''),
-      farbcode: pick(article, ['color_code', 'farbcode'], ''),
-      qualitaet: pick(article, ['quality', 'qualitaet'], ''),
+      farbpalette: pick(article, ['farbpalette', 'color_palette'], ''),
+      glanzgrad: pick(article, ['glanzgrad', 'gloss_level'], ''),
+      oberflaeche: pick(article, ['oberflaeche', 'surface'], ''),
+      anwendung: pick(article, ['anwendung', 'application'], ''),
+      farbton: pick(article, ['farbton', 'color_tone'], ''),
+      farbcode: pick(article, ['farbcode', 'color_code'], ''),
+      qualitaet: pick(article, ['qualitaet', 'quality'], ''),
 
-      effekt: pick(article, ['effect', 'effekt'], []) as string[],
-      sondereffekte: pick(article, ['special_effects', 'sondereffekte'], []) as string[],
-      zertifizierungen: pick(article, ['certifications', 'zertifizierungen'], []) as string[],
-      aufladung: pick(article, ['charge', 'aufladung'], []) as string[],
+      effekt: pick(article, ['effekt', 'effect'], []) as string[],
+      sondereffekte: pick(article, ['sondereffekte', 'special_effects'], []) as string[],
+      zertifizierungen: pick(article, ['zertifizierungen', 'certifications'], []) as string[],
+      aufladung: pick(article, ['aufladung', 'charge'], []) as string[],
+
+      // URLs extra (falls du lieber über getPrefill gehst)
+      imageUrls: pick(article, ['imageUrls', 'image_urls'], []) as string[],
+      fileUrls: pick(article, ['fileUrls', 'file_urls'], []) as string[],
     };
-  }, [article]);
+  }, [article, editId]);
 
   return {
     editId,

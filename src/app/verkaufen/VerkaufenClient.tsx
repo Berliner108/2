@@ -12,11 +12,6 @@ import { Star, Search, Crown, Loader2 } from 'lucide-react';
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useArticleEditPrefill } from '@/hooks/useArticleEditPrefill';
 
-const { isEditMode, loading: prefillLoading, error: prefillError, getPrefill } =
-  useArticleEditPrefill();
-
-const didPrefillRef = useRef(false);
-
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
     'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
@@ -150,7 +145,11 @@ function ArtikelEinstellen() {
   const router = useRouter()
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
-  const searchParams = useSearchParams(); // <-- HIER
+  const searchParams = useSearchParams(); // <-- HIER  
+  const { isEditMode, loading: prefillLoading, error: prefillError, getPrefill } =
+  useArticleEditPrefill();
+
+const didPrefillRef = useRef(false);
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
@@ -542,6 +541,23 @@ useEffect(() => {
 
   didPrefillRef.current = true;
 
+  const pAny = p as any;
+
+  setEditArticleId(p.id ?? p.articleId ?? null);
+
+  setExistingImageUrls(
+    Array.isArray(pAny.imageUrls) ? pAny.imageUrls :
+    Array.isArray(pAny.image_urls) ? pAny.image_urls : []
+  );
+
+  setExistingFileUrls(
+    Array.isArray(pAny.fileUrls) ? pAny.fileUrls :
+    Array.isArray(pAny.file_urls) ? pAny.file_urls : []
+  );
+
+
+
+
   // ✅ Kategorie wird gesetzt (und später gesperrt)
   setKategorie(p.kategorie);
 
@@ -594,8 +610,10 @@ useEffect(() => {
     window.removeEventListener('pageshow', onFocus);
   };
 }, [fetchConnect]);
+
 useEffect(() => {
   if (!kategorie) return;
+  if (isEditMode) return; // ✅ WICHTIG: Prefill nicht überschreiben
 
   // Verkaufsart & Staffel-Logik hart zurücksetzen bei Kategorie-Wechsel
   setVerkaufsArt('');
@@ -645,6 +663,9 @@ useEffect(() => {
 
   const [bilder, setBilder] = useState<File[]>([]);
   const [dateien, setDateien] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+const [existingFileUrls, setExistingFileUrls] = useState<string[]>([]);
+const [editArticleId, setEditArticleId] = useState<string | null>(null);
   const [bildPreviews, setBildPreviews] = useState<string[]>([]);
   const [warnung, setWarnung] = useState('');
   const [farbton, setFarbton] = useState('');
@@ -753,12 +774,15 @@ if (!agbAccepted) {
 
 
 
-  if (bilder.length === 0) {
-    setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
-    fehler = true;
-  } else {
-    setWarnungBilder('');
-  }
+const hasAnyImages = bilder.length > 0 || existingImageUrls.length > 0;
+
+if (!hasAnyImages) {
+  setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
+  fehler = true;
+} else {
+  setWarnungBilder('');
+}
+
   
    if (!titel.trim()) {
   setWarnungTitel('Bitte gib einen Titel an.');
@@ -1126,21 +1150,46 @@ formData.append('versandKosten', moneyToNumber(versandKosten).toString());
 
 formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
 
-const folder = `uploads/${crypto.randomUUID()}`;
+// ✅ Bestehende URLs behalten + neue optional hochladen
+let mergedImageUrls = [...existingImageUrls];
+let mergedFileUrls  = [...existingFileUrls];
 
-const imageUrls = await uploadPublicFilesBrowser("articles", `${folder}/images`, bilder);
-const fileUrls  = await uploadPublicFilesBrowser("articles", `${folder}/files`, dateien);
+if (bilder.length > 0 || dateien.length > 0) {
+  const folder = `uploads/${crypto.randomUUID()}`;
 
-// Statt Dateien -> URLs schicken:
-formData.append("imageUrls", JSON.stringify(imageUrls));
-formData.append("fileUrls", JSON.stringify(fileUrls));
+  if (bilder.length > 0) {
+    const newImageUrls = await uploadPublicFilesBrowser("articles", `${folder}/images`, bilder);
+    mergedImageUrls = [...mergedImageUrls, ...newImageUrls];
+  }
+
+  if (dateien.length > 0) {
+    const newFileUrls = await uploadPublicFilesBrowser("articles", `${folder}/files`, dateien);
+    mergedFileUrls = [...mergedFileUrls, ...newFileUrls];
+  }
+}
+
+// ✅ URLs schicken (bestehend + neu)
+formData.append("imageUrls", JSON.stringify(mergedImageUrls));
+formData.append("fileUrls", JSON.stringify(mergedFileUrls));
+
 
 try {
-  const res = await fetch('/api/verkaufen', {
-    method: 'POST',
-    body: formData,
-    credentials: 'include',
-  });
+// ✅ Edit braucht ID
+if (isEditMode) {
+  if (!editArticleId) {
+    alert('Fehler: Keine Artikel-ID im Edit-Modus.');
+    setLadeStatus(false);
+    return;
+  }
+  formData.append('id', editArticleId);
+}
+
+const res = await fetch('/api/verkaufen', {
+  method: isEditMode ? 'PUT' : 'POST',
+  body: formData,
+  credentials: 'include',
+});
+
 
   // ✅ Immer JSON lesen, damit du im Erfolg die articleId bekommst
   const data = await res.json().catch(() => ({} as any));
