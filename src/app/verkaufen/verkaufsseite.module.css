@@ -1221,6 +1221,11 @@
   opacity:.55;
   cursor:not-allowed;
 }
+.disabledIcon {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 .preisVersandContainer {
   display: grid;

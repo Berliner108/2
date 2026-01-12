@@ -10,6 +10,12 @@ import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { useArticleEditPrefill } from '@/hooks/useArticleEditPrefill';
+
+const { isEditMode, loading: prefillLoading, error: prefillError, getPrefill } =
+  useArticleEditPrefill();
+
+const didPrefillRef = useRef(false);
 
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
@@ -527,6 +533,51 @@ useEffect(() => {
   });
 }, [aufLager, menge, mengeStueck, verkaufsArt]);
 
+useEffect(() => {
+  if (!isEditMode) return;
+  if (didPrefillRef.current) return;
+
+  const p = getPrefill();
+  if (!p) return;
+
+  didPrefillRef.current = true;
+
+  // ✅ Kategorie wird gesetzt (und später gesperrt)
+  setKategorie(p.kategorie);
+
+  // ✅ gemeinsame Felder
+  setTitel(p.titel ?? '');
+  setBeschreibung(p.beschreibung ?? '');
+  setVerkaufAn(p.verkaufAn ?? '');
+  setHersteller(p.hersteller ?? '');
+  setZustand(p.zustand ?? 'neu');
+
+  setAufLager(!!p.aufLager);
+  setLieferWerktage(String(p.lieferWerktage ?? ''));
+
+  // ✅ Mengen je Kategorie
+  if (p.kategorie === 'arbeitsmittel') {
+    setMengeStueck(Number(p.mengeStueck ?? 0));
+  } else {
+    setMenge(Number(p.mengeKg ?? 0));
+  }
+
+  // ✅ Lack-Felder
+  if (p.kategorie === 'nasslack' || p.kategorie === 'pulverlack') {
+    setFarbpaletteWert(p.farbpalette ?? '');
+    setGlanzgrad(p.glanzgrad ?? '');
+    setOberflaeche(p.oberflaeche ?? '');
+    setAnwendung(p.anwendung ?? '');
+    setFarbton(p.farbton ?? '');
+    setFarbcode(p.farbcode ?? '');
+    setQualitaet(p.qualitaet ?? '');
+
+    setEffekt(Array.isArray(p.effekt) ? p.effekt : []);
+    setSondereffekte(Array.isArray(p.sondereffekte) ? p.sondereffekte : []);
+    setZertifizierungen(Array.isArray(p.zertifizierungen) ? p.zertifizierungen : []);
+    setAufladung(Array.isArray(p.aufladung) ? p.aufladung : []);
+  }
+}, [isEditMode, getPrefill]);
 
 useEffect(() => {
   fetchConnect();
@@ -584,12 +635,14 @@ const goToStripeOnboarding = useCallback(async () => {
 }, []);
 
 
-  useEffect(() => {
+useEffect(() => {
+  if (isEditMode) return; // ✅ Edit schlägt alles
   const vorausgewaehlt = searchParams.get('kategorie');
   if (vorausgewaehlt === 'nasslack' || vorausgewaehlt === 'pulverlack' || vorausgewaehlt === 'arbeitsmittel') {
     setKategorie(vorausgewaehlt);
   }
-}, [searchParams]);
+}, [searchParams, isEditMode]);
+
   const [bilder, setBilder] = useState<File[]>([]);
   const [dateien, setDateien] = useState<File[]>([]);
   const [bildPreviews, setBildPreviews] = useState<string[]>([]);
@@ -1630,32 +1683,41 @@ const submitDisabled = ladeStatus || !stripeReady;
             <div className={`${styles.iconRow} ${!kategorie && warnungKategorie ? styles.kategorieFehler : ''}`}>
 
                 <div
-                className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''}`}
-                     onClick={() => {
+                className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''} ${isEditMode ? styles.disabledIcon : ''}`}
+
+                  onClick={() => {
+                  if (isEditMode) return;
                   resetFieldsExceptCategory();
                   setKategorie('nasslack');
                 }}
+
                 >
               <FaSprayCan size={32} />
               <span>Nasslack</span>
             </div>
                 <div
-                    className={`${styles.iconBox} ${kategorie === 'pulverlack' ? styles.activeIcon : ''}`}
+                    className={`${styles.iconBox} ${kategorie === 'pulverlack' ? styles.activeIcon : ''} ${isEditMode ? styles.disabledIcon : ''}`}
+
                          onClick={() => {
-                      resetFieldsExceptCategory();
-                      setKategorie('pulverlack');
-                    }}
+                          if (isEditMode) return;
+                          resetFieldsExceptCategory();
+                          setKategorie('pulverlack');
+                        }}
+
                     >
                     <FaCloud size={32} />
 
                     <span>Pulverlack</span>
                   </div>
                   <div
-                  className={`${styles.iconBox} ${kategorie === 'arbeitsmittel' ? styles.activeIcon : ''}`}
+                  className={`${styles.iconBox} ${kategorie === 'arbeitsmittel' ? styles.activeIcon : ''} ${isEditMode ? styles.disabledIcon : ''}`}
+
                   onClick={() => {
+                    if (isEditMode) return;
                     resetFieldsExceptCategory();
                     setKategorie('arbeitsmittel');
                   }}
+
                 >
                   <FaTools size={32} />
                   <span>Arbeitsmittel</span>
