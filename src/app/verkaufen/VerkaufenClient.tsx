@@ -291,18 +291,17 @@ if (parseInt(lieferWerktage) >= 1) filled++;
 // Verkaufsart + Preislogik abhängig von Verkaufsart
 total++;
 if (verkaufsArt) filled++;
-
 if (verkaufsArt === 'gesamt') {
   total++; // Preis
-  if (parseFloat(preis) > 0) filled++;
+  if (moneyToNumber(preis) > 0) filled++;
 
   total++; // Versand
-  if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
+  if (versandKosten !== '' && moneyToNumber(versandKosten) >= 0) filled++;
 } else if (verkaufsArt === 'pro_stueck') {
   total++; // Staffeln
   if (staffelnSindGueltig(staffeln)) filled++;
-
 }
+
 
   } else {
     // Lack-Pflichtfelder
@@ -357,15 +356,15 @@ if (verkaufsArt) filled++;
 
 if (verkaufsArt === 'gesamt') {
   total++; // Preis
-  if (parseFloat(preis) > 0) filled++;
+  if (moneyToNumber(preis) > 0) filled++;
 
   total++; // Versand
-  if (versandKosten !== '' && parseFloat(versandKosten) >= 0) filled++;
-} else if (verkaufsArt === 'pro_kg') {
+  if (versandKosten !== '' && moneyToNumber(versandKosten) >= 0) filled++;
+} else if (verkaufsArt === 'pro_stueck') {
   total++; // Staffeln
   if (staffelnSindGueltig(staffeln)) filled++;
-
 }
+
 
 
 
@@ -859,19 +858,20 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 
 else if (verkaufsArt === 'gesamt') {
   // klassische Einzelpreis-Variante NUR bei "gesamt"
-  if (parseFloat(preis) <= 0 || isNaN(parseFloat(preis))) {
-    setWarnungPreis('Bitte gib einen gültigen Preis ein.');
-    fehler = true;
-  } else {
-    setWarnungPreis('');
-  }
+  if (moneyToNumber(preis) <= 0) {
+  setWarnungPreis('Bitte gib einen gültigen Preis ein.');
+  fehler = true;
+} else {
+  setWarnungPreis('');
+}
 
-  if (versandKosten === '' || parseFloat(versandKosten) < 0) {
-    setWarnungVersand('Bitte gib gültige Versandkosten ein.');
-    fehler = true;
-  } else {
-    setWarnungVersand('');
-  }
+if (versandKosten === '' || moneyToNumber(versandKosten) < 0) {
+  setWarnungVersand('Bitte gib gültige Versandkosten ein.');
+  fehler = true;
+} else {
+  setWarnungVersand('');
+}
+
 
   // bei gesamt: Staffelwarnung leeren
   setWarnungStaffeln('');
@@ -1045,8 +1045,9 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
 formData.append('preisStaffeln', JSON.stringify(aktiveStaffeln));
 
 } else {
-  formData.append('preis', (parseFloat(preis) || 0).toString());
-  formData.append('versandKosten', (parseFloat(versandKosten) || 0).toString());
+  formData.append('preis', moneyToNumber(preis).toString());
+formData.append('versandKosten', moneyToNumber(versandKosten).toString());
+
 }
 
 formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
@@ -1485,6 +1486,10 @@ const formatMoneyOnBlur = (v: string) => {
   if (Number.isNaN(n)) return '';
   return Math.min(n, MONEY_HARD_MAX).toFixed(2).replace('.', ',');
 
+};
+const moneyToNumber = (v: string) => {
+  const n = Number((v ?? '').replace(',', '.'));
+  return Number.isFinite(n) ? n : 0;
 };
 
 
@@ -3059,8 +3064,9 @@ onChange={(e) => {
 {/* Preisblock nach Verkaufsart */}
 {verkaufsArt === 'gesamt' ? (
   <>
-    <p><strong>Gesamtpreis:</strong> {preis ? `${parseFloat(preis).toFixed(2)} €` : '–'}</p>
-    <p><strong>Versandkosten:</strong> {versandKosten !== '' ? `${parseFloat(versandKosten).toFixed(2)} €` : '–'}</p>
+    <p><strong>Gesamtpreis:</strong> {preis ? `${moneyToNumber(preis).toFixed(2).replace('.', ',')} €` : '–'}</p>
+<p><strong>Versandkosten:</strong> {versandKosten !== '' ? `${moneyToNumber(versandKosten).toFixed(2).replace('.', ',')} €` : '–'}</p>
+
   </>
 ) : (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
   <>
