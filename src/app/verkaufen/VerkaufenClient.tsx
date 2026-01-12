@@ -23,6 +23,8 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
   'Sherwin‑Williams', 'Brillux','PPG Industries',  'Akzo Nobel',  'Nippon Paint',  'RPM International',  'Axalta',  'BASF',  'Kansai',  'Asian Paints',  'Jotun',  'Hempel',  'Adler Lacke',
   'Berger',  'Nerolac',  'Benjamin Moore'
 ];
+
+
     const farbpalette = [
   { name: 'Nach Vorlage ', value: 'Nach Vorlage' },
   { name: 'RAL ', value: 'RAL' },
@@ -589,6 +591,16 @@ const goToStripeOnboarding = useCallback(async () => {
   const HERSTELLER_ANDERE_VALUE = '__ANDERE__';
   const [herstellerAndere, setHerstellerAndere] = useState('');
 
+const cleanTwoDigitInt = (v: string) => (v ?? '').replace(/\D/g, '').slice(0, 2);
+
+const clampWerktageOnBlur = (v: string) => {
+  const cleaned = cleanTwoDigitInt(v);
+  if (cleaned === '') return '';
+  const n = parseInt(cleaned, 10);
+  if (Number.isNaN(n)) return '';
+  // 1–99 erzwingen
+  return String(Math.min(Math.max(n, 1), 99));
+};
 
 const limit = getStaffelLimit();
 
@@ -866,20 +878,15 @@ else if (verkaufsArt === 'gesamt') {
 }
 
 
-// Werktage bleiben Pflicht
-if (
-  !lieferWerktage.trim() ||
-  isNaN(parseInt(lieferWerktage)) ||
-  parseInt(lieferWerktage) < 1
-) {
-  setWarnungWerktage('Bitte mach eine gültige Angabe.');
+// Werktage bleiben Pflicht (1–99, ganze Zahl)
+const wt = parseInt(lieferWerktage, 10);
+
+if (!lieferWerktage.trim() || Number.isNaN(wt) || wt < 1 || wt > 99) {
+  setWarnungWerktage('Bitte 1–99 Werktage angeben.');
   fehler = true;
 } else {
   setWarnungWerktage('');
 }
-
-
-
 
 if (!verkaufAn) {
   setWarnungVerkaufAn('Bitte wähle, an wen du verkaufst.');
@@ -2806,21 +2813,26 @@ onChange={(e) => {
     Werktage bis Lieferung <span style={{ color: 'red' }}>*</span>
   </span>
       <input
-        type="number"
-        className={`${styles.dateInput} ${
-          warnungWerktage ? styles.numberInputError : ''
-        }`}
-        min={1}
-        step={1}
-        max={999}
-        value={lieferWerktage}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value === '' || Number(value) <= 999) {
-            setLieferWerktage(value);
-          }
-        }}
-      />
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className={`${styles.dateInput} ${warnungWerktage ? styles.numberInputError : ''}`}
+  value={lieferWerktage}
+  onChange={(e) => {
+    // nur Ziffern, max 2 Stellen
+    const cleaned = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setLieferWerktage(cleaned);
+  }}
+  onBlur={() => {
+    // optional: führende 0 entfernen (z.B. "07" -> "7")
+    if (lieferWerktage) {
+      const normalized = String(parseInt(lieferWerktage, 10));
+      setLieferWerktage(normalized === "NaN" ? "" : normalized);
+    }
+  }}
+  placeholder="z. B. 3"
+/>
+
     </label>
     {warnungWerktage && <p className={styles.warnung}>{warnungWerktage}</p>}
   </div>
