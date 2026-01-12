@@ -491,6 +491,16 @@ useEffect(() => {
 }, [aufLager, verkaufsArt]);
 
 useEffect(() => {
+  if (kategorie !== 'arbeitsmittel') return;
+  if (aufLager) return;                 // "gesamt" ist bei dir eh disabled, aber sicher ist sicher
+  if (verkaufsArt !== 'gesamt') return;
+
+  // Stück pro Verkauf MUSS = Menge (Stück)
+  setStueckProEinheit(mengeStueck >= 1 ? String(mengeStueck) : '');
+}, [kategorie, aufLager, verkaufsArt, mengeStueck]);
+
+
+useEffect(() => {
   if (!(verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck")) return;
 
   setStaffeln((prev) => {
@@ -774,6 +784,17 @@ if (kategorie === 'arbeitsmittel') {
   } else {
     setWarnungMenge('');
   }
+  if (!aufLager && verkaufsArt === 'gesamt') {
+  if (String(mengeStueck) !== String(parseInt(stueckProEinheit || '0', 10))) {
+    setWarnungStueckProEinheit(
+      'Bei „Nur als Gesamtmenge“ muss „Stück pro Verkauf“ exakt der Menge (Stück) entsprechen.'
+    );
+    fehler = true;
+  } else {
+    setWarnungStueckProEinheit('');
+  }
+}
+
 if (!hersteller.trim()) {
   setWarnungHersteller('Bitte gib den Hersteller an.');
   fehler = true;
@@ -2583,19 +2604,24 @@ onChange={(e) => {
     Stück pro Verkauf: <span style={{ color: 'red' }}>*</span>
   </span>
   <input
-    type="number"
-    min={1}
-    max={9999}
-    step={1}
-    className={styles.input}
-    value={stueckProEinheit}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value === '' || (Number(value) >= 1 && Number(value) <= 999)) {
-        setStueckProEinheit(value);
-      }
-    }}
-  />
+  type="number"
+  min={1}
+  max={9999}
+  step={1}
+  className={styles.input}
+  value={stueckProEinheit}
+  disabled={kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt'}
+  onChange={(e) => {
+    // wenn gesamt aktiv -> nicht editierbar
+    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') return;
+
+    const value = e.target.value;
+    if (value === '' || (Number(value) >= 1 && Number(value) <= 999)) {
+      setStueckProEinheit(value);
+    }
+  }}
+/>
+
 </label>
 
       {warnungStueckProEinheit && <p className={styles.validierungsfehler}>{warnungStueckProEinheit}</p>}
