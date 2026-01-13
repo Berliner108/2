@@ -74,6 +74,31 @@ const Pagination: FC<{
     </div>
   )
 }
+type ShopOrderStatus =
+  | "payment_pending"
+  | "paid"
+  | "shipped"
+  | "released"
+  | "complaint_open"
+  | "refunded";
+
+type ApiShopOrder = {
+  id: string;
+  created_at: string;
+  status: ShopOrderStatus;
+  unit: "kg" | "stueck";
+  qty: number;
+  total_gross_cents: number;
+
+  article_id: string;
+
+  seller_id: string;
+  seller_username: string | null;
+  seller_account_type: string | null;
+  seller_company_name: string | null;
+  seller_vat_number: string | null;
+  seller_address: any | null;
+};
 
 /* ================= Types ================= */
 type OrderStatus = 'bezahlt' | 'versandt' | 'geliefert' | 'reklamiert' | 'abgeschlossen'
@@ -97,6 +122,17 @@ type MyOrder = {
 /* ================= Routes ================= */
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
 
+function mapStatus(s: ShopOrderStatus): OrderStatus {
+  // UI-Labels die du aktuell hast
+  if (s === "paid") return "bezahlt";
+  if (s === "shipped") return "versandt";
+  if (s === "released") return "abgeschlossen";
+  if (s === "complaint_open") return "reklamiert";
+  if (s === "refunded") return "abgeschlossen";
+  // payment_pending: Käufer sieht das später eher nicht, aber falls doch:
+  return "bezahlt";
+}
+
 /* ================= Status Badges ================= */
 function badgeFor(status: OrderStatus) {
   if (status === 'bezahlt' || status === 'versandt') return { cls: styles.statusPending, label: status === 'bezahlt' ? 'Bezahlt' : 'Versandt' }
@@ -113,67 +149,49 @@ const BestellungenPage: FC = () => {
   const [orders, setOrders] = useState<MyOrder[]>([])
 
   useEffect(() => {
-    const now = Date.now()
-    const day = 24 * 60 * 60 * 1000
-    setOrders([
-      {
-        id: 'B-4001',
-        articleId: 'a-1002',
-        articleTitle: 'RAL 7016 Anthrazit Struktur',
-        sellerName: 'anbieter_01',
-        sellerRating: 4.8,
-        sellerRatingCount: 41,
-        amountCents: 10900,
-        dateIso: new Date(now - 2 * day).toISOString(),
-        status: 'geliefert',
-        paymentReleased: false,
-        complaintOpen: false,
+  let cancelled = false;
+
+  (async () => {
+    try {
+      const res = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
+      const json = await res.json();
+
+      if (!res.ok) {
+        console.error("shop-bestellungen error:", json);
+        if (!cancelled) setOrders([]);
+        return;
+      }
+
+      const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
+
+      const mapped: MyOrder[] = apiOrders.map((o) => ({
+        id: o.id,
+        articleId: o.article_id,
+        // Titel haben wir in shop_orders noch nicht drin -> erstmal Platzhalter
+        articleTitle: `Artikel ${o.article_id.slice(0, 8)}`,
+        sellerName: o.seller_username ?? "Verkäufer",
+        amountCents: o.total_gross_cents,
+        dateIso: o.created_at,
+        status: mapStatus(o.status),
+
+        // Flags für deine bestehenden Buttons
+        paymentReleased: o.status === "released",
+        complaintOpen: o.status === "complaint_open",
         rated: false,
-      },
-      {
-        id: 'B-4002',
-        articleId: 'a-1006',
-        articleTitle: 'Sondereffekt Metallic Silber',
-        sellerName: 'b2b_seller',
-        sellerRating: 4.6,
-        sellerRatingCount: 12,
-        amountCents: 13900,
-        dateIso: new Date(now - 7 * day).toISOString(),
-        status: 'versandt',
-        paymentReleased: false,
-        complaintOpen: false,
-        rated: false,
-      },
-      {
-        id: 'B-4003',
-        articleId: 'a-1001',
-        articleTitle: 'Vaillant Weiss glatt matt',
-        sellerName: 'farbe_profi',
-        sellerRating: 4.9,
-        sellerRatingCount: 88,
-        amountCents: 8900,
-        dateIso: new Date(now - 14 * day).toISOString(),
-        status: 'reklamiert',
-        paymentReleased: false,
-        complaintOpen: true,
-        rated: false,
-      },
-      {
-        id: 'B-4004',
-        articleId: 'a-1004',
-        articleTitle: 'Grundierung hellgrau',
-        sellerName: 'anbieter_02',
-        sellerRating: 4.7,
-        sellerRatingCount: 25,
-        amountCents: 7600,
-        dateIso: new Date(now - 20 * day).toISOString(),
-        status: 'abgeschlossen',
-        paymentReleased: true,
-        complaintOpen: false,
-        rated: true,
-      },
-    ])
-  }, [])
+      }));
+
+      if (!cancelled) setOrders(mapped);
+    } catch (e) {
+      console.error(e);
+      if (!cancelled) setOrders([]);
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
 
   /* ---------- Toolbar ---------- */
   const [query, setQuery] = useState('')
@@ -234,10 +252,11 @@ const BestellungenPage: FC = () => {
   function releasePayment(order: MyOrder) {
     if (order.paymentReleased) return
     // typische Logik: Freigabe nur wenn geliefert/abgeschlossen
-    if (!(order.status === 'geliefert' || order.status === 'abgeschlossen')) {
-      alert('Zahlung kann erst nach Lieferung freigegeben werden.')
-      return
+    if (order.status !== "versandt") {
+      alert("Zahlung kann erst nach gemeldetem Versand freigegeben werden.");
+      return;
     }
+
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, paymentReleased: true, status: 'abgeschlossen' } : o))
     alert('Zahlung freigegeben (Dummy).')
   }
@@ -312,8 +331,9 @@ const BestellungenPage: FC = () => {
                       ? `${o.sellerRating.toFixed(1)} ★ (${o.sellerRatingCount})`
                       : '—'
 
-                  const canRelease = (o.status === 'geliefert' || o.status === 'abgeschlossen') && !o.paymentReleased
-                  const canComplain = !o.complaintOpen && !o.paymentReleased
+                  const canRelease = (o.status === "versandt") && !o.paymentReleased && !o.complaintOpen;
+                  const canComplain = (o.status === "versandt") && !o.paymentReleased && !o.complaintOpen;
+
                   const canRate = !o.rated
 
                   return (
