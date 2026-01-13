@@ -101,6 +101,9 @@ type ApiShopOrder = {
   seller_address: any | null;
 };
 
+type ApiShopOrderWithArticle = ApiShopOrder & {
+  articles?: { title: string | null } | null;
+};
 
 /* ================= Types ================= */
 type OrderStatus = 'bezahlt' | 'versandt' | 'geliefert' | 'reklamiert' | 'abgeschlossen'
@@ -164,7 +167,7 @@ const BestellungenPage: FC = () => {
         return;
       }
 
-      const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
+      const apiOrders: ApiShopOrderWithArticle[] = Array.isArray(json?.orders) ? json.orders : [];
 
       const mapped: MyOrder[] = apiOrders.map((o) => ({
         id: o.id,
