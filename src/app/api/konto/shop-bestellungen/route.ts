@@ -41,7 +41,10 @@ export async function GET() {
         "seller_vat_number",
         "seller_address",
         // Artikelbezug
-        "article_id"
+        // Artikelbezug + Titel aus articles
+            "article_id",
+            "articles:article_id ( title )"
+
       ].join(",")
     )
     .eq("buyer_id", user.id)

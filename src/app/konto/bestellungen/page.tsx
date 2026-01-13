@@ -91,6 +91,7 @@ type ApiShopOrder = {
   total_gross_cents: number;
 
   article_id: string;
+  articles?: { title: string | null } | null;
 
   seller_id: string;
   seller_username: string | null;
@@ -100,13 +101,14 @@ type ApiShopOrder = {
   seller_address: any | null;
 };
 
+
 /* ================= Types ================= */
 type OrderStatus = 'bezahlt' | 'versandt' | 'geliefert' | 'reklamiert' | 'abgeschlossen'
 
 type MyOrder = {
   id: string
   articleId: string
-  articleTitle: string
+  articles?: { title: string | null } | null;
   sellerName: string
   sellerRating?: number
   sellerRatingCount?: number
@@ -168,7 +170,7 @@ const BestellungenPage: FC = () => {
         id: o.id,
         articleId: o.article_id,
         // Titel haben wir in shop_orders noch nicht drin -> erstmal Platzhalter
-        articleTitle: `Artikel ${o.article_id.slice(0, 8)}`,
+        articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
         sellerName: o.seller_username ?? "Verkäufer",
         amountCents: o.total_gross_cents,
         dateIso: o.created_at,
