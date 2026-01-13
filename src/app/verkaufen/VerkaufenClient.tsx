@@ -146,8 +146,15 @@ function ArtikelEinstellen() {
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
   const searchParams = useSearchParams(); // <-- HIER  
-  const { isEditMode, loading: prefillLoading, error: prefillError, getPrefill } =
-  useArticleEditPrefill();
+const {
+  editId,
+  isEditMode,
+  loading: prefillLoading,
+  error: prefillError,
+  getPrefill,
+  existingImageUrls: prefillImageUrls,
+  existingFileUrls: prefillFileUrls,
+} = useArticleEditPrefill();
 
 const didPrefillRef = useRef(false);
   const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
@@ -539,29 +546,22 @@ useEffect(() => {
   const p = getPrefill();
   if (!p) return;
 
+  // wenn DB kaputt / liefert keine Kategorie -> blockieren
+  if (!p.kategorie) return;
+
   didPrefillRef.current = true;
 
-  const pAny = p as any;
+  // ✅ ID kommt aus URL (?edit=...), optional auch p.id
+  setEditArticleId(p.id || editId || null);
 
-  setEditArticleId(p.id ?? p.articleId ?? null);
+  // ✅ bestehende URLs aus Hook
+  setExistingImageUrls(prefillImageUrls);
+  setExistingFileUrls(prefillFileUrls);
 
-  setExistingImageUrls(
-    Array.isArray(pAny.imageUrls) ? pAny.imageUrls :
-    Array.isArray(pAny.image_urls) ? pAny.image_urls : []
-  );
-
-  setExistingFileUrls(
-    Array.isArray(pAny.fileUrls) ? pAny.fileUrls :
-    Array.isArray(pAny.file_urls) ? pAny.file_urls : []
-  );
-
-
-
-
-  // ✅ Kategorie wird gesetzt (und später gesperrt)
+  // ✅ Kategorie aus DB setzen (und danach ist sie automatisch „nicht klickbar“)
   setKategorie(p.kategorie);
 
-  // ✅ gemeinsame Felder
+  // ✅ restliche Felder
   setTitel(p.titel ?? '');
   setBeschreibung(p.beschreibung ?? '');
   setVerkaufAn(p.verkaufAn ?? '');
@@ -571,14 +571,12 @@ useEffect(() => {
   setAufLager(!!p.aufLager);
   setLieferWerktage(String(p.lieferWerktage ?? ''));
 
-  // ✅ Mengen je Kategorie
   if (p.kategorie === 'arbeitsmittel') {
     setMengeStueck(Number(p.mengeStueck ?? 0));
   } else {
     setMenge(Number(p.mengeKg ?? 0));
   }
 
-  // ✅ Lack-Felder
   if (p.kategorie === 'nasslack' || p.kategorie === 'pulverlack') {
     setFarbpaletteWert(p.farbpalette ?? '');
     setGlanzgrad(p.glanzgrad ?? '');
@@ -593,7 +591,8 @@ useEffect(() => {
     setZertifizierungen(Array.isArray(p.zertifizierungen) ? p.zertifizierungen : []);
     setAufladung(Array.isArray(p.aufladung) ? p.aufladung : []);
   }
-}, [isEditMode, getPrefill]);
+}, [isEditMode, getPrefill, editId, prefillImageUrls, prefillFileUrls]);
+
 
 useEffect(() => {
   fetchConnect();
@@ -1642,9 +1641,26 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
   const stripeReady = connectLoaded && connect?.ready === true;
 const submitDisabled = ladeStatus || !stripeReady;
 
+if (isEditMode && prefillLoading) {
+  return (
+    <div className={styles.container}>
+      <p className={styles.description}>Artikel wird geladen…</p>
+    </div>
+  );
+}
+
+if (isEditMode && prefillError) {
+  return (
+    <div className={styles.container}>
+      <p className={styles.validierungsfehler}>Konnte Artikel nicht laden: {prefillError}</p>
+    </div>
+  );
+}
 
   return (
+    
     <>
+    
 
 <form onSubmit={handleSubmit} className={styles.container}>
   <motion.div

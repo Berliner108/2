@@ -342,7 +342,7 @@ charge:          category === "pulverlack" ? charge : [],
           const minQty = s.minMenge?.trim() ? Math.max(1, toInt(s.minMenge.trim(), 1)) : 1;
 
           let maxQty = s.maxMenge?.trim() ? Math.max(1, toInt(s.maxMenge.trim(), 1)) : null;
-          if (maxQty !== null && maxQty < minQty) maxQty = minQty;
+          if (maxQty !== null && maxQty <= minQty) maxQty = minQty + 1;
 
           const price = toNum(s.preis?.trim() ?? "", 0);
           const shipping = toNum(s.versand?.trim() ?? "", 0);
