@@ -1641,21 +1641,6 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
   const stripeReady = connectLoaded && connect?.ready === true;
 const submitDisabled = ladeStatus || !stripeReady;
 
-if (isEditMode && prefillLoading) {
-  return (
-    <div className={styles.container}>
-      <p className={styles.description}>Artikel wird geladen…</p>
-    </div>
-  );
-}
-
-if (isEditMode && prefillError) {
-  return (
-    <div className={styles.container}>
-      <p className={styles.validierungsfehler}>Konnte Artikel nicht laden: {prefillError}</p>
-    </div>
-  );
-}
 
   return (
     
