@@ -6,14 +6,17 @@ export const dynamic = "force-dynamic";
 
 const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000;
 
-export async function POST(_req: Request, context: { params: { id: string } }) {
+export async function POST(_req: Request, ctx: { params?: Record<string, string> }) {
+
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
   if (authErr || !user) return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
 
-  const orderId = context.params.id; // ✅ nur hier einmal
+  const orderId = String(ctx?.params?.id ?? "");
+if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+
 
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")

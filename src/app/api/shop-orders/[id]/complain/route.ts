@@ -5,7 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(_req: Request, context: { params: { id: string } }) {
+export async function POST(_req: Request, ctx: { params?: Record<string, string> }) {
+
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
 
@@ -13,7 +14,9 @@ export async function POST(_req: Request, context: { params: { id: string } }) {
   const user = auth?.user;
   if (authErr || !user) return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
 
-  const orderId = context.params.id;
+  const orderId = String(ctx?.params?.id ?? "");
+if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+
 
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
