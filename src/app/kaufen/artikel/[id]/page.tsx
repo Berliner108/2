@@ -176,6 +176,9 @@ export default function ArtikelDetailPage() {
   const [qty, setQty] = useState<number>(1);
 
   const [qtyHint, setQtyHint] = useState<string | null>(null);
+    const [buyLoading, setBuyLoading] = useState(false);
+  const [buyError, setBuyError] = useState<string | null>(null);
+
 
   // 1) Viewer laden (profiles.account_type)
   useEffect(() => {
@@ -841,13 +844,59 @@ const chosenTier = useMemo(() => {
 
                 <div className={styles.buttonRow}>
                   <button
-                    className={styles.submitOfferButton}
-                    disabled={disableBuy}
-                    onClick={() => alert("✅ UI steht. Checkout/Orders bauen wir als nächsten Block.")}
-                  >
-                    Jetzt kaufen
-                  </button>
+                  className={styles.submitOfferButton}
+                  disabled={disableBuy || buyLoading}
+                  onClick={async () => {
+                    try {
+                      setBuyLoading(true);
+                      setBuyError(null);
+
+                      if (!chosenTier) {
+                        setBuyError("Keine passende Preisstaffel gefunden.");
+                        return;
+                      }
+
+                      const res = await fetch("/api/shop/checkout-session", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          articleId: article.id,
+                          tierId: chosenTier.id,
+                          unit,
+                          qty: article.sale_type === "gesamt" ? 1 : qty,
+                        }),
+                      });
+
+                      const json = await res.json().catch(() => ({}));
+
+                      if (!res.ok) {
+                        // Wenn nicht eingeloggt -> Login (oder du hast eine eigene Login-Route)
+                        if (res.status === 401) {
+                          router.push("/login");
+                          return;
+                        }
+                        throw new Error(json?.error ?? "Checkout fehlgeschlagen");
+                      }
+
+                      if (!json?.url) throw new Error("Keine Checkout-URL erhalten.");
+                      window.location.href = json.url;
+                    } catch (e: any) {
+                      setBuyError(e?.message ?? "Unbekannter Fehler");
+                    } finally {
+                      setBuyLoading(false);
+                    }
+                  }}
+                >
+                  {buyLoading ? "Weiterleitung…" : "Jetzt kaufen"}
+                </button>
+
                 </div>
+                {buyError && (
+                  <p className={styles.offerNote} style={{ color: "#b00020" }}>
+                    {buyError}
+                  </p>
+                )}
+
 
                 {disableBuy && (
                   <p className={styles.offerNote} style={{ color: "#b00020" }}>
