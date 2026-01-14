@@ -150,17 +150,23 @@ function badgeFor(status: OrderStatus) {
   return { cls: styles.statusDone, label: 'Abgeschlossen' }
 }
 function canBuyerRelease(o: MyOrder) {
-  if (o.releasedAtIso) return false;       // schon released
-  if (o.complaintOpen) return false;       // schon reklamiert
-  if (o.status !== "versandt") return false; // shipped muss gesetzt sein
+  // niemals wenn schon final
+  if (o.releasedAtIso) return false;
+  if (o.status === "abgeschlossen") return false;
+
+  // wenn reklamiert, kein release
+  if (o.complaintOpen || o.status === "reklamiert") return false;
+
+  // Buyer darf NUR nachdem Verkäufer Versand gemeldet hat
+  // (du mapst shipped => "versandt")
+  if (o.status !== "versandt") return false;
+
+  // shippedAt muss gesetzt sein (optional, aber sauber)
   if (!o.shippedAtIso) return false;
 
-  const shipped = new Date(o.shippedAtIso);
-  if (Number.isNaN(+shipped)) return false;
-
-  const days = (Date.now() - +shipped) / (1000 * 60 * 60 * 24);
-  return days >= 28;
+  return true;
 }
+
 function canBuyerComplain(o: MyOrder) {
   // nie reklamieren wenn fertig
   if (o.status === "abgeschlossen") return false;
@@ -315,10 +321,11 @@ async function openComplaint(order: MyOrder) {
 
 
   async function releasePayment(order: MyOrder) {
-  if (!canBuyerRelease(order)) {
-    alert("Zahlung kann erst 28 Tage nach Versand freigegeben werden.");
-    return;
-  }
+if (!canBuyerRelease(order)) {
+  alert("Zahlung kann erst nach gemeldetem Versand freigegeben werden.");
+  return;
+}
+
 
   const res = await fetch(`/api/shop-orders/${encodeURIComponent(order.id)}/release`, {
     method: "POST",
@@ -490,17 +497,19 @@ async function openComplaint(order: MyOrder) {
                           >
                             {o.complaintOpen ? 'Reklamation offen' : 'Reklamation'}
                           </button>
+                            {(o.status === "versandt" || o.paymentReleased) && (
+                              <button
+                                type="button"
+                                className={`${styles.ctaBtn} ${styles.ctaSuccess ?? styles.ctaSecondary}`}
+                                onClick={() => releasePayment(o)}
+                                disabled={!canRelease}
+                                aria-disabled={!canRelease}
+                                style={!canRelease ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                              >
+                                {o.paymentReleased ? 'Zahlung freigegeben' : 'Zahlung freigeben'}
+                              </button>
+                            )}
 
-                          <button
-                            type="button"
-                            className={`${styles.ctaBtn} ${styles.ctaSuccess ?? styles.ctaSecondary}`}
-                            onClick={() => releasePayment(o)}
-                            disabled={!canRelease}
-                            aria-disabled={!canRelease}
-                            style={!canRelease ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-                          >
-                            {o.paymentReleased ? 'Zahlung freigegeben' : 'Zahlung freigeben'}
-                          </button>
                         </aside>
                       </div>
                     </li>
