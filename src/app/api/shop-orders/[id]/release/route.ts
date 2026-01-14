@@ -38,13 +38,16 @@ if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 })
   if (!isBuyer && !isSeller) return NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 });
 
   if (isSeller) {
-    const shippedAtMs = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
-    if (!shippedAtMs) return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
-
-    if (Date.now() - shippedAtMs < DAYS_28_MS) {
-      return NextResponse.json({ error: "Verkäufer-Freigabe erst nach 28 Tagen möglich." }, { status: 403 });
-    }
+  const shippedAtMs = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
+  if (!shippedAtMs) {
+    return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
   }
+
+  if (Date.now() - shippedAtMs < DAYS_28_MS) {
+    return NextResponse.json({ error: "Verkäufer darf erst nach 28 Tagen freigeben." }, { status: 403 });
+  }
+}
+
 
   const now = new Date().toISOString();
 

@@ -4,9 +4,7 @@ import { supabaseServer } from "@/lib/supabase-server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(_req: Request, ctx: any) {
-
-
+export async function POST(req: Request, ctx: any) {
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
@@ -16,16 +14,15 @@ export async function POST(_req: Request, ctx: any) {
   }
 
   const orderId = String(ctx?.params?.id ?? "");
-if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+  if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
-
-  const body = await _req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
   const tracking_number = typeof body?.tracking_number === "string" ? body.tracking_number.trim() : null;
   const shipping_carrier = typeof body?.shipping_carrier === "string" ? body.shipping_carrier.trim() : null;
 
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
-    .select("id,status,seller_id")
+    .select("id,status,seller_id,shipped_at,tracking_number,shipping_carrier")
     .eq("id", orderId)
     .single();
 
@@ -37,17 +34,44 @@ if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 })
     return NextResponse.json({ error: "Nur Verkäufer darf Versand melden." }, { status: 403 });
   }
 
+  // ✅ idempotent: wenn bereits shipped → gib aktuellen Stand zurück (optional: tracking update erlauben)
+  if (order.status === "shipped") {
+    // optional: tracking nachpflegen erlauben
+    const needsUpdate =
+      tracking_number !== (order.tracking_number ?? null) ||
+      shipping_carrier !== (order.shipping_carrier ?? null);
+
+    if (!needsUpdate) {
+      return NextResponse.json({ order });
+    }
+
+    const { data: updated2, error: u2 } = await supabase
+      .from("shop_orders")
+      .update({
+        tracking_number,
+        shipping_carrier,
+      })
+      .eq("id", orderId)
+      .select("id,status,shipped_at,tracking_number,shipping_carrier")
+      .single();
+
+    if (u2) return NextResponse.json({ error: u2.message }, { status: 500 });
+    return NextResponse.json({ order: updated2 });
+  }
+
+  // ✅ Versandmeldung nur aus "paid"
   if (order.status !== "paid") {
     return NextResponse.json({ error: "Versand nur möglich, wenn Status = paid." }, { status: 409 });
   }
 
-  const now = new Date().toISOString();
+  // shipped_at nur setzen wenn leer (damit 28 Tage sauber bleiben)
+  const shippedAt = order.shipped_at ?? new Date().toISOString();
 
   const { data: updated, error: uErr } = await supabase
     .from("shop_orders")
     .update({
       status: "shipped",
-      shipped_at: now,
+      shipped_at: shippedAt,
       tracking_number,
       shipping_carrier,
     })
