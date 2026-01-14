@@ -7,17 +7,16 @@ export const dynamic = "force-dynamic";
 const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000;
 
 export async function POST(_req: Request, ctx: any) {
-
-
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
-  if (authErr || !user) return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+  if (authErr || !user) {
+    return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+  }
 
   const orderId = String(ctx?.params?.id ?? "");
-if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
-
+  if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
@@ -25,42 +24,66 @@ if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 })
     .eq("id", orderId)
     .single();
 
-  if (oErr || !order) return NextResponse.json({ error: oErr?.message ?? "ORDER_NOT_FOUND" }, { status: 404 });
+  if (oErr || !order) {
+    return NextResponse.json({ error: oErr?.message ?? "ORDER_NOT_FOUND" }, { status: 404 });
+  }
 
+  // schon final?
+  if (order.refunded_at) return NextResponse.json({ error: "Bereits erstattet." }, { status: 409 });
+
+  // idempotent: wenn schon released, gib zurück (statt 409)
+  if (order.released_at) {
+    return NextResponse.json({ order });
+  }
+
+  // Release nur wenn shipped
   if (order.status !== "shipped") {
     return NextResponse.json({ error: "Freigabe nur möglich, wenn Status = shipped." }, { status: 409 });
   }
-  if (order.released_at) return NextResponse.json({ error: "Bereits freigegeben." }, { status: 409 });
-  if (order.refunded_at) return NextResponse.json({ error: "Bereits erstattet." }, { status: 409 });
 
   const isBuyer = order.buyer_id === user.id;
   const isSeller = order.seller_id === user.id;
-  if (!isBuyer && !isSeller) return NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 });
+  if (!isBuyer && !isSeller) {
+    return NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 });
+  }
 
+  // ✅ Verkäufer erst nach 28 Tagen ab shipped_at
   if (isSeller) {
-  const shippedAtMs = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
-  if (!shippedAtMs) {
-    return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
+    const shippedAtMs = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
+    if (!shippedAtMs) {
+      return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
+    }
+    if (Date.now() - shippedAtMs < DAYS_28_MS) {
+      return NextResponse.json({ error: "Verkäufer darf erst nach 28 Tagen freigeben." }, { status: 403 });
+    }
   }
 
-  if (Date.now() - shippedAtMs < DAYS_28_MS) {
-    return NextResponse.json({ error: "Verkäufer darf erst nach 28 Tagen freigeben." }, { status: 403 });
-  }
-}
-
+  // ✅ Käufer darf sofort nach shipped (keine Zusatzprüfung)
 
   const now = new Date().toISOString();
 
-  const { data: updated, error: uErr } = await supabase
+const { data: updated, error: uErr } = await supabase
+  .from("shop_orders")
+  .update({
+    status: "released",
+    released_at: now,
+  })
+  .eq("id", orderId)
+  .eq("status", "shipped")          // ✅ nur wenn noch shipped
+  .is("released_at", null)          // ✅ nur wenn noch nicht released
+  .is("refunded_at", null)          // ✅ nur wenn nicht refunded
+  .select("id,status,shipped_at,released_at,refunded_at,buyer_id,seller_id")
+  .single();
+
+
+if (uErr || !updated) {
+  // Wenn jemand schneller war (bereits released), gib aktuellen Stand zurück (idempotent)
+  const { data: latest } = await supabase
     .from("shop_orders")
-    .update({
-      status: "released",
-      released_at: now,
-    })
+    .select("id,status,shipped_at,released_at,refunded_at,buyer_id,seller_id")
     .eq("id", orderId)
-    .select("id,status,released_at")
     .single();
 
-  if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
-  return NextResponse.json({ order: updated });
-}
+  if (latest?.released_at) return NextResponse.json({ order: latest });
+  return NextResponse.json({ error: uErr?.message ?? "UPDATE_FAILED" }, { status: 500 });
+}}

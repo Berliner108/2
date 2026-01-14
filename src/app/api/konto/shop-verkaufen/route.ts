@@ -34,17 +34,16 @@ export async function GET() {
         "refunded_at",
         "tracking_number",
         "shipping_carrier",
-        // Snapshots Käufer
+
         "buyer_id",
         "buyer_username",
         "buyer_account_type",
         "buyer_company_name",
         "buyer_vat_number",
         "buyer_address",
-        // Artikelbezug
-        "article_id",
-        "articles:article_id ( title )"
 
+        "article_id",
+        "articles ( title )", // ✅ FIX
       ].join(",")
     )
     .eq("seller_id", user.id)
@@ -54,12 +53,16 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Zusatzfeld für 28-Tage-Button (nur Anzeigehilfe fürs UI)
   const now = Date.now();
   const orders = (data ?? []).map((o: any) => {
-    const shippedAt = o.shipped_at ? new Date(o.shipped_at).getTime() : null;
+    const shippedAtMs = o.shipped_at ? new Date(o.shipped_at).getTime() : null;
+
     const sellerCanRelease =
-      o.status === "shipped" && shippedAt !== null && now >= shippedAt + 28 * DAY_MS;
+      o.status === "shipped" &&
+      !o.released_at &&
+      !o.refunded_at &&
+      shippedAtMs !== null &&
+      now >= shippedAtMs + 28 * DAY_MS;
 
     return { ...o, sellerCanRelease };
   });

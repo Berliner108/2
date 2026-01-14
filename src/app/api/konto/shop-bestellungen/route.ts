@@ -14,7 +14,6 @@ export async function GET() {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
 
-  // Käufer sieht nur seine Bestellungen (RLS + Filter)
   const { data, error } = await supabase
     .from("shop_orders")
     .select(
@@ -33,18 +32,16 @@ export async function GET() {
         "refunded_at",
         "tracking_number",
         "shipping_carrier",
-        // Snapshots (damit du Profilinfos “durchreichen” kannst)
+
         "seller_id",
         "seller_username",
         "seller_account_type",
         "seller_company_name",
         "seller_vat_number",
         "seller_address",
-        // Artikelbezug
-        // Artikelbezug + Titel aus articles
-            "article_id",
-            "articles:article_id ( title )"
 
+        "article_id",
+        "articles ( title )",
       ].join(",")
     )
     .eq("buyer_id", user.id)
