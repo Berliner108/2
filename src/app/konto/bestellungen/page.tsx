@@ -4,6 +4,8 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './bestellungen.module.css'
+import { useSearchParams, useRouter } from "next/navigation"
+
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -91,8 +93,7 @@ type ApiShopOrder = {
   total_gross_cents: number;
 
   article_id: string;
-  articles?: { title: string | null } | null;
-
+  articles?: { title: string | null } | { title: string | null }[] | null;
   seller_id: string;
   seller_username: string | null;
   seller_account_type: string | null;
@@ -183,13 +184,21 @@ type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 
 const BestellungenPage: FC = () => {
   /* ---------- Dummy Orders ---------- */
+  const router = useRouter()
+const searchParams = useSearchParams()
+const highlightOrderId = searchParams.get("order")
+
+const [loading, setLoading] = useState(true)
+
   const [orders, setOrders] = useState<MyOrder[]>([])
 
-  useEffect(() => {
+useEffect(() => {
   let cancelled = false;
 
   (async () => {
     try {
+      setLoading(true)
+
       const res = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
       const json = await res.json();
 
@@ -201,30 +210,31 @@ const BestellungenPage: FC = () => {
 
       const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
 
+      const mapped: MyOrder[] = apiOrders.map((o) => ({
+        id: o.id,
+        articleId: o.article_id,
+        articleTitle:
+          (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
+          `Artikel ${o.article_id.slice(0, 8)}`,
+        sellerName: o.seller_username ?? "Verkäufer",
+        amountCents: o.total_gross_cents,
+        dateIso: o.created_at,
+        status: mapStatus(o.status),
 
-    const mapped: MyOrder[] = apiOrders.map((o) => ({
-  id: o.id,
-  articleId: o.article_id,
-  articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
-  sellerName: o.seller_username ?? "Verkäufer",
-  amountCents: o.total_gross_cents,
-  dateIso: o.created_at,
-  status: mapStatus(o.status),
+        shippedAtIso: o.shipped_at ?? null,
+        releasedAtIso: o.released_at ?? null,
 
-  shippedAtIso: o.shipped_at ?? null,      // ✅
-  releasedAtIso: o.released_at ?? null,    // ✅
-
-  paymentReleased: !!o.released_at || o.status === "released",
-  complaintOpen: o.status === "complaint_open",
-  rated: false,
-}));
-
-
+        paymentReleased: !!o.released_at || o.status === "released",
+        complaintOpen: o.status === "complaint_open",
+        rated: false,
+      }));
 
       if (!cancelled) setOrders(mapped);
     } catch (e) {
       console.error(e);
       if (!cancelled) setOrders([]);
+    } finally {
+      if (!cancelled) setLoading(false)
     }
   })();
 
@@ -232,6 +242,21 @@ const BestellungenPage: FC = () => {
     cancelled = true;
   };
 }, []);
+
+useEffect(() => {
+  if (!highlightOrderId) return
+  if (loading) return
+
+  const el = document.getElementById(`order-${highlightOrderId}`)
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
+
+  // optional: URL säubern (Parameter entfernen), aber erst kurz nach dem Scroll
+  const t = window.setTimeout(() => {
+    router.replace("/konto/bestellungen", { scroll: false })
+  }, 1200)
+
+  return () => window.clearTimeout(t)
+}, [highlightOrderId, loading, router])
 
 
   /* ---------- Toolbar ---------- */
@@ -412,14 +437,26 @@ if (!canBuyerRelease(order)) {
         </div>
 
         <hr className={styles.divider} />
+        {highlightOrderId && !loading && (
+  <div className={styles.emptyState} style={{ borderStyle: "solid" }}>
+    ✅ Bestellung erfolgreich angelegt. Bestell-Nr.: <strong>{highlightOrderId}</strong>
+  </div>
+)}
+
 
         <h2 className={styles.heading}>Meine Bestellungen</h2>
 
         <div className={styles.kontoContainer}>
-          {slice.total === 0 ? (
-            <div className={styles.emptyState}><strong>Keine Bestellungen sichtbar.</strong></div>
-          ) : (
-            <>
+  {loading ? (
+    <div className={styles.emptyState}>
+      <strong>Lade deine Bestellungen…</strong>
+    </div>
+  ) : slice.total === 0 ? (
+    <div className={styles.emptyState}>
+      <strong>Keine Bestellungen sichtbar.</strong>
+    </div>
+  ) : (
+    <>
               <ul className={styles.list}>
                 {slice.pageItems.map((o) => {
                   const b = badgeFor(o.status)
@@ -436,7 +473,13 @@ if (!canBuyerRelease(order)) {
                   const canRate = !o.rated
 
                   return (
-                    <li key={o.id} className={`${styles.card} ${styles.cardCyan}`}>
+                      <li
+                        key={o.id}
+                        id={`order-${o.id}`}
+                        className={`${styles.card} ${styles.cardCyan}`}
+                        style={highlightOrderId === o.id ? { outline: "3px solid #111", outlineOffset: 2 } : undefined}
+                      >
+
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
                           <Link href={articlePathBy(o.articleId)} className={styles.titleLink}>
