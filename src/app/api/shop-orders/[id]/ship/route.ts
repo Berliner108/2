@@ -19,7 +19,7 @@ export async function POST(_req: Request, ctx: any) {
 if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
 
-  const body = await req.json().catch(() => ({}));
+  const body = await _req.json().catch(() => ({}));
   const tracking_number = typeof body?.tracking_number === "string" ? body.tracking_number.trim() : null;
   const shipping_carrier = typeof body?.shipping_carrier === "string" ? body.shipping_carrier.trim() : null;
 
