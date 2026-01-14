@@ -394,55 +394,6 @@ async function sellerRelease(sale: MySale) {
     } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
-useEffect(() => {
-  let cancelled = false
-
-  ;(async () => {
-    try {
-      const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
-      const json = await res.json().catch(() => ({}))
-
-      if (!res.ok) {
-        console.error("shop-verkaufen error:", json)
-        if (!cancelled) setSales([])
-        return
-      }
-
-      const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
-
-      const mapped: MySale[] = orders.map((o) => ({
-  id: o.id,
-  articleId: o.article_id,
-  title: (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ?? `Artikel ${o.article_id.slice(0, 8)}`,
-  buyerName: o.buyer_username ?? "Käufer",
-  amountCents: o.total_gross_cents,
-  dateIso: o.created_at,
-  status: mapSaleStatus(o.status),
-  invoiceId: o.id,
-  rated: false,
-
-  // ✅ HIER sind die fehlenden Pflichtfelder:
-  orderStatus: o.status,
-  shippedAtIso: o.shipped_at ?? null,
-  releasedAtIso: o.released_at ?? null,
-  refundedAtIso: o.refunded_at ?? null,
-  sellerCanRelease: !!o.sellerCanRelease,
-}))
-
-
-      if (!cancelled) setSales(mapped)
-    } catch (e) {
-      console.error(e)
-      if (!cancelled) setSales([])
-    }
-  })()
-
-  return () => {
-    cancelled = true
-  }
-}, [])
-
-
 
   // Page reset bei Suche / Sort
   useEffect(() => {
