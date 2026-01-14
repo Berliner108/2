@@ -150,13 +150,9 @@ function badgeFor(status: OrderStatus) {
   return { cls: styles.statusDone, label: 'Abgeschlossen' }
 }
 function canBuyerRelease(o: MyOrder) {
-  if (o.paymentReleased) return false;
-  if (o.complaintOpen) return false;
-
-  // muss shipped sein
-  if (o.status !== "versandt") return false;
-
-  // shipped_at muss gesetzt sein
+  if (o.releasedAtIso) return false;       // schon released
+  if (o.complaintOpen) return false;       // schon reklamiert
+  if (o.status !== "versandt") return false; // shipped muss gesetzt sein
   if (!o.shippedAtIso) return false;
 
   const shipped = new Date(o.shippedAtIso);
@@ -164,6 +160,16 @@ function canBuyerRelease(o: MyOrder) {
 
   const days = (Date.now() - +shipped) / (1000 * 60 * 60 * 24);
   return days >= 28;
+}
+function canBuyerComplain(o: MyOrder) {
+  // nie reklamieren wenn fertig
+  if (o.status === "abgeschlossen") return false;
+  if (o.status === "reklamiert") return false; // ist ja schon offen
+
+  // nach release nie mehr reklamieren
+  if (o.releasedAtIso) return false;
+
+  return true;
 }
 
 /* ================= Page ================= */
@@ -202,7 +208,7 @@ const BestellungenPage: FC = () => {
   shippedAtIso: o.shipped_at ?? null,      // ✅
   releasedAtIso: o.released_at ?? null,    // ✅
 
-  paymentReleased: o.status === "released",
+  paymentReleased: !!o.released_at || o.status === "released",
   complaintOpen: o.status === "complaint_open",
   rated: false,
 }));
@@ -272,8 +278,8 @@ const BestellungenPage: FC = () => {
   }
 
   /* ---------- Actions ---------- */
- async function openComplaint(order: MyOrder) {
-  if (order.paymentReleased) return;
+async function openComplaint(order: MyOrder) {
+  if (order.releasedAtIso) return;   // statt paymentReleased
   if (order.complaintOpen) return;
 
   const res = await fetch(`/api/shop-orders/${encodeURIComponent(order.id)}/complain`, {
@@ -301,7 +307,7 @@ const BestellungenPage: FC = () => {
     status: mapStatus(o.status),
     shippedAtIso: o.shipped_at,
     releasedAtIso: o.released_at ?? null,
-    paymentReleased: o.status === "released",
+    paymentReleased: !!o.released_at || o.status === "released",
     complaintOpen: o.status === "complaint_open",
     rated: false,
   })) : []);
@@ -338,7 +344,7 @@ const BestellungenPage: FC = () => {
     status: mapStatus(o.status),
     shippedAtIso: o.shipped_at ?? null,
     releasedAtIso: o.released_at ?? null,
-    paymentReleased: o.status === "released",
+    paymentReleased: !!o.released_at || o.status === "released",
     complaintOpen: o.status === "complaint_open",
     rated: false,
   })) : []);
@@ -416,9 +422,8 @@ const BestellungenPage: FC = () => {
                       : '—'
 
                   const canRelease = canBuyerRelease(o);
+                  const canComplain = canBuyerComplain(o);
 
-// Reklamation: laut deiner Regel weiterhin möglich bis Release
-const canComplain = !o.paymentReleased && !o.complaintOpen;
 
 
                   const canRate = !o.rated
