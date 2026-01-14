@@ -198,12 +198,12 @@ const KontoVerkaufenPage: FC = () => {
 
       if (!cancelledRef?.current) {
         setArticles(Array.isArray(json?.articles) ? json.articles : [])
-        setSales([]) // Orders/Verkäufe kommen später -> vorerst leer
+        // setSales NICHT anfassen (Shop-Verkäufe kommen aus /api/konto/shop-verkaufen)
+
       }
     } catch (e: any) {
       if (!cancelledRef?.current) {
         setArticles([])
-        setSales([])
         setMineError(e?.message ?? 'Unbekannter Fehler')
       }
     } finally {
