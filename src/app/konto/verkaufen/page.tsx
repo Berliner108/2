@@ -386,11 +386,7 @@ async function sellerRelease(sale: MySale) {
     } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
-
-
-
-
-  // Page reset bei Suche / Sort
+  // Page reset bei Suchen / Sort
   useEffect(() => {
     setPageArtikel(1)
     setPageSales(1)
