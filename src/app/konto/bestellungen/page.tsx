@@ -99,7 +99,11 @@ type ApiShopOrder = {
   seller_company_name: string | null;
   seller_vat_number: string | null;
   seller_address: any | null;
+
+  shipped_at: string | null;     // ✅
+  released_at: string | null;    // ✅
 };
+
 
 /* ================= Types ================= */
 type OrderStatus = 'bezahlt' | 'versandt' | 'geliefert' | 'reklamiert' | 'abgeschlossen'
@@ -118,6 +122,11 @@ type MyOrder = {
   paymentReleased?: boolean
   complaintOpen?: boolean
   rated?: boolean
+  shippedAtIso?: string | null
+  releasedAtIso?: string | null
+
+
+
 }
 /* ================= Routes ================= */
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
@@ -139,6 +148,22 @@ function badgeFor(status: OrderStatus) {
   if (status === 'geliefert') return { cls: styles.statusDone, label: 'Geliefert' }
   if (status === 'reklamiert') return { cls: styles.statusDisputed, label: 'Reklamiert' }
   return { cls: styles.statusDone, label: 'Abgeschlossen' }
+}
+function canBuyerRelease(o: MyOrder) {
+  if (o.paymentReleased) return false;
+  if (o.complaintOpen) return false;
+
+  // muss shipped sein
+  if (o.status !== "versandt") return false;
+
+  // shipped_at muss gesetzt sein
+  if (!o.shippedAtIso) return false;
+
+  const shipped = new Date(o.shippedAtIso);
+  if (Number.isNaN(+shipped)) return false;
+
+  const days = (Date.now() - +shipped) / (1000 * 60 * 60 * 24);
+  return days >= 28;
 }
 
 /* ================= Page ================= */
@@ -165,21 +190,24 @@ const BestellungenPage: FC = () => {
       const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
 
 
-      const mapped: MyOrder[] = apiOrders.map((o) => ({
-        id: o.id,
-        articleId: o.article_id,
-        // Titel haben wir in shop_orders noch nicht drin -> erstmal Platzhalter
-        articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
-        sellerName: o.seller_username ?? "Verkäufer",
-        amountCents: o.total_gross_cents,
-        dateIso: o.created_at,
-        status: mapStatus(o.status),
+    const mapped: MyOrder[] = apiOrders.map((o) => ({
+  id: o.id,
+  articleId: o.article_id,
+  articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+  sellerName: o.seller_username ?? "Verkäufer",
+  amountCents: o.total_gross_cents,
+  dateIso: o.created_at,
+  status: mapStatus(o.status),
 
-        // Flags für deine bestehenden Buttons
-        paymentReleased: o.status === "released",
-        complaintOpen: o.status === "complaint_open",
-        rated: false,
-      }));
+  shippedAtIso: o.shipped_at ?? null,      // ✅
+  releasedAtIso: o.released_at ?? null,    // ✅
+
+  paymentReleased: o.status === "released",
+  complaintOpen: o.status === "complaint_open",
+  rated: false,
+}));
+
+
 
       if (!cancelled) setOrders(mapped);
     } catch (e) {
@@ -244,23 +272,78 @@ const BestellungenPage: FC = () => {
   }
 
   /* ---------- Actions ---------- */
-  function openComplaint(order: MyOrder) {
-    if (order.complaintOpen) return
-    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, complaintOpen: true, status: 'reklamiert' } : o))
-    alert('Reklamation eröffnet (Dummy).')
+ async function openComplaint(order: MyOrder) {
+  if (order.paymentReleased) return;
+  if (order.complaintOpen) return;
+
+  const res = await fetch(`/api/shop-orders/${encodeURIComponent(order.id)}/complain`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert(json?.error ?? "Reklamation fehlgeschlagen");
+    return;
   }
 
-  function releasePayment(order: MyOrder) {
-    if (order.paymentReleased) return
-    // typische Logik: Freigabe nur wenn geliefert/abgeschlossen
-    if (order.status !== "versandt") {
-      alert("Zahlung kann erst nach gemeldetem Versand freigegeben werden.");
-      return;
-    }
+  // UI refresh
+  const r2 = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
+  const j2 = await r2.json().catch(() => ({}));
+  // gleiches Mapping wie oben (du kannst es auch in eine Funktion ziehen – aber du willst modular, also lass es erstmal so)
+  setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
+    id: o.id,
+    articleId: o.article_id,
+    articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+    sellerName: o.seller_username ?? "Verkäufer",
+    amountCents: o.total_gross_cents,
+    dateIso: o.created_at,
+    status: mapStatus(o.status),
+    shippedAtIso: o.shipped_at,
+    releasedAtIso: o.released_at ?? null,
+    paymentReleased: o.status === "released",
+    complaintOpen: o.status === "complaint_open",
+    rated: false,
+  })) : []);
+}
 
-    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, paymentReleased: true, status: 'abgeschlossen' } : o))
-    alert('Zahlung freigegeben (Dummy).')
+
+  async function releasePayment(order: MyOrder) {
+  if (!canBuyerRelease(order)) {
+    alert("Zahlung kann erst 28 Tage nach Versand freigegeben werden.");
+    return;
   }
+
+  const res = await fetch(`/api/shop-orders/${encodeURIComponent(order.id)}/release`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert(json?.error ?? "Release fehlgeschlagen");
+    return;
+  }
+
+  // UI refresh: einfach neu laden
+  const r2 = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
+  const j2 = await r2.json().catch(() => ({}));
+  setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
+    id: o.id,
+    articleId: o.article_id,
+    articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+    sellerName: o.seller_username ?? "Verkäufer",
+    amountCents: o.total_gross_cents,
+    dateIso: o.created_at,
+    status: mapStatus(o.status),
+    shippedAtIso: o.shipped_at ?? null,
+    releasedAtIso: o.released_at ?? null,
+    paymentReleased: o.status === "released",
+    complaintOpen: o.status === "complaint_open",
+    rated: false,
+  })) : []);
+}
+
 
   /* ---------- Filter/Sort ---------- */
   const filtered = useMemo(() => {
@@ -332,8 +415,11 @@ const BestellungenPage: FC = () => {
                       ? `${o.sellerRating.toFixed(1)} ★ (${o.sellerRatingCount})`
                       : '—'
 
-                  const canRelease = (o.status === "versandt") && !o.paymentReleased && !o.complaintOpen;
-                  const canComplain = (o.status === "versandt") && !o.paymentReleased && !o.complaintOpen;
+                  const canRelease = canBuyerRelease(o);
+
+// Reklamation: laut deiner Regel weiterhin möglich bis Release
+const canComplain = !o.paymentReleased && !o.complaintOpen;
+
 
                   const canRate = !o.rated
 
