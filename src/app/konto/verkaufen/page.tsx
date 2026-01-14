@@ -139,7 +139,14 @@ type MySale = {
   status: VerkaufStatus
   invoiceId: string
   rated?: boolean
+
+  orderStatus: ShopOrderStatus
+  shippedAtIso?: string | null
+  releasedAtIso?: string | null
+  refundedAtIso?: string | null
+  sellerCanRelease?: boolean
 }
+
 type ShopOrderStatus =
   | "payment_pending"
   | "paid"
@@ -159,10 +166,12 @@ type ApiShopSale = {
 
   buyer_username: string | null;
 
-  // kommt aus deiner /api/konto/shop-verkaufen Route als Anzeigehilfe
-  sellerCanRelease?: boolean;
-};
+  shipped_at?: string | null;
+  released_at?: string | null;
+  refunded_at?: string | null;
 
+  sellerCanRelease?: boolean; // kommt von /api/konto/shop-verkaufen
+};
 /* ================= Routes ================= */
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
 
@@ -231,15 +240,95 @@ const KontoVerkaufenPage: FC = () => {
     return json?.article
   }
 
-  useEffect(() => {
-    const cancelledRef = { current: false }
-    loadMine(cancelledRef)
+  async function loadShopSales(cancelledRef?: { current: boolean }) {
+  try {
+    const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
+    const json = await res.json().catch(() => ({}))
 
-    return () => {
-      cancelledRef.current = true
+    if (!res.ok) {
+      console.error("shop-verkaufen error:", json)
+      if (!cancelledRef?.current) setSales([])
+      return
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+
+    const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
+
+    const mapped: MySale[] = orders.map((o) => ({
+      id: o.id,
+      articleId: o.article_id,
+      title: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+      buyerName: o.buyer_username ?? "Käufer",
+      amountCents: o.total_gross_cents,
+      dateIso: o.created_at,
+      status: mapSaleStatus(o.status),
+      invoiceId: o.id,
+      rated: false,
+
+      orderStatus: o.status,
+      shippedAtIso: o.shipped_at ?? null,
+      releasedAtIso: o.released_at ?? null,
+      refundedAtIso: o.refunded_at ?? null,
+      sellerCanRelease: !!o.sellerCanRelease,
+    }))
+
+    if (!cancelledRef?.current) setSales(mapped)
+  } catch (e) {
+    console.error(e)
+    if (!cancelledRef?.current) setSales([])
+  }
+}
+
+
+useEffect(() => {
+  const cancelledRef = { current: false }
+  loadShopSales(cancelledRef)
+  return () => { cancelledRef.current = true }
+}, [])
+
+async function markShipped(sale: MySale) {
+  // nur wenn paid
+  if (sale.orderStatus !== "paid") return;
+
+  const tracking_number = window.prompt("Tracking Nummer (optional):", "") ?? "";
+  const shipping_carrier = window.prompt("Versanddienst (optional):", "") ?? "";
+
+  const res = await fetch(`/api/shop-orders/${encodeURIComponent(sale.id)}/ship`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tracking_number: tracking_number.trim() || null,
+      shipping_carrier: shipping_carrier.trim() || null,
+    }),
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert(json?.error ?? "Versand melden fehlgeschlagen");
+    return;
+  }
+
+  await loadShopSales(); // refresh
+}
+async function sellerRelease(sale: MySale) {
+  // UI-Regel: nur wenn sellerCanRelease true (Route prüft nochmal)
+  if (!sale.sellerCanRelease) return;
+
+  const ok = window.confirm("Zahlung jetzt freigeben? (nur möglich nach 28 Tagen ab Versand)");
+  if (!ok) return;
+
+  const res = await fetch(`/api/shop-orders/${encodeURIComponent(sale.id)}/release`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert(json?.error ?? "Freigabe fehlgeschlagen");
+    return;
+  }
+
+  await loadShopSales(); // refresh
+}
 
   /* -------- Toolbar State -------- */
   const [tab, setTab] = useState<TabKey>('artikel')
@@ -615,6 +704,13 @@ useEffect(() => {
                           ? `${s.buyerRating.toFixed(1)} ★ (${s.buyerRatingCount})`
                           : '—'
 
+                           const canShip = s.orderStatus === "paid";
+                          const canSellerRelease =
+                            s.sellerCanRelease &&
+                            s.orderStatus === "shipped" &&
+                            !s.releasedAtIso &&
+                            !s.refundedAtIso;
+
                       return (
                         <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
                           <div className={styles.cardHeader}>
@@ -652,30 +748,53 @@ useEffect(() => {
                             <div />
                             <div />
                             <aside className={styles.sideCol}>
-                              <a
-                                href={invoiceHref(s)}
-                                className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
-                                target="_blank"
-                                rel="noopener"
-                              >
-                                Rechnung herunterladen (PDF)
-                              </a>
+  <a
+    href={invoiceHref(s)}
+    className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+    target="_blank"
+    rel="noopener"
+  >
+    Rechnung herunterladen (PDF)
+  </a>
 
-                              <button
-                                type="button"
-                                className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-                                onClick={() => openReview(s)}
-                                disabled={!!s.rated}
-                                aria-disabled={!!s.rated}
-                                style={s.rated ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-                              >
-                                {s.rated ? 'Bewertung bereits abgegeben' : 'Bewertung abgeben'}
-                              </button>
+  {/* ✅ HIER: Versand melden + Release */}
+  {s.orderStatus === "paid" && (
+    <button
+      type="button"
+      className={`${styles.ctaBtn} ${styles.ctaSuccess}`}
+      onClick={() => markShipped(s)}
+    >
+      Versand melden
+    </button>
+  )}
 
-                              <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
-                                Zum Artikel
-                              </Link>
-                            </aside>
+  <button
+    type="button"
+    className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+    onClick={() => sellerRelease(s)}
+    disabled={!(s.sellerCanRelease && s.orderStatus === "shipped" && !s.releasedAtIso && !s.refundedAtIso)}
+    aria-disabled={!(s.sellerCanRelease && s.orderStatus === "shipped" && !s.releasedAtIso && !s.refundedAtIso)}
+    style={!(s.sellerCanRelease && s.orderStatus === "shipped" && !s.releasedAtIso && !s.refundedAtIso) ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+  >
+    Zahlung freigeben (nach 28 Tagen)
+  </button>
+
+  <button
+    type="button"
+    className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+    onClick={() => openReview(s)}
+    disabled={!!s.rated}
+    aria-disabled={!!s.rated}
+    style={s.rated ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+  >
+    {s.rated ? 'Bewertung bereits abgegeben' : 'Bewertung abgeben'}
+  </button>
+
+  <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
+    Zum Artikel
+  </Link>
+</aside>
+
                           </div>
                         </li>
                       )
