@@ -394,19 +394,7 @@ async function sellerRelease(sale: MySale) {
     } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
-useEffect(() => {
-  let cancelled = false
 
-  ;(async () => {
-    try {
-      const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
-      const json = await res.json().catch(() => ({}))
-
-      if (!res.ok) {
-        console.error("shop-verkaufen error:", json)
-        if (!cancelled) setSales([])
-        return
-      }
 
       const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
 
