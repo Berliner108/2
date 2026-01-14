@@ -4,7 +4,10 @@ import { supabaseServer } from "@/lib/supabase-server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, context: { params: { id: string } }) {
+  const orderId = context.params.id;
+
+
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();

@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(_req: Request, context: { params: { id: string } }) {
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
 
@@ -13,9 +13,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const user = auth?.user;
   if (authErr || !user) return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
 
-  const orderId = params.id;
+  const orderId = context.params.id;
 
-  // Order lesen (RLS)
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .select("id,status,buyer_id,article_id,unit,qty,stock_adjusted,stock_reverted,refunded_at")
@@ -25,12 +24,10 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   if (oErr || !order) return NextResponse.json({ error: oErr?.message ?? "ORDER_NOT_FOUND" }, { status: 404 });
   if (order.buyer_id !== user.id) return NextResponse.json({ error: "Nur Käufer darf reklamieren." }, { status: 403 });
 
-  // Du willst Reklamation nach Versand
   if (order.status !== "shipped") {
     return NextResponse.json({ error: "Reklamation nur möglich, wenn Status = shipped." }, { status: 409 });
   }
 
-  // Stock-Guards
   if (!order.stock_adjusted) {
     return NextResponse.json({ error: "Stock wurde noch nicht abgezogen (stock_adjusted=false)." }, { status: 409 });
   }
@@ -40,7 +37,6 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
   const now = new Date().toISOString();
 
-  // 1) Order auf refunded + stock_reverted setzen (damit kein Doppel-Run)
   const { data: updated, error: uErr } = await supabase
     .from("shop_orders")
     .update({
@@ -54,7 +50,6 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
   if (uErr || !updated) return NextResponse.json({ error: uErr?.message ?? "UPDATE_FAILED" }, { status: 500 });
 
-  // 2) Bestand wieder hoch (Service Role)
   const { data: art, error: aErr } = await admin
     .from("articles")
     .select("id, qty_kg, qty_piece, published, sold_out")
@@ -62,7 +57,10 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     .single();
 
   if (aErr || !art) {
-    return NextResponse.json({ error: aErr?.message ?? "ARTICLE_NOT_FOUND", warning: "Order refunded, aber Artikel nicht gefunden." }, { status: 500 });
+    return NextResponse.json(
+      { error: aErr?.message ?? "ARTICLE_NOT_FOUND", warning: "Order refunded, aber Artikel nicht gefunden." },
+      { status: 500 }
+    );
   }
 
   const qty = Number(updated.qty ?? 0);
