@@ -27,6 +27,7 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const end = Math.min(start + ps, total)
   return { pageItems: arr.slice(start, end), from: total === 0 ? 0 : start + 1, to: end, total, safePage, pages }
 }
+const [shopSales, setShopSales] = useState<any[]>([])
 
 /* ================= Pagination (wie in lackangebote) ================= */
 const Pagination: FC<{
@@ -251,6 +252,24 @@ const KontoVerkaufenPage: FC = () => {
       if (next !== curr) router.replace(next, { scroll: false })
     } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
+
+  useEffect(() => {
+  let cancelled = false
+
+  ;(async () => {
+    const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
+    const json = await res.json()
+    if (!res.ok) {
+      console.error(json)
+      if (!cancelled) setShopSales([])
+      return
+    }
+    if (!cancelled) setShopSales(Array.isArray(json?.orders) ? json.orders : [])
+  })()
+
+  return () => { cancelled = true }
+}, [])
+
 
   // Page reset bei Suche / Sort
   useEffect(() => {
