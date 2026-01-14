@@ -331,7 +331,10 @@ async function openComplaint(order: MyOrder) {
   setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
     id: o.id,
     articleId: o.article_id,
-    articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+    articleTitle:
+  (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
+  `Artikel ${o.article_id.slice(0, 8)}`,
+
     sellerName: o.seller_username ?? "Verkäufer",
     amountCents: o.total_gross_cents,
     dateIso: o.created_at,
@@ -369,7 +372,10 @@ if (!canBuyerRelease(order)) {
   setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
     id: o.id,
     articleId: o.article_id,
-    articleTitle: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+    articleTitle:
+  (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
+  `Artikel ${o.article_id.slice(0, 8)}`,
+
     sellerName: o.seller_username ?? "Verkäufer",
     amountCents: o.total_gross_cents,
     dateIso: o.created_at,
@@ -447,16 +453,16 @@ if (!canBuyerRelease(order)) {
         <h2 className={styles.heading}>Meine Bestellungen</h2>
 
         <div className={styles.kontoContainer}>
-  {loading ? (
-    <div className={styles.emptyState}>
-      <strong>Lade deine Bestellungen…</strong>
-    </div>
-  ) : slice.total === 0 ? (
-    <div className={styles.emptyState}>
-      <strong>Keine Bestellungen sichtbar.</strong>
-    </div>
-  ) : (
-    <>
+              {loading ? (
+                <div className={styles.emptyState}>
+                  <strong>Lade deine Bestellungen…</strong>
+                </div>
+              ) : slice.total === 0 ? (
+                <div className={styles.emptyState}>
+                  <strong>Keine Bestellungen sichtbar.</strong>
+                </div>
+              ) : (
+                <>
               <ul className={styles.list}>
                 {slice.pageItems.map((o) => {
                   const b = badgeFor(o.status)
