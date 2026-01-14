@@ -6,16 +6,14 @@ export const dynamic = "force-dynamic";
 
 const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000;
 
-export async function POST(req: Request, context: { params: { id: string } }) {
-  const orderId = context.params.id;
-
+export async function POST(_req: Request, context: { params: { id: string } }) {
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
   if (authErr || !user) return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
 
-  const orderId = params.id;
+  const orderId = context.params.id; // ✅ nur hier einmal
 
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
@@ -36,11 +34,10 @@ export async function POST(req: Request, context: { params: { id: string } }) {
   if (!isBuyer && !isSeller) return NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 });
 
   if (isSeller) {
-    const shippedAt = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
-    if (!shippedAt) return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
+    const shippedAtMs = order.shipped_at ? new Date(order.shipped_at).getTime() : 0;
+    if (!shippedAtMs) return NextResponse.json({ error: "Kein shipped_at gesetzt." }, { status: 409 });
 
-    const nowMs = Date.now();
-    if (nowMs - shippedAt < DAYS_28_MS) {
+    if (Date.now() - shippedAtMs < DAYS_28_MS) {
       return NextResponse.json({ error: "Verkäufer-Freigabe erst nach 28 Tagen möglich." }, { status: 403 });
     }
   }
