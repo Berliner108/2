@@ -222,6 +222,14 @@ const KontoVerkaufenPage: FC = () => {
       if (!cancelledRef?.current) setMineLoading(false)
     }
   }
+  useEffect(() => {
+  const cancelledRef = { current: false };
+  loadMine(cancelledRef);
+  return () => {
+    cancelledRef.current = true;
+  };
+}, []);
+
   function mapSaleStatus(s: ShopOrderStatus): VerkaufStatus {
   if (s === "paid") return "bezahlt";
   if (s === "shipped") return "versandt";
