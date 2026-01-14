@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000;
 
-export async function POST(_req: Request, ctx: { params?: Record<string, string> }) {
+export async function POST(_req: Request, ctx: any) {
+
 
   const supabase = await supabaseServer();
 
