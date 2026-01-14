@@ -5,7 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(_req: Request, ctx: { params?: Record<string, string> }) {
+export async function POST(_req: Request, ctx: any) {
+
 
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
