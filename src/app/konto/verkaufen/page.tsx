@@ -27,7 +27,7 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const end = Math.min(start + ps, total)
   return { pageItems: arr.slice(start, end), from: total === 0 ? 0 : start + 1, to: end, total, safePage, pages }
 }
-const [shopSales, setShopSales] = useState<any[]>([])
+
 
 /* ================= Pagination (wie in lackangebote) ================= */
 const Pagination: FC<{
@@ -140,6 +140,28 @@ type MySale = {
   invoiceId: string
   rated?: boolean
 }
+type ShopOrderStatus =
+  | "payment_pending"
+  | "paid"
+  | "shipped"
+  | "released"
+  | "complaint_open"
+  | "refunded";
+
+type ApiShopSale = {
+  id: string;
+  created_at: string;
+  status: ShopOrderStatus;
+  total_gross_cents: number;
+
+  article_id: string;
+  articles?: { title: string | null } | null;
+
+  buyer_username: string | null;
+
+  // kommt aus deiner /api/konto/shop-verkaufen Route als Anzeigehilfe
+  sellerCanRelease?: boolean;
+};
 
 /* ================= Routes ================= */
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
@@ -188,6 +210,13 @@ const KontoVerkaufenPage: FC = () => {
       if (!cancelledRef?.current) setMineLoading(false)
     }
   }
+  function mapSaleStatus(s: ShopOrderStatus): VerkaufStatus {
+  if (s === "paid") return "bezahlt";
+  if (s === "shipped") return "versandt";
+  // released / complaint_open / refunded / payment_pending
+  return "geliefert";
+}
+
 
   async function patchArticle(id: string, patch: { published?: boolean }) {
     const res = await fetch(`/api/konto/articles/${encodeURIComponent(id)}`, {
@@ -253,22 +282,46 @@ const KontoVerkaufenPage: FC = () => {
     } catch {}
   }, [tab, query, sortArtikel, sortSales, psArtikel, psSales, pageArtikel, pageSales, router])
 
-  useEffect(() => {
+useEffect(() => {
   let cancelled = false
 
   ;(async () => {
-    const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
-    const json = await res.json()
-    if (!res.ok) {
-      console.error(json)
-      if (!cancelled) setShopSales([])
-      return
+    try {
+      const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        console.error("shop-verkaufen error:", json)
+        if (!cancelled) setSales([])
+        return
+      }
+
+      const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
+
+      const mapped: MySale[] = orders.map((o) => ({
+        id: o.id,
+        articleId: o.article_id,
+        title: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+        buyerName: o.buyer_username ?? "Käufer",
+        amountCents: o.total_gross_cents,
+        dateIso: o.created_at,
+        status: mapSaleStatus(o.status),
+        invoiceId: o.id, // Platzhalter (du nutzt invoice später)
+        rated: false,
+      }))
+
+      if (!cancelled) setSales(mapped)
+    } catch (e) {
+      console.error(e)
+      if (!cancelled) setSales([])
     }
-    if (!cancelled) setShopSales(Array.isArray(json?.orders) ? json.orders : [])
   })()
 
-  return () => { cancelled = true }
+  return () => {
+    cancelled = true
+  }
 }, [])
+
 
 
   // Page reset bei Suche / Sort
