@@ -4,7 +4,8 @@ import { supabaseServer } from "@/lib/supabase-server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request, context: { params: { id: string } }) {
+export async function POST(_req: Request, ctx: { params?: Record<string, string> }) {
+
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();
@@ -13,7 +14,9 @@ export async function POST(req: Request, context: { params: { id: string } }) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
 
-  const orderId = context.params.id; // ✅ nur hier einmal
+  const orderId = String(ctx?.params?.id ?? "");
+if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
+
 
   const body = await req.json().catch(() => ({}));
   const tracking_number = typeof body?.tracking_number === "string" ? body.tracking_number.trim() : null;
