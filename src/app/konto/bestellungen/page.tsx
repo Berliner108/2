@@ -375,7 +375,6 @@ if (!canBuyerRelease(order)) {
     articleTitle:
   (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
   `Artikel ${o.article_id.slice(0, 8)}`,
-
     sellerName: o.seller_username ?? "Verkäufer",
     amountCents: o.total_gross_cents,
     dateIso: o.created_at,
