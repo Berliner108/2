@@ -162,16 +162,19 @@ type ApiShopSale = {
   total_gross_cents: number;
 
   article_id: string;
-  articles?: { title: string | null } | null;
+  // Achtung: je nach Supabase-Select kann das Objekt ODER Array sein
+  articles?: { title: string | null } | { title: string | null }[] | null;
 
   buyer_username: string | null;
 
-  shipped_at?: string | null;
-  released_at?: string | null;
-  refunded_at?: string | null;
+  shipped_at: string | null;
+  released_at: string | null;
+  refunded_at: string | null;
 
-  sellerCanRelease?: boolean; // kommt von /api/konto/shop-verkaufen
+  sellerCanRelease?: boolean;
 };
+
+
 /* ================= Routes ================= */
 const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(String(id))}`
 
@@ -253,23 +256,35 @@ const KontoVerkaufenPage: FC = () => {
 
     const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
 
-    const mapped: MySale[] = orders.map((o) => ({
-      id: o.id,
-      articleId: o.article_id,
-      title: o.articles?.title ?? `Artikel ${o.article_id.slice(0, 8)}`,
-      buyerName: o.buyer_username ?? "Käufer",
-      amountCents: o.total_gross_cents,
-      dateIso: o.created_at,
-      status: mapSaleStatus(o.status),
-      invoiceId: o.id,
-      rated: false,
+const mapped: MySale[] = orders.map((o) => {
+  const title =
+    Array.isArray(o.articles)
+      ? (o.articles[0]?.title ?? null)
+      : (o.articles?.title ?? null);
 
-      orderStatus: o.status,
-      shippedAtIso: o.shipped_at ?? null,
-      releasedAtIso: o.released_at ?? null,
-      refundedAtIso: o.refunded_at ?? null,
-      sellerCanRelease: !!o.sellerCanRelease,
-    }))
+  return {
+    id: o.id,
+    articleId: o.article_id,
+    title: title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+    buyerName: o.buyer_username ?? "Käufer",
+    amountCents: o.total_gross_cents,
+    dateIso: o.created_at,
+    status: mapSaleStatus(o.status),
+    invoiceId: o.id,
+    rated: false,
+
+    // ✅ REQUIRED by MySale (sonst Build-Fehler)
+    orderStatus: o.status,
+
+    // ✅ für Buttons
+    shippedAtIso: o.shipped_at,
+    releasedAtIso: o.released_at,
+    refundedAtIso: o.refunded_at,
+    sellerCanRelease: !!o.sellerCanRelease,
+  };
+});
+
+
 
     if (!cancelledRef?.current) setSales(mapped)
   } catch (e) {
