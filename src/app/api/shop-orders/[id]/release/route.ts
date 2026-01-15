@@ -33,7 +33,8 @@ export async function POST(_req: Request, ctx: any) {
   if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
   // 2) order laden (wir brauchen Stripe Charge + total + fee)
-  const { data: order, error: oErr } = await supabase
+  // 2) order laden (wir brauchen Stripe Charge + total + fee)
+  const { data: orderRaw, error: oErr } = await supabase
     .from("shop_orders")
     .select(
       [
@@ -53,25 +54,18 @@ export async function POST(_req: Request, ctx: any) {
       ].join(",")
     )
     .eq("id", orderId)
-     .maybeSingle(); // 👈 statt .single()
+    .maybeSingle(); // 👈 statt .single()
 
-  if (oErr || !order) {
-    return NextResponse.json({ error: oErr?.message ?? "ORDER_NOT_FOUND" }, { status: 404 });
+  if (oErr) {
+    return NextResponse.json({ error: oErr.message }, { status: 500 });
+  }
+  if (!orderRaw) {
+    return NextResponse.json({ error: "ORDER_NOT_FOUND" }, { status: 404 });
   }
 
-  // final?
-  if (order.refunded_at) return NextResponse.json({ error: "Bereits erstattet." }, { status: 409 });
-
-  // idempotent: wenn schon released -> zurückgeben
-  if (order.released_at) {
-    return NextResponse.json({ order });
-  }
-
-  // Release nur wenn shipped
-  if (order.status !== "shipped") {
-    return NextResponse.json({ error: "Freigabe nur möglich, wenn Status = shipped." }, { status: 409 });
-  }
+  // ✅ Typ-Fix (damit order.refunded_at keinen TS-Fehler wirft)
   const order = orderRaw as any;
+
   const isBuyer = order.buyer_id === user.id;
   const isSeller = order.seller_id === user.id;
   if (!isBuyer && !isSeller) {
