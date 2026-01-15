@@ -53,7 +53,7 @@ export async function POST(_req: Request, ctx: any) {
       ].join(",")
     )
     .eq("id", orderId)
-    .single();
+     .maybeSingle(); // 👈 statt .single()
 
   if (oErr || !order) {
     return NextResponse.json({ error: oErr?.message ?? "ORDER_NOT_FOUND" }, { status: 404 });
