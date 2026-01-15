@@ -862,7 +862,7 @@ const chosenTier = useMemo(() => {
                         body: JSON.stringify({
                           articleId: article.id,
                           tierId: chosenTier.id,
-                          unit,
+                          unit: chosenTier.unit,
                           qty: article.sale_type === "gesamt" ? 1 : qty,
                         }),
                       });
