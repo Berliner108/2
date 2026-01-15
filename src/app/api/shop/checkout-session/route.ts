@@ -6,17 +6,16 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Plattform-Fee: 7%
 const PLATFORM_FEE_RATE = 0.07;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 type Body = {
-  articleId: string;
+  articleId?: string; // optional (wir validieren nur, wenn mitgesendet)
   tierId: string;
-  unit: "kg" | "stueck";
-  qty: number;
+  unit?: "kg" | "stueck";
+  qty?: number;
 };
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
@@ -34,61 +33,90 @@ export async function POST(req: Request) {
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
-  if (!body?.articleId || !body?.tierId || !body?.unit) {
-    return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
+  if (!body?.tierId) {
+    return NextResponse.json({ error: "Ungültige Daten (tierId fehlt)." }, { status: 400 });
   }
 
-  // 3) article laden (ADMIN -> RLS-sicher)
-  const { data: article, error: aErr } = await admin
-    .from("articles")
-    .select("id, title, seller_id, sale_type")
-    .eq("id", body.articleId)
-    .maybeSingle();
-
-  if (aErr || !article) {
-    return NextResponse.json({ error: "Artikel nicht gefunden." }, { status: 404 });
-  }
-
-  if (article.seller_id === user.id) {
-    return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
-  }
-
-  // 4) tier laden (ADMIN -> RLS-sicher)
-  const { data: tier, error: tErr } = await admin
+  // 3) Tier laden + Artikel direkt joinen (ADMIN => RLS egal)
+  //    WICHTIG: Join kann je nach FK/Select als Objekt ODER Array kommen -> wir normalisieren.
+  const { data: tierRow, error: tierErr } = await admin
     .from("article_price_tiers")
-    .select("id, unit, min_qty, max_qty, price, shipping")
+    .select(
+      [
+        "id",
+        "article_id",
+        "unit",
+        "min_qty",
+        "max_qty",
+        "price",
+        "shipping",
+        "articles:article_id ( id, title, seller_id, sale_type )",
+      ].join(",")
+    )
     .eq("id", body.tierId)
-    .eq("article_id", body.articleId)
     .maybeSingle();
 
-  if (tErr || !tier) return NextResponse.json({ error: "Preisstaffel nicht gefunden." }, { status: 400 });
-  if (tier.unit !== body.unit) return NextResponse.json({ error: "Falsche Einheit." }, { status: 400 });
+  if (tierErr || !tierRow) {
+    return NextResponse.json({ error: "Preisstaffel nicht gefunden." }, { status: 404 });
+  }
 
-  const qty = article.sale_type === "gesamt" ? 1 : Math.max(1, Number(body.qty || 1));
+  const joined = (tierRow as any).articles;
+  const article =
+    Array.isArray(joined) ? joined[0] ?? null : joined ?? null;
 
-  if (qty < Number(tier.min_qty)) {
+  if (!article?.id) {
+    return NextResponse.json(
+      { error: "Artikel nicht gefunden (Join über Tier liefert keinen Artikel)." },
+      { status: 404 }
+    );
+  }
+
+  // optional: wenn articleId mitgesendet wird, muss sie passen
+  if (body.articleId && String(body.articleId) !== String(article.id)) {
+    return NextResponse.json(
+      {
+        error: "Ungültige Daten (articleId passt nicht zum tierId).",
+      },
+      { status: 400 }
+    );
+  }
+
+  // unit/qty normalisieren
+  const unit = (body.unit ?? tierRow.unit) as "kg" | "stueck";
+  if (unit !== tierRow.unit) {
+    return NextResponse.json({ error: "Falsche Einheit." }, { status: 400 });
+  }
+
+  const saleType = String(article.sale_type ?? "");
+  const qty =
+    saleType === "gesamt" ? 1 : Math.max(1, Number(body.qty || 1));
+
+  if (qty < Number(tierRow.min_qty)) {
     return NextResponse.json({ error: "Menge zu klein." }, { status: 400 });
   }
-  if (tier.max_qty != null && qty > Number(tier.max_qty)) {
+  if (tierRow.max_qty != null && qty > Number(tierRow.max_qty)) {
     return NextResponse.json({ error: "Menge zu groß." }, { status: 400 });
   }
 
-  const unitPriceCents = eurToCents(tier.price);
-  const shippingCents = eurToCents(tier.shipping);
+  // Käufer darf nicht eigener Verkäufer sein
+  if (String(article.seller_id) === String(user.id)) {
+    return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
+  }
 
-  const itemsTotalCents = article.sale_type === "gesamt" ? unitPriceCents : qty * unitPriceCents;
+  // 4) Preise
+  const unitPriceCents = eurToCents(tierRow.price);
+  const shippingCents = eurToCents(tierRow.shipping);
+  const itemsTotalCents = saleType === "gesamt" ? unitPriceCents : qty * unitPriceCents;
   const totalCents = itemsTotalCents + shippingCents;
 
   // 5) profiles laden (Snapshots + Connect Destination)
-  const { data: sellerProf, error: spErr } = await admin
+  const { data: sellerProf } = await admin
     .from("profiles")
-    .select(
-      "id, username, account_type, company_name, vat_number, address, stripe_account_id, stripe_connect_id, payouts_enabled, connect_ready"
-    )
+    .select("id, username, account_type, company_name, vat_number, address, stripe_account_id, stripe_connect_id, connect_ready")
     .eq("id", article.seller_id)
     .maybeSingle();
 
-  if (spErr || !sellerProf) {
+  if (!sellerProf) {
     return NextResponse.json({ error: "Verkäuferprofil nicht gefunden." }, { status: 409 });
   }
 
@@ -96,18 +124,10 @@ export async function POST(req: Request) {
     (sellerProf as any).stripe_account_id || (sellerProf as any).stripe_connect_id;
 
   if (!sellerStripeAccount) {
-    return NextResponse.json(
-      { error: "Verkäufer hat kein Stripe-Connect Konto hinterlegt." },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: "Verkäufer hat kein Stripe-Connect Konto hinterlegt." }, { status: 409 });
   }
-
-  // optional streng: nur wenn connect_ready true
   if (sellerProf.connect_ready === false) {
-    return NextResponse.json(
-      { error: "Verkäufer ist für Auszahlungen noch nicht bereit (connect_ready=false)." },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: "Verkäufer ist für Connect noch nicht bereit." }, { status: 409 });
   }
 
   const { data: buyerProf } = await admin
@@ -116,7 +136,7 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // 6) Order anlegen (USER-client -> RLS Insert-Policy bleibt sauber)
+  // 6) Order anlegen (USER client => RLS Insert sauber)
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
@@ -126,7 +146,7 @@ export async function POST(req: Request) {
       seller_id: article.seller_id,
       article_id: article.id,
 
-      unit: body.unit,
+      unit,
       qty,
 
       price_gross_cents: unitPriceCents,
@@ -154,14 +174,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 7) Stripe Checkout Session (Connect Destination Charge)
+  // 7) Stripe Checkout Session (Destination Charge)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const feeCents = Math.max(0, Math.round(totalCents * PLATFORM_FEE_RATE));
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
 
-    // wenn du customers nutzt: besser customer setzen
     customer: buyerProf?.stripe_customer_id ?? undefined,
     customer_email: buyerProf?.stripe_customer_id ? undefined : user.email ?? undefined,
 
@@ -170,9 +189,9 @@ export async function POST(req: Request) {
         price_data: {
           currency: "eur",
           product_data: { name: article.title ?? "Artikel" },
-          unit_amount: article.sale_type === "gesamt" ? unitPriceCents : unitPriceCents,
+          unit_amount: unitPriceCents,
         },
-        quantity: article.sale_type === "gesamt" ? 1 : qty,
+        quantity: saleType === "gesamt" ? 1 : qty,
       },
       ...(shippingCents > 0
         ? [
@@ -190,9 +209,7 @@ export async function POST(req: Request) {
 
     payment_intent_data: {
       application_fee_amount: feeCents,
-      transfer_data: {
-        destination: sellerStripeAccount,
-      },
+      transfer_data: { destination: sellerStripeAccount },
       metadata: {
         shop_order_id: order.id,
         article_id: article.id,
