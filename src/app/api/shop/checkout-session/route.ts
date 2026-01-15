@@ -6,24 +6,30 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  // apiVersion: "2024-06-20", // optional, wenn du fix pinnen willst
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 type Body = {
   articleId: string;
-  tierId?: string; // optional: wir können notfalls auch ohne tierId ein Tier suchen
+  tierId: string;
   unit: "kg" | "stueck";
   qty: number;
 };
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 
+type ProfileSnap = {
+  username: string | null;
+  account_type: string | null;
+  company_name: string | null;
+  vat_number: string | null;
+  address: any | null;
+};
+
 export async function POST(req: Request) {
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
 
-  // 1) auth (RLS-User nur für Auth)
+  // 1) auth
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
   if (authErr || !user) {
@@ -32,171 +38,143 @@ export async function POST(req: Request) {
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
-  if (
-    !body ||
-    typeof body.articleId !== "string" ||
-    !body.articleId ||
-    (body.tierId != null && typeof body.tierId !== "string") ||
-    (body.unit !== "kg" && body.unit !== "stueck") ||
-    typeof body.qty !== "number"
-  ) {
+  if (!body?.articleId || !body?.tierId || !body?.unit || !body?.qty) {
     return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
   }
 
-  // 3) Artikel laden (ADMIN => kein RLS-„Artikel nicht gefunden“)
+  // 3) article laden (WICHTIG: bei dir ist Verkäufer = owner_id)
   const { data: article, error: aErr } = await admin
     .from("articles")
-    .select("id, title, seller_id, sale_type")
+    .select("id, title, owner_id, sale_type, published, sold_out, archived")
     .eq("id", body.articleId)
     .maybeSingle();
 
-  if (aErr || !article) {
+  if (aErr) {
+    return NextResponse.json({ error: aErr.message }, { status: 500 });
+  }
+  if (!article) {
     return NextResponse.json({ error: "Artikel nicht gefunden." }, { status: 404 });
   }
 
-  if (article.seller_id === user.id) {
-    return NextResponse.json(
-      { error: "Du kannst nicht deinen eigenen Artikel kaufen." },
-      { status: 400 }
-    );
+  // optional: nur kaufbar wenn publish + nicht sold_out + nicht archived
+  if (article.published === false || article.sold_out === true || article.archived === true) {
+    return NextResponse.json({ error: "Artikel nicht kaufbar." }, { status: 409 });
   }
 
-  // 4) qty normalisieren
-  const qty = article.sale_type === "gesamt" ? 1 : Math.max(1, Math.floor(body.qty || 1));
-
-  // 5) Tier laden (ADMIN => kein RLS-„Preisstaffel nicht gefunden“)
-  //    a) wenn tierId mitkommt: genau diesen Tier holen
-  //    b) sonst: passend zum qty/unit suchen
-  let tierRow: any | null = null;
-
-  if (body.tierId) {
-    const { data: tier, error: tErr } = await admin
-      .from("article_price_tiers")
-      .select("id, unit, min_qty, max_qty, price, shipping")
-      .eq("id", body.tierId)
-      .eq("article_id", body.articleId)
-      .maybeSingle();
-
-    if (tErr) {
-      return NextResponse.json({ error: tErr.message }, { status: 500 });
-    }
-    tierRow = tier ?? null;
-  } else {
-    const { data: tiers, error: tErr } = await admin
-      .from("article_price_tiers")
-      .select("id, unit, min_qty, max_qty, price, shipping")
-      .eq("article_id", body.articleId)
-      .eq("unit", body.unit)
-      .order("min_qty", { ascending: true });
-
-    if (tErr) {
-      return NextResponse.json({ error: tErr.message }, { status: 500 });
-    }
-
-    const list = Array.isArray(tiers) ? tiers : [];
-    // finde Tier passend zu qty, sonst nimm den letzten als fallback
-    tierRow =
-      list.find((t) => {
-        const min = Number(t.min_qty);
-        const max = t.max_qty == null ? null : Number(t.max_qty);
-        return qty >= min && (max == null || qty <= max);
-      }) ?? (list.length ? list[list.length - 1] : null);
+  const sellerId = String((article as any).owner_id ?? "");
+  if (!sellerId) {
+    return NextResponse.json({ error: "Artikel hat keinen Verkäufer (owner_id fehlt)." }, { status: 500 });
   }
 
-  if (!tierRow) {
-    return NextResponse.json(
-      { error: "Preisstaffel nicht gefunden (Artikel hat evtl. keine Preisstaffeln)." },
-      { status: 409 }
-    );
+  if (sellerId === user.id) {
+    return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
-  // Einheit muss passen
-  const unit = body.unit;
-  if (tierRow.unit !== unit) {
+  // 4) tier laden (ADMIN: sonst knallt RLS -> leer)
+  const { data: tier, error: tErr } = await admin
+    .from("article_price_tiers")
+    .select("id, unit, min_qty, max_qty, price, shipping")
+    .eq("id", body.tierId)
+    .eq("article_id", body.articleId)
+    .maybeSingle();
+
+  if (tErr) {
+    // <- damit du die echte Ursache siehst (z.B. RLS/Policy/Column)
+    return NextResponse.json({ error: tErr.message }, { status: 500 });
+  }
+  if (!tier) {
+    return NextResponse.json({ error: "Preisstaffel nicht gefunden." }, { status: 400 });
+  }
+
+  if (tier.unit !== body.unit) {
     return NextResponse.json({ error: "Falsche Einheit." }, { status: 400 });
   }
 
-  // Menge in Range?
-  if (qty < Number(tierRow.min_qty)) {
+  const saleType = String((article as any).sale_type ?? "");
+  const qty = saleType === "gesamt" ? 1 : Math.max(1, Number(body.qty || 1));
+
+  if (qty < Number(tier.min_qty)) {
     return NextResponse.json({ error: "Menge zu klein." }, { status: 400 });
   }
-  if (tierRow.max_qty != null && qty > Number(tierRow.max_qty)) {
+  if (tier.max_qty != null && qty > Number(tier.max_qty)) {
     return NextResponse.json({ error: "Menge zu groß." }, { status: 400 });
   }
 
-  // 6) Preisberechnung (Brutto)
-  const unitPriceCents = eurToCents(tierRow.price);
-  const shippingCents = eurToCents(tierRow.shipping);
+  const unitPriceCents = eurToCents(tier.price);
+  const shippingCents = eurToCents(tier.shipping);
 
   const totalCents =
-    article.sale_type === "gesamt"
+    saleType === "gesamt"
       ? unitPriceCents + shippingCents
       : qty * unitPriceCents + shippingCents;
 
-  // 7) Snapshots aus profiles (damit /konto/bestellungen alles “durchreichen” kann)
+  // 5) Snapshots (buyer_/seller_) aus profiles holen (ADMIN: stabil)
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
     admin
       .from("profiles")
-      .select("username, account_type, company_name, vat_number, address, stripe_customer_id")
+      .select("username, account_type, company_name, vat_number, address")
       .eq("id", user.id)
       .maybeSingle(),
     admin
       .from("profiles")
-      .select("username, account_type, company_name, vat_number, address, stripe_account_id, stripe_connect_id, payouts_enabled")
-      .eq("id", article.seller_id)
+      .select("username, account_type, company_name, vat_number, address")
+      .eq("id", sellerId)
       .maybeSingle(),
   ]);
 
-  // 8) Order anlegen
-  const { data: order, error: oErr } = await admin
+  const buyerSnap: ProfileSnap = {
+    username: (buyerProf as any)?.username ?? null,
+    account_type: (buyerProf as any)?.account_type ?? null,
+    company_name: (buyerProf as any)?.company_name ?? null,
+    vat_number: (buyerProf as any)?.vat_number ?? null,
+    address: (buyerProf as any)?.address ?? null,
+  };
+
+  const sellerSnap: ProfileSnap = {
+    username: (sellerProf as any)?.username ?? null,
+    account_type: (sellerProf as any)?.account_type ?? null,
+    company_name: (sellerProf as any)?.company_name ?? null,
+    vat_number: (sellerProf as any)?.vat_number ?? null,
+    address: (sellerProf as any)?.address ?? null,
+  };
+
+  // 6) Order anlegen (hier gerne supabaseServer, damit RLS greift)
+  const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
       status: "payment_pending",
-
       buyer_id: user.id,
-      seller_id: article.seller_id,
+      seller_id: sellerId,
       article_id: article.id,
-
-      unit,
+      unit: body.unit,
       qty,
-
       price_gross_cents: unitPriceCents,
       shipping_gross_cents: shippingCents,
       total_gross_cents: totalCents,
 
-      // Snapshots Buyer
-      buyer_username: buyerProf?.username ?? null,
-      buyer_account_type: buyerProf?.account_type ?? null,
-      buyer_company_name: buyerProf?.company_name ?? null,
-      buyer_vat_number: buyerProf?.vat_number ?? null,
-      buyer_address: buyerProf?.address ?? null,
+      // buyer snapshots
+      buyer_username: buyerSnap.username,
+      buyer_account_type: buyerSnap.account_type,
+      buyer_company_name: buyerSnap.company_name,
+      buyer_vat_number: buyerSnap.vat_number,
+      buyer_address: buyerSnap.address,
 
-      // Snapshots Seller
-      seller_username: sellerProf?.username ?? null,
-      seller_account_type: sellerProf?.account_type ?? null,
-      seller_company_name: sellerProf?.company_name ?? null,
-      seller_vat_number: sellerProf?.vat_number ?? null,
-      seller_address: sellerProf?.address ?? null,
+      // seller snapshots
+      seller_username: sellerSnap.username,
+      seller_account_type: sellerSnap.account_type,
+      seller_company_name: sellerSnap.company_name,
+      seller_vat_number: sellerSnap.vat_number,
+      seller_address: sellerSnap.address,
     })
     .select("id")
     .single();
 
   if (oErr || !order) {
-    return NextResponse.json(
-      { error: oErr?.message ?? "Order konnte nicht erstellt werden." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 9) Stripe Checkout Session (noch ohne Connect-Destination — das machen wir im Webhook/Connect-Step)
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!baseUrl) {
-    return NextResponse.json(
-      { error: "NEXT_PUBLIC_SITE_URL fehlt in .env" },
-      { status: 500 }
-    );
-  }
-
+  // 7) Stripe Checkout Session
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     customer_email: user.email ?? undefined,
@@ -204,8 +182,8 @@ export async function POST(req: Request) {
       {
         price_data: {
           currency: "eur",
-          product_data: { name: article.title ?? "Artikel" },
-          unit_amount: totalCents, // wir rechnen total inkl. Versand als 1 Position
+          product_data: { name: (article as any).title ?? "Artikel" },
+          unit_amount: totalCents,
         },
         quantity: 1,
       },
@@ -215,6 +193,7 @@ export async function POST(req: Request) {
     metadata: {
       shop_order_id: order.id,
       article_id: article.id,
+      seller_id: sellerId,
     },
   });
 
