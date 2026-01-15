@@ -71,7 +71,7 @@ export async function POST(_req: Request, ctx: any) {
   if (order.status !== "shipped") {
     return NextResponse.json({ error: "Freigabe nur möglich, wenn Status = shipped." }, { status: 409 });
   }
-
+  const order = orderRaw as any;
   const isBuyer = order.buyer_id === user.id;
   const isSeller = order.seller_id === user.id;
   if (!isBuyer && !isSeller) {
