@@ -20,8 +20,8 @@ const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 function pickDisplayName(u: any): string | null {
   if (!u) return null;
 
-  // supabase-js: user_metadata ist raw_user_meta_data
   const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
+  const id0 = Array.isArray(u.identities) ? u.identities[0]?.identity_data : null;
 
   const v =
     md.display_name ??
@@ -29,12 +29,14 @@ function pickDisplayName(u: any): string | null {
     md.name ??
     md.displayName ??
     md.fullName ??
+    id0?.display_name ??
+    id0?.full_name ??
+    id0?.name ??
     null;
 
   const s = v ? String(v).trim() : "";
   return s ? s : null;
 }
-
 
 type ProfileSnap = {
   username: string | null;
@@ -42,7 +44,6 @@ type ProfileSnap = {
   company_name: string | null;
   vat_number: string | null;
   address: any | null;
-  
 };
 
 export async function POST(req: Request) {
@@ -55,20 +56,12 @@ export async function POST(req: Request) {
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
-// ✅ Buyer Display Name robust (über Admin Auth)
-const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
-if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
 
-const buyerDisplayName =
-  (buyerAuth?.user?.user_metadata as any)?.display_name ??
-  (buyerAuth?.user?.user_metadata as any)?.full_name ??
-  (buyerAuth?.user?.user_metadata as any)?.name ??
-  (user.user_metadata as any)?.display_name ??
-  (user.user_metadata as any)?.full_name ??
-  (user.user_metadata as any)?.name ??
-  null;
+  // ✅ Buyer Display Name (Admin ist zuverlässiger als Session-User)
+  const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
+  if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
 
-
+  const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(user);
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
@@ -98,16 +91,11 @@ const buyerDisplayName =
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
+  // ✅ Seller Display Name (Admin)
+  const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
+  if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
 
-const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
-if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
-
-const sellerDisplayName =
-  (sellerAuth?.user?.user_metadata as any)?.display_name ??
-  (sellerAuth?.user?.user_metadata as any)?.full_name ??
-  (sellerAuth?.user?.user_metadata as any)?.name ??
-  null;
-
+  const sellerDisplayName = pickDisplayName(sellerAuth?.user);
 
   // 4) tier laden (ADMIN: RLS-sicher)
   const { data: tier, error: tErr } = await admin
@@ -144,8 +132,16 @@ const sellerDisplayName =
 
   // 5) Snapshots aus profiles holen (ADMIN: stabil)
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
-    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
-    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
+    admin
+      .from("profiles")
+      .select("username, account_type, company_name, vat_number, address")
+      .eq("id", user.id)
+      .maybeSingle(),
+    admin
+      .from("profiles")
+      .select("username, account_type, company_name, vat_number, address")
+      .eq("id", sellerId)
+      .maybeSingle(),
   ]);
 
   const buyerSnap: ProfileSnap = {
@@ -175,12 +171,12 @@ const sellerDisplayName =
 
       unit: body.unit,
       qty,
-      tier_id: (tier as any).id,           // ✅ WICHTIG
+      tier_id: (tier as any).id,
       price_gross_cents: unitPriceCents,
       shipping_gross_cents: shippingCents,
       total_gross_cents: totalCents,
 
-      platform_fee_percent: 0.07,          // ✅ WICHTIG (7% erst bei Release relevant)
+      platform_fee_percent: 0.07,
 
       // buyer snapshots
       buyer_username: buyerSnap.username,
@@ -189,8 +185,6 @@ const sellerDisplayName =
       buyer_vat_number: buyerSnap.vat_number,
       buyer_address: buyerSnap.address,
       buyer_display_name: buyerDisplayName,
-      seller_display_name: sellerDisplayName,
-
 
       // seller snapshots
       seller_username: sellerSnap.username,
@@ -198,6 +192,7 @@ const sellerDisplayName =
       seller_company_name: sellerSnap.company_name,
       seller_vat_number: sellerSnap.vat_number,
       seller_address: sellerSnap.address,
+      seller_display_name: sellerDisplayName,
     })
     .select("id, buyer_display_name, seller_display_name")
     .single();
@@ -221,20 +216,17 @@ const sellerDisplayName =
         quantity: 1,
       },
     ],
-
     payment_intent_data: {
-      transfer_group: order.id, // ✅ für spätere Transfers
+      transfer_group: order.id,
       metadata: {
         shop_order_id: order.id,
         article_id: (article as any).id,
-        seller_id: sellerId,    // ✅ FIX (nicht article.seller_id)
+        seller_id: sellerId,
         buyer_id: user.id,
       },
     },
-
     success_url: `${baseUrl}/konto/bestellungen?success=1&order=${order.id}`,
     cancel_url: `${baseUrl}/kaufen/artikel/${(article as any).id}?canceled=1`,
-
     metadata: {
       shop_order_id: order.id,
       article_id: (article as any).id,
