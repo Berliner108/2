@@ -18,6 +18,14 @@ function formatDate(iso?: string) {
   return d.toLocaleDateString('de-AT', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
+function formatAddress(a: any) {
+  if (!a) return "—";
+  const street = [a.street, a.houseNumber].filter(Boolean).join(" ");
+  const city = [a.zip, a.city].filter(Boolean).join(" ");
+  const country = a.country ? String(a.country) : "";
+  return [street, city, country].filter(Boolean).join(", ");
+}
+
 type Slice<T> = { pageItems: T[]; from: number; to: number; total: number; safePage: number; pages: number }
 function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const total = arr.length
@@ -132,6 +140,9 @@ type MySale = {
   articleId: string
   title: string
   buyerName: string
+  buyerCompanyName?: string | null;
+  buyerVatNumber?: string | null;
+  buyerAddress?: any | null;
   buyerRating?: number
   buyerRatingCount?: number
   amountCents: number
@@ -166,6 +177,9 @@ type ApiShopSale = {
   articles?: { title: string | null } | { title: string | null }[] | null;
 
   buyer_username: string | null;
+    buyer_company_name: string | null;
+  buyer_vat_number: string | null;
+  buyer_address: any | null;
 
   shipped_at: string | null;
   released_at: string | null;
@@ -289,6 +303,10 @@ const mapped: MySale[] = orders.map((o) => {
     releasedAtIso: o.released_at,
     refundedAtIso: o.refunded_at,
     sellerCanRelease: !!o.sellerCanRelease,
+    buyerCompanyName: o.buyer_company_name ?? null,
+buyerVatNumber: o.buyer_vat_number ?? null,
+buyerAddress: o.buyer_address ?? null,
+
   };
 });
 
@@ -711,6 +729,24 @@ async function sellerRelease(sale: MySale) {
                                 {s.buyerName}
                                 <span className={styles.vendorRatingSmall}> · {buyerTxt}</span>
                               </div>
+                              {s.buyerCompanyName && (
+  <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+    Firma: {s.buyerCompanyName}
+  </div>
+)}
+
+{s.buyerVatNumber && (
+  <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+    UID: {s.buyerVatNumber}
+  </div>
+)}
+
+{s.buyerAddress && (
+  <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+    Adresse: {formatAddress(s.buyerAddress)}
+  </div>
+)}
+
                             </div>
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Preis</div>
