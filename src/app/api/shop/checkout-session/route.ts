@@ -17,6 +17,25 @@ type Body = {
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 
+function pickDisplayName(u: any): string | null {
+  if (!u) return null;
+
+  // supabase-js: user_metadata ist raw_user_meta_data
+  const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
+
+  const v =
+    md.display_name ??
+    md.full_name ??
+    md.name ??
+    md.displayName ??
+    md.fullName ??
+    null;
+
+  const s = v ? String(v).trim() : "";
+  return s ? s : null;
+}
+
+
 type ProfileSnap = {
   username: string | null;
   account_type: string | null;
@@ -36,11 +55,19 @@ export async function POST(req: Request) {
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
-  const buyerDisplayName =
+// ✅ Buyer Display Name robust (über Admin Auth)
+const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
+if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
+
+const buyerDisplayName =
+  (buyerAuth?.user?.user_metadata as any)?.display_name ??
+  (buyerAuth?.user?.user_metadata as any)?.full_name ??
+  (buyerAuth?.user?.user_metadata as any)?.name ??
   (user.user_metadata as any)?.display_name ??
   (user.user_metadata as any)?.full_name ??
   (user.user_metadata as any)?.name ??
   null;
+
 
 
   // 2) body
@@ -70,7 +97,10 @@ export async function POST(req: Request) {
   if (sellerId === user.id) {
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
-  const { data: sellerAuth } = await admin.auth.admin.getUserById(sellerId);
+
+
+const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
+if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
 
 const sellerDisplayName =
   (sellerAuth?.user?.user_metadata as any)?.display_name ??
@@ -169,7 +199,7 @@ const sellerDisplayName =
       seller_vat_number: sellerSnap.vat_number,
       seller_address: sellerSnap.address,
     })
-    .select("id")
+    .select("id, buyer_display_name, seller_display_name")
     .single();
 
   if (oErr || !order) {
