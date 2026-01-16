@@ -25,7 +25,13 @@ type LackOrder = {
 
 type OrdersResp = { vergeben: LackOrder[]; angenommen: LackOrder[] }
 
+// ✅ Shop-Verkäufe (Verkäufer) – aus /api/konto/shop-verkaufen
+type ShopSalesResp = {
+  orders?: Array<{ id: string; created_at: string; status: string }>
+}
+
 const NAV_SCROLL_KEY = 'navbar:scrollLeft'
+
 export default function Navbar() {
   const pathname = usePathname()
   const [kontoNew, setKontoNew] = useState(0)
@@ -116,7 +122,31 @@ export default function Navbar() {
           // ignore
         }
 
-        if (alive) setKontoNew(offersNew + ordersBadge)
+        // 3) ✅ Shop-Verkäufe (NUR Verkäufer) – „neu“ exakt wie Lacke (lastSeen + 7 Tage Cap)
+        let shopSalesNew = 0
+        try {
+          const res = await fetch('/api/konto/shop-verkaufen', { cache: 'no-store' })
+          if (res.ok) {
+            const j: ShopSalesResp = await res.json()
+            const orders = Array.isArray(j?.orders) ? j.orders : []
+
+            const rawLastSeen = Number(localStorage.getItem('shopSales:lastSeen') || '0')
+            const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+            shopSalesNew = orders.reduce((acc, o) => {
+              const ts = +new Date(o.created_at)
+              // nur "paid" zählt als neuer Kauf
+              return o.status === 'paid' && ts > lastSeen ? acc + 1 : acc
+            }, 0)
+          } else {
+            // nicht eingeloggt / kein Verkäufer -> 0
+            shopSalesNew = 0
+          }
+        } catch {
+          // ignore
+        }
+
+        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew)
       } catch {
         // ignore
       }
@@ -143,39 +173,39 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-  const nav = navbarRef.current
-  if (!nav) return
+    const nav = navbarRef.current
+    if (!nav) return
 
-  const save = () => {
+    const save = () => {
+      try {
+        sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollLeft))
+      } catch {
+        // ignore
+      }
+    }
+
+    nav.addEventListener('scroll', save, { passive: true })
+    return () => nav.removeEventListener('scroll', save)
+  }, [])
+
+  useLayoutEffect(() => {
+    const nav = navbarRef.current
+    if (!nav) return
+
+    let x = 0
     try {
-      sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollLeft))
+      x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
     } catch {
       // ignore
     }
-  }
 
-  nav.addEventListener('scroll', save, { passive: true })
-  return () => nav.removeEventListener('scroll', save)
-}, [])
-useLayoutEffect(() => {
-  const nav = navbarRef.current
-  if (!nav) return
-
-  let x = 0
-  try {
-    x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
-  } catch {
-    // ignore
-  }
-
-  // 2 Frames warten, damit active-styles + Layout fertig sind
-  requestAnimationFrame(() => {
+    // 2 Frames warten, damit active-styles + Layout fertig sind
     requestAnimationFrame(() => {
-      nav.scrollTo({ left: x, behavior: 'auto' })
+      requestAnimationFrame(() => {
+        nav.scrollTo({ left: x, behavior: 'auto' })
+      })
     })
-  })
-}, [pathname])
-
+  }, [pathname])
 
   // --- Sichtbarkeitsprüfung per BoundingClientRect ---
   useEffect(() => {
@@ -228,6 +258,14 @@ useLayoutEffect(() => {
       }
       if (pathname.startsWith('/konto/lackanfragen')) {
         localStorage.setItem('offers:lastSeen', String(Date.now()))
+      }
+
+      // ✅ Shop-Verkäufe: nur dann "gesehen", wenn Verkäufer wirklich den Verkäufe-Tab öffnet
+      if (pathname.startsWith('/konto/verkaufen')) {
+        const sp = new URLSearchParams(window.location.search)
+        if (sp.get('tab') === 'verkaeufe') {
+          localStorage.setItem('shopSales:lastSeen', String(Date.now()))
+        }
       }
     } catch {
       // ignore
