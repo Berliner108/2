@@ -17,14 +17,14 @@ type Body = {
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 
-function buildDisplayNameFromAuthUser(u: any): string | null {
+function pickDisplayName(u: any): string | null {
   if (!u) return null;
 
   const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
   const id0 = Array.isArray(u.identities) ? u.identities[0]?.identity_data : null;
 
-  // 1) direkte Display-Name Felder
-  const direct =
+  // 1) klassische Display-Felder
+  const v =
     md.display_name ??
     md.full_name ??
     md.name ??
@@ -35,18 +35,20 @@ function buildDisplayNameFromAuthUser(u: any): string | null {
     id0?.name ??
     null;
 
-  const directStr = direct ? String(direct).trim() : "";
-  if (directStr) return directStr;
+  const direct = v ? String(v).trim() : "";
+  if (direct) return direct;
 
-  // 2) wie in deiner /api/profile Route: firstName + lastName
+  // 2) wie bei dir im profile-Route: firstName + lastName
   const first =
-    (md.firstName ?? md.first_name ?? id0?.firstName ?? id0?.first_name ?? "")?.toString().trim();
+    String(md.firstName ?? md.first_name ?? id0?.firstName ?? id0?.first_name ?? "").trim();
   const last =
-    (md.lastName ?? md.last_name ?? id0?.lastName ?? id0?.last_name ?? "")?.toString().trim();
+    String(md.lastName ?? md.last_name ?? id0?.lastName ?? id0?.last_name ?? "").trim();
 
   const composed = `${first} ${last}`.trim();
   return composed ? composed : null;
 }
+
+
 
 type ProfileSnap = {
   username: string | null;
@@ -54,6 +56,7 @@ type ProfileSnap = {
   company_name: string | null;
   vat_number: string | null;
   address: any | null;
+  
 };
 
 export async function POST(req: Request) {
@@ -66,6 +69,14 @@ export async function POST(req: Request) {
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
+// ✅ Buyer Display Name robust (über Admin Auth)
+const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
+if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
+
+const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(user);
+
+
+
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
@@ -73,7 +84,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
   }
 
-  // 3) article laden (seller = owner_id)
+  // 3) article laden (bei dir Verkäufer = owner_id)
   const { data: article, error: aErr } = await admin
     .from("articles")
     .select("id, title, owner_id, sale_type, published, sold_out, archived")
@@ -95,18 +106,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
-  // ✅ Display Names DIREKT aus auth.users (wie du willst) – aber inkl. firstName/lastName
-  const [{ data: buyerAuth }, { data: sellerAuth }] = await Promise.all([
-    admin.auth.admin.getUserById(user.id),
-    admin.auth.admin.getUserById(sellerId),
-  ]);
 
-  const buyerDisplayName =
-    buildDisplayNameFromAuthUser(buyerAuth?.user) ?? buildDisplayNameFromAuthUser(user);
+const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
+if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
 
-  const sellerDisplayName = buildDisplayNameFromAuthUser(sellerAuth?.user);
+const sellerDisplayName = pickDisplayName(sellerAuth?.user);
 
-  // 4) tier laden
+
+
+  // 4) tier laden (ADMIN: RLS-sicher)
   const { data: tier, error: tErr } = await admin
     .from("article_price_tiers")
     .select("id, unit, min_qty, max_qty, price, shipping")
@@ -139,7 +147,7 @@ export async function POST(req: Request) {
       ? unitPriceCents + shippingCents
       : qty * unitPriceCents + shippingCents;
 
-  // 5) Snapshots aus profiles holen
+  // 5) Snapshots aus profiles holen (ADMIN: stabil)
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
@@ -161,7 +169,7 @@ export async function POST(req: Request) {
     address: (sellerProf as any)?.address ?? null,
   };
 
-  // 6) Order anlegen
+  // 6) Order anlegen (supabaseServer -> RLS greift)
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
@@ -172,35 +180,37 @@ export async function POST(req: Request) {
 
       unit: body.unit,
       qty,
-      tier_id: (tier as any).id,
+      tier_id: (tier as any).id,           // ✅ WICHTIG
       price_gross_cents: unitPriceCents,
       shipping_gross_cents: shippingCents,
       total_gross_cents: totalCents,
 
-      platform_fee_percent: 0.07,
+      platform_fee_percent: 0.07,          // ✅ WICHTIG (7% erst bei Release relevant)
 
+      // buyer snapshots
       buyer_username: buyerSnap.username,
       buyer_account_type: buyerSnap.account_type,
       buyer_company_name: buyerSnap.company_name,
       buyer_vat_number: buyerSnap.vat_number,
       buyer_address: buyerSnap.address,
       buyer_display_name: buyerDisplayName,
-
+      // seller snapshots
       seller_username: sellerSnap.username,
       seller_account_type: sellerSnap.account_type,
       seller_company_name: sellerSnap.company_name,
       seller_vat_number: sellerSnap.vat_number,
       seller_address: sellerSnap.address,
       seller_display_name: sellerDisplayName,
+
     })
-    .select("id")
+    .select("id, buyer_display_name, seller_display_name")
     .single();
 
   if (oErr || !order) {
     return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 7) Stripe Checkout Session
+  // 7) Stripe Checkout Session (keine Transfers hier! escrow)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -215,17 +225,20 @@ export async function POST(req: Request) {
         quantity: 1,
       },
     ],
+
     payment_intent_data: {
-      transfer_group: order.id,
+      transfer_group: order.id, // ✅ für spätere Transfers
       metadata: {
         shop_order_id: order.id,
         article_id: (article as any).id,
-        seller_id: sellerId,
+        seller_id: sellerId,    // ✅ FIX (nicht article.seller_id)
         buyer_id: user.id,
       },
     },
+
     success_url: `${baseUrl}/konto/bestellungen?success=1&order=${order.id}`,
     cancel_url: `${baseUrl}/kaufen/artikel/${(article as any).id}?canceled=1`,
+
     metadata: {
       shop_order_id: order.id,
       article_id: (article as any).id,
