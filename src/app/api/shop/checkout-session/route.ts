@@ -17,9 +17,10 @@ type Body = {
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 
-function pickDisplayName(u: any): string | null {
+function displayNameFromAuthUser(u: any): string | null {
   if (!u) return null;
 
+  // auth.users raw metadata (Supabase Dashboard -> Raw user meta data)
   const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
   const id0 = Array.isArray(u.identities) ? u.identities[0]?.identity_data : null;
 
@@ -27,15 +28,13 @@ function pickDisplayName(u: any): string | null {
     md.display_name ??
     md.full_name ??
     md.name ??
-    md.displayName ??
-    md.fullName ??
     id0?.display_name ??
     id0?.full_name ??
     id0?.name ??
     null;
 
   const s = v ? String(v).trim() : "";
-  return s ? s : null;
+  return s || null;
 }
 
 type ProfileSnap = {
@@ -50,18 +49,12 @@ export async function POST(req: Request) {
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
 
-  // 1) auth
+  // 1) auth (buyer)
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
-
-  // ✅ Buyer Display Name (Admin ist zuverlässiger als Session-User)
-  const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
-  if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
-
-  const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(user);
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
@@ -69,7 +62,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
   }
 
-  // 3) article laden (bei dir Verkäufer = owner_id)
+  // 3) article laden (seller = owner_id)
   const { data: article, error: aErr } = await admin
     .from("articles")
     .select("id, title, owner_id, sale_type, published, sold_out, archived")
@@ -91,13 +84,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
-  // ✅ Seller Display Name (Admin)
-  const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
-  if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
+  // ✅ DISPLAY NAMES DIREKT AUS auth.users (Admin API)
+  const [{ data: buyerAuth, error: bErr }, { data: sellerAuth, error: sErr }] = await Promise.all([
+    admin.auth.admin.getUserById(user.id),
+    admin.auth.admin.getUserById(sellerId),
+  ]);
 
-  const sellerDisplayName = pickDisplayName(sellerAuth?.user);
+  if (bErr) console.error("getUserById(buyer) failed:", bErr);
+  if (sErr) console.error("getUserById(seller) failed:", sErr);
 
-  // 4) tier laden (ADMIN: RLS-sicher)
+  const buyerDisplayName = displayNameFromAuthUser(buyerAuth?.user);
+  const sellerDisplayName = displayNameFromAuthUser(sellerAuth?.user);
+
+  // 4) tier laden
   const { data: tier, error: tErr } = await admin
     .from("article_price_tiers")
     .select("id, unit, min_qty, max_qty, price, shipping")
@@ -130,18 +129,10 @@ export async function POST(req: Request) {
       ? unitPriceCents + shippingCents
       : qty * unitPriceCents + shippingCents;
 
-  // 5) Snapshots aus profiles holen (ADMIN: stabil)
+  // 5) profile snapshots
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
-    admin
-      .from("profiles")
-      .select("username, account_type, company_name, vat_number, address")
-      .eq("id", user.id)
-      .maybeSingle(),
-    admin
-      .from("profiles")
-      .select("username, account_type, company_name, vat_number, address")
-      .eq("id", sellerId)
-      .maybeSingle(),
+    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
+    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
   ]);
 
   const buyerSnap: ProfileSnap = {
@@ -160,7 +151,7 @@ export async function POST(req: Request) {
     address: (sellerProf as any)?.address ?? null,
   };
 
-  // 6) Order anlegen (supabaseServer -> RLS greift)
+  // 6) order insert
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
@@ -201,7 +192,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 7) Stripe Checkout Session (keine Transfers hier! escrow)
+  // 7) Stripe Checkout Session
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
