@@ -145,6 +145,7 @@ type MySale = {
   buyerAddress?: any | null;
   buyerRating?: number
   buyerRatingCount?: number
+  buyerDisplayName?: string | null;
   amountCents: number
   dateIso: string
   status: VerkaufStatus
@@ -180,6 +181,7 @@ type ApiShopSale = {
     buyer_company_name: string | null;
   buyer_vat_number: string | null;
   buyer_address: any | null;
+  buyer_display_name: string | null;
 
   shipped_at: string | null;
   released_at: string | null;
@@ -306,6 +308,8 @@ const mapped: MySale[] = orders.map((o) => {
     buyerCompanyName: o.buyer_company_name ?? null,
 buyerVatNumber: o.buyer_vat_number ?? null,
 buyerAddress: o.buyer_address ?? null,
+buyerDisplayName: (o as any).buyer_display_name ?? null,
+
 
   };
 });
@@ -740,6 +744,12 @@ async function sellerRelease(sale: MySale) {
     UID: {s.buyerVatNumber}
   </div>
 )}
+{s.buyerDisplayName && (
+  <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+    Name: {s.buyerDisplayName}
+  </div>
+)}
+
 
 {s.buyerAddress && (
   <div className={styles.metaValue} style={{ opacity: 0.85 }}>

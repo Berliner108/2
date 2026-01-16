@@ -41,6 +41,7 @@ export async function GET() {
         "buyer_company_name",
         "buyer_vat_number",
         "buyer_address",
+        "buyer_display_name",
 
         "article_id",
         "articles ( title )",

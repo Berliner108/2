@@ -39,7 +39,7 @@ export async function GET() {
         "seller_company_name",
         "seller_vat_number",
         "seller_address",
-
+        "seller_display_name",
         "article_id",
         "articles ( title )",
       ].join(",")

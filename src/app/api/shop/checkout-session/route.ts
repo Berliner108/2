@@ -23,6 +23,7 @@ type ProfileSnap = {
   company_name: string | null;
   vat_number: string | null;
   address: any | null;
+  
 };
 
 export async function POST(req: Request) {
@@ -35,6 +36,12 @@ export async function POST(req: Request) {
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
+  const buyerDisplayName =
+  (user.user_metadata as any)?.display_name ??
+  (user.user_metadata as any)?.full_name ??
+  (user.user_metadata as any)?.name ??
+  null;
+
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
@@ -63,6 +70,14 @@ export async function POST(req: Request) {
   if (sellerId === user.id) {
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
+  const { data: sellerAuth } = await admin.auth.admin.getUserById(sellerId);
+
+const sellerDisplayName =
+  (sellerAuth?.user?.user_metadata as any)?.display_name ??
+  (sellerAuth?.user?.user_metadata as any)?.full_name ??
+  (sellerAuth?.user?.user_metadata as any)?.name ??
+  null;
+
 
   // 4) tier laden (ADMIN: RLS-sicher)
   const { data: tier, error: tErr } = await admin
@@ -143,6 +158,9 @@ export async function POST(req: Request) {
       buyer_company_name: buyerSnap.company_name,
       buyer_vat_number: buyerSnap.vat_number,
       buyer_address: buyerSnap.address,
+      buyer_display_name: buyerDisplayName,
+      seller_display_name: sellerDisplayName,
+
 
       // seller snapshots
       seller_username: sellerSnap.username,

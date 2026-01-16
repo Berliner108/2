@@ -100,6 +100,7 @@ type ApiShopOrder = {
   seller_company_name: string | null;
   seller_vat_number: string | null;
   seller_address: any | null;
+  seller_display_name: string | null;
 
   shipped_at: string | null;     // ✅
   released_at: string | null;    // ✅
@@ -132,8 +133,7 @@ type MyOrder = {
   sellerCompanyName?: string | null;
   buyerVatNumber?: string | null;
   sellerVatNumber?: string | null;
-
-
+  sellerDisplayName?: string | null;
 
 }
 /* ================= Routes ================= */
@@ -240,6 +240,8 @@ useEffect(() => {
         sellerCompanyName: (o as any).seller_company_name ?? null,
         buyerVatNumber: (o as any).buyer_vat_number ?? null,
         sellerVatNumber: (o as any).seller_vat_number ?? null,
+        sellerDisplayName: (o as any).seller_display_name ?? null,
+
             }));
 
       if (!cancelled) setOrders(mapped);
@@ -538,12 +540,18 @@ if (!canBuyerRelease(order)) {
       UID: {o.sellerVatNumber}
     </div>
   )}
+  {o.sellerDisplayName && (
+  <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+    Name: {o.sellerDisplayName}
+  </div>
+)}
 
   {/* ✅ optional: Adresse */}
   {o.sellerAddress && (
     <div className={styles.metaValue} style={{ opacity: 0.85 }}>
       Adresse: {formatAddress(o.sellerAddress)}
-    </div>
+          </div>
+          
   )}
 </div>
 
