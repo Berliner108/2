@@ -125,6 +125,13 @@ type MyOrder = {
   rated?: boolean
   shippedAtIso?: string | null
   releasedAtIso?: string | null
+  buyerAddress?: any | null;
+  sellerAddress?: any | null;
+
+  buyerCompanyName?: string | null;
+  sellerCompanyName?: string | null;
+  buyerVatNumber?: string | null;
+  sellerVatNumber?: string | null;
 
 
 
@@ -227,7 +234,13 @@ useEffect(() => {
         paymentReleased: !!o.released_at || o.status === "released",
         complaintOpen: o.status === "complaint_open",
         rated: false,
-      }));
+        buyerAddress: (o as any).buyer_address ?? null,
+        sellerAddress: (o as any).seller_address ?? null,
+        buyerCompanyName: (o as any).buyer_company_name ?? null,
+        sellerCompanyName: (o as any).seller_company_name ?? null,
+        buyerVatNumber: (o as any).buyer_vat_number ?? null,
+        sellerVatNumber: (o as any).seller_vat_number ?? null,
+            }));
 
       if (!cancelled) setOrders(mapped);
     } catch (e) {
@@ -278,6 +291,15 @@ useEffect(() => {
     () => (reviewOrderId ? orders.find(o => o.id === reviewOrderId) ?? null : null),
     [reviewOrderId, orders]
   )
+
+  function formatAddress(a: any) {
+  if (!a) return "—";
+  const street = [a.street, a.houseNumber].filter(Boolean).join(" ");
+  const city = [a.zip, a.city].filter(Boolean).join(" ");
+  const country = a.country ? String(a.country) : "";
+  return [street, city, country].filter(Boolean).join(", ");
+}
+
 
   useEffect(() => {
     if (!reviewOpen) return
@@ -496,12 +518,36 @@ if (!canBuyerRelease(order)) {
 
                       <div className={styles.meta}>
                         <div className={styles.metaCol}>
-                          <div className={styles.metaLabel}>Verkäufer</div>
-                          <div className={styles.metaValue}>
-                            {o.sellerName}
-                            <span className={styles.vendorRatingSmall}> · {sellerTxt}</span>
-                          </div>
-                        </div>
+  <div className={styles.metaLabel}>Verkäufer</div>
+
+  <div className={styles.metaValue}>
+    {o.sellerName}
+    <span className={styles.vendorRatingSmall}> · {sellerTxt}</span>
+  </div>
+
+  {/* ✅ optional: Firma */}
+  {o.sellerCompanyName && (
+    <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+      Firma: {o.sellerCompanyName}
+    </div>
+  )}
+
+  {/* ✅ HIER: UID anzeigen */}
+  {o.sellerVatNumber && (
+    <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+      UID: {o.sellerVatNumber}
+    </div>
+  )}
+
+  {/* ✅ optional: Adresse */}
+  {o.sellerAddress && (
+    <div className={styles.metaValue} style={{ opacity: 0.85 }}>
+      Adresse: {formatAddress(o.sellerAddress)}
+    </div>
+  )}
+</div>
+
+
 
                         <div className={styles.metaCol}>
                           <div className={styles.metaLabel}>Preis</div>
