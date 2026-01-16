@@ -45,6 +45,7 @@ export async function GET() {
       ].join(",")
     )
     .eq("buyer_id", user.id)
+    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"]) // ✅ nur echte Käufe
     .order("created_at", { ascending: false });
 
   if (error) {

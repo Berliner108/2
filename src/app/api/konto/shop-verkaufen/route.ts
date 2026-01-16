@@ -43,10 +43,11 @@ export async function GET() {
         "buyer_address",
 
         "article_id",
-        "articles ( title )", // ✅ FIX
+        "articles ( title )",
       ].join(",")
     )
     .eq("seller_id", user.id)
+    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"]) // ✅ nur echte Käufe/Verkäufe (kein payment_pending)
     .order("created_at", { ascending: false });
 
   if (error) {
