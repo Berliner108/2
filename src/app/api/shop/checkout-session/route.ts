@@ -17,24 +17,35 @@ type Body = {
 
 const eurToCents = (v: any) => Math.round(Number(v ?? 0) * 100);
 
-function displayNameFromAuthUser(u: any): string | null {
+function buildDisplayNameFromAuthUser(u: any): string | null {
   if (!u) return null;
 
-  // auth.users raw metadata (Supabase Dashboard -> Raw user meta data)
   const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
   const id0 = Array.isArray(u.identities) ? u.identities[0]?.identity_data : null;
 
-  const v =
+  // 1) direkte Display-Name Felder
+  const direct =
     md.display_name ??
     md.full_name ??
     md.name ??
+    md.displayName ??
+    md.fullName ??
     id0?.display_name ??
     id0?.full_name ??
     id0?.name ??
     null;
 
-  const s = v ? String(v).trim() : "";
-  return s || null;
+  const directStr = direct ? String(direct).trim() : "";
+  if (directStr) return directStr;
+
+  // 2) wie in deiner /api/profile Route: firstName + lastName
+  const first =
+    (md.firstName ?? md.first_name ?? id0?.firstName ?? id0?.first_name ?? "")?.toString().trim();
+  const last =
+    (md.lastName ?? md.last_name ?? id0?.lastName ?? id0?.last_name ?? "")?.toString().trim();
+
+  const composed = `${first} ${last}`.trim();
+  return composed ? composed : null;
 }
 
 type ProfileSnap = {
@@ -49,7 +60,7 @@ export async function POST(req: Request) {
   const supabase = await supabaseServer();
   const admin = supabaseAdmin();
 
-  // 1) auth (buyer)
+  // 1) auth
   const { data: auth, error: authErr } = await supabase.auth.getUser();
   const user = auth?.user;
   if (authErr || !user) {
@@ -84,17 +95,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
-  // ✅ DISPLAY NAMES DIREKT AUS auth.users (Admin API)
-  const [{ data: buyerAuth, error: bErr }, { data: sellerAuth, error: sErr }] = await Promise.all([
+  // ✅ Display Names DIREKT aus auth.users (wie du willst) – aber inkl. firstName/lastName
+  const [{ data: buyerAuth }, { data: sellerAuth }] = await Promise.all([
     admin.auth.admin.getUserById(user.id),
     admin.auth.admin.getUserById(sellerId),
   ]);
 
-  if (bErr) console.error("getUserById(buyer) failed:", bErr);
-  if (sErr) console.error("getUserById(seller) failed:", sErr);
+  const buyerDisplayName =
+    buildDisplayNameFromAuthUser(buyerAuth?.user) ?? buildDisplayNameFromAuthUser(user);
 
-  const buyerDisplayName = displayNameFromAuthUser(buyerAuth?.user);
-  const sellerDisplayName = displayNameFromAuthUser(sellerAuth?.user);
+  const sellerDisplayName = buildDisplayNameFromAuthUser(sellerAuth?.user);
 
   // 4) tier laden
   const { data: tier, error: tErr } = await admin
@@ -129,7 +139,7 @@ export async function POST(req: Request) {
       ? unitPriceCents + shippingCents
       : qty * unitPriceCents + shippingCents;
 
-  // 5) profile snapshots
+  // 5) Snapshots aus profiles holen
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
@@ -151,7 +161,7 @@ export async function POST(req: Request) {
     address: (sellerProf as any)?.address ?? null,
   };
 
-  // 6) order insert
+  // 6) Order anlegen
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
@@ -169,7 +179,6 @@ export async function POST(req: Request) {
 
       platform_fee_percent: 0.07,
 
-      // buyer snapshots
       buyer_username: buyerSnap.username,
       buyer_account_type: buyerSnap.account_type,
       buyer_company_name: buyerSnap.company_name,
@@ -177,7 +186,6 @@ export async function POST(req: Request) {
       buyer_address: buyerSnap.address,
       buyer_display_name: buyerDisplayName,
 
-      // seller snapshots
       seller_username: sellerSnap.username,
       seller_account_type: sellerSnap.account_type,
       seller_company_name: sellerSnap.company_name,
@@ -185,7 +193,7 @@ export async function POST(req: Request) {
       seller_address: sellerSnap.address,
       seller_display_name: sellerDisplayName,
     })
-    .select("id, buyer_display_name, seller_display_name")
+    .select("id")
     .single();
 
   if (oErr || !order) {
