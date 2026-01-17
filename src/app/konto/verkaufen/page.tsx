@@ -209,6 +209,8 @@ const KontoVerkaufenPage: FC = () => {
 
   const [mineLoading, setMineLoading] = useState(true)
   const [mineError, setMineError] = useState<string | null>(null)
+  const [salesLoading, setSalesLoading] = useState(true)
+
 
   // ========= API Helpers (wichtig für Refresh nach PATCH) =========
   async function loadMine(cancelledRef?: { current: boolean }) {
@@ -266,9 +268,10 @@ const KontoVerkaufenPage: FC = () => {
     if (!res.ok) throw new Error(json?.error ?? 'PATCH_FAILED')
     return json?.article
   }
-
-  async function loadShopSales(cancelledRef?: { current: boolean }) {
+async function loadShopSales(cancelledRef?: { current: boolean }) {
   try {
+    setSalesLoading(true)
+
     const res = await fetch("/api/konto/shop-verkaufen", { cache: "no-store" })
     const json = await res.json().catch(() => ({}))
 
@@ -280,48 +283,45 @@ const KontoVerkaufenPage: FC = () => {
 
     const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
 
-const mapped: MySale[] = orders.map((o) => {
-  const title =
-    Array.isArray(o.articles)
-      ? (o.articles[0]?.title ?? null)
-      : (o.articles?.title ?? null);
+    const mapped: MySale[] = orders.map((o) => {
+      const title = Array.isArray(o.articles)
+        ? (o.articles[0]?.title ?? null)
+        : (o.articles?.title ?? null)
 
-  return {
-    id: o.id,
-    articleId: o.article_id,
-    title: title ?? `Artikel ${o.article_id.slice(0, 8)}`,
-    buyerName: o.buyer_username ?? "Käufer",
-    amountCents: o.total_gross_cents,
-    dateIso: o.created_at,
-    status: mapSaleStatus(o.status),
-    invoiceId: o.id,
-    rated: false,
+      return {
+        id: o.id,
+        articleId: o.article_id,
+        title: title ?? `Artikel ${o.article_id.slice(0, 8)}`,
+        buyerName: o.buyer_username ?? "Käufer",
+        amountCents: o.total_gross_cents,
+        dateIso: o.created_at,
+        status: mapSaleStatus(o.status),
+        invoiceId: o.id,
+        rated: false,
 
-    // ✅ REQUIRED by MySale (sonst Build-Fehler)
-    orderStatus: o.status,
+        orderStatus: o.status,
 
-    // ✅ für Buttons
-    shippedAtIso: o.shipped_at,
-    releasedAtIso: o.released_at,
-    refundedAtIso: o.refunded_at,
-    sellerCanRelease: !!o.sellerCanRelease,
-    buyerCompanyName: o.buyer_company_name ?? null,
-buyerVatNumber: o.buyer_vat_number ?? null,
-buyerAddress: o.buyer_address ?? null,
-buyerDisplayName: (o as any).buyer_display_name ?? null,
+        shippedAtIso: o.shipped_at,
+        releasedAtIso: o.released_at,
+        refundedAtIso: o.refunded_at,
+        sellerCanRelease: !!o.sellerCanRelease,
 
-
-  };
-});
-
-
+        buyerCompanyName: o.buyer_company_name ?? null,
+        buyerVatNumber: o.buyer_vat_number ?? null,
+        buyerAddress: o.buyer_address ?? null,
+        buyerDisplayName: o.buyer_display_name ?? null,
+      }
+    })
 
     if (!cancelledRef?.current) setSales(mapped)
   } catch (e) {
     console.error(e)
     if (!cancelledRef?.current) setSales([])
+  } finally {
+    if (!cancelledRef?.current) setSalesLoading(false)
   }
 }
+
 
 
 useEffect(() => {
@@ -464,6 +464,18 @@ async function sellerRelease(sale: MySale) {
   useEffect(() => {
     if (sliceSales.safePage !== pageSales) setPageSales(sliceSales.safePage)
   }, [sliceSales.safePage, pageSales])
+
+  useEffect(() => {
+  if (tab !== 'verkaeufe') return
+  if (salesLoading) return
+
+  try {
+    localStorage.setItem('shopSales:lastSeen', String(Date.now()))
+  } catch {
+    // ignore
+  }
+}, [tab, salesLoading])
+
 
   /* -------- Badges / Status Styles -------- */
   function artikelBadge(a: MyArticle) {
