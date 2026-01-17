@@ -334,15 +334,13 @@ async function markShipped(sale: MySale) {
   // nur wenn paid
   if (sale.orderStatus !== "paid") return;
 
-  const tracking_number = window.prompt("Tracking Nummer (optional):", "") ?? "";
-  const shipping_carrier = window.prompt("Versanddienst (optional):", "") ?? "";
-
   const res = await fetch(`/api/shop-orders/${encodeURIComponent(sale.id)}/ship`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    // ✅ KEINE prompts, keine Daten
     body: JSON.stringify({
-      tracking_number: tracking_number.trim() || null,
-      shipping_carrier: shipping_carrier.trim() || null,
+      tracking_number: null,
+      shipping_carrier: null,
     }),
   });
 
@@ -354,6 +352,7 @@ async function markShipped(sale: MySale) {
 
   await loadShopSales(); // refresh
 }
+
 async function sellerRelease(sale: MySale) {
   // UI-Regel: nur wenn sellerCanRelease true (Route prüft nochmal)
   if (!sale.sellerCanRelease) return;
