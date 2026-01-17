@@ -91,7 +91,6 @@ export default function Navbar() {
     return (
       tsOf(o.refunded_at) ||
       tsOf(o.released_at) ||
-      tsOf(o.shipped_at) ||
       tsOf(o.paid_at) ||
       tsOf(o.updated_at) ||
       tsOf(o.created_at)
@@ -184,7 +183,7 @@ export default function Navbar() {
 
             shopSalesNew = orders.reduce((acc, o) => {
               const ts = shopSellerEventTs(o)
-              const relevant = ['paid', 'released', 'refunded', 'complaint_open', 'shipped'].includes(o.status)
+              const relevant = ['paid', 'released', 'refunded', 'complaint_open'].includes(o.status)
               return relevant && ts > lastSeen ? acc + 1 : acc
             }, 0)
           } else {
