@@ -199,6 +199,18 @@ const [loading, setLoading] = useState(true)
 
   const [orders, setOrders] = useState<MyOrder[]>([])
 
+  // ✅ Buyer: Shop-Bestellungen als "gesehen" markieren (damit Badge verschwindet wie bei Lacken)
+useEffect(() => {
+  try {
+    localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
+    // optional: Navbar sofort “runterziehen”
+    window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { total: 0 } }))
+  } catch {
+    // ignore
+  }
+}, [])
+
+
 useEffect(() => {
   let cancelled = false;
 
@@ -214,7 +226,6 @@ useEffect(() => {
         if (!cancelled) setOrders([]);
         return;
       }
-
       const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
 
       const mapped: MyOrder[] = apiOrders.map((o) => ({
@@ -257,6 +268,15 @@ useEffect(() => {
     cancelled = true;
   };
 }, []);
+// ✅ erst wenn die Seite wirklich geladen ist (wie "gesehen")
+useEffect(() => {
+  if (loading) return
+  try {
+    localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
+  } catch {
+    // ignore
+  }
+}, [loading])
 
 useEffect(() => {
   if (!highlightOrderId) return
