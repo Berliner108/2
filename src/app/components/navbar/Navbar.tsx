@@ -64,6 +64,7 @@ export default function Navbar() {
   // Refs für Overlay/Erkennung
   const navbarRef = useRef<HTMLDivElement | null>(null)       // scrollbarer Container
   const kontoLinkRef = useRef<HTMLAnchorElement | null>(null) // "Mein Konto"-Link
+  const reloadCountsRef = useRef<null | (() => void)>(null) // ✅ damit Badge sofort neu berechnet wird
   const [showEdgeBadge, setShowEdgeBadge] = useState(false)
   const [edgeTop, setEdgeTop] = useState<number>(8)
 
@@ -222,6 +223,8 @@ export default function Navbar() {
         // ignore
       }
     }
+    reloadCountsRef.current = loadAllCounts // ✅ sofortiges Neuzählen von außen möglich
+
 
     loadAllCounts()
     const id = setInterval(loadAllCounts, 60_000)
@@ -237,10 +240,12 @@ export default function Navbar() {
     window.addEventListener('navbar:badge', onBadge as any)
 
     return () => {
-      alive = false
-      clearInterval(id)
-      window.removeEventListener('navbar:badge', onBadge as any)
-    }
+  alive = false
+  clearInterval(id)
+  window.removeEventListener('navbar:badge', onBadge as any)
+  reloadCountsRef.current = null
+}
+
   }, [])
 
   useEffect(() => {
@@ -324,28 +329,33 @@ export default function Navbar() {
   useEffect(() => {
     if (!pathname) return
     try {
-      if (pathname.startsWith('/konto/lackangebote')) {
-        localStorage.setItem('lackOrders:lastSeen', String(Date.now()))
-      }
-      if (pathname.startsWith('/konto/lackanfragen')) {
-        localStorage.setItem('offers:lastSeen', String(Date.now()))
-      }
+  if (pathname.startsWith('/konto/lackangebote')) {
+    localStorage.setItem('lackOrders:lastSeen', String(Date.now()))
+    reloadCountsRef.current?.()
+  }
+  if (pathname.startsWith('/konto/lackanfragen')) {
+    localStorage.setItem('offers:lastSeen', String(Date.now()))
+    reloadCountsRef.current?.()
+  }
 
-      // ✅ Verkäufer: Shop-Verkäufe nur als "gesehen", wenn der Verkäufe-Tab offen ist
-      if (pathname.startsWith('/konto/verkaufen')) {
-        const sp = new URLSearchParams(window.location.search)
-        if (sp.get('tab') === 'verkaeufe') {
-          localStorage.setItem('shopSales:lastSeen', String(Date.now()))
-        }
-      }
-
-      // ✅ Käufer: sobald er /konto/bestellungen öffnet, gilt Versand/Shop-Events als gesehen
-      if (pathname.startsWith('/konto/bestellungen')) {
-        localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
-      }
-    } catch {
-      // ignore
+  // ✅ Verkäufer: Shop-Verkäufe nur als "gesehen", wenn der Verkäufe-Tab offen ist
+  if (pathname.startsWith('/konto/verkaufen')) {
+    const sp = new URLSearchParams(window.location.search)
+    if (sp.get('tab') === 'verkaeufe') {
+      localStorage.setItem('shopSales:lastSeen', String(Date.now()))
+      reloadCountsRef.current?.()
     }
+  }
+
+  // ✅ Käufer: sobald er /konto/bestellungen öffnet, gilt Versand/Shop-Events als gesehen
+  if (pathname.startsWith('/konto/bestellungen')) {
+    localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
+    reloadCountsRef.current?.()
+  }
+} catch {
+  // ignore
+}
+
   }, [pathname])
 
   const displayCounter = kontoNew > 9 ? '9+' : String(kontoNew)
