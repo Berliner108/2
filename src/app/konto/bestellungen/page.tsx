@@ -214,25 +214,8 @@ useEffect(() => {
   }
 }, [])
 
-
-useEffect(() => {
-  let cancelled = false;
-
-  (async () => {
-    try {
-      setLoading(true)
-
-      const res = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
-      const json = await res.json();
-
-      if (!res.ok) {
-        console.error("shop-bestellungen error:", json);
-        if (!cancelled) setOrders([]);
-        return;
-      }
-      const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
-
-      const mapped: MyOrder[] = apiOrders.map((o) => {
+// ✅ sauber: EIN Mapper für initial + refresh (sonst fehlen später Felder)
+const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
   const sellerUsername = o.seller_profile?.username ?? o.seller_username ?? null;
 
   return {
@@ -267,7 +250,26 @@ useEffect(() => {
     sellerVatNumber: o.seller_vat_number ?? null,
     sellerDisplayName: o.seller_display_name ?? null,
   };
-});
+};
+
+useEffect(() => {
+  let cancelled = false;
+
+  (async () => {
+    try {
+      setLoading(true)
+
+      const res = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
+      const json = await res.json();
+
+      if (!res.ok) {
+        console.error("shop-bestellungen error:", json);
+        if (!cancelled) setOrders([]);
+        return;
+      }
+      const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
+      const mapped: MyOrder[] = apiOrders.map(mapApiToMyOrder);
+
 
 
       if (!cancelled) setOrders(mapped);
@@ -387,23 +389,9 @@ async function openComplaint(order: MyOrder) {
   const r2 = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
   const j2 = await r2.json().catch(() => ({}));
   // gleiches Mapping wie oben (du kannst es auch in eine Funktion ziehen – aber du willst modular, also lass es erstmal so)
-  setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
-    id: o.id,
-    articleId: o.article_id,
-    articleTitle:
-  (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
-  `Artikel ${o.article_id.slice(0, 8)}`,
+const refreshed: ApiShopOrder[] = Array.isArray(j2?.orders) ? j2.orders : [];
+setOrders(refreshed.map(mapApiToMyOrder));
 
-    sellerName: o.seller_username ?? "Verkäufer",
-    amountCents: o.total_gross_cents,
-    dateIso: o.created_at,
-    status: mapStatus(o.status),
-    shippedAtIso: o.shipped_at,
-    releasedAtIso: o.released_at ?? null,
-    paymentReleased: !!o.released_at || o.status === "released",
-    complaintOpen: o.status === "complaint_open",
-    rated: false,
-  })) : []);
 }
 
 
@@ -428,22 +416,9 @@ if (!canBuyerRelease(order)) {
   // UI refresh: einfach neu laden
   const r2 = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
   const j2 = await r2.json().catch(() => ({}));
-  setOrders(Array.isArray(j2?.orders) ? j2.orders.map((o: ApiShopOrder) => ({
-    id: o.id,
-    articleId: o.article_id,
-    articleTitle:
-  (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
-  `Artikel ${o.article_id.slice(0, 8)}`,
-    sellerName: o.seller_username ?? "Verkäufer",
-    amountCents: o.total_gross_cents,
-    dateIso: o.created_at,
-    status: mapStatus(o.status),
-    shippedAtIso: o.shipped_at ?? null,
-    releasedAtIso: o.released_at ?? null,
-    paymentReleased: !!o.released_at || o.status === "released",
-    complaintOpen: o.status === "complaint_open",
-    rated: false,
-  })) : []);
+const refreshed: ApiShopOrder[] = Array.isArray(j2?.orders) ? j2.orders : [];
+setOrders(refreshed.map(mapApiToMyOrder));
+
 }
 
 
