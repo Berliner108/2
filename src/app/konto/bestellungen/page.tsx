@@ -90,7 +90,10 @@ type ApiShopOrder = {
   status: ShopOrderStatus;
   unit: "kg" | "stueck";
   qty: number;
+  price_gross_cents: number;
+  shipping_gross_cents: number;
   total_gross_cents: number;
+
 
   article_id: string;
   articles?: { title: string | null } | { title: string | null }[] | null;
@@ -122,6 +125,9 @@ type MyOrder = {
 sellerRatingCount?: number | null
 
   amountCents: number
+  itemCents?: number | null;
+  shippingCents?: number | null;
+
   dateIso: string
   status: OrderStatus
 
@@ -232,7 +238,11 @@ const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
     sellerRatingCount: o.seller_profile?.rating_count ?? null,
 
     amountCents: o.total_gross_cents,
+    itemCents: o.price_gross_cents ?? null,
+    shippingCents: o.shipping_gross_cents ?? null,
+
     dateIso: o.created_at,
+
     status: mapStatus(o.status),
 
     shippedAtIso: o.shipped_at ?? null,
@@ -600,7 +610,14 @@ function ratingTxt(r?: number | null, c?: number | null) {
 
                         <div className={styles.metaCol}>
                           <div className={styles.metaLabel}>Preis</div>
-                          <div className={styles.metaValue}>{formatEUR(o.amountCents)}</div>
+                          <div className={styles.metaValue}>
+  <div>Artikel: {formatEUR(o.itemCents ?? 0)}</div>
+  <div>
+    Versand: {(o.shippingCents ?? 0) === 0 ? 'kostenlos' : formatEUR(o.shippingCents ?? 0)}
+  </div>
+  <div><strong>Gesamt: {formatEUR(o.amountCents)}</strong></div>
+</div>
+
                         </div>
 
                         <div className={styles.metaCol}>
