@@ -165,6 +165,9 @@ buyerRatingCount?: number | null;
 
   buyerDisplayName?: string | null;
   amountCents: number
+  itemCents?: number | null
+shippingCents?: number | null
+
   dateIso: string
   status: VerkaufStatus
   invoiceId: string
@@ -191,6 +194,9 @@ type ApiShopSale = {
   id: string;
   created_at: string;
   status: ShopOrderStatus;
+  price_gross_cents: number;
+shipping_gross_cents: number;
+
   total_gross_cents: number;
 
   article_id: string;
@@ -330,6 +336,9 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     buyerRatingCount,
 
     amountCents: o.total_gross_cents,
+    itemCents: (o as any).price_gross_cents ?? null,
+    shippingCents: (o as any).shipping_gross_cents ?? null,
+
     dateIso: o.created_at,
     status: mapSaleStatus(o.status),
     invoiceId: o.id,
@@ -817,9 +826,16 @@ async function sellerRelease(sale: MySale) {
 
                             </div>
                             <div className={styles.metaCol}>
-                              <div className={styles.metaLabel}>Preis</div>
-                              <div className={styles.metaValue}>{formatEUR(s.amountCents)}</div>
-                            </div>
+  <div className={styles.metaLabel}>Preis</div>
+  <div className={styles.metaValue}>
+    <div>Artikel: {formatEUR(s.itemCents ?? 0)}</div>
+    <div>
+      Versand: {(s.shippingCents ?? 0) === 0 ? 'kostenlos' : formatEUR(s.shippingCents ?? 0)}
+    </div>
+    <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+  </div>
+</div>
+
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Datum</div>
                               <div className={styles.metaValue}>{formatDate(s.dateIso)}</div>
