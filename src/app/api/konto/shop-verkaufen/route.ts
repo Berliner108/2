@@ -44,6 +44,9 @@ export async function GET() {
         "buyer_address",
         "buyer_display_name",
 
+            // ✅ NEU: Rating-Aggregate
+    "buyer_profile:profiles!shop_orders_buyer_id_fkey ( username, rating_avg, rating_count )",
+
         "article_id",
         "articles ( title )",
       ].join(",")

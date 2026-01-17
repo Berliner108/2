@@ -36,6 +36,22 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   return { pageItems: arr.slice(start, end), from: total === 0 ? 0 : start + 1, to: end, total, safePage, pages }
 }
 
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
+const asHandleOrNull = (v?: unknown) => {
+  const s = typeof v === "string" ? v.trim() : "";
+  return HANDLE_RE.test(s) ? s : null;
+};
+
+function buyerReviewsHref(username?: string | null) {
+  const h = asHandleOrNull(username);
+  return h ? `/u/${h}/reviews` : undefined;
+}
+
+function ratingTxt(r?: number | null, c?: number | null) {
+  return (typeof r === "number" && isFinite(r) && (c ?? 0) > 0)
+    ? `${r.toFixed(1)}/5 · ${c}`
+    : "keine Bewertungen";
+}
 
 /* ================= Pagination (wie in lackangebote) ================= */
 const Pagination: FC<{
@@ -143,8 +159,10 @@ type MySale = {
   buyerCompanyName?: string | null;
   buyerVatNumber?: string | null;
   buyerAddress?: any | null;
-  buyerRating?: number
-  buyerRatingCount?: number
+  buyerUsername?: string | null;
+buyerRating?: number | null;
+buyerRatingCount?: number | null;
+
   buyerDisplayName?: string | null;
   amountCents: number
   dateIso: string
@@ -157,6 +175,8 @@ type MySale = {
   releasedAtIso?: string | null
   refundedAtIso?: string | null
   sellerCanRelease?: boolean
+
+
 }
 
 type ShopOrderStatus =
@@ -182,6 +202,8 @@ type ApiShopSale = {
   buyer_vat_number: string | null;
   buyer_address: any | null;
   buyer_display_name: string | null;
+  buyer_profile?: { username: string | null; rating_avg: number | null; rating_count: number | null } | null;
+
 
   shipped_at: string | null;
   released_at: string | null;
@@ -284,34 +306,49 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
 
     const mapped: MySale[] = orders.map((o) => {
-      const title = Array.isArray(o.articles)
-        ? (o.articles[0]?.title ?? null)
-        : (o.articles?.title ?? null)
+  const title = Array.isArray(o.articles)
+    ? (o.articles[0]?.title ?? null)
+    : (o.articles?.title ?? null);
 
-      return {
-        id: o.id,
-        articleId: o.article_id,
-        title: title ?? `Artikel ${o.article_id.slice(0, 8)}`,
-        buyerName: o.buyer_username ?? "Käufer",
-        amountCents: o.total_gross_cents,
-        dateIso: o.created_at,
-        status: mapSaleStatus(o.status),
-        invoiceId: o.id,
-        rated: false,
+  // buyer_profile kann als Objekt ODER Array kommen (je nach select)
+  const bpAny: any = (o as any).buyer_profile;
+  const bp = Array.isArray(bpAny) ? bpAny[0] : bpAny;
 
-        orderStatus: o.status,
+  const buyerUsername = (bp?.username ?? o.buyer_username ?? null) as string | null;
+  const buyerRating = (bp?.rating_avg ?? null) as number | null;
+  const buyerRatingCount = (bp?.rating_count ?? null) as number | null;
 
-        shippedAtIso: o.shipped_at,
-        releasedAtIso: o.released_at,
-        refundedAtIso: o.refunded_at,
-        sellerCanRelease: !!o.sellerCanRelease,
+  return {
+    id: o.id,
+    articleId: o.article_id,
+    title: title ?? `Artikel ${o.article_id.slice(0, 8)}`,
 
-        buyerCompanyName: o.buyer_company_name ?? null,
-        buyerVatNumber: o.buyer_vat_number ?? null,
-        buyerAddress: o.buyer_address ?? null,
-        buyerDisplayName: o.buyer_display_name ?? null,
-      }
-    })
+    // Anzeige-Name: Username bevorzugen
+    buyerName: buyerUsername ?? "Käufer",
+    buyerUsername,
+    buyerRating,
+    buyerRatingCount,
+
+    amountCents: o.total_gross_cents,
+    dateIso: o.created_at,
+    status: mapSaleStatus(o.status),
+    invoiceId: o.id,
+    rated: false,
+
+    orderStatus: o.status,
+
+    shippedAtIso: o.shipped_at,
+    releasedAtIso: o.released_at,
+    refundedAtIso: o.refunded_at,
+    sellerCanRelease: !!o.sellerCanRelease,
+
+    buyerCompanyName: o.buyer_company_name ?? null,
+    buyerVatNumber: o.buyer_vat_number ?? null,
+    buyerAddress: o.buyer_address ?? null,
+    buyerDisplayName: o.buyer_display_name ?? null,
+  };
+});
+
 
     if (!cancelledRef?.current) setSales(mapped)
   } catch (e) {
@@ -741,9 +778,19 @@ async function sellerRelease(sale: MySale) {
                             <div className={styles.metaCol}>
                               <div className={styles.metaLabel}>Käufer</div>
                               <div className={styles.metaValue}>
-                                {s.buyerName}
-                                <span className={styles.vendorRatingSmall}> · {buyerTxt}</span>
-                              </div>
+                            {(() => {
+  const display = asHandleOrNull(s.buyerUsername ?? s.buyerName) ?? s.buyerName;
+  const href = buyerReviewsHref(s.buyerUsername ?? s.buyerName);
+  return href ? (
+    <Link href={href} className={styles.titleLink}>{display}</Link>
+  ) : (
+    <>{display}</>
+  );
+})()}
+<span className={styles.vendorRatingSmall}> · {ratingTxt(s.buyerRating, s.buyerRatingCount)}</span>
+
+                          </div>
+
                               {s.buyerCompanyName && (
   <div className={styles.metaValue} style={{ opacity: 0.85 }}>
     Firma: {s.buyerCompanyName}
