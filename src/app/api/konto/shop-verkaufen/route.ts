@@ -22,6 +22,7 @@ export async function GET() {
       [
         "id",
         "created_at",
+        "updated_at", // ✅ NEU (wichtig für Event-Zähler)
         "status",
         "unit",
         "qty",

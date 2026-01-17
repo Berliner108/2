@@ -25,12 +25,37 @@ type LackOrder = {
 
 type OrdersResp = { vergeben: LackOrder[]; angenommen: LackOrder[] }
 
-// ✅ Shop-Verkäufe (Verkäufer) – aus /api/konto/shop-verkaufen
+// ✅ Shop (Verkäufer) – /api/konto/shop-verkaufen
 type ShopSalesResp = {
-  orders?: Array<{ id: string; created_at: string; status: string }>
+  orders?: Array<{
+    id: string
+    created_at: string
+    status: string
+    paid_at?: string | null
+    shipped_at?: string | null
+    released_at?: string | null
+    refunded_at?: string | null
+    updated_at?: string | null
+  }>
+}
+
+// ✅ Shop (Käufer) – /api/konto/shop-bestellungen (falls deine Route anders heißt: hier Pfad ändern)
+type ShopBuysResp = {
+  orders?: Array<{
+    id: string
+    created_at: string
+    status: string
+    shipped_at?: string | null
+    released_at?: string | null
+    refunded_at?: string | null
+    updated_at?: string | null
+  }>
 }
 
 const NAV_SCROLL_KEY = 'navbar:scrollLeft'
+
+// ✅ wenn deine Buyer-API anders heißt, NUR diesen String anpassen:
+const SHOP_BUYS_API = '/api/konto/shop-bestellungen'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -42,7 +67,7 @@ export default function Navbar() {
   const [showEdgeBadge, setShowEdgeBadge] = useState(false)
   const [edgeTop, setEdgeTop] = useState<number>(8)
 
-  const tsOf = (iso?: string) => (iso ? +new Date(iso) : 0)
+  const tsOf = (iso?: string | null) => (iso ? +new Date(iso) : 0)
 
   function lastEventTs(o: LackOrder): number {
     const fallback =
@@ -58,6 +83,29 @@ export default function Navbar() {
   function needsAction(o: LackOrder): boolean {
     if (o.kind === 'angenommen') return (o.status ?? 'in_progress') === 'in_progress'
     return o.status === 'reported'
+  }
+
+  // ✅ Shop-Verkäufer: Event-Zeitpunkt (für "neu" wie Lacke)
+  function shopSellerEventTs(o: any): number {
+    return (
+      tsOf(o.refunded_at) ||
+      tsOf(o.released_at) ||
+      tsOf(o.shipped_at) ||
+      tsOf(o.paid_at) ||
+      tsOf(o.updated_at) ||
+      tsOf(o.created_at)
+    )
+  }
+
+  // ✅ Shop-Käufer: Event-Zeitpunkt (Versand zählt als Event)
+  function shopBuyerEventTs(o: any): number {
+    return (
+      tsOf(o.shipped_at) ||
+      tsOf(o.refunded_at) ||
+      tsOf(o.released_at) ||
+      tsOf(o.updated_at) ||
+      tsOf(o.created_at)
+    )
   }
 
   useEffect(() => {
@@ -122,7 +170,7 @@ export default function Navbar() {
           // ignore
         }
 
-        // 3) ✅ Shop-Verkäufe (NUR Verkäufer) – „neu“ exakt wie Lacke (lastSeen + 7 Tage Cap)
+        // 3) ✅ Shop-Verkäufe (NUR Verkäufer) – neu wie Lacke (lastSeen + 7 Tage Cap)
         let shopSalesNew = 0
         try {
           const res = await fetch('/api/konto/shop-verkaufen', { cache: 'no-store' })
@@ -134,19 +182,42 @@ export default function Navbar() {
             const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
 
             shopSalesNew = orders.reduce((acc, o) => {
-              const ts = +new Date(o.created_at)
-              // nur "paid" zählt als neuer Kauf
-              return o.status === 'paid' && ts > lastSeen ? acc + 1 : acc
+              const ts = shopSellerEventTs(o)
+              const relevant = ['paid', 'released', 'refunded', 'complaint_open', 'shipped'].includes(o.status)
+              return relevant && ts > lastSeen ? acc + 1 : acc
             }, 0)
           } else {
-            // nicht eingeloggt / kein Verkäufer -> 0
             shopSalesNew = 0
           }
         } catch {
           // ignore
         }
 
-        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew)
+        // 4) ✅ Shop-Käufe (Käufer) – Badge hoch, wenn Verkäufer Versand meldet (shipped)
+        let shopBuysNew = 0
+        try {
+          const res = await fetch(SHOP_BUYS_API, { cache: 'no-store' })
+          if (res.ok) {
+            const j: ShopBuysResp = await res.json()
+            const orders = Array.isArray(j?.orders) ? j.orders : []
+
+            const rawLastSeen = Number(localStorage.getItem('shopBuys:lastSeen') || '0')
+            const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+            shopBuysNew = orders.reduce((acc, o) => {
+              const ts = shopBuyerEventTs(o)
+              // Käufer soll reagieren, wenn Versand gemeldet wurde (optional auch released/refunded)
+              const relevant = ['shipped', 'released', 'refunded'].includes(o.status)
+              return relevant && ts > lastSeen ? acc + 1 : acc
+            }, 0)
+          } else {
+            shopBuysNew = 0
+          }
+        } catch {
+          // ignore
+        }
+
+        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew + shopBuysNew)
       } catch {
         // ignore
       }
@@ -260,12 +331,17 @@ export default function Navbar() {
         localStorage.setItem('offers:lastSeen', String(Date.now()))
       }
 
-      // ✅ Shop-Verkäufe: nur dann "gesehen", wenn Verkäufer wirklich den Verkäufe-Tab öffnet
+      // ✅ Verkäufer: Shop-Verkäufe nur als "gesehen", wenn der Verkäufe-Tab offen ist
       if (pathname.startsWith('/konto/verkaufen')) {
         const sp = new URLSearchParams(window.location.search)
         if (sp.get('tab') === 'verkaeufe') {
           localStorage.setItem('shopSales:lastSeen', String(Date.now()))
         }
+      }
+
+      // ✅ Käufer: sobald er /konto/bestellungen öffnet, gilt Versand/Shop-Events als gesehen
+      if (pathname.startsWith('/konto/bestellungen')) {
+        localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
       }
     } catch {
       // ignore
