@@ -102,6 +102,8 @@ type ApiShopOrder = {
   seller_address: any | null;
   seller_display_name: string | null;
 
+  seller_profile?: { username: string | null; rating_avg: number | null; rating_count: number | null } | null;
+
   shipped_at: string | null;     // ✅
   released_at: string | null;    // ✅
 };
@@ -115,8 +117,10 @@ type MyOrder = {
   articleId: string
   articleTitle: string
   sellerName: string
-  sellerRating?: number
-  sellerRatingCount?: number
+  sellerUsername?: string | null
+ sellerRating?: number | null
+sellerRatingCount?: number | null
+
   amountCents: number
   dateIso: string
   status: OrderStatus
@@ -228,32 +232,43 @@ useEffect(() => {
       }
       const apiOrders: ApiShopOrder[] = Array.isArray(json?.orders) ? json.orders : [];
 
-      const mapped: MyOrder[] = apiOrders.map((o) => ({
-        id: o.id,
-        articleId: o.article_id,
-        articleTitle:
-          (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
-          `Artikel ${o.article_id.slice(0, 8)}`,
-        sellerName: o.seller_username ?? "Verkäufer",
-        amountCents: o.total_gross_cents,
-        dateIso: o.created_at,
-        status: mapStatus(o.status),
+      const mapped: MyOrder[] = apiOrders.map((o) => {
+  const sellerUsername = o.seller_profile?.username ?? o.seller_username ?? null;
 
-        shippedAtIso: o.shipped_at ?? null,
-        releasedAtIso: o.released_at ?? null,
+  return {
+    id: o.id,
+    articleId: o.article_id,
+    articleTitle:
+      (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
+      `Artikel ${o.article_id.slice(0, 8)}`,
 
-        paymentReleased: !!o.released_at || o.status === "released",
-        complaintOpen: o.status === "complaint_open",
-        rated: false,
-        buyerAddress: (o as any).buyer_address ?? null,
-        sellerAddress: (o as any).seller_address ?? null,
-        buyerCompanyName: (o as any).buyer_company_name ?? null,
-        sellerCompanyName: (o as any).seller_company_name ?? null,
-        buyerVatNumber: (o as any).buyer_vat_number ?? null,
-        sellerVatNumber: (o as any).seller_vat_number ?? null,
-        sellerDisplayName: (o as any).seller_display_name ?? null,
+    sellerUsername,
+    sellerName: sellerUsername ?? "Verkäufer",
 
-            }));
+    sellerRating: o.seller_profile?.rating_avg ?? null,
+    sellerRatingCount: o.seller_profile?.rating_count ?? null,
+
+    amountCents: o.total_gross_cents,
+    dateIso: o.created_at,
+    status: mapStatus(o.status),
+
+    shippedAtIso: o.shipped_at ?? null,
+    releasedAtIso: o.released_at ?? null,
+
+    paymentReleased: !!o.released_at || o.status === "released",
+    complaintOpen: o.status === "complaint_open",
+    rated: false,
+
+    buyerAddress: (o as any).buyer_address ?? null,
+    sellerAddress: o.seller_address ?? null,
+    buyerCompanyName: (o as any).buyer_company_name ?? null,
+    sellerCompanyName: o.seller_company_name ?? null,
+    buyerVatNumber: (o as any).buyer_vat_number ?? null,
+    sellerVatNumber: o.seller_vat_number ?? null,
+    sellerDisplayName: o.seller_display_name ?? null,
+  };
+});
+
 
       if (!cancelled) setOrders(mapped);
     } catch (e) {
@@ -454,6 +469,24 @@ if (!canBuyerRelease(order)) {
   const slice = useMemo(() => sliceByPage(filtered, page, pageSize), [filtered, page, pageSize])
   useEffect(() => { if (slice.safePage !== page) setPage(slice.safePage) }, [slice.safePage, page])
 
+    const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
+const asHandleOrNull = (v?: unknown) => {
+  const s = typeof v === "string" ? v.trim() : "";
+  return HANDLE_RE.test(s) ? s : null;
+};
+
+function sellerReviewsHref(username?: string | null) {
+  const h = asHandleOrNull(username);
+  return h ? `/u/${h}/reviews` : undefined;
+}
+
+function ratingTxt(r?: number | null, c?: number | null) {
+  return (typeof r === "number" && isFinite(r) && (c ?? 0) > 0)
+    ? `${r.toFixed(1)}/5 · ${c}`
+    : "keine Bewertungen";
+}
+
+
   return (
     <>
       <Navbar />
@@ -540,12 +573,25 @@ if (!canBuyerRelease(order)) {
 
                       <div className={styles.meta}>
                         <div className={styles.metaCol}>
-  <div className={styles.metaLabel}>Verkäufer</div>
+                          <div className={styles.metaLabel}>Verkäufer</div>
 
-  <div className={styles.metaValue}>
-    {o.sellerName}
-    <span className={styles.vendorRatingSmall}> · {sellerTxt}</span>
-  </div>
+<div className={styles.metaValue}>
+  {(() => {
+    const href = sellerReviewsHref(o.sellerUsername ?? o.sellerName);
+    return href ? (
+      <Link href={href} className={styles.titleLink}>
+        {o.sellerName}
+      </Link>
+    ) : (
+      <>{o.sellerName}</>
+    );
+  })()}
+  <span className={styles.vendorRatingSmall}>
+    {" "}· {ratingTxt(o.sellerRating, o.sellerRatingCount)}
+  </span>
+</div>
+
+
 
   {/* ✅ optional: Firma */}
   {o.sellerCompanyName && (

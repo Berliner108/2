@@ -20,7 +20,7 @@ export async function GET() {
       [
         "id",
         "created_at",
-        "updated_at", // ✅ NEU (wichtig für Event-Zähler)
+        "updated_at",
         "status",
         "unit",
         "qty",
@@ -41,12 +41,16 @@ export async function GET() {
         "seller_vat_number",
         "seller_address",
         "seller_display_name",
+
+        // ✅ NEU: Seller-Rating aus profiles
+        "seller_profile:profiles!shop_orders_seller_id_fkey ( username, rating_avg, rating_count )",
+
         "article_id",
         "articles ( title )",
       ].join(",")
     )
     .eq("buyer_id", user.id)
-    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"]) // ✅ nur echte Käufe
+    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"])
     .order("created_at", { ascending: false });
 
   if (error) {
