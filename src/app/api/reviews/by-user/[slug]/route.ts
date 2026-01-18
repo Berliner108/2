@@ -98,31 +98,35 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     }
 
     // Reviews -> order_ids (kann lack-orders ODER shop_orders sein)
-const orderIds = Array.from(
-  new Set((rows ?? []).map(r => r.order_id).filter(Boolean))
+// --- IDs getrennt sammeln ---
+const lackOrderIds = Array.from(
+  new Set((rows ?? []).map(r => r.order_id).filter(Boolean).map(String))
+) as string[]
+
+const shopOrderIds = Array.from(
+  new Set((rows ?? []).map(r => r.shop_order_id).filter(Boolean).map(String))
 ) as string[]
 
 // 1) Lack-Orders -> request_id
 const ordersById = new Map<string, { request_id: string | null }>()
-if (orderIds.length) {
+if (lackOrderIds.length) {
   const { data: ords, error } = await admin
     .from('orders')
     .select('id, request_id')
-    .in('id', orderIds)
+    .in('id', lackOrderIds)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   for (const o of ords ?? []) {
     ordersById.set(String((o as any).id), { request_id: (o as any).request_id ?? null })
   }
 }
 
-// 2) Shop-Orders -> article + title (nur IDs, die NICHT in orders gefunden wurden)
-const shopIds = orderIds.filter(id => !ordersById.has(String(id)))
+// 2) Shop-Orders -> article + title
 const shopById = new Map<string, { article_id: string | null; title: string | null }>()
-if (shopIds.length) {
+if (shopOrderIds.length) {
   const { data: shops, error } = await admin
     .from('shop_orders')
     .select('id, article_id, articles ( title )')
-    .in('id', shopIds)
+    .in('id', shopOrderIds)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   for (const s of shops ?? []) {
@@ -137,6 +141,7 @@ if (shopIds.length) {
     })
   }
 }
+
 
 
     // lack_requests -> Titel
@@ -160,16 +165,18 @@ if (shopIds.length) {
     }
 
     const items = (rows ?? []).map(r => {
-  const oid = r.order_id ? String(r.order_id) : null
+  const lackOrderId = r.order_id ? String(r.order_id) : null
+  const shopOrderId = r.shop_order_id ? String(r.shop_order_id) : null
 
-  // Lack-Order?
-  const requestId = oid ? (ordersById.get(oid)?.request_id ?? null) : null
+  const isShop = !!shopOrderId
+  const p = raters.get(String(r.rater_id))
+
+  // Lack-Kontext
+  const requestId = !isShop && lackOrderId ? (ordersById.get(lackOrderId)?.request_id ?? null) : null
   const req = requestId ? reqById.get(String(requestId)) : null
 
-  // Shop-Order?
-  const shop = oid ? (shopById.get(oid) ?? null) : null
-
-  const p = raters.get(String(r.rater_id))
+  // Shop-Kontext
+  const shop = isShop && shopOrderId ? (shopById.get(shopOrderId) ?? null) : null
 
   return {
     id: r.id,
@@ -181,19 +188,18 @@ if (shopIds.length) {
       ? { id: p.id, username: p.username || null }
       : { id: r.rater_id, username: null },
 
-    // ✅ Wichtig: damit getContext() sauber entscheidet
-    // Lack = orderId gesetzt, Shop = shopOrderId gesetzt
-    orderId: shop ? null : (oid ?? null),
+    // ✅ Lack:
+    orderId: !isShop ? (lackOrderId ?? null) : null,
+    requestId: !isShop ? (requestId ? String(requestId) : null) : null,
+    requestTitle: !isShop ? pickRequestTitle(req) : null,
 
-    requestId: shop ? null : (requestId ? String(requestId) : null),
-    requestTitle: shop ? null : pickRequestTitle(req),
-
-    // ✅ Shop-Felder (werden von deinem Frontend schon erkannt)
-    productId: shop?.article_id ?? null,
-    productTitle: shop?.title ?? null,
-    shopOrderId: shop ? (oid ?? null) : null,
+    // ✅ Shop:
+    shopOrderId: isShop ? shopOrderId : null,
+    productId: isShop ? (shop?.article_id ?? null) : null,
+    productTitle: isShop ? (shop?.title ?? null) : null,
   }
 })
+
 
 
     return NextResponse.json({
