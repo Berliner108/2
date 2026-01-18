@@ -332,7 +332,9 @@ useEffect(() => {
   /* ---------- Review Modal (wie konto/lackangebote) ---------- */
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null)
-  const [stars, setStars] = useState<1|2|3|4|5>(5)
+  type Star = 0 | 1 | 2 | 3 | 4 | 5
+const [stars, setStars] = useState<Star>(0)
+
   const [reviewText, setReviewText] = useState('')
   const MAX_REVIEW = 600
   
@@ -761,20 +763,21 @@ function ratingTxt(r?: number | null, c?: number | null) {
 
             <div className={styles.stars} aria-label="Sterne auswählen">
   {([1, 2, 3, 4, 5] as const).map((v) => {
-    const active = v <= stars
-    return (
-      <button
-        key={v}
-        type="button"
-        className={styles.starBtn}
-        onClick={() => setStars(v)}
-        aria-label={`${v} Sterne`}
-        title={`${v} Sterne`}
-      >
-        {active ? '★' : '☆'}
-      </button>
-    )
-  })}
+  const active = v <= stars
+  return (
+    <button
+      key={v}
+      type="button"
+      className={styles.starBtn}
+      onClick={() => setStars(v)}   // ✅ funktioniert jetzt sicher
+      aria-label={`${v} Sterne`}
+      title={`${v} Sterne`}
+    >
+      {active ? '★' : '☆'}
+    </button>
+  )
+})}
+
 </div>
 
 
@@ -795,9 +798,9 @@ function ratingTxt(r?: number | null, c?: number | null) {
                 type="button"
                 className={styles.btnDanger}
                 onClick={submitReview}
-                disabled={stars === 5}
-                aria-disabled={stars === 5}
-                style={stars === 5 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                disabled={stars === 0}
+                aria-disabled={stars === 0}
+                style={stars === 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
               >
                 Bewertung senden
               </button>
