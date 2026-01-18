@@ -906,16 +906,16 @@ async function sellerRelease(sale: MySale) {
     Zahlung freigeben (nach 28 Tagen)
   </button>
 
+  {!s.rated && (
   <button
     type="button"
     className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
     onClick={() => openReview(s)}
-    disabled={!!s.rated}
-    aria-disabled={!!s.rated}
-    style={s.rated ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
   >
-    {s.rated ? 'Bewertung bereits abgegeben' : 'Bewertung abgeben'}
+    Bewertung abgeben
   </button>
+)}
+
 
   <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
     Zum Artikel
