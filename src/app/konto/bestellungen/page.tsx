@@ -404,7 +404,6 @@ const [stars, setStars] = useState<Star>(0)
           prev.map(o => o.id === activeOrder.id ? { ...o, rated: true } : o)
         );
         closeReview();
-        alert("Du hast diese Bestellung bereits bewertet.");
         return;
       }
       throw new Error(json?.error || "Bewerten fehlgeschlagen");

@@ -106,17 +106,21 @@ function getContext(it: ReviewItem): Ctx {
     const id = String(it.orderId).trim()
     return { kind:'auftrag', label:'Auftrag', title:`Auftrag #${id}`, href:`/auftraege/${encodeURIComponent(id)}` }
   }
-  if (it.productId || it.shopOrderId) {
-  const pid = String(it.productId || '').trim() // ✅ article_id
-  const title = it.productTitle?.trim() || (pid ? `Shop-Artikel #${pid.slice(0, 8)}` : 'Shop-Bewertung')
+ if (it.productId || it.shopOrderId) {
+  const pid = String(it.productId || '').trim()
+  const fallback = String(it.shopOrderId || '').trim()
+  const title =
+    it.productTitle?.trim() ||
+    (pid ? `Shop-Artikel #${pid.slice(0, 8)}` : fallback ? `Shop-Bestellung #${fallback.slice(0, 8)}` : 'Shop-Bewertung')
 
   return {
     kind: 'shop',
     label: 'Shop',
     title,
-    href: pid ? `/kaufen/artikel/${encodeURIComponent(pid)}` : undefined, // ✅ genau wie gewünscht
+    href: pid ? `/kaufen/artikel/${encodeURIComponent(pid)}` : undefined,
   }
 }
+
 
   return { kind:'sonstiges', label:'Bewertung', title:'Bewertung' }
 }
