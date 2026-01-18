@@ -57,25 +57,25 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
     // ✅ my_reviewed: hat der eingeloggte User diese Order schon bewertet?
-  const ids = (data ?? []).map((o: any) => String(o.id)).filter(Boolean);
+  // ✅ my_reviewed für Buyer-Seite bestimmen
+const orderIds = (data ?? []).map((o: any) => o.id).filter(Boolean);
 
-  let reviewedSet = new Set<string>();
-  if (ids.length) {
-    const { data: revs, error: rErr } = await supabase
-      .from("reviews")
-      .select("order_id")
-      .eq("rater_id", user.id)
-      .in("order_id", ids);
+let reviewedSet = new Set<string>();
+if (orderIds.length) {
+  const { data: myReviews } = await supabase
+    .from("reviews")
+    .select("shop_order_id")
+    .in("shop_order_id", orderIds)
+    .eq("rater_id", user.id);
 
-    if (!rErr && Array.isArray(revs)) {
-      reviewedSet = new Set(revs.map((r: any) => String(r.order_id)));
-    }
-  }
+  reviewedSet = new Set((myReviews ?? []).map((r: any) => String(r.shop_order_id)));
+}
 
-  const orders = (data ?? []).map((o: any) => ({
-    ...o,
-    my_reviewed: reviewedSet.has(String(o.id)),
-  }));
+const orders = (data ?? []).map((o: any) => ({
+  ...o,
+  my_reviewed: reviewedSet.has(String(o.id)),
+}));
 
-  return NextResponse.json({ orders });
+return NextResponse.json({ orders });
+
 }

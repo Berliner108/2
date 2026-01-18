@@ -79,7 +79,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     // Reviews holen
     const { data: rows, count, error: revErr } = await admin
       .from('reviews')
-      .select('id, order_id, rater_id, comment, created_at, stars, rating', { count: 'exact' })
+      .select('id, order_id, shop_order_id, rater_id, comment, created_at, stars, rating', { count: 'exact' })
       .eq('ratee_id', rateeId)
       .order('created_at', { ascending: false })
       .range(from, to)
