@@ -10,7 +10,9 @@ function clampStars(v: any): number {
   return Math.max(1, Math.min(5, Math.round(n)));
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, ctx: any) {
+  const params = ctx?.params as { id?: string } | undefined;
+
   const supabase = await supabaseServer();
 
   const { data: auth, error: authErr } = await supabase.auth.getUser();

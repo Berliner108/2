@@ -342,7 +342,7 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     dateIso: o.created_at,
     status: mapSaleStatus(o.status),
     invoiceId: o.id,
-    rated: false,
+    rated: !!(o as any).my_reviewed,
 
     orderStatus: o.status,
 
@@ -537,7 +537,7 @@ async function sellerRelease(sale: MySale) {
   /* -------- Review Modal (Dummy) -------- */
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewSale, setReviewSale] = useState<MySale | null>(null)
-  const [stars, setStars] = useState(0)
+  const [stars, setStars] = useState<number>(0)
   const [reviewText, setReviewText] = useState('')
 
   function openReview(s: MySale) {
@@ -552,12 +552,37 @@ async function sellerRelease(sale: MySale) {
     setStars(0)
     setReviewText('')
   }
-  function submitReview() {
-    if (!reviewSale) return
-    setSales((prev) => prev.map((x) => (x.id === reviewSale.id ? { ...x, rated: true } : x)))
-    closeReview()
-    alert('Bewertung gespeichert (Dummy). Backend kannst du später anbinden.')
+  async function submitReview() {
+  if (!reviewSale) return;
+
+  try {
+    const res = await fetch(
+      `/api/shop-orders/${encodeURIComponent(reviewSale.id)}/review`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({
+          stars,
+          comment: reviewText,
+        }),
+      }
+    );
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(json?.error ?? "Bewertung fehlgeschlagen");
+      return;
+    }
+
+    closeReview();
+    await loadShopSales(); // ✅ refresh -> Button bleibt weg
+  } catch (e) {
+    console.error(e);
+    alert("Bewertung fehlgeschlagen");
   }
+}
+
 
   function invoiceHref(s: MySale) {
     return `/api/invoices/${encodeURIComponent(s.invoiceId)}/download`
