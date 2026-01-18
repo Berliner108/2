@@ -56,6 +56,26 @@ export async function GET() {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+    // ✅ my_reviewed: hat der eingeloggte User diese Order schon bewertet?
+  const ids = (data ?? []).map((o: any) => String(o.id)).filter(Boolean);
 
-  return NextResponse.json({ orders: data ?? [] });
+  let reviewedSet = new Set<string>();
+  if (ids.length) {
+    const { data: revs, error: rErr } = await supabase
+      .from("reviews")
+      .select("order_id")
+      .eq("rater_id", user.id)
+      .in("order_id", ids);
+
+    if (!rErr && Array.isArray(revs)) {
+      reviewedSet = new Set(revs.map((r: any) => String(r.order_id)));
+    }
+  }
+
+  const orders = (data ?? []).map((o: any) => ({
+    ...o,
+    my_reviewed: reviewedSet.has(String(o.id)),
+  }));
+
+  return NextResponse.json({ orders });
 }

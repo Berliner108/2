@@ -250,7 +250,7 @@ const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
 
     paymentReleased: !!o.released_at || o.status === "released",
     complaintOpen: o.status === "complaint_open",
-    rated: false,
+    rated: !!(o as any).my_reviewed,
 
     buyerAddress: (o as any).buyer_address ?? null,
     sellerAddress: o.seller_address ?? null,
@@ -332,9 +332,10 @@ useEffect(() => {
   /* ---------- Review Modal (wie konto/lackangebote) ---------- */
   const [reviewOpen, setReviewOpen] = useState(false)
   const [reviewOrderId, setReviewOrderId] = useState<string | null>(null)
-  const [stars, setStars] = useState(0)
+  const [stars, setStars] = useState<1|2|3|4|5>(5)
   const [reviewText, setReviewText] = useState('')
   const MAX_REVIEW = 600
+  
 
   const activeOrder = useMemo(
     () => (reviewOrderId ? orders.find(o => o.id === reviewOrderId) ?? null : null),
@@ -360,7 +361,7 @@ useEffect(() => {
   function openReview(order: MyOrder) {
     if (order.rated) return
     setReviewOrderId(order.id)
-    setStars(0)
+    setStars(5)
     setReviewText('')
     setReviewOpen(true)
   }
@@ -368,16 +369,61 @@ useEffect(() => {
   function closeReview() {
     setReviewOpen(false)
     setReviewOrderId(null)
-    setStars(0)
+    setStars(5)
     setReviewText('')
   }
 
-  function submitReview() {
-    if (!activeOrder) return
-    setOrders(prev => prev.map(o => o.id === activeOrder.id ? { ...o, rated: true } : o))
-    closeReview()
-    alert('Bewertung gespeichert (Dummy). Backend später anbinden.')
+ async function submitReview() {
+  if (!activeOrder) return;
+
+  const comment = reviewText.trim();
+  if (!comment) {
+    alert("Bitte einen kurzen Kommentar eingeben.");
+    return;
   }
+
+  try {
+    const res = await fetch(
+      `/api/shop-orders/${encodeURIComponent(activeOrder.id)}/review`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stars, comment }),
+      }
+    );
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      if (res.status === 409) {
+        // bereits bewertet → UI trotzdem korrekt setzen
+        setOrders(prev =>
+          prev.map(o => o.id === activeOrder.id ? { ...o, rated: true } : o)
+        );
+        closeReview();
+        alert("Du hast diese Bestellung bereits bewertet.");
+        return;
+      }
+      throw new Error(json?.error || "Bewerten fehlgeschlagen");
+    }
+
+    // ✅ Button sofort weg / disabled
+    setOrders(prev =>
+      prev.map(o => o.id === activeOrder.id ? { ...o, rated: true } : o)
+    );
+    closeReview();
+
+    // optional: Nachladen (damit my_reviewed auch serverseitig sofort stimmt)
+    // const r2 = await fetch("/api/konto/shop-bestellungen", { cache: "no-store" });
+    // const j2 = await r2.json().catch(() => ({}));
+    // const refreshed: ApiShopOrder[] = Array.isArray(j2?.orders) ? j2.orders : [];
+    // setOrders(refreshed.map(mapApiToMyOrder));
+
+  } catch (e: any) {
+    alert(e?.message || "Bewerten fehlgeschlagen");
+  }
+}
 
   /* ---------- Actions ---------- */
 async function openComplaint(order: MyOrder) {
@@ -636,16 +682,18 @@ function ratingTxt(r?: number | null, c?: number | null) {
                         <div />
                         <div />
                         <aside className={styles.sideCol}>
-                          <button
-                            type="button"
-                            className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-                            onClick={() => openReview(o)}
-                            disabled={!canRate}
-                            aria-disabled={!canRate}
-                            style={!canRate ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
-                          >
-                            {o.rated ? 'Bewertung abgegeben' : 'Bewertung abgeben'}
-                          </button>
+                          {!o.rated ? (
+  <button
+    type="button"
+    className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+    onClick={() => openReview(o)}
+  >
+    Bewertung abgeben
+  </button>
+) : (
+  <div className={styles.btnHint}>Bewertung bereits abgegeben.</div>
+)}
+
 
                           <button
                             type="button"
@@ -712,29 +760,30 @@ function ratingTxt(r?: number | null, c?: number | null) {
             </p>
 
             <div className={styles.stars} aria-label="Sterne auswählen">
-              {Array.from({ length: 5 }).map((_, i) => {
-                const v = i + 1
-                const active = v <= stars
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    className={styles.starBtn}
-                    onClick={() => setStars(v)}
-                    aria-label={`${v} Sterne`}
-                    title={`${v} Sterne`}
-                  >
-                    {active ? '★' : '☆'}
-                  </button>
-                )
-              })}
-            </div>
+  {([1, 2, 3, 4, 5] as const).map((v) => {
+    const active = v <= stars
+    return (
+      <button
+        key={v}
+        type="button"
+        className={styles.starBtn}
+        onClick={() => setStars(v)}
+        aria-label={`${v} Sterne`}
+        title={`${v} Sterne`}
+      >
+        {active ? '★' : '☆'}
+      </button>
+    )
+  })}
+</div>
+
 
             <textarea
               className={styles.reviewBox}
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value.slice(0, MAX_REVIEW))}
-              placeholder="Kurzfeedback (optional)…"
+              placeholder="Kurz beschreiben, wie der Kauf gelaufen ist…"
+
             />
             <div className={styles.counter}>{reviewText.length} / {MAX_REVIEW}</div>
 
@@ -746,9 +795,9 @@ function ratingTxt(r?: number | null, c?: number | null) {
                 type="button"
                 className={styles.btnDanger}
                 onClick={submitReview}
-                disabled={stars === 0}
-                aria-disabled={stars === 0}
-                style={stars === 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                disabled={stars === 5}
+                aria-disabled={stars === 5}
+                style={stars === 5 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
               >
                 Bewertung senden
               </button>

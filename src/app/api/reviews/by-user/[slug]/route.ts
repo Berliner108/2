@@ -97,17 +97,47 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
       for (const p of profs ?? []) raters.set(String(p.id), p)
     }
 
-    // Orders -> request_id
-    const orderIds = Array.from(new Set((rows ?? []).map(r => r.order_id).filter(Boolean))) as string[]
-    const ordersById = new Map<string, { request_id: string | null }>()
-    if (orderIds.length) {
-      const { data: ords, error } = await admin
-        .from('orders')
-        .select('id, request_id')
-        .in('id', orderIds)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      for (const o of ords ?? []) ordersById.set(String((o as any).id), { request_id: (o as any).request_id ?? null })
-    }
+    // Reviews -> order_ids (kann lack-orders ODER shop_orders sein)
+const orderIds = Array.from(
+  new Set((rows ?? []).map(r => r.order_id).filter(Boolean))
+) as string[]
+
+// 1) Lack-Orders -> request_id
+const ordersById = new Map<string, { request_id: string | null }>()
+if (orderIds.length) {
+  const { data: ords, error } = await admin
+    .from('orders')
+    .select('id, request_id')
+    .in('id', orderIds)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  for (const o of ords ?? []) {
+    ordersById.set(String((o as any).id), { request_id: (o as any).request_id ?? null })
+  }
+}
+
+// 2) Shop-Orders -> article + title (nur IDs, die NICHT in orders gefunden wurden)
+const shopIds = orderIds.filter(id => !ordersById.has(String(id)))
+const shopById = new Map<string, { article_id: string | null; title: string | null }>()
+if (shopIds.length) {
+  const { data: shops, error } = await admin
+    .from('shop_orders')
+    .select('id, article_id, articles ( title )')
+    .in('id', shopIds)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  for (const s of shops ?? []) {
+    const t =
+      Array.isArray((s as any).articles)
+        ? ((s as any).articles[0]?.title ?? null)
+        : ((s as any).articles?.title ?? null)
+
+    shopById.set(String((s as any).id), {
+      article_id: (s as any).article_id ?? null,
+      title: t,
+    })
+  }
+}
+
 
     // lack_requests -> Titel
     const reqIds = Array.from(new Set(Array.from(ordersById.values()).map(o => o.request_id).filter(Boolean))) as string[]
@@ -130,25 +160,41 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     }
 
     const items = (rows ?? []).map(r => {
-      const orderId = String(r.order_id)
-      const requestId = ordersById.get(orderId)?.request_id ?? null
-      const req = requestId ? reqById.get(String(requestId)) : null
+  const oid = r.order_id ? String(r.order_id) : null
 
-      const p = raters.get(String(r.rater_id))
+  // Lack-Order?
+  const requestId = oid ? (ordersById.get(oid)?.request_id ?? null) : null
+  const req = requestId ? reqById.get(String(requestId)) : null
 
-      return {
-        id: r.id,
-        createdAt: r.created_at,
-        comment: r.comment || '',
-        stars: toStars(r),
-        rater: p
-          ? { id: p.id, username: p.username || null }
-          : { id: r.rater_id, username: null },
-        orderId,
-        requestId: requestId ? String(requestId) : null,
-        requestTitle: pickRequestTitle(req),
-      }
-    })
+  // Shop-Order?
+  const shop = oid ? (shopById.get(oid) ?? null) : null
+
+  const p = raters.get(String(r.rater_id))
+
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    comment: r.comment || '',
+    stars: toStars(r),
+
+    rater: p
+      ? { id: p.id, username: p.username || null }
+      : { id: r.rater_id, username: null },
+
+    // ✅ Wichtig: damit getContext() sauber entscheidet
+    // Lack = orderId gesetzt, Shop = shopOrderId gesetzt
+    orderId: shop ? null : (oid ?? null),
+
+    requestId: shop ? null : (requestId ? String(requestId) : null),
+    requestTitle: shop ? null : pickRequestTitle(req),
+
+    // ✅ Shop-Felder (werden von deinem Frontend schon erkannt)
+    productId: shop?.article_id ?? null,
+    productTitle: shop?.title ?? null,
+    shopOrderId: shop ? (oid ?? null) : null,
+  }
+})
+
 
     return NextResponse.json({
       profile: {
