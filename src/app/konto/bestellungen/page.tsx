@@ -684,17 +684,15 @@ function ratingTxt(r?: number | null, c?: number | null) {
                         <div />
                         <div />
                         <aside className={styles.sideCol}>
-                          {!o.rated ? (
-                            <button
-                              type="button"
-                              className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-                              onClick={() => openReview(o)}
-                            >
-                              Bewertung abgeben
-                            </button>
-                          ) : (
-                            <div className={styles.btnHint}>Bewertung bereits abgegeben.</div>
-                          )}
+                            {!o.rated ? (
+                          <button
+                            type="button"
+                            className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                            onClick={() => openReview(o)}
+                          >
+                            Bewertung abgeben
+                          </button>
+                        ) : null}
 
 
                           <button
