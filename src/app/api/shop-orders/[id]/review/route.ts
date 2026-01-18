@@ -59,30 +59,32 @@ export async function POST(req: Request, ctx: any) {
   const ratee_id = isBuyer ? order.seller_id : order.buyer_id;
 
   // 1x pro (order_id + rater_id)
-  const { data: existing, error: eErr } = await supabase
+    const { data: existing, error: eErr } = await supabase
     .from("reviews")
     .select("id")
-    .eq("order_id", orderId)
+    .eq("shop_order_id", orderId)
     .eq("rater_id", user.id)
     .limit(1);
+
 
   if (eErr) return NextResponse.json({ error: eErr.message }, { status: 500 });
   if (existing && existing.length > 0) {
     return NextResponse.json({ error: "Du hast diese Bestellung bereits bewertet." }, { status: 409 });
   }
 
-  const { data: created, error: cErr } = await supabase
+    const { data: created, error: cErr } = await supabase
     .from("reviews")
     .insert({
-      order_id: orderId,
+      shop_order_id: orderId,   // ✅ Shop-Order hier
       rater_id: user.id,
       ratee_id,
       comment,
       stars,
-      rating: stars, // falls du rating zusätzlich nutzt
+      rating: stars,
     })
-    .select("id, order_id, rater_id, ratee_id, stars, comment, created_at")
+    .select("id, shop_order_id, rater_id, ratee_id, stars, comment, created_at")
     .single();
+
 
   if (cErr) return NextResponse.json({ error: cErr.message }, { status: 500 });
 
