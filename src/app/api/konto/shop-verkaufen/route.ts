@@ -22,7 +22,7 @@ export async function GET() {
       [
         "id",
         "created_at",
-        "updated_at", // ✅ NEU (wichtig für Event-Zähler)
+        "updated_at",
         "status",
         "unit",
         "qty",
@@ -44,19 +44,42 @@ export async function GET() {
         "buyer_address",
         "buyer_display_name",
 
-            // ✅ NEU: Rating-Aggregate
-    "buyer_profile:profiles!shop_orders_buyer_id_fkey ( username, rating_avg, rating_count )",
+        // Buyer-Rating aus profiles
+        "buyer_profile:profiles!shop_orders_buyer_id_fkey ( username, rating_avg, rating_count )",
 
         "article_id",
         "articles ( title )",
       ].join(",")
     )
     .eq("seller_id", user.id)
-    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"]) // ✅ nur echte Käufe/Verkäufe (kein payment_pending)
+    .in("status", ["paid", "shipped", "released", "complaint_open", "refunded"])
     .order("created_at", { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // ✅ my_reviewed (hat dieser Seller schon bewertet?)
+  const orderIds = (data ?? []).map((o: any) => o.id).filter(Boolean);
+
+  let reviewedSet = new Set<string>();
+  if (orderIds.length) {
+    const { data: myReviews, error: rErr } = await supabase
+      .from("reviews")
+      .select("shop_order_id")
+      .eq("rater_id", user.id)
+      .in("shop_order_id", orderIds);
+
+    if (rErr) {
+      return NextResponse.json({ error: rErr.message }, { status: 500 });
+    }
+
+    reviewedSet = new Set(
+      (myReviews ?? [])
+        .map((r: any) => r.shop_order_id)
+        .filter(Boolean)
+        .map((v: any) => String(v))
+    );
   }
 
   const now = Date.now();
@@ -70,7 +93,9 @@ export async function GET() {
       shippedAtMs !== null &&
       now >= shippedAtMs + 28 * DAY_MS;
 
-    return { ...o, sellerCanRelease };
+    const my_reviewed = reviewedSet.has(String(o.id));
+
+    return { ...o, sellerCanRelease, my_reviewed };
   });
 
   return NextResponse.json({ orders });

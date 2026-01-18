@@ -404,6 +404,7 @@ const [stars, setStars] = useState<Star>(0)
           prev.map(o => o.id === activeOrder.id ? { ...o, rated: true } : o)
         );
         closeReview();
+        alert("Du hast diese Bestellung bereits bewertet.");
         return;
       }
       throw new Error(json?.error || "Bewerten fehlgeschlagen");
@@ -684,16 +685,16 @@ function ratingTxt(r?: number | null, c?: number | null) {
                         <div />
                         <aside className={styles.sideCol}>
                           {!o.rated ? (
-  <button
-    type="button"
-    className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
-    onClick={() => openReview(o)}
-  >
-    Bewertung abgeben
-  </button>
-) : (
-  <div className={styles.btnHint}>Bewertung bereits abgegeben.</div>
-)}
+                            <button
+                              type="button"
+                              className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                              onClick={() => openReview(o)}
+                            >
+                              Bewertung abgeben
+                            </button>
+                          ) : (
+                            <div className={styles.btnHint}>Bewertung bereits abgegeben.</div>
+                          )}
 
 
                           <button
