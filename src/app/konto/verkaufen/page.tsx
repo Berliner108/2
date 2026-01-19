@@ -582,11 +582,11 @@ async function sellerRelease(sale: MySale) {
     alert("Bewertung fehlgeschlagen");
   }
 }
+function invoiceHref(s: MySale) {
+  // s.id ist die shop_order_id -> Route akzeptiert id oder shop_order_id
+  return `/api/shop-invoices/${encodeURIComponent(s.id)}/download`
+}
 
-
-  function invoiceHref(s: MySale) {
-    return `/api/invoices/${encodeURIComponent(s.invoiceId)}/download`
-  }
 
   return (
     <>
@@ -796,6 +796,8 @@ async function sellerRelease(sale: MySale) {
                             s.orderStatus === "shipped" &&
                             !s.releasedAtIso &&
                             !s.refundedAtIso;
+                          const canDownloadInvoice = s.orderStatus === "released" && !!s.releasedAtIso;
+
 
                       return (
                         <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
@@ -875,6 +877,7 @@ async function sellerRelease(sale: MySale) {
                             <div />
                             <div />
                             <aside className={styles.sideCol}>
+ {canDownloadInvoice && (
   <a
     href={invoiceHref(s)}
     className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
@@ -883,6 +886,8 @@ async function sellerRelease(sale: MySale) {
   >
     Rechnung herunterladen (PDF)
   </a>
+)}
+
 
   {/* ✅ HIER: Versand melden + Release */}
   {s.orderStatus === "paid" && (
@@ -915,11 +920,6 @@ async function sellerRelease(sale: MySale) {
     Bewertung abgeben
   </button>
 )}
-
-
-  <Link href={articlePathBy(s.articleId)} className={`${styles.ctaBtn} ${styles.ctaGhost}`}>
-    Zum Artikel
-  </Link>
 </aside>
 
                           </div>
