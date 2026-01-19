@@ -1,8 +1,63 @@
+// src/server/shop-invoices.ts
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { renderInvoicePdfBuffer } from '@/lib/invoices/pdf'
 
 const COMMISSION_RATE = 0.07 as const
 type TaxMode = 'VAT_INCLUDED' | 'REVERSE_CHARGE' | 'NON_TAXABLE'
+
+/** Minimal-Typen (nur das was wir brauchen) */
+type ShopOrderStatus =
+  | 'payment_pending'
+  | 'paid'
+  | 'shipped'
+  | 'released'
+  | 'complaint_open'
+  | 'refunded'
+
+type ShopOrderMini = {
+  id: string
+  status: ShopOrderStatus
+  released_at: string | null
+
+  buyer_id: string
+  seller_id: string
+
+  total_gross_cents: number | null
+  platform_fee_percent: number | null
+  platform_fee_cents: number | null
+
+  buyer_company_name: string | null
+  buyer_vat_number: string | null
+  buyer_address: any | null
+  buyer_account_type: string | null
+  buyer_display_name: string | null
+  buyer_username: string | null
+
+  seller_company_name: string | null
+  seller_vat_number: string | null
+  seller_address: any | null
+  seller_account_type: string | null
+  seller_display_name: string | null
+  seller_username: string | null
+
+  article_id: string | null
+}
+
+type ShopInvoiceMini = {
+  id: string
+  shop_order_id: string
+  seller_id: string
+  buyer_id: string
+  number: string
+  issued_at: string
+  currency: string
+  total_gross_cents: number
+  fee_cents: number
+  payout_cents: number
+  pdf_path: string | null
+  meta: any | null
+}
 
 function normalizeMultiline(v?: string) {
   return v ? v.replace(/\\n/g, '\n') : v
@@ -31,7 +86,10 @@ function decideTaxMode({
 
   if (country === 'AT' || vat.startsWith('AT')) return { mode: 'VAT_INCLUDED', atVatRate: AT_RATE }
 
-  const EU = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'])
+  const EU = new Set([
+    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
+    'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'
+  ])
   if (EU.has(country)) return { mode: 'REVERSE_CHARGE', atVatRate: 0 }
 
   return { mode: 'NON_TAXABLE', atVatRate: 0 }
@@ -46,68 +104,84 @@ function formatSellerAddress(addr: any | null): string | undefined {
 }
 
 export async function ensureShopInvoiceForOrder(shopOrderId: string) {
-  const admin = supabaseAdmin()
+  // ✅ B-Fix: Admin-Client lokal casten, ohne supabase-admin.ts zu ändern
+  const admin = supabaseAdmin() as unknown as SupabaseClient
 
   // 1) Order laden (nur released)
-  const { data: ord, error: oErr } = await admin
+  const ordRes = await admin
     .from('shop_orders')
-    .select([
-      'id','status','released_at',
-      'buyer_id','seller_id',
-      'total_gross_cents','platform_fee_percent','platform_fee_cents',
-      'buyer_company_name','buyer_vat_number','buyer_address','buyer_account_type','buyer_display_name','buyer_username',
-      'seller_company_name','seller_vat_number','seller_address','seller_account_type','seller_display_name','seller_username',
-      'article_id'
-    ].join(','))
+    .select(
+      [
+        'id','status','released_at',
+        'buyer_id','seller_id',
+        'total_gross_cents','platform_fee_percent','platform_fee_cents',
+        'buyer_company_name','buyer_vat_number','buyer_address','buyer_account_type','buyer_display_name','buyer_username',
+        'seller_company_name','seller_vat_number','seller_address','seller_account_type','seller_display_name','seller_username',
+        'article_id'
+      ].join(',')
+    )
     .eq('id', shopOrderId)
     .maybeSingle()
 
-  if (oErr) throw new Error(`shop order lookup failed: ${oErr.message}`)
+  const oErr = (ordRes as any).error as { message?: string } | null
+  const ord = (ordRes as any).data as ShopOrderMini | null
+
+  if (oErr) throw new Error(`shop order lookup failed: ${oErr.message || 'unknown'}`)
   if (!ord) throw new Error('shop order not found')
+
   if (ord.status !== 'released' || !ord.released_at) {
-    return { skipped: true, reason: 'not_released' }
+    return { skipped: true as const, reason: 'not_released' as const }
   }
 
   // 2) Bereits vorhanden?
-  const { data: existing } = await admin
+  const exRes = await admin
     .from('shop_invoices')
     .select('*')
     .eq('shop_order_id', ord.id)
     .maybeSingle()
 
-  if (existing?.pdf_path) {
-    return { ok: true, ...existing }
-  }
+  const exErr = (exRes as any).error as { message?: string } | null
+  const existing = (exRes as any).data as ShopInvoiceMini | null
+
+  if (exErr) throw new Error(`shop invoice lookup failed: ${exErr.message || 'unknown'}`)
+  if (existing?.pdf_path) return { ok: true as const, ...existing }
 
   // 3) Artikel-Titel (= Referenz)
   let articleTitle: string | null = null
   if (ord.article_id) {
-    const { data: art } = await admin
+    const artRes = await admin
       .from('articles')
       .select('title')
       .eq('id', ord.article_id)
       .maybeSingle()
-    articleTitle = (art as any)?.title ?? null
+
+    const artErr = (artRes as any).error as { message?: string } | null
+    const art = (artRes as any).data as { title: string | null } | null
+    if (artErr) throw new Error(`article lookup failed: ${artErr.message || 'unknown'}`)
+    articleTitle = art?.title ?? null
   }
 
   // 4) Nummer erzeugen (INV-YYYYMM-xxxxx) mit released_at als Datum
   const issuedAt = new Date(ord.released_at)
-  const { data: invNo, error: nErr } = await admin.rpc('allocate_invoice_number', {
+  const noRes = await (admin as any).rpc('allocate_invoice_number', {
     p_prefix: 'INV',
     p_issued_at: issuedAt.toISOString()
   })
+  const nErr = noRes?.error as { message?: string } | null
+  const invNo = noRes?.data as string | null
+
   if (nErr || !invNo) throw new Error(nErr?.message || 'invoice number allocation failed')
 
   // 5) Beträge
-  const orderGrossCents = Number(ord.total_gross_cents || 0)
+  const orderGrossCents = Number(ord.total_gross_cents ?? 0)
   const feeCents =
-    (ord.platform_fee_cents && Number(ord.platform_fee_cents) > 0)
+    ord.platform_fee_cents != null && Number(ord.platform_fee_cents) > 0
       ? Number(ord.platform_fee_cents)
       : Math.round(orderGrossCents * COMMISSION_RATE)
 
   const payoutCents = Math.max(0, orderGrossCents - feeCents)
 
-  // 6) Steuerlogik (wie bei dir, aber aus seller snapshots)
+  // 6) Steuerlogik (aus seller snapshots)
   const accType = (ord.seller_account_type || '') as string
   const sellerVat = (ord.seller_vat_number || '') as string | null
   const sellerAddr = ord.seller_address as any | null
@@ -151,13 +225,19 @@ export async function ensureShopInvoiceForOrder(shopOrderId: string) {
   }
 
   // 8) PDF
-  const currency = 'EUR'
   const pdf = await renderInvoicePdfBuffer({
     invoiceNumber: invNo,
     issueDate: issuedAt,
-    currency,
+    currency: 'EUR',
     platform: { name: platform.name, vatId: platform.vatId, address: platform.address },
-    vendor: { displayName: vendorName, vatId: sellerVat || null, address: vendorAddress ? { formatted: vendorAddress } as any : (ord.seller_address as any) || null },
+
+    vendor: {
+      displayName: vendorName,
+      vatId: sellerVat || null,
+      address: vendorAddress
+        ? ({ formatted: vendorAddress } as any)
+        : ((ord.seller_address as any) || null)
+    },
 
     line: {
       title: `Vermittlungsprovision 7% auf Auftrag #${ord.id}${articleTitle ? ` – ${articleTitle}` : ''}`,
@@ -174,7 +254,7 @@ export async function ensureShopInvoiceForOrder(shopOrderId: string) {
 
     meta: {
       orderId: ord.id,
-      requestTitle: articleTitle, // wird in deinem Template als Referenz genutzt
+      requestTitle: articleTitle,
       orderGrossCents,
       payoutCents,
       taxLabel,
@@ -194,29 +274,34 @@ export async function ensureShopInvoiceForOrder(shopOrderId: string) {
   if (up.error) throw new Error(`invoice upload failed: ${up.error.message}`)
 
   // 10) DB speichern (idempotent per shop_order_id)
-  const { data: saved, error: sErr } = await admin
+  const saveRes = await admin
     .from('shop_invoices')
-    .upsert({
-      shop_order_id: ord.id,
-      seller_id: ord.seller_id,
-      buyer_id: ord.buyer_id,
-      number: invNo,
-      issued_at: issuedAt.toISOString(),
-      currency: 'eur',
-      total_gross_cents: orderGrossCents,
-      fee_cents: feeCents,
-      payout_cents: payoutCents,
-      pdf_path: pdfPath,
-      meta: {
-        article_title: articleTitle,
-        taxMode,
-        fee_breakdown: { vat_rate: appliedVatRate, net_cents: feeNetCents, vat_cents: feeVatCents }
-      }
-    }, { onConflict: 'shop_order_id' })
+    .upsert(
+      {
+        shop_order_id: ord.id,
+        seller_id: ord.seller_id,
+        buyer_id: ord.buyer_id,
+        number: invNo,
+        issued_at: issuedAt.toISOString(),
+        currency: 'eur',
+        total_gross_cents: orderGrossCents,
+        fee_cents: feeCents,
+        payout_cents: payoutCents,
+        pdf_path: pdfPath,
+        meta: {
+          article_title: articleTitle,
+          taxMode,
+          fee_breakdown: { vat_rate: appliedVatRate, net_cents: feeNetCents, vat_cents: feeVatCents }
+        }
+      },
+      { onConflict: 'shop_order_id' }
+    )
     .select('*')
     .maybeSingle()
 
+  const sErr = (saveRes as any).error as { message?: string } | null
+  const saved = (saveRes as any).data as ShopInvoiceMini | null
   if (sErr || !saved) throw new Error(sErr?.message || 'shop invoice upsert failed')
 
-  return { ok: true, ...saved }
+  return { ok: true as const, ...saved }
 }
