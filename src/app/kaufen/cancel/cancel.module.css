@@ -1,0 +1,128 @@
+/* src/app/kaufen/cancel/cancel.module.css */
+
+/* Seite darf NIE breiter als der Bildschirm sein */
+.page {
+  width: 100%;
+  max-width: 100vw;
+  min-height: 100dvh;
+  overflow-x: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+  box-sizing: border-box;
+
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 0, 0, 0.06), transparent 60%),
+    radial-gradient(900px 500px at 80% 90%, rgba(0, 0, 0, 0.05), transparent 55%),
+    #f7f7f8;
+}
+
+/* Card */
+.card {
+  width: 100%;
+  max-width: 520px; /* nice auf Desktop, bleibt aber responsive */
+  box-sizing: border-box;
+
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+
+  padding: 22px 20px;
+}
+
+/* Icon */
+.iconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.06);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.35);
+  border-top-color: rgba(0, 0, 0, 0.12);
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Text */
+.title {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  color: rgba(0, 0, 0, 0.9);
+  word-break: break-word;
+}
+
+.text {
+  margin: 0 0 14px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.75);
+  word-break: break-word;
+}
+
+.hint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.6);
+
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+  word-break: break-word;
+}
+
+/* Mobile Optimierung */
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 100%;
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  .iconWrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .text {
+    font-size: 14px;
+  }
+}
+
+/* Ultra-narrow Geräte (verhindert horizontales "Ziehen") */
+@media (max-width: 360px) {
+  .page {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+}

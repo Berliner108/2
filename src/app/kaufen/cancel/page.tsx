@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import styles from "./cancel.module.css";
 
 export default function CancelPage() {
   const router = useRouter();
@@ -27,24 +28,36 @@ export default function CancelPage() {
           body: JSON.stringify({ orderId }),
         });
 
-        // auch wenn’s fehlschlägt, wollen wir nicht hängen bleiben
         if (!res.ok) {
           const j = await res.json().catch(() => ({}));
           console.error("cancel-reservation failed:", j);
+          setMsg("Abbruch erkannt – wir leiten dich zurück. (Hinweis: Reservierung konnte evtl. nicht aufgehoben werden.)");
+        } else {
+          setMsg("Reservierung wird aufgehoben – du wirst zurückgeleitet...");
         }
       } catch (e) {
         console.error(e);
+        setMsg("Netzwerkfehler – wir leiten dich zurück...");
       } finally {
-        // zurück zum Artikel (UI zeigt wieder published=true)
         router.replace(`/kaufen/artikel/${articleId}?canceled=1`);
       }
     })();
   }, [router, sp]);
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Checkout abgebrochen</h2>
-      <p>{msg}</p>
-    </div>
+    <main className={styles.page}>
+      <section className={styles.card} role="status" aria-live="polite">
+        <div className={styles.iconWrap} aria-hidden="true">
+          <div className={styles.icon} />
+        </div>
+
+        <h2 className={styles.title}>Checkout abgebrochen</h2>
+        <p className={styles.text}>{msg}</p>
+
+        <div className={styles.hint}>
+          Falls der Artikel kurzzeitig nicht sichtbar ist: bitte einmal neu laden.
+        </div>
+      </section>
+    </main>
   );
 }
