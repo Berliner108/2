@@ -1,3 +1,4 @@
+// src/app/api/shop/checkout-session/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -23,7 +24,6 @@ function pickDisplayName(u: any): string | null {
   const md = u.user_metadata ?? u.raw_user_meta_data ?? {};
   const id0 = Array.isArray(u.identities) ? u.identities[0]?.identity_data : null;
 
-  // 1) klassische Display-Felder
   const v =
     md.display_name ??
     md.full_name ??
@@ -38,17 +38,12 @@ function pickDisplayName(u: any): string | null {
   const direct = v ? String(v).trim() : "";
   if (direct) return direct;
 
-  // 2) wie bei dir im profile-Route: firstName + lastName
-  const first =
-    String(md.firstName ?? md.first_name ?? id0?.firstName ?? id0?.first_name ?? "").trim();
-  const last =
-    String(md.lastName ?? md.last_name ?? id0?.lastName ?? id0?.last_name ?? "").trim();
+  const first = String(md.firstName ?? md.first_name ?? id0?.firstName ?? id0?.first_name ?? "").trim();
+  const last = String(md.lastName ?? md.last_name ?? id0?.lastName ?? id0?.last_name ?? "").trim();
 
   const composed = `${first} ${last}`.trim();
   return composed ? composed : null;
 }
-
-
 
 type ProfileSnap = {
   username: string | null;
@@ -56,7 +51,6 @@ type ProfileSnap = {
   company_name: string | null;
   vat_number: string | null;
   address: any | null;
-  
 };
 
 export async function POST(req: Request) {
@@ -69,14 +63,11 @@ export async function POST(req: Request) {
   if (authErr || !user) {
     return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
   }
-// ✅ Buyer Display Name robust (über Admin Auth)
-const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
-if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
 
-const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(user);
-
-
-
+  // Buyer Display Name (Admin Auth)
+  const { data: buyerAuth, error: buyerAuthErr } = await admin.auth.admin.getUserById(user.id);
+  if (buyerAuthErr) console.error("getUserById(buyer) failed:", buyerAuthErr);
+  const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(user);
 
   // 2) body
   const body = (await req.json().catch(() => null)) as Body | null;
@@ -84,10 +75,10 @@ const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(use
     return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
   }
 
-  // 3) article laden (bei dir Verkäufer = owner_id)
+  // 3) article laden (inkl. Bestand, weil sale_type=gesamt => ganzer Bestand)
   const { data: article, error: aErr } = await admin
     .from("articles")
-    .select("id, title, owner_id, sale_type, published, sold_out, archived")
+    .select("id, title, owner_id, sale_type, published, sold_out, archived, qty_kg, qty_piece, stock_status")
     .eq("id", body.articleId)
     .maybeSingle();
 
@@ -106,13 +97,9 @@ const buyerDisplayName = pickDisplayName(buyerAuth?.user) ?? pickDisplayName(use
     return NextResponse.json({ error: "Du kannst nicht deinen eigenen Artikel kaufen." }, { status: 400 });
   }
 
-
-const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
-if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
-
-const sellerDisplayName = pickDisplayName(sellerAuth?.user);
-
-
+  const { data: sellerAuth, error: sellerAuthErr } = await admin.auth.admin.getUserById(sellerId);
+  if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
+  const sellerDisplayName = pickDisplayName(sellerAuth?.user);
 
   // 4) tier laden (ADMIN: RLS-sicher)
   const { data: tier, error: tErr } = await admin
@@ -130,7 +117,20 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
   }
 
   const saleType = String((article as any).sale_type ?? "");
-  const qty = saleType === "gesamt" ? 1 : Math.max(1, Number(body.qty || 1));
+
+  // ✅ (1) qty bestimmen: bei "gesamt" = ganzer Bestand
+  let qty: number;
+  if (saleType === "gesamt") {
+    const available =
+      body.unit === "kg" ? Number((article as any).qty_kg ?? 0) : Number((article as any).qty_piece ?? 0);
+
+    if (!Number.isFinite(available) || available <= 0) {
+      return NextResponse.json({ error: "Artikel nicht verfügbar (Bestand = 0)." }, { status: 409 });
+    }
+    qty = available; // ganzer Bestand
+  } else {
+    qty = Math.max(1, Number(body.qty || 1));
+  }
 
   if (qty < Number(tier.min_qty)) {
     return NextResponse.json({ error: "Menge zu klein." }, { status: 400 });
@@ -143,9 +143,7 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
   const shippingCents = eurToCents((tier as any).shipping);
 
   const totalCents =
-    saleType === "gesamt"
-      ? unitPriceCents + shippingCents
-      : qty * unitPriceCents + shippingCents;
+    saleType === "gesamt" ? unitPriceCents + shippingCents : qty * unitPriceCents + shippingCents;
 
   // 5) Snapshots aus profiles holen (ADMIN: stabil)
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
@@ -169,6 +167,27 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
     address: (sellerProf as any)?.address ?? null,
   };
 
+  // ✅ (2) "gesamt" sofort reservieren, damit kein Doppelverkauf passiert
+  // Wir reservieren NUR den Listing-Status (published/sold_out), NICHT die Mengen.
+  // Die echte Mengenreduktion macht später der Webhook bei payment_intent.succeeded.
+  if (saleType === "gesamt") {
+    const { error: rErr } = await admin
+      .from("articles")
+      .update({
+        published: false,
+        sold_out: true,
+        stock_status: "reserved",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", body.articleId)
+      .eq("published", true)
+      .eq("sold_out", false);
+
+    if (rErr) {
+      return NextResponse.json({ error: "Reservierung fehlgeschlagen: " + rErr.message }, { status: 500 });
+    }
+  }
+
   // 6) Order anlegen (supabaseServer -> RLS greift)
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
@@ -180,41 +199,43 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
 
       unit: body.unit,
       qty,
-      tier_id: (tier as any).id,           // ✅ WICHTIG
+      tier_id: (tier as any).id,
       price_gross_cents: unitPriceCents,
       shipping_gross_cents: shippingCents,
       total_gross_cents: totalCents,
 
-      platform_fee_percent: 0.07,          // ✅ WICHTIG (7% erst bei Release relevant)
+      platform_fee_percent: 0.07,
 
-      // buyer snapshots
       buyer_username: buyerSnap.username,
       buyer_account_type: buyerSnap.account_type,
       buyer_company_name: buyerSnap.company_name,
       buyer_vat_number: buyerSnap.vat_number,
       buyer_address: buyerSnap.address,
       buyer_display_name: buyerDisplayName,
-      // seller snapshots
+
       seller_username: sellerSnap.username,
       seller_account_type: sellerSnap.account_type,
       seller_company_name: sellerSnap.company_name,
       seller_vat_number: sellerSnap.vat_number,
       seller_address: sellerSnap.address,
       seller_display_name: sellerDisplayName,
-
     })
-    .select("id, buyer_display_name, seller_display_name")
+    .select("id")
     .single();
 
   if (oErr || !order) {
     return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 7) Stripe Checkout Session (keine Transfers hier! escrow)
+  // 7) Stripe Checkout Session (escrow: keine Transfers hier!)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
-  const session = await stripe.checkout.sessions.create({
+  const payload: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
     customer_email: user.email ?? undefined,
+
+    // ✅ (3) hilfreich + fallback
+    client_reference_id: order.id,
+
     line_items: [
       {
         price_data: {
@@ -227,11 +248,11 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
     ],
 
     payment_intent_data: {
-      transfer_group: order.id, // ✅ für spätere Transfers
+      transfer_group: order.id,
       metadata: {
         shop_order_id: order.id,
         article_id: (article as any).id,
-        seller_id: sellerId,    // ✅ FIX (nicht article.seller_id)
+        seller_id: sellerId,
         buyer_id: user.id,
       },
     },
@@ -244,6 +265,11 @@ const sellerDisplayName = pickDisplayName(sellerAuth?.user);
       article_id: (article as any).id,
       seller_id: sellerId,
     },
+  };
+
+  const session = await stripe.checkout.sessions.create(payload, {
+    // ✅ (3) verhindert Doppel-Sessions bei Doppelklick
+    idempotencyKey: `shop_order_${order.id}_checkout_session_v1`,
   });
 
   return NextResponse.json({ url: session.url });
