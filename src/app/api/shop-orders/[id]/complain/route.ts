@@ -1,3 +1,4 @@
+// src/app/api/shop-orders/[id]/complain/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -13,7 +14,7 @@ type ShopOrderStatus =
   | "paid"
   | "shipped"
   | "released"
-  | "complaint_open"
+  | "compliant_open"
   | "refunded";
 
 type ShopOrderRow = {
@@ -34,7 +35,12 @@ type ShopOrderRow = {
 
   total_gross_cents: number;
 
+  // ✅ neu: stabiler Refund über PaymentIntent
+  stripe_payment_intent_id: string | null;
+
+  // legacy (kann leer bleiben)
   stripe_charge_id: string | null;
+
   stripe_transfer_id: string | null;
   transferred_at: string | null;
 };
@@ -45,6 +51,7 @@ type ArticleRow = {
   qty_piece: number | null;
   published: boolean | null;
   sold_out: boolean | null;
+  stock_status: string | null;
 };
 
 export async function POST(_req: Request, ctx: any) {
@@ -60,7 +67,7 @@ export async function POST(_req: Request, ctx: any) {
   const orderId = String(ctx?.params?.id ?? "");
   if (!orderId) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
-  // 1) Order laden (supabaseServer => RLS)
+  // 1) Order laden (RLS)
   const { data: orderData, error: oErr } = await supabase
     .from("shop_orders")
     .select(
@@ -77,6 +84,7 @@ export async function POST(_req: Request, ctx: any) {
         "released_at",
         "refunded_at",
         "total_gross_cents",
+        "stripe_payment_intent_id",
         "stripe_charge_id",
         "stripe_transfer_id",
         "transferred_at",
@@ -116,10 +124,10 @@ export async function POST(_req: Request, ctx: any) {
     );
   }
 
-  // Stripe Charge muss da sein (Webhook setzt paid + stripe_charge_id)
-  if (!order.stripe_charge_id) {
+  // ✅ Zahlung muss bestätigt sein (Webhook setzt PI-ID bei payment_intent.succeeded)
+  if (!order.stripe_payment_intent_id) {
     return NextResponse.json(
-      { error: "Zahlung noch nicht bestätigt (stripe_charge_id fehlt). Bitte kurz warten und erneut versuchen." },
+      { error: "Zahlung noch nicht bestätigt (stripe_payment_intent_id fehlt). Bitte kurz warten und erneut versuchen." },
       { status: 409 }
     );
   }
@@ -129,23 +137,23 @@ export async function POST(_req: Request, ctx: any) {
     return NextResponse.json({ error: "Ungültiger Betrag." }, { status: 409 });
   }
 
-  // 3) Stripe: Full refund (idempotent)
+  // 3) Stripe: Full refund (idempotent) -> über PaymentIntent
   let refundId: string | null = null;
   try {
     const refund = await stripe.refunds.create(
       {
-        charge: order.stripe_charge_id,
+        payment_intent: order.stripe_payment_intent_id,
         amount: totalCents,
         metadata: { shop_order_id: order.id },
       },
-      { idempotencyKey: `shop_order_${order.id}_refund_v1` }
+      { idempotencyKey: `shop_order_${order.id}_refund_v2` }
     );
     refundId = refund.id;
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "Stripe Refund fehlgeschlagen." }, { status: 502 });
   }
 
-  // 4) Order DB updaten (refund + optional restock-flag)
+  // 4) Order DB updaten
   const now = new Date().toISOString();
   const shouldRestock = !!order.stock_adjusted && !order.stock_reverted;
 
@@ -156,7 +164,7 @@ export async function POST(_req: Request, ctx: any) {
       refunded_at: now,
       stock_reverted: shouldRestock ? true : order.stock_reverted,
       updated_at: now,
-      // falls du später eine Spalte willst:
+      // optional später:
       // stripe_refund_id: refundId,
     })
     .eq("id", orderId)
@@ -188,9 +196,10 @@ export async function POST(_req: Request, ctx: any) {
     return NextResponse.json({ order: updated, restocked: false, refundId });
   }
 
+  // 6) Artikelbestand hochsetzen + Listing wieder aktivieren
   const { data: artData, error: aErr } = await admin
     .from("articles")
-    .select("id, qty_kg, qty_piece, published, sold_out")
+    .select("id, qty_kg, qty_piece, published, sold_out, stock_status")
     .eq("id", updated.article_id)
     .maybeSingle();
 
@@ -206,7 +215,14 @@ export async function POST(_req: Request, ctx: any) {
   const qty = Number(updated.qty ?? 0);
   const unit = updated.unit;
 
-  const patch: any = { published: true, sold_out: false };
+  const patch: any = {
+    published: true,
+    sold_out: false,
+    updated_at: now,
+    // stock_status lassen wir bewusst, falls du es später verwendest:
+    // stock_status: "auf_lager",
+  };
+
   if (unit === "kg") patch.qty_kg = Number(art.qty_kg ?? 0) + qty;
   else patch.qty_piece = Number(art.qty_piece ?? 0) + qty;
 
