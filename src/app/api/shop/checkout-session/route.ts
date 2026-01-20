@@ -75,10 +75,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Ungültige Daten." }, { status: 400 });
   }
 
-  // 3) article laden (inkl. Bestand, weil sale_type=gesamt => ganzer Bestand)
+  // 3) article laden (inkl. Bestand)
   const { data: article, error: aErr } = await admin
     .from("articles")
-    .select("id, title, owner_id, sale_type, published, sold_out, archived, qty_kg, qty_piece, stock_status")
+    .select("id, title, owner_id, sale_type, published, sold_out, archived, qty_kg, qty_piece")
     .eq("id", body.articleId)
     .maybeSingle();
 
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
   if (sellerAuthErr) console.error("getUserById(seller) failed:", sellerAuthErr);
   const sellerDisplayName = pickDisplayName(sellerAuth?.user);
 
-  // 4) tier laden (ADMIN: RLS-sicher)
+  // 4) tier laden
   const { data: tier, error: tErr } = await admin
     .from("article_price_tiers")
     .select("id, unit, min_qty, max_qty, price, shipping")
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
 
   const saleType = String((article as any).sale_type ?? "");
 
-  // ✅ (1) qty bestimmen: bei "gesamt" = ganzer Bestand
+  // (1) qty bestimmen: bei "gesamt" = ganzer Bestand
   let qty: number;
   if (saleType === "gesamt") {
     const available =
@@ -127,7 +127,7 @@ export async function POST(req: Request) {
     if (!Number.isFinite(available) || available <= 0) {
       return NextResponse.json({ error: "Artikel nicht verfügbar (Bestand = 0)." }, { status: 409 });
     }
-    qty = available; // ganzer Bestand
+    qty = available;
   } else {
     qty = Math.max(1, Number(body.qty || 1));
   }
@@ -142,10 +142,9 @@ export async function POST(req: Request) {
   const unitPriceCents = eurToCents((tier as any).price);
   const shippingCents = eurToCents((tier as any).shipping);
 
-  const totalCents =
-    saleType === "gesamt" ? unitPriceCents + shippingCents : qty * unitPriceCents + shippingCents;
+  const totalCents = saleType === "gesamt" ? unitPriceCents + shippingCents : qty * unitPriceCents + shippingCents;
 
-  // 5) Snapshots aus profiles holen (ADMIN: stabil)
+  // 5) profile snapshots
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
     admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
@@ -167,18 +166,16 @@ export async function POST(req: Request) {
     address: (sellerProf as any)?.address ?? null,
   };
 
-  // ✅ (2) "gesamt" sofort reservieren, damit kein Doppelverkauf passiert
-  // Wir reservieren NUR den Listing-Status (published/sold_out), NICHT die Mengen.
-  // Die echte Mengenreduktion macht später der Webhook bei payment_intent.succeeded.
+  // ✅ (2) "gesamt" sofort reservieren (OHNE stock_status wegen DB-Constraint)
   if (saleType === "gesamt") {
+    const now = new Date().toISOString();
     const { error: rErr } = await admin
       .from("articles")
       .update({
         published: false,
         sold_out: true,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
-
       .eq("id", body.articleId)
       .eq("published", true)
       .eq("sold_out", false);
@@ -188,7 +185,7 @@ export async function POST(req: Request) {
     }
   }
 
-  // 6) Order anlegen (supabaseServer -> RLS greift)
+  // 6) Order anlegen (RLS)
   const { data: order, error: oErr } = await supabase
     .from("shop_orders")
     .insert({
@@ -227,13 +224,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: oErr?.message ?? "Order konnte nicht erstellt werden." }, { status: 500 });
   }
 
-  // 7) Stripe Checkout Session (escrow: keine Transfers hier!)
+  // 7) Stripe Checkout Session
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const payload: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
     customer_email: user.email ?? undefined,
 
-    // ✅ (3) hilfreich + fallback
+    // (3) fallback + leichter zu suchen
     client_reference_id: order.id,
 
     line_items: [
@@ -258,7 +255,9 @@ export async function POST(req: Request) {
     },
 
     success_url: `${baseUrl}/konto/bestellungen?success=1&order=${order.id}`,
-    cancel_url: `${baseUrl}/kaufen/artikel/${(article as any).id}?canceled=1`,
+
+    // ✅ wichtig: orderId an cancel_url anhängen, damit du cancel-reservation aufrufen kannst
+    cancel_url: `${baseUrl}/kaufen/artikel/${(article as any).id}?canceled=1&order=${order.id}`,
 
     metadata: {
       shop_order_id: order.id,
@@ -268,9 +267,8 @@ export async function POST(req: Request) {
   };
 
   const session = await stripe.checkout.sessions.create(payload, {
-    // ✅ (3) verhindert Doppel-Sessions bei Doppelklick
     idempotencyKey: `shop_order_${order.id}_checkout_session_v1`,
   });
 
-  return NextResponse.json({ url: session.url });
+  return NextResponse.json({ url: session.url, orderId: order.id });
 }
