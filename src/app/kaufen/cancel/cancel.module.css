@@ -5,8 +5,8 @@
   width: 100%;
   max-width: 100vw;
 
-  /* "doppelt so hoch", damit Footer weiter unten ist */
-  min-height: 200dvh;
+  /* ✅ fixe Höhe in px, damit Footer weiter unten ist */
+  min-height: 100px; /* bei Bedarf z.B. 3000px */
 
   overflow-x: hidden;
   box-sizing: border-box;
