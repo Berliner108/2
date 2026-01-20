@@ -257,7 +257,8 @@ export async function POST(req: Request) {
     success_url: `${baseUrl}/konto/bestellungen?success=1&order=${order.id}`,
 
     // ✅ wichtig: orderId an cancel_url anhängen, damit du cancel-reservation aufrufen kannst
-    cancel_url: `${baseUrl}/kaufen/artikel/${(article as any).id}?canceled=1&order=${order.id}`,
+    cancel_url: `${baseUrl}/kaufen/cancel?canceled=1&order=${order.id}&article=${(article as any).id}`,
+
 
     metadata: {
       shop_order_id: order.id,
