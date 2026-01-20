@@ -176,9 +176,9 @@ export async function POST(req: Request) {
       .update({
         published: false,
         sold_out: true,
-        stock_status: "reserved",
         updated_at: new Date().toISOString(),
       })
+
       .eq("id", body.articleId)
       .eq("published", true)
       .eq("sold_out", false);
