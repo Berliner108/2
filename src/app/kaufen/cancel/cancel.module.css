@@ -25,8 +25,7 @@
   box-sizing: border-box;
 
   /* ✅ viel mehr Abstand oben & unten (gleich) */
-  margin-top: 600px;
-  margin-bottom: 600px;
+  margin: 220px auto;
 
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
