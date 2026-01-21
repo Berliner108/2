@@ -552,9 +552,6 @@ const Angebote: FC = () => {
                           <span className={styles.bestPrice}>{formatEUR(bestPrice)}</span>
                         )}
                       </div>
-                      <div className={styles.groupActions}>
-                        <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
-                      </div>
                     </div>
 
                     {offers.length === 0 && showNoOffersGroup ? (
