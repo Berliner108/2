@@ -95,7 +95,7 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Mein Konto',
     href: '/konto',
     links: [
-      { href: '/konto/angebote',       text: 'Eingeholte Angebote' },
+      { href: '/konto/angebote',       text: 'Aufträge Angebote' },
       { href: '/konto/auftraege',      text: 'Aufträge' },
       { href: '/konto/bestellungen',   text: 'Bestellungen' },
       { href: '/konto/lackanfragen',   text: 'Lackanfragen Angebote' },
