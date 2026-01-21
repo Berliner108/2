@@ -1,19 +1,18 @@
 /* src/app/kaufen/cancel/cancel.module.css */
 
-/* Seite darf NIE breiter als der Bildschirm sein */
+/* Fixe Seitenhöhe + Card exakt zentriert (horizontal + vertikal) */
 .page {
   width: 100%;
   max-width: 100vw;
-
-  /* ✅ fixe Höhe in px, damit Footer weiter unten ist */
-  min-height: 1200px; /* bei Bedarf z.B. 3000px */
-
   overflow-x: hidden;
   box-sizing: border-box;
 
+  /* ✅ fixe Höhe */
+  min-height: 1200px;
+
   display: flex;
-  align-items: center;       /* vertikal zentriert */
-  justify-content: center;   /* horizontal zentriert */
+  align-items: center;       /* vertikal */
+  justify-content: center;   /* horizontal */
 
   padding: 24px;
 
@@ -37,8 +36,8 @@
 
   display: flex;
   flex-direction: column;
-  align-items: center; /* Icon + Text horizontal */
-  text-align: center;  /* Text mittig */
+  align-items: center;
+  text-align: center;
 }
 
 /* Icon */
@@ -49,7 +48,7 @@
   background: rgba(0, 0, 0, 0.06);
 
   display: grid;
-  place-items: center; /* Icon exakt mittig */
+  place-items: center;
 
   margin: 0 0 14px 0;
 }
@@ -85,8 +84,6 @@
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.75);
   word-break: break-word;
-
-  /* damit lange Texte nicht zu breit wirken */
   max-width: 46ch;
 }
 
@@ -102,9 +99,10 @@
   max-width: 52ch;
 }
 
-/* Mobile Optimierung */
+/* Mobile: Höhe reduziert + Padding kleiner (bleibt zentriert) */
 @media (max-width: 480px) {
   .page {
+    min-height: 820px; /* ✅ mobile angepasst */
     padding: 16px;
   }
 
@@ -138,6 +136,7 @@
 /* Ultra-narrow Geräte */
 @media (max-width: 360px) {
   .page {
+    min-height: 760px;
     padding: 12px;
   }
 
