@@ -1,11 +1,9 @@
-// ✅ FIX für Next.js App Router Typing (Route Handler Context)
 // src/app/api/jobs/[jobId]/offers/route.ts
-
+// ✅ Fix für Next.js (neuere Versionen): params ist ein Promise
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -31,15 +29,17 @@ function parseBody(raw: any): { ok: true; value: Body } | { ok: false; error: st
   return { ok: true, value: { artikel_cents: a, versand_cents: v, gesamt_cents: g } };
 }
 
-function toISO(d: Date) {
-  return d.toISOString();
-}
-
-// ✅ Next.js erwartet Context-Typ { params: Record<string, string | string[]> }
-type RouteContext = { params: { jobId: string } };
-
-export async function POST(req: NextRequest, { params }: RouteContext) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ jobId: string }> }
+) {
   try {
+    const { jobId: jobIdRaw } = await params;
+    const jobId = String(jobIdRaw ?? '').trim();
+    if (!jobId) {
+      return NextResponse.json({ ok: false, error: 'missing_job_id' }, { status: 400 });
+    }
+
     const sb = await supabaseServer();
     const {
       data: { user },
@@ -48,11 +48,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     if (authErr || !user) {
       return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 });
-    }
-
-    const jobId = String(params?.jobId ?? '').trim();
-    if (!jobId) {
-      return NextResponse.json({ ok: false, error: 'missing_job_id' }, { status: 400 });
     }
 
     const raw = await req.json().catch(() => ({}));
@@ -119,29 +114,28 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const addr: any = prof.address || {};
     const meta: any = user.user_metadata || {};
 
-    const snapPublic = {
-      account_type: String(prof.account_type || ''),
-      location: {
-        country: String(addr.country || ''),
-        city: String(addr.city || ''),
+    const anbieter_snapshot = {
+      public: {
+        account_type: String(prof.account_type || ''),
+        location: {
+          country: String(addr.country || ''),
+          city: String(addr.city || ''),
+        },
+      },
+      private: {
+        firstName: String(meta.firstName || ''),
+        lastName: String(meta.lastName || ''),
+        address: {
+          street: String(addr.street || ''),
+          houseNumber: String(addr.houseNumber || ''),
+          zip: String(addr.zip || ''),
+          city: String(addr.city || ''),
+          country: String(addr.country || ''),
+        },
+        company_name: String(prof.company_name || ''),
+        vat_number: String(prof.vat_number || ''),
       },
     };
-
-    const snapPrivate = {
-      firstName: String(meta.firstName || ''),
-      lastName: String(meta.lastName || ''),
-      address: {
-        street: String(addr.street || ''),
-        houseNumber: String(addr.houseNumber || ''),
-        zip: String(addr.zip || ''),
-        city: String(addr.city || ''),
-        country: String(addr.country || ''),
-      },
-      company_name: String(prof.company_name || ''),
-      vat_number: String(prof.vat_number || ''),
-    };
-
-    const anbieter_snapshot = { public: snapPublic, private: snapPrivate };
 
     // 3) Insert offer (Unique(job_id, bieter_id) blockt 2. Angebot)
     const { data: inserted, error: insErr } = await admin
@@ -153,7 +147,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         artikel_cents,
         versand_cents,
         gesamt_cents,
-        valid_until: toISO(valid_until),
+        valid_until: valid_until.toISOString(),
         status: 'open',
         anbieter_snapshot,
       })
