@@ -123,6 +123,12 @@ function parseMoneyOrNull(raw: string): number | null {
 function formatMoney(n: number): string {
   return n.toFixed(2);
 }
+function toCentsFromMoneyInput(raw: string): number | null {
+  const n = parseMoneyOrNull(raw);
+  if (n === null) return null;
+  // € -> cents (sauber runden)
+  return Math.round(n * 100);
+}
 
 /* ===== Mindestpreise & Limits ===== */
 const MIN_AUFTRAG_PREIS = 60; // Mindestpreis Auftrag in €
@@ -172,7 +178,9 @@ function hasMinWholeDigits(value: string, minDigits: number): boolean {
 
 function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
+const [offerSent, setOfferSent] = useState(false);
+
 
   const { error: toastError } = useLocalToast();
 
@@ -344,65 +352,114 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
   })();
 
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setPreisError(null);
+  e.preventDefault();
+  setPreisError(null);
 
-    const base = parseMoneyOrNull(gesamtPreis);
-    if (base === null || base < MIN_AUFTRAG_PREIS) {
+  if (offerSent) return;
+
+  const artikelCents = toCentsFromMoneyInput(gesamtPreis);
+  if (artikelCents === null || artikelCents < MIN_AUFTRAG_PREIS * 100) {
+    setPreisError(
+      `Bitte die Gesamtkosten für den Auftrag eingeben (mindestens ${formatMoney(
+        MIN_AUFTRAG_PREIS
+      )} €).`
+    );
+    return;
+  }
+
+  let versandCents = 0;
+  if (brauchtLogistikPreis) {
+    const lCents = toCentsFromMoneyInput(logistikPreis);
+    if (lCents === null || lCents < MIN_LOGISTIK_PREIS * 100) {
       setPreisError(
-        `Bitte die Gesamtkosten für den Auftrag eingeben (mindestens ${formatMoney(
-          MIN_AUFTRAG_PREIS
+        `Bitte einen gültigen Logistikpreis angeben (mindestens ${formatMoney(
+          MIN_LOGISTIK_PREIS
         )} €).`
       );
       return;
     }
+    versandCents = lCents;
+  }
 
-    let logistik = 0;
-    if (brauchtLogistikPreis) {
-      const l = parseMoneyOrNull(logistikPreis);
-      if (l === null || l < MIN_LOGISTIK_PREIS) {
-        setPreisError(
-          `Bitte einen gültigen Logistikpreis angeben (mindestens ${formatMoney(
-            MIN_LOGISTIK_PREIS
-          )} €).`
-        );
-        return;
-      }
-      logistik = l;
-    }
+  const gesamtCents = artikelCents + versandCents;
 
-    // Connect-Ready prüfen (wie bei Lackanfragen)
-    try {
-      const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
-      const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
+  // Connect-Ready prüfen (wie bei Lackanfragen)
+  try {
+    const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+    const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
 
-      if (!stRes.ok) {
-        toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
-        return;
-      }
-
-      if (!st.ready) {
-        await goToStripeOnboarding();
-        return;
-      }
-    } catch {
-      toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
+    if (!stRes.ok) {
+      toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
       return;
     }
 
-    // TODO: später API-Call (z. B. POST /api/auftraege/{id}/angebote)
-    alert(
-      `Angebot gesendet:\n` +
-        `Gesamtkosten Auftrag: ${formatMoney(base)} €\n` +
-        (brauchtLogistikPreis
-          ? `Logistikkosten: ${formatMoney(logistik)} €\n`
-          : 'Logistikkosten: 0,00 € (Selbstanlieferung & Selbstabholung)\n') +
-        `Auftrag #${auftrag.id}`
-    );
-  };
+    if (!st.ready) {
+      await goToStripeOnboarding();
+      return;
+    }
+  } catch {
+    toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await fetch(`/api/jobs/${encodeURIComponent(String(auftrag.id))}/offers`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        artikel_cents: artikelCents,
+        versand_cents: versandCents,
+        gesamt_cents: gesamtCents,
+      }),
+    });
+
+    const j = await res.json().catch(() => ({} as any));
+
+    if (!res.ok) {
+      const code = String(j?.error || '');
+
+      if (code === 'already_offered') {
+        toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
+        setOfferSent(true);
+        return;
+      }
+      if (code === 'offer_window_closed') {
+        toastError('Angebotsfrist vorbei: Angebote nur bis 24h vor Warenausgabe möglich.');
+        setOfferSent(true);
+        return;
+      }
+      if (code === 'job_not_open') {
+        toastError('Dieser Auftrag ist nicht mehr offen.');
+        setOfferSent(true);
+        return;
+      }
+      if (code === 'cannot_offer_on_own_job') {
+        toastError('Du kannst kein Angebot für deinen eigenen Auftrag abgeben.');
+        setOfferSent(true);
+        return;
+      }
+
+      toastError(j?.message || 'Angebot konnte nicht gesendet werden.');
+      return;
+    }
+
+    // ✅ ok
+    setOfferSent(true);
+    // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
+    // alert('Angebot wurde gesendet.');
+  } catch (err: any) {
+    toastError(String(err?.message || 'Angebot konnte nicht gesendet werden.'));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const isSubmitDisabled =
-    !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
+  loading || offerSent || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
+
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
 
@@ -660,6 +717,7 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                     }`}
                     autoComplete="off"
                     maxLength={MAX_PRICE_CHARS}
+                    disabled={offerSent || loading}
                   />
                 </div>
 
@@ -686,6 +744,7 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                         }`}
                         autoComplete="off"
                         maxLength={MAX_PRICE_CHARS}
+                        disabled={offerSent || loading}
                       />
                     </div>
                   </>
@@ -713,8 +772,9 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                   className={styles.buyButton}
                   disabled={isSubmitDisabled}
                 >
-                  Angebot abgeben
+                  {offerSent ? 'Angebot abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
                 </button>
+
               </form>
             </div>
           </div>
