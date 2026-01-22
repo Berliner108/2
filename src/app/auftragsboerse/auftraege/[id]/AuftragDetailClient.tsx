@@ -243,17 +243,7 @@ const [offerSent, setOfferSent] = useState(false);
   const [logistikPreis, setLogistikPreis] = useState<string>('');
   const [preisError, setPreisError] = useState<string | null>(null);
 
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <TopLoader />
-        <div className={styles.container}>
-          <DetailSkeleton />
-        </div>
-      </>
-    );
-  }
+
   const username = auftrag.user ?? ''
 const messageTarget = encodeURIComponent(username)
 
@@ -468,6 +458,17 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
     <>
       <Navbar />
 
+{loading && <TopLoader />}
+
+<div className={styles.container}>
+  {loading ? (
+    <DetailSkeleton />
+  ) : (
+    <div className={styles.grid}>
+      {/* dein kompletter bisheriger Inhalt */}
+    </div>
+  )}
+</div>
       <div className={styles.container}>
         <div className={styles.grid}>
           {/* Bilder */}
