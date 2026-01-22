@@ -235,6 +235,13 @@ const [offerSent, setOfferSent] = useState(false);
       toastError(String(e?.message || 'Onboarding-Link konnte nicht erstellt werden.'));
     }
   }, [toastError]);
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  // Preisbereich: 2 Felder
+  const [gesamtPreis, setGesamtPreis] = useState<string>('');
+  const [logistikPreis, setLogistikPreis] = useState<string>('');
+  const [preisError, setPreisError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -265,15 +272,9 @@ const ratingCount =
     : 0
 
 
-  // Lightbox
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState(0);
+  
   const slides = auftrag.bilder?.map((src) => ({ src })) || [];
 
-  // Preisbereich: 2 Felder
-  const [gesamtPreis, setGesamtPreis] = useState<string>('');
-  const [logistikPreis, setLogistikPreis] = useState<string>('');
-  const [preisError, setPreisError] = useState<string | null>(null);
 
   // Logistik-Bedingung: nur wenn NICHT beides "Selbst..."
 const warenausgabeArtRaw = (auftrag.warenausgabeArt ?? '').trim().toLowerCase();
