@@ -21,9 +21,23 @@ type Job = {
 type Offer = {
   id: string
   jobId: string | number
-  vendor: string
-  priceCents: number
+
+  artikel_cents: number
+  versand_cents: number
+  gesamt_cents: number
+
   createdAt: string // ISO
+  validUntil: string // ISO
+
+  // live (profiles)
+  username: string
+  rating_avg: number
+  rating_count: number
+
+  // snapshot (job_offers)
+  snap_city: string
+  snap_country: string
+  snap_account_type: string // 'private' | 'business' | ''
 }
 
 /* ================= Helpers ================= */
@@ -50,21 +64,10 @@ const formatEUR = (c: number) =>
   (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
 const formatDateTime = (d?: Date) => (d ? d.toLocaleString('de-AT') : '—')
 
-function computeValidUntil(offer: Offer, job?: Job): Date | undefined {
-  const now = Date.now()
-  const created = asDateLike(offer.createdAt)
-  const plus72h = created ? new Date(created.getTime() + 72 * 60 * 60 * 1000) : undefined
-  const ausgabe = asDateLike(job?.warenausgabeDatum ?? job?.lieferDatum)
-  let dayBeforeEnd: Date | undefined
-  if (ausgabe) {
-    dayBeforeEnd = new Date(ausgabe)
-    dayBeforeEnd.setDate(dayBeforeEnd.getDate() - 1)
-    dayBeforeEnd.setHours(23, 59, 59, 999)
-  }
-  const candidates = [plus72h, dayBeforeEnd].filter((d): d is Date => !!d && +d > now)
-  if (candidates.length === 0) return undefined
-  return new Date(Math.min(...candidates.map(d => +d)))
+function computeValidUntil(offer: Offer): Date | undefined {
+  return asDateLike(offer.validUntil)
 }
+
 
 function formatRemaining(target?: Date) {
   if (!target) return { text: '—', level: 'ok' as const }
@@ -258,6 +261,64 @@ const Angebote: FC = () => {
     return () => { alive = false }
   }, [])
 
+  useEffect(() => {
+  let alive = true
+
+  const mapRow = (o: any): Offer => ({
+    id: String(o.id),
+    jobId: String(o.job_id ?? o.jobId),
+
+    artikel_cents: Number(o.artikel_cents ?? 0),
+    versand_cents: Number(o.versand_cents ?? 0),
+    gesamt_cents: Number(o.gesamt_cents ?? 0),
+
+    createdAt: String(o.created_at ?? o.createdAt),
+    validUntil: String(o.valid_until ?? o.validUntil),
+
+    username: String(o.username ?? ''),
+    rating_avg: Number(o.rating_avg ?? 0),
+    rating_count: Number(o.rating_count ?? 0),
+
+    snap_city: String(o.snap_city ?? '—') || '—',
+    snap_country: String(o.snap_country ?? '—') || '—',
+    snap_account_type: String(o.snap_account_type ?? ''),
+  })
+
+  const loadOffers = async () => {
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch('/api/offers/received', { credentials: 'include' }),
+        fetch('/api/offers/submitted', { credentials: 'include' }),
+      ])
+
+      const j1 = await r1.json().catch(() => ({} as any))
+      const j2 = await r2.json().catch(() => ({} as any))
+
+      if (!r1.ok) throw new Error(j1?.error || 'received_failed')
+      if (!r2.ok) throw new Error(j2?.error || 'submitted_failed')
+
+      if (!alive) return
+
+      setReceivedData(Array.isArray(j1?.offers) ? j1.offers.map(mapRow) : [])
+      setSubmittedData(Array.isArray(j2?.offers) ? j2.offers.map(mapRow) : [])
+    } catch (e) {
+      console.error(e)
+      if (!alive) return
+      setReceivedData([])
+      setSubmittedData([])
+    }
+  }
+
+  loadOffers()
+  const id = setInterval(loadOffers, 60_000)
+
+  return () => {
+    alive = false
+    clearInterval(id)
+  }
+}, [])
+
+
   const jobsById = useMemo(() => {
     const map = new Map<string, Job>()
     for (const j of jobs) map.set(String(j.id), j)
@@ -276,24 +337,22 @@ const Angebote: FC = () => {
     try { localStorage.setItem('angeboteTop', topSection) } catch {}
   }, [topSection])
 
-  // Angebote bereinigen (später, wenn echte Offers existieren)
-  const pruneExpiredOffers = () => {
-    const now = Date.now()
-    setReceivedData(prev =>
-      prev.filter(o => {
-        const job = jobsById.get(String(o.jobId))
-        const vu = computeValidUntil(o, job)
-        return !!vu && +vu > now
-      })
-    )
-    setSubmittedData(prev =>
-      prev.filter(o => {
-        const job = jobsById.get(String(o.jobId))
-        const vu = computeValidUntil(o, job)
-        return !!vu && +vu > now
-      })
-    )
-  }
+const pruneExpiredOffers = () => {
+  const now = Date.now()
+  setReceivedData(prev =>
+    prev.filter(o => {
+      const vu = computeValidUntil(o)
+      return !!vu && +vu > now
+    })
+  )
+  setSubmittedData(prev =>
+    prev.filter(o => {
+      const vu = computeValidUntil(o)
+      return !!vu && +vu > now
+    })
+  )
+}
+
 
   const compareBestPrice = (a: number, b: number, dir: 'asc' | 'desc') => {
     const aInf = !Number.isFinite(a), bInf = !Number.isFinite(b)
@@ -322,12 +381,12 @@ const Angebote: FC = () => {
       const offers = offersForJob.filter(o =>
         !q ||
         String(o.jobId).toLowerCase().includes(q) ||
-        o.vendor.toLowerCase().includes(q) ||
+        (o.username || '').toLowerCase().includes(q) ||
         titleLC.includes(q)
       )
 
       const showNoOffersGroup = offersForJob.length === 0 && (!q || titleLC.includes(q))
-      const bestPrice = offers.length ? Math.min(...offers.map(o => o.priceCents)) : Infinity
+      const bestPrice = offers.length ? Math.min(...offers.map(o => o.gesamt_cents)) : Infinity
       const latest = offers.length ? Math.max(...offers.map(o => +new Date(o.createdAt))) : 0
 
       return { jobId: String(id), job, offers, showNoOffersGroup, bestPrice, latest }
@@ -355,8 +414,9 @@ const Angebote: FC = () => {
     arr = [...arr].sort((a, b) => {
       if (sort === 'date_desc')  return +new Date(b.createdAt) - +new Date(a.createdAt)
       if (sort === 'date_asc')   return +new Date(a.createdAt) - +new Date(b.createdAt)
-      if (sort === 'price_desc') return b.priceCents - a.priceCents
-      if (sort === 'price_asc')  return a.priceCents - b.priceCents
+      if (sort === 'price_desc') return b.gesamt_cents - a.gesamt_cents
+      if (sort === 'price_asc')  return a.gesamt_cents - b.gesamt_cents
+
       return 0
     })
     return arr
@@ -569,21 +629,39 @@ const Angebote: FC = () => {
 
                         {offers
                           .slice()
-                          .sort((a,b)=>a.priceCents-b.priceCents)
+                          .sort((a,b)=>a.gesamt_cents-b.gesamt_cents)
+
                           .map(o => {
                             const j = jobsById.get(String(o.jobId))
-                            const validUntil = computeValidUntil(o, j)!
+                            const validUntil = computeValidUntil(o)!
+
                             const remaining = formatRemaining(validUntil)
                             return (
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
-                                  <span className={styles.vendor}>{o.vendor}</span>
-                                  {o.priceCents === bestPrice && offers.length > 1 && (
-                                    <span className={styles.tagBest}>Bester Preis</span>
-                                  )}
+                                  <span className={styles.vendor}>{o.username || '—'}</span>
+
+                                <span className={styles.vendorSub}>
+                                  {o.snap_country || '—'} · {o.snap_city || '—'} · {o.snap_account_type === 'business' ? 'Gewerblich' : 'Privat'}
+                                </span>
+
+                                <span className={styles.vendorRating}>
+                                  {o.rating_count > 0
+                                    ? `Bewertung: ${o.rating_avg.toFixed(1)}/5 · ${o.rating_count}`
+                                    : 'Bewertung: Noch keine Bewertungen'}
+                                </span>
+
+                                {o.gesamt_cents === bestPrice && offers.length > 1 && (
+                                  <span className={styles.tagBest}>Bester Preis</span>
+                                )}
+
                                 </div>
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
-                                  {formatEUR(o.priceCents)}
+                                  <div className={styles.priceMain}>{formatEUR(o.gesamt_cents)}</div>
+                                  <div className={styles.priceSplit}>
+                                    {formatEUR(o.artikel_cents)} (ohne Versand) · {formatEUR(o.versand_cents)} (Versand)
+                                  </div>
+
                                 </div>
                                 <div role="cell" className={styles.validCell} data-label="Gültig bis">
                                   <span>{formatDateTime(validUntil)}</span>
@@ -602,7 +680,8 @@ const Angebote: FC = () => {
                                     type="button"
                                     className={styles.acceptBtn}
                                     disabled={acceptingId === o.id}
-                                    onClick={() => openConfirm(o.jobId, o.id, o.priceCents, o.vendor)}
+                                    onClick={() => openConfirm(o.jobId, o.id, o.gesamt_cents, o.username)}
+
                                     title="Anbieter beauftragen"
                                   >
                                     {acceptingId === o.id ? 'Wird angenommen…' : 'Auftrag vergeben'}
@@ -647,7 +726,7 @@ const Angebote: FC = () => {
                 const job   = jobsById.get(String(o.jobId))
                 const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId} (nicht verfügbar)`
                 const href  = job ? jobPath(job) : '/auftragsboerse'
-                const validUntil = computeValidUntil(o, job)!
+                const validUntil = computeValidUntil(o)!
                 const remaining = formatRemaining(validUntil)
                 return (
                   <li key={o.id} className={styles.card}>
@@ -655,7 +734,9 @@ const Angebote: FC = () => {
                       <div className={styles.cardTitle}>
                         <Link href={href} className={styles.titleLink}>{title}</Link>
                       </div>
-                      <div className={styles.price}>{formatEUR(o.priceCents)}</div>
+                      <div className={styles.price}><div className={styles.price}>{formatEUR(o.gesamt_cents)}</div>
+
+</div>
                     </div>
                     <div className={styles.cardMeta}>
                       <span className={styles.metaItem}>Auftrags-Nr.: <strong>{o.jobId}</strong></span>
