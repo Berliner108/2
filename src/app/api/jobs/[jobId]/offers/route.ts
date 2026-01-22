@@ -1,8 +1,11 @@
+// ✅ FIX für Next.js App Router Typing (Route Handler Context)
 // src/app/api/jobs/[jobId]/offers/route.ts
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
@@ -32,7 +35,10 @@ function toISO(d: Date) {
   return d.toISOString();
 }
 
-export async function POST(req: Request, ctx: { params: { jobId: string } }) {
+// ✅ Next.js erwartet Context-Typ { params: Record<string, string | string[]> }
+type RouteContext = { params: { jobId: string } };
+
+export async function POST(req: NextRequest, { params }: RouteContext) {
   try {
     const sb = await supabaseServer();
     const {
@@ -44,7 +50,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 });
     }
 
-    const jobId = String(ctx?.params?.jobId ?? '').trim();
+    const jobId = String(params?.jobId ?? '').trim();
     if (!jobId) {
       return NextResponse.json({ ok: false, error: 'missing_job_id' }, { status: 400 });
     }
@@ -113,7 +119,6 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
     const addr: any = prof.address || {};
     const meta: any = user.user_metadata || {};
 
-    // Snapshot: public kommt NUR aus Snapshot (wie du willst)
     const snapPublic = {
       account_type: String(prof.account_type || ''),
       location: {
@@ -122,7 +127,6 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       },
     };
 
-    // Private Snapshot für später (nach Zahlung anzeigen)
     const snapPrivate = {
       firstName: String(meta.firstName || ''),
       lastName: String(meta.lastName || ''),
@@ -137,10 +141,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       vat_number: String(prof.vat_number || ''),
     };
 
-    const anbieter_snapshot = {
-      public: snapPublic,
-      private: snapPrivate,
-    };
+    const anbieter_snapshot = { public: snapPublic, private: snapPrivate };
 
     // 3) Insert offer (Unique(job_id, bieter_id) blockt 2. Angebot)
     const { data: inserted, error: insErr } = await admin
@@ -163,7 +164,6 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       const code = (insErr as any)?.code;
       const msg = String((insErr as any)?.message ?? '');
 
-      // Unique violation => schon angeboten
       if (code === '23505' || /duplicate key value violates unique constraint/i.test(msg)) {
         return NextResponse.json({ ok: false, error: 'already_offered' }, { status: 409 });
       }
