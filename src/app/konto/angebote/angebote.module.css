@@ -559,3 +559,26 @@
     right: 16px;
   }
 }
+.vendorSub {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.vendorRating {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.priceMain {
+  font-weight: 700;
+}
+
+.priceSplit {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 2px;
+}
