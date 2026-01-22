@@ -72,7 +72,7 @@ function computeValidUntil(offer: Offer): Date | undefined {
 function formatRemaining(target?: Date) {
   if (!target) return { text: '—', level: 'ok' as const }
   const ms = +target - Date.now()
-  if (ms <= 0) return { text: 'abgelaufen', level: 'over' as const }
+  if (ms <= 0) return { text: 'abgelaufen', level: 'critical' as const }
   const totalMinutes = Math.floor(ms / 60000)
   const days  = Math.floor(totalMinutes / (60 * 24))
   const hours = Math.floor((totalMinutes - days * 24 * 60) / 60)
@@ -208,11 +208,11 @@ const Angebote: FC = () => {
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
 
   const [confirmOffer, setConfirmOffer] = useState<null | {
-    jobId: string | number
-    offerId: string
-    amountCents: number
-    vendor: string
-  }>(null)
+  jobId: string | number
+  offerId: string
+  amountCents: number
+}>(null)
+
 
   // ESC schließt Modal
   useEffect(() => {
@@ -368,7 +368,7 @@ const pruneExpiredOffers = () => {
     const onVis = () => { if (!document.hidden) pruneExpiredOffers() }
     document.addEventListener('visibilitychange', onVis)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, [jobsById])
+  }, [])
 
   /* ===== Filter + Sort ===== */
   const receivedGroups = useMemo(() => {
@@ -563,18 +563,19 @@ const pruneExpiredOffers = () => {
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
   /* ===== Payment + Modal (vorbereitet für später) ===== */
-  function paymentUrl({ jobId, offerId, amountCents, vendor }: { jobId: string | number, offerId: string, amountCents: number, vendor: string }) {
-    return (
-      `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
-      `&offerId=${encodeURIComponent(offerId)}` +
-      `&amount=${amountCents}` +
-      `&vendor=${encodeURIComponent(vendor)}` +
-      `&returnTo=${encodeURIComponent('/konto/auftraege')}`
-    )
-  }
-  function openConfirm(jobId: string | number, offerId: string, amountCents: number, vendor: string) {
-    setConfirmOffer({ jobId, offerId, amountCents, vendor })
-  }
+function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, offerId: string, amountCents: number }) {
+  return (
+    `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
+    `&offerId=${encodeURIComponent(offerId)}` +
+    `&amount=${amountCents}` +
+    `&returnTo=${encodeURIComponent('/konto/auftraege')}`
+  )
+}
+
+  function openConfirm(jobId: string | number, offerId: string, amountCents: number) {
+  setConfirmOffer({ jobId, offerId, amountCents })
+}
+
   function confirmAccept() {
     if (!confirmOffer) return
     setAcceptingId(confirmOffer.offerId)
@@ -632,7 +633,6 @@ const pruneExpiredOffers = () => {
                           .sort((a,b)=>a.gesamt_cents-b.gesamt_cents)
 
                           .map(o => {
-                            const j = jobsById.get(String(o.jobId))
                             const validUntil = computeValidUntil(o)!
 
                             const remaining = formatRemaining(validUntil)
@@ -642,8 +642,13 @@ const pruneExpiredOffers = () => {
                                   <span className={styles.vendor}>{o.username || '—'}</span>
 
                                 <span className={styles.vendorSub}>
-                                  {o.snap_country || '—'} · {o.snap_city || '—'} · {o.snap_account_type === 'business' ? 'Gewerblich' : 'Privat'}
-                                </span>
+                                {(o.snap_country || '—')} · {(o.snap_city || '—')} · {
+                                  o.snap_account_type
+                                    ? (o.snap_account_type === 'business' ? 'Gewerblich' : 'Privat')
+                                    : '—'
+                                }
+                              </span>
+
 
                                 <span className={styles.vendorRating}>
                                   {o.rating_count > 0
@@ -680,7 +685,8 @@ const pruneExpiredOffers = () => {
                                     type="button"
                                     className={styles.acceptBtn}
                                     disabled={acceptingId === o.id}
-                                    onClick={() => openConfirm(o.jobId, o.id, o.gesamt_cents, o.username)}
+                                    onClick={() => openConfirm(o.jobId, o.id, o.gesamt_cents)}
+
 
                                     title="Anbieter beauftragen"
                                   >
@@ -734,9 +740,8 @@ const pruneExpiredOffers = () => {
                       <div className={styles.cardTitle}>
                         <Link href={href} className={styles.titleLink}>{title}</Link>
                       </div>
-                      <div className={styles.price}><div className={styles.price}>{formatEUR(o.gesamt_cents)}</div>
+                      <div className={styles.price}>{formatEUR(o.gesamt_cents)}</div>
 
-</div>
                     </div>
                     <div className={styles.cardMeta}>
                       <span className={styles.metaItem}>Auftrags-Nr.: <strong>{o.jobId}</strong></span>
@@ -861,7 +866,8 @@ const pruneExpiredOffers = () => {
             </p>
             <div className={styles.modalSummary}>
               <div><strong>Auftragnummer:</strong> #{String(confirmOffer.jobId)}</div>
-              <div><strong>Auftragnehmer:</strong> {confirmOffer.vendor}</div>
+              <div><strong>Angebot-ID:</strong> {confirmOffer.offerId}</div>
+
               <div><strong>Preis:</strong> {formatEUR(confirmOffer.amountCents)}</div>
             </div>
             <div className={styles.modalActions}>
