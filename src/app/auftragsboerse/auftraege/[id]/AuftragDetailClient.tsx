@@ -182,7 +182,8 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
 const [offerSent, setOfferSent] = useState(false);
 
 
-  const { error: toastError } = useLocalToast();
+  const { error: toastError, success: toastSuccess } = useLocalToast();
+
 
   // Connect (Stripe) Status – identisch zur Lackanfragen-Detailseite
   const [connect, setConnect] = useState<ConnectStatus | null>(null);
@@ -346,7 +347,11 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
   e.preventDefault();
   setPreisError(null);
 
-  if (offerSent) return;
+  if (offerSent) {
+  toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
+  return;
+}
+
 
   const artikelCents = toCentsFromMoneyInput(gesamtPreis);
   if (artikelCents === null || artikelCents < MIN_AUFTRAG_PREIS * 100) {
@@ -435,6 +440,10 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
       toastError(j?.message || 'Angebot konnte nicht gesendet werden.');
       return;
     }
+    // ✅ ok
+setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
+toastSuccess('Angebot wurde erfolgreich abgegeben.');
+
 
     // ✅ ok
     setOfferSent(true);
@@ -449,7 +458,8 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
 
 
   const isSubmitDisabled =
-  loading || offerSent || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
+  loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
+
 
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
@@ -719,7 +729,7 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                     }`}
                     autoComplete="off"
                     maxLength={MAX_PRICE_CHARS}
-                    disabled={offerSent || loading}
+                    disabled={loading}
                   />
                 </div>
 
@@ -746,7 +756,8 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
                         }`}
                         autoComplete="off"
                         maxLength={MAX_PRICE_CHARS}
-                        disabled={offerSent || loading}
+                        disabled={loading}
+
                       />
                     </div>
                   </>
