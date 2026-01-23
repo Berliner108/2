@@ -56,6 +56,31 @@ export async function GET() {
       console.error('[submitted offers] db:', error);
       return NextResponse.json({ ok: false, error: 'db' }, { status: 500 });
     }
+    // ✅ Job-Daten nachladen für die job_ids in den submitted offers
+const jobIds = Array.from(new Set((rows ?? []).map(r => String(r.job_id)).filter(Boolean)));
+
+let jobsById = new Map<string, any>();
+if (jobIds.length > 0) {
+  const { data: jobRows, error: jErr } = await admin
+    .from('jobs') // <- falls deine Tabelle anders heißt, hier anpassen
+    .select(`
+      id,
+      verfahren_1,
+      verfahren_2,
+      material_guete,
+      material_guete_custom,
+      standort
+    `)
+    .in('id', jobIds);
+
+  if (jErr) {
+    console.error('[submitted offers jobs] db:', jErr);
+    // nicht hart abbrechen → wir liefern offers trotzdem
+  } else {
+    jobsById = new Map((jobRows ?? []).map(j => [String(j.id), j]));
+  }
+}
+
 
     // Live username + rating aus profiles (für den eigenen User)
     const { data: prof, error: pErr } = await admin
@@ -71,10 +96,25 @@ export async function GET() {
 
     const offers = (rows ?? []).map((r: any) => {
       const snap = pickSnapPublic(r.anbieter_snapshot);
+      const job = jobsById.get(String(r.job_id));
+
+      const job_verfahren_1 = String(job?.verfahren_1 ?? '');
+      const job_verfahren_2 = String(job?.verfahren_2 ?? '');
+
+      const job_material = String(job?.material_guete_custom || job?.material_guete || '');
+      const job_standort = String(job?.standort || '');
+
 
       return {
         id: String(r.id),
         job_id: String(r.job_id),
+         // ✅ Job-Daten für Titel im Frontend
+        job_verfahren_1,
+        job_verfahren_2,
+        job_material,
+        job_standort,
+
+       
 
         artikel_cents: Number(r.artikel_cents),
         versand_cents: Number(r.versand_cents),

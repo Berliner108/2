@@ -38,6 +38,11 @@ type Offer = {
   snap_city: string
   snap_country: string
   snap_account_type: string // 'private' | 'business' | ''
+  job_verfahren_1?: string
+  job_verfahren_2?: string
+  job_material?: string
+  job_standort?: string
+
 }
 
 /* ================= Helpers ================= */
@@ -282,6 +287,11 @@ const Angebote: FC = () => {
     snap_city: String(o.snap_city ?? '—') || '—',
     snap_country: String(o.snap_country ?? '—') || '—',
     snap_account_type: String(o.snap_account_type ?? ''),
+    job_verfahren_1: String(o.job_verfahren_1 ?? ''),
+    job_verfahren_2: String(o.job_verfahren_2 ?? ''),
+    job_material: String(o.job_material ?? ''),
+    job_standort: String(o.job_standort ?? ''),
+
   })
 
   const loadOffers = async () => {
@@ -729,9 +739,11 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
           <>
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
-                const job   = jobsById.get(String(o.jobId))
-                const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId}`
-                const href  = job ? jobPath(job) : jobPathById(o.jobId)
+                const procs = [o.job_verfahren_1, o.job_verfahren_2].filter(Boolean).join(' & ')
+                const extras = [o.job_material, o.job_standort].filter(Boolean).join(' · ')
+                const title = [procs, extras].filter(Boolean).join(' — ') || `Auftrag #${o.jobId}`
+                const href  = jobPathById(o.jobId)
+
                 const validUntil = computeValidUntil(o)!
                 const remaining = formatRemaining(validUntil)
                 return (
