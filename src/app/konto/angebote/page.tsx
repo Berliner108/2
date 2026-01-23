@@ -730,8 +730,8 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
                 const job   = jobsById.get(String(o.jobId))
-                const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId} (nicht verfügbar)`
-                const href  = job ? jobPath(job) : '/auftragsboerse'
+                const title = job ? computeJobTitle(job) : `Auftrag #${o.jobId}`
+                const href  = job ? jobPath(job) : jobPathById(o.jobId)
                 const validUntil = computeValidUntil(o)!
                 const remaining = formatRemaining(validUntil)
                 return (
@@ -740,7 +740,14 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
                       <div className={styles.cardTitle}>
                         <Link href={href} className={styles.titleLink}>{title}</Link>
                       </div>
-                      <div className={styles.price}>{formatEUR(o.gesamt_cents)}</div>
+                       <div className={styles.priceCell}>
+                        <div className={styles.priceMain}>{formatEUR(o.gesamt_cents)}</div>
+                        <div className={styles.priceSplit}>
+                          {formatEUR(o.artikel_cents)} (Auftrag) ·{' '}
+                          {formatEUR(o.versand_cents)} (Logistik)
+                          {o.versand_cents === 0 ? ' (Selbstanlieferung & Selbstabholung)' : ''}
+                        </div>
+                      </div>
 
                     </div>
                     <div className={styles.cardMeta}>
@@ -757,9 +764,6 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
                           läuft ab in {remaining.text}
                         </span>
                       </span>
-                    </div>
-                    <div className={styles.actions}>
-                      <Link href={href} className={styles.jobLink}>Zum Auftrag</Link>
                     </div>
                   </li>
                 )
