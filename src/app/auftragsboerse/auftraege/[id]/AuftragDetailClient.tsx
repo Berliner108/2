@@ -471,12 +471,6 @@ toastSuccess('Angebot wurde erfolgreich abgegeben.');
   {loading ? (
     <DetailSkeleton />
   ) : (
-    <div className={styles.grid}>
-      {/* dein kompletter bisheriger Inhalt */}
-    </div>
-  )}
-</div>
-      <div className={styles.container}>
         <div className={styles.grid}>
           {/* Bilder */}
           <div className={styles.leftColumn}>
@@ -789,6 +783,7 @@ toastSuccess('Angebot wurde erfolgreich abgegeben.');
             </div>
           </div>
         </div>
+         )}
       </div>
 
       {/* Lightbox */}
