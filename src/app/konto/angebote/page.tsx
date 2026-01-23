@@ -664,7 +664,7 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
                                   <div className={styles.priceMain}>{formatEUR(o.gesamt_cents)}</div>
                                   <div className={styles.priceSplit}>
-                                    {formatEUR(o.artikel_cents)} (ohne Versand) · {formatEUR(o.versand_cents)} (Versand)
+                                    {formatEUR(o.artikel_cents)} (Auftrag) · {formatEUR(o.versand_cents)} (Logistik)
                                   </div>
 
                                 </div>
