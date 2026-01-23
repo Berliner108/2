@@ -31,7 +31,7 @@ export async function GET() {
     const admin = supabaseAdmin();
     const nowIso = new Date().toISOString();
 
-    // Nur aktive, eigene abgegebene Angebote
+    // 1) Nur aktive, eigene abgegebene Angebote
     const { data: rows, error } = await admin
       .from('job_offers')
       .select(
@@ -56,69 +56,85 @@ export async function GET() {
       console.error('[submitted offers] db:', error);
       return NextResponse.json({ ok: false, error: 'db' }, { status: 500 });
     }
-    // ✅ Job-Daten nachladen für die job_ids in den submitted offers
-const jobIds = Array.from(new Set((rows ?? []).map(r => String(r.job_id)).filter(Boolean)));
 
-let jobsById = new Map<string, any>();
-if (jobIds.length > 0) {
-  const { data: jobRows, error: jErr } = await admin
-    .from('jobs') // <- falls deine Tabelle anders heißt, hier anpassen
-    .select(`
-      id,
-      verfahren_1,
-      verfahren_2,
-      material_guete,
-      material_guete_custom,
-      standort
-    `)
-    .in('id', jobIds);
+    // 2) Jobs zu diesen Offers nachladen (für Titel + Owner userid)
+    const jobIds = Array.from(
+      new Set((rows ?? []).map((r: any) => String(r.job_id)).filter(Boolean))
+    );
 
-  if (jErr) {
-    console.error('[submitted offers jobs] db:', jErr);
-    // nicht hart abbrechen → wir liefern offers trotzdem
-  } else {
-    jobsById = new Map((jobRows ?? []).map(j => [String(j.id), j]));
-  }
-}
+    let jobsById = new Map<string, any>();
+    if (jobIds.length > 0) {
+      const { data: jobRows, error: jErr } = await admin
+        .from('jobs')
+        .select(
+          `
+          id,
+          userid,
+          verfahren_1,
+          verfahren_2,
+          material_guete,
+          material_guete_custom,
+          standort
+        `
+        )
+        .in('id', jobIds);
 
-
-    // Live username + rating aus profiles (für den eigenen User)
-    const { data: prof, error: pErr } = await admin
-      .from('profiles')
-      .select('id, username, rating_avg, rating_count')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (pErr) {
-      console.error('[submitted offers profile] db:', pErr);
-      return NextResponse.json({ ok: false, error: 'db_profiles' }, { status: 500 });
+      if (jErr) {
+        console.error('[submitted offers jobs] db:', jErr);
+      } else {
+        jobsById = new Map((jobRows ?? []).map((j: any) => [String(j.id), j]));
+      }
     }
 
+    // 3) Owner-Profile (Auftraggeber) nachladen -> username + rating
+    const ownerIds = Array.from(
+      new Set(
+        Array.from(jobsById.values())
+          .map((j: any) => String(j?.userid ?? ''))
+          .filter(Boolean)
+      )
+    );
+
+    let ownersById = new Map<string, any>();
+    if (ownerIds.length > 0) {
+      const { data: ownerRows, error: oErr } = await admin
+        .from('profiles')
+        .select('id, username, rating_avg, rating_count')
+        .in('id', ownerIds);
+
+      if (oErr) {
+        console.error('[submitted offers owners] db:', oErr);
+      } else {
+        ownersById = new Map((ownerRows ?? []).map((p: any) => [String(p.id), p]));
+      }
+    }
+
+    // 4) Offers ausgeben (inkl. job title daten + owner daten)
     const offers = (rows ?? []).map((r: any) => {
       const snap = pickSnapPublic(r.anbieter_snapshot);
+
       const job = jobsById.get(String(r.job_id));
+      const ownerId = String(job?.userid ?? '');
+      const owner = ownersById.get(ownerId);
 
       const job_verfahren_1 = String(job?.verfahren_1 ?? '');
       const job_verfahren_2 = String(job?.verfahren_2 ?? '');
-
       const job_material = String(job?.material_guete_custom || job?.material_guete || '');
       const job_standort = String(job?.standort || '');
-
 
       return {
         id: String(r.id),
         job_id: String(r.job_id),
-         // ✅ Job-Daten für Titel im Frontend
+
+        // ✅ Für Titel im Frontend (Abgegebene sollen gleich aussehen wie Erhaltene)
         job_verfahren_1,
         job_verfahren_2,
         job_material,
         job_standort,
 
-       
-
-        artikel_cents: Number(r.artikel_cents),
-        versand_cents: Number(r.versand_cents),
-        gesamt_cents: Number(r.gesamt_cents),
+        artikel_cents: Number(r.artikel_cents ?? 0),
+        versand_cents: Number(r.versand_cents ?? 0),
+        gesamt_cents: Number(r.gesamt_cents ?? 0),
 
         created_at: String(r.created_at),
         valid_until: String(r.valid_until),
@@ -128,10 +144,16 @@ if (jobIds.length > 0) {
         snap_city: snap.snap_city || '—',
         snap_account_type: snap.snap_account_type || '',
 
-        // Live aus profiles (eigener User)
-        username: String((prof as any)?.username ?? ''),
-        rating_avg: typeof (prof as any)?.rating_avg === 'number' ? (prof as any).rating_avg : Number((prof as any)?.rating_avg ?? 0) || 0,
-        rating_count: typeof (prof as any)?.rating_count === 'number' ? (prof as any).rating_count : Number((prof as any)?.rating_count ?? 0) || 0,
+        // ✅ Auftraggeber (Owner) -> Anzeige + Link zur Bewertungsseite
+        owner_username: String(owner?.username ?? ''),
+        owner_rating_avg:
+          typeof owner?.rating_avg === 'number'
+            ? owner.rating_avg
+            : Number(owner?.rating_avg ?? 0) || 0,
+        owner_rating_count:
+          typeof owner?.rating_count === 'number'
+            ? owner.rating_count
+            : Number(owner?.rating_count ?? 0) || 0,
       };
     });
 
