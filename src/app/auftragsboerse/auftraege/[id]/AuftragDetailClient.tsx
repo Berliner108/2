@@ -444,9 +444,6 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
 setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
 toastSuccess('Angebot wurde erfolgreich abgegeben.');
 
-
-    // ✅ ok
-    setOfferSent(true);
     // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
     // alert('Angebot wurde gesendet.');
   } catch (err: any) {
@@ -785,7 +782,7 @@ toastSuccess('Angebot wurde erfolgreich abgegeben.');
                   className={styles.buyButton}
                   disabled={isSubmitDisabled}
                 >
-                  {offerSent ? 'Angebot abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
+                  {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
                 </button>
 
               </form>
