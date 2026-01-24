@@ -39,6 +39,7 @@ export async function GET() {
         id,
         job_id,
         bieter_id,
+        owner_id,
         artikel_cents,
         versand_cents,
         gesamt_cents,
@@ -69,14 +70,12 @@ export async function GET() {
         .select(
           `
           id,
-          userid,
+          user_id,
           verfahren_1,
           verfahren_2,
           material_guete,
           material_guete_custom,
-          standort
-        `
-        )
+        `)
         .in('id', jobIds);
 
       if (jErr) {
@@ -114,8 +113,9 @@ export async function GET() {
       const snap = pickSnapPublic(r.anbieter_snapshot);
 
       const job = jobsById.get(String(r.job_id));
-      const ownerId = String(job?.userid ?? '');
+      const ownerId = String(r.owner_id ?? '');
       const owner = ownersById.get(ownerId);
+
 
       const job_verfahren_1 = String(job?.verfahren_1 ?? '');
       const job_verfahren_2 = String(job?.verfahren_2 ?? '');
