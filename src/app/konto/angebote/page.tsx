@@ -44,9 +44,13 @@ type Offer = {
   job_standort?: string
 
     // Auftraggeber (Owner des Jobs) – kommt aus /api/offers/submitted
+    // Auftraggeber (owner)
   owner_username?: string
   owner_rating_avg?: number
   owner_rating_count?: number
+  owner_city?: string
+  owner_zip?: string
+
 
 
 }
@@ -275,35 +279,41 @@ const Angebote: FC = () => {
   useEffect(() => {
   let alive = true
 
-  const mapRow = (o: any): Offer => ({
-    id: String(o.id),
-    jobId: String(o.job_id ?? o.jobId),
+const mapRow = (o: any): Offer => ({
+  id: String(o.id),
+  jobId: String(o.job_id ?? o.jobId),
 
-    artikel_cents: Number(o.artikel_cents ?? 0),
-    versand_cents: Number(o.versand_cents ?? 0),
-    gesamt_cents: Number(o.gesamt_cents ?? 0),
+  artikel_cents: Number(o.artikel_cents ?? 0),
+  versand_cents: Number(o.versand_cents ?? 0),
+  gesamt_cents: Number(o.gesamt_cents ?? 0),
 
-    createdAt: String(o.created_at ?? o.createdAt),
-    validUntil: String(o.valid_until ?? o.validUntil),
+  createdAt: String(o.created_at ?? o.createdAt),
+  validUntil: String(o.valid_until ?? o.validUntil),
 
-    username: String(o.username ?? ''),
-    rating_avg: Number(o.rating_avg ?? 0),
-    rating_count: Number(o.rating_count ?? 0),
+  // received: Anbieter (kommt als username/rating_*)
+  username: String(o.username ?? ''),
+  rating_avg: Number(o.rating_avg ?? 0),
+  rating_count: Number(o.rating_count ?? 0),
 
-    snap_city: String(o.snap_city ?? '—') || '—',
-    snap_country: String(o.snap_country ?? '—') || '—',
-    snap_account_type: String(o.snap_account_type ?? ''),
-    job_verfahren_1: String(o.job_verfahren_1 ?? ''),
-    job_verfahren_2: String(o.job_verfahren_2 ?? ''),
-    job_material: String(o.job_material ?? ''),
-    job_standort: String(o.job_standort ?? ''),
+  // snapshot
+  snap_city: String(o.snap_city ?? '—') || '—',
+  snap_country: String(o.snap_country ?? '—') || '—',
+  snap_account_type: String(o.snap_account_type ?? ''),
 
-    owner_username: String(o.owner_username ?? ''),
-    owner_rating_avg: Number(o.owner_rating_avg ?? 0),
-    owner_rating_count: Number(o.owner_rating_count ?? 0),
+  // job title daten
+  job_verfahren_1: String(o.job_verfahren_1 ?? ''),
+  job_verfahren_2: String(o.job_verfahren_2 ?? ''),
+  job_material: String(o.job_material ?? ''),
+  job_standort: String(o.job_standort ?? ''),
 
+  // submitted: Auftraggeber (kommt als owner_*)
+  owner_username: String(o.owner_username ?? ''),
+  owner_rating_avg: Number(o.owner_rating_avg ?? 0),
+  owner_rating_count: Number(o.owner_rating_count ?? 0),
+  owner_city: String(o.owner_city ?? '—'),
+  owner_zip: String(o.owner_zip ?? '—'),
+})
 
-  })
 
   const loadOffers = async () => {
     try {
@@ -660,7 +670,14 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
                             return (
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
-                                  <span className={styles.vendor}>{o.username || '—'}</span>
+                                  {o.username ? (
+                                      <Link href={`/u/${o.username}/reviews`} className={styles.titleLink}>
+                                        <span className={styles.vendor}>{o.username}</span>
+                                      </Link>
+                                    ) : (
+                                      <span className={styles.vendor}>—</span>
+                                    )}
+
 
                                 <span className={styles.vendorSub}>
                                 {(o.snap_country || '—')} · {(o.snap_city || '—')} · {
@@ -751,8 +768,17 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
                 const procs = [o.job_verfahren_1, o.job_verfahren_2].filter(Boolean).join(' & ')
-                const extras = [o.job_material, o.job_standort].filter(Boolean).join(' · ')
-                const title = [procs, extras].filter(Boolean).join(' — ') || `Auftrag #${o.jobId}`
+const material = (o.job_material || '').trim()
+
+const zip = (o.owner_zip || '').trim()
+const city = (o.owner_city || '').trim()
+const place = [zip, city].filter(v => v && v !== '—').join(' ')
+
+const extras = [material, place].filter(Boolean).join(' · ')
+const title = [procs, extras].filter(Boolean).join(' — ') || `Auftrag #${o.jobId}`
+
+
+
                 const href  = jobPathById(o.jobId)
 
                 const validUntil = computeValidUntil(o)!
@@ -779,20 +805,20 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
   </span>
 
   <span className={styles.metaItem}>
-    Auftraggeber:{' '}
-    {o.owner_username ? (
-      <Link href={`/u/${o.owner_username}/reviews`} className={styles.titleLink}>
-        <strong>{o.owner_username}</strong>
-      </Link>
-    ) : (
-      <strong>—</strong>
-    )}
-    <span className={styles.vendorRating}>
-      {o.owner_rating_count && o.owner_rating_count > 0
-        ? ` · ${Number(o.owner_rating_avg ?? 0).toFixed(1)}/5 · ${o.owner_rating_count}`
-        : ' · keine Bewertungen'}
-    </span>
+  Auftraggeber:{' '}
+  {o.owner_username ? (
+    <Link href={`/u/${o.owner_username}/reviews`} className={styles.titleLink}>
+      <strong>{o.owner_username}</strong>
+    </Link>
+  ) : (
+    <strong>—</strong>
+  )}
+  <span className={styles.vendorRating}>
+    {' '}· {o.owner_rating_count && o.owner_rating_count > 0
+      ? `${Number(o.owner_rating_avg ?? 0).toFixed(1)}/5 · ${o.owner_rating_count}`
+      : 'keine Bewertungen'}
   </span>
+</span>
 
   <span className={styles.metaItem}>
     Gültig bis: {formatDateTime(validUntil)}{' '}
