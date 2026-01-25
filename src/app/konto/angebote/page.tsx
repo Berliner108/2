@@ -768,14 +768,14 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
             <ul className={styles.list}>
               {sub.pageItems.map(o => {
                 const procs = [o.job_verfahren_1, o.job_verfahren_2].filter(Boolean).join(' & ')
-const material = (o.job_material || '').trim()
+                const material = (o.job_material || '').trim()
 
-const zip = (o.owner_zip || '').trim()
-const city = (o.owner_city || '').trim()
-const place = [zip, city].filter(v => v && v !== '—').join(' ')
+                const zip = (o.owner_zip || '').trim()
+                const city = (o.owner_city || '').trim()
+                const place = [zip, city].filter(v => v && v !== '—').join(' ')
 
-const extras = [material, place].filter(Boolean).join(' · ')
-const title = [procs, extras].filter(Boolean).join(' — ') || `Auftrag #${o.jobId}`
+                const extras = [material, place].filter(Boolean).join(' · ')
+                const title = [procs, extras].filter(Boolean).join(' — ') || `Auftrag #${o.jobId}`
 
 
 

@@ -105,7 +105,7 @@ export async function GET() {
       const job = jobsById.get(String(r.job_id))
       const ownerId = String(r.owner_id ?? '')
       const owner = ownersById.get(ownerId)
-      const addr = (owner?.address ?? {}) as any
+      const addr = (owner?.address ?? {}) as any;
 
       const job_verfahren_1 = String(job?.verfahren_1 ?? '')
       const job_verfahren_2 = String(job?.verfahren_2 ?? '')
