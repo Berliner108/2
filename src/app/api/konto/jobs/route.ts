@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
 export async function GET() {
-  const cookieStore = await cookies(); // ✅ Next 15: cookies() ist async
+  const cookieStore = await cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // ✅ Profiladresse als JSON holen
+  // Profiladresse
   const { data: prof, error: pErr } = await supabase
     .from("profiles")
     .select("address")
@@ -34,22 +34,25 @@ export async function GET() {
     return NextResponse.json({ error: pErr.message }, { status: 500 });
   }
 
-  // address kann als Object ODER (selten) als String kommen → robust parsen
   const addressRaw = (prof as any)?.address;
-  const address =
-    typeof addressRaw === "string" ? safeJson(addressRaw) : addressRaw;
+  const address = typeof addressRaw === "string" ? safeJson(addressRaw) : addressRaw;
 
   const zip = String(address?.zip ?? "");
   const city = String(address?.city ?? "");
   const standort = [zip, city].filter(Boolean).join(" ");
 
-  // ✅ Jobs minimal laden (nur was du willst)
+  // ✅ Nur aktive Jobs (published/open) UND Warenausgabe in Zukunft
+  const nowIso = new Date().toISOString();
+
   const { data: jobs, error } = await supabase
     .from("jobs")
-    .select("id, material_guete, material_guete_custom, verfahren_1, verfahren_2, published, status, created_at")
+    .select(
+      "id, material_guete, material_guete_custom, verfahren_1, verfahren_2, published, status, created_at, liefer_datum_utc"
+    )
     .eq("user_id", auth.user.id)
     .eq("published", true)
     .eq("status", "open")
+    .gt("liefer_datum_utc", nowIso) // ✅ HIER der entscheidende Filter
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -60,5 +63,9 @@ export async function GET() {
 }
 
 function safeJson(v: string) {
-  try { return JSON.parse(v); } catch { return null; }
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
 }
