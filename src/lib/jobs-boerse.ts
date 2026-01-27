@@ -44,9 +44,6 @@ type JobFileRow = {
 export async function fetchBoersenJobs(opts?: { limit?: number }): Promise<Auftrag[]> {
   const supabase = await supabaseServer()
 
-  // ✅ NEU: Serverzeit als ISO (UTC)
-  const nowIso = new Date().toISOString()
-
   // 1) Jobs holen
   let q = supabase
     .from('jobs')
@@ -75,8 +72,6 @@ export async function fetchBoersenJobs(opts?: { limit?: number }): Promise<Auftr
     )
     .eq('published', true)
     .eq('status', 'open')
-    // ✅ NEU: Warenausgabe muss in der Zukunft liegen
-    .gt('liefer_datum_utc', nowIso)
     .order('promo_score', { ascending: false })
     .order('rueck_datum_utc', { ascending: true })
 
