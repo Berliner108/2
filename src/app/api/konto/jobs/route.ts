@@ -41,9 +41,7 @@ export async function GET() {
   const city = String(address?.city ?? "");
   const standort = [zip, city].filter(Boolean).join(" ");
 
-  // ✅ Nur aktive Jobs (published/open) UND Warenausgabe in Zukunft
-  const nowIso = new Date().toISOString();
-
+  // ✅ Eigene aktive Jobs (OHNE Datumsfilter!)
   const { data: jobs, error } = await supabase
     .from("jobs")
     .select(
@@ -52,7 +50,6 @@ export async function GET() {
     .eq("user_id", auth.user.id)
     .eq("published", true)
     .eq("status", "open")
-    .gt("liefer_datum_utc", nowIso) // ✅ HIER der entscheidende Filter
     .order("created_at", { ascending: false });
 
   if (error) {
