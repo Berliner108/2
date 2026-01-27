@@ -51,6 +51,13 @@ type ShopBuysResp = {
     updated_at?: string | null
   }>
 }
+type JobOffersReceivedResp = {
+  ok?: boolean
+  offers?: Array<{ id: string; created_at?: string }>
+}
+
+const JOB_OFFERS_RECEIVED_API = '/api/offers/received'
+const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
 
 const NAV_SCROLL_KEY = 'navbar:scrollLeft'
 
@@ -170,6 +177,8 @@ export default function Navbar() {
           // ignore
         }
 
+
+
         // 3) ✅ Shop-Verkäufe (NUR Verkäufer) – neu wie Lacke (lastSeen + 7 Tage Cap)
         let shopSalesNew = 0
         try {
@@ -216,8 +225,27 @@ export default function Navbar() {
         } catch {
           // ignore
         }
+                // 5) ✅ Job-Angebote (received) – neu wie Lacke (lastSeen + 7 Tage Cap)
+let jobOffersNew = 0
+try {
+  const res = await fetch(JOB_OFFERS_RECEIVED_API, { cache: 'no-store', credentials: 'include' })
+  if (res.ok) {
+    const j: JobOffersReceivedResp = await res.json()
+    const offers = Array.isArray(j?.offers) ? j.offers : []
 
-        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew + shopBuysNew)
+    const rawLastSeen = Number(localStorage.getItem(JOB_OFFERS_LASTSEEN_KEY) || '0')
+    const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+    jobOffersNew = offers.reduce((acc, o) => {
+      const ts = +new Date((o as any).created_at)
+      return ts > lastSeen ? acc + 1 : acc
+    }, 0)
+  }
+} catch {
+  // ignore
+}
+
+        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew + shopBuysNew + jobOffersNew)
       } catch {
         // ignore
       }
@@ -344,11 +372,17 @@ export default function Navbar() {
       localStorage.setItem('shopSales:lastSeen', String(Date.now()))
       reloadCountsRef.current?.()
     }
+
   }
 
   // ✅ Käufer: sobald er /konto/bestellungen öffnet, gilt Versand/Shop-Events als gesehen
   if (pathname.startsWith('/konto/bestellungen')) {
     localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
+    reloadCountsRef.current?.()
+  }
+      // ✅ NEU: Job-Angebote als gesehen markieren
+  if (pathname.startsWith('/konto/angebote')) {
+    localStorage.setItem(JOB_OFFERS_LASTSEEN_KEY, String(Date.now()))
     reloadCountsRef.current?.()
   }
 } catch {
