@@ -6,6 +6,9 @@ import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './angebote.module.css'
 
+const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
+
+
 type Verfahren = { name: string; felder: Record<string, any> }
 type Job = {
   id: number | string
@@ -212,6 +215,14 @@ const View = () =>
 const Angebote: FC = () => {
   const router = useRouter()
   const { ok: toastOk, err: toastErr, View: Toast } = useToast()
+  useEffect(() => {
+  try {
+    localStorage.setItem(JOB_OFFERS_LASTSEEN_KEY, String(Date.now()))
+  } catch {
+    // ignore
+  }
+}, [])
+
 
   // ✅ Echte Jobs + Standort aus Profil (/api/konto/jobs)
   const [jobs, setJobs] = useState<Job[]>([])
