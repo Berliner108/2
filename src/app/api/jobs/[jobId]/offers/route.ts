@@ -1,5 +1,4 @@
 // src/app/api/jobs/[jobId]/offers/route.ts
-// ✅ Fix für Next.js (neuere Versionen): params ist ein Promise
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +28,149 @@ function parseBody(raw: any): { ok: true; value: Body } | { ok: false; error: st
   return { ok: true, value: { artikel_cents: a, versand_cents: v, gesamt_cents: g } };
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
+/* =========================
+   PATCH: Angebot auswählen
+   ========================= */
+type SelectBody = { offerId: string };
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ jobId: string }> }) {
+  try {
+    const { jobId: jobIdRaw } = await params;
+    const jobId = String(jobIdRaw ?? '').trim();
+    if (!jobId) return NextResponse.json({ ok: false, error: 'missing_job_id' }, { status: 400 });
+
+    const sb = await supabaseServer();
+    const { data: auth, error: authErr } = await sb.auth.getUser();
+    const user = auth?.user;
+
+    if (authErr || !user) {
+      return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 });
+    }
+
+    const raw = (await req.json().catch(() => ({}))) as Partial<SelectBody>;
+    const offerId = String(raw?.offerId ?? '').trim();
+    if (!offerId) {
+      return NextResponse.json({ ok: false, error: 'missing_offer_id' }, { status: 400 });
+    }
+
+    const admin = supabaseAdmin();
+
+    // 1) Job prüfen: Owner-only, muss open sein, noch nichts selected
+    const { data: job, error: jobErr } = await admin
+      .from('jobs')
+      .select('id, user_id, status, selected_offer_id, published')
+      .eq('id', jobId)
+      .maybeSingle();
+
+    if (jobErr || !job) return NextResponse.json({ ok: false, error       : 'job_not_found' }, { status: 404 });
+
+    if (!job.published) {
+      return NextResponse.json({ ok: false, error: 'job_not_published' }, { status: 409 });
+    }
+
+    const ownerId = String(job.user_id);
+    if (ownerId !== user.id) {
+      return NextResponse.json({ ok: false, error: 'forbidden_not_owner' }, { status: 403 });
+    }
+
+    // du willst: selected/accepted erst später (paid), aber auswählen jetzt:
+    if (String(job.status) !== 'open') {
+      return NextResponse.json({ ok: false, error: 'job_not_open' }, { status: 409 });
+    }
+
+    if (job.selected_offer_id) {
+      return NextResponse.json({ ok: false, error: 'job_already_selected' }, { status: 409 });
+    }
+
+    // 2) Offer prüfen: gehört zum Job, noch open, nicht abgelaufen
+    const { data: offer, error: offErr } = await admin
+      .from('job_offers')
+      .select('id, job_id, owner_id, status, valid_until')
+      .eq('id', offerId)
+      .maybeSingle();
+
+    if (offErr || !offer) {
+      return NextResponse.json({ ok: false, error: 'offer_not_found' }, { status: 404 });
+    }
+
+    if (String(offer.job_id) !== jobId) {
+      return NextResponse.json({ ok: false, error: 'offer_wrong_job' }, { status: 409 });
+    }
+
+    if (String(offer.owner_id) !== ownerId) {
+      return NextResponse.json({ ok: false, error: 'offer_wrong_owner' }, { status: 409 });
+    }
+
+    if (String(offer.status) !== 'open') {
+      return NextResponse.json({ ok: false, error: 'offer_not_open' }, { status: 409 });
+    }
+
+    const now = new Date();
+    const validUntil = new Date(String(offer.valid_until));
+    if (isNaN(+validUntil) || +validUntil <= +now) {
+      return NextResponse.json({ ok: false, error: 'offer_expired' }, { status: 409 });
+    }
+
+    // 3) Updates (best effort) – wir sichern später zusätzlich per DB-Constraint
+    // 3a) Job markieren
+    const { error: updJobErr } = await admin
+      .from('jobs')
+      .update({
+        selected_offer_id: offerId,
+        status: 'awaiting_payment',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', jobId)
+      .is('selected_offer_id', null) // extra guard
+      .eq('status', 'open');
+
+    if (updJobErr) {
+      console.error('[PATCH select offer] update job:', updJobErr);
+      return NextResponse.json({ ok: false, error: 'db_job_update' }, { status: 500 });
+    }
+
+    // 3b) Gewähltes Offer auf selected
+    const { error: selErr } = await admin
+      .from('job_offers')
+      .update({ status: 'selected' })
+      .eq('id', offerId)
+      .eq('status', 'open');
+
+    if (selErr) {
+      console.error('[PATCH select offer] update selected offer:', selErr);
+      return NextResponse.json({ ok: false, error: 'db_offer_select' }, { status: 500 });
+    }
+
+    // 3c) Alle anderen auf not_selected
+    const { error: othersErr } = await admin
+      .from('job_offers')
+      .update({ status: 'not_selected' })
+      .eq('job_id', jobId)
+      .neq('id', offerId)
+      .eq('status', 'open');
+
+    if (othersErr) {
+      console.error('[PATCH select offer] update other offers:', othersErr);
+      return NextResponse.json({ ok: false, error: 'db_offer_others' }, { status: 500 });
+    }
+
+    return NextResponse.json(
+      { ok: true, jobId, selectedOfferId: offerId },
+      { headers: { 'Cache-Control': 'no-store' } }
+    );
+  } catch (e: any) {
+    console.error('[PATCH /api/jobs/:jobId/offers] fatal:', e);
+    return NextResponse.json(
+      { ok: false, error: 'fatal', message: String(e?.message ?? e) },
+      { status: 500 }
+    );
+  }
+}
+
+/* =========================
+   POST: Angebot abgeben
+   ========================= */
+export async function POST(req: Request, { params }: { params: Promise<{ jobId: string }> }) {
   try {
     const { jobId: jobIdRaw } = await params;
     const jobId = String(jobIdRaw ?? '').trim();
@@ -178,3 +316,4 @@ export async function POST(
     );
   }
 }
+
