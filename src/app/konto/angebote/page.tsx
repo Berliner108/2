@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './angebote.module.css'
+import CheckoutModal from '../../components/checkout/CheckoutModal'
+
 
 const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
 
@@ -238,6 +240,12 @@ const Angebote: FC = () => {
   offerId: string
   amountCents: number
 }>(null)
+
+// ✅ Checkout Modal (wie bei Lackanfragen)
+const [checkoutOpen, setCheckoutOpen] = useState(false)
+const [clientSecret, setClientSecret] = useState<string | null>(null)
+const [pendingJobId, setPendingJobId] = useState<string | null>(null)
+
 
 
   // ESC schließt Modal
@@ -604,51 +612,61 @@ const pruneExpiredOffers = () => {
   const sub = sliceByPage(submitted, pageSub, psSub)
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
-  /* ===== Payment + Modal (vorbereitet für später) ===== */
-function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, offerId: string, amountCents: number }) {
-  return (
-    `/zahlung?jobId=${encodeURIComponent(String(jobId))}` +
-    `&offerId=${encodeURIComponent(offerId)}` +
-    `&amount=${amountCents}` +
-    `&returnTo=${encodeURIComponent('/konto/auftraege')}`
-  )
-}
+
 
   function openConfirm(jobId: string | number, offerId: string, amountCents: number) {
   setConfirmOffer({ jobId, offerId, amountCents })
 }
-
- async function confirmAccept() {
+async function confirmAccept() {
   if (!confirmOffer) return
 
-  const { jobId, offerId, amountCents } = confirmOffer
+  const { jobId, offerId } = confirmOffer
   setAcceptingId(offerId)
 
   try {
     // 1) Offer auswählen (select)
-    const res = await fetch(`/api/jobs/${encodeURIComponent(String(jobId))}/offers`, {
+    const sel = await fetch(`/api/jobs/${encodeURIComponent(String(jobId))}/offers`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ offerId }),
     })
 
-    const j = await res.json().catch(() => ({} as any))
-    if (!res.ok || !j?.ok) {
-      throw new Error(j?.error || 'select_failed')
+    const selJson = await sel.json().catch(() => ({} as any))
+    if (!sel.ok || !selJson?.ok) {
+      throw new Error(selJson?.error || 'select_failed')
     }
 
-    // 2) Danach zur Zahlung
-    const url = paymentUrl({ jobId, offerId, amountCents })
+    // 2) PaymentIntent erstellen => clientSecret holen
+    const piRes = await fetch('/api/jobs/orders/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        jobId: String(jobId),
+        offerId,
+      }),
+    })
+
+    const piJson = await piRes.json().catch(() => ({} as any))
+    if (!piRes.ok) throw new Error(piJson?.error || 'create_pi_failed')
+    if (!piJson?.clientSecret) throw new Error('missing_client_secret')
+
+    // 3) CheckoutModal öffnen
+    setPendingJobId(String(jobId))
+    setClientSecret(String(piJson.clientSecret))
+    setCheckoutOpen(true)
+
     setConfirmOffer(null)
-    router.push(url)
   } catch (e: any) {
     console.error(e)
-    toastErr('Konnte Angebot nicht auswählen. Bitte Seite neu laden.')
-    setAcceptingId(null)
+    toastErr(e?.message || 'Konnte Checkout nicht starten.')
     setConfirmOffer(null)
+  } finally {
+    setAcceptingId(null)
   }
 }
+
 
   const cols = '2fr 1fr 1.6fr 1fr'
 
@@ -994,6 +1012,23 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
           </div>
         </div>
       )}
+      <CheckoutModal
+      clientSecret={clientSecret}
+      open={checkoutOpen}
+      onCloseAction={() => setCheckoutOpen(false)}
+      onSuccessAction={async () => {
+        toastOk('Zahlung erfolgreich.')
+        setCheckoutOpen(false)
+
+        // Optional: Daten neu laden (damit UI sofort sauber ist)
+        // simplest: Seite hart refreshen:
+        // router.refresh()
+
+        // oder wenn du sauber willst: hier eine "loadOffers()" Funktion nach außen ziehen
+        // und hier aufrufen.
+      }}
+    />
+
     </>
   )
 }
