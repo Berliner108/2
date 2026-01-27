@@ -618,13 +618,37 @@ function paymentUrl({ jobId, offerId, amountCents }: { jobId: string | number, o
   setConfirmOffer({ jobId, offerId, amountCents })
 }
 
-  function confirmAccept() {
-    if (!confirmOffer) return
-    setAcceptingId(confirmOffer.offerId)
-    const url = paymentUrl(confirmOffer)
+ async function confirmAccept() {
+  if (!confirmOffer) return
+
+  const { jobId, offerId, amountCents } = confirmOffer
+  setAcceptingId(offerId)
+
+  try {
+    // 1) Offer auswählen (select)
+    const res = await fetch(`/api/jobs/${encodeURIComponent(String(jobId))}/offers`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ offerId }),
+    })
+
+    const j = await res.json().catch(() => ({} as any))
+    if (!res.ok || !j?.ok) {
+      throw new Error(j?.error || 'select_failed')
+    }
+
+    // 2) Danach zur Zahlung
+    const url = paymentUrl({ jobId, offerId, amountCents })
     setConfirmOffer(null)
     router.push(url)
+  } catch (e: any) {
+    console.error(e)
+    toastErr('Konnte Angebot nicht auswählen. Bitte Seite neu laden.')
+    setAcceptingId(null)
+    setConfirmOffer(null)
   }
+}
 
   const cols = '2fr 1fr 1.6fr 1fr'
 
