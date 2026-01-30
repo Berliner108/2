@@ -1,10 +1,9 @@
 'use client'
 
 import { FC, useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './auftraege.module.css'
-import { dummyAuftraege } from '@/data/dummyAuftraege'
 import Navbar from '../../components/navbar/Navbar'
 
 type Verfahren = { name: string; felder: Record<string, any> }
@@ -21,9 +20,10 @@ type Job = {
   user?: any
 }
 
-/* ---------- Neuer, expliziter Auftragsstatus (frontend-only) ---------- */
+/* ---------- Neuer, expliziter Auftragsstatus (frontend-only / Ablauf) ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type OrderKind = 'vergeben' | 'angenommen'
+
 type Order = {
   jobId: string | number
   offerId?: string
@@ -40,21 +40,43 @@ type Order = {
   disputeReason?: string | null
 
   deliveredAt?: string // legacy
-
   review?: { rating: number; text?: string }
 }
 
-type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
+/* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
+type DbJobPayStatus =
+  | 'paid'
+  | 'released'
+  | 'partially_refunded'
+  | 'refunded'
+  | 'disputed'
+
+type DbOfferPayStatus =
+  | 'paid'
+  | 'released'
+  | 'partially_refunded'
+  | 'refunded'
+  | 'disputed'
+
+type DbOrder = Order & {
+  // Für kind='vergeben' (Auftraggeber-Sicht) -> Status am Job/Payment
+  jobPayStatus?: DbJobPayStatus
+  // Für kind='angenommen' (Anbieter-Sicht) -> Status am Offer/Payment
+  offerPayStatus?: DbOfferPayStatus
+  paidAt?: string
+  releasedAt?: string
+}
+
+type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
-/* ---------- Persist Keys & Defaults ---------- */
-const LS_KEY     = 'myAuftraegeV2'
-const TOP_KEY    = 'auftraegeTop'
-const LS_PS_V    = 'orders:ps:v'
-const LS_PS_A    = 'orders:ps:a'
-const LS_PAGE_V  = 'orders:page:v'
-const LS_PAGE_A  = 'orders:page:a'
+/* ---------- Persist Keys & Defaults (nur UI) ---------- */
+const TOP_KEY = 'auftraegeTop'
+const LS_PS_V = 'orders:ps:v'
+const LS_PS_A = 'orders:ps:a'
+const LS_PAGE_V = 'orders:page:v'
+const LS_PAGE_A = 'orders:page:a'
 const AUTO_RELEASE_DAYS = 14
 
 const DEFAULTS = {
@@ -141,7 +163,7 @@ function computeStatus(job: Job): {
   const annahme = asDateLike(job.warenannahmeDatum)
   const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
   if (annahme && now < +annahme) return { key: 'wartet', label: 'Anlieferung geplant' }
-  if (ausgabe && now < +ausgabe) return { key: 'aktiv',  label: 'In Bearbeitung' }
+  if (ausgabe && now < +ausgabe) return { key: 'aktiv', label: 'In Bearbeitung' }
   if (ausgabe && now >= +ausgabe) return { key: 'fertig', label: 'Abholbereit/Versandt' }
   return { key: 'aktiv', label: 'In Bearbeitung' }
 }
@@ -161,20 +183,9 @@ function getStatusKeyFor(order: Order, job: Job): StatusKey {
   return computeStatus(job).key
 }
 
-const hoursAgo = (h: number) => new Date(Date.now() - h * 3600_000).toISOString()
-const daysAgo  = (d: number) => new Date(Date.now() - d * 86400_000).toISOString()
-
 function notifyNavbarCount(count: number) {
   try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } })) } catch {}
 }
-
-/* ---------------- Beispiel-Aufträge ---------------- */
-const EXAMPLE_ORDERS: Order[] = [
-  { jobId: 3,  vendor: 'ColorTec · 4.9', amountCents:  9500, acceptedAt: hoursAgo(2),  kind: 'vergeben'   },
-  { jobId: 22, vendor: 'MetalX · 4.8',   amountCents: 20000, acceptedAt: daysAgo(1),   kind: 'vergeben'   },
-  { jobId: 12, vendor: 'ACME GmbH',      amountCents: 15000, acceptedAt: hoursAgo(3),  kind: 'angenommen' },
-  { jobId: 5,  vendor: 'Muster AG',      amountCents: 12000, acceptedAt: daysAgo(2),   kind: 'angenommen' },
-]
 
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
@@ -249,26 +260,29 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
 /* ---------------- Component ---------------- */
 const AuftraegePage: FC = () => {
   const router = useRouter()
-  const params = useSearchParams()
+
+  // ✅ Daten kommen aus DB
+  const [orders, setOrders] = useState<DbOrder[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
 
   const jobsById = useMemo(() => {
     const m = new Map<string, Job>()
-    for (const j of dummyAuftraege as Job[]) m.set(String(j.id), j)
+    for (const j of jobs) m.set(String(j.id), j)
     return m
-  }, [])
+  }, [jobs])
 
-  const [orders, setOrders] = useState<Order[]>([])
   const [topSection, setTopSection] = useState<OrderKind>('vergeben')
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 300)
-  const [sort,  setSort]  = useState<SortKey>('date_desc')
+  const [sort, setSort] = useState<SortKey>('date_desc')
   const [statusFilter, setStatusFilter] = useState<FilterKey>('alle')
 
   // Seiten & PageSizes
   const [pageV, setPageV] = useState(1)
-  const [psV,   setPsV]   = useState<number>(10)
+  const [psV, setPsV] = useState<number>(10)
   const [pageA, setPageA] = useState(1)
-  const [psA,   setPsA]   = useState<number>(10)
+  const [psA, setPsA] = useState<number>(10)
 
   // Modal: Fertig/geliefert bestätigen (Auftragnehmer)
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
@@ -281,80 +295,68 @@ const AuftraegePage: FC = () => {
   // ESC schließt Modal
   useEffect(() => {
     if (confirmJobId == null && rateOrderId == null) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setConfirmJobId(null); setRateOrderId(null) } }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setConfirmJobId(null); setRateOrderId(null) }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmJobId, rateOrderId])
 
-  /* ---------- Orders laden & migrieren ---------- */
+  /* ---------- DB Load: NUR paid + Folgestati ---------- */
   useEffect(() => {
-    const savedTop = localStorage.getItem(TOP_KEY)
-    if (savedTop === 'vergeben' || savedTop === 'angenommen') setTopSection(savedTop as OrderKind)
+    let alive = true
 
-    try {
-      const raw = localStorage.getItem(LS_KEY)
-      const existing: Order[] = raw ? JSON.parse(raw) : []
-      const seen = new Set(existing.map(o => `${o.kind}-${o.jobId}`))
-      const merged: Order[] = existing.map((o): Order => {
-        if (o.deliveredAt && !o.status) {
-          return {
-            ...o,
-            status: 'confirmed' as OrderStatus,
-            deliveredConfirmedAt: o.deliveredConfirmedAt ?? o.deliveredAt,
-          }
-        }
-        return o
-      })
+    ;(async () => {
+      try {
+        setLoading(true)
+        const res = await fetch('/api/konto/auftraege', { credentials: 'include' })
+        const j = await res.json().catch(() => ({} as any))
+        if (!res.ok) throw new Error(j?.error || 'load_failed')
 
-      for (const ex of EXAMPLE_ORDERS) {
-        if (!jobsById.has(String(ex.jobId))) continue
-        if (!seen.has(`${ex.kind}-${ex.jobId}`)) merged.push(ex)
+        const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
+        const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
+
+        const allowed = new Set<DbJobPayStatus | DbOfferPayStatus>([
+          'paid',
+          'released',
+          'partially_refunded',
+          'refunded',
+          'disputed',
+        ])
+
+        const filtered = nextOrders.filter(o => {
+          if (o.kind === 'vergeben') return !!o.jobPayStatus && allowed.has(o.jobPayStatus)
+          if (o.kind === 'angenommen') return !!o.offerPayStatus && allowed.has(o.offerPayStatus)
+          return false
+        })
+
+        if (!alive) return
+        setJobs(nextJobs)
+        setOrders(filtered)
+        notifyNavbarCount(filtered.length)
+      } catch (e) {
+        console.error(e)
+        if (!alive) return
+        setJobs([])
+        setOrders([])
+        notifyNavbarCount(0)
+      } finally {
+        if (alive) setLoading(false)
       }
-      setOrders(merged)
-      localStorage.setItem(LS_KEY, JSON.stringify(merged))
-      notifyNavbarCount(merged.length)
-    } catch {}
-  }, [jobsById])
+    })()
 
-  // Param „accepted“ cleanup + Auto-Release Check
-  useEffect(() => {
-    const accepted = params.get('accepted')
-    if (!accepted) return
-
-    setOrders(prev => {
-      const now = Date.now()
-      let changed = false
-      const next = prev.map((o): Order => {
-        if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
-          changed = true
-          return {
-            ...o,
-            status: 'confirmed' as OrderStatus,
-            deliveredConfirmedAt: new Date().toISOString(),
-          }
-        }
-        return o
-      })
-      if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
-      return next
-    })
-
-    const clean = new URL(window.location.href)
-    ;['accepted','offerId','vendor','amount','kind','role','side'].forEach(k => clean.searchParams.delete(k))
-    router.replace(clean.pathname + clean.search)
-  }, [params, router])
+    return () => { alive = false }
+  }, [])
 
   // Top-Sektion merken
   useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
 
-  /* ---------- Auto-Freigabe ---------- */
+  /* ---------- Auto-Freigabe (nur UI/State; Server kommt später) ---------- */
   const runAutoRelease = () => {
     setOrders(prev => {
       const now = Date.now()
-      let changed = false
-      const next: Order[] = prev.map((o): Order => {
+      return prev.map((o): DbOrder => {
         if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
-          changed = true
           return {
             ...o,
             status: 'confirmed' as const,
@@ -363,8 +365,6 @@ const AuftraegePage: FC = () => {
         }
         return o
       })
-      if (changed) localStorage.setItem(LS_KEY, JSON.stringify(next))
-      return next
     })
   }
   useEffect(() => {
@@ -380,18 +380,18 @@ const AuftraegePage: FC = () => {
     () => orders
       .filter(o => o.kind === 'vergeben')
       .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
-      .filter(x => !!x.job) as {order:Order, job:Job}[],
+      .filter(x => !!x.job) as { order: DbOrder, job: Job }[],
     [orders, jobsById]
   )
   const allAngenommen = useMemo(
     () => orders
       .filter(o => o.kind === 'angenommen')
       .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
-      .filter(x => !!x.job) as {order:Order, job:Job}[],
+      .filter(x => !!x.job) as { order: DbOrder, job: Job }[],
     [orders, jobsById]
   )
 
-  const applySearchAndFilter = (items: {order:Order, job:Job}[], qStr: string) => {
+  const applySearchAndFilter = (items: { order: DbOrder, job: Job }[], qStr: string) => {
     const q = qStr.trim().toLowerCase()
     return items.filter(({ order, job }) => {
       if (statusFilter !== 'alle') {
@@ -409,12 +409,12 @@ const AuftraegePage: FC = () => {
     })
   }
 
-  const applySort = (items: {order: Order, job: Job}[]) => {
+  const applySort = (items: { order: DbOrder, job: Job }[]) => {
     return [...items].sort((a, b) => {
-      if (sort === 'date_desc')  return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
-      if (sort === 'date_asc')   return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
+      if (sort === 'date_desc') return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
+      if (sort === 'date_asc') return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
       if (sort === 'price_desc') return (b.order.amountCents ?? 0) - (a.order.amountCents ?? 0)
-      if (sort === 'price_asc')  return (a.order.amountCents ?? 0) - (b.order.amountCents ?? 0)
+      if (sort === 'price_asc') return (a.order.amountCents ?? 0) - (b.order.amountCents ?? 0)
       return 0
     })
   }
@@ -436,10 +436,10 @@ const AuftraegePage: FC = () => {
       const q = p.get('q'); if (q !== null) setQuery(q)
 
       const s = p.get('sort') as SortKey | null
-      if (s && ['date_desc','date_asc','price_desc','price_asc'].includes(s)) setSort(s)
+      if (s && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(s)) setSort(s)
 
       const st = p.get('status') as FilterKey | null
-      if (st && ['alle','wartet','aktiv','fertig'].includes(st)) setStatusFilter(st)
+      if (st && ['alle', 'wartet', 'aktiv', 'fertig'].includes(st)) setStatusFilter(st)
 
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
@@ -465,9 +465,9 @@ const AuftraegePage: FC = () => {
     } catch {}
   }, [])
 
-  /* ---------- Persistenzen ---------- */
-  useEffect(() => { try { localStorage.setItem(LS_PS_V,   String(psV)) } catch {} }, [psV])
-  useEffect(() => { try { localStorage.setItem(LS_PS_A,   String(psA)) } catch {} }, [psA])
+  /* ---------- Persistenzen (nur UI) ---------- */
+  useEffect(() => { try { localStorage.setItem(LS_PS_V, String(psV)) } catch {} }, [psV])
+  useEffect(() => { try { localStorage.setItem(LS_PS_A, String(psA)) } catch {} }, [psA])
   useEffect(() => { try { localStorage.setItem(LS_PAGE_V, String(pageV)) } catch {} }, [pageV])
   useEffect(() => { try { localStorage.setItem(LS_PAGE_A, String(pageA)) } catch {} }, [pageA])
 
@@ -479,15 +479,15 @@ const AuftraegePage: FC = () => {
     try {
       const p = new URLSearchParams()
       if (debouncedQuery !== DEFAULTS.q) p.set('q', debouncedQuery)
-      if (sort !== DEFAULTS.sort)        p.set('sort', sort)
+      if (sort !== DEFAULTS.sort) p.set('sort', sort)
       if (statusFilter !== DEFAULTS.status) p.set('status', statusFilter)
-      if (topSection !== DEFAULTS.tab)   p.set('tab', topSection)
-      if (psV !== DEFAULTS.psV)          p.set('psV', String(psV))
-      if (psA !== DEFAULTS.psA)          p.set('psA', String(psA))
-      if (pageV !== DEFAULTS.pageV)      p.set('pageV', String(pageV))
-      if (pageA !== DEFAULTS.pageA)      p.set('pageA', String(pageA))
+      if (topSection !== DEFAULTS.tab) p.set('tab', topSection)
+      if (psV !== DEFAULTS.psV) p.set('psV', String(psV))
+      if (psA !== DEFAULTS.psA) p.set('psA', String(psA))
+      if (pageV !== DEFAULTS.pageV) p.set('pageV', String(pageV))
+      if (pageA !== DEFAULTS.pageA) p.set('pageA', String(pageA))
 
-      const qs   = p.toString()
+      const qs = p.toString()
       const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
       const curr = `${window.location.pathname}${window.location.search}`
       if (next !== curr) {
@@ -503,70 +503,79 @@ const AuftraegePage: FC = () => {
   const sliceA = sliceByPage(filteredSortedA, pageA, psA)
   useEffect(() => { if (sliceA.safePage !== pageA) setPageA(sliceA.safePage) }, [sliceA.safePage, pageA])
 
-  /* ---------- Actions (frontend only) ---------- */
-  function persist(next: Order[]) {
-    localStorage.setItem(LS_KEY, JSON.stringify(next))
-    setOrders(next)
-  }
-
+  /* ---------- Actions (UI-only; Server-Calls kommen später) ---------- */
   function reportDelivered(jobId: string | number) {
-    const next = orders.map((o): Order =>
-      String(o.jobId) === String(jobId)
-        ? {
-            ...o,
-            status: 'reported' as OrderStatus,
-            deliveredReportedAt: new Date().toISOString(),
-            autoReleaseAt: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString(),
-          }
-        : o
+    setOrders(prev =>
+      prev.map((o): DbOrder =>
+        String(o.jobId) === String(jobId)
+          ? {
+              ...o,
+              status: 'reported' as OrderStatus,
+              deliveredReportedAt: new Date().toISOString(),
+              autoReleaseAt: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString(),
+            }
+          : o
+      )
     )
-    persist(next)
   }
 
   function confirmDelivered(jobId: string | number) {
-    const next: Order[] = orders.map((o): Order =>
-      String(o.jobId) === String(jobId)
-        ? {
-            ...o,
-            status: 'confirmed' as OrderStatus,
-            deliveredConfirmedAt: new Date().toISOString(),
-          }
-        : o
+    setOrders(prev =>
+      prev.map((o): DbOrder =>
+        String(o.jobId) === String(jobId)
+          ? {
+              ...o,
+              status: 'confirmed' as OrderStatus,
+              deliveredConfirmedAt: new Date().toISOString(),
+            }
+          : o
+      )
     )
-    persist(next)
   }
 
   function openDispute(jobId: string | number) {
     const reason = window.prompt('Problem melden (optional):')
-    const next = orders.map((o): Order =>
-      String(o.jobId) === String(jobId)
-        ? {
-            ...o,
-            status: 'disputed' as OrderStatus,
-            disputeOpenedAt: new Date().toISOString(),
-            disputeReason: reason || null,
-          }
-        : o
+    setOrders(prev =>
+      prev.map((o): DbOrder =>
+        String(o.jobId) === String(jobId)
+          ? {
+              ...o,
+              status: 'disputed' as OrderStatus,
+              disputeOpenedAt: new Date().toISOString(),
+              disputeReason: reason || null,
+            }
+          : o
+      )
     )
-    persist(next)
   }
 
   function remainingText(iso?: string) {
     if (!iso) return '–'
     const delta = +new Date(iso) - Date.now()
     if (delta <= 0) return 'kurzfristig'
-    const days  = Math.floor(delta / 86400000)
+    const days = Math.floor(delta / 86400000)
     const hours = Math.floor((delta % 86400000) / 3600000)
-    return days >= 1 ? `${days} ${days===1?'Tag':'Tage'} ${hours} Std` : `${hours} Std`
+    return days >= 1 ? `${days} ${days === 1 ? 'Tag' : 'Tage'} ${hours} Std` : `${hours} Std`
+  }
+
+  function paymentLabel(order: DbOrder): string {
+    const s = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+    if (!s) return '—'
+    if (s === 'paid') return 'Bezahlt'
+    if (s === 'released') return 'Freigegeben'
+    if (s === 'refunded') return 'Rückerstattet'
+    if (s === 'partially_refunded') return 'Teilweise rückerstattet'
+    if (s === 'disputed') return 'In Klärung'
+    return String(s)
   }
 
   /* ---------------- Section Renderer ---------------- */
   const SectionList: FC<{
     kind: OrderKind
-    slice: Slice<{order:Order, job:Job}>
+    slice: Slice<{ order: DbOrder, job: Job }>
     idPrefix: string
     onConfirmDelivered: (jobId: string | number) => void
-  }> = ({ kind, slice, idPrefix, onConfirmDelivered }) => (
+  }> = ({ slice, idPrefix, onConfirmDelivered }) => (
     <>
       <ul className={styles.list}>
         {slice.pageItems.map(({ order, job }) => {
@@ -589,7 +598,7 @@ const AuftraegePage: FC = () => {
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
-          const isVendor   = order.kind === 'angenommen'
+          const isVendor = order.kind === 'angenommen'
           const isCustomer = order.kind === 'vergeben'
 
           return (
@@ -600,6 +609,7 @@ const AuftraegePage: FC = () => {
                     {computeJobTitle(j)}
                   </Link>
                 </div>
+
                 <span
                   className={[
                     styles.statusBadge,
@@ -623,6 +633,10 @@ const AuftraegePage: FC = () => {
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
                   <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
+                </div>
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Zahlungsstatus</div>
+                  <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
@@ -795,56 +809,72 @@ const AuftraegePage: FC = () => {
           <>
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {sliceV.total === 0
-                ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
-                : <SectionList
-                    kind="vergeben"
-                    slice={sliceV}
-                    idPrefix="v"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+              {loading ? (
+                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+              ) : sliceV.total === 0 ? (
+                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+              ) : (
+                <SectionList
+                  kind="vergeben"
+                  slice={sliceV}
+                  idPrefix="v"
+                  onConfirmDelivered={confirmDelivered}
+                />
+              )}
             </div>
 
             <hr className={styles.divider} />
 
             <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {sliceA.total === 0
-                ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
-                : <SectionList
-                    kind="angenommen"
-                    slice={sliceA}
-                    idPrefix="a"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+              {loading ? (
+                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+              ) : sliceA.total === 0 ? (
+                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+              ) : (
+                <SectionList
+                  kind="angenommen"
+                  slice={sliceA}
+                  idPrefix="a"
+                  onConfirmDelivered={confirmDelivered}
+                />
+              )}
             </div>
           </>
         ) : (
           <>
             <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {sliceA.total === 0
-                ? <div className={styles.emptyState}><strong>Noch keine Aufträge angenommen.</strong></div>
-                : <SectionList
-                    kind="angenommen"
-                    slice={sliceA}
-                    idPrefix="a"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+              {loading ? (
+                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+              ) : sliceA.total === 0 ? (
+                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+              ) : (
+                <SectionList
+                  kind="angenommen"
+                  slice={sliceA}
+                  idPrefix="a"
+                  onConfirmDelivered={confirmDelivered}
+                />
+              )}
             </div>
 
             <hr className={styles.divider} />
 
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
-              {sliceV.total === 0
-                ? <div className={styles.emptyState}><strong>Noch keine Aufträge vergeben.</strong></div>
-                : <SectionList
-                    kind="vergeben"
-                    slice={sliceV}
-                    idPrefix="v"
-                    onConfirmDelivered={confirmDelivered}
-                  />}
+              {loading ? (
+                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+              ) : sliceV.total === 0 ? (
+                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+              ) : (
+                <SectionList
+                  kind="vergeben"
+                  slice={sliceV}
+                  idPrefix="v"
+                  onConfirmDelivered={confirmDelivered}
+                />
+              )}
             </div>
           </>
         )}
@@ -893,7 +923,7 @@ const AuftraegePage: FC = () => {
           <div className={styles.modalContent}>
             <h3 id="rateTitle" className={styles.modalTitle}>Auftragnehmer bewerten</h3>
             <div className={styles.stars}>
-              {[1,2,3,4,5].map(n => (
+              {[1, 2, 3, 4, 5].map(n => (
                 <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn}>
                   {n <= rating ? '★' : '☆'}
                 </button>
@@ -907,19 +937,17 @@ const AuftraegePage: FC = () => {
               rows={4}
             />
             <div className={styles.modalActions}>
-              <button className={styles.btnGhost} onClick={()=>setRateOrderId(null)}>Abbrechen</button>
+              <button className={styles.btnGhost} onClick={() => setRateOrderId(null)}>Abbrechen</button>
               <button
                 className={styles.primaryBtn}
                 onClick={() => {
-                  setOrders(prev => {
-                    const next = prev.map(o =>
+                  setOrders(prev =>
+                    prev.map(o =>
                       String(o.jobId) === String(rateOrderId)
                         ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
                         : o
                     )
-                    localStorage.setItem(LS_KEY, JSON.stringify(next))
-                    return next
-                  })
+                  )
                   setRateOrderId(null)
                 }}
               >
