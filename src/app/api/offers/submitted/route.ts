@@ -31,10 +31,17 @@ export async function GET() {
     const admin = supabaseAdmin()
     const nowIso = new Date().toISOString()
 
-    // 1) Nur aktive, eigene abgegebene Angebote
+    /**
+     * Ziel:
+     * - Konto/Angebote (submitted) zeigt NUR nicht-bezahlte Angebote
+     * - Offers zu Jobs, die bereits vergeben sind (selected_offer_id gesetzt):
+     *   -> nur das ausgewählte Offer (falls es deins ist) bleibt sichtbar
+     * - status muss mit raus
+     */
     const { data: rows, error } = await admin
       .from('job_offers')
-      .select(`
+      .select(
+        `
         id,
         job_id,
         bieter_id,
@@ -45,10 +52,20 @@ export async function GET() {
         created_at,
         valid_until,
         status,
-        anbieter_snapshot
-      `)
+        anbieter_snapshot,
+        paid_at,
+        refunded_amount_cents,
+        jobs!inner(
+          id,
+          selected_offer_id
+        )
+      `
+      )
       .eq('bieter_id', user.id)
-      .gt('valid_until', nowIso)
+      .is('paid_at', null)
+      .in('status', ['open', 'selected'])
+      // gültig ODER selected (damit selected nicht verschwindet, wenn valid_until vorbei ist)
+      .or(`valid_until.gt.${nowIso},status.eq.selected`)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -56,21 +73,30 @@ export async function GET() {
       return NextResponse.json({ ok: false, error: 'db' }, { status: 500 })
     }
 
-    // 2) Jobs zu diesen Offers nachladen (für Titel-Daten)
-    const jobIds = Array.from(new Set((rows ?? []).map((r: any) => String(r.job_id)).filter(Boolean)))
+    // Wenn Job bereits selected_offer_id hat => nur das selected Offer behalten
+    const filtered = (rows ?? []).filter((r: any) => {
+      const sel = r?.jobs?.selected_offer_id
+      if (!sel) return true
+      return String(sel) === String(r.id)
+    })
+
+    // Jobs zu diesen Offers nachladen (für Titel-Daten)
+    const jobIds = Array.from(new Set(filtered.map((r: any) => String(r.job_id)).filter(Boolean)))
 
     let jobsById = new Map<string, any>()
     if (jobIds.length > 0) {
       const { data: jobRows, error: jErr } = await admin
         .from('jobs')
-        .select(`
+        .select(
+          `
           id,
           user_id,
           verfahren_1,
           verfahren_2,
           material_guete,
           material_guete_custom
-        `)
+        `
+        )
         .in('id', jobIds)
 
       if (jErr) {
@@ -80,9 +106,8 @@ export async function GET() {
       }
     }
 
-    // 3) Owner-Profile (Auftraggeber) nachladen -> username + rating + address (zip/city)
-    //    ✅ ownerIds NICHT aus jobsById, sondern aus rows.owner_id
-    const ownerIds = Array.from(new Set((rows ?? []).map((r: any) => String(r.owner_id)).filter(Boolean)))
+    // Owner-Profile (Auftraggeber) nachladen -> username + rating + address (zip/city)
+    const ownerIds = Array.from(new Set(filtered.map((r: any) => String(r.owner_id)).filter(Boolean)))
 
     let ownersById = new Map<string, any>()
     if (ownerIds.length > 0) {
@@ -98,14 +123,14 @@ export async function GET() {
       }
     }
 
-    // 4) Offers ausgeben (inkl. job-title Daten + owner Daten)
-    const offers = (rows ?? []).map((r: any) => {
+    // Offers ausgeben (inkl. job-title Daten + owner Daten)
+    const offers = filtered.map((r: any) => {
       const snap = pickSnapPublic(r.anbieter_snapshot)
 
       const job = jobsById.get(String(r.job_id))
       const ownerId = String(r.owner_id ?? '')
       const owner = ownersById.get(ownerId)
-      const addr = (owner?.address ?? {}) as any;
+      const addr = (owner?.address ?? {}) as any
 
       const job_verfahren_1 = String(job?.verfahren_1 ?? '')
       const job_verfahren_2 = String(job?.verfahren_2 ?? '')
@@ -126,6 +151,12 @@ export async function GET() {
 
         created_at: String(r.created_at),
         valid_until: String(r.valid_until),
+
+        // ✅ status für UI (open | selected)
+        status: String(r.status),
+
+        // optional (hilft später, falls du "refund requested" o.ä. visualisieren willst)
+        refunded_amount_cents: Number(r.refunded_amount_cents ?? 0),
 
         // Snapshot (fix, nicht live)
         snap_country: snap.snap_country || '—',
