@@ -313,7 +313,7 @@ export default function Page() {
   const tiles = [
     {
       href: '/konto/angebote',
-      text: 'Eingeholte Angebote',
+      text: 'Aufträge Angebote',
       sub: 'Übersicht über deine eingeholten und abgegebenen Angebote für Beschichtungsaufträge',
       icon: <PencilIcon className="w-6 h-6 text-blue-500 fill-current stroke-current" />,
     },
