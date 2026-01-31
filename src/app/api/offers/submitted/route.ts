@@ -31,7 +31,17 @@ export async function GET() {
     const admin = supabaseAdmin()
     const nowIso = new Date().toISOString()
 
-    // 1) Nur aktive, eigene abgegebene Angebote
+    /**
+     * ÄNDERUNG #1: "Angebote" Seite zeigt:
+     *  - open NUR wenn valid_until > now
+     *  - selected IMMER (auch wenn valid_until abgelaufen)
+     *
+     * ÄNDERUNG #2: paid IMMER raus aus "offers"
+     *  - paid_at muss null sein
+     *  - zusätzlich status != 'paid' (falls jemand status gesetzt hat ohne paid_at)
+     *
+     * ÄNDERUNG #3: wir selektieren paid/refund Felder mit, weil UI später Status anzeigen will
+     */
     const { data: rows, error } = await admin
       .from('job_offers')
       .select(`
@@ -45,15 +55,28 @@ export async function GET() {
         created_at,
         valid_until,
         status,
-        anbieter_snapshot
+        anbieter_snapshot,
+        paid_at,
+        paid_amount_cents,
+        refunded_amount_cents,
+        currency,
+        payment_intent_id,
+        charge_id
       `)
       .eq('bieter_id', user.id)
-      .gt('valid_until', nowIso)
+      .is('paid_at', null)
+      .neq('status', 'paid')
+      // open nur wenn gültig ODER selected immer
+      .or(`and(status.eq.open,valid_until.gt.${nowIso}),status.eq.selected`)
       .order('created_at', { ascending: false })
 
     if (error) {
       console.error('[submitted offers] db:', error)
-      return NextResponse.json({ ok: false, error: 'db' }, { status: 500 })
+      // ÄNDERUNG #4: error detail zurückgeben, damit du nicht im Blindflug bist
+      return NextResponse.json(
+        { ok: false, error: 'db', detail: error.message, code: (error as any).code ?? null },
+        { status: 500 }
+      )
     }
 
     // 2) Jobs zu diesen Offers nachladen (für Titel-Daten)
@@ -81,7 +104,6 @@ export async function GET() {
     }
 
     // 3) Owner-Profile (Auftraggeber) nachladen -> username + rating + address (zip/city)
-    //    ✅ ownerIds NICHT aus jobsById, sondern aus rows.owner_id
     const ownerIds = Array.from(new Set((rows ?? []).map((r: any) => String(r.owner_id)).filter(Boolean)))
 
     let ownersById = new Map<string, any>()
@@ -98,14 +120,14 @@ export async function GET() {
       }
     }
 
-    // 4) Offers ausgeben (inkl. job-title Daten + owner Daten)
+    // 4) Offers ausgeben
     const offers = (rows ?? []).map((r: any) => {
       const snap = pickSnapPublic(r.anbieter_snapshot)
 
       const job = jobsById.get(String(r.job_id))
       const ownerId = String(r.owner_id ?? '')
       const owner = ownersById.get(ownerId)
-      const addr = (owner?.address ?? {}) as any;
+      const addr = (owner?.address ?? {}) as any
 
       const job_verfahren_1 = String(job?.verfahren_1 ?? '')
       const job_verfahren_2 = String(job?.verfahren_2 ?? '')
@@ -115,7 +137,7 @@ export async function GET() {
         id: String(r.id),
         job_id: String(r.job_id),
 
-        // ✅ Titel-Daten fürs Frontend
+        // Titel-Daten fürs Frontend
         job_verfahren_1,
         job_verfahren_2,
         job_material,
@@ -127,12 +149,21 @@ export async function GET() {
         created_at: String(r.created_at),
         valid_until: String(r.valid_until),
 
-        // Snapshot (fix, nicht live)
+        // NEU: Status/Payment Info (hilft dir später fürs UI)
+        status: String(r.status ?? ''),
+        paid_at: r.paid_at ? String(r.paid_at) : null,
+        paid_amount_cents: r.paid_amount_cents != null ? Number(r.paid_amount_cents) : null,
+        refunded_amount_cents: r.refunded_amount_cents != null ? Number(r.refunded_amount_cents) : 0,
+        currency: r.currency ? String(r.currency) : null,
+        payment_intent_id: r.payment_intent_id ? String(r.payment_intent_id) : null,
+        charge_id: r.charge_id ? String(r.charge_id) : null,
+
+        // Snapshot (fix)
         snap_country: snap.snap_country || '—',
         snap_city: snap.snap_city || '—',
         snap_account_type: snap.snap_account_type || '',
 
-        // ✅ Auftraggeber (Owner)
+        // Auftraggeber (Owner)
         owner_username: String(owner?.username ?? ''),
         owner_rating_avg:
           typeof owner?.rating_avg === 'number' ? owner.rating_avg : Number(owner?.rating_avg ?? 0) || 0,
@@ -144,8 +175,11 @@ export async function GET() {
     })
 
     return NextResponse.json({ ok: true, offers }, { headers: { 'Cache-Control': 'no-store' } })
-  } catch (e) {
+  } catch (e: any) {
     console.error('[GET /api/offers/submitted] fatal:', e)
-    return NextResponse.json({ ok: false, error: 'fatal' }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'fatal', detail: e?.message ?? String(e) },
+      { status: 500 }
+    )
   }
 }
