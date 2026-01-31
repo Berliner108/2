@@ -11,41 +11,65 @@ type DbOffer = {
   job_id: string
   bieter_id: string
   owner_id: string
+
   gesamt_cents: number | null
   created_at: string | null
+
+  // FIX: status bleibt bei dir "paid" (nach Zahlung)
   status: string | null
+
+  // Snapshot (optional)
   anbieter_snapshot: any | null
+
+  // Payment-Felder
   paid_at: string | null
   paid_amount_cents: number | null
   refunded_amount_cents: number | null
+  refunded_at: string | null
   currency: string | null
   payment_intent_id: string | null
   charge_id: string | null
-}
 
-type DbJobPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+  // NEU: Post-Paid Status
+  fulfillment_status: 'in_progress' | 'reported' | 'disputed' | 'confirmed' | null
+  delivered_reported_at: string | null
+  delivered_confirmed_at: string | null
+  dispute_opened_at: string | null
+  dispute_reason: string | null
+
+  payout_status: 'hold' | 'released' | 'partial_refund' | 'refunded' | null
+  payout_released_at: string | null
+}
 
 type ApiOrder = {
   jobId: string
-  offerId?: string
-  vendor?: string
+  offerId: string
   amountCents?: number
   acceptedAt: string
   kind: 'vergeben' | 'angenommen'
 
-  // Ablaufstatus (dein Frontend-Flow) – kommt später aus DB, hier nur default
-  status?: 'in_progress' | 'reported' | 'disputed' | 'confirmed'
+  // Ablaufstatus (kommt jetzt aus DB!)
+  status: 'in_progress' | 'reported' | 'disputed' | 'confirmed'
   deliveredReportedAt?: string
   deliveredConfirmedAt?: string
-  autoReleaseAt?: string
   disputeOpenedAt?: string
   disputeReason?: string | null
 
-  // Zahlungsstatus (DB) – das wolltest du sichtbar haben
-  jobPayStatus?: DbJobPayStatus
-  offerPayStatus?: DbJobPayStatus
+  // Payout/Refund sichtbar
+  payoutStatus: 'hold' | 'released' | 'partial_refund' | 'refunded'
+  payoutReleasedAt?: string
+  refundedAmountCents?: number
+  refundedAt?: string
+
+  // Labels
+  vendor?: string
+  owner?: string
+
+  // Payment refs (Debug)
   paidAt?: string
-  releasedAt?: string
+  currency?: string | null
+  paymentIntentId?: string | null
+  chargeId?: string | null
 }
 
 type ApiJob = {
@@ -61,58 +85,15 @@ type ApiJob = {
   user?: any
 }
 
-function pick<T extends Record<string, any>>(obj: T, keys: string[]) {
-  for (const k of keys) {
-    if (obj && obj[k] != null) return obj[k]
-  }
-  return undefined
-}
-
 function safeNum(v: any): number | undefined {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? n : undefined
 }
 
-function buildVendorLabel(snapshot: any): string | undefined {
-  if (!snapshot || typeof snapshot !== 'object') return undefined
-  const priv = snapshot.private ?? snapshot?.anbieter_snapshot?.private ?? snapshot?.anbieter?.private
-  const pub = snapshot.public ?? snapshot?.anbieter_snapshot?.public ?? snapshot?.anbieter?.public
-
-  const company = (priv?.company_name || priv?.company || priv?.firma || '').trim?.() || ''
-  const first = (priv?.firstName || priv?.firstname || '').trim?.() || ''
-  const last = (priv?.lastName || priv?.lastname || '').trim?.() || ''
-  const name = [first, last].filter(Boolean).join(' ').trim()
-
-  const acct = (pub?.account_type || pub?.accountType || '').toString().trim()
-
-  const base = company || name
-  if (!base) return undefined
-  return acct ? `${base} · ${acct}` : base
-}
-
-function computePayStatus(offer: DbOffer): DbJobPayStatus | undefined {
-  // 1) Status-Text aus DB (falls du später umstellst)
-  const s = (offer.status || '').toLowerCase().trim()
-
-  // 2) Refund-Logik (überschreibt)
-  const refunded = safeNum(offer.refunded_amount_cents) ?? 0
-  const paidAmt = safeNum(offer.paid_amount_cents) ?? (offer.paid_at ? safeNum(offer.gesamt_cents) ?? 0 : 0)
-
-  if (refunded > 0) {
-    if (paidAmt > 0 && refunded >= paidAmt) return 'refunded'
-    return 'partially_refunded'
+function pick<T extends Record<string, any>>(obj: T, keys: string[]) {
+  for (const k of keys) {
+    if (obj && obj[k] != null) return obj[k]
   }
-
-  // 3) Dispute
-  if (s === 'disputed') return 'disputed'
-
-  // 4) Released / Paid
-  if (s === 'released') return 'released'
-  if (s === 'paid') return 'paid'
-
-  // 5) Fallback: paid_at vorhanden => paid
-  if (offer.paid_at) return 'paid'
-
   return undefined
 }
 
@@ -148,12 +129,7 @@ function normalizeJob(row: any): ApiJob {
     id,
     verfahren: Array.isArray(verfahren) ? verfahren : [],
     material: row.material ?? row.materialguete ?? row.guete ?? undefined,
-    standort:
-      row.standort ??
-      row.location?.city ??
-      row.ort ??
-      row.city ??
-      undefined,
+    standort: row.standort ?? row.location?.city ?? row.ort ?? row.city ?? undefined,
     beschreibung: row.beschreibung ?? row.description ?? undefined,
     bilder: Array.isArray(bilder) ? bilder : undefined,
     warenausgabeDatum: warenausgabeDatum ?? null,
@@ -161,6 +137,14 @@ function normalizeJob(row: any): ApiJob {
     warenannahmeDatum: warenannahmeDatum ?? null,
     user,
   }
+}
+
+function labelFromProfile(p: any): string {
+  const u = String(p?.username ?? '').trim()
+  const avg = typeof p?.rating_avg === 'number' ? p.rating_avg : Number(p?.rating_avg ?? 0) || 0
+  const cnt = typeof p?.rating_count === 'number' ? p.rating_count : Number(p?.rating_count ?? 0) || 0
+  if (!u) return '—'
+  return cnt > 0 ? `${u} · ${avg.toFixed(1)}` : u
 }
 
 export async function GET() {
@@ -181,118 +165,167 @@ export async function GET() {
 
   const { data: auth, error: authErr } = await supabase.auth.getUser()
   if (authErr || !auth?.user) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
   const uid = auth.user.id
 
-  // nur "bezahlt + Folgestati"
-  const allowedStatus = ['paid', 'released', 'refunded', 'partially_refunded', 'disputed']
+  // ✅ Wichtig: NUR paid – alles "nach paid" kommt aus fulfillment_status/payout_status
+  const baseSelect = `
+    id,
+    job_id,
+    bieter_id,
+    owner_id,
+    gesamt_cents,
+    created_at,
+    status,
+    anbieter_snapshot,
+    paid_at,
+    paid_amount_cents,
+    currency,
+    payment_intent_id,
+    charge_id,
+    refunded_amount_cents,
+    refunded_at,
 
-  const baseSelect =
-    'id,job_id,bieter_id,owner_id,gesamt_cents,created_at,status,anbieter_snapshot,paid_at,paid_amount_cents,refunded_amount_cents,currency,payment_intent_id,charge_id'
+    fulfillment_status,
+    delivered_reported_at,
+    delivered_confirmed_at,
+    dispute_opened_at,
+    dispute_reason,
 
-  // 1) Auftraggeber-Sicht (vergeben): owner_id = uid
-  const { data: ownerOffersRaw, error: ownerErr } = await supabase
+    payout_status,
+    payout_released_at
+  `
+
+  const { data: rowsRaw, error: err } = await supabase
     .from('job_offers')
     .select(baseSelect)
-    .eq('owner_id', uid)
-    // paid_at vorhanden ODER DB-Status schon in Folgestati
-    .or(`paid_at.not.is.null,status.in.(${allowedStatus.join(',')})`)
+    .eq('status', 'paid')
+    .or(`owner_id.eq.${uid},bieter_id.eq.${uid}`)
     .order('paid_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
 
-  if (ownerErr) {
-    return NextResponse.json({ error: ownerErr.message }, { status: 500 })
+  if (err) {
+    // das ist dein {"ok":false,"error":"db"} Problem gewesen → hier bekommst du die echte message
+    console.error('[GET /api/konto/auftraege] db:', err)
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
   }
 
-  // pro job nur 1 Offer (das "relevante": neuestes paid/Status)
-  const ownerOffers = (ownerOffersRaw as DbOffer[]) ?? []
-  const ownerByJob = new Map<string, DbOffer>()
-  for (const o of ownerOffers) {
-    const jid = String(o.job_id)
-    if (!ownerByJob.has(jid)) ownerByJob.set(jid, o)
+  const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
+
+  // Counterparty Profiles laden (damit Labels stabil sind – statt nur Snapshot)
+  const ids = new Set<string>()
+  for (const r of rows) {
+    ids.add(String(r.owner_id))
+    ids.add(String(r.bieter_id))
   }
 
-  // 2) Anbieter-Sicht (angenommen): bieter_id = uid
-  const { data: bidderOffersRaw, error: bidderErr } = await supabase
-    .from('job_offers')
-    .select(baseSelect)
-    .eq('bieter_id', uid)
-    .or(`paid_at.not.is.null,status.in.(${allowedStatus.join(',')})`)
-    .order('paid_at', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false })
+  const idList = Array.from(ids)
+  const { data: profsRaw, error: pErr } = idList.length
+    ? await supabase.from('profiles').select('id, username, rating_avg, rating_count').in('id', idList)
+    : { data: [], error: null }
 
-  if (bidderErr) {
-    return NextResponse.json({ error: bidderErr.message }, { status: 500 })
+  if (pErr) {
+    console.error('[GET /api/konto/auftraege] profiles db:', pErr)
+    // kein Hard-Fail – Orders können trotzdem zurück
   }
 
-  const bidderOffers = (bidderOffersRaw as DbOffer[]) ?? []
+  const profMap = new Map<string, any>()
+  for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
-  // 3) Orders DTO bauen
+  // Orders bauen
   const orders: ApiOrder[] = []
 
-  // vergeben (Kunde)
-  for (const o of ownerByJob.values()) {
-    const pay = computePayStatus(o)
-    if (!pay) continue // extra safety (falls oben OR mal zuviel reinlässt)
+  for (const o of rows) {
+    const jobId = String(o.job_id)
+    const offerId = String(o.id)
 
-    orders.push({
-      jobId: String(o.job_id),
-      offerId: o.id,
-      vendor: buildVendorLabel(o.anbieter_snapshot),
-      amountCents: safeNum(o.gesamt_cents),
-      acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
-      kind: 'vergeben',
+    const fulfillment = (o.fulfillment_status ?? 'in_progress') as ApiOrder['status']
+    const payout = (o.payout_status ?? 'hold') as ApiOrder['payoutStatus']
 
-      // Ablaufstatus erstmal default
-      status: 'in_progress',
+    const ownerLabel = labelFromProfile(profMap.get(String(o.owner_id)))
+    const vendorLabel = labelFromProfile(profMap.get(String(o.bieter_id)))
 
-      // Zahlungsstatus sichtbar
-      jobPayStatus: pay,
-      paidAt: o.paid_at || undefined,
-    })
+    // Owner-Sicht (vergeben)
+    if (String(o.owner_id) === uid) {
+      orders.push({
+        jobId,
+        offerId,
+        amountCents: safeNum(o.gesamt_cents),
+        acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
+        kind: 'vergeben',
+
+        status: fulfillment,
+        deliveredReportedAt: o.delivered_reported_at || undefined,
+        deliveredConfirmedAt: o.delivered_confirmed_at || undefined,
+        disputeOpenedAt: o.dispute_opened_at || undefined,
+        disputeReason: o.dispute_reason || null,
+
+        payoutStatus: payout,
+        payoutReleasedAt: o.payout_released_at || undefined,
+        refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
+        refundedAt: o.refunded_at || undefined,
+
+        vendor: vendorLabel,
+
+        paidAt: o.paid_at || undefined,
+        currency: o.currency ?? null,
+        paymentIntentId: o.payment_intent_id ?? null,
+        chargeId: o.charge_id ?? null,
+      })
+    }
+
+    // Anbieter-Sicht (angenommen)
+    if (String(o.bieter_id) === uid) {
+      orders.push({
+        jobId,
+        offerId,
+        amountCents: safeNum(o.gesamt_cents),
+        acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
+        kind: 'angenommen',
+
+        status: fulfillment,
+        deliveredReportedAt: o.delivered_reported_at || undefined,
+        deliveredConfirmedAt: o.delivered_confirmed_at || undefined,
+        disputeOpenedAt: o.dispute_opened_at || undefined,
+        disputeReason: o.dispute_reason || null,
+
+        payoutStatus: payout,
+        payoutReleasedAt: o.payout_released_at || undefined,
+        refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
+        refundedAt: o.refunded_at || undefined,
+
+        owner: ownerLabel,
+
+        paidAt: o.paid_at || undefined,
+        currency: o.currency ?? null,
+        paymentIntentId: o.payment_intent_id ?? null,
+        chargeId: o.charge_id ?? null,
+      })
+    }
   }
 
-  // angenommen (Anbieter)
-  for (const o of bidderOffers) {
-    const pay = computePayStatus(o)
-    if (!pay) continue
-
-    orders.push({
-      jobId: String(o.job_id),
-      offerId: o.id,
-      amountCents: safeNum(o.gesamt_cents),
-      acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
-      kind: 'angenommen',
-
-      status: 'in_progress',
-
-      offerPayStatus: pay,
-      paidAt: o.paid_at || undefined,
-    })
-  }
-
-  // 4) Jobs laden (für Karteninfos)
+  // Jobs laden (für Karteninfos)
   const jobIds = Array.from(new Set(orders.map(o => String(o.jobId))))
   let jobs: ApiJob[] = []
 
   if (jobIds.length) {
-    // ✅ Wichtig: select('*') damit es NICHT crasht wenn Spaltennamen bei dir anders sind.
     const { data: jobsRaw, error: jobsErr } = await supabase
       .from('jobs')
       .select('*')
       .in('id', jobIds)
 
     if (jobsErr) {
-      return NextResponse.json({ error: jobsErr.message }, { status: 500 })
+      console.error('[GET /api/konto/auftraege] jobs db:', jobsErr)
+      return NextResponse.json({ ok: false, error: jobsErr.message }, { status: 500 })
     }
 
     jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
   }
 
-  // 5) Nur Jobs zurückgeben, die wir auch wirklich anzeigen
+  // safety: nur orders zurückgeben, deren job auch geladen wurde
   const jobSet = new Set(jobs.map(j => String(j.id)))
   const filteredOrders = orders.filter(o => jobSet.has(String(o.jobId)))
 
-  return NextResponse.json({ jobs, orders: filteredOrders }, { status: 200 })
+  return NextResponse.json({ ok: true, jobs, orders: filteredOrders }, { status: 200 })
 }
