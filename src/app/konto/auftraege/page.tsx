@@ -1,3 +1,4 @@
+// src/app/konto/auftraege/page.tsx
 'use client'
 
 import { FC, useEffect, useMemo, useState } from 'react'
@@ -20,7 +21,7 @@ type Job = {
   user?: any
 }
 
-/* ---------- Neuer, expliziter Auftragsstatus (Ablauf) ---------- */
+/* ---------- Ablaufstatus (DB) ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type OrderKind = 'vergeben' | 'angenommen'
 
@@ -35,22 +36,25 @@ type Order = {
   status?: OrderStatus
   deliveredReportedAt?: string
   deliveredConfirmedAt?: string
+  autoReleaseAt?: string
   disputeOpenedAt?: string
   disputeReason?: string | null
 
-  deliveredAt?: string // legacy
-  review?: { rating: number; text?: string }
+  deliveredAt?: string // legacy (fallback)
 }
 
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
-type DbJobPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
-type DbOfferPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
 
 type DbOrder = Order & {
-  jobPayStatus?: DbJobPayStatus
-  offerPayStatus?: DbOfferPayStatus
+  jobPayStatus?: DbPayStatus // kind='vergeben'
+  offerPayStatus?: DbPayStatus // kind='angenommen'
   paidAt?: string
   releasedAt?: string
+
+  // ✅ beidseitige Bewertung (kommt aus /api/konto/auftraege)
+  customerReviewed?: boolean // Auftraggeber -> Anbieter
+  vendorReviewed?: boolean // Anbieter -> Auftraggeber
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -198,6 +202,12 @@ function paymentLabel(order: DbOrder): string {
   return String(s)
 }
 
+function clampStars(v: any): number {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return 0
+  return Math.max(1, Math.min(5, Math.round(n)))
+}
+
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
@@ -216,12 +226,17 @@ const Pagination: FC<{
         {total === 0 ? 'Keine Einträge' : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
       </div>
       <div className={styles.pagiControls}>
-        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
+        <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>
+          Pro Seite:
+        </label>
         <select
           id={`${idPrefix}-ps`}
           className={styles.pageSize}
           value={pageSize}
-          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}
+          onChange={e => {
+            setPageSize(Number(e.target.value))
+            setPage(1)
+          }}
         >
           <option value={2}>2</option>
           <option value={10}>10</option>
@@ -230,11 +245,21 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">«</button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">‹</button>
-          <span className={styles.pageNow} aria-live="polite">Seite {page} / {pages}</span>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">›</button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">»</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">
+            «
+          </button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">
+            ‹
+          </button>
+          <span className={styles.pageNow} aria-live="polite">
+            Seite {page} / {pages}
+          </span>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">
+            ›
+          </button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">
+            »
+          </button>
         </div>
       </div>
     </div>
@@ -274,8 +299,9 @@ const AuftraegePage: FC = () => {
   const [orders, setOrders] = useState<DbOrder[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadErr, setLoadErr] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+
+  // Busy states für Actions
+  const [busyKey, setBusyKey] = useState<string | null>(null)
 
   const jobsById = useMemo(() => {
     const m = new Map<string, Job>()
@@ -295,140 +321,106 @@ const AuftraegePage: FC = () => {
   const [pageA, setPageA] = useState(1)
   const [psA, setPsA] = useState<number>(10)
 
-  // Modal: Fertig/geliefert bestätigen (Auftragnehmer)
+  // Modal: Auftragnehmer meldet „abgeschlossen“
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
 
-  // Bewertung
-  const [rateOrderId, setRateOrderId] = useState<string | number | null>(null)
+  // ✅ Bewertung (ein Modal – wir unterscheiden via role)
+  type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
+  const [reviewJobId, setReviewJobId] = useState<string | number | null>(null)
+  const [reviewRole, setReviewRole] = useState<ReviewRole>('customer_to_vendor')
   const [rating, setRating] = useState(5)
   const [ratingText, setRatingText] = useState('')
+  const [reviewErr, setReviewErr] = useState<string | null>(null)
 
-  // ESC schließt Modal
+  // ESC schließt Modals
   useEffect(() => {
-    if (confirmJobId == null && rateOrderId == null) return
+    if (confirmJobId == null && reviewJobId == null) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setConfirmJobId(null); setRateOrderId(null) }
+      if (e.key === 'Escape') {
+        setConfirmJobId(null)
+        setReviewJobId(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [confirmJobId, rateOrderId])
+  }, [confirmJobId, reviewJobId])
 
-  async function loadOrdersAndJobs() {
-    const res = await fetch('/api/konto/auftraege', { credentials: 'include', cache: 'no-store' })
-    const j = await res.json().catch(() => ({} as any))
-    if (!res.ok) throw new Error(j?.error || 'load_failed')
+  /* ---------- DB Load: paid + Folgestati ---------- */
+  async function loadOrders() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/konto/auftraege', { credentials: 'include' })
+      const j = await res.json().catch(() => ({} as any))
+      if (!res.ok) throw new Error(j?.error || 'load_failed')
 
-    const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
-    const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
-    setJobs(nextJobs)
-    setOrders(nextOrders)
-    notifyNavbarCount(nextOrders.length)
+      const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
+      const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
+
+      // server liefert das already gefiltert – wir lassen das nur als Safety
+      const allowed = new Set<DbPayStatus>(['paid', 'released', 'partially_refunded', 'refunded', 'disputed'])
+      const filtered = nextOrders.filter(o => {
+        const s = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
+        return !!s && allowed.has(s)
+      })
+
+      setJobs(nextJobs)
+      setOrders(filtered)
+      notifyNavbarCount(filtered.length)
+    } catch (e) {
+      console.error(e)
+      setJobs([])
+      setOrders([])
+      notifyNavbarCount(0)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  /* ---------- DB Load ---------- */
   useEffect(() => {
     let alive = true
     ;(async () => {
-      try {
-        setLoading(true)
-        setLoadErr(null)
-        await loadOrdersAndJobs()
-      } catch (e: any) {
-        console.error(e)
-        if (!alive) return
-        setJobs([])
-        setOrders([])
-        setLoadErr(String(e?.message || 'load_failed'))
-        notifyNavbarCount(0)
-      } finally {
-        if (alive) setLoading(false)
-      }
+      if (!alive) return
+      await loadOrders()
     })()
-    return () => { alive = false }
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Top-Sektion merken
-  useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
-
-  /* ---------- Actions (Server) ---------- */
-  async function reportDelivered(jobId: string | number, offerId?: string) {
+  useEffect(() => {
     try {
-      setBusy(true)
-      const res = await fetch('/api/konto/auftraege/report-delivered', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ jobId: String(jobId), offerId }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(j?.error || 'report_failed')
-      await loadOrdersAndJobs()
-    } catch (e) {
-      console.error(e)
-      alert('Konnte „Zustellung melden“ nicht speichern.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function confirmDelivered(jobId: string | number, offerId?: string) {
+      const saved = localStorage.getItem(TOP_KEY)
+      if (saved === 'vergeben' || saved === 'angenommen') setTopSection(saved as OrderKind)
+    } catch {}
+  }, [])
+  useEffect(() => {
     try {
-      setBusy(true)
-      const res = await fetch('/api/konto/auftraege/confirm-delivered', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ jobId: String(jobId), offerId }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(j?.error || 'confirm_failed')
-      await loadOrdersAndJobs()
-    } catch (e) {
-      console.error(e)
-      alert('Konnte „Empfang bestätigen“ nicht speichern.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function openDispute(jobId: string | number, offerId?: string) {
-    const reason = window.prompt('Problem melden (optional):') || ''
-    try {
-      setBusy(true)
-      const res = await fetch('/api/konto/auftraege/open-dispute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ jobId: String(jobId), offerId, reason }),
-      })
-      const j = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(j?.error || 'dispute_failed')
-      await loadOrdersAndJobs()
-    } catch (e) {
-      console.error(e)
-      alert('Konnte „Problem melden“ nicht speichern.')
-    } finally {
-      setBusy(false)
-    }
-  }
+      localStorage.setItem(TOP_KEY, topSection)
+    } catch {}
+  }, [topSection])
 
   /* ---------- Filter + Sort ---------- */
   const allVergeben = useMemo(
-    () => orders
-      .filter(o => o.kind === 'vergeben')
-      .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
-      .filter(x => !!x.job) as { order: DbOrder, job: Job }[],
-    [orders, jobsById]
-  )
-  const allAngenommen = useMemo(
-    () => orders
-      .filter(o => o.kind === 'angenommen')
-      .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
-      .filter(x => !!x.job) as { order: DbOrder, job: Job }[],
+    () =>
+      orders
+        .filter(o => o.kind === 'vergeben')
+        .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
+        .filter(x => !!x.job) as { order: DbOrder; job: Job }[],
     [orders, jobsById]
   )
 
-  const applySearchAndFilter = (items: { order: DbOrder, job: Job }[], qStr: string) => {
+  const allAngenommen = useMemo(
+    () =>
+      orders
+        .filter(o => o.kind === 'angenommen')
+        .map(o => ({ order: o, job: jobsById.get(String(o.jobId)) }))
+        .filter(x => !!x.job) as { order: DbOrder; job: Job }[],
+    [orders, jobsById]
+  )
+
+  const applySearchAndFilter = (items: { order: DbOrder; job: Job }[], qStr: string) => {
     const q = qStr.trim().toLowerCase()
     return items.filter(({ order, job }) => {
       if (statusFilter !== 'alle') {
@@ -438,15 +430,11 @@ const AuftraegePage: FC = () => {
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
       const partyName = order.kind === 'vergeben' ? (order.vendor || '') : getOwnerName(job)
-      return (
-        String(order.jobId).toLowerCase().includes(q) ||
-        title.includes(q) ||
-        partyName.toLowerCase().includes(q)
-      )
+      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || partyName.toLowerCase().includes(q)
     })
   }
 
-  const applySort = (items: { order: DbOrder, job: Job }[]) => {
+  const applySort = (items: { order: DbOrder; job: Job }[]) => {
     return [...items].sort((a, b) => {
       if (sort === 'date_desc') return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
       if (sort === 'date_asc') return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
@@ -456,21 +444,26 @@ const AuftraegePage: FC = () => {
     })
   }
 
-  const filteredSortedV = useMemo(
-    () => applySort(applySearchAndFilter(allVergeben, debouncedQuery)),
-    [allVergeben, debouncedQuery, sort, statusFilter]
-  )
-  const filteredSortedA = useMemo(
-    () => applySort(applySearchAndFilter(allAngenommen, debouncedQuery)),
-    [allAngenommen, debouncedQuery, sort, statusFilter]
-  )
+  const filteredSortedV = useMemo(() => applySort(applySearchAndFilter(allVergeben, debouncedQuery)), [
+    allVergeben,
+    debouncedQuery,
+    sort,
+    statusFilter,
+  ])
+  const filteredSortedA = useMemo(() => applySort(applySearchAndFilter(allAngenommen, debouncedQuery)), [
+    allAngenommen,
+    debouncedQuery,
+    sort,
+    statusFilter,
+  ])
 
   /* ---------- URL → State (Init aus URL & LocalStorage) ---------- */
   useEffect(() => {
     try {
       const p = new URLSearchParams(window.location.search)
 
-      const q = p.get('q'); if (q !== null) setQuery(q)
+      const q = p.get('q')
+      if (q !== null) setQuery(q)
 
       const s = p.get('sort') as SortKey | null
       if (s && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(s)) setSort(s)
@@ -479,37 +472,51 @@ const AuftraegePage: FC = () => {
       if (st && ['alle', 'wartet', 'aktiv', 'fertig'].includes(st)) setStatusFilter(st)
 
       const tab = p.get('tab') as OrderKind | null
-      if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
-        setTopSection(tab)
-      } else {
-        const saved = localStorage.getItem(TOP_KEY)
-        if (saved === 'vergeben' || saved === 'angenommen') setTopSection(saved as OrderKind)
-      }
+      if (tab && (tab === 'vergeben' || tab === 'angenommen')) setTopSection(tab)
 
       const lPsV = Number(localStorage.getItem(LS_PS_V)) || DEFAULTS.psV
       const lPsA = Number(localStorage.getItem(LS_PS_A)) || DEFAULTS.psA
       const uPsV = Number(p.get('psV'))
       const uPsA = Number(p.get('psA'))
-      setPsV(ALLOWED_PS.includes(uPsV) ? uPsV : (ALLOWED_PS.includes(lPsV) ? lPsV : DEFAULTS.psV))
-      setPsA(ALLOWED_PS.includes(uPsA) ? uPsA : (ALLOWED_PS.includes(lPsA) ? lPsA : DEFAULTS.psA))
+      setPsV(ALLOWED_PS.includes(uPsV) ? uPsV : ALLOWED_PS.includes(lPsV) ? lPsV : DEFAULTS.psV)
+      setPsA(ALLOWED_PS.includes(uPsA) ? uPsA : ALLOWED_PS.includes(lPsA) ? lPsA : DEFAULTS.psA)
 
       const lPageV = Number(localStorage.getItem(LS_PAGE_V)) || DEFAULTS.pageV
       const lPageA = Number(localStorage.getItem(LS_PAGE_A)) || DEFAULTS.pageA
       const uPageV = Number(p.get('pageV')) || undefined
       const uPageA = Number(p.get('pageA')) || undefined
-      setPageV(uPageV && uPageV > 0 ? uPageV : (lPageV > 0 ? lPageV : DEFAULTS.pageV))
-      setPageA(uPageA && uPageA > 0 ? uPageA : (lPageA > 0 ? lPageA : DEFAULTS.pageA))
+      setPageV(uPageV && uPageV > 0 ? uPageV : lPageV > 0 ? lPageV : DEFAULTS.pageV)
+      setPageA(uPageA && uPageA > 0 ? uPageA : lPageA > 0 ? lPageA : DEFAULTS.pageA)
     } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /* ---------- Persistenzen (nur UI) ---------- */
-  useEffect(() => { try { localStorage.setItem(LS_PS_V, String(psV)) } catch {} }, [psV])
-  useEffect(() => { try { localStorage.setItem(LS_PS_A, String(psA)) } catch {} }, [psA])
-  useEffect(() => { try { localStorage.setItem(LS_PAGE_V, String(pageV)) } catch {} }, [pageV])
-  useEffect(() => { try { localStorage.setItem(LS_PAGE_A, String(pageA)) } catch {} }, [pageA])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PS_V, String(psV))
+    } catch {}
+  }, [psV])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PS_A, String(psA))
+    } catch {}
+  }, [psA])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PAGE_V, String(pageV))
+    } catch {}
+  }, [pageV])
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PAGE_A, String(pageA))
+    } catch {}
+  }, [pageA])
 
-  // Bei (debounced) Such-/Sort-/Status-Änderung beide Seiten zurücksetzen
-  useEffect(() => { setPageV(1); setPageA(1) }, [debouncedQuery, sort, statusFilter])
+  useEffect(() => {
+    setPageV(1)
+    setPageA(1)
+  }, [debouncedQuery, sort, statusFilter])
 
   /* ---------- URL-Sync ---------- */
   useEffect(() => {
@@ -527,31 +534,134 @@ const AuftraegePage: FC = () => {
       const qs = p.toString()
       const next = `${window.location.pathname}${qs ? `?${qs}` : ''}`
       const curr = `${window.location.pathname}${window.location.search}`
-      if (next !== curr) {
-        router.replace(next, { scroll: false })
-      }
+      if (next !== curr) router.replace(next, { scroll: false })
     } catch {}
   }, [debouncedQuery, sort, statusFilter, topSection, psV, psA, pageV, pageA, router])
 
   /* ---------- Slices ---------- */
   const sliceV = sliceByPage(filteredSortedV, pageV, psV)
-  useEffect(() => { if (sliceV.safePage !== pageV) setPageV(sliceV.safePage) }, [sliceV.safePage, pageV])
+  useEffect(() => {
+    if (sliceV.safePage !== pageV) setPageV(sliceV.safePage)
+  }, [sliceV.safePage, pageV])
 
   const sliceA = sliceByPage(filteredSortedA, pageA, psA)
-  useEffect(() => { if (sliceA.safePage !== pageA) setPageA(sliceA.safePage) }, [sliceA.safePage, pageA])
+  useEffect(() => {
+    if (sliceA.safePage !== pageA) setPageA(sliceA.safePage)
+  }, [sliceA.safePage, pageA])
+
+  /* ---------- Actions (Server) ---------- */
+  async function postJson(url: string, body: any) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body ?? {}),
+    })
+    const j = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(j?.error || 'request_failed')
+    return j
+  }
+
+  async function reportDelivered(jobId: string | number) {
+    const key = `report:${jobId}`
+    setBusyKey(key)
+    try {
+      await postJson('/api/konto/auftraege/report-delivered', { jobId })
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte Zustellung nicht melden.')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
+  async function confirmDelivered(jobId: string | number) {
+    const key = `confirm:${jobId}`
+    setBusyKey(key)
+    try {
+      await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte Empfang nicht bestätigen.')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
+  async function openDispute(jobId: string | number) {
+    const reason = window.prompt('Problem melden (optional):') || ''
+    const key = `dispute:${jobId}`
+    setBusyKey(key)
+    try {
+      await postJson('/api/konto/auftraege/open-dispute', { jobId, reason: reason.trim().slice(0, 800) })
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte Reklamation nicht eröffnen.')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
+  function openReviewModal(jobId: string | number, role: ReviewRole) {
+    setReviewErr(null)
+    setReviewJobId(jobId)
+    setReviewRole(role)
+    setRating(5)
+    setRatingText('')
+  }
+
+  async function submitReview() {
+    const jobId = reviewJobId
+    if (jobId == null) return
+    const stars = clampStars(rating)
+    const comment = typeof ratingText === 'string' ? ratingText.trim().slice(0, 800) : ''
+
+    if (!stars) {
+      setReviewErr('Bitte 1–5 Sterne wählen.')
+      return
+    }
+    if (!comment) {
+      setReviewErr('Kommentar ist Pflicht.')
+      return
+    }
+
+    const key = `review:${jobId}:${reviewRole}`
+    setBusyKey(key)
+    setReviewErr(null)
+
+    try {
+      // ✅ Route bitte genauso bauen wie bei Shop – nur eben für jobs/job_offers
+      await postJson('/api/konto/auftraege/review', {
+        jobId,
+        role: reviewRole,
+        stars,
+        comment,
+      })
+      setReviewJobId(null)
+      await loadOrders()
+    } catch (e: any) {
+      console.error(e)
+      setReviewErr(String(e?.message || 'Bewertung fehlgeschlagen.'))
+    } finally {
+      setBusyKey(null)
+    }
+  }
 
   /* ---------------- Section Renderer ---------------- */
   const SectionList: FC<{
     kind: OrderKind
-    slice: Slice<{ order: DbOrder, job: Job }>
+    slice: Slice<{ order: DbOrder; job: Job }>
     idPrefix: string
-    onConfirmDelivered: (jobId: string | number, offerId?: string) => void
-  }> = ({ slice, idPrefix, onConfirmDelivered }) => (
+  }> = ({ slice, idPrefix }) => (
     <>
       <ul className={styles.list}>
         {slice.pageItems.map(({ order, job }) => {
           const j = job as Job
           const prodStatus = computeStatus(j)
+
           const display =
             order.status === 'confirmed'
               ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const }
@@ -572,8 +682,37 @@ const AuftraegePage: FC = () => {
           const isVendor = order.kind === 'angenommen'
           const isCustomer = order.kind === 'vergeben'
 
+          const isBusy =
+            busyKey === `report:${order.jobId}` ||
+            busyKey === `confirm:${order.jobId}` ||
+            busyKey === `dispute:${order.jobId}` ||
+            busyKey?.startsWith(`review:${order.jobId}:`) ||
+            false
+
+          const canVendorReport =
+            isVendor &&
+            (order.status ?? 'in_progress') === 'in_progress' &&
+            (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released')
+
+          const canCustomerConfirmOrDispute =
+            isCustomer &&
+            order.status === 'reported' &&
+            (order.jobPayStatus === 'paid' || order.jobPayStatus === 'released')
+
+          const canCustomerReview =
+            isCustomer &&
+            order.status === 'confirmed' &&
+            (order.jobPayStatus === 'paid' || order.jobPayStatus === 'released') &&
+            !order.customerReviewed
+
+          const canVendorReview =
+            isVendor &&
+            order.status === 'confirmed' &&
+            (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
+            !order.vendorReviewed
+
           return (
-            <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card}>
+            <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
                   <Link href={`/auftragsboerse/auftraege/${j.id}`} className={styles.titleLink}>
@@ -590,7 +729,9 @@ const AuftraegePage: FC = () => {
                     display.label === 'Zustellung gemeldet' ? styles.statusPending : '',
                     display.label === 'Reklamation offen' ? styles.statusPending : '',
                     display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
-                  ].join(' ').trim()}
+                  ]
+                    .join(' ')
+                    .trim()}
                 >
                   {display.label}
                 </span>
@@ -637,59 +778,74 @@ const AuftraegePage: FC = () => {
                   Zum Auftrag
                 </Link>
 
-                {/* Auftragnehmer: „Auftrag abgeschlossen“ -> report-delivered */}
-                {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (() => {
-                  const hintId = `deliver-hint-${order.kind}-${order.jobId}`
-                  return (
-                    <div className={styles.actionStack}>
-                      <button
-                        type="button"
-                        className={styles.secondaryBtn}
-                        disabled={!canClick || busy}
-                        aria-disabled={!canClick || busy}
-                        aria-describedby={!canClick ? hintId : undefined}
-                        onClick={() => { if (canClick && !busy) setConfirmJobId(order.jobId) }}
-                        title={canClick ? 'Bestätigt Fertigung & Lieferung – endgültig' : reason}
-                      >
-                        Auftrag abgeschlossen
-                      </button>
-                      {!canClick && <div id={hintId} className={styles.btnHint}> {reason} </div>}
-                    </div>
-                  )
-                })()}
+                {/* Auftragnehmer: „Auftrag abgeschlossen“ → report-delivered */}
+                {canVendorReport &&
+                  (() => {
+                    const hintId = `deliver-hint-${order.kind}-${order.jobId}`
+                    return (
+                      <div className={styles.actionStack}>
+                        <button
+                          type="button"
+                          className={styles.secondaryBtn}
+                          disabled={!canClick || isBusy}
+                          aria-disabled={!canClick || isBusy}
+                          aria-describedby={!canClick ? hintId : undefined}
+                          onClick={() => {
+                            if (canClick) setConfirmJobId(order.jobId)
+                          }}
+                          title={canClick ? 'Meldet Zustellung an Auftraggeber' : reason}
+                        >
+                          {isBusy && busyKey === `report:${order.jobId}` ? 'Sende…' : 'Auftrag abgeschlossen'}
+                        </button>
+                        {!canClick && <div id={hintId} className={styles.btnHint}> {reason} </div>}
+                      </div>
+                    )
+                  })()}
 
                 {/* Auftraggeber: nach Meldung bestätigen / reklamieren */}
-                {isCustomer && order.status === 'reported' && (
+                {canCustomerConfirmOrDispute && (
                   <div className={styles.actionStack}>
                     <button
                       type="button"
                       className={styles.primaryBtn}
-                      disabled={busy}
-                      onClick={() => onConfirmDelivered(order.jobId, order.offerId)}
+                      disabled={isBusy}
+                      onClick={() => confirmDelivered(order.jobId)}
                       title="Empfang bestätigen"
                     >
-                      Empfang bestätigen
+                      {isBusy && busyKey === `confirm:${order.jobId}` ? 'Sende…' : 'Empfang bestätigen'}
                     </button>
                     <button
                       type="button"
                       className={styles.btnGhost}
-                      disabled={busy}
-                      onClick={() => openDispute(order.jobId, order.offerId)}
+                      disabled={isBusy}
+                      onClick={() => openDispute(order.jobId)}
                     >
-                      Problem melden
+                      {isBusy && busyKey === `dispute:${order.jobId}` ? 'Sende…' : 'Problem melden'}
                     </button>
                   </div>
                 )}
 
-                {/* Auftraggeber: nach Bestätigung bewerten (UI-only) */}
-                {isCustomer && order.status === 'confirmed' && !order.review && (
+                {/* ✅ Bewertung Auftraggeber -> Auftragnehmer */}
+                {canCustomerReview && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
-                    disabled={busy}
-                    onClick={() => { setRateOrderId(order.jobId); setRating(5); setRatingText('') }}
+                    disabled={isBusy}
+                    onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}
                   >
-                    Auftragnehmer bewerten
+                    Dienstleister bewerten
+                  </button>
+                )}
+
+                {/* ✅ Bewertung Auftragnehmer -> Auftraggeber */}
+                {canVendorReview && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}
+                  >
+                    Auftraggeber bewerten
                   </button>
                 )}
               </div>
@@ -716,34 +872,35 @@ const AuftraegePage: FC = () => {
       <Navbar />
       <div className={styles.wrapper}>
         <div className={styles.toolbar}>
-          <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
+          <label className={styles.visuallyHidden} htmlFor="search">
+            Suchen
+          </label>
           <input
             id="search"
             type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             placeholder="Auftrags-Nr., Name oder Titel…"
             className={styles.search}
           />
 
-          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className={styles.select}
-          >
+          <label className={styles.visuallyHidden} htmlFor="sort">
+            Sortierung
+          </label>
+          <select id="sort" value={sort} onChange={e => setSort(e.target.value as SortKey)} className={styles.select}>
             <option value="date_desc">Neueste zuerst</option>
             <option value="date_asc">Älteste zuerst</option>
             <option value="price_desc">Höchster Preis zuerst</option>
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
 
-          <label className={styles.visuallyHidden} htmlFor="status">Status</label>
+          <label className={styles.visuallyHidden} htmlFor="status">
+            Status
+          </label>
           <select
             id="status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as FilterKey)}
+            onChange={e => setStatusFilter(e.target.value as FilterKey)}
             className={styles.select}
             title="Nach Status filtern"
           >
@@ -775,22 +932,20 @@ const AuftraegePage: FC = () => {
           </div>
         </div>
 
-        {loadErr && !loading && (
-          <div className={styles.emptyState}>
-            <strong>Fehler beim Laden: {loadErr}</strong>
-          </div>
-        )}
-
         {topSection === 'vergeben' ? (
           <>
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Lade bezahlte Aufträge…</strong>
+                </div>
               ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Noch keine bezahlten Aufträge.</strong>
+                </div>
               ) : (
-                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" onConfirmDelivered={confirmDelivered} />
+                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
               )}
             </div>
 
@@ -799,11 +954,15 @@ const AuftraegePage: FC = () => {
             <h2 className={styles.heading}>Angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Lade bezahlte Aufträge…</strong>
+                </div>
               ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Noch keine bezahlten Aufträge.</strong>
+                </div>
               ) : (
-                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" onConfirmDelivered={confirmDelivered} />
+                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
               )}
             </div>
           </>
@@ -812,11 +971,15 @@ const AuftraegePage: FC = () => {
             <h2 className={styles.heading}>Angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Lade bezahlte Aufträge…</strong>
+                </div>
               ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Noch keine bezahlten Aufträge.</strong>
+                </div>
               ) : (
-                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" onConfirmDelivered={confirmDelivered} />
+                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
               )}
             </div>
 
@@ -825,18 +988,22 @@ const AuftraegePage: FC = () => {
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Lade bezahlte Aufträge…</strong>
+                </div>
               ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
+                <div className={styles.emptyState}>
+                  <strong>Noch keine bezahlten Aufträge.</strong>
+                </div>
               ) : (
-                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" onConfirmDelivered={confirmDelivered} />
+                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
               )}
             </div>
           </>
         )}
       </div>
 
-      {/* Modal: Auftragnehmer meldet „abgeschlossen“ -> report-delivered */}
+      {/* Modal: Auftragnehmer meldet „abgeschlossen“ */}
       {confirmJobId !== null && (
         <div
           className={styles.modal}
@@ -844,26 +1011,29 @@ const AuftraegePage: FC = () => {
           aria-modal="true"
           aria-labelledby="confirmTitle"
           aria-describedby="confirmText"
-          onClick={(e) => { if (e.target === e.currentTarget) setConfirmJobId(null) }}
+          onClick={e => {
+            if (e.target === e.currentTarget) setConfirmJobId(null)
+          }}
         >
           <div className={styles.modalContent}>
-            <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
+            <h3 id="confirmTitle" className={styles.modalTitle}>
+              Bestätigen?
+            </h3>
             <p id="confirmText" className={styles.modalText}>
-              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung. Danach kann der Auftraggeber den Empfang bestätigen oder ein Problem melden.
+              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung.
             </p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} disabled={busy} onClick={() => setConfirmJobId(null)}>
+              <button type="button" className={styles.btnGhost} onClick={() => setConfirmJobId(null)}>
                 Abbrechen
               </button>
               <button
                 type="button"
                 className={styles.btnDanger}
-                disabled={busy}
+                disabled={busyKey === `report:${confirmJobId}`}
                 onClick={async () => {
-                  const jobId = confirmJobId
-                  const offerId = orders.find(o => String(o.jobId) === String(jobId) && o.kind === 'angenommen')?.offerId
-                  await reportDelivered(jobId, offerId)
+                  const id = confirmJobId
                   setConfirmJobId(null)
+                  await reportDelivered(id)
                 }}
               >
                 Ja, Zustellung melden
@@ -873,48 +1043,52 @@ const AuftraegePage: FC = () => {
         </div>
       )}
 
-      {/* Modal: Bewertung (UI-only) */}
-      {rateOrderId !== null && (
+      {/* ✅ Modal: Bewertung (beidseitig) */}
+      {reviewJobId !== null && (
         <div
           className={styles.modal}
           role="dialog"
           aria-modal="true"
           aria-labelledby="rateTitle"
-          onClick={(e) => { if (e.target === e.currentTarget) setRateOrderId(null) }}
+          onClick={e => {
+            if (e.target === e.currentTarget) setReviewJobId(null)
+          }}
         >
           <div className={styles.modalContent}>
-            <h3 id="rateTitle" className={styles.modalTitle}>Auftragnehmer bewerten</h3>
+            <h3 id="rateTitle" className={styles.modalTitle}>
+              {reviewRole === 'customer_to_vendor' ? 'Dienstleister bewerten' : 'Auftraggeber bewerten'}
+            </h3>
+
             <div className={styles.stars}>
               {[1, 2, 3, 4, 5].map(n => (
-                <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn}>
+                <button
+                  key={n}
+                  onClick={() => setRating(n)}
+                  aria-label={`${n} Sterne`}
+                  className={styles.starBtn}
+                  type="button"
+                >
                   {n <= rating ? '★' : '☆'}
                 </button>
               ))}
             </div>
+
             <textarea
               className={styles.reviewBox}
               value={ratingText}
               onChange={e => setRatingText(e.target.value)}
-              placeholder="Optionales Feedback…"
+              placeholder="Feedback (Pflicht)…"
               rows={4}
             />
+
+            {reviewErr && <div className={styles.btnHint} style={{ marginTop: 8 }}>{reviewErr}</div>}
+
             <div className={styles.modalActions}>
-              <button className={styles.btnGhost} disabled={busy} onClick={() => setRateOrderId(null)}>Abbrechen</button>
-              <button
-                className={styles.primaryBtn}
-                disabled={busy}
-                onClick={() => {
-                  setOrders(prev =>
-                    prev.map(o =>
-                      String(o.jobId) === String(rateOrderId)
-                        ? { ...o, review: { rating, text: ratingText.trim() || undefined } }
-                        : o
-                    )
-                  )
-                  setRateOrderId(null)
-                }}
-              >
-                Abschicken
+              <button className={styles.btnGhost} type="button" onClick={() => setReviewJobId(null)} disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}>
+                Abbrechen
+              </button>
+              <button className={styles.primaryBtn} type="button" onClick={submitReview} disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}>
+                {busyKey?.startsWith(`review:${reviewJobId}:`) ? 'Sende…' : 'Abschicken'}
               </button>
             </div>
           </div>
