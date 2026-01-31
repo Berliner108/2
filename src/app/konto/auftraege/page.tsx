@@ -20,7 +20,7 @@ type Job = {
   user?: any
 }
 
-/* ---------- Neuer, expliziter Auftragsstatus (frontend-only / Ablauf) ---------- */
+/* ---------- Neuer, expliziter Auftragsstatus (Ablauf) ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
 type OrderKind = 'vergeben' | 'angenommen'
 
@@ -35,7 +35,6 @@ type Order = {
   status?: OrderStatus
   deliveredReportedAt?: string
   deliveredConfirmedAt?: string
-  autoReleaseAt?: string
   disputeOpenedAt?: string
   disputeReason?: string | null
 
@@ -44,24 +43,11 @@ type Order = {
 }
 
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
-type DbJobPayStatus =
-  | 'paid'
-  | 'released'
-  | 'partially_refunded'
-  | 'refunded'
-  | 'disputed'
-
-type DbOfferPayStatus =
-  | 'paid'
-  | 'released'
-  | 'partially_refunded'
-  | 'refunded'
-  | 'disputed'
+type DbJobPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+type DbOfferPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
 
 type DbOrder = Order & {
-  // Für kind='vergeben' (Auftraggeber-Sicht) -> Status am Job/Payment
   jobPayStatus?: DbJobPayStatus
-  // Für kind='angenommen' (Anbieter-Sicht) -> Status am Offer/Payment
   offerPayStatus?: DbOfferPayStatus
   paidAt?: string
   releasedAt?: string
@@ -77,7 +63,6 @@ const LS_PS_V = 'orders:ps:v'
 const LS_PS_A = 'orders:ps:a'
 const LS_PAGE_V = 'orders:page:v'
 const LS_PAGE_A = 'orders:page:a'
-const AUTO_RELEASE_DAYS = 14
 
 const DEFAULTS = {
   q: '',
@@ -136,19 +121,32 @@ function getOwnerName(job: Job): string {
   const j: any = job
   if (typeof j.user === 'string' && j.user.trim()) return j.user.trim()
   if (j.user && typeof j.user === 'object') {
-    const name =
-      j.user.name || j.user.username || j.user.displayName || j.user.firma || j.user.company
+    const name = j.user.name || j.user.username || j.user.displayName || j.user.firma || j.user.company
     const rating =
       typeof j.user.rating === 'number'
         ? j.user.rating.toFixed(1)
-        : (typeof j.user.sterne === 'number' ? j.user.sterne.toFixed(1) : null)
+        : typeof j.user.sterne === 'number'
+          ? j.user.sterne.toFixed(1)
+          : null
     if (name) return rating ? `${name} · ${rating}` : name
   }
   const candidates = [
-    j.userName, j.username, j.name, j.kunde, j.kundenname,
-    j.auftraggeber, j.auftraggeberName, j.owner, j.ownerName,
-    j.company, j.firma, j.betrieb, j.kontakt?.name, j.kontakt?.firma,
-    j.ersteller?.name, j.ersteller?.username,
+    j.userName,
+    j.username,
+    j.name,
+    j.kunde,
+    j.kundenname,
+    j.auftraggeber,
+    j.auftraggeberName,
+    j.owner,
+    j.ownerName,
+    j.company,
+    j.firma,
+    j.betrieb,
+    j.kontakt?.name,
+    j.kontakt?.firma,
+    j.ersteller?.name,
+    j.ersteller?.username,
   ]
   for (const c of candidates) if (typeof c === 'string' && c.trim()) return c.trim()
   return '—'
@@ -179,20 +177,33 @@ function canConfirmDelivered(job?: Job): { ok: boolean; reason: string } {
 /** Für Filterung „wartet/aktiv/fertig“ (reported/disputed/confirmed => „fertig“) */
 function getStatusKeyFor(order: Order, job: Job): StatusKey {
   if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
-  if (order.deliveredAt) return 'fertig' // Legacy
+  if (order.deliveredAt) return 'fertig'
   return computeStatus(job).key
 }
 
 function notifyNavbarCount(count: number) {
-  try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } })) } catch {}
+  try {
+    window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } }))
+  } catch {}
+}
+
+function paymentLabel(order: DbOrder): string {
+  const s = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+  if (!s) return '—'
+  if (s === 'paid') return 'Bezahlt'
+  if (s === 'released') return 'Freigegeben'
+  if (s === 'refunded') return 'Rückerstattet'
+  if (s === 'partially_refunded') return 'Teilweise rückerstattet'
+  if (s === 'disputed') return 'In Klärung'
+  return String(s)
 }
 
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
-  setPage: (p:number)=>void
+  setPage: (p: number) => void
   pageSize: number
-  setPageSize: (n:number)=>void
+  setPageSize: (n: number) => void
   total: number
   from: number
   to: number
@@ -202,9 +213,7 @@ const Pagination: FC<{
   return (
     <div className={styles.pagination} aria-label="Seitensteuerung">
       <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
-        {total === 0
-          ? 'Keine Einträge'
-          : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
+        {total === 0 ? 'Keine Einträge' : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
       </div>
       <div className={styles.pagiControls}>
         <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>Pro Seite:</label>
@@ -265,6 +274,8 @@ const AuftraegePage: FC = () => {
   const [orders, setOrders] = useState<DbOrder[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
 
   const jobsById = useMemo(() => {
     const m = new Map<string, Job>()
@@ -302,78 +313,104 @@ const AuftraegePage: FC = () => {
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmJobId, rateOrderId])
 
-  /* ---------- DB Load: NUR paid + Folgestati ---------- */
+  async function loadOrdersAndJobs() {
+    const res = await fetch('/api/konto/auftraege', { credentials: 'include', cache: 'no-store' })
+    const j = await res.json().catch(() => ({} as any))
+    if (!res.ok) throw new Error(j?.error || 'load_failed')
+
+    const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
+    const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
+    setJobs(nextJobs)
+    setOrders(nextOrders)
+    notifyNavbarCount(nextOrders.length)
+  }
+
+  /* ---------- DB Load ---------- */
   useEffect(() => {
     let alive = true
-
     ;(async () => {
       try {
         setLoading(true)
-        const res = await fetch('/api/konto/auftraege', { credentials: 'include' })
-        const j = await res.json().catch(() => ({} as any))
-        if (!res.ok) throw new Error(j?.error || 'load_failed')
-
-        const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
-        const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
-
-        const allowed = new Set<DbJobPayStatus | DbOfferPayStatus>([
-          'paid',
-          'released',
-          'partially_refunded',
-          'refunded',
-          'disputed',
-        ])
-
-        const filtered = nextOrders.filter(o => {
-          if (o.kind === 'vergeben') return !!o.jobPayStatus && allowed.has(o.jobPayStatus)
-          if (o.kind === 'angenommen') return !!o.offerPayStatus && allowed.has(o.offerPayStatus)
-          return false
-        })
-
-        if (!alive) return
-        setJobs(nextJobs)
-        setOrders(filtered)
-        notifyNavbarCount(filtered.length)
-      } catch (e) {
+        setLoadErr(null)
+        await loadOrdersAndJobs()
+      } catch (e: any) {
         console.error(e)
         if (!alive) return
         setJobs([])
         setOrders([])
+        setLoadErr(String(e?.message || 'load_failed'))
         notifyNavbarCount(0)
       } finally {
         if (alive) setLoading(false)
       }
     })()
-
     return () => { alive = false }
   }, [])
 
   // Top-Sektion merken
   useEffect(() => { try { localStorage.setItem(TOP_KEY, topSection) } catch {} }, [topSection])
 
-  /* ---------- Auto-Freigabe (nur UI/State; Server kommt später) ---------- */
-  const runAutoRelease = () => {
-    setOrders(prev => {
-      const now = Date.now()
-      return prev.map((o): DbOrder => {
-        if (o.status === 'reported' && o.autoReleaseAt && +new Date(o.autoReleaseAt) <= now) {
-          return {
-            ...o,
-            status: 'confirmed' as const,
-            deliveredConfirmedAt: new Date().toISOString(),
-          }
-        }
-        return o
+  /* ---------- Actions (Server) ---------- */
+  async function reportDelivered(jobId: string | number, offerId?: string) {
+    try {
+      setBusy(true)
+      const res = await fetch('/api/konto/auftraege/report-delivered', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ jobId: String(jobId), offerId }),
       })
-    })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j?.error || 'report_failed')
+      await loadOrdersAndJobs()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte „Zustellung melden“ nicht speichern.')
+    } finally {
+      setBusy(false)
+    }
   }
-  useEffect(() => {
-    runAutoRelease()
-    const id = setInterval(runAutoRelease, 60_000)
-    const onVis = () => { if (!document.hidden) runAutoRelease() }
-    document.addEventListener('visibilitychange', onVis)
-    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis) }
-  }, [])
+
+  async function confirmDelivered(jobId: string | number, offerId?: string) {
+    try {
+      setBusy(true)
+      const res = await fetch('/api/konto/auftraege/confirm-delivered', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ jobId: String(jobId), offerId }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j?.error || 'confirm_failed')
+      await loadOrdersAndJobs()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte „Empfang bestätigen“ nicht speichern.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function openDispute(jobId: string | number, offerId?: string) {
+    const reason = window.prompt('Problem melden (optional):') || ''
+    try {
+      setBusy(true)
+      const res = await fetch('/api/konto/auftraege/open-dispute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ jobId: String(jobId), offerId, reason }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(j?.error || 'dispute_failed')
+      await loadOrdersAndJobs()
+    } catch (e) {
+      console.error(e)
+      alert('Konnte „Problem melden“ nicht speichern.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   /* ---------- Filter + Sort ---------- */
   const allVergeben = useMemo(
@@ -503,78 +540,12 @@ const AuftraegePage: FC = () => {
   const sliceA = sliceByPage(filteredSortedA, pageA, psA)
   useEffect(() => { if (sliceA.safePage !== pageA) setPageA(sliceA.safePage) }, [sliceA.safePage, pageA])
 
-  /* ---------- Actions (UI-only; Server-Calls kommen später) ---------- */
-  function reportDelivered(jobId: string | number) {
-    setOrders(prev =>
-      prev.map((o): DbOrder =>
-        String(o.jobId) === String(jobId)
-          ? {
-              ...o,
-              status: 'reported' as OrderStatus,
-              deliveredReportedAt: new Date().toISOString(),
-              autoReleaseAt: new Date(Date.now() + AUTO_RELEASE_DAYS * 86400_000).toISOString(),
-            }
-          : o
-      )
-    )
-  }
-
-  function confirmDelivered(jobId: string | number) {
-    setOrders(prev =>
-      prev.map((o): DbOrder =>
-        String(o.jobId) === String(jobId)
-          ? {
-              ...o,
-              status: 'confirmed' as OrderStatus,
-              deliveredConfirmedAt: new Date().toISOString(),
-            }
-          : o
-      )
-    )
-  }
-
-  function openDispute(jobId: string | number) {
-    const reason = window.prompt('Problem melden (optional):')
-    setOrders(prev =>
-      prev.map((o): DbOrder =>
-        String(o.jobId) === String(jobId)
-          ? {
-              ...o,
-              status: 'disputed' as OrderStatus,
-              disputeOpenedAt: new Date().toISOString(),
-              disputeReason: reason || null,
-            }
-          : o
-      )
-    )
-  }
-
-  function remainingText(iso?: string) {
-    if (!iso) return '–'
-    const delta = +new Date(iso) - Date.now()
-    if (delta <= 0) return 'kurzfristig'
-    const days = Math.floor(delta / 86400000)
-    const hours = Math.floor((delta % 86400000) / 3600000)
-    return days >= 1 ? `${days} ${days === 1 ? 'Tag' : 'Tage'} ${hours} Std` : `${hours} Std`
-  }
-
-  function paymentLabel(order: DbOrder): string {
-    const s = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
-    if (!s) return '—'
-    if (s === 'paid') return 'Bezahlt'
-    if (s === 'released') return 'Freigegeben'
-    if (s === 'refunded') return 'Rückerstattet'
-    if (s === 'partially_refunded') return 'Teilweise rückerstattet'
-    if (s === 'disputed') return 'In Klärung'
-    return String(s)
-  }
-
   /* ---------------- Section Renderer ---------------- */
   const SectionList: FC<{
     kind: OrderKind
     slice: Slice<{ order: DbOrder, job: Job }>
     idPrefix: string
-    onConfirmDelivered: (jobId: string | number) => void
+    onConfirmDelivered: (jobId: string | number, offerId?: string) => void
   }> = ({ slice, idPrefix, onConfirmDelivered }) => (
     <>
       <ul className={styles.list}>
@@ -666,7 +637,7 @@ const AuftraegePage: FC = () => {
                   Zum Auftrag
                 </Link>
 
-                {/* Auftragnehmer: „Auftrag abgeschlossen“ */}
+                {/* Auftragnehmer: „Auftrag abgeschlossen“ -> report-delivered */}
                 {isVendor && (order.status ?? 'in_progress') === 'in_progress' && (() => {
                   const hintId = `deliver-hint-${order.kind}-${order.jobId}`
                   return (
@@ -674,10 +645,10 @@ const AuftraegePage: FC = () => {
                       <button
                         type="button"
                         className={styles.secondaryBtn}
-                        disabled={!canClick}
-                        aria-disabled={!canClick}
+                        disabled={!canClick || busy}
+                        aria-disabled={!canClick || busy}
                         aria-describedby={!canClick ? hintId : undefined}
-                        onClick={() => { if (canClick) setConfirmJobId(order.jobId) }}
+                        onClick={() => { if (canClick && !busy) setConfirmJobId(order.jobId) }}
                         title={canClick ? 'Bestätigt Fertigung & Lieferung – endgültig' : reason}
                       >
                         Auftrag abgeschlossen
@@ -693,29 +664,29 @@ const AuftraegePage: FC = () => {
                     <button
                       type="button"
                       className={styles.primaryBtn}
-                      onClick={() => onConfirmDelivered(order.jobId)}
-                      title="Empfang bestätigen & Zahlung freigeben"
+                      disabled={busy}
+                      onClick={() => onConfirmDelivered(order.jobId, order.offerId)}
+                      title="Empfang bestätigen"
                     >
-                      Empfang bestätigen & Zahlung freigeben
+                      Empfang bestätigen
                     </button>
                     <button
                       type="button"
                       className={styles.btnGhost}
-                      onClick={() => openDispute(order.jobId)}
+                      disabled={busy}
+                      onClick={() => openDispute(order.jobId, order.offerId)}
                     >
                       Problem melden
                     </button>
-                    <div className={styles.btnHint}>
-                      Auto-Freigabe in {remainingText(order.autoReleaseAt)}
-                    </div>
                   </div>
                 )}
 
-                {/* Auftraggeber: nach Bestätigung bewerten (einmalig) */}
+                {/* Auftraggeber: nach Bestätigung bewerten (UI-only) */}
                 {isCustomer && order.status === 'confirmed' && !order.review && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
+                    disabled={busy}
                     onClick={() => { setRateOrderId(order.jobId); setRating(5); setRatingText('') }}
                   >
                     Auftragnehmer bewerten
@@ -727,7 +698,6 @@ const AuftraegePage: FC = () => {
         })}
       </ul>
 
-      {/* Pager */}
       <Pagination
         page={slice.safePage}
         setPage={idPrefix === 'v' ? setPageV : setPageA}
@@ -755,6 +725,7 @@ const AuftraegePage: FC = () => {
             placeholder="Auftrags-Nr., Name oder Titel…"
             className={styles.search}
           />
+
           <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
           <select
             id="sort"
@@ -768,7 +739,6 @@ const AuftraegePage: FC = () => {
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
 
-          {/* Status-Filter */}
           <label className={styles.visuallyHidden} htmlFor="status">Status</label>
           <select
             id="status"
@@ -805,57 +775,48 @@ const AuftraegePage: FC = () => {
           </div>
         </div>
 
+        {loadErr && !loading && (
+          <div className={styles.emptyState}>
+            <strong>Fehler beim Laden: {loadErr}</strong>
+          </div>
+        )}
+
         {topSection === 'vergeben' ? (
           <>
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
               ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
               ) : (
-                <SectionList
-                  kind="vergeben"
-                  slice={sliceV}
-                  idPrefix="v"
-                  onConfirmDelivered={confirmDelivered}
-                />
+                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" onConfirmDelivered={confirmDelivered} />
               )}
             </div>
 
             <hr className={styles.divider} />
 
-            <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
+            <h2 className={styles.heading}>Angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
               ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
               ) : (
-                <SectionList
-                  kind="angenommen"
-                  slice={sliceA}
-                  idPrefix="a"
-                  onConfirmDelivered={confirmDelivered}
-                />
+                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" onConfirmDelivered={confirmDelivered} />
               )}
             </div>
           </>
         ) : (
           <>
-            <h2 className={styles.heading}>Vom Auftraggeber angenommene Aufträge</h2>
+            <h2 className={styles.heading}>Angenommene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
               ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
               ) : (
-                <SectionList
-                  kind="angenommen"
-                  slice={sliceA}
-                  idPrefix="a"
-                  onConfirmDelivered={confirmDelivered}
-                />
+                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" onConfirmDelivered={confirmDelivered} />
               )}
             </div>
 
@@ -864,23 +825,18 @@ const AuftraegePage: FC = () => {
             <h2 className={styles.heading}>Vergebene Aufträge</h2>
             <div className={styles.kontoContainer}>
               {loading ? (
-                <div className={styles.emptyState}><strong>Lade bezahlte Aufträge…</strong></div>
+                <div className={styles.emptyState}><strong>Lade Aufträge…</strong></div>
               ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}><strong>Noch keine bezahlten Aufträge.</strong></div>
+                <div className={styles.emptyState}><strong>Noch keine Aufträge.</strong></div>
               ) : (
-                <SectionList
-                  kind="vergeben"
-                  slice={sliceV}
-                  idPrefix="v"
-                  onConfirmDelivered={confirmDelivered}
-                />
+                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" onConfirmDelivered={confirmDelivered} />
               )}
             </div>
           </>
         )}
       </div>
 
-      {/* Modal: Auftragnehmer meldet „abgeschlossen“ */}
+      {/* Modal: Auftragnehmer meldet „abgeschlossen“ -> report-delivered */}
       {confirmJobId !== null && (
         <div
           className={styles.modal}
@@ -893,16 +849,22 @@ const AuftraegePage: FC = () => {
           <div className={styles.modalContent}>
             <h3 id="confirmTitle" className={styles.modalTitle}>Bestätigen?</h3>
             <p id="confirmText" className={styles.modalText}>
-              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung. Danach startet automatisch eine 14-Tage-Frist zur Freigabe.
+              „Auftrag abgeschlossen“ meldet dem Auftraggeber die Zustellung. Danach kann der Auftraggeber den Empfang bestätigen oder ein Problem melden.
             </p>
             <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} onClick={() => setConfirmJobId(null)}>
+              <button type="button" className={styles.btnGhost} disabled={busy} onClick={() => setConfirmJobId(null)}>
                 Abbrechen
               </button>
               <button
                 type="button"
                 className={styles.btnDanger}
-                onClick={() => { reportDelivered(confirmJobId); setConfirmJobId(null) }}
+                disabled={busy}
+                onClick={async () => {
+                  const jobId = confirmJobId
+                  const offerId = orders.find(o => String(o.jobId) === String(jobId) && o.kind === 'angenommen')?.offerId
+                  await reportDelivered(jobId, offerId)
+                  setConfirmJobId(null)
+                }}
               >
                 Ja, Zustellung melden
               </button>
@@ -911,7 +873,7 @@ const AuftraegePage: FC = () => {
         </div>
       )}
 
-      {/* Modal: Bewertung */}
+      {/* Modal: Bewertung (UI-only) */}
       {rateOrderId !== null && (
         <div
           className={styles.modal}
@@ -937,9 +899,10 @@ const AuftraegePage: FC = () => {
               rows={4}
             />
             <div className={styles.modalActions}>
-              <button className={styles.btnGhost} onClick={() => setRateOrderId(null)}>Abbrechen</button>
+              <button className={styles.btnGhost} disabled={busy} onClick={() => setRateOrderId(null)}>Abbrechen</button>
               <button
                 className={styles.primaryBtn}
+                disabled={busy}
                 onClick={() => {
                   setOrders(prev =>
                     prev.map(o =>
