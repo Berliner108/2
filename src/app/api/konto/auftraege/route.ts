@@ -70,6 +70,10 @@ type ApiOrder = {
   currency?: string | null
   paymentIntentId?: string | null
   chargeId?: string | null
+
+  // ✅ beidseitige Bewertung (aus reviews über order_id = job_offers.id)
+  customerReviewed?: boolean // owner_id hat bewertet (Auftraggeber -> Anbieter)
+  vendorReviewed?: boolean // bieter_id hat bewertet (Anbieter -> Auftraggeber)
 }
 
 type ApiJob = {
@@ -147,6 +151,40 @@ function labelFromProfile(p: any): string {
   return cnt > 0 ? `${u} · ${avg.toFixed(1)}` : u
 }
 
+async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
+  const map = new Map<string, Set<string>>() // order_id -> set(rater_id)
+  if (!orderIds.length) return map
+
+  const CHUNK = 200
+  for (let i = 0; i < orderIds.length; i += CHUNK) {
+    const batch = orderIds.slice(i, i + CHUNK)
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('order_id, rater_id')
+      .in('order_id', batch)
+
+    if (error) {
+      console.error('[GET /api/konto/auftraege] reviews db:', error)
+      continue // kein Hard-Fail
+    }
+
+    for (const r of (data ?? []) as any[]) {
+      const oid = String(r.order_id ?? '')
+      const rid = String(r.rater_id ?? '')
+      if (!oid || !rid) continue
+      let set = map.get(oid)
+      if (!set) {
+        set = new Set<string>()
+        map.set(oid, set)
+      }
+      set.add(rid)
+    }
+  }
+
+  return map
+}
+
 export async function GET() {
   const cookieStore = await cookies()
 
@@ -206,7 +244,6 @@ export async function GET() {
     .order('created_at', { ascending: false })
 
   if (err) {
-    // das ist dein {"ok":false,"error":"db"} Problem gewesen → hier bekommst du die echte message
     console.error('[GET /api/konto/auftraege] db:', err)
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
   }
@@ -233,6 +270,10 @@ export async function GET() {
   const profMap = new Map<string, any>()
   for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
+  // ✅ Reviews laden: order_id = job_offers.id
+  const offerIds = rows.map(r => String(r.id))
+  const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
+
   // Orders bauen
   const orders: ApiOrder[] = []
 
@@ -245,6 +286,10 @@ export async function GET() {
 
     const ownerLabel = labelFromProfile(profMap.get(String(o.owner_id)))
     const vendorLabel = labelFromProfile(profMap.get(String(o.bieter_id)))
+
+    const raters = reviewMap.get(offerId) ?? new Set<string>()
+    const customerReviewed = raters.has(String(o.owner_id))
+    const vendorReviewed = raters.has(String(o.bieter_id))
 
     // Owner-Sicht (vergeben)
     if (String(o.owner_id) === uid) {
@@ -272,6 +317,9 @@ export async function GET() {
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,
+
+        customerReviewed,
+        vendorReviewed,
       })
     }
 
@@ -301,6 +349,9 @@ export async function GET() {
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,
+
+        customerReviewed,
+        vendorReviewed,
       })
     }
   }

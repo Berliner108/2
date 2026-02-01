@@ -356,7 +356,6 @@ const AuftraegePage: FC = () => {
       const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
       const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
 
-      // server liefert das already gefiltert – wir lassen das nur als Safety
       const allowed = new Set<DbPayStatus>(['paid', 'released', 'partially_refunded', 'refunded', 'disputed'])
       const filtered = nextOrders.filter(o => {
         const s = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
@@ -616,6 +615,7 @@ const AuftraegePage: FC = () => {
   async function submitReview() {
     const jobId = reviewJobId
     if (jobId == null) return
+
     const stars = clampStars(rating)
     const comment = typeof ratingText === 'string' ? ratingText.trim().slice(0, 800) : ''
 
@@ -633,16 +633,24 @@ const AuftraegePage: FC = () => {
     setReviewErr(null)
 
     try {
-      // ✅ Route bitte genauso bauen wie bei Shop – nur eben für jobs/job_offers
-      await postJson('/api/konto/auftraege/review', {
-        jobId,
+      // ✅ neue Route: /api/konto/auftraege/review/[id]
+      await postJson(`/api/konto/auftraege/review/${encodeURIComponent(String(jobId))}`, {
         role: reviewRole,
         stars,
         comment,
       })
+
       setReviewJobId(null)
       await loadOrders()
     } catch (e: any) {
+      // wenn DB-Unique schon gegriffen hat -> einfach refreshen und Modal zu
+      const msg = String(e?.message || '')
+      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+        setReviewJobId(null)
+        await loadOrders()
+        return
+      }
+
       console.error(e)
       setReviewErr(String(e?.message || 'Bewertung fehlgeschlagen.'))
     } finally {
@@ -814,12 +822,7 @@ const AuftraegePage: FC = () => {
                     >
                       {isBusy && busyKey === `confirm:${order.jobId}` ? 'Sende…' : 'Empfang bestätigen'}
                     </button>
-                    <button
-                      type="button"
-                      className={styles.btnGhost}
-                      disabled={isBusy}
-                      onClick={() => openDispute(order.jobId)}
-                    >
+                    <button type="button" className={styles.btnGhost} disabled={isBusy} onClick={() => openDispute(order.jobId)}>
                       {isBusy && busyKey === `dispute:${order.jobId}` ? 'Sende…' : 'Problem melden'}
                     </button>
                   </div>
@@ -1081,13 +1084,27 @@ const AuftraegePage: FC = () => {
               rows={4}
             />
 
-            {reviewErr && <div className={styles.btnHint} style={{ marginTop: 8 }}>{reviewErr}</div>}
+            {reviewErr && (
+              <div className={styles.btnHint} style={{ marginTop: 8 }}>
+                {reviewErr}
+              </div>
+            )}
 
             <div className={styles.modalActions}>
-              <button className={styles.btnGhost} type="button" onClick={() => setReviewJobId(null)} disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}>
+              <button
+                className={styles.btnGhost}
+                type="button"
+                onClick={() => setReviewJobId(null)}
+                disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}
+              >
                 Abbrechen
               </button>
-              <button className={styles.primaryBtn} type="button" onClick={submitReview} disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}>
+              <button
+                className={styles.primaryBtn}
+                type="button"
+                onClick={submitReview}
+                disabled={busyKey?.startsWith(`review:${reviewJobId}:`)}
+              >
                 {busyKey?.startsWith(`review:${reviewJobId}:`) ? 'Sende…' : 'Abschicken'}
               </button>
             </div>
