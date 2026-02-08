@@ -28,21 +28,27 @@ async function markPaidFromPaymentIntent(pi: Stripe.PaymentIntent): Promise<Mark
   const paidAmount = typeof pi.amount_received === 'number' ? pi.amount_received : pi.amount
   const currency = (pi.currency || 'eur').toLowerCase()
 
-  // 1) Offer: selected -> paid (idempotent)
-  const { data: updatedOffer, error: offerErr } = await admin
-    .from('job_offers')
-    .update({
-      status: 'paid',
-      paid_at: paidAt,
-      paid_amount_cents: paidAmount,
-      currency,
-      payment_intent_id: pi.id,
-    })
-    .eq('id', offerId)
-    .eq('job_id', jobId)
-    .in('status', ['selected', 'paid'])
-    .select('id, status')
-    .maybeSingle()
+ // 1) Offer: selected -> paid (idempotent)
+const { data: updatedOffer, error: offerErr } = await admin
+  .from('job_offers')
+  .update({
+    status: 'paid',
+    paid_at: paidAt,
+    paid_amount_cents: paidAmount,
+    currency,
+    payment_intent_id: pi.id,
+    charge_id: (pi.latest_charge ? String(pi.latest_charge) : null),
+
+    // ✅ neu: post-paid defaults
+    fulfillment_status: 'in_progress',
+    payout_status: 'hold',
+  })
+  .eq('id', offerId)
+  .eq('job_id', jobId)
+  .in('status', ['selected', 'paid'])
+  .select('id, status')
+  .maybeSingle()
+
 
   if (offerErr) throw offerErr
 

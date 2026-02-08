@@ -64,10 +64,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       .eq('id', jobId)
       .maybeSingle()
 
-    if (jobErr || !job) return NextResponse.json({ ok: false, error: 'job_not_found' }, { status: 404 })
+    if (jobErr || !job) return NextResponse.json({ ok: false, error: 'auftrag_nicht_gefunden' }, { status: 404 })
 
     if (!job.published) {
-      return NextResponse.json({ ok: false, error: 'job_not_published' }, { status: 409 })
+      return NextResponse.json({ ok: false, error: 'auftrag_nicht_mehr_verfügbar' }, { status: 409 })
     }
 
     const ownerId = String(job.user_id)
@@ -75,13 +75,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'forbidden_not_owner' }, { status: 403 })
     }
 
-    if (String(job.status) !== 'open') {
-      return NextResponse.json({ ok: false, error: 'job_not_open' }, { status: 409 })
+      if (!['open', 'awaiting_payment'].includes(String(job.status))) {
+      return NextResponse.json({ ok: false, error: 'auftrag_nicht_mehr_verfügbar' }, { status: 409 })
     }
 
-    if (job.selected_offer_id) {
-      return NextResponse.json({ ok: false, error: 'job_already_selected' }, { status: 409 })
+
+        if (job.selected_offer_id && String(job.selected_offer_id) !== offerId) {
+      return NextResponse.json({ ok: false, error: 'auftrag_bereits_im_bezahlvorgang' }, { status: 409 })
     }
+
 
     // 2) Offer prüfen: gehört zum Job, noch open, nicht abgelaufen
     const { data: offer, error: offErr } = await admin
@@ -102,9 +104,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'offer_wrong_owner' }, { status: 409 })
     }
 
-    if (String(offer.status) !== 'open') {
+    if (!['open', 'selected'].includes(String(offer.status))) {
       return NextResponse.json({ ok: false, error: 'offer_not_open' }, { status: 409 })
     }
+
 
     const now = new Date()
     const validUntil = new Date(String(offer.valid_until))
@@ -112,16 +115,32 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'offer_expired' }, { status: 409 })
     }
 
+    // 3) Offer auf selected setzen (idempotent)
+    const { data: updOffer, error: updOfferErr } = await admin
+      .from('job_offers')
+      .update({ status: 'selected' })
+      .eq('id', offerId)
+      .eq('job_id', jobId)
+      .in('status', ['open', 'selected'])
+      .select('id, status')
+      .maybeSingle()
+
+    if (updOfferErr || !updOffer?.id) {
+      return NextResponse.json({ ok: false, error: 'db_offer_update' }, { status: 500 })
+    }
+
+
     // 3) NUR reservieren: selected_offer_id setzen (sonst nix ändern!)
     const { data: updatedJob, error: updJobErr } = await admin
       .from('jobs')
       .update({
         selected_offer_id: offerId,
+        status: 'awaiting_payment',
         updated_at: new Date().toISOString(),
       })
       .eq('id', jobId)
-      .is('selected_offer_id', null) // Guard gegen race
-      .eq('status', 'open')
+      .in('status', ['open', 'awaiting_payment'])
+      .or(`selected_offer_id.is.null,selected_offer_id.eq.${offerId}`)
       .select('id, selected_offer_id')
       .maybeSingle()
 
