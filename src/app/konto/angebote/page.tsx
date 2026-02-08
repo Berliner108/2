@@ -617,6 +617,27 @@ const pruneExpiredOffers = () => {
   function openConfirm(jobId: string | number, offerId: string, amountCents: number) {
   setConfirmOffer({ jobId, offerId, amountCents })
 }
+async function resetAfterCancel() {
+  const jid = pendingJobId
+  if (!jid) return
+
+  try {
+    await fetch(`/api/jobs/${encodeURIComponent(String(jid))}/offers/unselect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({}), // offerId optional – wir lassen leer
+    })
+  } catch (e) {
+    console.error('unselect failed:', e)
+  } finally {
+    // UI-State immer sauber machen
+    setCheckoutOpen(false)
+    setClientSecret(null)
+    setPendingJobId(null)
+  }
+}
+
 async function confirmAccept() {
   if (!confirmOffer) return
 
@@ -1013,21 +1034,23 @@ async function confirmAccept() {
         </div>
       )}
       <CheckoutModal
-      clientSecret={clientSecret}
-      open={checkoutOpen}
-      onCloseAction={() => setCheckoutOpen(false)}
-      onSuccessAction={async () => {
-        toastOk('Zahlung erfolgreich.')
-        setCheckoutOpen(false)
+        clientSecret={clientSecret}
+        open={checkoutOpen}
+        onCloseAction={async () => {
+          // Modal geschlossen = Abbruch -> DB zurücksetzen
+          await resetAfterCancel()
+          toastErr('Zahlung abgebrochen – Auswahl zurückgesetzt.')
+        }}
+        onSuccessAction={async () => {
+          toastOk('Zahlung erfolgreich.')
+          setCheckoutOpen(false)
+          setClientSecret(null)
+          setPendingJobId(null)
+          // optional: reload offers
+          // router.refresh()
+        }}
+      />
 
-        // Optional: Daten neu laden (damit UI sofort sauber ist)
-        // simplest: Seite hart refreshen:
-        // router.refresh()
-
-        // oder wenn du sauber willst: hier eine "loadOffers()" Funktion nach außen ziehen
-        // und hier aufrufen.
-      }}
-    />
 
     </>
   )
