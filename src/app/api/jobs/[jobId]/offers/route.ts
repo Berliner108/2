@@ -30,8 +30,10 @@ function parseBody(raw: any): { ok: true; value: Body } | { ok: false; error: st
 
 /* =========================
    PATCH: Angebot auswählen
-   - WICHTIG: KEIN status flip, KEIN not_selected
-   - Bei Zahlungsabbruch bleibt alles wie es ist
+   - setzt Offer.status = selected
+   - setzt Job.selected_offer_id + Job.status = awaiting_payment
+   - idempotent (mehrfach klicken ok)
+   - bei Fehler: rollback Offer zurück auf open (wenn wir es gerade geändert haben)
    ========================= */
 type SelectBody = { offerId: string }
 
@@ -57,7 +59,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
 
     const admin = supabaseAdmin()
 
-    // 1) Job prüfen: Owner-only, muss open sein, noch nichts selected
+    // 1) Job prüfen
     const { data: job, error: jobErr } = await admin
       .from('jobs')
       .select('id, user_id, status, selected_offer_id, published')
@@ -75,17 +77,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'forbidden_not_owner' }, { status: 403 })
     }
 
-      if (!['open', 'awaiting_payment'].includes(String(job.status))) {
+    // Job darf open oder awaiting_payment sein (damit "erneut starten" geht)
+    if (!['open', 'awaiting_payment'].includes(String(job.status))) {
       return NextResponse.json({ ok: false, error: 'auftrag_nicht_mehr_verfügbar' }, { status: 409 })
     }
 
-
-        if (job.selected_offer_id && String(job.selected_offer_id) !== offerId) {
+    // Wenn schon ein anderes Offer selected ist -> blocken
+    if (job.selected_offer_id && String(job.selected_offer_id) !== offerId) {
       return NextResponse.json({ ok: false, error: 'auftrag_bereits_im_bezahlvorgang' }, { status: 409 })
     }
 
-
-    // 2) Offer prüfen: gehört zum Job, noch open, nicht abgelaufen
+    // 2) Offer prüfen
     const { data: offer, error: offErr } = await admin
       .from('job_offers')
       .select('id, job_id, owner_id, status, valid_until')
@@ -104,10 +106,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'offer_wrong_owner' }, { status: 409 })
     }
 
+    // Nur open/selected darf hier weiter (paid/refunded/etc. NICHT)
     if (!['open', 'selected'].includes(String(offer.status))) {
-      return NextResponse.json({ ok: false, error: 'offer_not_open' }, { status: 409 })
+      return NextResponse.json({ ok: false, error: 'offer_not_selectable' }, { status: 409 })
     }
-
 
     const now = new Date()
     const validUntil = new Date(String(offer.valid_until))
@@ -115,7 +117,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       return NextResponse.json({ ok: false, error: 'offer_expired' }, { status: 409 })
     }
 
-    // 3) Offer auf selected setzen (idempotent)
+    const offerWasOpen = String(offer.status) === 'open'
+
+    // 3) Offer -> selected (idempotent)
     const { data: updOffer, error: updOfferErr } = await admin
       .from('job_offers')
       .update({ status: 'selected' })
@@ -125,12 +129,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
       .select('id, status')
       .maybeSingle()
 
-    if (updOfferErr || !updOffer?.id) {
+    if (updOfferErr) {
+      console.error('[PATCH select offer] update offer:', updOfferErr)
       return NextResponse.json({ ok: false, error: 'db_offer_update' }, { status: 500 })
     }
+    if (!updOffer?.id) {
+      return NextResponse.json({ ok: false, error: 'offer_already_taken' }, { status: 409 })
+    }
 
-
-    // 3) NUR reservieren: selected_offer_id setzen (sonst nix ändern!)
+    // 4) Job reservieren + auf awaiting_payment setzen (idempotent)
     const { data: updatedJob, error: updJobErr } = await admin
       .from('jobs')
       .update({
@@ -146,11 +153,31 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ jobId:
 
     if (updJobErr) {
       console.error('[PATCH select offer] update job:', updJobErr)
+
+      // rollback: nur wenn wir gerade von open -> selected gegangen sind
+      if (offerWasOpen) {
+        await admin
+          .from('job_offers')
+          .update({ status: 'open' })
+          .eq('id', offerId)
+          .eq('job_id', jobId)
+          .eq('status', 'selected')
+      }
+
       return NextResponse.json({ ok: false, error: 'db_job_update' }, { status: 500 })
     }
 
-    // Wenn 0 Zeilen getroffen → jemand war schneller
     if (!updatedJob?.id) {
+      // rollback: nur wenn wir gerade von open -> selected gegangen sind
+      if (offerWasOpen) {
+        await admin
+          .from('job_offers')
+          .update({ status: 'open' })
+          .eq('id', offerId)
+          .eq('job_id', jobId)
+          .eq('status', 'selected')
+      }
+
       return NextResponse.json({ ok: false, error: 'job_already_selected' }, { status: 409 })
     }
 
