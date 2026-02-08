@@ -245,6 +245,8 @@ const Angebote: FC = () => {
 const [checkoutOpen, setCheckoutOpen] = useState(false)
 const [clientSecret, setClientSecret] = useState<string | null>(null)
 const [pendingJobId, setPendingJobId] = useState<string | null>(null)
+const [pendingOfferId, setPendingOfferId] = useState<string | null>(null)
+
 
 
 
@@ -626,7 +628,8 @@ async function resetAfterCancel() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({}), // offerId optional – wir lassen leer
+      body: JSON.stringify({ offerId: pendingOfferId ?? undefined }),
+
     })
   } catch (e) {
     console.error('unselect failed:', e)
@@ -635,6 +638,7 @@ async function resetAfterCancel() {
     setCheckoutOpen(false)
     setClientSecret(null)
     setPendingJobId(null)
+    setPendingOfferId(null) // ✅ HIER
   }
 }
 
@@ -675,8 +679,10 @@ async function confirmAccept() {
 
     // 3) CheckoutModal öffnen
     setPendingJobId(String(jobId))
+    setPendingOfferId(String(offerId)) // ✅ HIER
     setClientSecret(String(piJson.clientSecret))
     setCheckoutOpen(true)
+
 
     setConfirmOffer(null)
   } catch (e: any) {

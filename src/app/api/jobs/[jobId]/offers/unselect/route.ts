@@ -96,7 +96,56 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
 
     const nowIso = new Date().toISOString()
 
-    // 4) Job resetten (Guard: selected_offer_id muss noch genau dieses sein)
+    // =========================
+    // ✅ REIHENFOLGE GEDREHT:
+    // 4) ZUERST Offer zurücksetzen (wenn es selected ist)
+    // =========================
+    let offerReset = false
+
+    if (offer?.id) {
+      // Wenn Offer schon open ist: ok, dann setzen wir nur payment_intent_id auf null
+      if (String(offer.status) === 'open') {
+        const { error: updOpenErr } = await admin
+          .from('job_offers')
+          .update({ payment_intent_id: null, updated_at: nowIso })
+          .eq('id', selectedOfferId)
+          .eq('job_id', jobId)
+          .eq('status', 'open')
+
+        if (updOpenErr) {
+          console.error('[unselect] offer open->open update error:', updOpenErr)
+        } else {
+          offerReset = true
+        }
+      } else {
+        // Normalfall: selected -> open
+        const { data: updOffer, error: updOfferErr } = await admin
+          .from('job_offers')
+          .update({
+            status: 'open',
+            payment_intent_id: null,
+            updated_at: nowIso,
+          })
+          .eq('id', selectedOfferId)
+          .eq('job_id', jobId)
+          .eq('status', 'selected') // ✅ Step 5 Fix: nur selected zurücksetzen
+          .select('id, status')
+          .maybeSingle()
+
+        if (updOfferErr) {
+          console.error('[unselect] offer update error:', updOfferErr)
+        } else if (!updOffer?.id) {
+          // Offer war nicht mehr selected (Race / Webhook)
+          console.warn('[unselect] offer not reset because status changed (race)')
+        } else {
+          offerReset = true
+        }
+      }
+    }
+
+    // =========================
+    // 5) DANACH Job resetten (Guard: selected_offer_id muss noch genau dieses sein)
+    // =========================
     const { data: updJob, error: updJobErr } = await admin
       .from('jobs')
       .update({
@@ -120,32 +169,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
       return jsonNoStore({ ok: false, error: 'job_changed' }, 409)
     }
 
-    // 5) Offer zurück auf open (nur wenn es selected ist)
-    // + payment_intent_id nullen, damit "frisch" gestartet wird
-    if (offer?.id) {
-      const { error: updOfferErr } = await admin
-        .from('job_offers')
-        .update({
-          status: 'open',
-          payment_intent_id: null,
-          updated_at: nowIso,
-        })
-        .eq('id', selectedOfferId)
-        .eq('job_id', jobId)
-        .in('status', ['selected', 'open']) // idempotent
-
-      if (updOfferErr) {
-        console.error('[unselect] offer update error:', updOfferErr)
-        // nicht fatal – Job ist schon frei, Offer kann man notfalls manuell fixen
-      }
-    }
-
     return jsonNoStore({
       ok: true,
       reset: true,
       jobId,
       clearedOfferId: selectedOfferId,
       piCanceled,
+      offerReset,
     })
   } catch (e: any) {
     console.error('[POST /api/jobs/:jobId/offers/unselect] fatal:', e)
