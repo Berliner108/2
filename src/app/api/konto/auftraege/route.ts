@@ -15,7 +15,7 @@ type DbOffer = {
   gesamt_cents: number | null
   created_at: string | null
 
-  // FIX: status bleibt bei dir "paid" (nach Zahlung)
+  // bei dir nach Zahlung: status = 'paid'
   status: string | null
 
   // Snapshot (optional)
@@ -30,7 +30,7 @@ type DbOffer = {
   payment_intent_id: string | null
   charge_id: string | null
 
-  // NEU: Post-Paid Status
+  // Post-Paid Status
   fulfillment_status: 'in_progress' | 'reported' | 'disputed' | 'confirmed' | null
   delivered_reported_at: string | null
   delivered_confirmed_at: string | null
@@ -41,6 +41,9 @@ type DbOffer = {
   payout_released_at: string | null
 }
 
+/* ---------- Payment-Status fürs Frontend ---------- */
+type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+
 type ApiOrder = {
   jobId: string
   offerId: string
@@ -48,14 +51,18 @@ type ApiOrder = {
   acceptedAt: string
   kind: 'vergeben' | 'angenommen'
 
-  // Ablaufstatus (kommt jetzt aus DB!)
+  // Ablaufstatus (kommt aus DB!)
   status: 'in_progress' | 'reported' | 'disputed' | 'confirmed'
   deliveredReportedAt?: string
   deliveredConfirmedAt?: string
   disputeOpenedAt?: string
   disputeReason?: string | null
 
-  // Payout/Refund sichtbar
+  // Payment-Status (genau das erwartet dein /konto/auftraege/page.tsx Filter)
+  jobPayStatus?: DbPayStatus // kind='vergeben'
+  offerPayStatus?: DbPayStatus // kind='angenommen'
+
+  // zusätzlich weiterhin (für UI/Infos)
   payoutStatus: 'hold' | 'released' | 'partial_refund' | 'refunded'
   payoutReleasedAt?: string
   refundedAmountCents?: number
@@ -67,13 +74,14 @@ type ApiOrder = {
 
   // Payment refs (Debug)
   paidAt?: string
+  releasedAt?: string
   currency?: string | null
   paymentIntentId?: string | null
   chargeId?: string | null
 
-  // ✅ beidseitige Bewertung (aus reviews über order_id = job_offers.id)
-  customerReviewed?: boolean // owner_id hat bewertet (Auftraggeber -> Anbieter)
-  vendorReviewed?: boolean // bieter_id hat bewertet (Anbieter -> Auftraggeber)
+  // ✅ beidseitige Bewertung
+  customerReviewed?: boolean // owner_id hat bewertet
+  vendorReviewed?: boolean // bieter_id hat bewertet
 }
 
 type ApiJob = {
@@ -166,7 +174,7 @@ async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
 
     if (error) {
       console.error('[GET /api/konto/auftraege] reviews db:', error)
-      continue // kein Hard-Fail
+      continue
     }
 
     for (const r of (data ?? []) as any[]) {
@@ -183,6 +191,20 @@ async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
   }
 
   return map
+}
+
+/** payout_status + dispute -> Frontend Payment-Status */
+function mapPayStatus(o: DbOffer): DbPayStatus {
+  // Dispute “überstimmt” alles
+  if (o.dispute_opened_at) return 'disputed'
+
+  const ps = String(o.payout_status ?? 'hold')
+  if (ps === 'released') return 'released'
+  if (ps === 'partial_refund') return 'partially_refunded'
+  if (ps === 'refunded') return 'refunded'
+
+  // hold (default) = bezahlt, aber noch auf Hold
+  return 'paid'
 }
 
 export async function GET() {
@@ -207,7 +229,7 @@ export async function GET() {
   }
   const uid = auth.user.id
 
-  // ✅ Wichtig: NUR paid – alles "nach paid" kommt aus fulfillment_status/payout_status
+  // ✅ Nur paid laden – “nach paid” kommt aus fulfillment_status/payout_status
   const baseSelect = `
     id,
     job_id,
@@ -250,7 +272,7 @@ export async function GET() {
 
   const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
 
-  // Counterparty Profiles laden (damit Labels stabil sind – statt nur Snapshot)
+  // Counterparty Profiles laden (Labels stabil)
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -264,13 +286,13 @@ export async function GET() {
 
   if (pErr) {
     console.error('[GET /api/konto/auftraege] profiles db:', pErr)
-    // kein Hard-Fail – Orders können trotzdem zurück
+    // kein Hard-Fail
   }
 
   const profMap = new Map<string, any>()
   for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
-  // ✅ Reviews laden: order_id = job_offers.id
+  // Reviews: order_id = job_offers.id
   const offerIds = rows.map(r => String(r.id))
   const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
 
@@ -283,6 +305,7 @@ export async function GET() {
 
     const fulfillment = (o.fulfillment_status ?? 'in_progress') as ApiOrder['status']
     const payout = (o.payout_status ?? 'hold') as ApiOrder['payoutStatus']
+    const payStatus = mapPayStatus(o)
 
     const ownerLabel = labelFromProfile(profMap.get(String(o.owner_id)))
     const vendorLabel = labelFromProfile(profMap.get(String(o.bieter_id)))
@@ -291,13 +314,15 @@ export async function GET() {
     const customerReviewed = raters.has(String(o.owner_id))
     const vendorReviewed = raters.has(String(o.bieter_id))
 
+    const acceptedAt = o.paid_at || o.created_at || new Date().toISOString()
+
     // Owner-Sicht (vergeben)
     if (String(o.owner_id) === uid) {
       orders.push({
         jobId,
         offerId,
         amountCents: safeNum(o.gesamt_cents),
-        acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
+        acceptedAt,
         kind: 'vergeben',
 
         status: fulfillment,
@@ -305,6 +330,9 @@ export async function GET() {
         deliveredConfirmedAt: o.delivered_confirmed_at || undefined,
         disputeOpenedAt: o.dispute_opened_at || undefined,
         disputeReason: o.dispute_reason || null,
+
+        // ✅ Frontend erwartet dieses Feld
+        jobPayStatus: payStatus,
 
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
@@ -314,6 +342,7 @@ export async function GET() {
         vendor: vendorLabel,
 
         paidAt: o.paid_at || undefined,
+        releasedAt: o.payout_released_at || undefined,
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,
@@ -329,7 +358,7 @@ export async function GET() {
         jobId,
         offerId,
         amountCents: safeNum(o.gesamt_cents),
-        acceptedAt: o.paid_at || o.created_at || new Date().toISOString(),
+        acceptedAt,
         kind: 'angenommen',
 
         status: fulfillment,
@@ -337,6 +366,9 @@ export async function GET() {
         deliveredConfirmedAt: o.delivered_confirmed_at || undefined,
         disputeOpenedAt: o.dispute_opened_at || undefined,
         disputeReason: o.dispute_reason || null,
+
+        // ✅ Frontend erwartet dieses Feld
+        offerPayStatus: payStatus,
 
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
@@ -346,6 +378,7 @@ export async function GET() {
         owner: ownerLabel,
 
         paidAt: o.paid_at || undefined,
+        releasedAt: o.payout_released_at || undefined,
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,
