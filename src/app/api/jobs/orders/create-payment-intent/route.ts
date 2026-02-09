@@ -30,7 +30,6 @@ function jsonNoStore(data: any, status = 200) {
 }
 
 function canReusePI(status: Stripe.PaymentIntent.Status) {
-  // diese Stati sind "weiterführbar" im Checkout
   return (
     status === 'requires_payment_method' ||
     status === 'requires_confirmation' ||
@@ -52,6 +51,7 @@ export async function POST(req: Request) {
     if (!jobId || !offerId) return jsonNoStore({ ok: false, error: 'missing_params' }, 400)
 
     const admin = supabaseAdmin()
+    const nowIso = new Date().toISOString()
 
     // 1) Job laden (Owner prüfen + selected_offer_id muss passen)
     const { data: job, error: jobErr } = await admin
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       return jsonNoStore({ ok: false, error: 'offer_not_selected_on_job' }, 409)
     }
 
-    // 2) Offer laden (muss selected sein + gültig)
+    // 2) Offer laden
     const { data: offer, error: offErr } = await admin
       .from('job_offers')
       .select('id, job_id, owner_id, status, valid_until, gesamt_cents, payment_intent_id')
@@ -84,8 +84,28 @@ export async function POST(req: Request) {
     if (String(offer.job_id) !== String(jobId)) return jsonNoStore({ ok: false, error: 'offer_wrong_job' }, 409)
     if (String(offer.owner_id) !== user.id) return jsonNoStore({ ok: false, error: 'offer_wrong_owner' }, 409)
 
-    if (String(offer.status) !== 'selected') {
-      return jsonNoStore({ ok: false, error: 'offer_not_selected' }, 409)
+    // ✅ 2b) Ensure selected (Race-Fix)
+    // Wenn Job bereits selected_offer_id==offerId hat, aber Offer wieder "open" ist -> wieder auf "selected" setzen.
+    let effectiveStatus = String(offer.status ?? '')
+    if (effectiveStatus === 'open') {
+      const { data: ensured, error: ensureErr } = await admin
+        .from('job_offers')
+        .update({ status: 'selected', updated_at: nowIso })
+        .eq('id', offerId)
+        .eq('job_id', jobId)
+        .in('status', ['open', 'selected'])
+        .select('id, status')
+        .maybeSingle()
+
+      if (ensureErr) {
+        console.error('[create-payment-intent] ensure selected failed:', ensureErr)
+      } else if (ensured?.status) {
+        effectiveStatus = String(ensured.status)
+      }
+    }
+
+    if (effectiveStatus !== 'selected') {
+      return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
     }
 
     const vu = new Date(String(offer.valid_until))
@@ -100,18 +120,14 @@ export async function POST(req: Request) {
       try {
         const existing = await stripe.paymentIntents.retrieve(existingId)
 
-        // wenn bereits bezahlt -> fertig
         if (existing.status === 'succeeded') {
           return jsonNoStore({ ok: false, error: 'already_paid' }, 409)
         }
 
-        // wenn canceled -> NICHT wiederverwenden
-        // oder wenn amount/currency nicht passt -> NICHT wiederverwenden
         const sameMoney = existing.amount === amount && existing.currency === CURRENCY
         if (existing.status === 'canceled' || !sameMoney) {
-          // weiter unten neuen erstellen + überschreiben
+          // neuen erstellen
         } else if (existing.client_secret && canReusePI(existing.status)) {
-          // nutzbar -> clientSecret zurück
           return jsonNoStore({
             ok: true,
             jobId,
@@ -122,13 +138,12 @@ export async function POST(req: Request) {
             piStatus: existing.status,
           })
         }
-        // sonst: status ist z.B. requires_capture (selten), oder kein client_secret -> neuen erstellen
       } catch {
-        // retrieve failed -> neuen PI erstellen
+        // neuen erstellen
       }
     }
 
-    // 4) Neuen PI erstellen (Option A: keine Connect Transfers)
+    // 4) Neuen PI erstellen
     const pi = await stripe.paymentIntents.create({
       amount,
       currency: CURRENCY,
@@ -141,8 +156,7 @@ export async function POST(req: Request) {
       },
     })
 
-    // 5) payment_intent_id speichern (überschreibt auch alte/canceled IDs)
-    const nowIso = new Date().toISOString()
+    // 5) payment_intent_id speichern
     const { data: updOffer, error: updErr } = await admin
       .from('job_offers')
       .update({
@@ -161,7 +175,6 @@ export async function POST(req: Request) {
       // PI existiert trotzdem – clientSecret zurückgeben
     }
     if (!updOffer?.id) {
-      // z.B. wenn in der Zwischenzeit unselect passiert ist
       return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
     }
 
