@@ -32,15 +32,10 @@ export async function GET() {
     const nowIso = new Date().toISOString()
 
     /**
-     * ÄNDERUNG #1: received zeigt:
-     *  - open NUR wenn valid_until > now
-     *  - selected IMMER (auch wenn valid_until abgelaufen)
-     *
-     * ÄNDERUNG #2: paid IMMER raus:
-     *  - paid_at muss null sein
-     *  - und status != 'paid' als zusätzliche Absicherung
-     *
-     * ÄNDERUNG #3: Payment/Refund Felder mitsenden (für UI/Debug)
+     * Anzeige-Regel (wie du willst):
+     * - paid/released/refunded NIE (wandern zu konto/auftraege)
+     * - open NUR wenn valid_until > now
+     * - selected NUR wenn valid_until > now (wenn selected aber abgelaufen => ausblenden)
      */
     const { data: rows, error } = await admin
       .from('job_offers')
@@ -64,9 +59,13 @@ export async function GET() {
         charge_id
       `)
       .eq('owner_id', user.id)
+      // ✅ nichts fertiges anzeigen
       .is('paid_at', null)
-      .neq('status', 'paid')
-      .or(`and(status.eq.open,valid_until.gt.${nowIso}),status.eq.selected`)
+      .not('status', 'in', '("paid","released","refunded")')
+      // ✅ nur diese Stati gehören in "Angebote"
+      .in('status', ['open', 'selected'])
+      // ✅ abgelaufene komplett raus
+      .gt('valid_until', nowIso)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -78,15 +77,10 @@ export async function GET() {
     }
 
     // Live username + rating aus profiles
-    const bieterIds = Array.from(
-      new Set((rows ?? []).map((r: any) => String(r.bieter_id)).filter(Boolean))
-    )
+    const bieterIds = Array.from(new Set((rows ?? []).map((r: any) => String(r.bieter_id)).filter(Boolean)))
 
     const { data: profs, error: pErr } = bieterIds.length
-      ? await admin
-          .from('profiles')
-          .select('id, username, rating_avg, rating_count')
-          .in('id', bieterIds)
+      ? await admin.from('profiles').select('id, username, rating_avg, rating_count').in('id', bieterIds)
       : { data: [], error: null }
 
     if (pErr) {
@@ -116,11 +110,11 @@ export async function GET() {
         created_at: String(r.created_at),
         valid_until: String(r.valid_until),
 
-        // NEU: Status/Payment Info
+        // Status/Payment Info (für UI/Debug)
         status: String(r.status ?? ''),
-        paid_at: r.paid_at ? String(r.paid_at) : null,
-        paid_amount_cents: r.paid_amount_cents != null ? Number(r.paid_amount_cents) : null,
-        refunded_amount_cents: r.refunded_amount_cents != null ? Number(r.refunded_amount_cents) : 0,
+        paid_at: null, // durch Filter garantiert
+        paid_amount_cents: null,
+        refunded_amount_cents: 0,
         currency: r.currency ? String(r.currency) : null,
         payment_intent_id: r.payment_intent_id ? String(r.payment_intent_id) : null,
         charge_id: r.charge_id ? String(r.charge_id) : null,
@@ -140,9 +134,6 @@ export async function GET() {
     return NextResponse.json({ ok: true, offers }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e: any) {
     console.error('[GET /api/offers/received] fatal:', e)
-    return NextResponse.json(
-      { ok: false, error: 'fatal', detail: e?.message ?? String(e) },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: 'fatal', detail: e?.message ?? String(e) }, { status: 500 })
   }
 }
