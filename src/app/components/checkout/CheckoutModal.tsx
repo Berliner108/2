@@ -1,7 +1,7 @@
 // /src/components/checkout/CheckoutModal.tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { stripePromise } from '@/lib/stripe-client'
 
@@ -23,20 +23,22 @@ function Inner({
 
   const pay = async () => {
     if (!stripe || !elements) return
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
 
-    // 1) Bestätigen (ohne Hard-Redirect)
+    // 1) Payment bestätigen (ohne Redirect)
     const { error: confirmErr } = await stripe.confirmPayment({
       elements,
       redirect: 'if_required',
     })
+
     if (confirmErr) {
       setLoading(false)
       setError(confirmErr.message || 'Zahlung fehlgeschlagen.')
       return
     }
 
-    // 2) Finalen Status prüfen (reliable)
+    // 2) Status zuverlässig holen
     const { paymentIntent, error: retrieveErr } = await stripe.retrievePaymentIntent(clientSecret)
     setLoading(false)
 
@@ -46,27 +48,46 @@ function Inner({
     }
 
     const s = paymentIntent.status
+
+    // ✅ WICHTIG:
+    // Erfolg -> NICHT onCloseAction aufrufen!
+    // (weil bei dir onCloseAction = reset/unselect)
     if (s === 'succeeded' || s === 'processing') {
       onSuccessAction({ status: s, paymentIntentId: paymentIntent.id })
-      onCloseAction()
       return
     }
 
+    // Kein Auto-Reset bei requires_payment_method:
+    // Das kann auch heißen "andere Zahlungsart wählen"
     if (s === 'requires_payment_method') setError('Zahlung abgebrochen oder andere Zahlungsmethode nötig.')
-    else if (s === 'requires_action')   setError('Zusätzliche Bestätigung erforderlich. Bitte erneut versuchen.')
-    else if (s === 'canceled')          setError('Zahlung abgebrochen.')
-    else                                setError(`Unbekannter Zahlungsstatus: ${s}`)
+    else if (s === 'requires_action') setError('Zusätzliche Bestätigung erforderlich. Bitte erneut versuchen.')
+    else if (s === 'canceled') setError('Zahlung abgebrochen.')
+    else setError(`Unbekannter Zahlungsstatus: ${s}`)
   }
 
   return (
     <div style={{ padding: 16 }}>
       <PaymentElement />
+
       {error && <div style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}
-      <div style={{ display:'flex', gap:8, marginTop:12 }}>
-        <button onClick={onCloseAction} disabled={loading} style={{ padding:'10px 12px', borderRadius:8, border:'1px solid #e5e7eb' }}>
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        {/* Abbrechen = echter Close -> onCloseAction */}
+        <button
+          type="button"
+          onClick={onCloseAction}
+          disabled={loading}
+          style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb' }}
+        >
           Abbrechen
         </button>
-        <button onClick={pay} disabled={loading} style={{ padding:'10px 12px', borderRadius:8, background:'#111827', color:'#fff' }}>
+
+        <button
+          type="button"
+          onClick={pay}
+          disabled={loading}
+          style={{ padding: '10px 12px', borderRadius: 8, background: '#111827', color: '#fff' }}
+        >
           {loading ? 'Wird bezahlt…' : 'Jetzt bezahlen'}
         </button>
       </div>
@@ -85,13 +106,45 @@ export default function CheckoutModal({
   onCloseAction: () => void
   onSuccessAction: (payload?: SuccessPayload) => void
 }) {
+  // ESC = Close (Abbruch)
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseAction()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onCloseAction])
+
   if (!open || !clientSecret) return null
+
   return (
-    <div style={{
-      position:'fixed', inset:0, background:'rgba(0,0,0,0.45)', display:'grid', placeItems:'center', zIndex:1000
-    }}>
-      <div style={{ width: 'min(520px, 92vw)', borderRadius: 12, background:'#fff', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}>
-        <Elements stripe={stripePromise!} options={{ clientSecret }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      // Overlay click = Close (Abbruch)
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCloseAction()
+      }}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'grid',
+        placeItems: 'center',
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          width: 'min(520px, 92vw)',
+          borderRadius: 12,
+          background: '#fff',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        }}
+      >
+        {/* key => Remount wenn clientSecret wechselt */}
+        <Elements key={clientSecret} stripe={stripePromise!} options={{ clientSecret }}>
           <Inner clientSecret={clientSecret} onCloseAction={onCloseAction} onSuccessAction={onSuccessAction} />
         </Elements>
       </div>
