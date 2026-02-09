@@ -1057,7 +1057,7 @@ async function confirmAccept() {
       <CheckoutModal
   clientSecret={clientSecret}
   open={checkoutOpen}
-  onCloseAction={async () => {
+  onCancelAction={async () => {
     // ✅ Wenn close durch Success-Unmount kommt -> KEIN unselect
     if (closeReasonRef.current === 'success') {
       // optional: state ist eh schon clean, aber zur Sicherheit:
