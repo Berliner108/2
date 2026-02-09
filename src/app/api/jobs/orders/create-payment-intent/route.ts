@@ -179,37 +179,55 @@ export async function POST(req: Request) {
       } catch {}
       return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
     }
+// 5) Offer speichern: NICHT nur open|selected, sondern alles außer final akzeptieren
+const { data: updOffer, error: updErr } = await admin
+  .from('job_offers')
+  .update({
+    status: 'selected',            // ✅ wieder herstellen / festnageln
+    payment_intent_id: pi.id,
+    currency: CURRENCY,
+    updated_at: nowIso,
+  })
+  .eq('id', offerId)
+  .eq('job_id', jobId)
+  .eq('owner_id', user.id)
+  .not('status', 'in', '(paid,released,refunded)') // ✅ final darf nie überschrieben werden
+  .select('id, status')
+  .maybeSingle()
 
-    // 5) Offer speichern: NICHT nur selected, sondern open|selected akzeptieren
-    const { data: updOffer, error: updErr } = await admin
-      .from('job_offers')
-      .update({
-        status: 'selected',            // ✅ wichtig: wieder herstellen
-        payment_intent_id: pi.id,
-        currency: CURRENCY,
-        updated_at: nowIso,
-      })
-      .eq('id', offerId)
-      .eq('job_id', jobId)
-      .eq('owner_id', user.id)
-      .in('status', ['open', 'selected'])
-      .select('id')
-      .maybeSingle()
+if (updErr) {
+  console.error('[create-payment-intent] update offer:', updErr)
+}
 
-    if (updErr) {
-      console.error('[create-payment-intent] update offer:', updErr)
-    }
+if (!updOffer?.id) {
+  // 🔥 EINMALIGES DEBUG: warum wurde nichts getroffen?
+  const { data: dbgOffer } = await admin
+    .from('job_offers')
+    .select('id, job_id, owner_id, status, payment_intent_id, valid_until, updated_at')
+    .eq('id', offerId)
+    .maybeSingle()
 
-    if (!updOffer?.id) {
-      // DB hat nicht geschrieben -> PI canceln, damit nix rumliegt
-      try {
-        await stripe.paymentIntents.cancel(pi.id)
-      } catch {}
-      return jsonNoStore(
-        { ok: false, error: 'offer_not_selected_anymore', debug_offer_status: offerStatus },
-        409
-      )
-    }
+  const { data: dbgJob } = await admin
+    .from('jobs')
+    .select('id, status, selected_offer_id, updated_at')
+    .eq('id', jobId)
+    .maybeSingle()
+
+  try { await stripe.paymentIntents.cancel(pi.id) } catch {}
+
+  return jsonNoStore(
+    {
+      ok: false,
+      error: 'offer_not_selected_anymore',
+      debug: {
+        job: dbgJob ?? null,
+        offer: dbgOffer ?? null,
+      },
+    },
+    409
+  )
+}
+
 
     // 6) Job auf awaiting_payment festnageln
     await admin
