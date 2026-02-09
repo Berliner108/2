@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const admin = supabaseAdmin()
     const nowIso = new Date().toISOString()
 
-    // 1) Job laden (Owner prüfen + selected_offer_id muss passen)
+    // 1) Job laden (Owner + selected_offer_id muss passen)
     const { data: job, error: jobErr } = await admin
       .from('jobs')
       .select('id, user_id, status, published, selected_offer_id')
@@ -64,13 +64,17 @@ export async function POST(req: Request) {
     if (!job.published) return jsonNoStore({ ok: false, error: 'job_not_published' }, 409)
     if (String(job.user_id) !== user.id) return jsonNoStore({ ok: false, error: 'forbidden_not_owner' }, 403)
 
-    // Job darf open oder awaiting_payment sein (Re-Try)
+    // Job darf open oder awaiting_payment sein (Retry ok)
     if (!['open', 'awaiting_payment'].includes(String(job.status))) {
-      return jsonNoStore({ ok: false, error: 'job_wrong_status' }, 409)
+      return jsonNoStore({ ok: false, error: 'job_wrong_status', jobStatus: String(job.status) }, 409)
     }
 
+    // WICHTIG: Reservation ist die Wahrheit
     if (s(job.selected_offer_id) !== offerId) {
-      return jsonNoStore({ ok: false, error: 'offer_not_selected_on_job' }, 409)
+      return jsonNoStore(
+        { ok: false, error: 'offer_not_selected_on_job', selected: s(job.selected_offer_id) || null },
+        409
+      )
     }
 
     // 2) Offer laden
@@ -84,37 +88,28 @@ export async function POST(req: Request) {
     if (String(offer.job_id) !== String(jobId)) return jsonNoStore({ ok: false, error: 'offer_wrong_job' }, 409)
     if (String(offer.owner_id) !== user.id) return jsonNoStore({ ok: false, error: 'offer_wrong_owner' }, 409)
 
-    // ✅ 2b) Ensure selected (Race-Fix)
-    // Wenn Job bereits selected_offer_id==offerId hat, aber Offer wieder "open" ist -> wieder auf "selected" setzen.
-    let effectiveStatus = String(offer.status ?? '')
-    if (effectiveStatus === 'open') {
-      const { data: ensured, error: ensureErr } = await admin
-        .from('job_offers')
-        .update({ status: 'selected', updated_at: nowIso })
-        .eq('id', offerId)
-        .eq('job_id', jobId)
-        .in('status', ['open', 'selected'])
-        .select('id, status')
-        .maybeSingle()
+    const offerStatus = String(offer.status ?? '')
 
-      if (ensureErr) {
-        console.error('[create-payment-intent] ensure selected failed:', ensureErr)
-      } else if (ensured?.status) {
-        effectiveStatus = String(ensured.status)
-      }
+    // Final-Stati: niemals PI erstellen
+    if (['paid', 'released', 'refunded'].includes(offerStatus)) {
+      return jsonNoStore({ ok: false, error: 'offer_already_final', offerStatus }, 409)
     }
 
-    if (effectiveStatus !== 'selected') {
-      return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
+    // Wir erlauben hier open ODER selected (weil Race)
+    if (!['open', 'selected'].includes(offerStatus)) {
+      return jsonNoStore({ ok: false, error: 'offer_not_payable', offerStatus }, 409)
     }
 
+    // Wenn abgelaufen -> kein Checkout
     const vu = new Date(String(offer.valid_until))
-    if (isNaN(+vu) || +vu <= Date.now()) return jsonNoStore({ ok: false, error: 'offer_expired' }, 409)
+    if (isNaN(+vu) || +vu <= Date.now()) {
+      return jsonNoStore({ ok: false, error: 'offer_expired' }, 409)
+    }
 
     const amount = toSafeInt(offer.gesamt_cents)
     if (amount === null) return jsonNoStore({ ok: false, error: 'invalid_amount' }, 409)
 
-    // 3) Idempotenz: existierenden PI nur wiederverwenden, wenn sinnvoll
+    // 3) Idempotenz: existierenden PI wiederverwenden, falls sinnvoll
     const existingId = s(offer.payment_intent_id)
     if (existingId) {
       try {
@@ -125,9 +120,23 @@ export async function POST(req: Request) {
         }
 
         const sameMoney = existing.amount === amount && existing.currency === CURRENCY
-        if (existing.status === 'canceled' || !sameMoney) {
-          // neuen erstellen
-        } else if (existing.client_secret && canReusePI(existing.status)) {
+        if (existing.status !== 'canceled' && sameMoney && existing.client_secret && canReusePI(existing.status)) {
+          // sicherheitshalber: Offer wieder "selected" setzen (idempotent)
+          await admin
+            .from('job_offers')
+            .update({ status: 'selected', updated_at: nowIso })
+            .eq('id', offerId)
+            .eq('job_id', jobId)
+            .in('status', ['open', 'selected'])
+
+          // Job auf awaiting_payment festnageln (idempotent)
+          await admin
+            .from('jobs')
+            .update({ status: 'awaiting_payment', updated_at: nowIso })
+            .eq('id', jobId)
+            .eq('selected_offer_id', offerId)
+            .in('status', ['open', 'awaiting_payment'])
+
           return jsonNoStore({
             ok: true,
             jobId,
@@ -139,7 +148,7 @@ export async function POST(req: Request) {
           })
         }
       } catch {
-        // neuen erstellen
+        // ignore -> neuer PI
       }
     }
 
@@ -156,35 +165,59 @@ export async function POST(req: Request) {
       },
     })
 
-    // 5) payment_intent_id speichern
+    // 4b) Nach PI-Create: nochmal checken, ob Job immer noch reserviert ist
+    const { data: job2, error: job2Err } = await admin
+      .from('jobs')
+      .select('id, status, selected_offer_id')
+      .eq('id', jobId)
+      .maybeSingle()
+
+    if (job2Err || !job2 || s(job2.selected_offer_id) !== offerId) {
+      // Reservation weg -> PI canceln, sonst “verwaist”
+      try {
+        await stripe.paymentIntents.cancel(pi.id)
+      } catch {}
+      return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
+    }
+
+    // 5) Offer speichern: NICHT nur selected, sondern open|selected akzeptieren
     const { data: updOffer, error: updErr } = await admin
       .from('job_offers')
       .update({
+        status: 'selected',            // ✅ wichtig: wieder herstellen
         payment_intent_id: pi.id,
         currency: CURRENCY,
         updated_at: nowIso,
       })
       .eq('id', offerId)
       .eq('job_id', jobId)
-      .eq('status', 'selected')
+      .eq('owner_id', user.id)
+      .in('status', ['open', 'selected'])
       .select('id')
       .maybeSingle()
 
     if (updErr) {
       console.error('[create-payment-intent] update offer:', updErr)
-      // PI existiert trotzdem – clientSecret zurückgeben
-    }
-    if (!updOffer?.id) {
-      return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
     }
 
-    // Job Status auf awaiting_payment festnageln (idempotent)
+    if (!updOffer?.id) {
+      // DB hat nicht geschrieben -> PI canceln, damit nix rumliegt
+      try {
+        await stripe.paymentIntents.cancel(pi.id)
+      } catch {}
+      return jsonNoStore(
+        { ok: false, error: 'offer_not_selected_anymore', debug_offer_status: offerStatus },
+        409
+      )
+    }
+
+    // 6) Job auf awaiting_payment festnageln
     await admin
       .from('jobs')
       .update({ status: 'awaiting_payment', updated_at: nowIso })
       .eq('id', jobId)
-      .in('status', ['open', 'awaiting_payment'])
       .eq('selected_offer_id', offerId)
+      .in('status', ['open', 'awaiting_payment'])
 
     return jsonNoStore({
       ok: true,
