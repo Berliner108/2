@@ -32,15 +32,10 @@ export async function GET() {
     const nowIso = new Date().toISOString()
 
     /**
-     * ÄNDERUNG #1: "Angebote" Seite zeigt:
-     *  - open NUR wenn valid_until > now
-     *  - selected IMMER (auch wenn valid_until abgelaufen)
-     *
-     * ÄNDERUNG #2: paid IMMER raus aus "offers"
-     *  - paid_at muss null sein
-     *  - zusätzlich status != 'paid' (falls jemand status gesetzt hat ohne paid_at)
-     *
-     * ÄNDERUNG #3: wir selektieren paid/refund Felder mit, weil UI später Status anzeigen will
+     * Anzeige-Regel (wie du willst):
+     * - open NUR wenn valid_until > now
+     * - selected NUR wenn valid_until > now UND nicht paid/released/refunded
+     * - paid/released/refunded NIE (wandern zu konto/auftraege)
      */
     const { data: rows, error } = await admin
       .from('job_offers')
@@ -64,15 +59,17 @@ export async function GET() {
         charge_id
       `)
       .eq('bieter_id', user.id)
+      // ✅ nichts was schon bezahlt / abgeschlossen ist
       .is('paid_at', null)
-      .neq('status', 'paid')
-      // open nur wenn gültig ODER selected immer
-      .or(`and(status.eq.open,valid_until.gt.${nowIso}),status.eq.selected`)
+      .not('status', 'in', '("paid","released","refunded")')
+      // ✅ nur open/selected im "angebote"-Screen
+      .in('status', ['open', 'selected'])
+      // ✅ abgelaufene Angebote komplett ausblenden (auch selected!)
+      .gt('valid_until', nowIso)
       .order('created_at', { ascending: false })
 
     if (error) {
       console.error('[submitted offers] db:', error)
-      // ÄNDERUNG #4: error detail zurückgeben, damit du nicht im Blindflug bist
       return NextResponse.json(
         { ok: false, error: 'db', detail: error.message, code: (error as any).code ?? null },
         { status: 500 }
@@ -96,11 +93,8 @@ export async function GET() {
         `)
         .in('id', jobIds)
 
-      if (jErr) {
-        console.error('[submitted offers jobs] db:', jErr)
-      } else {
-        jobsById = new Map((jobRows ?? []).map((j: any) => [String(j.id), j]))
-      }
+      if (jErr) console.error('[submitted offers jobs] db:', jErr)
+      else jobsById = new Map((jobRows ?? []).map((j: any) => [String(j.id), j]))
     }
 
     // 3) Owner-Profile (Auftraggeber) nachladen -> username + rating + address (zip/city)
@@ -113,11 +107,8 @@ export async function GET() {
         .select('id, username, rating_avg, rating_count, address')
         .in('id', ownerIds)
 
-      if (oErr) {
-        console.error('[submitted offers owners] db:', oErr)
-      } else {
-        ownersById = new Map((ownerRows ?? []).map((p: any) => [String(p.id), p]))
-      }
+      if (oErr) console.error('[submitted offers owners] db:', oErr)
+      else ownersById = new Map((ownerRows ?? []).map((p: any) => [String(p.id), p]))
     }
 
     // 4) Offers ausgeben
@@ -149,11 +140,10 @@ export async function GET() {
         created_at: String(r.created_at),
         valid_until: String(r.valid_until),
 
-        // NEU: Status/Payment Info (hilft dir später fürs UI)
         status: String(r.status ?? ''),
-        paid_at: r.paid_at ? String(r.paid_at) : null,
-        paid_amount_cents: r.paid_amount_cents != null ? Number(r.paid_amount_cents) : null,
-        refunded_amount_cents: r.refunded_amount_cents != null ? Number(r.refunded_amount_cents) : 0,
+        paid_at: null, // garantiert durch Filter
+        paid_amount_cents: null,
+        refunded_amount_cents: 0,
         currency: r.currency ? String(r.currency) : null,
         payment_intent_id: r.payment_intent_id ? String(r.payment_intent_id) : null,
         charge_id: r.charge_id ? String(r.charge_id) : null,

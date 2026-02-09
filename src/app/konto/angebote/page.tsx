@@ -1087,8 +1087,6 @@ async function confirmAccept() {
   }}
 />
 
-
-
     </>
   )
 }
