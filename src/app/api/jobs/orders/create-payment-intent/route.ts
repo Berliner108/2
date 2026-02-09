@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const admin = supabaseAdmin()
     const nowIso = new Date().toISOString()
 
-    // 1) Job laden (Owner + selected_offer_id muss passen)
+    // 1) Job lesen (Owner + published + selected_offer_id)
     const { data: job, error: jobErr } = await admin
       .from('jobs')
       .select('id, user_id, status, published, selected_offer_id')
@@ -64,12 +64,11 @@ export async function POST(req: Request) {
     if (!job.published) return jsonNoStore({ ok: false, error: 'job_not_published' }, 409)
     if (String(job.user_id) !== user.id) return jsonNoStore({ ok: false, error: 'forbidden_not_owner' }, 403)
 
-    // Job darf open oder awaiting_payment sein (Retry ok)
     if (!['open', 'awaiting_payment'].includes(String(job.status))) {
       return jsonNoStore({ ok: false, error: 'job_wrong_status', jobStatus: String(job.status) }, 409)
     }
 
-    // WICHTIG: Reservation ist die Wahrheit
+    // Reservation ist die Wahrheit
     if (s(job.selected_offer_id) !== offerId) {
       return jsonNoStore(
         { ok: false, error: 'offer_not_selected_on_job', selected: s(job.selected_offer_id) || null },
@@ -77,7 +76,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // 2) Offer laden
+    // 2) Offer lesen (Preis, valid, status, evtl. existing PI)
     const { data: offer, error: offErr } = await admin
       .from('job_offers')
       .select('id, job_id, owner_id, status, valid_until, gesamt_cents, payment_intent_id')
@@ -90,14 +89,9 @@ export async function POST(req: Request) {
 
     const offerStatus = String(offer.status ?? '')
 
-    // Final-Stati: niemals PI erstellen
+    // final: niemals
     if (['paid', 'released', 'refunded'].includes(offerStatus)) {
       return jsonNoStore({ ok: false, error: 'offer_already_final', offerStatus }, 409)
-    }
-
-    // Wir erlauben hier open ODER selected (weil Race)
-    if (!['open', 'selected'].includes(offerStatus)) {
-      return jsonNoStore({ ok: false, error: 'offer_not_payable', offerStatus }, 409)
     }
 
     // Wenn abgelaufen -> kein Checkout
@@ -109,7 +103,28 @@ export async function POST(req: Request) {
     const amount = toSafeInt(offer.gesamt_cents)
     if (amount === null) return jsonNoStore({ ok: false, error: 'invalid_amount' }, 409)
 
-    // 3) Idempotenz: existierenden PI wiederverwenden, falls sinnvoll
+    // 3) HARTE VERIFIKATION per UPDATE statt "job2 SELECT"
+    //    -> Wenn hier 0 Rows: Reservation ist wirklich weg.
+    const { data: guardJob, error: guardJobErr } = await admin
+      .from('jobs')
+      .update({ status: 'awaiting_payment', updated_at: nowIso }) // idempotent
+      .eq('id', jobId)
+      .eq('user_id', user.id)
+      .eq('selected_offer_id', offerId)
+      .in('status', ['open', 'awaiting_payment'])
+      .select('id')
+      .maybeSingle()
+
+    if (guardJobErr) {
+      console.error('[create-payment-intent] guard job update:', guardJobErr)
+      return jsonNoStore({ ok: false, error: 'db_guard_job' }, 500)
+    }
+    if (!guardJob?.id) {
+      // Reservation weg -> sauber abbrechen
+      return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
+    }
+
+    // 4) Idempotenz: bestehenden PI nur wiederverwenden, wenn sinnvoll
     const existingId = s(offer.payment_intent_id)
     if (existingId) {
       try {
@@ -121,21 +136,14 @@ export async function POST(req: Request) {
 
         const sameMoney = existing.amount === amount && existing.currency === CURRENCY
         if (existing.status !== 'canceled' && sameMoney && existing.client_secret && canReusePI(existing.status)) {
-          // sicherheitshalber: Offer wieder "selected" setzen (idempotent)
+          // Offer status festnageln (ohne zu streng zu sein)
           await admin
             .from('job_offers')
             .update({ status: 'selected', updated_at: nowIso })
             .eq('id', offerId)
             .eq('job_id', jobId)
-            .in('status', ['open', 'selected'])
-
-          // Job auf awaiting_payment festnageln (idempotent)
-          await admin
-            .from('jobs')
-            .update({ status: 'awaiting_payment', updated_at: nowIso })
-            .eq('id', jobId)
-            .eq('selected_offer_id', offerId)
-            .in('status', ['open', 'awaiting_payment'])
+            .eq('owner_id', user.id)
+            .not('status', 'in', '(paid,released,refunded)')
 
           return jsonNoStore({
             ok: true,
@@ -152,7 +160,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4) Neuen PI erstellen
+    // 5) Neuen PI erstellen
     const pi = await stripe.paymentIntents.create({
       amount,
       currency: CURRENCY,
@@ -165,77 +173,30 @@ export async function POST(req: Request) {
       },
     })
 
-    // 4b) Nach PI-Create: nochmal checken, ob Job immer noch reserviert ist
-    const { data: job2, error: job2Err } = await admin
-      .from('jobs')
-      .select('id, status, selected_offer_id')
-      .eq('id', jobId)
+    // 6) Offer speichern (GUARDED UPDATE) – wenn 0 rows -> Reservation weg -> PI cancel
+    const { data: updOffer, error: updErr } = await admin
+      .from('job_offers')
+      .update({
+        status: 'selected',
+        payment_intent_id: pi.id,
+        currency: CURRENCY,
+        updated_at: nowIso,
+      })
+      .eq('id', offerId)
+      .eq('job_id', jobId)
+      .eq('owner_id', user.id)
+      .not('status', 'in', '(paid,released,refunded)')
+      .select('id')
       .maybeSingle()
 
-    if (job2Err || !job2 || s(job2.selected_offer_id) !== offerId) {
-      // Reservation weg -> PI canceln, sonst “verwaist”
-      try {
-        await stripe.paymentIntents.cancel(pi.id)
-      } catch {}
+    if (updErr) {
+      console.error('[create-payment-intent] update offer:', updErr)
+    }
+
+    if (!updOffer?.id) {
+      try { await stripe.paymentIntents.cancel(pi.id) } catch {}
       return jsonNoStore({ ok: false, error: 'offer_not_selected_anymore' }, 409)
     }
-// 5) Offer speichern: NICHT nur open|selected, sondern alles außer final akzeptieren
-const { data: updOffer, error: updErr } = await admin
-  .from('job_offers')
-  .update({
-    status: 'selected',            // ✅ wieder herstellen / festnageln
-    payment_intent_id: pi.id,
-    currency: CURRENCY,
-    updated_at: nowIso,
-  })
-  .eq('id', offerId)
-  .eq('job_id', jobId)
-  .eq('owner_id', user.id)
-  .not('status', 'in', '(paid,released,refunded)') // ✅ final darf nie überschrieben werden
-  .select('id, status')
-  .maybeSingle()
-
-if (updErr) {
-  console.error('[create-payment-intent] update offer:', updErr)
-}
-
-if (!updOffer?.id) {
-  // 🔥 EINMALIGES DEBUG: warum wurde nichts getroffen?
-  const { data: dbgOffer } = await admin
-    .from('job_offers')
-    .select('id, job_id, owner_id, status, payment_intent_id, valid_until, updated_at')
-    .eq('id', offerId)
-    .maybeSingle()
-
-  const { data: dbgJob } = await admin
-    .from('jobs')
-    .select('id, status, selected_offer_id, updated_at')
-    .eq('id', jobId)
-    .maybeSingle()
-
-  try { await stripe.paymentIntents.cancel(pi.id) } catch {}
-
-  return jsonNoStore(
-    {
-      ok: false,
-      error: 'offer_not_selected_anymore',
-      debug: {
-        job: dbgJob ?? null,
-        offer: dbgOffer ?? null,
-      },
-    },
-    409
-  )
-}
-
-
-    // 6) Job auf awaiting_payment festnageln
-    await admin
-      .from('jobs')
-      .update({ status: 'awaiting_payment', updated_at: nowIso })
-      .eq('id', jobId)
-      .eq('selected_offer_id', offerId)
-      .in('status', ['open', 'awaiting_payment'])
 
     return jsonNoStore({
       ok: true,
