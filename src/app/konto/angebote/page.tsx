@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
@@ -246,6 +246,15 @@ const [checkoutOpen, setCheckoutOpen] = useState(false)
 const [clientSecret, setClientSecret] = useState<string | null>(null)
 const [pendingJobId, setPendingJobId] = useState<string | null>(null)
 const [pendingOfferId, setPendingOfferId] = useState<string | null>(null)
+
+// ✅ verhindert "unselect" durch Close-Events, die nicht wirklich ein User-Abbruch waren
+const checkoutEverOpenedRef = useRef(false)
+const closeReasonRef = useRef<'none' | 'success'>('none')
+
+// wenn Modal wirklich offen war -> true
+useEffect(() => {
+  if (checkoutOpen) checkoutEverOpenedRef.current = true
+}, [checkoutOpen])
 
 
 
@@ -678,10 +687,16 @@ async function confirmAccept() {
     if (!piJson?.clientSecret) throw new Error('missing_client_secret')
 
     // 3) CheckoutModal öffnen
+    // 3) CheckoutModal öffnen
     setPendingJobId(String(jobId))
-    setPendingOfferId(String(offerId)) // ✅ HIER
+    setPendingOfferId(String(offerId))
     setClientSecret(String(piJson.clientSecret))
+
+    checkoutEverOpenedRef.current = false
+    closeReasonRef.current = 'none'
+
     setCheckoutOpen(true)
+
 
 
     setConfirmOffer(null)
@@ -1040,22 +1055,38 @@ async function confirmAccept() {
         </div>
       )}
       <CheckoutModal
-        clientSecret={clientSecret}
-        open={checkoutOpen}
-        onCloseAction={async () => {
-          // Modal geschlossen = Abbruch -> DB zurücksetzen
-          await resetAfterCancel()
-          toastErr('Zahlung abgebrochen – Auswahl zurückgesetzt.')
-        }}
-        onSuccessAction={async () => {
-          toastOk('Zahlung erfolgreich.')
-          setCheckoutOpen(false)
-          setClientSecret(null)
-          setPendingJobId(null)
-          // optional: reload offers
-          // router.refresh()
-        }}
-      />
+  clientSecret={clientSecret}
+  open={checkoutOpen}
+  onCloseAction={async () => {
+    // ✅ Wenn close durch Success-Unmount kommt -> KEIN unselect
+    if (closeReasonRef.current === 'success') {
+      // optional: state ist eh schon clean, aber zur Sicherheit:
+      setCheckoutOpen(false)
+      return
+    }
+
+    // ✅ Guard: nur wenn Modal wirklich offen war UND wir wirklich einen aktiven Checkout hatten
+    if (!checkoutEverOpenedRef.current || !pendingJobId || !clientSecret) {
+      setCheckoutOpen(false)
+      return
+    }
+
+    await resetAfterCancel()
+    toastErr('Zahlung abgebrochen – Auswahl zurückgesetzt.')
+  }}
+  onSuccessAction={async () => {
+    closeReasonRef.current = 'success'
+    toastOk('Zahlung erfolgreich.')
+
+    setCheckoutOpen(false)
+    setClientSecret(null)
+    setPendingJobId(null)
+    setPendingOfferId(null)
+
+    checkoutEverOpenedRef.current = false
+  }}
+/>
+
 
 
     </>
