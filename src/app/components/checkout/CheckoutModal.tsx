@@ -21,6 +21,13 @@ function Inner({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // ✅ WICHTIG:
+  // Während wir bezahlen, darf NICHT geschlossen werden (sonst triggert onCloseAction = unselect/reset)
+  const safeClose = () => {
+    if (loading) return
+    onCloseAction()
+  }
+
   const pay = async () => {
     if (!stripe || !elements) return
     setLoading(true)
@@ -49,8 +56,7 @@ function Inner({
 
     const s = paymentIntent.status
 
-    // ✅ WICHTIG:
-    // Erfolg -> NICHT onCloseAction aufrufen!
+    // ✅ Erfolg -> NICHT onCloseAction aufrufen!
     // (weil bei dir onCloseAction = reset/unselect)
     if (s === 'succeeded' || s === 'processing') {
       onSuccessAction({ status: s, paymentIntentId: paymentIntent.id })
@@ -72,10 +78,10 @@ function Inner({
       {error && <div style={{ color: '#b91c1c', marginTop: 8 }}>{error}</div>}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        {/* Abbrechen = echter Close -> onCloseAction */}
+        {/* Abbrechen = echter Close -> safeClose (blockt bei loading) */}
         <button
           type="button"
-          onClick={onCloseAction}
+          onClick={safeClose}
           disabled={loading}
           style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #e5e7eb' }}
         >
@@ -107,6 +113,8 @@ export default function CheckoutModal({
   onSuccessAction: (payload?: SuccessPayload) => void
 }) {
   // ESC = Close (Abbruch)
+  // ✅ Während Stripe evtl. kurz "busy" ist, verhindert Inner bereits Close über Button.
+  // ESC/Overlay blocken wir nicht perfekt ohne shared state – aber das reduziert den Haupt-Race massiv.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
