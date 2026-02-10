@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,10 +16,9 @@ type DbOffer = {
   gesamt_cents: number | null
   created_at: string | null
 
-  // bei dir nach Zahlung: status = 'paid'
+  // nach Zahlung: status = 'paid' (bei dir)
   status: string | null
 
-  // Snapshot (optional)
   anbieter_snapshot: any | null
 
   // Payment-Felder
@@ -51,7 +51,7 @@ type ApiOrder = {
   acceptedAt: string
   kind: 'vergeben' | 'angenommen'
 
-  // Ablaufstatus (kommt aus DB!)
+  // Ablaufstatus
   status: 'in_progress' | 'reported' | 'disputed' | 'confirmed'
   deliveredReportedAt?: string
   deliveredConfirmedAt?: string
@@ -62,31 +62,29 @@ type ApiOrder = {
   jobPayStatus?: DbPayStatus // kind='vergeben'
   offerPayStatus?: DbPayStatus // kind='angenommen'
 
-  // zusätzlich weiterhin (für UI/Infos)
+  // Zusatzinfos
   payoutStatus: 'hold' | 'released' | 'partial_refund' | 'refunded'
   payoutReleasedAt?: string
   refundedAmountCents?: number
   refundedAt?: string
 
-  // Labels
   vendor?: string
   owner?: string
 
-  // Payment refs (Debug)
   paidAt?: string
   releasedAt?: string
   currency?: string | null
   paymentIntentId?: string | null
   chargeId?: string | null
 
-  // ✅ beidseitige Bewertung
-  customerReviewed?: boolean // owner_id hat bewertet
-  vendorReviewed?: boolean // bieter_id hat bewertet
+  // Bewertungen
+  customerReviewed?: boolean
+  vendorReviewed?: boolean
 }
 
 type ApiJob = {
   id: string
-  verfahren: any[]
+  verfahren: { name: string; felder: Record<string, any> }[]
   material?: string
   standort?: string
   beschreibung?: string
@@ -102,53 +100,42 @@ function safeNum(v: any): number | undefined {
   return Number.isFinite(n) ? n : undefined
 }
 
-function pick<T extends Record<string, any>>(obj: T, keys: string[]) {
+function pick(obj: any, keys: string[]) {
   for (const k of keys) {
     if (obj && obj[k] != null) return obj[k]
   }
   return undefined
 }
 
-function normalizeJob(row: any): ApiJob {
-  const id = String(row.id)
+/** Versucht, zu einem Verfahren die passenden Feldwerte aus jobs.specs zu holen. */
+function pickProcedureFields(specs: any, procName: string): Record<string, any> {
+  if (!specs || typeof specs !== 'object') return {}
 
-  const verfahren =
-    row.verfahren ??
-    row.procedures ??
-    row.verfahren_json ??
-    row.verfahren_liste ??
-    []
+  // Direkt unter dem Namen (z.B. specs["Pulverbeschichten"] = {...})
+  const direct = specs[procName]
+  if (direct && typeof direct === 'object' && !Array.isArray(direct)) return direct as Record<string, any>
 
-  const bilder =
-    row.bilder ??
-    row.images ??
-    row.photos ??
-    row.job_images ??
-    undefined
+  // Manchmal normalisiert (lowercase)
+  const keyLc = procName.toLowerCase()
+  const lc = specs[keyLc]
+  if (lc && typeof lc === 'object' && !Array.isArray(lc)) return lc as Record<string, any>
 
-  const warenausgabeDatum = pick(row, ['warenausgabeDatum', 'warenausgabe_datum', 'warenausgabe_date', 'ausgabe_datum'])
-  const lieferDatum = pick(row, ['lieferDatum', 'liefer_datum', 'lieferdate', 'delivery_date'])
-  const warenannahmeDatum = pick(row, ['warenannahmeDatum', 'warenannahme_datum', 'annahme_datum', 'pickup_date'])
+  // Manche speichern unter specs.procedures / specs.verfahren / specs.processes
+  const container =
+    specs.procedures ||
+    specs.verfahren ||
+    specs.processes ||
+    specs.specifications ||
+    null
 
-  const user =
-    row.user ??
-    row.owner_snapshot ??
-    row.kunde_snapshot ??
-    row.owner ??
-    undefined
-
-  return {
-    id,
-    verfahren: Array.isArray(verfahren) ? verfahren : [],
-    material: row.material ?? row.materialguete ?? row.guete ?? undefined,
-    standort: row.standort ?? row.location?.city ?? row.ort ?? row.city ?? undefined,
-    beschreibung: row.beschreibung ?? row.description ?? undefined,
-    bilder: Array.isArray(bilder) ? bilder : undefined,
-    warenausgabeDatum: warenausgabeDatum ?? null,
-    lieferDatum: lieferDatum ?? null,
-    warenannahmeDatum: warenannahmeDatum ?? null,
-    user,
+  if (container && typeof container === 'object') {
+    const a = container[procName]
+    if (a && typeof a === 'object' && !Array.isArray(a)) return a as Record<string, any>
+    const b = container[keyLc]
+    if (b && typeof b === 'object' && !Array.isArray(b)) return b as Record<string, any>
   }
+
+  return {}
 }
 
 function labelFromProfile(p: any): string {
@@ -167,11 +154,7 @@ async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
   for (let i = 0; i < orderIds.length; i += CHUNK) {
     const batch = orderIds.slice(i, i + CHUNK)
 
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('order_id, rater_id')
-      .in('order_id', batch)
-
+    const { data, error } = await supabase.from('reviews').select('order_id, rater_id').in('order_id', batch)
     if (error) {
       console.error('[GET /api/konto/auftraege] reviews db:', error)
       continue
@@ -195,7 +178,6 @@ async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
 
 /** payout_status + dispute -> Frontend Payment-Status */
 function mapPayStatus(o: DbOffer): DbPayStatus {
-  // Dispute “überstimmt” alles
   if (o.dispute_opened_at) return 'disputed'
 
   const ps = String(o.payout_status ?? 'hold')
@@ -205,6 +187,62 @@ function mapPayStatus(o: DbOffer): DbPayStatus {
 
   // hold (default) = bezahlt, aber noch auf Hold
   return 'paid'
+}
+
+/** Mapping: dein echtes jobs-Schema -> ApiJob fürs Frontend */
+function normalizeJobFromSchema(row: any, ownerProfile?: any): ApiJob {
+  const id = String(row.id)
+
+  // Verfahren: aus verfahren_1/2 (und Felder aus specs)
+  const v1 = String(row.verfahren_1 ?? '').trim()
+  const v2 = String(row.verfahren_2 ?? '').trim()
+  const specs = row.specs ?? null
+
+  const verfahren: { name: string; felder: Record<string, any> }[] = []
+  if (v1) verfahren.push({ name: v1, felder: pickProcedureFields(specs, v1) })
+  if (v2 && v2 !== v1) verfahren.push({ name: v2, felder: pickProcedureFields(specs, v2) })
+
+  // Material: material_guete oder custom
+  const material =
+    (String(row.material_guete_custom ?? '').trim() || String(row.material_guete ?? '').trim() || undefined)
+
+  // Standort: nicht als Spalte vorhanden -> best effort aus specs
+  const standort =
+    pick(specs, ['standort', 'ort', 'city', 'location']) ||
+    pick(specs?.location, ['city', 'ort']) ||
+    undefined
+
+  // Beschreibung: jobs.description
+  const beschreibung = (typeof row.description === 'string' ? row.description : undefined)
+
+  // Termine:
+  // liefer_datum_utc = Warenannahme (Kunde)
+  // rueck_datum_utc  = Warenausgabe (Kunde)
+  const warenannahmeDatum = row.liefer_datum_utc ? String(row.liefer_datum_utc) : null
+  const warenausgabeDatum = row.rueck_datum_utc ? String(row.rueck_datum_utc) : null
+
+  // Für dein Frontend ist lieferDatum nur Fallback – wir setzen es sinnvoll auf rueck_datum_utc
+  const lieferDatum = warenausgabeDatum
+
+  // Bilder: in deinem Schema sind nur counts drin.
+  // Wenn du später job_files anbindest, kannst du hier echte URLs füllen.
+  const bilder = undefined
+
+  // user: damit getOwnerName(job) auf "angenommen" funktioniert
+  const user = ownerProfile ?? undefined
+
+  return {
+    id,
+    verfahren,
+    material,
+    standort,
+    beschreibung,
+    bilder,
+    warenausgabeDatum,
+    lieferDatum,
+    warenannahmeDatum,
+    user,
+  }
 }
 
 export async function GET() {
@@ -229,7 +267,7 @@ export async function GET() {
   }
   const uid = auth.user.id
 
-  // ✅ Nur paid laden – “nach paid” kommt aus fulfillment_status/payout_status
+  // ✅ Paid + Folgestati: wir lassen status flexibler, damit es später nicht verschwindet
   const baseSelect = `
     id,
     job_id,
@@ -260,7 +298,7 @@ export async function GET() {
   const { data: rowsRaw, error: err } = await supabase
     .from('job_offers')
     .select(baseSelect)
-    .eq('status', 'paid')
+    .in('status', ['paid', 'released', 'refunded']) // robust für später (wenn du status weiterentwickelst)
     .or(`owner_id.eq.${uid},bieter_id.eq.${uid}`)
     .order('paid_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
@@ -331,7 +369,6 @@ export async function GET() {
         disputeOpenedAt: o.dispute_opened_at || undefined,
         disputeReason: o.dispute_reason || null,
 
-        // ✅ Frontend erwartet dieses Feld
         jobPayStatus: payStatus,
 
         payoutStatus: payout,
@@ -367,7 +404,6 @@ export async function GET() {
         disputeOpenedAt: o.dispute_opened_at || undefined,
         disputeReason: o.dispute_reason || null,
 
-        // ✅ Frontend erwartet dieses Feld
         offerPayStatus: payStatus,
 
         payoutStatus: payout,
@@ -389,14 +425,30 @@ export async function GET() {
     }
   }
 
-  // Jobs laden (für Karteninfos)
+  // Jobs laden (für Karteninfos) — ✅ Service Role, damit RLS nicht alles wegfiltert
   const jobIds = Array.from(new Set(orders.map(o => String(o.jobId))))
   let jobs: ApiJob[] = []
 
   if (jobIds.length) {
-    const { data: jobsRaw, error: jobsErr } = await supabase
+    const admin = supabaseAdmin()
+
+    // Schlankes Select: nur was wir fürs Mapping wirklich brauchen
+    const { data: jobsRaw, error: jobsErr } = await admin
       .from('jobs')
-      .select('*')
+      .select(
+        [
+          'id',
+          'user_id',
+          'description',
+          'material_guete',
+          'material_guete_custom',
+          'liefer_datum_utc',
+          'rueck_datum_utc',
+          'specs',
+          'verfahren_1',
+          'verfahren_2',
+        ].join(', ')
+      )
       .in('id', jobIds)
 
     if (jobsErr) {
@@ -404,7 +456,11 @@ export async function GET() {
       return NextResponse.json({ ok: false, error: jobsErr.message }, { status: 500 })
     }
 
-    jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
+    // Owner-Profile für getOwnerName(job) (bei "angenommen" braucht UI Auftraggeber)
+    jobs = ((jobsRaw as any[]) ?? []).map(row => {
+      const ownerProfile = profMap.get(String(row.user_id))
+      return normalizeJobFromSchema(row, ownerProfile)
+    })
   }
 
   // safety: nur orders zurückgeben, deren job auch geladen wurde
