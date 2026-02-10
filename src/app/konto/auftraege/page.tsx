@@ -683,7 +683,11 @@ const AuftraegePage: FC = () => {
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
 
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
-          const contactValue = order.kind === 'vergeben' ? (order.vendor ?? '—') : getOwnerName(j)
+          const contactValue =
+          order.kind === 'vergeben'
+            ? (order.vendor ?? '—')
+            : ((order as any).owner ?? getOwnerName(j))
+
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
