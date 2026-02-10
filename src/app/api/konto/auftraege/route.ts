@@ -467,5 +467,6 @@ export async function GET() {
   const jobSet = new Set(jobs.map(j => String(j.id)))
   const filteredOrders = orders.filter(o => jobSet.has(String(o.jobId)))
 
-  return NextResponse.json({ ok: true, jobs, orders: filteredOrders }, { status: 200 })
+  return NextResponse.json({ ok: true, jobs, orders }, { status: 200 })
+  
 }
