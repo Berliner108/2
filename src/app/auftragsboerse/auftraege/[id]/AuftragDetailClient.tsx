@@ -310,7 +310,7 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
     if (!gesamtPreis.trim()) return false;
 
     // mind. 2 Ziffern vor dem Komma/Punkt
-    if (!hasMinWholeDigits(gesamtPreis, 2)) return false;
+    if (!hasMinWholeDigits(gesamtPreis, 1)) return false;
 
     const n = parseMoneyOrNull(gesamtPreis);
     if (n === null) return false;
