@@ -7,7 +7,7 @@ import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {})
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!
+const WEBHOOK_SECRET = process.env.STRIPE_JOBS_WEBHOOK_SECRET!
 
 const s = (v: unknown) => (typeof v === 'string' ? v : '').trim()
 

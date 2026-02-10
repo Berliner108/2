@@ -714,7 +714,7 @@ async function confirmAccept() {
 
   const ReceivedSection = () => (
     <>
-      <h2 className={styles.heading}>Erhaltene Angebote für deine zu vergebenden Aufträge</h2>
+      <h2 className={styles.heading}>Erhaltene Angebote für deine zu vergebenen Aufträge</h2>
       <div className={styles.kontoContainer}>
         {loadingJobs ? (
           <div className={styles.emptyState}><strong>Lade deine Aufträge…</strong></div>
