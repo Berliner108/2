@@ -130,9 +130,7 @@ function toCentsFromMoneyInput(raw: string): number | null {
   return Math.round(n * 100);
 }
 
-/* ===== Mindestpreise & Limits ===== */
-const MIN_AUFTRAG_PREIS = 60; // Mindestpreis Auftrag in €
-const MIN_LOGISTIK_PREIS = 20; // Mindestpreis Logistik in €
+/* ===== Limits ===== */
 const MAX_PRICE_CHARS = 8; // z. B. "99999,99"
 
 /**
@@ -179,11 +177,9 @@ function hasMinWholeDigits(value: string, minDigits: number): boolean {
 function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading, setLoading] = useState(false);
-const [offerSent, setOfferSent] = useState(false);
-
+  const [offerSent, setOfferSent] = useState(false);
 
   const { error: toastError, success: toastSuccess } = useLocalToast();
-
 
   // Connect (Stripe) Status – identisch zur Lackanfragen-Detailseite
   const [connect, setConnect] = useState<ConnectStatus | null>(null);
@@ -236,48 +232,45 @@ const [offerSent, setOfferSent] = useState(false);
       toastError(String(e?.message || 'Onboarding-Link konnte nicht erstellt werden.'));
     }
   }, [toastError]);
+
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+
   // Preisbereich: 2 Felder
   const [gesamtPreis, setGesamtPreis] = useState<string>('');
   const [logistikPreis, setLogistikPreis] = useState<string>('');
   const [preisError, setPreisError] = useState<string | null>(null);
 
+  const username = auftrag.user ?? '';
+  const messageTarget = encodeURIComponent(username);
 
-  const username = auftrag.user ?? ''
-const messageTarget = encodeURIComponent(username)
+  const reviewsHref = username
+    ? `/u/${encodeURIComponent(username)}/reviews`
+    : null;
 
-const reviewsHref = username
-  ? `/u/${encodeURIComponent(username)}/reviews`
-  : null
+  const ratingValue =
+    typeof auftrag.userRatingAvg === 'number' && Number.isFinite(auftrag.userRatingAvg)
+      ? auftrag.userRatingAvg
+      : 0;
 
-const ratingValue =
-  typeof auftrag.userRatingAvg === 'number' && Number.isFinite(auftrag.userRatingAvg)
-    ? auftrag.userRatingAvg
-    : 0
+  const ratingCount =
+    typeof auftrag.userRatingCount === 'number' && Number.isFinite(auftrag.userRatingCount)
+      ? auftrag.userRatingCount
+      : 0;
 
-const ratingCount =
-  typeof auftrag.userRatingCount === 'number' && Number.isFinite(auftrag.userRatingCount)
-    ? auftrag.userRatingCount
-    : 0
-
-
-  
   const slides = auftrag.bilder?.map((src) => ({ src })) || [];
 
-
   // Logistik-Bedingung: nur wenn NICHT beides "Selbst..."
-const warenausgabeArtRaw = (auftrag.warenausgabeArt ?? '').trim().toLowerCase();
-const warenannahmeArtRaw = (auftrag.warenannahmeArt ?? '').trim().toLowerCase();
+  const warenausgabeArtRaw = (auftrag.warenausgabeArt ?? '').trim().toLowerCase();
+  const warenannahmeArtRaw = (auftrag.warenannahmeArt ?? '').trim().toLowerCase();
 
-// ✅ Rohwerte: 'selbst' | 'abholung' | 'anlieferung'
-const selbstAnlieferung = warenausgabeArtRaw === 'selbst';
-const selbstAbholung = warenannahmeArtRaw === 'selbst';
+  // ✅ Rohwerte: 'selbst' | 'abholung' | 'anlieferung'
+  const selbstAnlieferung = warenausgabeArtRaw === 'selbst';
+  const selbstAbholung = warenannahmeArtRaw === 'selbst';
 
-// ✅ nur wenn beides "selbst" ist, braucht man keinen Logistikpreis
-const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
-
+  // ✅ nur wenn beides "selbst" ist, braucht man keinen Logistikpreis
+  const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
 
   const handleGesamtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPreisError(null);
@@ -294,12 +287,8 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
   const handleGesamtBlur = () => {
     if (!gesamtPreis.trim()) return;
     const n = parseMoneyOrNull(gesamtPreis);
-    if (n === null || n < MIN_AUFTRAG_PREIS) {
-      setPreisError(
-        `Bitte gib einen gültigen Gesamtpreis ein (mindestens ${formatMoney(
-          MIN_AUFTRAG_PREIS
-        )} €).`
-      );
+    if (n === null) {
+      setPreisError('Bitte gib einen gültigen Gesamtpreis ein.');
       setGesamtPreis('');
       return;
     }
@@ -309,12 +298,8 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
   const handleLogistikBlur = () => {
     if (!logistikPreis.trim()) return;
     const n = parseMoneyOrNull(logistikPreis);
-    if (n === null || n < MIN_LOGISTIK_PREIS) {
-      setPreisError(
-        `Bitte gib einen gültigen Logistikpreis ein (mindestens ${formatMoney(
-          MIN_LOGISTIK_PREIS
-        )} €).`
-      );
+    if (n === null) {
+      setPreisError('Bitte gib einen gültigen Logistikpreis ein.');
       setLogistikPreis('');
       return;
     }
@@ -328,7 +313,7 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
     if (!hasMinWholeDigits(gesamtPreis, 2)) return false;
 
     const n = parseMoneyOrNull(gesamtPreis);
-    if (n === null || n < MIN_AUFTRAG_PREIS) return false;
+    if (n === null) return false;
 
     return true;
   })();
@@ -338,126 +323,115 @@ const brauchtLogistikPreis = !(selbstAnlieferung && selbstAbholung);
     if (!logistikPreis.trim()) return false;
 
     const n = parseMoneyOrNull(logistikPreis);
-    if (n === null || n < MIN_LOGISTIK_PREIS) return false;
+    if (n === null) return false;
 
     return true;
   })();
 
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setPreisError(null);
+    e.preventDefault();
+    setPreisError(null);
 
-  if (offerSent) {
-  toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
-  return;
-}
-
-
-  const artikelCents = toCentsFromMoneyInput(gesamtPreis);
-  if (artikelCents === null || artikelCents < MIN_AUFTRAG_PREIS * 100) {
-    setPreisError(
-      `Bitte die Gesamtkosten für den Auftrag eingeben (mindestens ${formatMoney(
-        MIN_AUFTRAG_PREIS
-      )} €).`
-    );
-    return;
-  }
-
-  let versandCents = 0;
-  if (brauchtLogistikPreis) {
-    const lCents = toCentsFromMoneyInput(logistikPreis);
-    if (lCents === null || lCents < MIN_LOGISTIK_PREIS * 100) {
-      setPreisError(
-        `Bitte einen gültigen Logistikpreis angeben (mindestens ${formatMoney(
-          MIN_LOGISTIK_PREIS
-        )} €).`
-      );
-      return;
-    }
-    versandCents = lCents;
-  }
-
-  const gesamtCents = artikelCents + versandCents;
-
-  // Connect-Ready prüfen (wie bei Lackanfragen)
-  try {
-    const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
-    const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
-
-    if (!stRes.ok) {
-      toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
+    if (offerSent) {
+      toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
       return;
     }
 
-    if (!st.ready) {
-      await goToStripeOnboarding();
+    const artikelCents = toCentsFromMoneyInput(gesamtPreis);
+    if (artikelCents === null) {
+      setPreisError('Bitte die Gesamtkosten für den Auftrag eingeben.');
       return;
     }
-  } catch {
-    toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
-    return;
-  }
 
-  setLoading(true);
-  try {
-    const res = await fetch(`/api/jobs/${encodeURIComponent(String(auftrag.id))}/offers`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        artikel_cents: artikelCents,
-        versand_cents: versandCents,
-        gesamt_cents: gesamtCents,
-      }),
-    });
-
-    const j = await res.json().catch(() => ({} as any));
-
-    if (!res.ok) {
-      const code = String(j?.error || '');
-
-      if (code === 'already_offered') {
-        toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
-        setOfferSent(true);
+    let versandCents = 0;
+    if (brauchtLogistikPreis) {
+      const lCents = toCentsFromMoneyInput(logistikPreis);
+      if (lCents === null) {
+        setPreisError('Bitte einen gültigen Logistikpreis angeben.');
         return;
       }
-      if (code === 'offer_window_closed') {
-        toastError('Angebotsfrist vorbei: Angebote nur bis 24h vor Warenausgabe möglich.');
-        setOfferSent(true);
-        return;
-      }
-      if (code === 'job_not_open') {
-        toastError('Dieser Auftrag ist nicht mehr offen.');
-        setOfferSent(true);
-        return;
-      }
-      if (code === 'cannot_offer_on_own_job') {
-        toastError('Du kannst kein Angebot für deinen eigenen Auftrag abgeben.');
-        setOfferSent(true);
+      versandCents = lCents;
+    }
+
+    const gesamtCents = artikelCents + versandCents;
+
+    // Connect-Ready prüfen (wie bei Lackanfragen)
+    try {
+      const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
+      const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
+
+      if (!stRes.ok) {
+        toastError('Dein Anbieter-Status konnte nicht geprüft werden. Bitte erneut versuchen.');
         return;
       }
 
-      toastError(j?.message || 'Angebot konnte nicht gesendet werden.');
+      if (!st.ready) {
+        await goToStripeOnboarding();
+        return;
+      }
+    } catch {
+      toastError('Dein Anbieter-Status konnte nicht geprüft werden.');
       return;
     }
-    // ✅ ok
-setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
-toastSuccess('Angebot wurde erfolgreich abgegeben.');
 
-    // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
-    // alert('Angebot wurde gesendet.');
-  } catch (err: any) {
-    toastError(String(err?.message || 'Angebot konnte nicht gesendet werden.'));
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/jobs/${encodeURIComponent(String(auftrag.id))}/offers`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          artikel_cents: artikelCents,
+          versand_cents: versandCents,
+          gesamt_cents: gesamtCents,
+        }),
+      });
 
+      const j = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) {
+        const code = String(j?.error || '');
+
+        if (code === 'already_offered') {
+          toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
+          setOfferSent(true);
+          return;
+        }
+        if (code === 'offer_window_closed') {
+          toastError('Angebotsfrist vorbei: Angebote nur bis 24h vor Warenausgabe möglich.');
+          setOfferSent(true);
+          return;
+        }
+        if (code === 'job_not_open') {
+          toastError('Dieser Auftrag ist nicht mehr offen.');
+          setOfferSent(true);
+          return;
+        }
+        if (code === 'cannot_offer_on_own_job') {
+          toastError('Du kannst kein Angebot für deinen eigenen Auftrag abgeben.');
+          setOfferSent(true);
+          return;
+        }
+
+        toastError(j?.message || 'Angebot konnte nicht gesendet werden.');
+        return;
+      }
+
+      // ✅ ok
+      setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
+      toastSuccess('Angebot wurde erfolgreich abgegeben.');
+
+      // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
+      // alert('Angebot wurde gesendet.');
+    } catch (err: any) {
+      toastError(String(err?.message || 'Angebot konnte nicht gesendet werden.'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isSubmitDisabled =
-  loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
-
-
+    loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
 
@@ -465,325 +439,320 @@ toastSuccess('Angebot wurde erfolgreich abgegeben.');
     <>
       <Navbar />
 
-{loading && <TopLoader />}
+      {loading && <TopLoader />}
 
-<div className={styles.container}>
-  {loading ? (
-    <DetailSkeleton />
-  ) : (
-        <div className={styles.grid}>
-          {/* Bilder */}
-          <div className={styles.leftColumn}>
-            <div className={styles.imageWrapper}>
-              <Image
-                src={auftrag.bilder?.[photoIndex] || '/images/platzhalter.jpg'}
-                alt={verfahrenName}
-                width={500}
-                height={500}
-                className={styles.image}
-                loading="lazy"
-                onClick={() => setLightboxOpen(true)}
-              />
-            </div>
-
-            <div className={styles.thumbnails}>
-              {(auftrag.bilder ?? []).map((bild, i) => (
-                <img
-                  key={i}
-                  src={bild}
-                  alt={`Bild ${i + 1}`}
-                  className={`${styles.thumbnail} ${
-                    i === photoIndex ? styles.thumbnailActive : ''
-                  }`}
-                  onClick={() => setPhotoIndex(i)}
+      <div className={styles.container}>
+        {loading ? (
+          <DetailSkeleton />
+        ) : (
+          <div className={styles.grid}>
+            {/* Bilder */}
+            <div className={styles.leftColumn}>
+              <div className={styles.imageWrapper}>
+                <Image
+                  src={auftrag.bilder?.[photoIndex] || '/images/platzhalter.jpg'}
+                  alt={verfahrenName}
+                  width={500}
+                  height={500}
+                  className={styles.image}
+                  loading="lazy"
+                  onClick={() => setLightboxOpen(true)}
                 />
-              ))}
-            </div>
-          </div>
-
-          {/* Rechte Spalte */}
-          <div className={styles.rightColumn}>
-            <div className={styles.titleRow}>
-              <h1 className={styles.title}>{verfahrenName}</h1>
-              <div className={styles.badges}>
-                {auftrag.gesponsert && (
-                  <span className={`${styles.badge} ${styles.gesponsert}`}>
-                    Gesponsert
-                  </span>
-                )}
-                {auftrag.gewerblich && (
-                  <span className={`${styles.badge} ${styles.gewerblich}`}>
-                    Gewerblich
-                  </span>
-                )}
-                {auftrag.privat && (
-                  <span className={`${styles.badge} ${styles.privat}`}>
-                    Privat
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {connectLoaded && connect?.ready === false && (
-              <div className={styles.connectNotice} role="status" aria-live="polite">
-                <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
-
-                {connect?.reason ? (
-                  <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
-                ) : null}
-
-                <div className={styles.connectActions}>
-                  <button type="button" className={styles.connectBtn} onClick={goToStripeOnboarding}>
-                    Jetzt bei Stripe verifizieren
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Meta-Grid: alle allgemeinen Eingaben */}
-            <div className={styles.metaGrid}>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Material:</span>
-                <span className={styles.value}>{auftrag.material}</span>
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Warenausgabe per:</span>
-                <span className={styles.value}>
-  {labelWarenausgabeArt(auftrag.warenausgabeArt)}
-</span>
               </div>
 
-              <div className={styles.metaItem1}>
-                <span className={styles.label}>Datum Warenausgabe:</span>
-                <span className={styles.value}>
-                  {auftrag.warenausgabeDatum
-                    ? auftrag.warenausgabeDatum.toLocaleDateString('de-DE')
-                    : '—'}
-                </span>
-                <DeadlineBadge date={auftrag.warenausgabeDatum} />
-              </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Warenrückgabe per:</span>
-                <span className={styles.value}>
-  {labelWarenrueckgabeArt(auftrag.warenannahmeArt)}
-</span>
-
-              </div>
-
-              <div className={styles.metaItem1}>
-                <span className={styles.label}>Datum Warenrückgabe:</span>
-                <span className={styles.value}>
-                  {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
-                  <DeadlineBadge date={auftrag.warenannahmeDatum} />
-                </span>
-              </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Standort:</span>
-                <span className={styles.value}>{auftrag.standort}</span>
-              </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Maße größtes Werkstück:</span>
-                <span className={styles.value}>
-                  {auftrag.length} × {auftrag.width} × {auftrag.height} mm
-                </span>
-              </div>
-
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Masse schwerstes Werkstück :</span>
-                <span className={styles.value}>{auftrag.masse} kg</span>
-              </div>
-{auftrag.user && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>User:</span>
-
-    <span className={styles.value}>
-      {reviewsHref ? (
-        <Link href={reviewsHref} className={styles.kontaktLink} title="Zu den Bewertungen">
-          {auftrag.user}
-        </Link>
-      ) : (
-        auftrag.user
-      )}
-    </span>
-
-    <div className={styles.userRating} style={{ marginTop: 6 }}>
-      {ratingCount > 0 ? (
-        <>
-          Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung{ratingCount === 1 ? '' : 'en'}
-        </>
-      ) : (
-        <>Bewertung: Noch keine Bewertungen</>
-      )}
-    </div>
-
-    <div style={{ marginTop: 6 }}>
-      <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
-        User kontaktieren
-      </Link>
-    </div>
-  </div>
-)}
-
-
-
-            </div>
-
-            {/* Downloads */}
-            {auftrag.dateien && auftrag.dateien.length > 0 && (
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Downloads:</span>
-                <ul className={styles.downloadList}>
-                  {auftrag.dateien.map((file, i) => (
-                    <li key={i} className={styles.downloadItem}>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.downloadLink}
-                      >
-                        <FaFilePdf className={styles.fileIcon} />
-                        {file.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Beschreibung (aus Formular) */}
-            {auftrag.beschreibung && (
-              <div className={styles.beschreibung}>
-                <h2>Beschreibung</h2>
-                <p className={styles.preserveNewlines}>{auftrag.beschreibung}</p>
-              </div>
-            )}
-
-            {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
-            {auftrag.verfahren.map((v, idx) => {
-              const entries = Object.entries(v.felder ?? {});
-              if (!entries.length) return null;
-
-              return (
-                <div key={idx} className={styles.verfahrenBlock}>
-                  <h3 className={styles.verfahrenTitel}>
-                    Spezifikationen zum&nbsp;{v.name}
-                  </h3>
-
-                  <div className={styles.verfahrenGrid}>
-                    {entries.map(([key, val]) => (
-                      <div key={key} className={styles.metaItem}>
-                        <span className={styles.label}>
-                          {key
-                            .replace(/([A-Z])/g, ' $1')
-                            .replace(/^\w/, (c) => c.toUpperCase())}
-                          :
-                        </span>
-                        <span className={styles.value}>
-                          {Array.isArray(val) ? val.join(', ') : String(val)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Preisbereich – immer sichtbar */}
-            <div className={`${styles.metaItem} ${styles.priceSection}`}>
-              <h2 className={styles.priceHeading}>
-                Mach ein Angebot für diesen Auftrag
-              </h2>
-
-              <form
-                id="pricePanel"
-                onSubmit={onPreisSubmit}
-                className={styles.priceForm}
-              >
-                <label htmlFor="gesamtpreis" className={styles.label}>
-                  Gesamtkosten für den Auftrag (inkl. Steuern und Gebühren exkl.
-                  Logistik) in €
-                </label>
-                <div className={styles.priceRow}>
-                  <input
-                    id="gesamtpreis"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="mind. 60 € - z. B. 1450,00 €"
-                    value={gesamtPreis}
-                    onChange={handleGesamtChange}
-                    onBlur={handleGesamtBlur}
-                    className={`${styles.priceInput} ${
-                      preisError ? styles.isInvalid : ''
+              <div className={styles.thumbnails}>
+                {(auftrag.bilder ?? []).map((bild, i) => (
+                  <img
+                    key={i}
+                    src={bild}
+                    alt={`Bild ${i + 1}`}
+                    className={`${styles.thumbnail} ${
+                      i === photoIndex ? styles.thumbnailActive : ''
                     }`}
-                    autoComplete="off"
-                    maxLength={MAX_PRICE_CHARS}
-                    disabled={loading}
+                    onClick={() => setPhotoIndex(i)}
                   />
+                ))}
+              </div>
+            </div>
+
+            {/* Rechte Spalte */}
+            <div className={styles.rightColumn}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>{verfahrenName}</h1>
+                <div className={styles.badges}>
+                  {auftrag.gesponsert && (
+                    <span className={`${styles.badge} ${styles.gesponsert}`}>
+                      Gesponsert
+                    </span>
+                  )}
+                  {auftrag.gewerblich && (
+                    <span className={`${styles.badge} ${styles.gewerblich}`}>
+                      Gewerblich
+                    </span>
+                  )}
+                  {auftrag.privat && (
+                    <span className={`${styles.badge} ${styles.privat}`}>
+                      Privat
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {connectLoaded && connect?.ready === false && (
+                <div className={styles.connectNotice} role="status" aria-live="polite">
+                  <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
+
+                  {connect?.reason ? (
+                    <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
+                  ) : null}
+
+                  <div className={styles.connectActions}>
+                    <button type="button" className={styles.connectBtn} onClick={goToStripeOnboarding}>
+                      Jetzt bei Stripe verifizieren
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Meta-Grid: alle allgemeinen Eingaben */}
+              <div className={styles.metaGrid}>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Material:</span>
+                  <span className={styles.value}>{auftrag.material}</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Warenausgabe per:</span>
+                  <span className={styles.value}>
+                    {labelWarenausgabeArt(auftrag.warenausgabeArt)}
+                  </span>
                 </div>
 
-                {brauchtLogistikPreis && (
-                  <>
-                    <label
-                      htmlFor="logistikpreis"
-                      className={styles.label}
-                      style={{ marginTop: '0.75rem' }}
-                    >
-                      Logistikkosten in € (Transport/Spedition)
-                    </label>
-                    <div className={styles.priceRow}>
-                      <input
-                        id="logistikpreis"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="mind. 20 € - z. B. 180,00 € "
-                        value={logistikPreis}
-                        onChange={handleLogistikChange}
-                        onBlur={handleLogistikBlur}
-                        className={`${styles.priceInput} ${
-                          preisError ? styles.isInvalid : ''
-                        }`}
-                        autoComplete="off"
-                        maxLength={MAX_PRICE_CHARS}
-                        disabled={loading}
+                <div className={styles.metaItem1}>
+                  <span className={styles.label}>Datum Warenausgabe:</span>
+                  <span className={styles.value}>
+                    {auftrag.warenausgabeDatum
+                      ? auftrag.warenausgabeDatum.toLocaleDateString('de-DE')
+                      : '—'}
+                  </span>
+                  <DeadlineBadge date={auftrag.warenausgabeDatum} />
+                </div>
 
-                      />
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Warenrückgabe per:</span>
+                  <span className={styles.value}>
+                    {labelWarenrueckgabeArt(auftrag.warenannahmeArt)}
+                  </span>
+                </div>
+
+                <div className={styles.metaItem1}>
+                  <span className={styles.label}>Datum Warenrückgabe:</span>
+                  <span className={styles.value}>
+                    {auftrag.warenannahmeDatum.toLocaleDateString('de-DE')}
+                    <DeadlineBadge date={auftrag.warenannahmeDatum} />
+                  </span>
+                </div>
+
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Standort:</span>
+                  <span className={styles.value}>{auftrag.standort}</span>
+                </div>
+
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Maße größtes Werkstück:</span>
+                  <span className={styles.value}>
+                    {auftrag.length} × {auftrag.width} × {auftrag.height} mm
+                  </span>
+                </div>
+
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Masse schwerstes Werkstück :</span>
+                  <span className={styles.value}>{auftrag.masse} kg</span>
+                </div>
+
+                {auftrag.user && (
+                  <div className={styles.metaItem}>
+                    <span className={styles.label}>User:</span>
+
+                    <span className={styles.value}>
+                      {reviewsHref ? (
+                        <Link href={reviewsHref} className={styles.kontaktLink} title="Zu den Bewertungen">
+                          {auftrag.user}
+                        </Link>
+                      ) : (
+                        auftrag.user
+                      )}
+                    </span>
+
+                    <div className={styles.userRating} style={{ marginTop: 6 }}>
+                      {ratingCount > 0 ? (
+                        <>
+                          Bewertung: {ratingValue.toFixed(1)}/5 · {ratingCount} Bewertung{ratingCount === 1 ? '' : 'en'}
+                        </>
+                      ) : (
+                        <>Bewertung: Noch keine Bewertungen</>
+                      )}
                     </div>
-                  </>
-                )}
 
-                {preisError ? (
-                  <div
-                    role="alert"
-                    className={styles.priceError}
-                    aria-live="polite"
-                  >
-                    {preisError}
-                  </div>
-                ) : (
-                  <div className={styles.priceHint}>
-                    Mit der Angebotsabgabe bestätigst du, alle
-                    Kundenanforderungen zum Auftrag vollständig erfüllen zu
-                    können. Dein Angebot ist 72&nbsp;h oder bis zum Tag der
-                    Warenausgabe gültig.
+                    <div style={{ marginTop: 6 }}>
+                      <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
+                        User kontaktieren
+                      </Link>
+                    </div>
                   </div>
                 )}
+              </div>
 
-                <button
-                  type="submit"
-                  className={styles.buyButton}
-                  disabled={isSubmitDisabled}
+              {/* Downloads */}
+              {auftrag.dateien && auftrag.dateien.length > 0 && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Downloads:</span>
+                  <ul className={styles.downloadList}>
+                    {auftrag.dateien.map((file, i) => (
+                      <li key={i} className={styles.downloadItem}>
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.downloadLink}
+                        >
+                          <FaFilePdf className={styles.fileIcon} />
+                          {file.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Beschreibung (aus Formular) */}
+              {auftrag.beschreibung && (
+                <div className={styles.beschreibung}>
+                  <h2>Beschreibung</h2>
+                  <p className={styles.preserveNewlines}>{auftrag.beschreibung}</p>
+                </div>
+              )}
+
+              {/* Dynamische Spezifikationen je Verfahren – NUR wenn es Felder gibt */}
+              {auftrag.verfahren.map((v, idx) => {
+                const entries = Object.entries(v.felder ?? {});
+                if (!entries.length) return null;
+
+                return (
+                  <div key={idx} className={styles.verfahrenBlock}>
+                    <h3 className={styles.verfahrenTitel}>
+                      Spezifikationen zum&nbsp;{v.name}
+                    </h3>
+
+                    <div className={styles.verfahrenGrid}>
+                      {entries.map(([key, val]) => (
+                        <div key={key} className={styles.metaItem}>
+                          <span className={styles.label}>
+                            {key
+                              .replace(/([A-Z])/g, ' $1')
+                              .replace(/^\w/, (c) => c.toUpperCase())}
+                            :
+                          </span>
+                          <span className={styles.value}>
+                            {Array.isArray(val) ? val.join(', ') : String(val)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Preisbereich – immer sichtbar */}
+              <div className={`${styles.metaItem} ${styles.priceSection}`}>
+                <h2 className={styles.priceHeading}>
+                  Mach ein Angebot für diesen Auftrag
+                </h2>
+
+                <form
+                  id="pricePanel"
+                  onSubmit={onPreisSubmit}
+                  className={styles.priceForm}
                 >
-                  {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
-                </button>
+                  <label htmlFor="gesamtpreis" className={styles.label}>
+                    Gesamtkosten für den Auftrag (inkl. Steuern und Gebühren exkl.
+                    Logistik) in €
+                  </label>
+                  <div className={styles.priceRow}>
+                    <input
+                      id="gesamtpreis"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="mind. 60 € - z. B. 1450,00 €"
+                      value={gesamtPreis}
+                      onChange={handleGesamtChange}
+                      onBlur={handleGesamtBlur}
+                      className={`${styles.priceInput} ${
+                        preisError ? styles.isInvalid : ''
+                      }`}
+                      autoComplete="off"
+                      maxLength={MAX_PRICE_CHARS}
+                      disabled={loading}
+                    />
+                  </div>
 
-              </form>
+                  {brauchtLogistikPreis && (
+                    <>
+                      <label
+                        htmlFor="logistikpreis"
+                        className={styles.label}
+                        style={{ marginTop: '0.75rem' }}
+                      >
+                        Logistikkosten in € (Transport/Spedition)
+                      </label>
+                      <div className={styles.priceRow}>
+                        <input
+                          id="logistikpreis"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="mind. 20 € - z. B. 180,00 € "
+                          value={logistikPreis}
+                          onChange={handleLogistikChange}
+                          onBlur={handleLogistikBlur}
+                          className={`${styles.priceInput} ${
+                            preisError ? styles.isInvalid : ''
+                          }`}
+                          autoComplete="off"
+                          maxLength={MAX_PRICE_CHARS}
+                          disabled={loading}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {preisError ? (
+                    <div
+                      role="alert"
+                      className={styles.priceError}
+                      aria-live="polite"
+                    >
+                      {preisError}
+                    </div>
+                  ) : (
+                    <div className={styles.priceHint}>
+                      Mit der Angebotsabgabe bestätigst du, alle
+                      Kundenanforderungen zum Auftrag vollständig erfüllen zu
+                      können. Dein Angebot ist 72&nbsp;h oder bis zum Tag der
+                      Warenausgabe gültig.
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className={styles.buyButton}
+                    disabled={isSubmitDisabled}
+                  >
+                    {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-         )}
+        )}
       </div>
 
       {/* Lightbox */}
