@@ -602,18 +602,31 @@ const AuftraegePage: FC = () => {
   }
 
   async function confirmDelivered(jobId: string | number) {
-    const key = `confirm:${jobId}`
-    setBusyKey(key)
+  const key = `confirm:${jobId}`
+  setBusyKey(key)
+
+  try {
+    // 1) Empfang bestätigen (Status: confirmed)
+    await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
+
+    // 2) Danach automatisch Auszahlung freigeben (nur wenn hold; Server enforced)
     try {
-      await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
-      await loadOrders()
+      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
     } catch (e) {
-      console.error(e)
-      alert('Konnte Empfang nicht bestätigen.')
-    } finally {
-      setBusyKey(null)
+      console.error('auto-release failed:', e)
+      // Empfang ist bestätigt, aber Auszahlung blieb auf hold -> manuell über "Freigeben" später möglich
+      alert('Empfang bestätigt, aber Auszahlung konnte nicht automatisch freigegeben werden. Bitte später erneut versuchen.')
     }
+
+    await loadOrders()
+  } catch (e) {
+    console.error(e)
+    alert('Konnte Empfang nicht bestätigen.')
+  } finally {
+    setBusyKey(null)
   }
+}
+
 
   async function openDispute(jobId: string | number) {
     const reason = window.prompt('Problem melden (optional):') || ''
@@ -925,9 +938,9 @@ const AuftraegePage: FC = () => {
                     className={styles.btnDanger}
                     disabled={isBusy}
                     onClick={() => triggerRefund(order.jobId)}
-                    title="Refund nur möglich solange payout_status = hold"
+                    title="Refund nur möglich solange Auszahlungsstatus = hold"
                   >
-                    {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Refund auslösen'}
+                    {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
                   </button>
                 )}
 
