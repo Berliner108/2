@@ -76,7 +76,6 @@ type DbOrder = Order & {
   owner_rating_avg?: number | null
   owner_rating_count?: number | null
   anbieterSnapshot?: any | null
-
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -401,6 +400,7 @@ const AuftraegePage: FC = () => {
 
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
 
+  // ✅ NUR EINMAL (damit kein Duplicate identifier)
   type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
   const [reviewJobId, setReviewJobId] = useState<string | number | null>(null)
   const [reviewRole, setReviewRole] = useState<ReviewRole>('customer_to_vendor')
@@ -863,95 +863,92 @@ const AuftraegePage: FC = () => {
                 </span>
               </div>
 
+              {/* ✅ WICHTIG: Meta-Spalten NICHT verschachteln -> korrekt schließen */}
               <div className={styles.metaCol}>
-  <div className={styles.metaLabel}>{contactLabel}</div>
+                <div className={styles.metaLabel}>{contactLabel}</div>
 
-  <div className={styles.metaValue}>
-    {/* ✅ UNBERÜHRT: username + rating */}
-    {contact.handle ? (
-      <>
-        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
-          <span className={styles.vendor}>{contact.name}</span>
-        </Link>
-        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-      </>
-    ) : (
-      <>
-        <span className={styles.vendor}>{contact.name}</span>
-        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-      </>
-    )}
+                <div className={styles.metaValue}>
+                  {contact.handle ? (
+                    <>
+                      <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+                        <span className={styles.vendor}>{contact.name}</span>
+                      </Link>
+                      <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={styles.vendor}>{contact.name}</span>
+                      <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                    </>
+                  )}
 
-    {/* ✅ NEU: Snapshot darunter */}
-    {(() => {
-      const snap: any =
-        (order as any).anbieterSnapshot ??
-        (order as any).anbieter_snapshot ??
-        (order as any).owner_snapshot ??
-        (order as any).vendor_snapshot ??
-        null
+                  {(() => {
+                    const snap: any =
+                      (order as any).anbieterSnapshot ??
+                      (order as any).anbieter_snapshot ??
+                      (order as any).owner_snapshot ??
+                      (order as any).vendor_snapshot ??
+                      null
 
-      if (!snap) return null
+                    if (!snap) return null
 
-      const priv = snap?.private ?? {}
-      const pub = snap?.public ?? {}
-      const addr = priv?.address ?? {}
-      const loc = pub?.location ?? {}
+                    const priv = snap?.private ?? {}
+                    const pub = snap?.public ?? {}
+                    const addr = priv?.address ?? {}
+                    const loc = pub?.location ?? {}
 
-      const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
-      const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
+                    const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
+                    const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
 
-      const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
-      const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
-      const country = String(addr?.country ?? loc?.country ?? '').trim()
+                    const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
+                    const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
+                    const country = String(addr?.country ?? loc?.country ?? '').trim()
 
-      return (
-        <div className={styles.vendorSnapshot}>
-          {company ? <div>{company}</div> : null}
-          {person ? <div>{person}</div> : null}
-          {streetLine ? <div>{streetLine}</div> : null}
-          {cityLine ? <div>{cityLine}</div> : null}
-          {country ? <div>{country}</div> : null}
-        </div>
-      )
-    })()}
-  </div>
-
-
-
-
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Preis</div>
-                  <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
+                    return (
+                      <div className={styles.vendorSnapshot}>
+                        {company ? <div>{company}</div> : null}
+                        {person ? <div>{person}</div> : null}
+                        {streetLine ? <div>{streetLine}</div> : null}
+                        {cityLine ? <div>{cityLine}</div> : null}
+                        {country ? <div>{country}</div> : null}
+                      </div>
+                    )
+                  })()}
                 </div>
-
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Zahlungsstatus</div>
-                  <div className={styles.metaValue}>{paymentLabel(order)}</div>
-                </div>
-
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
-                  <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
-                </div>
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
-                  <div className={styles.metaValue}>{formatDate(annahme)}</div>
-                </div>
-
-                {order.deliveredReportedAt && (
-                  <div className={styles.metaCol}>
-                    <div className={styles.metaLabel}>Gemeldet</div>
-                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredReportedAt))}</div>
-                  </div>
-                )}
-                {order.deliveredConfirmedAt && (
-                  <div className={styles.metaCol}>
-                    <div className={styles.metaLabel}>Bestätigt</div>
-                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
-                  </div>
-                )}
               </div>
+
+              <div className={styles.metaCol}>
+                <div className={styles.metaLabel}>Preis</div>
+                <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
+              </div>
+
+              <div className={styles.metaCol}>
+                <div className={styles.metaLabel}>Zahlungsstatus</div>
+                <div className={styles.metaValue}>{paymentLabel(order)}</div>
+              </div>
+
+              {/* ✅ Datumszuordnung korrigiert */}
+              <div className={styles.metaCol}>
+                <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
+                <div className={styles.metaValue}>{formatDate(annahme)}</div>
+              </div>
+              <div className={styles.metaCol}>
+                <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
+                <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
+              </div>
+
+              {order.deliveredReportedAt && (
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Gemeldet</div>
+                  <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredReportedAt))}</div>
+                </div>
+              )}
+              {order.deliveredConfirmedAt && (
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Bestätigt</div>
+                  <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
+                </div>
+              )}
 
               <div className={styles.actions}>
                 {canVendorReport &&
@@ -1004,7 +1001,7 @@ const AuftraegePage: FC = () => {
                     className={styles.primaryBtn}
                     disabled={isBusy}
                     onClick={() => triggerRelease(order.jobId)}
-                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr."
+                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr möglich."
                   >
                     {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                   </button>
@@ -1023,13 +1020,23 @@ const AuftraegePage: FC = () => {
                 )}
 
                 {canCustomerReview && (
-                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}>
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}
+                  >
                     Dienstleister bewerten
                   </button>
                 )}
 
                 {canVendorReview && (
-                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}>
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}
+                  >
                     Auftraggeber bewerten
                   </button>
                 )}
