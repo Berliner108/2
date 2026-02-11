@@ -60,7 +60,7 @@ type ApiOrder = {
   jobPayStatus?: DbPayStatus
   offerPayStatus?: DbPayStatus
 
-  // ✅ NEU: rollen-spezifischer payout_status für Buttons
+  // ✅ rollen-spezifischer payout_status für Buttons
   jobPayoutStatus?: DbPayoutStatus // kind='vergeben'
   offerPayoutStatus?: DbPayoutStatus // kind='angenommen'
 
@@ -149,6 +149,8 @@ function mapPayStatus(o: DbOffer): DbPayStatus {
 /**
  * Aus jobs.specs + verfahren_1/2 ein "verfahren[]"-Array bauen,
  * damit computeJobTitle() in deiner page.tsx wieder sauber arbeitet.
+ *
+ * specs keys: z.B. "v1__Pulverbeschichten__farbton": "7016"
  */
 function buildVerfahrenFromJobRow(job: any): any[] {
   const names = new Set<string>()
@@ -161,6 +163,7 @@ function buildVerfahrenFromJobRow(job: any): any[] {
   const keyList = Object.keys(specs || {})
   for (const k of keyList) {
     const parts = k.split('__')
+    // v1__Pulverbeschichten__farbton
     if (parts.length >= 3) {
       const proc = String(parts[1] ?? '').trim()
       if (proc) names.add(proc)
@@ -173,7 +176,7 @@ function buildVerfahrenFromJobRow(job: any): any[] {
     for (const k of keyList) {
       const parts = k.split('__')
       if (parts.length >= 3 && String(parts[1]) === name) {
-        const fieldKey = parts.slice(2).join('__')
+        const fieldKey = parts.slice(2).join('__') // alles nach dem Verfahren
         felder[fieldKey] = (specs as any)[k]
       }
     }
@@ -185,9 +188,16 @@ function buildVerfahrenFromJobRow(job: any): any[] {
 
 function normalizeJob(row: any): ApiJob {
   const id = String(row.id)
+
+  // jobs schema (dein create table):
+  // description, material_guete, material_guete_custom,
+  // liefer_datum_utc, rueck_datum_utc, specs, verfahren_1, verfahren_2
   const beschreibung = row.description ?? row.beschreibung ?? row.description_text ?? undefined
   const material = row.material_guete ?? row.material ?? undefined
 
+  // Für deine UI-Logik:
+  // warenannahmeDatum ~ liefer_datum_utc
+  // warenausgabeDatum ~ rueck_datum_utc
   const warenannahmeDatum = row.liefer_datum_utc ?? row.warenannahmeDatum ?? null
   const warenausgabeDatum = row.rueck_datum_utc ?? row.warenausgabeDatum ?? null
 
@@ -235,7 +245,7 @@ export async function GET(req: Request) {
 
   const admin = supabaseAdmin()
 
-  // --- DEBUG ---
+  // --- DEBUG: Vergleich user-client vs admin (RLS Diagnose) ---
   if (debug) {
     const qPaidUser = await supabase
       .from('job_offers')
@@ -267,16 +277,32 @@ export async function GET(req: Request) {
       {
         ok: true,
         uid,
-        paid_user: { count: qPaidUser.count ?? null, error: qPaidUser.error?.message ?? null, sample: (qPaidUser.data ?? []).slice(0, 5) },
-        paid_admin: { count: qPaidAdmin.count ?? null, error: qPaidAdmin.error?.message ?? null, sample: (qPaidAdmin.data ?? []).slice(0, 5) },
-        any_user: { count: qAnyUser.count ?? null, error: qAnyUser.error?.message ?? null, sample: (qAnyUser.data ?? []).slice(0, 5) },
-        any_admin: { count: qAnyAdmin.count ?? null, error: qAnyAdmin.error?.message ?? null, sample: (qAnyAdmin.data ?? []).slice(0, 5) },
+        paid_user: {
+          count: qPaidUser.count ?? null,
+          error: qPaidUser.error?.message ?? null,
+          sample: (qPaidUser.data ?? []).slice(0, 5),
+        },
+        paid_admin: {
+          count: qPaidAdmin.count ?? null,
+          error: qPaidAdmin.error?.message ?? null,
+          sample: (qPaidAdmin.data ?? []).slice(0, 5),
+        },
+        any_user: {
+          count: qAnyUser.count ?? null,
+          error: qAnyUser.error?.message ?? null,
+          sample: (qAnyUser.data ?? []).slice(0, 5),
+        },
+        any_admin: {
+          count: qAnyAdmin.count ?? null,
+          error: qAnyAdmin.error?.message ?? null,
+          sample: (qAnyAdmin.data ?? []).slice(0, 5),
+        },
       },
       { status: 200 }
     )
   }
 
-  // --- PRODUKTIV ---
+  // --- PRODUKTIV: Admin query (damit es live NICHT an RLS scheitert) ---
   const baseSelect = `
     id,
     job_id,
@@ -319,7 +345,7 @@ export async function GET(req: Request) {
 
   const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
 
-  // Counterparty Profiles
+  // Counterparty Profiles (weiterhin über user-client; ok)
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -376,7 +402,7 @@ export async function GET(req: Request) {
 
         jobPayStatus: payStatus,
 
-        // ✅ NEU
+        // ✅ NEU: für Buttons in page.tsx
         jobPayoutStatus: payout,
 
         // (alt bleibt)
@@ -415,7 +441,7 @@ export async function GET(req: Request) {
 
         offerPayStatus: payStatus,
 
-        // ✅ NEU
+        // ✅ NEU: für Buttons in page.tsx
         offerPayoutStatus: payout,
 
         // (alt bleibt)
@@ -438,7 +464,7 @@ export async function GET(req: Request) {
     }
   }
 
-  // Jobs laden (Admin)
+  // Jobs laden (Admin -> damit vendor auch sieht!)
   const jobIds = Array.from(new Set(orders.map(o => String(o.jobId))))
   let jobs: ApiJob[] = []
 
