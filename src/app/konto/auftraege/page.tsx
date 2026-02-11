@@ -82,6 +82,9 @@ type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
+// ✅ NUR EINMAL (fix für "Duplicate identifier 'ReviewRole'")
+type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
+
 /* ---------- Persist Keys & Defaults (nur UI) ---------- */
 const TOP_KEY = 'auftraegeTop'
 const LS_PS_V = 'orders:ps:v'
@@ -125,9 +128,7 @@ const formatEUR = (c?: number) =>
     : '—'
 
 const formatDate = (d?: Date) =>
-  d
-    ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
-    : '—'
+  d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
 
 // ✅ exakt wie du es wolltest: "4.7/5 · 12" oder "keine Bewertungen"
 function ratingTxt(avg?: number | null, cnt?: number | null): string {
@@ -183,10 +184,7 @@ function getOwnerName(job: Job): string {
 }
 
 /** „Produktionsstatus“ aus Terminen */
-function computeStatus(job: Job): {
-  key: StatusKey
-  label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
-} {
+function computeStatus(job: Job): { key: StatusKey; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
   const now = Date.now()
   const annahme = asDateLike(job.warenannahmeDatum)
   const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
@@ -400,8 +398,6 @@ const AuftraegePage: FC = () => {
 
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
 
-  // ✅ NUR EINMAL (damit kein Duplicate identifier)
-  type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
   const [reviewJobId, setReviewJobId] = useState<string | number | null>(null)
   const [reviewRole, setReviewRole] = useState<ReviewRole>('customer_to_vendor')
   const [rating, setRating] = useState(5)
@@ -787,8 +783,9 @@ const AuftraegePage: FC = () => {
                   ? { key: 'fertig' as StatusKey, label: 'Zustellung gemeldet' as const }
                   : prodStatus
 
-          const annahme = asDateLike(j.warenannahmeDatum)
-          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
+          // ✅ richtig zuordnen:
+          const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
+          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
 
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
           const contact = getContactForOrder(order, j)
@@ -863,92 +860,101 @@ const AuftraegePage: FC = () => {
                 </span>
               </div>
 
-              {/* ✅ WICHTIG: Meta-Spalten NICHT verschachteln -> korrekt schließen */}
-              <div className={styles.metaCol}>
-                <div className={styles.metaLabel}>{contactLabel}</div>
-
-                <div className={styles.metaValue}>
-                  {contact.handle ? (
-                    <>
-                      <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+              {/* ✅ wie vorher: mehrere Spalten (auto-fit), OHNE neue Klassennamen */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 12,
+                  alignItems: 'start',
+                }}
+              >
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>{contactLabel}</div>
+                  <div className={styles.metaValue}>
+                    {contact.handle ? (
+                      <>
+                        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+                          <span className={styles.vendor}>{contact.name}</span>
+                        </Link>
+                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                      </>
+                    ) : (
+                      <>
                         <span className={styles.vendor}>{contact.name}</span>
-                      </Link>
-                      <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className={styles.vendor}>{contact.name}</span>
-                      <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-                    </>
-                  )}
+                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                      </>
+                    )}
 
-                  {(() => {
-                    const snap: any =
-                      (order as any).anbieterSnapshot ??
-                      (order as any).anbieter_snapshot ??
-                      (order as any).owner_snapshot ??
-                      (order as any).vendor_snapshot ??
-                      null
+                    {(() => {
+                      const snap: any =
+                        (order as any).anbieterSnapshot ??
+                        (order as any).anbieter_snapshot ??
+                        (order as any).owner_snapshot ??
+                        (order as any).vendor_snapshot ??
+                        null
 
-                    if (!snap) return null
+                      if (!snap) return null
 
-                    const priv = snap?.private ?? {}
-                    const pub = snap?.public ?? {}
-                    const addr = priv?.address ?? {}
-                    const loc = pub?.location ?? {}
+                      const priv = snap?.private ?? {}
+                      const pub = snap?.public ?? {}
+                      const addr = priv?.address ?? {}
+                      const loc = pub?.location ?? {}
 
-                    const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
-                    const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
+                      const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
+                      const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
 
-                    const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
-                    const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
-                    const country = String(addr?.country ?? loc?.country ?? '').trim()
+                      const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
+                      const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
+                      const country = String(addr?.country ?? loc?.country ?? '').trim()
 
-                    return (
-                      <div className={styles.vendorSnapshot}>
-                        {company ? <div>{company}</div> : null}
-                        {person ? <div>{person}</div> : null}
-                        {streetLine ? <div>{streetLine}</div> : null}
-                        {cityLine ? <div>{cityLine}</div> : null}
-                        {country ? <div>{country}</div> : null}
-                      </div>
-                    )
-                  })()}
+                      return (
+                        <div className={styles.vendorSnapshot}>
+                          {company ? <div>{company}</div> : null}
+                          {person ? <div>{person}</div> : null}
+                          {streetLine ? <div>{streetLine}</div> : null}
+                          {cityLine ? <div>{cityLine}</div> : null}
+                          {country ? <div>{country}</div> : null}
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
-              </div>
 
-              <div className={styles.metaCol}>
-                <div className={styles.metaLabel}>Preis</div>
-                <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
-              </div>
-
-              <div className={styles.metaCol}>
-                <div className={styles.metaLabel}>Zahlungsstatus</div>
-                <div className={styles.metaValue}>{paymentLabel(order)}</div>
-              </div>
-
-              {/* ✅ Datumszuordnung korrigiert */}
-              <div className={styles.metaCol}>
-                <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
-                <div className={styles.metaValue}>{formatDate(annahme)}</div>
-              </div>
-              <div className={styles.metaCol}>
-                <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
-                <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
-              </div>
-
-              {order.deliveredReportedAt && (
                 <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Gemeldet</div>
-                  <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredReportedAt))}</div>
+                  <div className={styles.metaLabel}>Preis</div>
+                  <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
                 </div>
-              )}
-              {order.deliveredConfirmedAt && (
+
                 <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Bestätigt</div>
-                  <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
+                  <div className={styles.metaLabel}>Zahlungsstatus</div>
+                  <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
-              )}
+
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
+                  <div className={styles.metaValue}>{formatDate(annahme)}</div>
+                </div>
+
+                <div className={styles.metaCol}>
+                  <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
+                  <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
+                </div>
+
+                {order.deliveredReportedAt && (
+                  <div className={styles.metaCol}>
+                    <div className={styles.metaLabel}>Gemeldet</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredReportedAt))}</div>
+                  </div>
+                )}
+
+                {order.deliveredConfirmedAt && (
+                  <div className={styles.metaCol}>
+                    <div className={styles.metaLabel}>Bestätigt</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
+                  </div>
+                )}
+              </div>
 
               <div className={styles.actions}>
                 {canVendorReport &&
@@ -1001,7 +1007,7 @@ const AuftraegePage: FC = () => {
                     className={styles.primaryBtn}
                     disabled={isBusy}
                     onClick={() => triggerRelease(order.jobId)}
-                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr möglich."
+                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr."
                   >
                     {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                   </button>
