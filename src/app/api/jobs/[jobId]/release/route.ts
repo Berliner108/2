@@ -15,30 +15,13 @@ function jsonNoStore(data: any, status = 200) {
   return NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store' } })
 }
 
-/**
- * Modell B (Hold -> später Release):
- * - Beim Checkout wurde PaymentIntent erstellt (buyer zahlt)
- * - Funds bleiben auf Plattform (bzw. noch nicht an Connected Account transferiert)
- * - Beim Release machen wir:
- *   1) Transfer an Connected Account (vendor) = gross - platformFee
- *   2) Job/Offer payout_status = released, released_at setzen
- *
- * Voraussetzung:
- * - offer.status = 'paid'
- * - offer.payout_status = 'hold'
- * - offer has connected_account_id (oder seller_profile.stripe_account_id)
- */
-
-export async function POST(
-  req: Request,
-  ctx: { params: Promise<{ jobId: string }> } // ✅ Next 15
-) {
+export async function POST(req: Request, ctx: { params: Promise<{ jobId: string }> }) {
   try {
     const { jobId } = await ctx.params
     const jobIdStr = s(jobId)
     if (!jobIdStr) return jsonNoStore({ ok: false, error: 'missing_jobId' }, 400)
 
-    // Auth: nur Auftraggeber (Owner) darf Release auslösen
+    // Auth: nur Auftraggeber darf Release auslösen
     const supabase = await supabaseServer()
     const { data: auth, error: authErr } = await supabase.auth.getUser()
     if (authErr) return jsonNoStore({ ok: false, error: authErr.message }, 401)
@@ -47,47 +30,27 @@ export async function POST(
     const admin = supabaseAdmin()
     const nowIso = new Date().toISOString()
 
-    // Job laden
+    // Jobs-Tabelle: bei dir ist der Auftraggeber "user_id" (nicht owner_id)
     const { data: job, error: jobErr } = await admin
       .from('jobs')
-      .select('id, owner_id, selected_offer_id, status')
+      .select('*')
       .eq('id', jobIdStr)
       .maybeSingle()
 
     if (jobErr) return jsonNoStore({ ok: false, error: jobErr.message }, 500)
     if (!job) return jsonNoStore({ ok: false, error: 'job_not_found' }, 404)
 
-    if (s(job.owner_id) !== s(auth.user.id)) {
+    if (s((job as any).user_id) !== s(auth.user.id)) {
       return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
     }
 
-    const offerId = s(job.selected_offer_id)
+    const offerId = s((job as any).selected_offer_id)
     if (!offerId) return jsonNoStore({ ok: false, error: 'no_selected_offer' }, 409)
 
-    // Offer laden (inkl. vendor stripe account)
-    // ✅ Wichtig: passe "connected_account_id" an deine Spalte/Join an:
-    // - Option A: job_offers.connected_account_id
-    // - Option B: via profiles.stripe_account_id des Bieters
+    // Offer laden (select('*') => kein GenericStringError)
     const { data: offer, error: offerErr } = await admin
       .from('job_offers')
-      .select(
-        [
-          'id',
-          'job_id',
-          'owner_id',
-          'bieter_id',
-          'status',
-          'payout_status',
-          'paid_amount_cents',
-          'refunded_amount_cents',
-          'currency',
-          'payment_intent_id',
-          'transfer_id',
-          'payout_released_at',
-          // optional: falls du es direkt in offers speicherst:
-          'connected_account_id',
-        ].join(', ')
-      )
+      .select('*')
       .eq('id', offerId)
       .eq('job_id', jobIdStr)
       .maybeSingle()
@@ -95,41 +58,46 @@ export async function POST(
     if (offerErr) return jsonNoStore({ ok: false, error: offerErr.message }, 500)
     if (!offer) return jsonNoStore({ ok: false, error: 'offer_not_found' }, 404)
 
-    if (s(offer.owner_id) !== s(auth.user.id)) {
+    // Auftraggeber-Check: in deinen Inserts heißt es "owner_id" in job_offers
+    if (s((offer as any).owner_id) !== s(auth.user.id)) {
       return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
     }
 
     // Nur wenn hold
-    if (s(offer.payout_status) !== 'hold') {
+    if (s((offer as any).payout_status) !== 'hold') {
       return jsonNoStore(
-        { ok: true, ignored: true, reason: 'payout_status_not_hold', payout_status: offer.payout_status },
+        { ok: true, ignored: true, reason: 'payout_status_not_hold', payout_status: (offer as any).payout_status },
         200
       )
     }
 
-    // Nur wenn paid (nicht refunded / nicht released)
-    if (s(offer.status) !== 'paid') {
-      return jsonNoStore({ ok: false, error: 'offer_not_paid', status: offer.status }, 409)
+    // Nur wenn paid
+    if (s((offer as any).status) !== 'paid') {
+      return jsonNoStore({ ok: false, error: 'offer_not_paid', status: (offer as any).status }, 409)
     }
 
-    const paid = Number(offer.paid_amount_cents ?? 0)
-    const refunded = Number(offer.refunded_amount_cents ?? 0)
-    const netGross = Math.max(0, paid - refunded) // falls partial refund: nur Rest releasen
+    const paid = Number((offer as any).paid_amount_cents ?? (offer as any).gesamt_cents ?? 0)
+    const refunded = Number((offer as any).refunded_amount_cents ?? 0)
+    const netGross = Math.max(0, paid - refunded)
     if (netGross <= 0) {
       return jsonNoStore({ ok: true, ignored: true, reason: 'nothing_to_release', paid, refunded }, 200)
     }
 
-    const currency = (s(offer.currency) || 'eur').toLowerCase()
+    const currency = (s((offer as any).currency) || 'eur').toLowerCase()
 
-    // Vendor connected account finden
+    // Connected Account (Vendor) finden:
+    // 1) falls du es direkt in offers speicherst:
     let connectedAccountId = s((offer as any).connected_account_id)
 
+    // 2) sonst aus profiles des bieter_id
     if (!connectedAccountId) {
-      // Fallback: aus profiles des bieter_id
+      const bieterId = s((offer as any).bieter_id)
+      if (!bieterId) return jsonNoStore({ ok: false, error: 'missing_bieter_id' }, 500)
+
       const { data: prof, error: profErr } = await admin
         .from('profiles')
         .select('stripe_account_id')
-        .eq('id', offer.bieter_id)
+        .eq('id', bieterId)
         .maybeSingle()
 
       if (profErr) return jsonNoStore({ ok: false, error: profErr.message }, 500)
@@ -137,22 +105,18 @@ export async function POST(
     }
 
     if (!connectedAccountId) {
-      return jsonNoStore({ ok: false, error: 'vendor_not_onboarded_missing_stripe_account_id' }, 409)
+      return jsonNoStore({ ok: false, error: 'vendor_missing_stripe_account_id' }, 409)
     }
 
-    // Platform Fee (bei dir 7% — brutto)
-    // Wenn du es aus DB holen willst (z.B. settings table), kannst du hier ersetzen.
+    // Provision (7% brutto)
     const platformFeePercent = 0.07
     const platformFee = Math.max(0, Math.round(netGross * platformFeePercent))
     const vendorAmount = Math.max(0, netGross - platformFee)
-
     if (vendorAmount <= 0) {
-      // Extremfall: nur fee übrig -> blockieren, sonst komisch
       return jsonNoStore({ ok: false, error: 'vendor_amount_zero', netGross, platformFee }, 409)
     }
 
-    // ✅ Transfer an Connected Account
-    // Hinweis: Das geht nur, wenn die Zahlung auf der Plattform gelandet ist (Destination/Separate Charges korrekt).
+    // Transfer an Connected Account (Modell B)
     const transfer = await stripe.transfers.create({
       amount: vendorAmount,
       currency,
@@ -160,26 +124,24 @@ export async function POST(
       metadata: {
         kind: 'job',
         jobId: jobIdStr,
-        offerId: offerId,
-        paid_amount_cents: String(paid),
-        refunded_amount_cents: String(refunded),
+        offerId,
         net_gross_cents: String(netGross),
         platform_fee_cents: String(platformFee),
+        vendor_amount_cents: String(vendorAmount),
       },
     })
 
-    // DB updaten: Offer + Job
+    // DB: Offer auf released
     const { error: updOfferErr } = await admin
       .from('job_offers')
       .update({
         payout_status: 'released',
         payout_released_at: nowIso,
         transfer_id: transfer.id,
-        updated_at: nowIso,
-      })
+      } as any)
       .eq('id', offerId)
       .eq('job_id', jobIdStr)
-      .eq('payout_status', 'hold') // idempotenz
+      .eq('payout_status', 'hold')
       .eq('status', 'paid')
 
     if (updOfferErr) {
@@ -190,10 +152,10 @@ export async function POST(
       )
     }
 
-    // Job-Status optional mitschreiben (z.B. released_at)
+    // Job: optional Status/Datum setzen
     await admin
       .from('jobs')
-      .update({ status: 'closed', released_at: nowIso, updated_at: nowIso })
+      .update({ status: 'closed', released_at: nowIso, updated_at: nowIso } as any)
       .eq('id', jobIdStr)
       .eq('selected_offer_id', offerId)
 
