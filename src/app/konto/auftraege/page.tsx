@@ -862,7 +862,8 @@ const AuftraegePage: FC = () => {
                   {display.label}
                 </span>
               </div>
-<div className={styles.metaCol}>
+
+              <div className={styles.metaCol}>
   <div className={styles.metaLabel}>{contactLabel}</div>
 
   <div className={styles.metaValue}>
@@ -881,9 +882,10 @@ const AuftraegePage: FC = () => {
       </>
     )}
 
-    {/* ✅ NEU: zusätzliche Infos aus profiles snapshot (ohne username zu ersetzen) */}
+    {/* ✅ NEU: Snapshot darunter */}
     {(() => {
       const snap: any =
+        (order as any).anbieterSnapshot ??
         (order as any).anbieter_snapshot ??
         (order as any).owner_snapshot ??
         (order as any).vendor_snapshot ??
