@@ -40,6 +40,7 @@ type DbOffer = {
 
 /* ---------- Payment-Status fürs Frontend ---------- */
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
 
 type ApiOrder = {
   jobId: string
@@ -59,8 +60,12 @@ type ApiOrder = {
   jobPayStatus?: DbPayStatus
   offerPayStatus?: DbPayStatus
 
-  // zusätzliche Infos
-  payoutStatus: 'hold' | 'released' | 'partial_refund' | 'refunded'
+  // ✅ NEU: rollen-spezifischer payout_status für Buttons
+  jobPayoutStatus?: DbPayoutStatus // kind='vergeben'
+  offerPayoutStatus?: DbPayoutStatus // kind='angenommen'
+
+  // (alte Felder bleiben drin)
+  payoutStatus: DbPayoutStatus
   payoutReleasedAt?: string
   refundedAmountCents?: number
   refundedAt?: string
@@ -144,8 +149,6 @@ function mapPayStatus(o: DbOffer): DbPayStatus {
 /**
  * Aus jobs.specs + verfahren_1/2 ein "verfahren[]"-Array bauen,
  * damit computeJobTitle() in deiner page.tsx wieder sauber arbeitet.
- *
- * specs keys: z.B. "v1__Pulverbeschichten__farbton": "7016"
  */
 function buildVerfahrenFromJobRow(job: any): any[] {
   const names = new Set<string>()
@@ -158,7 +161,6 @@ function buildVerfahrenFromJobRow(job: any): any[] {
   const keyList = Object.keys(specs || {})
   for (const k of keyList) {
     const parts = k.split('__')
-    // v1__Pulverbeschichten__farbton
     if (parts.length >= 3) {
       const proc = String(parts[1] ?? '').trim()
       if (proc) names.add(proc)
@@ -171,7 +173,7 @@ function buildVerfahrenFromJobRow(job: any): any[] {
     for (const k of keyList) {
       const parts = k.split('__')
       if (parts.length >= 3 && String(parts[1]) === name) {
-        const fieldKey = parts.slice(2).join('__') // alles nach dem Verfahren
+        const fieldKey = parts.slice(2).join('__')
         felder[fieldKey] = (specs as any)[k]
       }
     }
@@ -183,16 +185,9 @@ function buildVerfahrenFromJobRow(job: any): any[] {
 
 function normalizeJob(row: any): ApiJob {
   const id = String(row.id)
-
-  // jobs schema (dein create table):
-  // description, material_guete, material_guete_custom,
-  // liefer_datum_utc, rueck_datum_utc, specs, verfahren_1, verfahren_2
   const beschreibung = row.description ?? row.beschreibung ?? row.description_text ?? undefined
   const material = row.material_guete ?? row.material ?? undefined
 
-  // Für deine UI-Logik:
-  // warenannahmeDatum ~ liefer_datum_utc
-  // warenausgabeDatum ~ rueck_datum_utc
   const warenannahmeDatum = row.liefer_datum_utc ?? row.warenannahmeDatum ?? null
   const warenausgabeDatum = row.rueck_datum_utc ?? row.warenausgabeDatum ?? null
 
@@ -215,7 +210,7 @@ function normalizeJob(row: any): ApiJob {
 export async function GET(req: Request) {
   const cookieStore = await cookies()
 
-  // User-Client (für Auth + Reviews + Profiles; ist OK)
+  // User-Client (Auth + Reviews + Profiles)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -240,7 +235,7 @@ export async function GET(req: Request) {
 
   const admin = supabaseAdmin()
 
-  // --- DEBUG: Vergleich user-client vs admin (RLS Diagnose) ---
+  // --- DEBUG ---
   if (debug) {
     const qPaidUser = await supabase
       .from('job_offers')
@@ -281,7 +276,7 @@ export async function GET(req: Request) {
     )
   }
 
-  // --- PRODUKTIV: Admin query (damit es live NICHT an RLS scheitert) ---
+  // --- PRODUKTIV ---
   const baseSelect = `
     id,
     job_id,
@@ -324,7 +319,7 @@ export async function GET(req: Request) {
 
   const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
 
-  // Counterparty Profiles (weiterhin über user-client; ok)
+  // Counterparty Profiles
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -352,7 +347,7 @@ export async function GET(req: Request) {
     const offerId = String(o.id)
 
     const fulfillment = (o.fulfillment_status ?? 'in_progress') as ApiOrder['status']
-    const payout = (o.payout_status ?? 'hold') as ApiOrder['payoutStatus']
+    const payout = (o.payout_status ?? 'hold') as DbPayoutStatus
     const payStatus = mapPayStatus(o)
 
     const ownerLabel = labelFromProfile(profMap.get(String(o.owner_id)))
@@ -364,6 +359,7 @@ export async function GET(req: Request) {
 
     const acceptedAt = o.paid_at || o.created_at || new Date().toISOString()
 
+    // ✅ Auftraggeber-Sicht (vergeben)
     if (String(o.owner_id) === uid) {
       orders.push({
         jobId,
@@ -380,6 +376,10 @@ export async function GET(req: Request) {
 
         jobPayStatus: payStatus,
 
+        // ✅ NEU
+        jobPayoutStatus: payout,
+
+        // (alt bleibt)
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
@@ -398,6 +398,7 @@ export async function GET(req: Request) {
       })
     }
 
+    // ✅ Anbieter-Sicht (angenommen)
     if (String(o.bieter_id) === uid) {
       orders.push({
         jobId,
@@ -414,6 +415,10 @@ export async function GET(req: Request) {
 
         offerPayStatus: payStatus,
 
+        // ✅ NEU
+        offerPayoutStatus: payout,
+
+        // (alt bleibt)
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
@@ -433,7 +438,7 @@ export async function GET(req: Request) {
     }
   }
 
-  // Jobs laden (Admin -> damit vendor auch sieht!)
+  // Jobs laden (Admin)
   const jobIds = Array.from(new Set(orders.map(o => String(o.jobId))))
   let jobs: ApiJob[] = []
 
