@@ -937,12 +937,12 @@ const AuftraegePage: FC = () => {
                 </div>
 
                 <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
+                  <div className={styles.metaLabel}>Warenausgabe</div>
                   <div className={styles.metaValue}>{formatDate(annahme)}</div>
                 </div>
 
                 <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Warenausgabe (Kunde)</div>
+                  <div className={styles.metaLabel}>Warenrückgabe</div>
                   <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
                 </div>
 
