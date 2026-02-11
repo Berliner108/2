@@ -379,3 +379,21 @@
   font: inherit;
   resize: vertical;
 }
+/* Mobil: Segmented-Control strecken wie im anderen Screen */
+@media (max-width: 768px){
+  .toolbar { 
+    grid-template-columns: 1fr;      /* eine Spalte */
+  }
+
+  .toolbar .segmented{
+    display: flex;                   /* statt inline-flex */
+    width: 100%;                     /* volle Zeile */
+    justify-self: stretch;           /* Grid-Lücke schließen */
+  }
+
+  .segmentedBtn{
+    flex: 1 1 0;                     /* beide Buttons gleich breit */
+    justify-content: center;
+    min-width: 0;                    /* Text darf umbrechen */
+  }
+}
