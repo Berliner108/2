@@ -397,3 +397,29 @@
     min-width: 0;                    /* Text darf umbrechen */
   }
 }
+/* =========================
+   FIX: userLink im Meta-Bereich darf NICHT weiß sein
+   ========================= */
+.userLink{
+  color: #111 !important;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.userLink:hover{
+  color: #089bb9 !important;
+  border-bottom-color: #00b5d8;
+}
+
+.userLink:visited{
+  color: #111 !important;
+}
+
+/* =========================
+   Absicherung: Links in Buttons bleiben weiß
+   ========================= */
+.actions a.userLink{
+  color: #fff !important;
+  border-bottom: 0;
+}
