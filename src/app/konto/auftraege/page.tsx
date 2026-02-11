@@ -899,22 +899,30 @@ const AuftraegePage: FC = () => {
           <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
 
           {/* ✅ Anbieter-Snapshot (nur für Kunde / vergeben) */}
-          {order.kind === 'vergeben' && order.anbieterSnapshot ? (
-            <div className={styles.vendorSnapshot}>
-              {(() => {
-                const snap: any = order.anbieterSnapshot
-                const priv = snap?.private ?? {}
-                const pub = snap?.public ?? {}
-                const loc = pub?.location ?? {}
+          {order.kind === 'angenommen' && order.anbieterSnapshot ? (
+  <div className={styles.vendorSnapshot}>
+    {(() => {
+      const s: any = order.anbieterSnapshot
 
-                const company = typeof priv.company_name === 'string' ? priv.company_name.trim() : ''
-                const person = [priv.firstName, priv.lastName].filter(Boolean).join(' ').trim()
-                const place = [loc.city, loc.country].filter(Boolean).join(', ').trim()
+      const priv = s?.private ?? {}
+      const pub = s?.public ?? {}
+      const addr = priv?.address ?? {}
+      const loc = pub?.location ?? {}
 
-                return [company || person, place].filter(Boolean).join(' · ')
-              })()}
-            </div>
-          ) : null}
+      const company = String(priv?.company_name ?? '').trim()
+      const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
+
+      const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
+      const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
+      const country = String(addr?.country ?? loc?.country ?? '').trim()
+
+      return [company || null, person || null, streetLine || null, cityLine || null, country || null]
+        .filter(Boolean)
+        .join(' · ')
+    })()}
+  </div>
+) : null}
+
         </>
       )}
     </div>
