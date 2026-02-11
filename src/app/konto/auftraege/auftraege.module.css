@@ -263,12 +263,14 @@
   background: #fff;
   color: #111827;
   font-weight: 700;
+  font-family: inherit;
   padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
 }
 .btnGhost:hover { background: #f9fafb; }
 .btnDanger {
+  font-family: inherit; /* ✅ rein */
   appearance: none;
   border: 1px solid rgba(0,0,0,.08);
   color: #fff;
@@ -281,6 +283,7 @@
   animation: btnGradientMove 5s linear infinite;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
+
 .btnDanger:hover { animation-duration: 2.5s; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.18); }
 .btnDanger:active { transform: translateY(0); }
 .btnDanger:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(239, 68, 68, .35), 0 2px 6px rgba(0,0,0,.15); }
