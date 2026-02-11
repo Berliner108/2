@@ -871,14 +871,46 @@ const AuftraegePage: FC = () => {
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
                   <div className={styles.metaValue}>
-                    {contact.handle ? (
-                      <Link href={`/u/${contact.handle}/reviews`} className={styles.userLink} title="Zur Bewertungsseite">
-                        {contact.name}
-                      </Link>
-                    ) : (
-                      contact.name
-                    )}
-                  </div>
+  {(() => {
+    // rating wie in lackanfragen: "4.7/5 · 12" oder "keine Bewertungen"
+    const o: any = order
+    const u: any = (job as any)?.user
+
+    const rating =
+      order.kind === 'vergeben'
+        ? (typeof o.vendorRating === 'number' ? o.vendorRating : typeof o.vendor_rating === 'number' ? o.vendor_rating : undefined)
+        : (typeof o.ownerRating === 'number' ? o.ownerRating : typeof o.owner_rating === 'number' ? o.owner_rating : undefined)
+
+    const count =
+      order.kind === 'vergeben'
+        ? (typeof o.vendorRatingCount === 'number' ? o.vendorRatingCount : typeof o.vendor_rating_count === 'number' ? o.vendor_rating_count : undefined)
+        : (typeof o.ownerRatingCount === 'number' ? o.ownerRatingCount : typeof o.owner_rating_count === 'number' ? o.owner_rating_count : undefined)
+
+    // fallback falls API es am job.user liefert
+    const r2 = typeof rating === 'number' ? rating : (typeof u?.rating === 'number' ? u.rating : undefined)
+    const c2 = typeof count === 'number' ? count : (typeof u?.ratingCount === 'number' ? u.ratingCount : undefined)
+
+    const ratingTxt =
+      (typeof r2 === 'number' && typeof c2 === 'number' && c2 > 0)
+        ? `${r2.toFixed(1)}/5 · ${c2}`
+        : 'keine Bewertungen'
+
+    return contact.handle ? (
+      <>
+        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+          <span className={styles.vendor}>{contact.name}</span>
+        </Link>
+        <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
+      </>
+    ) : (
+      <>
+        <span className={styles.vendor}>{contact.name}</span>
+        <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
+      </>
+    )
+  })()}
+</div>
+
                 </div>
 
                 <div className={styles.metaCol}>
