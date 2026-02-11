@@ -904,6 +904,9 @@ const AuftraegePage: FC = () => {
                       const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
                       const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
 
+                      // ✅ bei dir im Snapshot: private.vat_number
+                      const vat = typeof priv?.vat_number === 'string' ? priv.vat_number.trim() : ''
+
                       const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
                       const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
                       const country = String(addr?.country ?? loc?.country ?? '').trim()
@@ -912,11 +915,13 @@ const AuftraegePage: FC = () => {
                         <div className={styles.vendorSnapshot}>
                           {company ? <div>{company}</div> : null}
                           {person ? <div>{person}</div> : null}
+                          {vat ? <div>UID: {vat}</div> : null}
                           {streetLine ? <div>{streetLine}</div> : null}
                           {cityLine ? <div>{cityLine}</div> : null}
                           {country ? <div>{country}</div> : null}
                         </div>
                       )
+
                     })()}
                   </div>
                 </div>
