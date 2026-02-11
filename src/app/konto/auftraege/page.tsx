@@ -793,7 +793,7 @@ const AuftraegePage: FC = () => {
 
                 {/* ✅ NEU: payout_status sichtbar (damit du siehst warum Buttons fehlen) */}
                 <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>Payout</div>
+                  <div className={styles.metaLabel}>Auszahlung</div>
                   <div className={styles.metaValue}>{payoutLabel(order)}</div>
                 </div>
 
