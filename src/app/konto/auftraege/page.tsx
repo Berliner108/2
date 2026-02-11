@@ -75,6 +75,8 @@ type DbOrder = Order & {
   vendor_rating_count?: number | null
   owner_rating_avg?: number | null
   owner_rating_count?: number | null
+  anbieterSnapshot?: any | null
+
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -862,25 +864,63 @@ const AuftraegePage: FC = () => {
               </div>
 
               <div className={styles.meta}>
-                <div className={styles.metaCol}>
-                  <div className={styles.metaLabel}>{contactLabel}</div>
+  <div className={styles.metaCol}>
+    <div className={styles.metaLabel}>{contactLabel}</div>
 
-                  <div className={styles.metaValue}>
-                    {contact.handle ? (
-                      <>
-                        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
-                          <span className={styles.vendor}>{contact.name}</span>
-                        </Link>
-                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className={styles.vendor}>{contact.name}</span>
-                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+    <div className={styles.metaValue}>
+      {contact.handle ? (
+        <>
+          <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+            <span className={styles.vendor}>{contact.name}</span>
+          </Link>
+          <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+
+          {/* ✅ Anbieter-Snapshot (nur für Kunde / vergeben) */}
+          {order.kind === 'vergeben' && order.anbieterSnapshot ? (
+            <div className={styles.vendorSnapshot}>
+              {(() => {
+                const snap: any = order.anbieterSnapshot
+                const priv = snap?.private ?? {}
+                const pub = snap?.public ?? {}
+                const loc = pub?.location ?? {}
+
+                const company = typeof priv.company_name === 'string' ? priv.company_name.trim() : ''
+                const person = [priv.firstName, priv.lastName].filter(Boolean).join(' ').trim()
+                const place = [loc.city, loc.country].filter(Boolean).join(', ').trim()
+
+                return [company || person, place].filter(Boolean).join(' · ')
+              })()}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <span className={styles.vendor}>{contact.name}</span>
+          <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+
+          {/* ✅ Anbieter-Snapshot (nur für Kunde / vergeben) */}
+          {order.kind === 'vergeben' && order.anbieterSnapshot ? (
+            <div className={styles.vendorSnapshot}>
+              {(() => {
+                const snap: any = order.anbieterSnapshot
+                const priv = snap?.private ?? {}
+                const pub = snap?.public ?? {}
+                const loc = pub?.location ?? {}
+
+                const company = typeof priv.company_name === 'string' ? priv.company_name.trim() : ''
+                const person = [priv.firstName, priv.lastName].filter(Boolean).join(' ').trim()
+                const place = [loc.city, loc.country].filter(Boolean).join(', ').trim()
+
+                return [company || person, place].filter(Boolean).join(' · ')
+              })()}
+            </div>
+          ) : null}
+        </>
+      )}
+    </div>
+  </div>
+
+
 
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
