@@ -76,6 +76,12 @@ type ApiOrder = {
   vendor_handle?: string | null
   owner_handle?: string | null
 
+  // ✅ Ratings aus profiles
+  vendor_rating_avg?: number | null
+  vendor_rating_count?: number | null
+  owner_rating_avg?: number | null
+  owner_rating_count?: number | null
+
   paidAt?: string
   releasedAt?: string
   currency?: string | null
@@ -103,13 +109,15 @@ function safeNum(v: any): number | undefined {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? n : undefined
 }
+function safeNumOrNull(v: any): number | null {
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : null
+}
 
+/** Backend liefert nur den Username; Rating kommt separat (wie bei Lackanfragen). */
 function labelFromProfile(p: any): string {
   const u = String(p?.username ?? '').trim()
-  const avg = typeof p?.rating_avg === 'number' ? p.rating_avg : Number(p?.rating_avg ?? 0) || 0
-  const cnt = typeof p?.rating_count === 'number' ? p.rating_count : Number(p?.rating_count ?? 0) || 0
-  if (!u) return '—'
-  return cnt > 0 ? `${u} · ${avg.toFixed(1)}` : u
+  return u || '—'
 }
 
 async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
@@ -379,11 +387,18 @@ export async function GET(req: Request) {
     const ownerProf = profMap.get(String(o.owner_id))
     const vendorProf = profMap.get(String(o.bieter_id))
 
-    const ownerLabel = labelFromProfile(ownerProf)
-    const vendorLabel = labelFromProfile(vendorProf)
-
     const ownerHandle = ownerProf?.username ? String(ownerProf.username) : null
     const vendorHandle = vendorProf?.username ? String(vendorProf.username) : null
+
+    // ✅ Ratings (genau aus profiles.rating_avg + rating_count)
+    const ownerRatingAvg = safeNumOrNull(ownerProf?.rating_avg)
+    const ownerRatingCount = safeNumOrNull(ownerProf?.rating_count)
+    const vendorRatingAvg = safeNumOrNull(vendorProf?.rating_avg)
+    const vendorRatingCount = safeNumOrNull(vendorProf?.rating_count)
+
+    // Display-Name = nur Username (Anzeigeformat macht dein Frontend)
+    const ownerLabel = labelFromProfile(ownerProf)
+    const vendorLabel = labelFromProfile(vendorProf)
 
     const raters = reviewMap.get(offerId) ?? new Set<string>()
     const customerReviewed = raters.has(String(o.owner_id))
@@ -416,6 +431,8 @@ export async function GET(req: Request) {
 
         vendor: vendorLabel,
         vendor_handle: vendorHandle,
+        vendor_rating_avg: vendorRatingAvg,
+        vendor_rating_count: vendorRatingCount,
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,
@@ -453,6 +470,8 @@ export async function GET(req: Request) {
 
         owner: ownerLabel,
         owner_handle: ownerHandle,
+        owner_rating_avg: ownerRatingAvg,
+        owner_rating_count: ownerRatingCount,
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,

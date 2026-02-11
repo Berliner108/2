@@ -28,7 +28,11 @@ type OrderKind = 'vergeben' | 'angenommen'
 type Order = {
   jobId: string | number
   offerId?: string
+
+  // ✅ beide Seiten (API liefert beides je nach kind)
   vendor?: string
+  owner?: string
+
   amountCents?: number
   acceptedAt: string // ISO
   kind: OrderKind
@@ -45,7 +49,9 @@ type Order = {
 
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
-type DbPayoutStatus = 'hold' | 'released' | 'refunded'
+
+// ✅ Backend: 'hold' | 'released' | 'partial_refund' | 'refunded'
+type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
 
 type DbOrder = Order & {
   jobPayStatus?: DbPayStatus // kind='vergeben'
@@ -63,6 +69,12 @@ type DbOrder = Order & {
   // ✅ NEU aus API: Handles fürs sichere Verlinken
   vendor_handle?: string | null // kind='vergeben'
   owner_handle?: string | null // kind='angenommen'
+
+  // ✅ NEU aus API: Ratings aus profiles (genau diese Felder!)
+  vendor_rating_avg?: number | null
+  vendor_rating_count?: number | null
+  owner_rating_avg?: number | null
+  owner_rating_count?: number | null
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -116,6 +128,14 @@ const formatDate = (d?: Date) =>
     ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
     : '—'
 
+// ✅ exakt wie du es wolltest: "4.7/5 · 12" oder "keine Bewertungen"
+function ratingTxt(avg?: number | null, cnt?: number | null): string {
+  const a = typeof avg === 'number' ? avg : Number(avg)
+  const c = typeof cnt === 'number' ? cnt : Number(cnt)
+  if (Number.isFinite(a) && Number.isFinite(c) && c > 0) return `${a.toFixed(1)}/5 · ${c}`
+  return 'keine Bewertungen'
+}
+
 function computeJobTitle(job: Job): string {
   const procs = (job.verfahren ?? [])
     .map(v => v.name)
@@ -137,13 +157,7 @@ function getOwnerName(job: Job): string {
   if (typeof j.user === 'string' && j.user.trim()) return j.user.trim()
   if (j.user && typeof j.user === 'object') {
     const name = j.user.name || j.user.username || j.user.displayName || j.user.firma || j.user.company
-    const rating =
-      typeof j.user.rating === 'number'
-        ? j.user.rating.toFixed(1)
-        : typeof j.user.sterne === 'number'
-          ? j.user.sterne.toFixed(1)
-          : null
-    if (name) return rating ? `${name} · ${rating}` : name
+    if (name) return String(name)
   }
   const candidates = [
     j.userName,
@@ -224,7 +238,8 @@ function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
   if (order.payoutStatus) return order.payoutStatus
   const pay = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
   if (pay === 'released') return 'released'
-  if (pay === 'refunded' || pay === 'partially_refunded') return 'refunded'
+  if (pay === 'refunded') return 'refunded'
+  if (pay === 'partially_refunded') return 'partial_refund'
   if (pay === 'paid') return 'hold'
   return undefined
 }
@@ -319,14 +334,13 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
 }
 
 /* ---------------- Handles / Contact Helpers ---------------- */
-// gleiches Regex kannst du aus Lackanfragen übernehmen
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
 const asHandleOrNull = (v?: unknown) => {
   const s = typeof v === 'string' ? v.trim() : ''
   return HANDLE_RE.test(s) ? s : null
 }
 function cleanDisplayName(s: string) {
-  return s.split('·')[0].trim() // falls "Name · 4.7"
+  return s.split('·')[0].trim()
 }
 
 function getContactForOrder(order: DbOrder, job: Job) {
@@ -334,7 +348,6 @@ function getContactForOrder(order: DbOrder, job: Job) {
   const j: any = job
 
   if (order.kind === 'vergeben') {
-    // Dienstleister (aus API: vendor_handle)
     const handle =
       asHandleOrNull(o.vendor_handle) ||
       asHandleOrNull(o.vendorHandle) ||
@@ -345,7 +358,6 @@ function getContactForOrder(order: DbOrder, job: Job) {
     const name = cleanDisplayName(String(order.vendor ?? 'Dienstleister'))
     return { name, handle }
   } else {
-    // Auftraggeber (aus API: owner_handle)
     const handle =
       asHandleOrNull(o.owner_handle) ||
       asHandleOrNull(o.ownerHandle) ||
@@ -353,7 +365,7 @@ function getContactForOrder(order: DbOrder, job: Job) {
       asHandleOrNull(j.user?.username) ||
       null
 
-    const name = cleanDisplayName(String((o.owner ?? getOwnerName(job)) || 'Auftraggeber'))
+    const name = cleanDisplayName(String(order.owner ?? getOwnerName(job) ?? 'Auftraggeber'))
     return { name, handle }
   }
 }
@@ -362,12 +374,10 @@ function getContactForOrder(order: DbOrder, job: Job) {
 const AuftraegePage: FC = () => {
   const router = useRouter()
 
-  // ✅ Daten kommen aus DB
   const [orders, setOrders] = useState<DbOrder[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Busy states für Actions
   const [busyKey, setBusyKey] = useState<string | null>(null)
 
   const jobsById = useMemo(() => {
@@ -382,16 +392,13 @@ const AuftraegePage: FC = () => {
   const [sort, setSort] = useState<SortKey>('date_desc')
   const [statusFilter, setStatusFilter] = useState<FilterKey>('alle')
 
-  // Seiten & PageSizes
   const [pageV, setPageV] = useState(1)
   const [psV, setPsV] = useState<number>(10)
   const [pageA, setPageA] = useState(1)
   const [psA, setPsA] = useState<number>(10)
 
-  // Modal: Auftragnehmer meldet „abgeschlossen“
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
 
-  // ✅ Bewertung (ein Modal – wir unterscheiden via role)
   type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
   const [reviewJobId, setReviewJobId] = useState<string | number | null>(null)
   const [reviewRole, setReviewRole] = useState<ReviewRole>('customer_to_vendor')
@@ -399,7 +406,6 @@ const AuftraegePage: FC = () => {
   const [ratingText, setRatingText] = useState('')
   const [reviewErr, setReviewErr] = useState<string | null>(null)
 
-  // ESC schließt Modals
   useEffect(() => {
     if (confirmJobId == null && reviewJobId == null) return
     const onKey = (e: KeyboardEvent) => {
@@ -412,7 +418,6 @@ const AuftraegePage: FC = () => {
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmJobId, reviewJobId])
 
-  /* ---------- DB Load: paid + Folgestati ---------- */
   async function loadOrders() {
     setLoading(true)
     try {
@@ -454,7 +459,6 @@ const AuftraegePage: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Top-Sektion merken
   useEffect(() => {
     try {
       const saved = localStorage.getItem(TOP_KEY)
@@ -467,7 +471,6 @@ const AuftraegePage: FC = () => {
     } catch {}
   }, [topSection])
 
-  /* ---------- Filter + Sort ---------- */
   const allVergeben = useMemo(
     () =>
       orders
@@ -495,8 +498,8 @@ const AuftraegePage: FC = () => {
       }
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
-      const partyName = order.kind === 'vergeben' ? (order.vendor || '') : getOwnerName(job)
-      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || partyName.toLowerCase().includes(q)
+      const partyName = order.kind === 'vergeben' ? (order.vendor || '') : (order.owner || getOwnerName(job))
+      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || String(partyName).toLowerCase().includes(q)
     })
   }
 
@@ -523,7 +526,6 @@ const AuftraegePage: FC = () => {
     statusFilter,
   ])
 
-  /* ---------- URL → State (Init aus URL & LocalStorage) ---------- */
   useEffect(() => {
     try {
       const p = new URLSearchParams(window.location.search)
@@ -557,7 +559,6 @@ const AuftraegePage: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* ---------- Persistenzen (nur UI) ---------- */
   useEffect(() => {
     try {
       localStorage.setItem(LS_PS_V, String(psV))
@@ -584,7 +585,6 @@ const AuftraegePage: FC = () => {
     setPageA(1)
   }, [debouncedQuery, sort, statusFilter])
 
-  /* ---------- URL-Sync ---------- */
   useEffect(() => {
     try {
       const p = new URLSearchParams()
@@ -604,7 +604,6 @@ const AuftraegePage: FC = () => {
     } catch {}
   }, [debouncedQuery, sort, statusFilter, topSection, psV, psA, pageV, pageA, router])
 
-  /* ---------- Slices ---------- */
   const sliceV = sliceByPage(filteredSortedV, pageV, psV)
   useEffect(() => {
     if (sliceV.safePage !== pageV) setPageV(sliceV.safePage)
@@ -647,10 +646,8 @@ const AuftraegePage: FC = () => {
     setBusyKey(key)
 
     try {
-      // 1) Empfang bestätigen (Status: confirmed)
       await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
 
-      // 2) Danach automatisch Auszahlung freigeben (nur wenn hold; Server enforced)
       try {
         await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
       } catch (e) {
@@ -682,7 +679,6 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ Refund (nur solange payout_status = hold)
   async function triggerRefund(jobId: string | number) {
     const key = `refund:${jobId}`
     setBusyKey(key)
@@ -700,7 +696,6 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ Release (Auszahlung an Anbieter + Provision behalten)
   async function triggerRelease(jobId: string | number) {
     const key = `release:${jobId}`
     setBusyKey(key)
@@ -756,11 +751,7 @@ const AuftraegePage: FC = () => {
       await loadOrders()
     } catch (e: any) {
       const msg = String(e?.message || '')
-      if (
-        msg.toLowerCase().includes('bereits bewertet') ||
-        msg.toLowerCase().includes('duplicate') ||
-        msg.toLowerCase().includes('unique')
-      ) {
+      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
         setReviewJobId(null)
         await loadOrders()
         return
@@ -836,10 +827,13 @@ const AuftraegePage: FC = () => {
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
             !order.vendorReviewed
 
-          // ✅ Refund/Release nur für Auftraggeber, nur wenn hold
           const payout = getPayoutStatus(order)
           const canCustomerRelease = isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold'
           const canCustomerRefund = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && order.status !== 'confirmed'
+
+          // ✅ Rating genau aus API-Feldern
+          const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
+          const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
 
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
@@ -870,47 +864,22 @@ const AuftraegePage: FC = () => {
               <div className={styles.meta}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
+
                   <div className={styles.metaValue}>
-  {(() => {
-    // rating wie in lackanfragen: "4.7/5 · 12" oder "keine Bewertungen"
-    const o: any = order
-    const u: any = (job as any)?.user
-
-    const rating =
-      order.kind === 'vergeben'
-        ? (typeof o.vendorRating === 'number' ? o.vendorRating : typeof o.vendor_rating === 'number' ? o.vendor_rating : undefined)
-        : (typeof o.ownerRating === 'number' ? o.ownerRating : typeof o.owner_rating === 'number' ? o.owner_rating : undefined)
-
-    const count =
-      order.kind === 'vergeben'
-        ? (typeof o.vendorRatingCount === 'number' ? o.vendorRatingCount : typeof o.vendor_rating_count === 'number' ? o.vendor_rating_count : undefined)
-        : (typeof o.ownerRatingCount === 'number' ? o.ownerRatingCount : typeof o.owner_rating_count === 'number' ? o.owner_rating_count : undefined)
-
-    // fallback falls API es am job.user liefert
-    const r2 = typeof rating === 'number' ? rating : (typeof u?.rating === 'number' ? u.rating : undefined)
-    const c2 = typeof count === 'number' ? count : (typeof u?.ratingCount === 'number' ? u.ratingCount : undefined)
-
-    const ratingTxt =
-      (typeof r2 === 'number' && typeof c2 === 'number' && c2 > 0)
-        ? `${r2.toFixed(1)}/5 · ${c2}`
-        : 'keine Bewertungen'
-
-    return contact.handle ? (
-      <>
-        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
-          <span className={styles.vendor}>{contact.name}</span>
-        </Link>
-        <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
-      </>
-    ) : (
-      <>
-        <span className={styles.vendor}>{contact.name}</span>
-        <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
-      </>
-    )
-  })()}
-</div>
-
+                    {contact.handle ? (
+                      <>
+                        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+                          <span className={styles.vendor}>{contact.name}</span>
+                        </Link>
+                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={styles.vendor}>{contact.name}</span>
+                        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.metaCol}>
@@ -923,8 +892,6 @@ const AuftraegePage: FC = () => {
                   <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
 
-                {/* ⚠️ (deine Labels waren im Snippet vertauscht – ich lasse es wie bei dir,
-                    aber wenn’s falsch angezeigt wird: annahme/ausgabe tauschen) */}
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
                   <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
@@ -949,7 +916,6 @@ const AuftraegePage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-                {/* Auftragnehmer: „Auftrag abgeschlossen“ → report-delivered */}
                 {canVendorReport &&
                   (() => {
                     const hintId = `deliver-hint-${order.kind}-${order.jobId}`
@@ -977,7 +943,6 @@ const AuftraegePage: FC = () => {
                     )
                   })()}
 
-                {/* Auftraggeber: nach Meldung bestätigen / reklamieren */}
                 {canCustomerConfirmOrDispute && (
                   <div className={styles.actionStack}>
                     <button
@@ -995,7 +960,6 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {/* Auszahlung freigeben */}
                 {canCustomerRelease && (
                   <button
                     type="button"
@@ -1008,7 +972,6 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* Refund auslösen */}
                 {canCustomerRefund && (
                   <button
                     type="button"
@@ -1021,26 +984,14 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* Bewertung Auftraggeber -> Auftragnehmer */}
                 {canCustomerReview && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}
-                  >
+                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}>
                     Dienstleister bewerten
                   </button>
                 )}
 
-                {/* Bewertung Auftragnehmer -> Auftraggeber */}
                 {canVendorReview && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}
-                  >
+                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}>
                     Auftraggeber bewerten
                   </button>
                 )}
@@ -1239,7 +1190,7 @@ const AuftraegePage: FC = () => {
         </div>
       )}
 
-      {/* ✅ Modal: Bewertung (beidseitig) */}
+      {/* Modal: Bewertung (beidseitig) */}
       {reviewJobId !== null && (
         <div
           className={styles.modal}
