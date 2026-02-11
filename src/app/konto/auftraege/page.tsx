@@ -862,17 +862,34 @@ const AuftraegePage: FC = () => {
                   {display.label}
                 </span>
               </div>
-
-              <div className={styles.meta}><div className={styles.metaCol}>
+<div className={styles.metaCol}>
   <div className={styles.metaLabel}>{contactLabel}</div>
 
   <div className={styles.metaValue}>
-    {(() => {
-      const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
-      const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
+    {/* ✅ UNBERÜHRT: username + rating */}
+    {contact.handle ? (
+      <>
+        <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+          <span className={styles.vendor}>{contact.name}</span>
+        </Link>
+        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+      </>
+    ) : (
+      <>
+        <span className={styles.vendor}>{contact.name}</span>
+        <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+      </>
+    )}
 
-      // ✅ exakt dein Key
-      const snap: any = (order as any).anbieter_snapshot ?? null
+    {/* ✅ NEU: zusätzliche Infos aus profiles snapshot (ohne username zu ersetzen) */}
+    {(() => {
+      const snap: any =
+        (order as any).anbieter_snapshot ??
+        (order as any).owner_snapshot ??
+        (order as any).vendor_snapshot ??
+        null
+
+      if (!snap) return null
 
       const priv = snap?.private ?? {}
       const pub = snap?.public ?? {}
@@ -886,41 +903,18 @@ const AuftraegePage: FC = () => {
       const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
       const country = String(addr?.country ?? loc?.country ?? '').trim()
 
-      // Anzeige-Name (Firma > Person > Fallback aus contact)
-      const headline = company || person || contact.name
-      // Person extra nur wenn Firma existiert (damit’s nicht doppelt ist)
-      const subPerson = company && person ? person : ''
-
       return (
-        <>
-          {contact.handle ? (
-            <>
-              <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
-                <span className={styles.vendor}>{headline}</span>
-              </Link>
-              <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-            </>
-          ) : (
-            <>
-              <span className={styles.vendor}>{headline}</span>
-              <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-            </>
-          )}
-
-          {/* ✅ Vollständige Daten aus profiles Snapshot */}
-          {snap ? (
-            <div className={styles.vendorSnapshot}>
-              {subPerson ? <div>{subPerson}</div> : null}
-              {streetLine ? <div>{streetLine}</div> : null}
-              {cityLine ? <div>{cityLine}</div> : null}
-              {country ? <div>{country}</div> : null}
-            </div>
-          ) : null}
-        </>
+        <div className={styles.vendorSnapshot}>
+          {company ? <div>{company}</div> : null}
+          {person ? <div>{person}</div> : null}
+          {streetLine ? <div>{streetLine}</div> : null}
+          {cityLine ? <div>{cityLine}</div> : null}
+          {country ? <div>{country}</div> : null}
+        </div>
       )
     })()}
   </div>
-</div>
+
 
 
 
