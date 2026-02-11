@@ -786,9 +786,6 @@ const AuftraegePage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-                <Link href={`/auftragsboerse/auftraege/${j.id}`} className={styles.primaryBtn}>
-                  Zum Auftrag
-                </Link>
 
                 {/* Auftragnehmer: „Auftrag abgeschlossen“ → report-delivered */}
                 {canVendorReport &&

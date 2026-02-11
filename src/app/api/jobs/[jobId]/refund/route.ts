@@ -4,189 +4,161 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabaseServer } from '@/lib/supabase-server'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {})
 const s = (v: unknown) => (typeof v === 'string' ? v : '').trim()
 
 type Body = {
-  amount_cents?: number
+  amount_cents?: number // optional: partial refund
   reason?: string
-}
-
-function isInt(n: unknown): n is number {
-  return typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n)
 }
 
 function jsonNoStore(data: any, status = 200) {
   return NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store' } })
 }
 
-async function getChargeIdFromPaymentIntent(piId: string) {
-  const pi = await stripe.paymentIntents.retrieve(piId, {
-    expand: ['latest_charge', 'charges.data.balance_transaction'],
-  })
-
-  // Prefer expanded latest_charge
-  const latest = pi.latest_charge as any
-  if (latest && typeof latest === 'object' && latest.id) return { pi, chargeId: String(latest.id) }
-
-  // Fallback: charges array (if present)
-  const charges = (pi as any)?.charges?.data
-  if (Array.isArray(charges) && charges[0]?.id) return { pi, chargeId: String(charges[0].id) }
-
-  return { pi, chargeId: '' }
+function isInt(n: unknown): n is number {
+  return typeof n === 'number' && Number.isFinite(n) && Number.isInteger(n)
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ jobId: string }> }) {
+function safeNum(v: any): number {
+  const n = typeof v === 'number' ? v : Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+export async function POST(req: Request, ctx: { params: { jobId: string } }) {
   try {
-    const { jobId: jobIdRaw } = await params
-    const jobId = s(jobIdRaw)
-    if (!jobId) return jsonNoStore({ ok: false, error: 'missing_job_id' }, 400)
+    const jobId = s(ctx?.params?.jobId)
+    if (!jobId) return jsonNoStore({ ok: false, error: 'missing_jobId' }, 400)
 
-    const sb = await supabaseServer()
-    const { data: auth, error: authErr } = await sb.auth.getUser()
-    const user = auth?.user
-    if (authErr || !user) return jsonNoStore({ ok: false, error: 'unauthenticated' }, 401)
+    // Auth (User muss eingeloggt sein)
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: { getAll: () => cookieStore.getAll(), setAll() {} },
+      }
+    )
 
-    const raw = (await req.json().catch(() => ({}))) as Body
-    const reason = s(raw?.reason)
+    const { data: auth, error: authErr } = await supabase.auth.getUser()
+    if (authErr || !auth?.user) return jsonNoStore({ ok: false, error: 'unauthorized' }, 401)
+    const uid = auth.user.id
 
-    if (raw?.amount_cents !== undefined && !isInt(raw.amount_cents)) {
-      return jsonNoStore({ ok: false, error: 'invalid_amount_format' }, 400)
-    }
-    if (raw?.amount_cents !== undefined && raw.amount_cents < 0) {
-      return jsonNoStore({ ok: false, error: 'amount_negative' }, 400)
-    }
+    const body = (await req.json().catch(() => ({}))) as Body
+    const reason = s(body.reason).slice(0, 800)
 
     const admin = supabaseAdmin()
 
-    // 1) Job laden (Owner-only)
-    const { data: job, error: jobErr } = await admin
+    // Job laden + prüfen: nur Auftraggeber darf refund auslösen
+    const { data: job, error: jErr } = await admin
       .from('jobs')
-      .select('id, user_id, status, selected_offer_id')
+      .select('id, user_id, selected_offer_id, status')
       .eq('id', jobId)
       .maybeSingle()
 
-    if (jobErr || !job) return jsonNoStore({ ok: false, error: 'job_not_found' }, 404)
-
-    const ownerId = String(job.user_id)
-    if (ownerId !== user.id) return jsonNoStore({ ok: false, error: 'forbidden_not_owner' }, 403)
+    if (jErr) throw jErr
+    if (!job) return jsonNoStore({ ok: false, error: 'job_not_found' }, 404)
+    if (String(job.user_id) !== uid) return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
 
     const offerId = s(job.selected_offer_id)
-    if (!offerId) return jsonNoStore({ ok: false, error: 'no_selected_offer' }, 409)
+    if (!offerId) return jsonNoStore({ ok: false, error: 'no_selected_offer' }, 400)
 
-    // 2) Offer laden: muss paid sein
-    const { data: offer, error: offErr } = await admin
+    // Offer laden
+    const { data: offer, error: oErr } = await admin
       .from('job_offers')
-      .select('id, job_id, status, payment_intent_id, paid_amount_cents, refunded_amount_cents, charge_id, currency')
+      .select(
+        `
+        id, job_id, status,
+        payout_status,
+        paid_amount_cents, refunded_amount_cents,
+        currency, payment_intent_id, charge_id,
+        fulfillment_status, dispute_opened_at, dispute_reason
+      `
+      )
       .eq('id', offerId)
       .eq('job_id', jobId)
       .maybeSingle()
 
-    if (offErr || !offer) return jsonNoStore({ ok: false, error: 'offer_not_found' }, 404)
-    if (String(offer.status) !== 'paid') return jsonNoStore({ ok: false, error: 'offer_not_paid' }, 409)
+    if (oErr) throw oErr
+    if (!offer) return jsonNoStore({ ok: false, error: 'offer_not_found' }, 404)
 
-    const piId = s(offer.payment_intent_id)
-    if (!piId) return jsonNoStore({ ok: false, error: 'missing_payment_intent' }, 409)
-
-    const paid = Number(offer.paid_amount_cents ?? 0)
-    const alreadyRefunded = Number(offer.refunded_amount_cents ?? 0)
-
-    if (!Number.isFinite(paid) || paid <= 0) {
-      return jsonNoStore({ ok: false, error: 'offer_missing_paid_amount' }, 409)
+    // ✅ harte Regel: Refund nur bei payout_status=hold
+    if (String(offer.payout_status ?? 'hold') !== 'hold') {
+      return jsonNoStore({ ok: false, error: 'refund_not_allowed_after_release' }, 409)
     }
 
-    const remaining = paid - alreadyRefunded
-    if (remaining <= 0) {
+    // Zahlung muss paid sein
+    if (String(offer.status) !== 'paid') {
+      return jsonNoStore({ ok: false, error: 'offer_not_paid' }, 409)
+    }
+
+    const paid = safeNum(offer.paid_amount_cents)
+    const alreadyRefunded = safeNum(offer.refunded_amount_cents)
+    const maxRefund = Math.max(0, paid - alreadyRefunded)
+
+    if (maxRefund <= 0) {
       return jsonNoStore({ ok: false, error: 'nothing_to_refund' }, 409)
     }
 
-    const requested = raw.amount_cents === undefined ? remaining : raw.amount_cents
-    if (requested <= 0) return jsonNoStore({ ok: false, error: 'amount_zero' }, 400)
-
-    const amount = Math.min(requested, remaining)
-
-    // 3) Charge holen (für Refund)
-    let chargeId = s(offer.charge_id)
-    let currency = s(offer.currency) || 'eur'
-
-    if (!chargeId) {
-      const { pi, chargeId: cId } = await getChargeIdFromPaymentIntent(piId)
-      chargeId = s(cId)
-      currency = (s((pi as any).currency) || currency).toLowerCase()
-      if (!chargeId) return jsonNoStore({ ok: false, error: 'charge_not_found' }, 409)
-
-      // Charge-ID speichern (hilft später)
-      await admin.from('job_offers').update({ charge_id: chargeId, currency }).eq('id', offerId)
+    // Betrag bestimmen (default: full remaining)
+    let amount = maxRefund
+    if (isInt(body.amount_cents)) {
+      amount = body.amount_cents
+      if (amount <= 0) return jsonNoStore({ ok: false, error: 'amount_invalid' }, 400)
+      if (amount > maxRefund) return jsonNoStore({ ok: false, error: 'amount_exceeds_remaining' }, 400)
     }
 
-    // 4) Stripe Refund erstellen (idempotent key!)
-    // idempotency_key: jobId+offerId+amount+remaining+timestamp wäre schlecht.
-    // Wir nehmen: jobId + offerId + amount + (alreadyRefunded) => wenn gleicher request wiederkommt, bleibt es stabil.
-    const idemKey = `jobrefund:${jobId}:${offerId}:${amount}:${alreadyRefunded}`
+    const paymentIntentId = s(offer.payment_intent_id)
+    const chargeId = s(offer.charge_id)
+    if (!paymentIntentId && !chargeId) {
+      return jsonNoStore({ ok: false, error: 'missing_payment_refs' }, 500)
+    }
 
-    const refund = await stripe.refunds.create(
-      {
-        charge: chargeId,
-        amount,
-        reason: 'requested_by_customer', // Stripe enum; "reason" text speichern wir in DB
-        metadata: {
-          kind: 'job_refund',
-          jobId: String(jobId),
-          offerId: String(offerId),
-          note: reason ? reason.slice(0, 200) : '',
-        },
+    // Optional: “Dispute/Problem” markieren (nur DB, kein Stripe-Dispute!)
+    // -> hilfreich, damit UI den Fall als “In Klärung” zeigt.
+    const nowIso = new Date().toISOString()
+    if (!offer.dispute_opened_at) {
+      await admin
+        .from('job_offers')
+        .update({
+          dispute_opened_at: nowIso,
+          dispute_reason: reason || null,
+          fulfillment_status: 'disputed',
+        })
+        .eq('id', offerId)
+        .eq('job_id', jobId)
+    }
+
+    // Stripe Refund erstellen (geht automatisch auf die Payment-Methode des Käufers zurück ✅)
+    const refund = await stripe.refunds.create({
+      payment_intent: paymentIntentId || undefined,
+      charge: !paymentIntentId && chargeId ? chargeId : undefined,
+      amount,
+      reason: 'requested_by_customer',
+      metadata: {
+        kind: 'job',
+        jobId,
+        offerId,
       },
-      { idempotencyKey: idemKey }
-    )
-
-    // 5) DB updaten
-    // 5a) Refund-Log (wenn Tabelle existiert)
-    try {
-      await admin.from('job_refunds').insert({
-        job_id: jobId,
-        offer_id: offerId,
-        stripe_refund_id: refund.id,
-        amount_cents: amount,
-        reason: reason || null,
-      })
-    } catch (e) {
-      // falls Tabelle nicht existiert oder RLS/Schema: nicht hart failen
-      console.warn('[refund] job_refunds insert skipped:', e)
-    }
-
-    // 5b) offer refunded_amount_cents hochzählen
-    const newRefunded = alreadyRefunded + amount
-
-    const { error: updOfferErr } = await admin
-      .from('job_offers')
-      .update({ refunded_amount_cents: newRefunded })
-      .eq('id', offerId)
-      .eq('job_id', jobId)
-
-    if (updOfferErr) throw updOfferErr
-
-    // 5c) Job-Status setzen (partial/full)
-    const nextStatus = newRefunded >= paid ? 'refunded_full' : 'refunded_partial'
-    await admin.from('jobs').update({ status: nextStatus, updated_at: new Date().toISOString() }).eq('id', jobId)
-
-    return jsonNoStore({
-      ok: true,
-      jobId,
-      offerId,
-      stripe_refund_id: refund.id,
-      amount_cents: amount,
-      refunded_total_cents: newRefunded,
-      paid_amount_cents: paid,
-      status: nextStatus,
-      currency,
     })
+
+    // DB-Finalstatus NICHT hier “hart” setzen -> dafür ist der Webhook da (refund.created/updated/failed)
+    // Hier nur ok zurückgeben.
+    return jsonNoStore(
+      {
+        ok: true,
+        jobId,
+        offerId,
+        refund: { id: refund.id, amount: refund.amount, status: refund.status },
+      },
+      200
+    )
   } catch (e: any) {
-    console.error('[POST /api/jobs/:jobId/refund] fatal:', e)
-    // Stripe errors sind hilfreich:
-    const msg = String(e?.message ?? e)
-    return jsonNoStore({ ok: false, error: 'fatal', message: msg }, 500)
+    console.error('[POST /api/jobs/[jobId]/refund] error:', e)
+    return jsonNoStore({ ok: false, error: 'refund_failed', message: String(e?.message ?? e) }, 500)
   }
 }
