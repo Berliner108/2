@@ -458,50 +458,6 @@ const AuftraegePage: FC = () => {
       return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || partyName.toLowerCase().includes(q)
     })
   }
-  // gleiches Regex kannst du aus Lackanfragen übernehmen
-const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
-const asHandleOrNull = (v?: unknown) => {
-  const s = typeof v === 'string' ? v.trim() : '';
-  return HANDLE_RE.test(s) ? s : null;
-};
-
-function cleanDisplayName(s: string) {
-  return s.split('·')[0].trim() // falls "Name · 4.7"
-}
-
-function getContactForOrder(order: DbOrder, job: Job) {
-  const o: any = order
-  const j: any = job
-
-  if (order.kind === 'vergeben') {
-    // Dienstleister
-    const handle =
-      asHandleOrNull(o.vendorHandle) ||
-      asHandleOrNull(o.vendor_handle) ||
-      asHandleOrNull(o.vendorUsername) ||
-      asHandleOrNull(o.vendor_username) ||
-      asHandleOrNull(o.vendor) || // nur als Fallback (wenn vendor wirklich handle ist)
-      null
-
-    const name = cleanDisplayName(String(order.vendor ?? 'Dienstleister'))
-    return { name, handle }
-  } else {
-    // Auftraggeber
-    const handle =
-      asHandleOrNull(o.ownerHandle) ||
-      asHandleOrNull(o.owner_handle) ||
-      asHandleOrNull(o.ownerUsername) ||
-      asHandleOrNull(o.owner_username) ||
-      asHandleOrNull(j.user?.handle) ||
-      asHandleOrNull(j.user?.username) ||
-      asHandleOrNull(getOwnerName(job)) || // Fallback (nur wenn getOwnerName ein Handle wäre)
-      null
-
-    const name = cleanDisplayName(String((o.owner ?? getOwnerName(job)) || 'Auftraggeber'))
-    return { name, handle }
-  }
-}
-
 
   const applySort = (items: { order: DbOrder; job: Job }[]) => {
     return [...items].sort((a, b) => {
@@ -800,8 +756,8 @@ function getContactForOrder(order: DbOrder, job: Job) {
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
 
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
-          const contact = getContactForOrder(order, j)
-
+          const contactValue =
+            order.kind === 'vergeben' ? order.vendor ?? '—' : ((order as any).owner ?? getOwnerName(j))
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
@@ -882,16 +838,7 @@ function getContactForOrder(order: DbOrder, job: Job) {
               <div className={styles.meta}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
-                  <div className={styles.metaValue}>
-                    {contact.handle ? (
-                      <Link href={`/u/${contact.handle}/reviews`} className={styles.userLink} title="Zur Bewertungsseite">
-                        {contact.name}
-                      </Link>
-                    ) : (
-                      contact.name
-                    )}
-                  </div>
-
+                  <div className={styles.metaValue}>{contactValue}</div>
                 </div>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
