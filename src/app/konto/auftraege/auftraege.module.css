@@ -397,23 +397,32 @@
     min-width: 0;                    /* Text darf umbrechen */
   }
 }
-/* Link-Farbe fix (damit nicht weiß wird) */
-.titleLink{
-  color: #111 !important;
+/* Link normal: keine Unterstreichung */
+.titleLink {
+  color: inherit;
   text-decoration: none;
 }
-.titleLink:visited{ color:#111 !important; }
-.titleLink:hover{ text-decoration: underline; }
 
-/* Username + Rating exakt wie Lackanfragen */
-.vendor{
-  font-weight: 800;
-  color: #111;
+/* 1x Unterstreichung NUR bei Hover/Focus */
+.titleLink:hover,
+.titleLink:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
 }
 
-.vendorRatingSmall{
-  font-size: .85rem;
-  font-weight: 700;
-  color: #6b7280;
-  white-space: nowrap;
+/* Username + Rating immer schwarz */
+.vendor {
+  color: #000;
+}
+
+.vendorRatingSmall {
+  color: #000;
+  opacity: 1;
+}
+
+/* wichtig: verhindert doppelte Unterstreichung durch innere Elemente */
+.titleLink .vendor,
+.titleLink .vendorRatingSmall {
+  text-decoration: none;
 }
