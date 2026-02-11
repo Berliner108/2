@@ -863,70 +863,64 @@ const AuftraegePage: FC = () => {
                 </span>
               </div>
 
-              <div className={styles.meta}>
-  <div className={styles.metaCol}>
-    <div className={styles.metaLabel}>{contactLabel}</div>
+              <div className={styles.meta}><div className={styles.metaCol}>
+  <div className={styles.metaLabel}>{contactLabel}</div>
 
-    <div className={styles.metaValue}>
-      {contact.handle ? (
-        <>
-          <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
-            <span className={styles.vendor}>{contact.name}</span>
-          </Link>
-          <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-
-          {/* ✅ Anbieter-Snapshot (nur für Kunde / vergeben) */}
-          {order.kind === 'vergeben' && order.anbieterSnapshot ? (
-            <div className={styles.vendorSnapshot}>
-              {(() => {
-                const snap: any = order.anbieterSnapshot
-                const priv = snap?.private ?? {}
-                const pub = snap?.public ?? {}
-                const loc = pub?.location ?? {}
-
-                const company = typeof priv.company_name === 'string' ? priv.company_name.trim() : ''
-                const person = [priv.firstName, priv.lastName].filter(Boolean).join(' ').trim()
-                const place = [loc.city, loc.country].filter(Boolean).join(', ').trim()
-
-                return [company || person, place].filter(Boolean).join(' · ')
-              })()}
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <>
-          <span className={styles.vendor}>{contact.name}</span>
-          <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
-
-          {/* ✅ Anbieter-Snapshot (nur für Kunde / vergeben) */}
-          {order.kind === 'angenommen' && order.anbieterSnapshot ? (
-  <div className={styles.vendorSnapshot}>
+  <div className={styles.metaValue}>
     {(() => {
-      const s: any = order.anbieterSnapshot
+      const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
+      const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
 
-      const priv = s?.private ?? {}
-      const pub = s?.public ?? {}
+      // ✅ exakt dein Key
+      const snap: any = (order as any).anbieter_snapshot ?? null
+
+      const priv = snap?.private ?? {}
+      const pub = snap?.public ?? {}
       const addr = priv?.address ?? {}
       const loc = pub?.location ?? {}
 
-      const company = String(priv?.company_name ?? '').trim()
+      const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
       const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
 
       const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
       const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
       const country = String(addr?.country ?? loc?.country ?? '').trim()
 
-      return [company || null, person || null, streetLine || null, cityLine || null, country || null]
-        .filter(Boolean)
-        .join(' · ')
+      // Anzeige-Name (Firma > Person > Fallback aus contact)
+      const headline = company || person || contact.name
+      // Person extra nur wenn Firma existiert (damit’s nicht doppelt ist)
+      const subPerson = company && person ? person : ''
+
+      return (
+        <>
+          {contact.handle ? (
+            <>
+              <Link href={`/u/${contact.handle}/reviews`} className={styles.titleLink}>
+                <span className={styles.vendor}>{headline}</span>
+              </Link>
+              <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.vendor}>{headline}</span>
+              <span className={styles.vendorRatingSmall}> · {ratingTxt(avg, cnt)}</span>
+            </>
+          )}
+
+          {/* ✅ Vollständige Daten aus profiles Snapshot */}
+          {snap ? (
+            <div className={styles.vendorSnapshot}>
+              {subPerson ? <div>{subPerson}</div> : null}
+              {streetLine ? <div>{streetLine}</div> : null}
+              {cityLine ? <div>{cityLine}</div> : null}
+              {country ? <div>{country}</div> : null}
+            </div>
+          ) : null}
+        </>
+      )
     })()}
   </div>
-) : null}
-
-        </>
-      )}
-    </div>
-  </div>
+</div>
 
 
 

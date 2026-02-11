@@ -90,7 +90,7 @@ type ApiOrder = {
 
   customerReviewed?: boolean
   vendorReviewed?: boolean
-  anbieterSnapshot?: any | null
+  anbieter_snapshot?: any | null
 
 }
 
@@ -416,7 +416,7 @@ export async function GET(req: Request) {
         amountCents: safeNum(o.gesamt_cents),
         acceptedAt,
         kind: 'vergeben',
-        anbieterSnapshot: o.anbieter_snapshot ?? null,
+        anbieter_snapshot: o.anbieter_snapshot ?? null,
 
         status: fulfillment,
         deliveredReportedAt: o.delivered_reported_at || undefined,
@@ -456,7 +456,7 @@ export async function GET(req: Request) {
         amountCents: safeNum(o.gesamt_cents),
         acceptedAt,
         kind: 'angenommen',
-        anbieterSnapshot: o.anbieter_snapshot ?? null,
+        anbieter_snapshot: o.anbieter_snapshot ?? null,
 
         status: fulfillment,
         deliveredReportedAt: o.delivered_reported_at || undefined,
