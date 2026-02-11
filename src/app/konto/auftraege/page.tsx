@@ -46,6 +46,9 @@ type Order = {
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
 
+// optional – kommt idealerweise aus /api/konto/auftraege (job_offers.payout_status)
+type DbPayoutStatus = 'hold' | 'released' | 'refunded'
+
 type DbOrder = Order & {
   jobPayStatus?: DbPayStatus // kind='vergeben'
   offerPayStatus?: DbPayStatus // kind='angenommen'
@@ -55,6 +58,9 @@ type DbOrder = Order & {
   // ✅ beidseitige Bewertung (kommt aus /api/konto/auftraege)
   customerReviewed?: boolean // Auftraggeber -> Anbieter
   vendorReviewed?: boolean // Anbieter -> Auftraggeber
+
+  // ✅ wichtig für Refund/Release-Buttons
+  payoutStatus?: DbPayoutStatus
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -109,7 +115,10 @@ const formatDate = (d?: Date) =>
     : '—'
 
 function computeJobTitle(job: Job): string {
-  const procs = (job.verfahren ?? []).map(v => v.name).filter(Boolean).join(' & ')
+  const procs = (job.verfahren ?? [])
+    .map(v => v.name)
+    .filter(Boolean)
+    .join(' & ')
   const pb = (job.verfahren ?? []).find(v => /pulver/i.test(v.name))?.felder ?? {}
   const farbe = (pb as any)?.farbbezeichnung || (pb as any)?.farbton
   const extras = [farbe, job.material, job.standort].filter(Boolean).join(' · ')
@@ -208,6 +217,17 @@ function clampStars(v: any): number {
   return Math.max(1, Math.min(5, Math.round(n)))
 }
 
+/** payoutStatus ableiten (Fallback, falls API es noch nicht liefert) */
+function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
+  if (order.payoutStatus) return order.payoutStatus
+  // Fallback: wenn bereits released -> released, wenn refunded -> refunded, sonst bei paid -> hold
+  const pay = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+  if (pay === 'released') return 'released'
+  if (pay === 'refunded' || pay === 'partially_refunded') return 'refunded'
+  if (pay === 'paid') return 'hold'
+  return undefined
+}
+
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
@@ -223,7 +243,13 @@ const Pagination: FC<{
   return (
     <div className={styles.pagination} aria-label="Seitensteuerung">
       <div className={styles.pageInfo} id={`${idPrefix}-info`} aria-live="polite">
-        {total === 0 ? 'Keine Einträge' : <>Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong></>}
+        {total === 0 ? (
+          'Keine Einträge'
+        ) : (
+          <>
+            Zeige <strong>{from}</strong>–<strong>{to}</strong> von <strong>{total}</strong>
+          </>
+        )}
       </div>
       <div className={styles.pagiControls}>
         <label className={styles.pageSizeLabel} htmlFor={`${idPrefix}-ps`}>
@@ -604,6 +630,41 @@ const AuftraegePage: FC = () => {
     }
   }
 
+  // ✅ NEU: Refund (nur solange payout_status = hold)
+  async function triggerRefund(jobId: string | number) {
+    const key = `refund:${jobId}`
+    setBusyKey(key)
+    try {
+      const reason = window.prompt('Grund (optional):') || ''
+      const ok = window.confirm('Refund wirklich auslösen? (geht zurück auf die Zahlungsmethode des Käufers)')
+      if (!ok) return
+      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/refund`, { reason: reason.trim().slice(0, 800) })
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Refund fehlgeschlagen.')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
+  // ✅ NEU: Release (Auszahlung an Anbieter + Provision behalten)
+  async function triggerRelease(jobId: string | number) {
+    const key = `release:${jobId}`
+    setBusyKey(key)
+    try {
+      const ok = window.confirm('Auszahlung wirklich freigeben? (danach kein Refund mehr möglich)')
+      if (!ok) return
+      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Auszahlung fehlgeschlagen.')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
   function openReviewModal(jobId: string | number, role: ReviewRole) {
     setReviewErr(null)
     setReviewJobId(jobId)
@@ -643,7 +704,6 @@ const AuftraegePage: FC = () => {
       setReviewJobId(null)
       await loadOrders()
     } catch (e: any) {
-      // wenn DB-Unique schon gegriffen hat -> einfach refreshen und Modal zu
       const msg = String(e?.message || '')
       if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
         setReviewJobId(null)
@@ -684,10 +744,7 @@ const AuftraegePage: FC = () => {
 
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
           const contactValue =
-          order.kind === 'vergeben'
-            ? (order.vendor ?? '—')
-            : ((order as any).owner ?? getOwnerName(j))
-
+            order.kind === 'vergeben' ? order.vendor ?? '—' : ((order as any).owner ?? getOwnerName(j))
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
@@ -698,6 +755,8 @@ const AuftraegePage: FC = () => {
             busyKey === `report:${order.jobId}` ||
             busyKey === `confirm:${order.jobId}` ||
             busyKey === `dispute:${order.jobId}` ||
+            busyKey === `refund:${order.jobId}` ||
+            busyKey === `release:${order.jobId}` ||
             busyKey?.startsWith(`review:${order.jobId}:`) ||
             false
 
@@ -722,6 +781,20 @@ const AuftraegePage: FC = () => {
             order.status === 'confirmed' &&
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
             !order.vendorReviewed
+
+          // ✅ NEU: Refund/Release nur für Auftraggeber, nur wenn hold
+          const payout = getPayoutStatus(order)
+          const canCustomerRelease =
+            isCustomer &&
+            order.status === 'confirmed' &&
+            order.jobPayStatus === 'paid' &&
+            payout === 'hold'
+
+          const canCustomerRefund =
+            isCustomer &&
+            order.jobPayStatus === 'paid' &&
+            payout === 'hold' &&
+            order.status !== 'confirmed'
 
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
@@ -786,7 +859,6 @@ const AuftraegePage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-
                 {/* Auftragnehmer: „Auftrag abgeschlossen“ → report-delivered */}
                 {canVendorReport &&
                   (() => {
@@ -806,7 +878,11 @@ const AuftraegePage: FC = () => {
                         >
                           {isBusy && busyKey === `report:${order.jobId}` ? 'Sende…' : 'Auftrag abgeschlossen'}
                         </button>
-                        {!canClick && <div id={hintId} className={styles.btnHint}> {reason} </div>}
+                        {!canClick && (
+                          <div id={hintId} className={styles.btnHint}>
+                            {reason}
+                          </div>
+                        )}
                       </div>
                     )
                   })()}
@@ -827,6 +903,32 @@ const AuftraegePage: FC = () => {
                       {isBusy && busyKey === `dispute:${order.jobId}` ? 'Sende…' : 'Problem melden'}
                     </button>
                   </div>
+                )}
+
+                {/* ✅ NEU: Auszahlung freigeben (nur Auftraggeber, nur hold, nur nach confirmed) */}
+                {canCustomerRelease && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() => triggerRelease(order.jobId)}
+                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr."
+                  >
+                    {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
+                  </button>
+                )}
+
+                {/* ✅ NEU: Refund auslösen (nur Auftraggeber, nur hold, nur vor confirmed) */}
+                {canCustomerRefund && (
+                  <button
+                    type="button"
+                    className={styles.btnDanger}
+                    disabled={isBusy}
+                    onClick={() => triggerRefund(order.jobId)}
+                    title="Refund nur möglich solange payout_status = hold"
+                  >
+                    {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Refund auslösen'}
+                  </button>
                 )}
 
                 {/* ✅ Bewertung Auftraggeber -> Auftragnehmer */}
@@ -1065,13 +1167,7 @@ const AuftraegePage: FC = () => {
 
             <div className={styles.stars}>
               {[1, 2, 3, 4, 5].map(n => (
-                <button
-                  key={n}
-                  onClick={() => setRating(n)}
-                  aria-label={`${n} Sterne`}
-                  className={styles.starBtn}
-                  type="button"
-                >
+                <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn} type="button">
                   {n <= rating ? '★' : '☆'}
                 </button>
               ))}
