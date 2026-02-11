@@ -45,8 +45,6 @@ type Order = {
 
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
-
-// optional – kommt idealerweise aus /api/konto/auftraege (job_offers.payout_status)
 type DbPayoutStatus = 'hold' | 'released' | 'refunded'
 
 type DbOrder = Order & {
@@ -55,12 +53,16 @@ type DbOrder = Order & {
   paidAt?: string
   releasedAt?: string
 
-  // ✅ beidseitige Bewertung (kommt aus /api/konto/auftraege)
+  // ✅ beidseitige Bewertung
   customerReviewed?: boolean // Auftraggeber -> Anbieter
   vendorReviewed?: boolean // Anbieter -> Auftraggeber
 
   // ✅ wichtig für Refund/Release-Buttons
   payoutStatus?: DbPayoutStatus
+
+  // ✅ NEU aus API: Handles fürs sichere Verlinken
+  vendor_handle?: string | null // kind='vergeben'
+  owner_handle?: string | null // kind='angenommen'
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -220,7 +222,6 @@ function clampStars(v: any): number {
 /** payoutStatus ableiten (Fallback, falls API es noch nicht liefert) */
 function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
   if (order.payoutStatus) return order.payoutStatus
-  // Fallback: wenn bereits released -> released, wenn refunded -> refunded, sonst bei paid -> hold
   const pay = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
   if (pay === 'released') return 'released'
   if (pay === 'refunded' || pay === 'partially_refunded') return 'refunded'
@@ -314,6 +315,46 @@ function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
     total,
     safePage,
     pages,
+  }
+}
+
+/* ---------------- Handles / Contact Helpers ---------------- */
+// gleiches Regex kannst du aus Lackanfragen übernehmen
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
+const asHandleOrNull = (v?: unknown) => {
+  const s = typeof v === 'string' ? v.trim() : ''
+  return HANDLE_RE.test(s) ? s : null
+}
+function cleanDisplayName(s: string) {
+  return s.split('·')[0].trim() // falls "Name · 4.7"
+}
+
+function getContactForOrder(order: DbOrder, job: Job) {
+  const o: any = order
+  const j: any = job
+
+  if (order.kind === 'vergeben') {
+    // Dienstleister (aus API: vendor_handle)
+    const handle =
+      asHandleOrNull(o.vendor_handle) ||
+      asHandleOrNull(o.vendorHandle) ||
+      asHandleOrNull(o.vendor_username) ||
+      asHandleOrNull(o.vendorUsername) ||
+      null
+
+    const name = cleanDisplayName(String(order.vendor ?? 'Dienstleister'))
+    return { name, handle }
+  } else {
+    // Auftraggeber (aus API: owner_handle)
+    const handle =
+      asHandleOrNull(o.owner_handle) ||
+      asHandleOrNull(o.ownerHandle) ||
+      asHandleOrNull(j.user?.handle) ||
+      asHandleOrNull(j.user?.username) ||
+      null
+
+    const name = cleanDisplayName(String((o.owner ?? getOwnerName(job)) || 'Auftraggeber'))
+    return { name, handle }
   }
 }
 
@@ -602,31 +643,29 @@ const AuftraegePage: FC = () => {
   }
 
   async function confirmDelivered(jobId: string | number) {
-  const key = `confirm:${jobId}`
-  setBusyKey(key)
+    const key = `confirm:${jobId}`
+    setBusyKey(key)
 
-  try {
-    // 1) Empfang bestätigen (Status: confirmed)
-    await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
-
-    // 2) Danach automatisch Auszahlung freigeben (nur wenn hold; Server enforced)
     try {
-      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
+      // 1) Empfang bestätigen (Status: confirmed)
+      await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
+
+      // 2) Danach automatisch Auszahlung freigeben (nur wenn hold; Server enforced)
+      try {
+        await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
+      } catch (e) {
+        console.error('auto-release failed:', e)
+        alert('Empfang bestätigt, aber Auszahlung konnte nicht automatisch freigegeben werden. Bitte später erneut versuchen.')
+      }
+
+      await loadOrders()
     } catch (e) {
-      console.error('auto-release failed:', e)
-      // Empfang ist bestätigt, aber Auszahlung blieb auf hold -> manuell über "Freigeben" später möglich
-      alert('Empfang bestätigt, aber Auszahlung konnte nicht automatisch freigegeben werden. Bitte später erneut versuchen.')
+      console.error(e)
+      alert('Konnte Empfang nicht bestätigen.')
+    } finally {
+      setBusyKey(null)
     }
-
-    await loadOrders()
-  } catch (e) {
-    console.error(e)
-    alert('Konnte Empfang nicht bestätigen.')
-  } finally {
-    setBusyKey(null)
   }
-}
-
 
   async function openDispute(jobId: string | number) {
     const reason = window.prompt('Problem melden (optional):') || ''
@@ -643,7 +682,7 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ NEU: Refund (nur solange payout_status = hold)
+  // ✅ Refund (nur solange payout_status = hold)
   async function triggerRefund(jobId: string | number) {
     const key = `refund:${jobId}`
     setBusyKey(key)
@@ -661,7 +700,7 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ NEU: Release (Auszahlung an Anbieter + Provision behalten)
+  // ✅ Release (Auszahlung an Anbieter + Provision behalten)
   async function triggerRelease(jobId: string | number) {
     const key = `release:${jobId}`
     setBusyKey(key)
@@ -707,7 +746,6 @@ const AuftraegePage: FC = () => {
     setReviewErr(null)
 
     try {
-      // ✅ neue Route: /api/konto/auftraege/review/[id]
       await postJson(`/api/konto/auftraege/review/${encodeURIComponent(String(jobId))}`, {
         role: reviewRole,
         stars,
@@ -718,7 +756,11 @@ const AuftraegePage: FC = () => {
       await loadOrders()
     } catch (e: any) {
       const msg = String(e?.message || '')
-      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+      if (
+        msg.toLowerCase().includes('bereits bewertet') ||
+        msg.toLowerCase().includes('duplicate') ||
+        msg.toLowerCase().includes('unique')
+      ) {
         setReviewJobId(null)
         await loadOrders()
         return
@@ -756,8 +798,7 @@ const AuftraegePage: FC = () => {
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
 
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
-          const contactValue =
-            order.kind === 'vergeben' ? order.vendor ?? '—' : ((order as any).owner ?? getOwnerName(j))
+          const contact = getContactForOrder(order, j)
 
           const { ok: canClick, reason } = canConfirmDelivered(j)
 
@@ -795,19 +836,10 @@ const AuftraegePage: FC = () => {
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
             !order.vendorReviewed
 
-          // ✅ NEU: Refund/Release nur für Auftraggeber, nur wenn hold
+          // ✅ Refund/Release nur für Auftraggeber, nur wenn hold
           const payout = getPayoutStatus(order)
-          const canCustomerRelease =
-            isCustomer &&
-            order.status === 'confirmed' &&
-            order.jobPayStatus === 'paid' &&
-            payout === 'hold'
-
-          const canCustomerRefund =
-            isCustomer &&
-            order.jobPayStatus === 'paid' &&
-            payout === 'hold' &&
-            order.status !== 'confirmed'
+          const canCustomerRelease = isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold'
+          const canCustomerRefund = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && order.status !== 'confirmed'
 
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
@@ -838,16 +870,29 @@ const AuftraegePage: FC = () => {
               <div className={styles.meta}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
-                  <div className={styles.metaValue}>{contactValue}</div>
+                  <div className={styles.metaValue}>
+                    {contact.handle ? (
+                      <Link href={`/u/${contact.handle}/reviews`} className={styles.userLink} title="Zur Bewertungsseite">
+                        {contact.name}
+                      </Link>
+                    ) : (
+                      contact.name
+                    )}
+                  </div>
                 </div>
+
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
                   <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
                 </div>
+
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Zahlungsstatus</div>
                   <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
+
+                {/* ⚠️ (deine Labels waren im Snippet vertauscht – ich lasse es wie bei dir,
+                    aber wenn’s falsch angezeigt wird: annahme/ausgabe tauschen) */}
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Warenannahme (Kunde)</div>
                   <div className={styles.metaValue}>{formatDate(ausgabe)}</div>
@@ -918,7 +963,7 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {/* ✅ NEU: Auszahlung freigeben (nur Auftraggeber, nur hold, nur nach confirmed) */}
+                {/* Auszahlung freigeben */}
                 {canCustomerRelease && (
                   <button
                     type="button"
@@ -931,7 +976,7 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* ✅ NEU: Refund auslösen (nur Auftraggeber, nur hold, nur vor confirmed) */}
+                {/* Refund auslösen */}
                 {canCustomerRefund && (
                   <button
                     type="button"
@@ -944,7 +989,7 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* ✅ Bewertung Auftraggeber -> Auftragnehmer */}
+                {/* Bewertung Auftraggeber -> Auftragnehmer */}
                 {canCustomerReview && (
                   <button
                     type="button"
@@ -956,7 +1001,7 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* ✅ Bewertung Auftragnehmer -> Auftraggeber */}
+                {/* Bewertung Auftragnehmer -> Auftraggeber */}
                 {canVendorReview && (
                   <button
                     type="button"

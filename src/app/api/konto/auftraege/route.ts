@@ -70,8 +70,11 @@ type ApiOrder = {
   refundedAmountCents?: number
   refundedAt?: string
 
+  // ✅ Display + Handles (für Verlinkung)
   vendor?: string
   owner?: string
+  vendor_handle?: string | null
+  owner_handle?: string | null
 
   paidAt?: string
   releasedAt?: string
@@ -189,9 +192,6 @@ function buildVerfahrenFromJobRow(job: any): any[] {
 function normalizeJob(row: any): ApiJob {
   const id = String(row.id)
 
-  // jobs schema (dein create table):
-  // description, material_guete, material_guete_custom,
-  // liefer_datum_utc, rueck_datum_utc, specs, verfahren_1, verfahren_2
   const beschreibung = row.description ?? row.beschreibung ?? row.description_text ?? undefined
   const material = row.material_guete ?? row.material ?? undefined
 
@@ -220,7 +220,7 @@ function normalizeJob(row: any): ApiJob {
 export async function GET(req: Request) {
   const cookieStore = await cookies()
 
-  // User-Client (Auth + Reviews + Profiles)
+  // User-Client (Auth + Reviews)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -345,7 +345,7 @@ export async function GET(req: Request) {
 
   const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
 
-  // Counterparty Profiles (weiterhin über user-client; ok)
+  // ✅ Counterparty Profiles IMMER via admin (sonst sind Ratings/Username oft weg wegen RLS)
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -354,7 +354,7 @@ export async function GET(req: Request) {
   const idList = Array.from(ids)
 
   const { data: profsRaw, error: pErr } = idList.length
-    ? await supabase.from('profiles').select('id, username, rating_avg, rating_count').in('id', idList)
+    ? await admin.from('profiles').select('id, username, rating_avg, rating_count').in('id', idList)
     : { data: [], error: null }
 
   if (pErr) console.error('[GET /api/konto/auftraege] profiles db:', pErr)
@@ -362,7 +362,7 @@ export async function GET(req: Request) {
   const profMap = new Map<string, any>()
   for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
-  // Reviews
+  // Reviews (dürfen über user-client laufen)
   const offerIds = rows.map(r => String(r.id))
   const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
 
@@ -376,8 +376,14 @@ export async function GET(req: Request) {
     const payout = (o.payout_status ?? 'hold') as DbPayoutStatus
     const payStatus = mapPayStatus(o)
 
-    const ownerLabel = labelFromProfile(profMap.get(String(o.owner_id)))
-    const vendorLabel = labelFromProfile(profMap.get(String(o.bieter_id)))
+    const ownerProf = profMap.get(String(o.owner_id))
+    const vendorProf = profMap.get(String(o.bieter_id))
+
+    const ownerLabel = labelFromProfile(ownerProf)
+    const vendorLabel = labelFromProfile(vendorProf)
+
+    const ownerHandle = ownerProf?.username ? String(ownerProf.username) : null
+    const vendorHandle = vendorProf?.username ? String(vendorProf.username) : null
 
     const raters = reviewMap.get(offerId) ?? new Set<string>()
     const customerReviewed = raters.has(String(o.owner_id))
@@ -401,17 +407,15 @@ export async function GET(req: Request) {
         disputeReason: o.dispute_reason || null,
 
         jobPayStatus: payStatus,
-
-        // ✅ NEU: für Buttons in page.tsx
         jobPayoutStatus: payout,
 
-        // (alt bleibt)
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
         refundedAt: o.refunded_at || undefined,
 
         vendor: vendorLabel,
+        vendor_handle: vendorHandle,
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,
@@ -440,17 +444,15 @@ export async function GET(req: Request) {
         disputeReason: o.dispute_reason || null,
 
         offerPayStatus: payStatus,
-
-        // ✅ NEU: für Buttons in page.tsx
         offerPayoutStatus: payout,
 
-        // (alt bleibt)
         payoutStatus: payout,
         payoutReleasedAt: o.payout_released_at || undefined,
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
         refundedAt: o.refunded_at || undefined,
 
         owner: ownerLabel,
+        owner_handle: ownerHandle,
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,
