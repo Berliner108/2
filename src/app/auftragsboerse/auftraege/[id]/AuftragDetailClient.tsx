@@ -754,7 +754,6 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
           </div>
         )}
       </div>
-
       {/* Lightbox */}
       {lightboxOpen && (
         <Lightbox
