@@ -12,12 +12,16 @@ type DbOffer = {
   job_id: string
   bieter_id: string
   owner_id: string
+  
+  artikel_cents: number | null
+  versand_cents: number | null
 
   gesamt_cents: number | null
   created_at: string | null
   status: string | null
 
   anbieter_snapshot: any | null
+
 
   paid_at: string | null
   paid_amount_cents: number | null
@@ -59,6 +63,10 @@ type ApiOrder = {
   jobId: string
   offerId: string
   amountCents?: number
+  artikelCents?: number
+  versandCents?: number
+  gesamtCents?: number
+
   acceptedAt: string
   kind: 'vergeben' | 'angenommen'
 
@@ -135,6 +143,12 @@ function safeNumOrNull(v: any): number | null {
 
 function s(v: any): string {
   return typeof v === 'string' ? v.trim() : ''
+}
+function splitCents(o: DbOffer) {
+  const artikel = safeNum(o.artikel_cents) ?? 0
+  const versand = safeNum(o.versand_cents) ?? 0
+  const gesamt = safeNum(o.gesamt_cents) ?? artikel + versand
+  return { artikel, versand, gesamt }
 }
 
 /** Backend liefert nur den Username; Rating kommt separat. */
@@ -354,6 +368,9 @@ export async function GET(req: Request) {
     job_id,
     bieter_id,
     owner_id,
+    artikel_cents,
+    versand_cents,
+
     gesamt_cents,
     created_at,
     status,
@@ -421,7 +438,8 @@ export async function GET(req: Request) {
   const orders: ApiOrder[] = []
   for (const o of rows) {
     const jobId = String(o.job_id)
-    const offerId = String(o.id)
+    const offerId = String(o.id)    
+    const { artikel, versand, gesamt } = splitCents(o)
 
     const fulfillment = (o.fulfillment_status ?? 'in_progress') as ApiOrder['status']
     const payout = (o.payout_status ?? 'hold') as DbPayoutStatus
@@ -455,7 +473,10 @@ export async function GET(req: Request) {
       orders.push({
         jobId,
         offerId,
-        amountCents: safeNum(o.gesamt_cents),
+        amountCents: gesamt,
+        artikelCents: artikel,
+        versandCents: versand,
+        gesamtCents: gesamt,
         acceptedAt,
         kind: 'vergeben',
         anbieter_snapshot: o.anbieter_snapshot ?? null,
@@ -500,7 +521,11 @@ export async function GET(req: Request) {
       orders.push({
         jobId,
         offerId,
-        amountCents: safeNum(o.gesamt_cents),
+        amountCents: gesamt,        // du hast aktuell safeNum(o.gesamt_cents) -> ersetzen!
+        artikelCents: artikel,
+        versandCents: versand,
+        gesamtCents: gesamt,
+
         acceptedAt,
         kind: 'angenommen',
         anbieter_snapshot: o.anbieter_snapshot ?? null, // bleibt drin, aber UI soll’s NICHT mehr nutzen

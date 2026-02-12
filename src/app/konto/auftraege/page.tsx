@@ -34,6 +34,10 @@ type Order = {
   owner?: string
 
   amountCents?: number
+  artikelCents?: number
+  versandCents?: number
+  gesamtCents?: number
+
   acceptedAt: string // ISO
   kind: OrderKind
 
@@ -524,8 +528,11 @@ const AuftraegePage: FC = () => {
     return [...items].sort((a, b) => {
       if (sort === 'date_desc') return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
       if (sort === 'date_asc') return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
-      if (sort === 'price_desc') return (b.order.amountCents ?? 0) - (a.order.amountCents ?? 0)
-      if (sort === 'price_asc') return (a.order.amountCents ?? 0) - (b.order.amountCents ?? 0)
+     const aPrice = a.order.gesamtCents ?? a.order.amountCents ?? 0
+      const bPrice = b.order.gesamtCents ?? b.order.amountCents ?? 0
+      if (sort === 'price_desc') return bPrice - aPrice
+      if (sort === 'price_asc') return aPrice - bPrice
+
       return 0
     })
   }
@@ -979,8 +986,15 @@ const AuftraegePage: FC = () => {
 
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Preis</div>
-                  <div className={styles.metaValue}>{formatEUR(order.amountCents)}</div>
+                  <div className={styles.metaValue}>
+                    <div>Auftrag: {formatEUR(order.artikelCents ?? 0)}</div>
+                    <div>Logistik: {formatEUR(order.versandCents ?? 0)}</div>
+                    <div>
+                      <strong>Gesamt: {formatEUR(order.gesamtCents ?? order.amountCents)}</strong>
+                    </div>
+                  </div>
                 </div>
+
 
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Zahlungsstatus</div>
