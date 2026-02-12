@@ -15,7 +15,6 @@ type DbOffer = {
 
   gesamt_cents: number | null
   created_at: string | null
-
   status: string | null
 
   anbieter_snapshot: any | null
@@ -42,6 +41,20 @@ type DbOffer = {
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
 type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
 
+type PartyProfile = {
+  firstName: string
+  lastName: string
+  address: {
+    street: string
+    houseNumber: string
+    zip: string
+    city: string
+    country: string
+  }
+  companyName?: string
+  vatNumber?: string
+}
+
 type ApiOrder = {
   jobId: string
   offerId: string
@@ -60,7 +73,7 @@ type ApiOrder = {
   jobPayStatus?: DbPayStatus
   offerPayStatus?: DbPayStatus
 
-  // ✅ rollen-spezifischer payout_status für Buttons
+  // rollen-spezifischer payout_status für Buttons
   jobPayoutStatus?: DbPayoutStatus // kind='vergeben'
   offerPayoutStatus?: DbPayoutStatus // kind='angenommen'
 
@@ -70,13 +83,13 @@ type ApiOrder = {
   refundedAmountCents?: number
   refundedAt?: string
 
-  // ✅ Display + Handles (für Verlinkung)
+  // Display + Handles (für Verlinkung)
   vendor?: string
   owner?: string
   vendor_handle?: string | null
   owner_handle?: string | null
 
-  // ✅ Ratings aus profiles
+  // Ratings aus profiles
   vendor_rating_avg?: number | null
   vendor_rating_count?: number | null
   owner_rating_avg?: number | null
@@ -90,8 +103,12 @@ type ApiOrder = {
 
   customerReviewed?: boolean
   vendorReviewed?: boolean
+
+  // legacy (für "vergeben" bleibt es so!)
   anbieter_snapshot?: any | null
 
+  // ✅ NUR für "angenommen" gedacht (Auftragnehmer sieht Auftraggeberdaten)
+  owner_profile?: PartyProfile | null
 }
 
 type ApiJob = {
@@ -116,7 +133,11 @@ function safeNumOrNull(v: any): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-/** Backend liefert nur den Username; Rating kommt separat (wie bei Lackanfragen). */
+function s(v: any): string {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+/** Backend liefert nur den Username; Rating kommt separat. */
 function labelFromProfile(p: any): string {
   const u = String(p?.username ?? '').trim()
   return u || '—'
@@ -160,9 +181,6 @@ function mapPayStatus(o: DbOffer): DbPayStatus {
 }
 
 /**
- * Aus jobs.specs + verfahren_1/2 ein "verfahren[]"-Array bauen,
- * damit computeJobTitle() in deiner page.tsx wieder sauber arbeitet.
- *
  * specs keys: z.B. "v1__Pulverbeschichten__farbton": "7016"
  */
 function buildVerfahrenFromJobRow(job: any): any[] {
@@ -176,7 +194,6 @@ function buildVerfahrenFromJobRow(job: any): any[] {
   const keyList = Object.keys(specs || {})
   for (const k of keyList) {
     const parts = k.split('__')
-    // v1__Pulverbeschichten__farbton
     if (parts.length >= 3) {
       const proc = String(parts[1] ?? '').trim()
       if (proc) names.add(proc)
@@ -189,13 +206,12 @@ function buildVerfahrenFromJobRow(job: any): any[] {
     for (const k of keyList) {
       const parts = k.split('__')
       if (parts.length >= 3 && String(parts[1]) === name) {
-        const fieldKey = parts.slice(2).join('__') // alles nach dem Verfahren
+        const fieldKey = parts.slice(2).join('__')
         felder[fieldKey] = (specs as any)[k]
       }
     }
     out.push({ name, felder })
   }
-
   return out
 }
 
@@ -205,9 +221,6 @@ function normalizeJob(row: any): ApiJob {
   const beschreibung = row.description ?? row.beschreibung ?? row.description_text ?? undefined
   const material = row.material_guete ?? row.material ?? undefined
 
-  // Für deine UI-Logik:
-  // warenannahmeDatum ~ liefer_datum_utc
-  // warenausgabeDatum ~ rueck_datum_utc
   const warenannahmeDatum = row.liefer_datum_utc ?? row.warenannahmeDatum ?? null
   const warenausgabeDatum = row.rueck_datum_utc ?? row.warenausgabeDatum ?? null
 
@@ -225,6 +238,61 @@ function normalizeJob(row: any): ApiJob {
     lieferDatum: warenausgabeDatum ?? row.lieferDatum ?? null,
     user: row.user ?? row.owner_snapshot ?? row.owner ?? undefined,
   }
+}
+
+/** ✅ nur das, was du brauchst: Name aus Auth + Rest aus profiles */
+function buildPartyProfile(profileRow: any, authMeta: any): PartyProfile {
+  const addr = (profileRow?.address && typeof profileRow.address === 'object') ? profileRow.address : {}
+  const accountType = String(profileRow?.account_type ?? '').toLowerCase()
+
+  const out: PartyProfile = {
+    firstName: s(authMeta?.firstName),
+    lastName: s(authMeta?.lastName),
+    address: {
+      street: s(addr?.street),
+      houseNumber: s(addr?.houseNumber),
+      zip: s(addr?.zip),
+      city: s(addr?.city),
+      country: s(addr?.country),
+    },
+  }
+
+  // business: Firma + UID
+  if (accountType === 'business') {
+    const companyName = s(profileRow?.company_name)
+    const vatNumber = s(profileRow?.vat_number)
+    if (companyName) out.companyName = companyName
+    if (vatNumber) out.vatNumber = vatNumber
+  }
+
+  return out
+}
+
+/** ✅ Auth user_metadata für fremde User via Service Role */
+async function fetchAuthMetaMap(admin: any, ids: string[]) {
+  const map = new Map<string, any>()
+  if (!ids.length) return map
+
+  const CHUNK = 25
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const batch = ids.slice(i, i + CHUNK)
+
+    const results = await Promise.all(
+      batch.map(async (id) => {
+        try {
+          const { data, error } = await admin.auth.admin.getUserById(id)
+          if (error || !data?.user) return { id, meta: {} }
+          return { id, meta: (data.user.user_metadata || {}) as any }
+        } catch {
+          return { id, meta: {} }
+        }
+      })
+    )
+
+    for (const r of results) map.set(String(r.id), r.meta ?? {})
+  }
+
+  return map
 }
 
 export async function GET(req: Request) {
@@ -255,7 +323,6 @@ export async function GET(req: Request) {
 
   const admin = supabaseAdmin()
 
-  // --- DEBUG: Vergleich user-client vs admin (RLS Diagnose) ---
   if (debug) {
     const qPaidUser = await supabase
       .from('job_offers')
@@ -271,48 +338,17 @@ export async function GET(req: Request) {
       .or(`owner_id.eq.${uid},bieter_id.eq.${uid}`)
       .order('paid_at', { ascending: false, nullsFirst: false })
 
-    const qAnyUser = await supabase
-      .from('job_offers')
-      .select('id, job_id, status, owner_id, bieter_id, created_at', { count: 'exact' })
-      .or(`owner_id.eq.${uid},bieter_id.eq.${uid}`)
-      .order('created_at', { ascending: false })
-
-    const qAnyAdmin = await admin
-      .from('job_offers')
-      .select('id, job_id, status, owner_id, bieter_id, created_at', { count: 'exact' })
-      .or(`owner_id.eq.${uid},bieter_id.eq.${uid}`)
-      .order('created_at', { ascending: false })
-
     return NextResponse.json(
       {
         ok: true,
         uid,
-        paid_user: {
-          count: qPaidUser.count ?? null,
-          error: qPaidUser.error?.message ?? null,
-          sample: (qPaidUser.data ?? []).slice(0, 5),
-        },
-        paid_admin: {
-          count: qPaidAdmin.count ?? null,
-          error: qPaidAdmin.error?.message ?? null,
-          sample: (qPaidAdmin.data ?? []).slice(0, 5),
-        },
-        any_user: {
-          count: qAnyUser.count ?? null,
-          error: qAnyUser.error?.message ?? null,
-          sample: (qAnyUser.data ?? []).slice(0, 5),
-        },
-        any_admin: {
-          count: qAnyAdmin.count ?? null,
-          error: qAnyAdmin.error?.message ?? null,
-          sample: (qAnyAdmin.data ?? []).slice(0, 5),
-        },
+        paid_user: { count: qPaidUser.count ?? null, error: qPaidUser.error?.message ?? null, sample: (qPaidUser.data ?? []).slice(0, 5) },
+        paid_admin: { count: qPaidAdmin.count ?? null, error: qPaidAdmin.error?.message ?? null, sample: (qPaidAdmin.data ?? []).slice(0, 5) },
       },
       { status: 200 }
     )
   }
 
-  // --- PRODUKTIV: Admin query (damit es live NICHT an RLS scheitert) ---
   const baseSelect = `
     id,
     job_id,
@@ -355,7 +391,7 @@ export async function GET(req: Request) {
 
   const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
 
-  // ✅ Counterparty Profiles IMMER via admin (sonst sind Ratings/Username oft weg wegen RLS)
+  // profiles für beide IDs laden (für username/rating + für angenommene Seite auch Adresse/Firma/UID)
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -364,7 +400,10 @@ export async function GET(req: Request) {
   const idList = Array.from(ids)
 
   const { data: profsRaw, error: pErr } = idList.length
-    ? await admin.from('profiles').select('id, username, rating_avg, rating_count').in('id', idList)
+    ? await admin
+        .from('profiles')
+        .select('id, username, rating_avg, rating_count, account_type, company_name, vat_number, address')
+        .in('id', idList)
     : { data: [], error: null }
 
   if (pErr) console.error('[GET /api/konto/auftraege] profiles db:', pErr)
@@ -372,11 +411,13 @@ export async function GET(req: Request) {
   const profMap = new Map<string, any>()
   for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
-  // Reviews (dürfen über user-client laufen)
+  // ✅ Auth meta map (nur nötig, weil Auftragnehmer Vor/Nachname sehen soll)
+  const authMetaMap = await fetchAuthMetaMap(admin, idList)
+
+  // Reviews (über user-client)
   const offerIds = rows.map(r => String(r.id))
   const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
 
-  // Orders bauen
   const orders: ApiOrder[] = []
   for (const o of rows) {
     const jobId = String(o.job_id)
@@ -386,30 +427,31 @@ export async function GET(req: Request) {
     const payout = (o.payout_status ?? 'hold') as DbPayoutStatus
     const payStatus = mapPayStatus(o)
 
-    const ownerProf = profMap.get(String(o.owner_id))
-    const vendorProf = profMap.get(String(o.bieter_id))
+    const ownerId = String(o.owner_id)
+    const vendorId = String(o.bieter_id)
+
+    const ownerProf = profMap.get(ownerId)
+    const vendorProf = profMap.get(vendorId)
 
     const ownerHandle = ownerProf?.username ? String(ownerProf.username) : null
     const vendorHandle = vendorProf?.username ? String(vendorProf.username) : null
 
-    // ✅ Ratings (genau aus profiles.rating_avg + rating_count)
     const ownerRatingAvg = safeNumOrNull(ownerProf?.rating_avg)
     const ownerRatingCount = safeNumOrNull(ownerProf?.rating_count)
     const vendorRatingAvg = safeNumOrNull(vendorProf?.rating_avg)
     const vendorRatingCount = safeNumOrNull(vendorProf?.rating_count)
 
-    // Display-Name = nur Username (Anzeigeformat macht dein Frontend)
     const ownerLabel = labelFromProfile(ownerProf)
     const vendorLabel = labelFromProfile(vendorProf)
 
     const raters = reviewMap.get(offerId) ?? new Set<string>()
-    const customerReviewed = raters.has(String(o.owner_id))
-    const vendorReviewed = raters.has(String(o.bieter_id))
+    const customerReviewed = raters.has(ownerId)
+    const vendorReviewed = raters.has(vendorId)
 
     const acceptedAt = o.paid_at || o.created_at || new Date().toISOString()
 
-    // ✅ Auftraggeber-Sicht (vergeben)
-    if (String(o.owner_id) === uid) {
+    // ✅ Auftraggeber-Sicht (vergeben) -> UNVERÄNDERT (Snapshot bleibt, keine Profile-Block-Pflicht)
+    if (ownerId === uid) {
       orders.push({
         jobId,
         offerId,
@@ -448,15 +490,20 @@ export async function GET(req: Request) {
       })
     }
 
-    // ✅ Anbieter-Sicht (angenommen)
-    if (String(o.bieter_id) === uid) {
+    // ✅ Anbieter-Sicht (angenommen) -> HIER: owner_profile liefern (Auth+profiles)
+    if (vendorId === uid) {
+      const owner_profile =
+        ownerProf
+          ? buildPartyProfile(ownerProf, authMetaMap.get(ownerId) ?? {})
+          : null
+
       orders.push({
         jobId,
         offerId,
         amountCents: safeNum(o.gesamt_cents),
         acceptedAt,
         kind: 'angenommen',
-        anbieter_snapshot: o.anbieter_snapshot ?? null,
+        anbieter_snapshot: o.anbieter_snapshot ?? null, // bleibt drin, aber UI soll’s NICHT mehr nutzen
 
         status: fulfillment,
         deliveredReportedAt: o.delivered_reported_at || undefined,
@@ -485,6 +532,8 @@ export async function GET(req: Request) {
 
         customerReviewed,
         vendorReviewed,
+
+        owner_profile,
       })
     }
   }
@@ -502,7 +551,6 @@ export async function GET(req: Request) {
     jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
   }
 
-  // safety: nur orders zurückgeben, deren job auch geladen wurde
   const jobSet = new Set(jobs.map(j => String(j.id)))
   const filteredOrders = orders.filter(o => jobSet.has(String(o.jobId)))
 

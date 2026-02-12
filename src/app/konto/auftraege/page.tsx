@@ -53,6 +53,21 @@ type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'di
 // ✅ Backend: 'hold' | 'released' | 'partial_refund' | 'refunded'
 type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
 
+/* ✅ NEU: Datenblock für Auftraggeber (nur in "angenommen") */
+type PartyProfile = {
+  firstName: string
+  lastName: string
+  address: {
+    street: string
+    houseNumber: string
+    zip: string
+    city: string
+    country: string
+  }
+  companyName?: string
+  vatNumber?: string
+}
+
 type DbOrder = Order & {
   jobPayStatus?: DbPayStatus // kind='vergeben'
   offerPayStatus?: DbPayStatus // kind='angenommen'
@@ -75,7 +90,11 @@ type DbOrder = Order & {
   vendor_rating_count?: number | null
   owner_rating_avg?: number | null
   owner_rating_count?: number | null
+
   anbieterSnapshot?: any | null
+
+  // ✅ NEU aus API (Route): nur relevant für "angenommen"
+  owner_profile?: PartyProfile | null
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
@@ -886,43 +905,75 @@ const AuftraegePage: FC = () => {
                       </>
                     )}
 
-                    {(() => {
-                      const snap: any =
-                        (order as any).anbieterSnapshot ??
-                        (order as any).anbieter_snapshot ??
-                        (order as any).owner_snapshot ??
-                        (order as any).vendor_snapshot ??
-                        null
+                    {/* ✅ NUR für "angenommen": echte Daten aus owner_profile (kein Snapshot) */}
+                    {order.kind === 'angenommen' && order.owner_profile ? (
+                      <div className={styles.vendorSnapshot}>
+                        {order.owner_profile.companyName ? <div>{order.owner_profile.companyName}</div> : null}
 
-                      if (!snap) return null
+                        {(() => {
+                          const full = [order.owner_profile?.firstName, order.owner_profile?.lastName].filter(Boolean).join(' ').trim()
+                          return full ? <div>{full}</div> : null
+                        })()}
 
-                      const priv = snap?.private ?? {}
-                      const pub = snap?.public ?? {}
-                      const addr = priv?.address ?? {}
-                      const loc = pub?.location ?? {}
+                        {(() => {
+                          const a = order.owner_profile?.address
+                          if (!a) return null
 
-                      const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
-                      const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
+                          const streetLine = [a.street, a.houseNumber].filter(Boolean).join(' ').trim()
+                          const cityLine = [a.zip, a.city].filter(Boolean).join(' ').trim()
+                          const country = String(a.country ?? '').trim()
 
-                      // ✅ bei dir im Snapshot: private.vat_number
-                      const vat = typeof priv?.vat_number === 'string' ? priv.vat_number.trim() : ''
+                          return (
+                            <>
+                              {streetLine ? <div>{streetLine}</div> : null}
+                              {cityLine ? <div>{cityLine}</div> : null}
+                              {country ? <div>{country}</div> : null}
+                              {order.owner_profile?.vatNumber ? <div>UID: {order.owner_profile.vatNumber}</div> : null}
+                            </>
+                          )
+                        })()}
+                      </div>
+                    ) : null}
 
-                      const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
-                      const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
-                      const country = String(addr?.country ?? loc?.country ?? '').trim()
+                    {/* ✅ NUR für "vergeben": Snapshot bleibt exakt wie bei dir */}
+                    {order.kind === 'vergeben'
+                      ? (() => {
+                          const snap: any =
+                            (order as any).anbieterSnapshot ??
+                            (order as any).anbieter_snapshot ??
+                            (order as any).owner_snapshot ??
+                            (order as any).vendor_snapshot ??
+                            null
 
-                      return (
-                        <div className={styles.vendorSnapshot}>
-                          {company ? <div>{company}</div> : null}
-                          {person ? <div>{person}</div> : null}
-                          {vat ? <div>UID: {vat}</div> : null}
-                          {streetLine ? <div>{streetLine}</div> : null}
-                          {cityLine ? <div>{cityLine}</div> : null}
-                          {country ? <div>{country}</div> : null}
-                        </div>
-                      )
+                          if (!snap) return null
 
-                    })()}
+                          const priv = snap?.private ?? {}
+                          const pub = snap?.public ?? {}
+                          const addr = priv?.address ?? {}
+                          const loc = pub?.location ?? {}
+
+                          const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
+                          const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
+
+                          // ✅ bei dir im Snapshot: private.vat_number
+                          const vat = typeof priv?.vat_number === 'string' ? priv.vat_number.trim() : ''
+
+                          const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
+                          const cityLine = [addr?.zip, addr?.city ?? loc?.city].filter(Boolean).join(' ').trim()
+                          const country = String(addr?.country ?? loc?.country ?? '').trim()
+
+                          return (
+                            <div className={styles.vendorSnapshot}>
+                              {company ? <div>{company}</div> : null}
+                              {person ? <div>{person}</div> : null}
+                              {vat ? <div>UID: {vat}</div> : null}
+                              {streetLine ? <div>{streetLine}</div> : null}
+                              {cityLine ? <div>{cityLine}</div> : null}
+                              {country ? <div>{country}</div> : null}
+                            </div>
+                          )
+                        })()
+                      : null}
                   </div>
                 </div>
 
@@ -1012,7 +1063,7 @@ const AuftraegePage: FC = () => {
                     className={styles.primaryBtn}
                     disabled={isBusy}
                     onClick={() => triggerRelease(order.jobId)}
-                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr."
+                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr möglich."
                   >
                     {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                   </button>
