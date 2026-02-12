@@ -664,94 +664,95 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
                 );
               })}
 
-              {/* Preisbereich – immer sichtbar */}
-              <div className={`${styles.metaItem} ${styles.priceSection}`}>
-                <h2 className={styles.priceHeading}>
-                  Mach ein Angebot für diesen Auftrag
-                </h2>
+              {/* Angebotsbereich / Vermittelt-Box */}
+{vermittelt ? (
+  <div
+    className={styles.patchVermittelt}
+    role="status"
+    aria-live="polite"
+    style={{
+      display: 'block',
+      marginTop: 16,
+      padding: '16px 20px',
+      border: '3px solid #52c41a',
+      background: '#f6ffed',
+      color: '#135200',
+      fontWeight: 700,
+      textAlign: 'center',
+      borderRadius: 14,
+      boxShadow: 'inset 0 2px 8px rgba(0,0,0,.06)',
+    }}
+  >
+    <strong>Auftrag erfolgreich vermittelt</strong>
+  </div>
+) : (
+  /* Preisbereich */
+  <div className={`${styles.metaItem} ${styles.priceSection}`}>
+    <h2 className={styles.priceHeading}>Mach ein Angebot für diesen Auftrag</h2>
 
-                <form
-                  id="pricePanel"
-                  onSubmit={onPreisSubmit}
-                  className={styles.priceForm}
-                >
-                  <label htmlFor="gesamtpreis" className={styles.label}>
-                    Gesamtkosten für den Auftrag (inkl. Steuern und Gebühren exkl.
-                    Logistik) in €
-                  </label>
-                  <div className={styles.priceRow}>
-                    <input
-                      id="gesamtpreis"
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="mind. 60 € - z. B. 1450,00 €"
-                      value={gesamtPreis}
-                      onChange={handleGesamtChange}
-                      onBlur={handleGesamtBlur}
-                      className={`${styles.priceInput} ${
-                        preisError ? styles.isInvalid : ''
-                      }`}
-                      autoComplete="off"
-                      maxLength={MAX_PRICE_CHARS}
-                      disabled={loading}
-                    />
-                  </div>
+    <form id="pricePanel" onSubmit={onPreisSubmit} className={styles.priceForm}>
+      <label htmlFor="gesamtpreis" className={styles.label}>
+        Gesamtkosten für den Auftrag (inkl. Steuern und Gebühren exkl. Logistik) in €
+      </label>
 
-                  {brauchtLogistikPreis && (
-                    <>
-                      <label
-                        htmlFor="logistikpreis"
-                        className={styles.label}
-                        style={{ marginTop: '0.75rem' }}
-                      >
-                        Logistikkosten in € (Transport/Spedition)
-                      </label>
-                      <div className={styles.priceRow}>
-                        <input
-                          id="logistikpreis"
-                          type="text"
-                          inputMode="decimal"
-                          placeholder="mind. 20 € - z. B. 180,00 € "
-                          value={logistikPreis}
-                          onChange={handleLogistikChange}
-                          onBlur={handleLogistikBlur}
-                          className={`${styles.priceInput} ${
-                            preisError ? styles.isInvalid : ''
-                          }`}
-                          autoComplete="off"
-                          maxLength={MAX_PRICE_CHARS}
-                          disabled={loading}
-                        />
-                      </div>
-                    </>
-                  )}
+      <div className={styles.priceRow}>
+        <input
+          id="gesamtpreis"
+          type="text"
+          inputMode="decimal"
+          placeholder="mind. 60 € - z. B. 1450,00 €"
+          value={gesamtPreis}
+          onChange={handleGesamtChange}
+          onBlur={handleGesamtBlur}
+          className={`${styles.priceInput} ${preisError ? styles.isInvalid : ''}`}
+          autoComplete="off"
+          maxLength={MAX_PRICE_CHARS}
+          disabled={loading}
+        />
+      </div>
 
-                  {preisError ? (
-                    <div
-                      role="alert"
-                      className={styles.priceError}
-                      aria-live="polite"
-                    >
-                      {preisError}
-                    </div>
-                  ) : (
-                    <div className={styles.priceHint}>
-                      Mit der Angebotsabgabe bestätigst du, alle
-                      Kundenanforderungen zum Auftrag vollständig erfüllen zu
-                      können. Dein Angebot ist 72&nbsp;h oder bis zum Tag der
-                      Warenausgabe gültig.
-                    </div>
-                  )}
+      {brauchtLogistikPreis && (
+        <>
+          <label htmlFor="logistikpreis" className={styles.label} style={{ marginTop: '0.75rem' }}>
+            Logistikkosten in € (Transport/Spedition)
+          </label>
 
-                  <button
-                    type="submit"
-                    className={styles.buyButton}
-                    disabled={isSubmitDisabled}
-                  >
-                    {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
-                  </button>
-                </form>
-              </div>
+          <div className={styles.priceRow}>
+            <input
+              id="logistikpreis"
+              type="text"
+              inputMode="decimal"
+              placeholder="mind. 20 € - z. B. 180,00 € "
+              value={logistikPreis}
+              onChange={handleLogistikChange}
+              onBlur={handleLogistikBlur}
+              className={`${styles.priceInput} ${preisError ? styles.isInvalid : ''}`}
+              autoComplete="off"
+              maxLength={MAX_PRICE_CHARS}
+              disabled={loading}
+            />
+          </div>
+        </>
+      )}
+
+      {preisError ? (
+        <div role="alert" className={styles.priceError} aria-live="polite">
+          {preisError}
+        </div>
+      ) : (
+        <div className={styles.priceHint}>
+          Mit der Angebotsabgabe bestätigst du, alle Kundenanforderungen zum Auftrag vollständig erfüllen zu können.
+          Dein Angebot ist 72&nbsp;h oder bis zum Tag der Warenausgabe gültig.
+        </div>
+      )}
+
+      <button type="submit" className={styles.buyButton} disabled={isSubmitDisabled}>
+        {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
+      </button>
+    </form>
+  </div>
+)}
+
             </div>
           </div>
         )}
