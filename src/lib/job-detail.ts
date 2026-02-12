@@ -79,10 +79,15 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
 
   const j = job as unknown as JobRow
 
-  // Optional: wenn du NUR published+open anzeigen willst, hier prüfen:
-  if (!j.published || j.status !== 'open') {
-    return null
-  }
+  // Öffentlich nur published+open.
+// Wenn NICHT published/open: nur eingeloggte Nutzer dürfen weiter (RLS entscheidet dann final).
+const { data: auth } = await supabase.auth.getUser()
+const uid = auth?.user?.id ?? null
+
+if ((!j.published || j.status !== 'open') && !uid) {
+  return null
+}
+
 
   // 2) Profile separat holen
 const { data: profile, error: profileError } = await supabase
