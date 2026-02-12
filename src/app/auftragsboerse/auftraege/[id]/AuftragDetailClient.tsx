@@ -434,6 +434,8 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
     loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
+  const vermittelt = auftrag.published === false;
+
 
   return (
     <>

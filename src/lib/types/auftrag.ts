@@ -1,7 +1,7 @@
 // src/lib/types/auftrag.ts
 export type Auftrag = {
   id: string
-
+  published?: boolean | null
   verfahren: { name: string; felder: Record<string, any> }[]
 
   material: string | null

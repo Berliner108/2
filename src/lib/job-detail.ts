@@ -176,6 +176,7 @@ const ratingCount = p?.rating_count == null ? null : Number(p.rating_count)
 
   return {
     id: j.id,
+    published: j.published ?? true, // ✅ HIER neu
     verfahren,
     material,
     length,
