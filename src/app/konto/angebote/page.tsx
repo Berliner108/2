@@ -963,50 +963,57 @@ async function confirmAccept() {
 
       <div className={styles.wrapper}>
         <div className={styles.toolbar}>
-          <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
-          <input
-            id="search"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Auftrags-Nr. oder Titel…"
-            className={styles.search}
-          />
+  <div className={styles.toolbarSearch}>
+    <label className={styles.visuallyHidden} htmlFor="search">Suchen</label>
+    <input
+      id="search"
+      type="search"
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Auftrags-Nr. oder Titel…"
+      className={styles.search}
+    />
+  </div>
 
-          <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className={styles.select}
-          >
-            <option value="date_desc">Neueste zuerst</option>
-            <option value="date_asc">Älteste zuerst</option>
-            <option value="price_desc">Bester Preis zuletzt</option>
-            <option value="price_asc">Bester Preis zuerst</option>
-          </select>
+  <div className={styles.toolbarSort}>
+    <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
+    <select
+      id="sort"
+      value={sort}
+      onChange={(e) => setSort(e.target.value as SortKey)}
+      className={styles.select}
+    >
+      <option value="date_desc">Neueste zuerst</option>
+      <option value="date_asc">Älteste zuerst</option>
+      <option value="price_desc">Bester Preis zuletzt</option>
+      <option value="price_asc">Bester Preis zuerst</option>
+    </select>
+  </div>
 
-          <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
-            <button
-              role="tab"
-              aria-selected={topSection === 'received'}
-              className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
-              onClick={() => setTopSection('received')}
-              type="button"
-            >
-              Erhaltene oben
-            </button>
-            <button
-              role="tab"
-              aria-selected={topSection === 'submitted'}
-              className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
-              onClick={() => setTopSection('submitted')}
-              type="button"
-            >
-              Abgegebene oben
-            </button>
-          </div>
-        </div>
+  <div className={styles.toolbarTabs}>
+    <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
+      <button
+        role="tab"
+        aria-selected={topSection === 'received'}
+        className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
+        onClick={() => setTopSection('received')}
+        type="button"
+      >
+        Erhaltene oben
+      </button>
+      <button
+        role="tab"
+        aria-selected={topSection === 'submitted'}
+        className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
+        onClick={() => setTopSection('submitted')}
+        type="button"
+      >
+        Abgegebene oben
+      </button>
+    </div>
+  </div>
+</div>
+
 
         {topSection === 'received' ? (
           <>

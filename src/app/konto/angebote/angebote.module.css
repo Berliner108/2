@@ -582,3 +582,38 @@
   opacity: 0.85;
   margin-top: 2px;
 }
+/* Desktop: wie bisher – nur sauber über Areas */
+.toolbar{
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: "search sort tabs";
+  gap: .75rem;
+  align-items: center;
+  margin: 0 0 1rem;
+}
+
+.toolbarSearch{ grid-area: search; }
+.toolbarSort  { grid-area: sort; }
+.toolbarTabs  { grid-area: tabs; }
+
+/* Mobile: Tabs volle Breite + Buttons gleich breit */
+@media (max-width: 768px){
+  .toolbar{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "tabs"
+      "search"
+      "sort";
+  }
+
+  .segmented{
+    display: flex;
+    width: 100%;
+  }
+
+  .segmentedBtn{
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+  }
+}
