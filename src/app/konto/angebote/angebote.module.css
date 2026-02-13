@@ -585,18 +585,859 @@
 .segmentedDesktop { display: block; }
 .segmentedMobile  { display: none; margin-top: .75rem; }
 
-@media (max-width: 768px) {
-  .segmentedDesktop { display: none; }
-  .segmentedMobile  { display: block; }
+/* — Basis — */
+.wrapper {
+  padding: 2rem;
+  max-width: 100%;
+  font-family: 'Oswald';
+}
 
-  .segmentedMobile .segmented{
-    display: flex;      /* statt inline-flex */
+.heading {
+  font-size: 1.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1.2rem;
+  color: #222;
+  border-left: 6px solid #00b5d8;
+  padding-left: 1rem;
+}
+
+.kontoContainer {
+  background-color: #ffffff;
+  margin-bottom: 3rem;
+}
+
+.kontoContainer p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* Segmented Control (Umschalter oben) */
+.segmented {
+  display: inline-flex;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.segmentedBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: .45rem .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Oswald';
+}
+.segmentedBtn + .segmentedBtn { border-left: 2px solid #e0e0e0; }
+.segmentedActive { background: #00b5d8; color: #fff; }
+
+/* Divider */
+.divider {
+  height: 2px;
+  background: linear-gradient(to right, #00b5d8, transparent);
+  margin: 2rem 0;
+  border: none;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0 0 1rem;
+}
+.search,
+.select {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 1rem;
+  font-family: 'Oswald';
+}
+.onlyActive { display: flex; gap: 0.5rem; align-items: center; font-weight: 600; }
+.search:focus-visible,
+.select:focus-visible { outline: 3px solid #9ee8f3; outline-offset: 2px; }
+
+/* A11y label helper */
+.visuallyHidden {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* ===== Karten & Listen ===== */
+
+/* Bullets für diese Listen entfernen */
+.kontoContainer ul.groupList,
+.kontoContainer ul.list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Abgegebene Liste */
+.list { display: grid; gap: 0.75rem; }
+
+/* Modal (wie auf Aufträge-Seite) */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;animation:modalFade .15s ease-out}
+@keyframes modalFade{from{opacity:0}to{opacity:1}}
+.modalContent{width:min(520px,92vw);background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:22px 20px;transform:translateY(4px);animation:modalUp .18s ease-out}
+@keyframes modalUp{from{transform:translateY(12px);opacity:.9}to{transform:translateY(0);opacity:1}}
+.modalTitle{margin:0 0 8px;font-size:20px;font-weight:800;color:#111827}
+.modalText{margin:0 0 14px;color:#374151}
+.modalSummary{display:grid;gap:6px;margin-bottom:12px;color:#111}
+.modalActions{display:flex;justify-content:flex-end;gap:10px}
+.btnGhost{appearance:none;border:1px solid #e5e7eb;background:#fff;color:#111827;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
+.btnGhost:hover{background:#f9fafb}
+.btnDanger{appearance:none;border:1px solid rgba(0,0,0,.08);color:#fff;font-weight:800;padding:10px 14px;border-radius:10px;cursor:pointer;background:linear-gradient(90deg,#dc2626,#ef4444,#f97316,#ef4444,#dc2626);background-size:300% 300%;animation:btnGradientMove 5s linear infinite;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.btnDanger:hover{animation-duration:2.5s;transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.btnDanger:active{transform:translateY(0)}
+@keyframes btnGradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:200% 50%}}
+
+.card {
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  transition: box-shadow .2s, transform .06s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+
+.cardHeader { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.cardTitle { font-weight: 700; }
+
+/* Performance-Optimierung */
+.card {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px 400px;
+}
+
+.titleLink {
+  color: #111;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.titleLink:hover { border-bottom-color: #00b5d8; }
+
+.price { font-weight: 800; }
+
+.cardMeta {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+.metaItem strong { color: #222; }
+
+.actions { margin-top: 0.75rem; }
+
+/* Einheitlicher Link-Button */
+.jobLink,
+.groupActions .jobLink,
+.actions .jobLink {
+  box-sizing: border-box;
+  display: inline-block;
+  background: #00b5d8;
+  color: #fff !important;
+  border: 0;
+  padding: .45rem .8rem;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+}
+.jobLink:hover,
+.groupActions .jobLink:hover,
+.actions .jobLink:hover {
+  background: #089bb9;
+  color: #fff !important;
+}
+
+/* ===== Gruppen (erhaltene Angebote) ===== */
+.groupList { display: grid; gap: 1rem; }
+.groupCard {
+  background:#fff; border:2px solid darkgrey; border-radius:12px; padding:1rem;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,.06),
+    0 8px 24px rgba(0,0,0,.08);
+  transition: box-shadow .18s ease, transform .06s ease;
+}
+.groupCard:hover {
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.16),
+    0 4px 10px rgba(0,0,0,.08);
+  transform: translateY(-2px);
+}
+.groupHeader { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+.groupTitle { display:flex; flex-wrap:wrap; gap:.5rem .75rem; align-items:center; font-weight:700; }
+.groupCounter {
+  font-size: .85rem;
+  padding: .2rem .6rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #16a34a 0%, #86efac 55%, #ffffff 100%);
+  border: 1px solid #16a34a;
+  color: #064e3b;
+  font-weight: 700;
+}
+.groupCounter:hover {
+  background: linear-gradient(90deg, #149142 0%, #6ee7b7 55%, #ffffff 100%);
+  border-color: #149142;
+}
+
+.bestPrice { font-weight:800; }
+.groupActions { display:flex; gap:.5rem; }
+
+/* Beste-Preis Tag */
+.tagBest {
+  margin-left:.5rem; font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
+  background:#e6fbff; border:1px solid #bdeff8; color:#006a7d;
+}
+
+/* ===== Tabelle: Anbieter | Preis | Gültig bis | Aktion ===== */
+.offerTable { margin-top:.75rem; border-top:1px dashed black; }
+.offerHeader,
+.offerRow {
+  display:grid;
+  grid-template-columns: 2fr 1fr 1.6fr 1fr;
+  gap:.5rem; padding:.5rem 0; align-items:center;
+}
+.offerHeader { font-weight:700; color:#444; }
+.offerRow + .offerRow { border-top:1px dashed #eef2f7; }
+
+.vendor { font-weight:600; }
+.priceCell { font-weight:700; }
+.colAction { justify-self: end; text-align: right; }
+.validCell { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+
+.groupFootNote { margin-top:.5rem; color:#666; font-size:.9rem; }
+
+/* Accept-Button */
+.acceptBtn {
+  box-sizing: border-box;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid #15803d;
+  background: linear-gradient(90deg, #16a34a, #22c55e, #86efac, #22c55e);
+  background-size: 200% 200%;
+  animation: acceptGradient 3s ease infinite;
+  color: black;
+  font-family: 'Oswald';
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+  cursor: pointer;
+}
+.acceptBtn { width: max-content; }
+.acceptBtn:hover {
+  animation-duration: 3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  filter: saturate(1.05);
+}
+.acceptBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+.acceptBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.35);
+}
+.acceptBtn[disabled] {
+  opacity: .7;
+  filter: grayscale(.05);
+  cursor: not-allowed;
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .acceptBtn { animation: none; }
+}
+@keyframes acceptGradient {
+  0%   { background-position:   0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+/* ===== „läuft ab in …“ Badge ===== */
+.expBadge {
+  font-size:.75rem; padding:.15rem .45rem; border-radius:9999px;
+  border:1px solid #cbd5e1; background:#f8fafc; color:#334155;
+}
+.expSoon { background:#fff7e6; border-color:#ffe1a6; color:#7a4b00; }
+.expCritical { background:#ffeef0; border-color:#ffc7cf; color:#8a0f1a; }
+
+/* Empty */
+.emptyState {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  color: #555;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .toolbar { grid-template-columns: 1fr; }
+  .cardHeader { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 900px) {
+  .wrapper { padding: 1rem; }
+  .heading { font-size: 1.25rem; margin-top: 2rem; }
+}
+
+/* Mobile Gruppenlayout */
+@media (max-width: 680px) {
+  .kontoContainer .groupCard {
+    box-sizing: border-box;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0;
+    margin: 0 0 .9rem 0;
+  }
+  .groupHeader { padding: 1rem 1rem .5rem; }
+  .groupFootNote { padding: 0 1rem 1rem; }
+  .groupActions .jobLink {
+    display: block;
+    width: 100%;
+    min-height: 36px;
+    padding: .5rem .9rem;
+    text-align: center;
+  }
+  .offerTable {
+    border-top: 1px dashed #e5e7eb;
+    padding: .75rem 1rem 1rem;
+    margin-top: .25rem;
+  }
+  .offerHeader { display: none !important; }
+  .offerRow {
+    display: grid !important;
+    grid-template-columns: 1.15fr 0.85fr 2.3fr;
+    gap: .75rem 1rem;
+    align-items: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .offerRow + .offerRow { margin-top: .75rem; }
+  .offerRow [role="cell"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .offerRow [role="cell"][data-label]::before {
+    content: attr(data-label);
+    font-size: .7rem;
+    line-height: 1.1;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: .2rem;
+  }
+  .validCell {
+    display: grid !important;
+    grid-template-rows: auto auto;
+    align-content: start;
+    gap: .25rem;
+  }
+  .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .4rem;
+    text-align: left;
+  }
+  .jobLink, .acceptBtn {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+  .acceptBtn { min-height: 40px; padding: .55rem .9rem; }
+}
+/* Mobile: Inhalt in Cards bekommt wieder Seiten-Padding,
+   Header/Footnote/OfferTable behalten ihre eigenen Abstände */
+@media (max-width: 680px){
+  /* Standard-Inhalt */
+  .groupCard > p,
+  .groupCard .groupMetaLine {
+    padding-inline: 1rem;
+  }
+
+  /* Falls du noch andere Textzeilen hast, optional: */
+  .groupCard .cardMeta,
+  .groupCard .actions {
+    padding-inline: 1rem;
+  }
+
+  /* Extra Platz links, wenn der türkise Streifen aktiv ist */
+  .groupCard.isLackanfrage > p,
+  .groupCard.isLackanfrage .groupMetaLine,
+  .groupCard.isLackanfrage .cardMeta,
+  .groupCard.isLackanfrage .actions {
+    padding-inline-start: calc(1rem + 8px);
+  }
+}
+
+/* Mobile 3-Spalten-Variante */
+@media (max-width: 680px) {
+  .offerRow {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .75rem 1rem;
+    align-items: start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .offerRow [role="cell"] {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+  }
+  .offerRow .priceCell {
+    align-items: flex-end;
+    text-align: right;
+    width: 100%;
+  }
+  .offerRow .validCell {
+    display: flex !important;
+    flex-direction: column;
+    gap: .25rem;
+  }
+  .offerRow .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .4rem;
+    text-align: left;
+  }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+.pageInfo { color: #444; font-size: .95rem; }
+.pagiControls {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.pageSizeLabel { font-size: .9rem; color: #6b7280; }
+.pageSize {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: .35rem .5rem;
+  font: inherit;
+  background: #fff;
+}
+.pageButtons {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+.pageBtn {
+  appearance: none;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  border-radius: 10px;
+  padding: .3rem .6rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+.pageBtn:hover:not(:disabled) { background: #f9fafb; }
+.pageBtn:disabled { opacity: .55; cursor: not-allowed; }
+.pageNow { min-width: 7.5rem; text-align: center; font-weight: 700; }
+
+.modalSummary {
+  display: grid;
+  gap: .4rem;
+  padding: .75rem .5rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  margin-bottom: 12px;
+}
+.modalSummary > div { font-size: .95rem; }
+/* lackanfragen.module.css */
+.metaInline { margin-left: 10px; opacity: .85; }
+/* lackanfragen.module.css */
+.groupMetaLine {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0 10px;
+  font-size: .95rem;
+  opacity: .9;
+}
+.metaDot { margin: 0 4px; opacity: .6; }
+
+  
+/* ===== Page Skeleton ===== */
+.skeletonPage {
+  display: grid;
+  gap: 16px;
+  padding: 16px 0 32px 0;
+}
+
+.skelHeader { display: grid; gap: 10px; }
+.skelLine {
+  height: 16px;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+.skelLineWide { height: 24px; width: 60%; }
+
+.skelBlock, .skelBlockSmall, .skelDrop, .skelDropSmall, .skelInput {
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: shimmer 1.2s linear infinite;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.04);
+}
+.skelBlock { height: 56px; }
+.skelBlockSmall { height: 40px; width: 50%; }
+.skelInput { height: 44px; }
+.skelDrop { height: 180px; }
+.skelDropSmall { height: 120px; }
+
+.skelTwoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelTwoCols { grid-template-columns: 1fr; }
+}
+
+.skelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 900px) {
+  .skelGrid { grid-template-columns: 1fr; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0, 0 0; }
+  100% { background-position: 200% 0, 0 0; }
+}
+/* EINZIGER cyan Streifen – linke Border unsichtbar machen */
+/* Nur EIN Streifen: linke Außenborder komplett entfernen */
+.card.isLackanfrage,
+.groupCard.isLackanfrage{
+  position: relative;
+  overflow: hidden;
+  border-left: 0 !important;     /* statt border-left-color: transparent */
+}
+
+/* Streifen + weicher Glow innen */
+.card.isLackanfrage::before,
+.groupCard.isLackanfrage::before{
+  content:"";
+  position:absolute;
+  top:0; bottom:0; left:0;
+  width:12px; /* 6px Balken + 6px Glow */
+  background: linear-gradient(90deg,#06b6d4 0 6px, rgba(6,182,212,.25) 6px 12px);
+  pointer-events:none;
+  border-top-left-radius:inherit;
+  border-bottom-left-radius:inherit;
+}
+
+/* Mobile-Override: dort setzt .groupCard erneut eine Border */
+@media (max-width:680px){
+  .kontoContainer .groupCard.isLackanfrage{ border-left:0 !important; }
+}
+/* EIN Streifen per inset-Shadow, keine ::before nötig */
+.groupCard.isLackanfrage{
+  border-left: 0 !important;
+  box-shadow:
+    inset 6px 0 0 #06b6d4,             /* cyan Streifen */
+    0 1px 3px rgba(0,0,0,.06),
+    0 8px 24px rgba(0,0,0,.08);
+}
+.groupCard.isLackanfrage:hover{
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 12px 28px rgba(0,0,0,.16),
+    0 4px 10px rgba(0,0,0,.08);
+}
+
+/* Falls gesetzt: alten ::before-Streifen für groupCard deaktivieren */
+.groupCard.isLackanfrage::before{ content: none !important; }
+
+/* Optional auch für .card verwenden */
+.card.isLackanfrage{
+  border-left: 0 !important;
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 2px 8px rgba(0,0,0,.04);
+}
+.card.isLackanfrage:hover{
+  box-shadow:
+    inset 6px 0 0 #06b6d4,
+    0 4px 12px rgba(0,0,0,.10);
+}
+/* Auch bei .card den alten ::before-Streifen ausschalten */
+.card.isLackanfrage::before{ content: none !important; }
+/* Mobil: Segmented-Control strecken wie im anderen Screen */
+@media (max-width: 768px){
+  .toolbar { grid-template-columns: 1fr; }       /* eine Spalte */
+  .toolbar .segmented{
+    display: flex;                                /* statt inline-flex */
+    width: 100%;                                  /* volle Zeile */
+    justify-self: stretch;                        /* Grid-Lücke schließen */
+  }
+  .segmentedBtn{
+    flex: 1 1 0;                                  /* beide Buttons gleich breit */
+    justify-content: center;
+    min-width: 0;                                 /* Text darf umbrechen */
+  }
+}
+/* Mobil: Pagination sauber ausrichten */
+@media (max-width: 640px){
+  .pagination{
+    gap: 10px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  /* Infozeile oben, volle Breite */
+  .pageInfo{
+    width: 100%;
+    order: 1;
+    margin-bottom: 4px;
+  }
+
+  /* Controls darunter als 3-Spalten-Grid:
+     [Select]  [Seite x / y]  [Buttons] */
+  .pagiControls{
+    width: 100%;
+    order: 2;
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Label mobil ausblenden (spart Platz) */
+  .pageSizeLabel{ display: none; }
+
+  /* Select links */
+  .pageSize{
+    justify-self: start;
+    max-width: 120px;
+  }
+
+  /* Seitentext mittig, ohne feste Mindestbreite */
+  .pageNow{
+    justify-self: center;
+    text-align: center;
+    min-width: auto;
+    font-weight: 700;
+  }
+
+  /* Pfeil-Buttons rechts */
+  .pageButtons{
+    justify-self: end;
+    display: inline-flex;
+    gap: 6px;
+  }
+  .pageButtons .pageBtn{ min-width: 40px; height: 36px; }
+}
+/* Mobile Pagination: stabil, keine Überlappung */
+@media (max-width: 560px) {
+  .pagination{
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #eee;
+  }
+
+  /* Infozeile oben links */
+  .pageInfo{
+    order: 1;
+    justify-self: start;
+    width: 100%;
+    font-size: .95rem;
+  }
+
+  /* Control-Zeile: 3 Spalten = links / Mitte / rechts */
+  .pagiControls{
+    order: 2;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 10px;
     width: 100%;
   }
 
-  .segmentedBtn{
-    flex: 1 1 0;
-    justify-content: center;
-    min-width: 0;
+  /* Links: Select + Prev-Buttons gruppieren */
+  .pageSize{ 
+    padding: 4px 10px;
+    font-size: 14px;
+    height: 34px;
+    border-radius: 8px;
+  }
+  .pageButtons{
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .pagiControls .pageButtons:first-of-type{ justify-content: flex-start; }
+  .pagiControls .pageButtons:last-of-type { justify-content: flex-end; }
+
+  /* Mittig: aktuelle Seite */
+  .pageNow{
+    justify-self: center;
+    min-width: auto;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  /* Buttons kompakter, ohne „Hüpfen“ */
+  .pageBtn{
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
+    transform: none;
+  }
+  .pageBtn:hover{ box-shadow: none; background: #fafafa; }
+}
+/* ---- Cards: Mobile Luft & klare Zeilen ---- */
+@media (max-width: 520px) {
+  /* Mehr nutzbare Breite, weicher Rahmen */
+  .card,
+  .groupCard{
+    margin: 0 -8px;               /* leicht über die Ränder = mehr Platz */
+    border-width: 1px;            /* statt 2px */
+    border-radius: 14px;
+    padding: 12px 14px;           /* mehr Innenabstand */
+    box-shadow: 0 3px 14px rgba(0,0,0,.06);
+  }
+
+  /* Headline/Badges untereinander statt gedrängt nebeneinander */
+  .cardHeader,
+  .groupHeader{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Meta: 1 Spalte statt Grid mit Wrap */
+  .meta{
+    grid-template-columns: 1fr !important;
+    row-gap: 6px;
+    margin-top: 10px;
+  }
+  .metaCol{ flex-direction: row; gap: 6px; }
+  .metaLabel{ font-size: .75rem; margin: 0; }
+  .metaValue{ font-size: .95rem; }
+
+  /* Die Linie mit Lieferdatum / Anfrage läuft bis: stapeln */
+  .groupMetaLine{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 0 8px;
+  }
+  .metaDot{ display: none; }
+
+  /* Lesbarkeit: etwas höhere Zeilenhöhe */
+  .card p,
+  .groupCard p{ line-height: 1.35; }
+
+  /* Aktionen unten: volle Breite, 1 Spalte */
+  .actions{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .jobLink,
+  .acceptBtn,
+  .primaryBtn,
+  .secondaryBtn{
+    width: 100%;
+    min-height: 42px;
+  }
+
+  /* Badge/Counter kompakter */
+  .groupCounter,
+  .statusBadge{ font-size: .8rem; padding: .2rem .5rem; }
+}
+
+/* Feinschliff für sehr schmale Screens */
+@media (max-width: 380px){
+  .card,
+  .groupCard{ margin: 0 -12px; padding: 12px; }
+  .heading{ font-size: 1.25rem; }
+}
+/* ===== Mobile Feinschliff für Angebotszeilen ===== */
+@media (max-width: 680px) {
+  /* 3-Spalten-Grid beibehalten, aber kompakter und oben ausgerichtet */
+  .offerRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    align-items: start;
+    gap: .6rem .9rem;
+  }
+
+  /* Spaltenlabels kleiner/enger */
+  .offerRow [role="cell"][data-label]::before {
+    font-size: .68rem;
+    margin-bottom: .15rem;
+    letter-spacing: .02em;
+  }
+
+  /* Preiszelle linksbündig (wirkt ruhiger auf schmalen Screens) */
+  .offerRow .priceCell {
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+  }
+
+  /* "Gültig bis" Spalte: auch linksbündig und ohne zu viel Abstand */
+  .offerRow .validCell {
+    align-items: flex-start;
+    gap: .25rem;
+  }
+
+  /* Aktionsspalte: volle Breite unter den drei Spalten */
+  .offerRow .colAction {
+    grid-column: 1 / -1 !important;
+    margin-top: .35rem;
+    text-align: left;
+    justify-self: stretch;
+  }
+  /* Das "AKTION"-Label ausblenden – kostet nur Platz */
+  .offerRow .colAction[data-label]::before { display: none; }
+
+  /* Button wirklich 100% Breite auf Mobil (überschreibt Desktop-Regel) */
+  /* Button wirklich 100% Breite auf Mobil (überschreibt Desktop-Regel) */
+  .acceptBtn {
+    width: 100% !important;
+    min-height: 40px;
+    padding: .55rem .9rem;
   }
 }
+
