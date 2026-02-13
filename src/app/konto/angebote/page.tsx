@@ -990,26 +990,27 @@ async function confirmAccept() {
   <div className={styles.segmentedDesktop} role="tablist" aria-label="Reihenfolge wählen">
     <div className={styles.segmented}>
       <button
-        role="tab"
-        aria-selected={topSection === 'received'}
-        className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
-        onClick={() => setTopSection('received')}
-        type="button"
-      >
-        Erhaltene oben
-        <span className={styles.chip}>{rec.total}</span>
-      </button>
+  role="tab"
+  aria-selected={topSection === 'received'}
+  className={`${styles.segmentedBtn} ${topSection === 'received' ? styles.segmentedActive : ''}`}
+  onClick={() => setTopSection('received')}
+  type="button"
+>
+  <span>Erhaltene oben</span>
+  <span className={styles.chip}>{rec.total}</span>
+</button>
 
-      <button
-        role="tab"
-        aria-selected={topSection === 'submitted'}
-        className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
-        onClick={() => setTopSection('submitted')}
-        type="button"
-      >
-        Abgegebene oben
-        <span className={styles.chip}>{sub.total}</span>
-      </button>
+<button
+  role="tab"
+  aria-selected={topSection === 'submitted'}
+  className={`${styles.segmentedBtn} ${topSection === 'submitted' ? styles.segmentedActive : ''}`}
+  onClick={() => setTopSection('submitted')}
+  type="button"
+>
+  <span>Abgegebene oben</span>
+  <span className={styles.chip}>{sub.total}</span>
+</button>
+
     </div>
   </div>
 </div>
