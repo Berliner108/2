@@ -8,12 +8,13 @@ import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {})
-
 const s = (v: unknown) => (typeof v === 'string' ? v : '').trim()
 
 function jsonNoStore(data: any, status = 200) {
   return NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store' } })
 }
+
+const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000
 
 export async function POST(req: Request, ctx: { params: Promise<{ jobId: string }> }) {
   try {
@@ -21,36 +22,35 @@ export async function POST(req: Request, ctx: { params: Promise<{ jobId: string 
     const jobIdStr = s(jobId)
     if (!jobIdStr) return jsonNoStore({ ok: false, error: 'missing_jobId' }, 400)
 
-    // Auth: nur Auftraggeber darf Release auslösen
+    // Auth: Kunde ODER Auftragnehmer (ab 28d nach rueck_datum_utc)
     const supabase = await supabaseServer()
     const { data: auth, error: authErr } = await supabase.auth.getUser()
     if (authErr) return jsonNoStore({ ok: false, error: authErr.message }, 401)
     if (!auth?.user) return jsonNoStore({ ok: false, error: 'unauthorized' }, 401)
 
     const admin = supabaseAdmin()
-    const nowIso = new Date().toISOString()
+    const now = Date.now()
+    const nowIso = new Date(now).toISOString()
 
-    // Jobs-Tabelle: bei dir ist der Auftraggeber "user_id" (nicht owner_id)
+    // Job laden (nur benötigte Felder)
     const { data: job, error: jobErr } = await admin
       .from('jobs')
-      .select('*')
+      .select('id, user_id, selected_offer_id, rueck_datum_utc, released_at, refunded_at')
       .eq('id', jobIdStr)
       .maybeSingle()
 
     if (jobErr) return jsonNoStore({ ok: false, error: jobErr.message }, 500)
     if (!job) return jsonNoStore({ ok: false, error: 'job_not_found' }, 404)
 
-    if (s((job as any).user_id) !== s(auth.user.id)) {
-      return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
-    }
-
     const offerId = s((job as any).selected_offer_id)
     if (!offerId) return jsonNoStore({ ok: false, error: 'no_selected_offer' }, 409)
 
-    // Offer laden (select('*') => kein GenericStringError)
+    // Offer laden
     const { data: offer, error: offerErr } = await admin
       .from('job_offers')
-      .select('*')
+      .select(
+        'id, job_id, owner_id, bieter_id, status, payout_status, paid_amount_cents, gesamt_cents, refunded_amount_cents, currency, payout_transfer_id'
+      )
       .eq('id', offerId)
       .eq('job_id', jobIdStr)
       .maybeSingle()
@@ -58,24 +58,48 @@ export async function POST(req: Request, ctx: { params: Promise<{ jobId: string 
     if (offerErr) return jsonNoStore({ ok: false, error: offerErr.message }, 500)
     if (!offer) return jsonNoStore({ ok: false, error: 'offer_not_found' }, 404)
 
-    // Auftraggeber-Check: in deinen Inserts heißt es "owner_id" in job_offers
-    if (s((offer as any).owner_id) !== s(auth.user.id)) {
-      return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
+    const userId = s(auth.user.id)
+    const ownerId = s((offer as any).owner_id)   // Kunde
+    const bieterId = s((offer as any).bieter_id) // Auftragnehmer
+
+    const isCustomer = userId === ownerId
+    const isVendor = userId === bieterId
+
+    // Final schon passiert?
+    if ((job as any).released_at || (job as any).refunded_at) {
+      return jsonNoStore({ ok: true, ignored: true, reason: 'job_already_final' }, 200)
     }
 
-    // Nur wenn hold
+    // Nur wenn paid + hold
     if (s((offer as any).payout_status) !== 'hold') {
       return jsonNoStore(
         { ok: true, ignored: true, reason: 'payout_status_not_hold', payout_status: (offer as any).payout_status },
         200
       )
     }
-
-    // Nur wenn paid
     if (s((offer as any).status) !== 'paid') {
       return jsonNoStore({ ok: false, error: 'offer_not_paid', status: (offer as any).status }, 409)
     }
 
+    // 28-Tage-Regel: Kunde danach gesperrt, Vendor darf dann releasen
+    const rd = new Date(String((job as any).rueck_datum_utc))
+    const unlockAt = isNaN(+rd) ? null : +rd + DAYS_28_MS
+
+    if (!isCustomer && !isVendor) return jsonNoStore({ ok: false, error: 'forbidden' }, 403)
+
+    if (unlockAt !== null) {
+      if (isCustomer && now > unlockAt) {
+        return jsonNoStore({ ok: false, error: 'customer_locked_after_28d', unlockAt: new Date(unlockAt).toISOString() }, 403)
+      }
+      if (isVendor && now < unlockAt) {
+        return jsonNoStore({ ok: false, error: 'vendor_too_early', unlockAt: new Date(unlockAt).toISOString() }, 403)
+      }
+    } else {
+      // wenn rueck_datum_utc kaputt ist: sicherheitshalber nur Kunde erlauben
+      if (isVendor) return jsonNoStore({ ok: false, error: 'invalid_rueck_datum_utc' }, 409)
+    }
+
+    // Beträge
     const paid = Number((offer as any).paid_amount_cents ?? (offer as any).gesamt_cents ?? 0)
     const refunded = Number((offer as any).refunded_amount_cents ?? 0)
     const netGross = Math.max(0, paid - refunded)
@@ -85,59 +109,50 @@ export async function POST(req: Request, ctx: { params: Promise<{ jobId: string 
 
     const currency = (s((offer as any).currency) || 'eur').toLowerCase()
 
-    // Connected Account (Vendor) finden:
-    // 1) falls du es direkt in offers speicherst:
-    let connectedAccountId = s((offer as any).connected_account_id)
+    // Vendor Stripe Account aus profiles (über bieter_id)
+    const { data: prof, error: profErr } = await admin
+      .from('profiles')
+      .select('stripe_account_id')
+      .eq('id', bieterId)
+      .maybeSingle()
 
-    // 2) sonst aus profiles des bieter_id
-    if (!connectedAccountId) {
-      const bieterId = s((offer as any).bieter_id)
-      if (!bieterId) return jsonNoStore({ ok: false, error: 'missing_bieter_id' }, 500)
+    if (profErr) return jsonNoStore({ ok: false, error: profErr.message }, 500)
 
-      const { data: prof, error: profErr } = await admin
-        .from('profiles')
-        .select('stripe_account_id')
-        .eq('id', bieterId)
-        .maybeSingle()
+    const connectedAccountId = s((prof as any)?.stripe_account_id)
+    if (!connectedAccountId) return jsonNoStore({ ok: false, error: 'vendor_missing_stripe_account_id' }, 409)
 
-      if (profErr) return jsonNoStore({ ok: false, error: profErr.message }, 500)
-      connectedAccountId = s((prof as any)?.stripe_account_id)
-    }
-
-    if (!connectedAccountId) {
-      return jsonNoStore({ ok: false, error: 'vendor_missing_stripe_account_id' }, 409)
-    }
-
-    // Provision (7% brutto)
-    const platformFeePercent = 0.07
-    const platformFee = Math.max(0, Math.round(netGross * platformFeePercent))
+    // 7% Fee bleibt bei dir (Plattform), Vendor bekommt Rest
+    const platformFee = Math.max(0, Math.round(netGross * 0.07))
     const vendorAmount = Math.max(0, netGross - platformFee)
-    if (vendorAmount <= 0) {
-      return jsonNoStore({ ok: false, error: 'vendor_amount_zero', netGross, platformFee }, 409)
-    }
+    if (vendorAmount <= 0) return jsonNoStore({ ok: false, error: 'vendor_amount_zero', netGross, platformFee }, 409)
 
-    // Transfer an Connected Account (Modell B)
-    const transfer = await stripe.transfers.create({
-      amount: vendorAmount,
-      currency,
-      destination: connectedAccountId,
-      metadata: {
-        kind: 'job',
-        jobId: jobIdStr,
-        offerId,
-        net_gross_cents: String(netGross),
-        platform_fee_cents: String(platformFee),
-        vendor_amount_cents: String(vendorAmount),
+    // Idempotency-Key verhindert Doppel-Transfer bei Race
+    const idempotencyKey = `job_release_${offerId}`
+
+    const transfer = await stripe.transfers.create(
+      {
+        amount: vendorAmount,
+        currency,
+        destination: connectedAccountId,
+        metadata: {
+          kind: 'job',
+          jobId: jobIdStr,
+          offerId,
+          net_gross_cents: String(netGross),
+          platform_fee_cents: String(platformFee),
+          vendor_amount_cents: String(vendorAmount),
+        },
       },
-    })
+      { idempotencyKey }
+    )
 
-    // DB: Offer auf released
+    // DB: Offer auf released (FELDNAME FIX: payout_transfer_id)
     const { error: updOfferErr } = await admin
       .from('job_offers')
       .update({
         payout_status: 'released',
         payout_released_at: nowIso,
-        transfer_id: transfer.id,
+        payout_transfer_id: transfer.id,
       } as any)
       .eq('id', offerId)
       .eq('job_id', jobIdStr)
@@ -147,12 +162,12 @@ export async function POST(req: Request, ctx: { params: Promise<{ jobId: string 
     if (updOfferErr) {
       console.error('[release] DB update failed after transfer:', updOfferErr)
       return jsonNoStore(
-        { ok: false, error: 'db_update_failed_after_transfer', transfer_id: transfer.id, message: updOfferErr.message },
+        { ok: false, error: 'db_update_failed_after_transfer', payout_transfer_id: transfer.id, message: updOfferErr.message },
         500
       )
     }
 
-    // Job: optional Status/Datum setzen
+    // Job final markieren
     await admin
       .from('jobs')
       .update({ status: 'closed', released_at: nowIso, updated_at: nowIso } as any)
@@ -163,6 +178,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ jobId: string 
       ok: true,
       jobId: jobIdStr,
       offerId,
+      by: isCustomer ? 'customer' : 'vendor',
+      unlockAt: unlockAt ? new Date(unlockAt).toISOString() : null,
       transfer: { id: transfer.id, amount: transfer.amount, currency: transfer.currency, destination: transfer.destination },
       amounts: { paid, refunded, net_gross_cents: netGross, platform_fee_cents: platformFee, vendor_amount_cents: vendorAmount },
     })
