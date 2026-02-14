@@ -266,6 +266,12 @@ function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
   return undefined
 }
 
+function canVendorAutoReleaseNow(order: DbOrder): { ok: boolean; unlockAtIso: string | null } {
+  const unlockAt = asDateLike(order.autoReleaseAt)
+  if (!unlockAt) return { ok: false, unlockAtIso: null }
+  return { ok: Date.now() >= +unlockAt, unlockAtIso: unlockAt.toISOString() }
+}
+
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
@@ -528,11 +534,10 @@ const AuftraegePage: FC = () => {
     return [...items].sort((a, b) => {
       if (sort === 'date_desc') return +new Date(b.order.acceptedAt) - +new Date(a.order.acceptedAt)
       if (sort === 'date_asc') return +new Date(a.order.acceptedAt) - +new Date(b.order.acceptedAt)
-     const aPrice = a.order.gesamtCents ?? a.order.amountCents ?? 0
+      const aPrice = a.order.gesamtCents ?? a.order.amountCents ?? 0
       const bPrice = b.order.gesamtCents ?? b.order.amountCents ?? 0
       if (sort === 'price_desc') return bPrice - aPrice
       if (sort === 'price_asc') return aPrice - bPrice
-
       return 0
     })
   }
@@ -853,8 +858,20 @@ const AuftraegePage: FC = () => {
             !order.vendorReviewed
 
           const payout = getPayoutStatus(order)
+
+          // Kunde: Release nur wenn confirmed + hold
           const canCustomerRelease = isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold'
+
+          // Kunde: Refund nur wenn paid + hold und NICHT confirmed
           const canCustomerRefund = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && order.status !== 'confirmed'
+
+          // Anbieter: darf nach autoReleaseAt (28d nach rueck_datum_utc) selbst releasen, wenn noch hold
+          const ar = canVendorAutoReleaseNow(order)
+          const canVendorRelease =
+            isVendor &&
+            order.offerPayStatus === 'paid' &&
+            payout === 'hold' &&
+            ar.ok
 
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
@@ -995,12 +1012,12 @@ const AuftraegePage: FC = () => {
                   </div>
                 </div>
 
-
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Zahlungsstatus</div>
                   <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
 
+                {/* NICHT ANFASSEN: Warenausgabe/Warenrückgabe Bereich */}
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Warenausgabe</div>
                   <div className={styles.metaValue}>{formatDate(annahme)}</div>
@@ -1022,6 +1039,14 @@ const AuftraegePage: FC = () => {
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Bestätigt</div>
                     <div className={styles.metaValue}>{formatDate(asDateLike(order.deliveredConfirmedAt))}</div>
+                  </div>
+                )}
+
+                {/* Optional: Info für Anbieter, ab wann er holen darf (ohne neue CSS-Klassen) */}
+                {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !ar.ok && ar.unlockAtIso && (
+                  <div className={styles.metaCol}>
+                    <div className={styles.metaLabel}>Auszahlung möglich ab</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(ar.unlockAtIso))}</div>
                   </div>
                 )}
               </div>
@@ -1092,6 +1117,19 @@ const AuftraegePage: FC = () => {
                     title="Refund nur möglich solange Auszahlungsstatus = hold"
                   >
                     {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
+                  </button>
+                )}
+
+                {/* ✅ Anbieter darf nach Unlock selbst holen */}
+                {canVendorRelease && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() => triggerRelease(order.jobId)}
+                    title="Nach Ablauf der Frist kannst du die Auszahlung selbst auslösen."
+                  >
+                    {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung holen'}
                   </button>
                 )}
 
