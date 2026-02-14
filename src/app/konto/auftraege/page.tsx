@@ -54,8 +54,8 @@ type Order = {
 /* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
 type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
 
-// ✅ Backend: 'hold' | 'released' | 'partial_refund' | 'refunded'
-type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
+// ✅ Backend: 'hold' | 'released' | 'partial_refund' | 'refunded' | 'transferred'
+type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded' | 'transferred'
 
 /* ✅ NEU: Datenblock für Auftraggeber (nur in "angenommen") */
 type PartyProfile = {
@@ -85,6 +85,10 @@ type DbOrder = Order & {
   // ✅ wichtig für Refund/Release-Buttons
   payoutStatus?: DbPayoutStatus
 
+  // ✅ NEU: Transfer-ID (falls API sie liefert)
+  payout_transfer_id?: string | null
+  payoutTransferId?: string | null
+
   // ✅ NEU aus API: Handles fürs sichere Verlinken
   vendor_handle?: string | null // kind='vergeben'
   owner_handle?: string | null // kind='angenommen'
@@ -105,7 +109,7 @@ type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
-// ✅ NUR EINMAL (fix für "Duplicate identifier 'ReviewRole'")
+// ✅ NUR EINMAL
 type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
 
 /* ---------- Persist Keys & Defaults (nur UI) ---------- */
@@ -153,7 +157,7 @@ const formatEUR = (c?: number) =>
 const formatDate = (d?: Date) =>
   d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
 
-// ✅ exakt wie du es wolltest: "4.7/5 · 12" oder "keine Bewertungen"
+// ✅ exakt: "4.7/5 · 12" oder "keine Bewertungen"
 function ratingTxt(avg?: number | null, cnt?: number | null): string {
   const a = typeof avg === 'number' ? avg : Number(avg)
   const c = typeof cnt === 'number' ? cnt : Number(cnt)
@@ -266,6 +270,13 @@ function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
   return undefined
 }
 
+function getPayoutTransferId(order: DbOrder): string | null {
+  const a = (order as any).payout_transfer_id
+  const b = (order as any).payoutTransferId
+  const v = typeof a === 'string' && a.trim() ? a.trim() : typeof b === 'string' && b.trim() ? b.trim() : ''
+  return v || null
+}
+
 function canVendorAutoReleaseNow(order: DbOrder): { ok: boolean; unlockAtIso: string | null } {
   const unlockAt = asDateLike(order.autoReleaseAt)
   if (!unlockAt) return { ok: false, unlockAtIso: null }
@@ -315,19 +326,43 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1} aria-label="Erste Seite">
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(1)}
+            disabled={page <= 1}
+            aria-label="Erste Seite"
+          >
             «
           </button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1} aria-label="Vorherige Seite">
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(page - 1)}
+            disabled={page <= 1}
+            aria-label="Vorherige Seite"
+          >
             ‹
           </button>
           <span className={styles.pageNow} aria-live="polite">
             Seite {page} / {pages}
           </span>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages} aria-label="Nächste Seite">
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(page + 1)}
+            disabled={page >= pages}
+            aria-label="Nächste Seite"
+          >
             ›
           </button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages} aria-label="Letzte Seite">
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setPage(pages)}
+            disabled={page >= pages}
+            aria-label="Letzte Seite"
+          >
             »
           </button>
         </div>
@@ -526,7 +561,11 @@ const AuftraegePage: FC = () => {
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
       const partyName = order.kind === 'vergeben' ? (order.vendor || '') : (order.owner || getOwnerName(job))
-      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || String(partyName).toLowerCase().includes(q)
+      return (
+        String(order.jobId).toLowerCase().includes(q) ||
+        title.includes(q) ||
+        String(partyName).toLowerCase().includes(q)
+      )
     })
   }
 
@@ -562,8 +601,8 @@ const AuftraegePage: FC = () => {
       const q = p.get('q')
       if (q !== null) setQuery(q)
 
-      const s = p.get('sort') as SortKey | null
-      if (s && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(s)) setSort(s)
+      const srt = p.get('sort') as SortKey | null
+      if (srt && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(srt)) setSort(srt)
 
       const st = p.get('status') as FilterKey | null
       if (st && ['alle', 'wartet', 'aktiv', 'fertig'].includes(st)) setStatusFilter(st)
@@ -670,20 +709,12 @@ const AuftraegePage: FC = () => {
     }
   }
 
+  // ✅ FIX: bestätigt Empfang + Auszahlung passiert serverseitig in confirm-delivered (kein extra /release hier!)
   async function confirmDelivered(jobId: string | number) {
     const key = `confirm:${jobId}`
     setBusyKey(key)
-
     try {
       await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
-
-      try {
-        await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
-      } catch (e) {
-        console.error('auto-release failed:', e)
-        alert('Empfang bestätigt, aber Auszahlung konnte nicht automatisch freigegeben werden. Bitte später erneut versuchen.')
-      }
-
       await loadOrders()
     } catch (e) {
       console.error(e)
@@ -780,7 +811,11 @@ const AuftraegePage: FC = () => {
       await loadOrders()
     } catch (e: any) {
       const msg = String(e?.message || '')
-      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+      if (
+        msg.toLowerCase().includes('bereits bewertet') ||
+        msg.toLowerCase().includes('duplicate') ||
+        msg.toLowerCase().includes('unique')
+      ) {
         setReviewJobId(null)
         await loadOrders()
         return
@@ -858,20 +893,18 @@ const AuftraegePage: FC = () => {
             !order.vendorReviewed
 
           const payout = getPayoutStatus(order)
+          const transferId = getPayoutTransferId(order)
 
-          // Kunde: Release nur wenn confirmed + hold
-          const canCustomerRelease = isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold'
+          // Kunde: Release nur wenn confirmed + hold + noch NICHT transfered (Fallback)
+          const canCustomerRelease =
+            isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId
 
           // Kunde: Refund nur wenn paid + hold und NICHT confirmed
           const canCustomerRefund = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && order.status !== 'confirmed'
 
-          // Anbieter: darf nach autoReleaseAt (28d nach rueck_datum_utc) selbst releasen, wenn noch hold
+          // Anbieter: darf nach autoReleaseAt selbst releasen, wenn noch hold + nicht transfered
           const ar = canVendorAutoReleaseNow(order)
-          const canVendorRelease =
-            isVendor &&
-            order.offerPayStatus === 'paid' &&
-            payout === 'hold' &&
-            ar.ok
+          const canVendorRelease = isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && ar.ok
 
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
@@ -903,7 +936,6 @@ const AuftraegePage: FC = () => {
                 </span>
               </div>
 
-              {/* ✅ wie vorher: mehrere Spalten (auto-fit), OHNE neue Klassennamen */}
               <div
                 style={{
                   display: 'grid',
@@ -929,13 +961,16 @@ const AuftraegePage: FC = () => {
                       </>
                     )}
 
-                    {/* ✅ NUR für "angenommen": echte Daten aus owner_profile (kein Snapshot) */}
+                    {/* ✅ NUR für "angenommen": echte Daten aus owner_profile */}
                     {order.kind === 'angenommen' && order.owner_profile ? (
                       <div className={styles.vendorSnapshot}>
                         {order.owner_profile.companyName ? <div>{order.owner_profile.companyName}</div> : null}
 
                         {(() => {
-                          const full = [order.owner_profile?.firstName, order.owner_profile?.lastName].filter(Boolean).join(' ').trim()
+                          const full = [order.owner_profile?.firstName, order.owner_profile?.lastName]
+                            .filter(Boolean)
+                            .join(' ')
+                            .trim()
                           return full ? <div>{full}</div> : null
                         })()}
 
@@ -959,7 +994,7 @@ const AuftraegePage: FC = () => {
                       </div>
                     ) : null}
 
-                    {/* ✅ NUR für "vergeben": Snapshot bleibt exakt wie bei dir */}
+                    {/* ✅ NUR für "vergeben": Snapshot bleibt wie gehabt */}
                     {order.kind === 'vergeben'
                       ? (() => {
                           const snap: any =
@@ -978,8 +1013,6 @@ const AuftraegePage: FC = () => {
 
                           const company = typeof priv?.company_name === 'string' ? priv.company_name.trim() : ''
                           const person = [priv?.firstName, priv?.lastName].filter(Boolean).join(' ').trim()
-
-                          // ✅ bei dir im Snapshot: private.vat_number
                           const vat = typeof priv?.vat_number === 'string' ? priv.vat_number.trim() : ''
 
                           const streetLine = [addr?.street, addr?.houseNumber].filter(Boolean).join(' ').trim()
@@ -1042,7 +1075,6 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {/* Optional: Info für Anbieter, ab wann er holen darf (ohne neue CSS-Klassen) */}
                 {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !ar.ok && ar.unlockAtIso && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Auszahlung möglich ab</div>
@@ -1090,19 +1122,25 @@ const AuftraegePage: FC = () => {
                     >
                       {isBusy && busyKey === `confirm:${order.jobId}` ? 'Sende…' : 'Empfang bestätigen'}
                     </button>
-                    <button type="button" className={styles.btnGhost} disabled={isBusy} onClick={() => openDispute(order.jobId)}>
+                    <button
+                      type="button"
+                      className={styles.btnGhost}
+                      disabled={isBusy}
+                      onClick={() => openDispute(order.jobId)}
+                    >
                       {isBusy && busyKey === `dispute:${order.jobId}` ? 'Sende…' : 'Problem melden'}
                     </button>
                   </div>
                 )}
 
+                {/* Fallback: nur sichtbar wenn confirmed+hold und noch kein Transfer */}
                 {canCustomerRelease && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
                     disabled={isBusy}
                     onClick={() => triggerRelease(order.jobId)}
-                    title="Zahlt an den Anbieter aus (Provision bleibt bei dir). Danach kein Refund mehr möglich."
+                    title="Fallback: Auszahlung freigeben (falls die automatische Auszahlung nicht durchging)."
                   >
                     {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                   </button>
@@ -1120,7 +1158,6 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {/* ✅ Anbieter darf nach Unlock selbst holen */}
                 {canVendorRelease && (
                   <button
                     type="button"
@@ -1367,7 +1404,13 @@ const AuftraegePage: FC = () => {
 
             <div className={styles.stars}>
               {[1, 2, 3, 4, 5].map(n => (
-                <button key={n} onClick={() => setRating(n)} aria-label={`${n} Sterne`} className={styles.starBtn} type="button">
+                <button
+                  key={n}
+                  onClick={() => setRating(n)}
+                  aria-label={`${n} Sterne`}
+                  className={styles.starBtn}
+                  type="button"
+                >
                   {n <= rating ? '★' : '☆'}
                 </button>
               ))}
