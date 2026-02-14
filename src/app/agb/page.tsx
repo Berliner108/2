@@ -15,9 +15,7 @@ const AgbPage = () => {
           registrierte Nutzer:innen. Über die Plattform können Anbieter:innen Leistungen und/oder Waren anbieten und Nutzer:innen
           (Käufer:innen) diese beauftragen bzw. kaufen.
         </p>
-        <p>
-          Die Plattform richtet sich an Nutzer:innen in Deutschland (DE), Österreich (AT), der Schweiz (CH) und Liechtenstein (FL).
-        </p>
+        <p>Die Plattform richtet sich an Nutzer:innen in Deutschland (DE), Österreich (AT), der Schweiz (CH) und Liechtenstein (FL).</p>
       </section>
 
       <h2 className={styles.subheading}>2. Rolle der Plattform</h2>
@@ -115,7 +113,33 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>10. Definition: Lieferdatum</h2>
+      <h2 className={styles.subheading}>10. Pflichten von Käufer:innen und Anbieter:innen</h2>
+      <section className={styles.section}>
+        <p>
+          Käufer:innen verpflichten sich, nur ernsthafte und verbindliche Beauftragungen/Käufe vorzunehmen, vereinbarte Zahlungen fristgerecht
+          zu leisten und im Rahmen der gesetzlichen Möglichkeiten an einer ordnungsgemäßen Abwicklung mitzuwirken (z. B. Erreichbarkeit,
+          Bereitstellung erforderlicher Informationen).
+        </p>
+        <p>
+          Anbieter:innen verpflichten sich, vollständige und wahrheitsgemäße Angaben zu ihren Angeboten zu machen, Anfragen und Aufträge im
+          zumutbaren Rahmen zu bearbeiten, vereinbarte Leistungen/Waren ordnungsgemäß zu erbringen bzw. zu liefern und gesetzliche Pflichten
+          einzuhalten.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>11. Vertragsabschluss und Verbindlichkeit</h2>
+      <section className={styles.section}>
+        <p>
+          Ein Vertrag zwischen Käufer:in und Anbieter:in kommt zustande, sobald die Parteien über die Plattform eine verbindliche Bestellung/
+          Beauftragung auslösen und die Zahlung erfolgreich verarbeitet wurde bzw. die Plattform den Abschluss als bestätigt anzeigt.
+        </p>
+        <p>
+          Stornierungen, Rücktritte oder sonstige Vertragsänderungen richten sich nach den Vereinbarungen der Parteien sowie den gesetzlichen
+          Bestimmungen. Die Plattform kann technische Möglichkeiten zur Stornierung bereitstellen, ist hierzu jedoch nicht verpflichtet.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>12. Definition: Lieferdatum</h2>
       <section className={styles.section}>
         <p>
           <strong>Lieferdatum</strong> ist das vom Anbieter/von der Anbieterin im Auftrag gesetzte und dem/der Käufer:in sichtbar angezeigte
@@ -131,7 +155,16 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>11. Nutzungsrechte an Inhalten</h2>
+      <h2 className={styles.subheading}>13. Versand, Übergabe und Transport</h2>
+      <section className={styles.section}>
+        <p>
+          Versand, Übergabe, Transport, Verpackung, Versicherung sowie Risiko- und Gefahrenübergang sind – soweit anwendbar – ausschließlich
+          Angelegenheit zwischen Käufer:in und Anbieter:in. Die Plattform übernimmt hierfür keine Verantwortung und haftet nicht für Schäden,
+          Verzögerungen oder Verlust im Zusammenhang mit Transport/Übergabe, soweit gesetzlich zulässig.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>14. Nutzungsrechte an Inhalten</h2>
       <section className={styles.section}>
         <p>
           Durch das Einstellen von Inhalten (z. B. Texte, Bilder, Dateien) räumt der/die Nutzer:in der Plattform ein nicht-exklusives,
@@ -141,7 +174,17 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>12. Melden von Inhalten und Moderation</h2>
+      <h2 className={styles.subheading}>15. Schutzrechte an Plattform, Marke und Design</h2>
+      <section className={styles.section}>
+        <p>
+          Sämtliche Rechte an der Plattform (insbesondere Software, Quellcode, Datenbankstruktur, Layout/Design, Texte der Plattform, Marken,
+          Logos und Kennzeichen) verbleiben bei dem Plattformbetreiber bzw. den jeweiligen Rechteinhabern. Nutzer:innen dürfen Inhalte oder
+          Elemente der Plattform nicht ohne ausdrückliche Zustimmung kopieren, nachbilden, fram(en), automatisiert auslesen oder für eigene
+          Dienste verwenden, soweit gesetzlich zulässig.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>16. Melden von Inhalten und Moderation</h2>
       <section className={styles.section}>
         <p>
           Die Plattform kann Möglichkeiten bereitstellen, Inhalte zu melden, die Nutzer:innen oder Dritte als rechtswidrig oder unzulässig
@@ -158,7 +201,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>13. Ranking, Sortierung und „Sponsored“</h2>
+      <h2 className={styles.subheading}>17. Ranking, Sortierung und „Sponsored“</h2>
       <section className={styles.section}>
         <p>
           Suchergebnisse und Listenansichten können nach Relevanzkriterien sortiert werden (z. B. Kategorie, Standort, Preis, Verfügbarkeit,
@@ -171,7 +214,21 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>14. Zahlungsabwicklung über Stripe</h2>
+      <h2 className={styles.subheading}>18. Beweissicherung, Protokolle und Logfiles</h2>
+      <section className={styles.section}>
+        <p>
+          Die Plattform ist berechtigt, zur Gewährleistung der Sicherheit, zur Betrugsprävention, zur Missbrauchsaufklärung sowie zur
+          technischen Fehleranalyse Protokolle (Logfiles) zu führen und technische Nutzungsdaten zu speichern. Dies kann insbesondere
+          Zeitpunkte, Geräte-/Browserinformationen, Systemereignisse und sicherheitsrelevante Vorgänge umfassen.
+        </p>
+        <p>
+          Soweit Kommunikationsfunktionen bereitgestellt werden, kann die Plattform zur Sicherstellung des Betriebs und zur Missbrauchsabwehr
+          auch Kommunikations-Metadaten (z. B. Zeitpunkte, beteiligte Konten, Dateigrößen) verarbeiten. Eine Verpflichtung zur Herausgabe von
+          Protokollen oder Kommunikationsinhalten besteht nicht, sofern keine gesetzliche Pflicht besteht.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>19. Zahlungsabwicklung über Stripe</h2>
       <section className={styles.section}>
         <p>
           Zahlungen erfolgen über den externen Zahlungsdienstleister Stripe. Die Zahlungsabwicklung (inkl. Rückerstattungen/Disputes) erfolgt
@@ -180,7 +237,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>15. Auszahlung an Anbieter:innen</h2>
+      <h2 className={styles.subheading}>20. Auszahlung an Anbieter:innen</h2>
       <section className={styles.section}>
         <p>
           Die Auszahlung an Anbieter:innen wird ausgelöst, sobald entweder (a) der/die Käufer:in den Erhalt bzw. die ordnungsgemäße Leistung
@@ -192,7 +249,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>16. Reklamationen, Rückerstattungen und Streitfälle</h2>
+      <h2 className={styles.subheading}>21. Reklamationen, Rückerstattungen und Streitfälle</h2>
       <section className={styles.section}>
         <p>
           Käufer:innen können innerhalb von <strong>28 Tagen nach dem Lieferdatum</strong> eine Reklamation zum betroffenen Auftrag einreichen.
@@ -215,7 +272,16 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>17. Nachbesserung</h2>
+      <h2 className={styles.subheading}>22. Missbrauch von Reklamationen</h2>
+      <section className={styles.section}>
+        <p>
+          Offensichtlich unbegründete Reklamationen oder ein missbräuchliches Ausnutzen der Reklamationsfunktion sind untersagt. Bei
+          wiederholtem oder schwerwiegendem Missbrauch kann die Plattform die Reklamationsfunktion einschränken oder sperren sowie weitere
+          Maßnahmen (bis hin zur temporären oder dauerhaften Kontosperre) setzen.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>23. Nachbesserung</h2>
       <section className={styles.section}>
         <p>
           Anbieter:innen erhalten grundsätzlich die Möglichkeit, beanstandete Leistungen/Lieferungen innerhalb von <strong>28 Tagen</strong> nach
@@ -223,7 +289,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>18. Widerruf und Gewährleistung</h2>
+      <h2 className={styles.subheading}>24. Widerruf und Gewährleistung</h2>
       <section className={styles.section}>
         <p>
           Etwaige Widerrufsrechte, Gewährleistungsrechte und sonstige zwingende Verbraucherrechte richten sich nach den gesetzlichen Bestimmungen
@@ -232,7 +298,16 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>19. Rückbuchungen (Chargebacks) und Schäden</h2>
+      <h2 className={styles.subheading}>25. Offensichtliche Irrtümer und Korrekturen</h2>
+      <section className={styles.section}>
+        <p>
+          Offensichtliche Eingabe- oder Übermittlungsfehler (insbesondere offensichtliche Preis- oder Inhaltsirrtümer) können von der jeweils
+          verantwortlichen Partei berichtigt werden. Soweit dadurch eine Durchführung des Vertrags nicht zumutbar oder fair möglich ist, kann
+          eine Rückabwicklung nach den gesetzlichen Bestimmungen erfolgen.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>26. Rückbuchungen (Chargebacks) und Schäden</h2>
       <section className={styles.section}>
         <p>
           Erfolgen Rückbuchungen (z. B. Rücklastschriften, Chargebacks) über Bank oder Kartenanbieter, erfolgt die Bearbeitung ausschließlich
@@ -245,16 +320,21 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>20. Umgehungsverbot</h2>
+      <h2 className={styles.subheading}>27. Umgehungsverbot, Vertragsstrafe und Schadenersatz</h2>
       <section className={styles.section}>
         <p>
-          Nutzer:innen dürfen keine Geschäfte unter Umgehung der Plattform abwickeln. Es ist insbesondere untersagt, nach Kontaktaufnahme über die
-          Plattform einen Kauf, Verkauf oder eine Beauftragung außerhalb der Plattform abzuschließen, um Gebühren oder Provisionen zu umgehen. Bei
-          Verstößen kann die Plattform Nutzerkonten sperren oder löschen und weitere Schritte vorbehalten.
+          Nutzer:innen dürfen keine Geschäfte unter Umgehung der Plattform abwickeln. Es ist insbesondere untersagt, nach Kontaktaufnahme über
+          die Plattform einen Kauf, Verkauf oder eine Beauftragung außerhalb der Plattform abzuschließen, um Gebühren oder Provisionen zu
+          umgehen.
+        </p>
+        <p>
+          Bei Verstößen kann die Plattform Nutzerkonten sperren oder löschen und – soweit gesetzlich zulässig – eine angemessene
+          pauschalierte Vertragsstrafe bzw. Schadenersatz geltend machen. Unberührt bleibt der Nachweis eines höheren Schadens sowie der
+          Nachweis, dass kein oder ein geringerer Schaden entstanden ist.
         </p>
       </section>
 
-      <h2 className={styles.subheading}>21. Bewertungen und Rezensionen</h2>
+      <h2 className={styles.subheading}>28. Bewertungen und Rezensionen</h2>
       <section className={styles.section}>
         <p>
           Bewertungen sollen wahrheitsgemäß und sachlich sein. Manipulationen, Fake-Bewertungen oder Druckausübung (z. B. „Bewertung gegen Geld“)
@@ -262,7 +342,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>22. Automatisierte Nutzung, Scraping und Angriffe</h2>
+      <h2 className={styles.subheading}>29. Automatisierte Nutzung, Scraping und Angriffe</h2>
       <section className={styles.section}>
         <p>
           Automatisierte Zugriffe, das Auslesen der Plattform (Scraping), Bots, das Umgehen von Sicherheitsmechanismen, Reverse Engineering sowie
@@ -271,7 +351,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>23. Freistellung</h2>
+      <h2 className={styles.subheading}>30. Freistellung</h2>
       <section className={styles.section}>
         <p>
           Nutzer:innen stellen die Plattform von sämtlichen Ansprüchen Dritter (einschließlich angemessener Kosten der Rechtsverteidigung) frei,
@@ -280,7 +360,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>24. Höhere Gewalt</h2>
+      <h2 className={styles.subheading}>31. Höhere Gewalt</h2>
       <section className={styles.section}>
         <p>
           Soweit und solange Ereignisse höherer Gewalt (z. B. Naturkatastrophen, Krieg, Streik, behördliche Maßnahmen, Ausfälle von
@@ -289,7 +369,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>25. Gebühren</h2>
+      <h2 className={styles.subheading}>32. Gebühren</h2>
       <section className={styles.section}>
         <p>
           Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom <strong>Brutto-Auftrags- bzw. Warenwert</strong> an.
@@ -297,7 +377,16 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>26. Haftung</h2>
+      <h2 className={styles.subheading}>33. Rangfolge und Zusatzbedingungen</h2>
+      <section className={styles.section}>
+        <p>
+          Ergänzend zu diesen AGB können für einzelne Funktionen oder Leistungen zusätzliche Bedingungen gelten (z. B. Gebührenordnung,
+          Sponsored-/Promo-Regeln, Produkt- oder Kategoriebedingungen). Soweit solche Bedingungen spezieller sind, gehen sie diesen AGB im
+          jeweiligen Anwendungsbereich vor; im Übrigen gelten die AGB ergänzend fort.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>34. Haftung</h2>
       <section className={styles.section}>
         <p>
           Die Plattform haftet nicht für Schäden, die aus der Nichterfüllung oder mangelhaften Erfüllung von Verträgen zwischen Käufer:innen und Anbieter:innen
@@ -308,7 +397,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>27. Zustellungen und Kommunikation</h2>
+      <h2 className={styles.subheading}>35. Zustellungen und Kommunikation</h2>
       <section className={styles.section}>
         <p>
           Mitteilungen der Plattform an Nutzer:innen können per E-Mail an die im Nutzerkonto hinterlegte Adresse erfolgen und gelten als zugegangen,
@@ -317,7 +406,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>28. Änderungen der AGB</h2>
+      <h2 className={styles.subheading}>36. Änderungen der AGB</h2>
       <section className={styles.section}>
         <p>
           Die Plattform behält sich das Recht vor, diese AGB zu ändern, soweit dies erforderlich ist und Nutzer:innen dadurch nicht unangemessen benachteiligt werden.
@@ -326,7 +415,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>29. Salvatorische Klausel</h2>
+      <h2 className={styles.subheading}>37. Salvatorische Klausel</h2>
       <section className={styles.section}>
         <p>
           Sollten einzelne Bestimmungen dieser AGB ganz oder teilweise unwirksam oder undurchführbar sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen
@@ -335,7 +424,7 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>30. Anwendbares Recht und Gerichtsstand</h2>
+      <h2 className={styles.subheading}>38. Anwendbares Recht und Gerichtsstand</h2>
       <section className={styles.section}>
         <p>
           Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts. Gerichtsstand ist Feldkirch, soweit gesetzlich zulässig. Für Verbraucher:innen gilt diese
@@ -351,8 +440,6 @@ const AgbPage = () => {
       </div>
 
     </div>
-
-
   );
 };
 
