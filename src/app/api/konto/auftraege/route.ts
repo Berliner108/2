@@ -7,12 +7,14 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000
+
 type DbOffer = {
   id: string
   job_id: string
   bieter_id: string
   owner_id: string
-  
+
   artikel_cents: number | null
   versand_cents: number | null
 
@@ -21,7 +23,6 @@ type DbOffer = {
   status: string | null
 
   anbieter_snapshot: any | null
-
 
   paid_at: string | null
   paid_amount_cents: number | null
@@ -39,6 +40,9 @@ type DbOffer = {
 
   payout_status: 'hold' | 'released' | 'partial_refund' | 'refunded' | null
   payout_released_at: string | null
+
+  // ✅ wichtig für UI: Buttons nach Transfer ausblenden
+  payout_transfer_id: string | null
 }
 
 /* ---------- Payment-Status fürs Frontend ---------- */
@@ -90,6 +94,12 @@ type ApiOrder = {
   payoutReleasedAt?: string
   refundedAmountCents?: number
   refundedAt?: string
+
+  // ✅ 28-Tage Frist (UI: Vendor Unlock / Buyer Window)
+  autoReleaseAt?: string
+
+  // ✅ Transfer-ID (UI: Buttons weg, sobald transferred)
+  payout_transfer_id?: string | null
 
   // Display + Handles (für Verlinkung)
   vendor?: string
@@ -144,6 +154,7 @@ function safeNumOrNull(v: any): number | null {
 function s(v: any): string {
   return typeof v === 'string' ? v.trim() : ''
 }
+
 function splitCents(o: DbOffer) {
   const artikel = safeNum(o.artikel_cents) ?? 0
   const versand = safeNum(o.versand_cents) ?? 0
@@ -170,8 +181,8 @@ async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
       continue
     }
     for (const r of (data ?? []) as any[]) {
-      const oid = String(r.order_id ?? '')
-      const rid = String(r.rater_id ?? '')
+      const oid = String((r as any).order_id ?? '')
+      const rid = String((r as any).rater_id ?? '')
       if (!oid || !rid) continue
       let set = map.get(oid)
       if (!set) {
@@ -235,6 +246,7 @@ function normalizeJob(row: any): ApiJob {
   const beschreibung = row.description ?? row.beschreibung ?? row.description_text ?? undefined
   const material = row.material_guete ?? row.material ?? undefined
 
+  // ✅ deine DB: liefer_datum_utc = Warenannahme, rueck_datum_utc = Warenrückgabe
   const warenannahmeDatum = row.liefer_datum_utc ?? row.warenannahmeDatum ?? null
   const warenausgabeDatum = row.rueck_datum_utc ?? row.warenausgabeDatum ?? null
 
@@ -256,22 +268,21 @@ function normalizeJob(row: any): ApiJob {
 
 /** ✅ nur das, was du brauchst: Name aus Auth + Rest aus profiles */
 function buildPartyProfile(profileRow: any, authMeta: any): PartyProfile {
-  const addr = (profileRow?.address && typeof profileRow.address === 'object') ? profileRow.address : {}
+  const addr = profileRow?.address && typeof profileRow.address === 'object' ? profileRow.address : {}
   const accountType = String(profileRow?.account_type ?? '').toLowerCase()
 
   const out: PartyProfile = {
     firstName: s(authMeta?.firstName),
     lastName: s(authMeta?.lastName),
     address: {
-      street: s(addr?.street),
-      houseNumber: s(addr?.houseNumber),
-      zip: s(addr?.zip),
-      city: s(addr?.city),
-      country: s(addr?.country),
+      street: s((addr as any)?.street),
+      houseNumber: s((addr as any)?.houseNumber),
+      zip: s((addr as any)?.zip),
+      city: s((addr as any)?.city),
+      country: s((addr as any)?.country),
     },
   }
 
-  // business: Firma + UID
   if (accountType === 'business') {
     const companyName = s(profileRow?.company_name)
     const vatNumber = s(profileRow?.vat_number)
@@ -307,6 +318,15 @@ async function fetchAuthMetaMap(admin: any, ids: string[]) {
   }
 
   return map
+}
+
+function calcAutoReleaseAtIso(jobRow: any | undefined, paidAtIso?: string | null): string | undefined {
+  // ✅ Primär: 28 Tage nach rueck_datum_utc (Warenrückgabe)
+  const baseRaw = jobRow?.rueck_datum_utc ?? jobRow?.warenausgabeDatum ?? jobRow?.lieferDatum ?? paidAtIso ?? null
+  if (!baseRaw) return undefined
+  const d = new Date(baseRaw)
+  if (isNaN(+d)) return undefined
+  return new Date(+d + DAYS_28_MS).toISOString()
 }
 
 export async function GET(req: Request) {
@@ -356,8 +376,16 @@ export async function GET(req: Request) {
       {
         ok: true,
         uid,
-        paid_user: { count: qPaidUser.count ?? null, error: qPaidUser.error?.message ?? null, sample: (qPaidUser.data ?? []).slice(0, 5) },
-        paid_admin: { count: qPaidAdmin.count ?? null, error: qPaidAdmin.error?.message ?? null, sample: (qPaidAdmin.data ?? []).slice(0, 5) },
+        paid_user: {
+          count: qPaidUser.count ?? null,
+          error: (qPaidUser as any).error?.message ?? null,
+          sample: ((qPaidUser as any).data ?? []).slice(0, 5),
+        },
+        paid_admin: {
+          count: qPaidAdmin.count ?? null,
+          error: (qPaidAdmin as any).error?.message ?? null,
+          sample: ((qPaidAdmin as any).data ?? []).slice(0, 5),
+        },
       },
       { status: 200 }
     )
@@ -390,7 +418,8 @@ export async function GET(req: Request) {
     dispute_reason,
 
     payout_status,
-    payout_released_at
+    payout_released_at,
+    payout_transfer_id
   `
 
   const { data: rowsRaw, error: err } = await admin
@@ -406,7 +435,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
   }
 
-  const rows = ((rowsRaw as any[]) ?? []) as DbOffer[]
+  const rows = (((rowsRaw as any[]) ?? []) as DbOffer[]).map((r: any) => ({
+    ...r,
+    payout_transfer_id: r?.payout_transfer_id ?? null,
+  }))
+
+  // ✅ Jobs vorab laden (damit wir autoReleaseAt aus rueck_datum_utc berechnen können)
+  const jobIdsFromOffers = Array.from(new Set(rows.map((r) => String(r.job_id))))
+  let jobs: ApiJob[] = []
+  const jobRawMap = new Map<string, any>()
+
+  if (jobIdsFromOffers.length) {
+    const { data: jobsRaw, error: jobsErr } = await admin.from('jobs').select('*').in('id', jobIdsFromOffers)
+    if (jobsErr) {
+      console.error('[GET /api/konto/auftraege] jobs db:', jobsErr)
+      return NextResponse.json({ ok: false, error: jobsErr.message }, { status: 500 })
+    }
+    for (const jr of (jobsRaw ?? []) as any[]) jobRawMap.set(String(jr.id), jr)
+    jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
+  }
 
   // profiles für beide IDs laden (für username/rating + für angenommene Seite auch Adresse/Firma/UID)
   const ids = new Set<string>()
@@ -432,13 +479,13 @@ export async function GET(req: Request) {
   const authMetaMap = await fetchAuthMetaMap(admin, idList)
 
   // Reviews (über user-client)
-  const offerIds = rows.map(r => String(r.id))
+  const offerIds = rows.map((r) => String(r.id))
   const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
 
   const orders: ApiOrder[] = []
   for (const o of rows) {
     const jobId = String(o.job_id)
-    const offerId = String(o.id)    
+    const offerId = String(o.id)
     const { artikel, versand, gesamt } = splitCents(o)
 
     const fulfillment = (o.fulfillment_status ?? 'in_progress') as ApiOrder['status']
@@ -468,7 +515,11 @@ export async function GET(req: Request) {
 
     const acceptedAt = o.paid_at || o.created_at || new Date().toISOString()
 
-    // ✅ Auftraggeber-Sicht (vergeben) -> UNVERÄNDERT (Snapshot bleibt, keine Profile-Block-Pflicht)
+    const jobRow = jobRawMap.get(jobId)
+    const autoReleaseAt = calcAutoReleaseAtIso(jobRow, o.paid_at)
+    const payoutTransferId = o.payout_transfer_id ?? null
+
+    // ✅ Auftraggeber-Sicht (vergeben)
     if (ownerId === uid) {
       orders.push({
         jobId,
@@ -495,6 +546,9 @@ export async function GET(req: Request) {
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
         refundedAt: o.refunded_at || undefined,
 
+        autoReleaseAt,
+        payout_transfer_id: payoutTransferId,
+
         vendor: vendorLabel,
         vendor_handle: vendorHandle,
         vendor_rating_avg: vendorRatingAvg,
@@ -511,24 +565,21 @@ export async function GET(req: Request) {
       })
     }
 
-    // ✅ Anbieter-Sicht (angenommen) -> HIER: owner_profile liefern (Auth+profiles)
+    // ✅ Anbieter-Sicht (angenommen)
     if (vendorId === uid) {
-      const owner_profile =
-        ownerProf
-          ? buildPartyProfile(ownerProf, authMetaMap.get(ownerId) ?? {})
-          : null
+      const owner_profile = ownerProf ? buildPartyProfile(ownerProf, authMetaMap.get(ownerId) ?? {}) : null
 
       orders.push({
         jobId,
         offerId,
-        amountCents: gesamt,        // du hast aktuell safeNum(o.gesamt_cents) -> ersetzen!
+        amountCents: gesamt,
         artikelCents: artikel,
         versandCents: versand,
         gesamtCents: gesamt,
 
         acceptedAt,
         kind: 'angenommen',
-        anbieter_snapshot: o.anbieter_snapshot ?? null, // bleibt drin, aber UI soll’s NICHT mehr nutzen
+        anbieter_snapshot: o.anbieter_snapshot ?? null,
 
         status: fulfillment,
         deliveredReportedAt: o.delivered_reported_at || undefined,
@@ -543,6 +594,9 @@ export async function GET(req: Request) {
         payoutReleasedAt: o.payout_released_at || undefined,
         refundedAmountCents: safeNum(o.refunded_amount_cents) ?? 0,
         refundedAt: o.refunded_at || undefined,
+
+        autoReleaseAt,
+        payout_transfer_id: payoutTransferId,
 
         owner: ownerLabel,
         owner_handle: ownerHandle,
@@ -563,21 +617,9 @@ export async function GET(req: Request) {
     }
   }
 
-  // Jobs laden (Admin -> damit vendor auch sieht!)
-  const jobIds = Array.from(new Set(orders.map(o => String(o.jobId))))
-  let jobs: ApiJob[] = []
-
-  if (jobIds.length) {
-    const { data: jobsRaw, error: jobsErr } = await admin.from('jobs').select('*').in('id', jobIds)
-    if (jobsErr) {
-      console.error('[GET /api/konto/auftraege] jobs db:', jobsErr)
-      return NextResponse.json({ ok: false, error: jobsErr.message }, { status: 500 })
-    }
-    jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
-  }
-
-  const jobSet = new Set(jobs.map(j => String(j.id)))
-  const filteredOrders = orders.filter(o => jobSet.has(String(o.jobId)))
+  // nur Jobs zurückgeben, die wir wirklich geladen haben
+  const jobSet = new Set(jobs.map((j) => String(j.id)))
+  const filteredOrders = orders.filter((o) => jobSet.has(String(o.jobId)))
 
   return NextResponse.json({ ok: true, jobs, orders: filteredOrders }, { status: 200 })
 }
