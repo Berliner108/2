@@ -429,3 +429,42 @@
 .titleLink .vendorRatingSmall {
   text-decoration: none;
 }
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:14px;
+}
+
+.actionStack{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:260px;
+}
+
+/* gleicher Look für beide */
+.btnDanger{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:12px 14px;
+  font-family:'Oswald';
+  font-size:1rem;
+  font-weight:600;
+  cursor:pointer;
+  color:#fff;
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.14);
+  transition: transform .08s ease, filter .18s ease, opacity .18s ease;
+}
+
+.btnDanger:hover{ filter: brightness(1.03); }
+.btnDanger:active{ transform: translateY(1px); }
+
+.btnDanger:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
+}
