@@ -20,18 +20,10 @@ function parseDate(v: any): Date | null {
   return Number.isFinite(+d) ? d : null
 }
 
-function getParamString(v: string | string[] | undefined): string {
-  if (!v) return ""
-  return Array.isArray(v) ? String(v[0] ?? "") : String(v)
-}
-
-export async function POST(
-  req: Request,
-  ctx: { params: Record<string, string | string[]> }
-) {
+export async function POST(req: Request, ctx: any) {
   try {
-    const jobId = getParamString(ctx?.params?.jobId).trim()
-    if (!jobId) return jsonError("MISSING_ID", 400)
+    const jobId = String(ctx?.params?.jobId ?? "").trim()
+    if (!jobId) return jsonError("MISSING_JOBID", 400)
 
     // optional body: { reason?: string }
     const body = await req.json().catch(() => ({} as any))
