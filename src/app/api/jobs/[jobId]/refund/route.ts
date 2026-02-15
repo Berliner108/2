@@ -20,14 +20,18 @@ function parseDate(v: any): Date | null {
   return Number.isFinite(+d) ? d : null
 }
 
+function getParamString(v: string | string[] | undefined): string {
+  if (!v) return ""
+  return Array.isArray(v) ? String(v[0] ?? "") : String(v)
+}
+
 export async function POST(
   req: Request,
-  ctx: { params: Promise<{ jobId: string }> }
+  ctx: { params: Record<string, string | string[]> }
 ) {
   try {
-    const { jobId } = await ctx.params
-    const jobIdStr = String(jobId ?? "").trim()
-    if (!jobIdStr) return jsonError("MISSING_ID", 400)
+    const jobId = getParamString(ctx?.params?.jobId).trim()
+    if (!jobId) return jsonError("MISSING_ID", 400)
 
     // optional body: { reason?: string }
     const body = await req.json().catch(() => ({} as any))
@@ -45,7 +49,7 @@ export async function POST(
     const { data: job, error: jobErr } = await admin
       .from("jobs")
       .select("id,user_id,rueck_datum_utc,selected_offer_id,released_at,refunded_at")
-      .eq("id", jobIdStr)
+      .eq("id", jobId)
       .single()
 
     if (jobErr || !job) return jsonError("JOB_NOT_FOUND", 404, { details: jobErr?.message })
@@ -74,7 +78,7 @@ export async function POST(
       .single()
 
     if (offErr || !offer) return jsonError("OFFER_NOT_FOUND", 404, { details: offErr?.message })
-    if (String((offer as any).job_id) !== String(jobIdStr)) return jsonError("OFFER_JOB_MISMATCH", 409)
+    if (String((offer as any).job_id) !== String(jobId)) return jsonError("OFFER_JOB_MISMATCH", 409)
 
     const ownerId = String((offer as any).owner_id ?? "").trim()
     const vendorId = String((offer as any).bieter_id ?? "").trim()
@@ -115,7 +119,7 @@ export async function POST(
       amount: totalCents,
       reason: "requested_by_customer",
       metadata: {
-        job_id: String(jobIdStr),
+        job_id: String(jobId),
         offer_id: String(selectedOfferId),
         owner_id: ownerId,
         vendor_id: vendorId,
@@ -142,7 +146,7 @@ export async function POST(
       })
     }
 
-    await admin.from("jobs").update({ refunded_at: refundedAtIso }).eq("id", jobIdStr)
+    await admin.from("jobs").update({ refunded_at: refundedAtIso }).eq("id", jobId)
 
     return NextResponse.json({
       ok: true,

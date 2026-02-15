@@ -131,6 +131,9 @@ const DEFAULTS = {
 }
 const ALLOWED_PS = [2, 10, 20, 50]
 
+// ✅ 28 Tage Fenster (wie Backend)
+const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000
+
 /* ---------- Hooks ---------- */
 function useDebouncedValue<T>(value: T, delay = 300): T {
   const [debounced, setDebounced] = useState<T>(value)
@@ -277,16 +280,11 @@ function getPayoutTransferId(order: DbOrder): string | null {
   return v || null
 }
 
-function canVendorAutoReleaseNow(order: DbOrder): { ok: boolean; unlockAtIso: string | null } {
-  const unlockAt = asDateLike(order.autoReleaseAt)
-  if (!unlockAt) return { ok: false, unlockAtIso: null }
-  return { ok: Date.now() >= +unlockAt, unlockAtIso: unlockAt.toISOString() }
-}
-
-function isBuyerWindowOpen(order: DbOrder): { ok: boolean; untilIso: string | null } {
-  const until = asDateLike(order.autoReleaseAt)
-  if (!until) return { ok: true, untilIso: null } // wenn API's autoReleaseAt fehlt: Buyer darf (sicherer Default)
-  return { ok: Date.now() < +until, untilIso: until.toISOString() }
+/** 28d-Fenster aus Job-Datum ableiten (UI braucht dafür keine API-Felder) */
+function computeAutoReleaseAt(job: Job): Date | null {
+  const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
+  if (!ausgabe) return null
+  return new Date(+ausgabe + DAYS_28_MS)
 }
 
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
@@ -844,6 +842,12 @@ const AuftraegePage: FC = () => {
           const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
 
+          // ✅ Fenster aus Job ableiten (wie Backend: rueck_datum_utc + 28 Tage)
+          const autoReleaseAt = computeAutoReleaseAt(j)
+          const buyerWindowOk = !autoReleaseAt ? true : Date.now() < +autoReleaseAt
+          const buyerWindowUntilIso = autoReleaseAt ? autoReleaseAt.toISOString() : null
+          const vendorUnlockOk = !!autoReleaseAt && Date.now() >= +autoReleaseAt
+
           const contactLabel = order.kind === 'vergeben' ? 'Dienstleister' : 'Auftraggeber'
           const contact = getContactForOrder(order, j)
 
@@ -880,19 +884,24 @@ const AuftraegePage: FC = () => {
           const payout = getPayoutStatus(order)
           const transferId = getPayoutTransferId(order)
 
-          // --- Zeitfenster ---
-          const ar = canVendorAutoReleaseNow(order)
-          const buyerWin = isBuyerWindowOpen(order)
-
-          // Buyer: darf release/refund sobald bezahlt, aber nur bis autoReleaseAt, solange hold + kein Transfer
+          // ✅ Käufer sieht Release/Refund sofort nach "paid" (keine confirmed-Bedingung)
           const canCustomerDecide =
-            isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWin.ok
+            isCustomer &&
+            order.jobPayStatus === 'paid' &&
+            payout === 'hold' &&
+            !transferId &&
+            buyerWindowOk
 
           const canCustomerRelease = canCustomerDecide
           const canCustomerRefund = canCustomerDecide
 
-          // Vendor: nach autoReleaseAt selbst releasen (nur wenn noch hold + kein Transfer)
-          const canVendorRelease = isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && ar.ok
+          // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn noch hold + kein Transfer)
+          const canVendorRelease =
+            isVendor &&
+            order.offerPayStatus === 'paid' &&
+            payout === 'hold' &&
+            !transferId &&
+            vendorUnlockOk
 
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
@@ -1063,17 +1072,17 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !ar.ok && ar.unlockAtIso && (
+                {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !vendorUnlockOk && autoReleaseAt && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Auszahlung möglich ab</div>
-                    <div className={styles.metaValue}>{formatDate(asDateLike(ar.unlockAtIso))}</div>
+                    <div className={styles.metaValue}>{formatDate(autoReleaseAt)}</div>
                   </div>
                 )}
 
-                {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWin.untilIso && (
+                {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWindowUntilIso && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Release/Refund möglich bis</div>
-                    <div className={styles.metaValue}>{formatDate(asDateLike(buyerWin.untilIso))}</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(buyerWindowUntilIso))}</div>
                   </div>
                 )}
               </div>
