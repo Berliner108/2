@@ -283,6 +283,12 @@ function canVendorAutoReleaseNow(order: DbOrder): { ok: boolean; unlockAtIso: st
   return { ok: Date.now() >= +unlockAt, unlockAtIso: unlockAt.toISOString() }
 }
 
+function isBuyerWindowOpen(order: DbOrder): { ok: boolean; untilIso: string | null } {
+  const until = asDateLike(order.autoReleaseAt)
+  if (!until) return { ok: true, untilIso: null } // wenn API's autoReleaseAt fehlt: Buyer darf (sicherer Default)
+  return { ok: Date.now() < +until, untilIso: until.toISOString() }
+}
+
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
@@ -709,21 +715,6 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ FIX: bestätigt Empfang + Auszahlung passiert serverseitig in confirm-delivered (kein extra /release hier!)
-  async function confirmDelivered(jobId: string | number) {
-    const key = `confirm:${jobId}`
-    setBusyKey(key)
-    try {
-      await postJson('/api/konto/auftraege/confirm-delivered', { jobId })
-      await loadOrders()
-    } catch (e) {
-      console.error(e)
-      alert('Konnte Empfang nicht bestätigen.')
-    } finally {
-      setBusyKey(null)
-    }
-  }
-
   async function openDispute(jobId: string | number) {
     const reason = window.prompt('Problem melden (optional):') || ''
     const key = `dispute:${jobId}`
@@ -863,7 +854,6 @@ const AuftraegePage: FC = () => {
 
           const isBusy =
             busyKey === `report:${order.jobId}` ||
-            busyKey === `confirm:${order.jobId}` ||
             busyKey === `dispute:${order.jobId}` ||
             busyKey === `refund:${order.jobId}` ||
             busyKey === `release:${order.jobId}` ||
@@ -874,11 +864,6 @@ const AuftraegePage: FC = () => {
             isVendor &&
             (order.status ?? 'in_progress') === 'in_progress' &&
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released')
-
-          const canCustomerConfirmOrDispute =
-            isCustomer &&
-            order.status === 'reported' &&
-            (order.jobPayStatus === 'paid' || order.jobPayStatus === 'released')
 
           const canCustomerReview =
             isCustomer &&
@@ -895,15 +880,18 @@ const AuftraegePage: FC = () => {
           const payout = getPayoutStatus(order)
           const transferId = getPayoutTransferId(order)
 
-          // Kunde: Release nur wenn confirmed + hold + noch NICHT transfered (Fallback)
-          const canCustomerRelease =
-            isCustomer && order.status === 'confirmed' && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId
-
-          // Kunde: Refund nur wenn paid + hold und NICHT confirmed
-          const canCustomerRefund = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && order.status !== 'confirmed'
-
-          // Anbieter: darf nach autoReleaseAt selbst releasen, wenn noch hold + nicht transfered
+          // --- Zeitfenster ---
           const ar = canVendorAutoReleaseNow(order)
+          const buyerWin = isBuyerWindowOpen(order)
+
+          // Buyer: darf release/refund sobald bezahlt, aber nur bis autoReleaseAt, solange hold + kein Transfer
+          const canCustomerDecide =
+            isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWin.ok
+
+          const canCustomerRelease = canCustomerDecide
+          const canCustomerRefund = canCustomerDecide
+
+          // Vendor: nach autoReleaseAt selbst releasen (nur wenn noch hold + kein Transfer)
           const canVendorRelease = isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && ar.ok
 
           // ✅ Rating genau aus API-Feldern
@@ -1081,6 +1069,13 @@ const AuftraegePage: FC = () => {
                     <div className={styles.metaValue}>{formatDate(asDateLike(ar.unlockAtIso))}</div>
                   </div>
                 )}
+
+                {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWin.untilIso && (
+                  <div className={styles.metaCol}>
+                    <div className={styles.metaLabel}>Release/Refund möglich bis</div>
+                    <div className={styles.metaValue}>{formatDate(asDateLike(buyerWin.untilIso))}</div>
+                  </div>
+                )}
               </div>
 
               <div className={styles.actions}>
@@ -1111,17 +1106,28 @@ const AuftraegePage: FC = () => {
                     )
                   })()}
 
-                {canCustomerConfirmOrDispute && (
+                {(canCustomerRelease || canCustomerRefund) && (
                   <div className={styles.actionStack}>
                     <button
                       type="button"
                       className={styles.primaryBtn}
-                      disabled={isBusy}
-                      onClick={() => confirmDelivered(order.jobId)}
-                      title="Empfang bestätigen"
+                      disabled={isBusy || !canCustomerRelease}
+                      onClick={() => triggerRelease(order.jobId)}
+                      title="Auszahlung an den Dienstleister (abzüglich 7%). Danach kein Refund mehr."
                     >
-                      {isBusy && busyKey === `confirm:${order.jobId}` ? 'Sende…' : 'Empfang bestätigen'}
+                      {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                     </button>
+
+                    <button
+                      type="button"
+                      className={styles.btnDanger}
+                      disabled={isBusy || !canCustomerRefund}
+                      onClick={() => triggerRefund(order.jobId)}
+                      title="Refund auf die Zahlungsmethode (nur solange Auszahlungsstatus = hold)."
+                    >
+                      {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
+                    </button>
+
                     <button
                       type="button"
                       className={styles.btnGhost}
@@ -1131,31 +1137,6 @@ const AuftraegePage: FC = () => {
                       {isBusy && busyKey === `dispute:${order.jobId}` ? 'Sende…' : 'Problem melden'}
                     </button>
                   </div>
-                )}
-
-                {/* Fallback: nur sichtbar wenn confirmed+hold und noch kein Transfer */}
-                {canCustomerRelease && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => triggerRelease(order.jobId)}
-                    title="Fallback: Auszahlung freigeben (falls die automatische Auszahlung nicht durchging)."
-                  >
-                    {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
-                  </button>
-                )}
-
-                {canCustomerRefund && (
-                  <button
-                    type="button"
-                    className={styles.btnDanger}
-                    disabled={isBusy}
-                    onClick={() => triggerRefund(order.jobId)}
-                    title="Refund nur möglich solange Auszahlungsstatus = hold"
-                  >
-                    {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
-                  </button>
                 )}
 
                 {canVendorRelease && (
