@@ -468,3 +468,69 @@
   transform:none;
   box-shadow:none;
 }
+/* Modal: saubere Breite + responsive */
+.modalContent {
+  width: min(720px, 92vw);
+  max-width: 92vw;
+  box-sizing: border-box;
+}
+
+/* Textarea im Modal darf NICHT überlaufen */
+.reviewBox {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* ✅ Grün (Release) */
+.btnSuccess {
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 10px 24px rgba(34, 197, 94, 0.22);
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btnSuccess:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.btnSuccess:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ✅ Rot (Refund) – Gradient */
+.btnDanger {
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.22);
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btnDanger:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.btnDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* optional: Ghost bleibt neutral, aber „wertiger“ */
+.btnGhost {
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+}
