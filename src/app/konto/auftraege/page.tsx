@@ -109,6 +109,7 @@ type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 type StatusKey = 'wartet' | 'aktiv' | 'fertig'
 type FilterKey = 'alle' | StatusKey
 
+// ✅ NUR EINMAL
 type ReviewRole = 'customer_to_vendor' | 'vendor_to_customer'
 
 /* ---------- Persist Keys & Defaults (nur UI) ---------- */
@@ -152,13 +153,12 @@ function asDateLike(v: unknown): Date | undefined {
 }
 
 const formatEUR = (c?: number) =>
-  typeof c === 'number'
-    ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
-    : '—'
+  typeof c === 'number' ? (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' }) : '—'
 
 const formatDate = (d?: Date) =>
   d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
 
+// ✅ exakt: "4.7/5 · 12" oder "keine Bewertungen"
 function ratingTxt(avg?: number | null, cnt?: number | null): string {
   const a = typeof avg === 'number' ? avg : Number(avg)
   const c = typeof cnt === 'number' ? cnt : Number(cnt)
@@ -212,7 +212,10 @@ function getOwnerName(job: Job): string {
 }
 
 /** „Produktionsstatus“ aus Terminen */
-function computeStatus(job: Job): { key: StatusKey; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
+function computeStatus(job: Job): {
+  key: StatusKey
+  label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
+} {
   const now = Date.now()
   const annahme = asDateLike(job.warenannahmeDatum)
   const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
@@ -274,23 +277,18 @@ function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
 function getPayoutTransferId(order: DbOrder): string | null {
   const a = (order as any).payout_transfer_id
   const b = (order as any).payoutTransferId
-  const v =
-    typeof a === 'string' && a.trim()
-      ? a.trim()
-      : typeof b === 'string' && b.trim()
-        ? b.trim()
-        : ''
+  const v = typeof a === 'string' && a.trim() ? a.trim() : typeof b === 'string' && b.trim() ? b.trim() : ''
   return v || null
 }
 
-/** 28d-Fenster aus Job-Datum ableiten */
+/** 28d-Fenster aus Job-Datum ableiten (UI braucht dafür keine API-Felder) */
 function computeAutoReleaseAt(job: Job): Date | null {
   const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
   if (!ausgabe) return null
   return new Date(+ausgabe + DAYS_28_MS)
 }
 
-/* ============ Pagination-UI ============ */
+/* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
 const Pagination: FC<{
   page: number
   setPage: (p: number) => void
@@ -333,43 +331,19 @@ const Pagination: FC<{
         </select>
 
         <div className={styles.pageButtons}>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(1)}
-            disabled={page <= 1}
-            aria-label="Erste Seite"
-          >
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(1)} disabled={page <= 1}>
             «
           </button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page - 1)}
-            disabled={page <= 1}
-            aria-label="Vorherige Seite"
-          >
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page <= 1}>
             ‹
           </button>
           <span className={styles.pageNow} aria-live="polite">
             Seite {page} / {pages}
           </span>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(page + 1)}
-            disabled={page >= pages}
-            aria-label="Nächste Seite"
-          >
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page >= pages}>
             ›
           </button>
-          <button
-            type="button"
-            className={styles.pageBtn}
-            onClick={() => setPage(pages)}
-            disabled={page >= pages}
-            aria-label="Letzte Seite"
-          >
+          <button type="button" className={styles.pageBtn} onClick={() => setPage(pages)} disabled={page >= pages}>
             »
           </button>
         </div>
@@ -379,31 +353,17 @@ const Pagination: FC<{
 }
 
 /* ---------- Slice Helper ---------- */
-type Slice<T> = {
-  pageItems: T[]
-  from: number
-  to: number
-  total: number
-  safePage: number
-  pages: number
-}
+type Slice<T> = { pageItems: T[]; from: number; to: number; total: number; safePage: number; pages: number }
 function sliceByPage<T>(arr: T[], page: number, ps: number): Slice<T> {
   const total = arr.length
   const pages = Math.max(1, Math.ceil(total / ps))
   const safePage = Math.min(Math.max(1, page), pages)
   const start = (safePage - 1) * ps
   const end = Math.min(start + ps, total)
-  return {
-    pageItems: arr.slice(start, end),
-    from: total === 0 ? 0 : start + 1,
-    to: end,
-    total,
-    safePage,
-    pages,
-  }
+  return { pageItems: arr.slice(start, end), from: total === 0 ? 0 : start + 1, to: end, total, safePage, pages }
 }
 
-/* ---------------- Contact Helpers ---------------- */
+/* ---------------- Handles / Contact Helpers ---------------- */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
 const asHandleOrNull = (v?: unknown) => {
   const s = typeof v === 'string' ? v.trim() : ''
@@ -450,11 +410,6 @@ const AuftraegePage: FC = () => {
 
   const [busyKey, setBusyKey] = useState<string | null>(null)
 
-  // ✅ Refund-Modal
-  const [refundJobId, setRefundJobId] = useState<string | number | null>(null)
-  const [refundText, setRefundText] = useState('')
-  const [refundBusy, setRefundBusy] = useState(false)
-
   const jobsById = useMemo(() => {
     const m = new Map<string, Job>()
     for (const j of jobs) m.set(String(j.id), j)
@@ -479,6 +434,11 @@ const AuftraegePage: FC = () => {
   const [rating, setRating] = useState(5)
   const [ratingText, setRatingText] = useState('')
   const [reviewErr, setReviewErr] = useState<string | null>(null)
+
+  // ✅ Refund-Modal (statt prompt/confirm)
+  const [refundJobId, setRefundJobId] = useState<string | number | null>(null)
+  const [refundText, setRefundText] = useState('')
+  const [refundBusy, setRefundBusy] = useState(false)
 
   // ESC schließt Modals
   useEffect(() => {
@@ -578,11 +538,7 @@ const AuftraegePage: FC = () => {
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
       const partyName = order.kind === 'vergeben' ? (order.vendor || '') : (order.owner || getOwnerName(job))
-      return (
-        String(order.jobId).toLowerCase().includes(q) ||
-        title.includes(q) ||
-        String(partyName).toLowerCase().includes(q)
-      )
+      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || String(partyName).toLowerCase().includes(q)
     })
   }
 
@@ -726,37 +682,6 @@ const AuftraegePage: FC = () => {
     }
   }
 
-  // ✅ Refund: Modal öffnen statt prompt
-  function openRefund(jobId: string | number) {
-    setRefundJobId(jobId)
-    setRefundText('')
-  }
-  function cancelRefund() {
-    if (refundBusy) return
-    setRefundJobId(null)
-    setRefundText('')
-  }
-  async function confirmRefund() {
-    if (refundJobId == null || refundBusy) return
-    const jobId = refundJobId
-    const key = `refund:${jobId}`
-    try {
-      setRefundBusy(true)
-      setBusyKey(key)
-      const reason = refundText.trim().slice(0, 800)
-      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/refund`, { reason })
-      setRefundJobId(null)
-      setRefundText('')
-      await loadOrders()
-    } catch (e) {
-      console.error(e)
-      alert('Refund fehlgeschlagen.')
-    } finally {
-      setRefundBusy(false)
-      setBusyKey(null)
-    }
-  }
-
   async function triggerRelease(jobId: string | number) {
     const key = `release:${jobId}`
     setBusyKey(key)
@@ -769,6 +694,40 @@ const AuftraegePage: FC = () => {
       console.error(e)
       alert('Auszahlung fehlgeschlagen.')
     } finally {
+      setBusyKey(null)
+    }
+  }
+
+  // ✅ Refund-Modal Flow
+  function openRefundModal(jobId: string | number) {
+    if (refundBusy) return
+    setRefundJobId(jobId)
+    setRefundText('')
+  }
+  function cancelRefundModal() {
+    if (refundBusy) return
+    setRefundJobId(null)
+    setRefundText('')
+  }
+  async function confirmRefundModal() {
+    if (refundJobId == null || refundBusy) return
+    const jobId = refundJobId
+    const reason = refundText.trim().slice(0, 800)
+
+    const key = `refund:${jobId}`
+    setRefundBusy(true)
+    setBusyKey(key)
+
+    try {
+      await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/refund`, { reason })
+      setRefundJobId(null)
+      setRefundText('')
+      await loadOrders()
+    } catch (e) {
+      console.error(e)
+      alert('Refund fehlgeschlagen.')
+    } finally {
+      setRefundBusy(false)
       setBusyKey(null)
     }
   }
@@ -812,11 +771,7 @@ const AuftraegePage: FC = () => {
       await loadOrders()
     } catch (e: any) {
       const msg = String(e?.message || '')
-      if (
-        msg.toLowerCase().includes('bereits bewertet') ||
-        msg.toLowerCase().includes('duplicate') ||
-        msg.toLowerCase().includes('unique')
-      ) {
+      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
         setReviewJobId(null)
         await loadOrders()
         return
@@ -850,11 +805,11 @@ const AuftraegePage: FC = () => {
                   ? { key: 'fertig' as StatusKey, label: 'Zustellung gemeldet' as const }
                   : prodStatus
 
-          // NICHT ändern: Warenausgabe/Warenrückgabe Anzeige
-          const annahme = asDateLike(j.warenannahmeDatum)
-          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum)
+          // ✅ richtig zuordnen:
+          const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
+          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
 
-          // Fenster aus Job ableiten
+          // ✅ Fenster aus Job ableiten (wie Backend: rueck_datum_utc + 28 Tage)
           const autoReleaseAt = computeAutoReleaseAt(j)
           const buyerWindowOk = !autoReleaseAt ? true : Date.now() < +autoReleaseAt
           const buyerWindowUntilIso = autoReleaseAt ? autoReleaseAt.toISOString() : null
@@ -895,25 +850,18 @@ const AuftraegePage: FC = () => {
           const payout = getPayoutStatus(order)
           const transferId = getPayoutTransferId(order)
 
-          // Käufer: Release/Refund während Fenster möglich (wenn hold + kein Transfer)
+          // ✅ Käufer sieht Release/Refund sofort nach "paid" (keine confirmed-Bedingung)
           const canCustomerDecide =
-            isCustomer &&
-            order.jobPayStatus === 'paid' &&
-            payout === 'hold' &&
-            !transferId &&
-            buyerWindowOk
+            isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWindowOk
 
           const canCustomerRelease = canCustomerDecide
           const canCustomerRefund = canCustomerDecide
 
-          // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn hold + kein Transfer)
+          // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn noch hold + kein Transfer)
           const canVendorRelease =
-            isVendor &&
-            order.offerPayStatus === 'paid' &&
-            payout === 'hold' &&
-            !transferId &&
-            vendorUnlockOk
+            isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && vendorUnlockOk
 
+          // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
           const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
 
@@ -968,6 +916,7 @@ const AuftraegePage: FC = () => {
                       </>
                     )}
 
+                    {/* ✅ NUR für "angenommen": echte Daten aus owner_profile */}
                     {order.kind === 'angenommen' && order.owner_profile ? (
                       <div className={styles.vendorSnapshot}>
                         {order.owner_profile.companyName ? <div>{order.owner_profile.companyName}</div> : null}
@@ -1000,6 +949,7 @@ const AuftraegePage: FC = () => {
                       </div>
                     ) : null}
 
+                    {/* ✅ NUR für "vergeben": Snapshot bleibt wie gehabt */}
                     {order.kind === 'vergeben'
                       ? (() => {
                           const snap: any =
@@ -1055,6 +1005,7 @@ const AuftraegePage: FC = () => {
                   <div className={styles.metaValue}>{paymentLabel(order)}</div>
                 </div>
 
+                {/* NICHT ANFASSEN: Warenausgabe/Warenrückgabe Bereich */}
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Warenausgabe</div>
                   <div className={styles.metaValue}>{formatDate(annahme)}</div>
@@ -1124,10 +1075,10 @@ const AuftraegePage: FC = () => {
 
                 {(canCustomerRelease || canCustomerRefund) && (
                   <div className={styles.actionStack}>
-                    {/* ✅ Auszahlungsbutton gleich wie Refund (rot) */}
+                    {/* ✅ GRÜN (wie acceptBtn) */}
                     <button
                       type="button"
-                      className={styles.btnSuccess}   // ✅ statt btnDanger
+                      className={styles.acceptBtn}
                       disabled={isBusy || !canCustomerRelease}
                       onClick={() => triggerRelease(order.jobId)}
                       title="Auszahlung an den Dienstleister (abzüglich 7%). Danach kein Refund mehr."
@@ -1135,12 +1086,12 @@ const AuftraegePage: FC = () => {
                       {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                     </button>
 
-
+                    {/* ✅ ROT (wie btnDanger) + Modal statt prompt */}
                     <button
                       type="button"
                       className={styles.btnDanger}
                       disabled={isBusy || !canCustomerRefund}
-                      onClick={() => openRefund(order.jobId)}
+                      onClick={() => openRefundModal(order.jobId)}
                       title="Refund auf die Zahlungsmethode (nur solange Auszahlungsstatus = hold)."
                     >
                       {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
@@ -1151,7 +1102,7 @@ const AuftraegePage: FC = () => {
                 {canVendorRelease && (
                   <button
                     type="button"
-                    className={styles.primaryBtn}
+                    className={styles.acceptBtn}
                     disabled={isBusy}
                     onClick={() => triggerRelease(order.jobId)}
                     title="Nach Ablauf der Frist kannst du die Auszahlung selbst auslösen."
@@ -1161,23 +1112,13 @@ const AuftraegePage: FC = () => {
                 )}
 
                 {canCustomerReview && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}
-                  >
+                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}>
                     Dienstleister bewerten
                   </button>
                 )}
 
                 {canVendorReview && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}
-                  >
+                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}>
                     Auftraggeber bewerten
                   </button>
                 )}
@@ -1376,7 +1317,7 @@ const AuftraegePage: FC = () => {
         </div>
       )}
 
-      {/* ✅ Modal: Rückerstattung auslösen (mit Grund) */}
+      {/* ✅ Modal: Rückerstattung auslösen (GENAU wie dein Look) */}
       {refundJobId !== null && (
         <div
           className={styles.modal}
@@ -1384,7 +1325,7 @@ const AuftraegePage: FC = () => {
           aria-modal="true"
           aria-labelledby="refundTitle"
           onClick={e => {
-            if (e.target === e.currentTarget) cancelRefund()
+            if (e.target === e.currentTarget) cancelRefundModal()
           }}
         >
           <div className={styles.modalContent}>
@@ -1401,15 +1342,16 @@ const AuftraegePage: FC = () => {
               placeholder="z. B. nicht geliefert, Menge/Qualität weicht ab…"
               rows={4}
             />
+
             <div className={styles.btnHint} aria-live="polite">
               {refundText.length}/800
             </div>
 
             <div className={styles.modalActions}>
-              <button type="button" className={styles.btnGhost} onClick={cancelRefund} disabled={refundBusy}>
+              <button type="button" className={styles.btnGhost} onClick={cancelRefundModal} disabled={refundBusy}>
                 Abbrechen
               </button>
-              <button type="button" className={styles.btnDanger} onClick={confirmRefund} disabled={refundBusy}>
+              <button type="button" className={styles.btnDanger} onClick={confirmRefundModal} disabled={refundBusy}>
                 {refundBusy ? 'Wird erstattet…' : 'Rückerstattung bestätigen'}
               </button>
             </div>
@@ -1453,7 +1395,6 @@ const AuftraegePage: FC = () => {
               onChange={e => setRatingText(e.target.value)}
               placeholder="Feedback (Pflicht)…"
               rows={4}
-              maxLength={800}
             />
 
             {reviewErr && (
