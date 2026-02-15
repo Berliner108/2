@@ -26,9 +26,9 @@ function calcFeeCents(totalGrossCents: number) {
   return Math.max(0, fee)
 }
 
-export async function POST(req: Request, ctx: { params: { id: string } }) {
+export async function POST(req: Request, ctx: { params: { jobId: string } }) {
   try {
-    const jobId = String(ctx?.params?.id ?? "").trim()
+    const jobId = String(ctx?.params?.jobId ?? "").trim()
     if (!jobId) return jsonError("MISSING_ID", 400)
 
     // Auth (Cookie Session)

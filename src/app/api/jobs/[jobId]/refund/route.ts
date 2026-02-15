@@ -20,9 +20,9 @@ function parseDate(v: any): Date | null {
   return Number.isFinite(+d) ? d : null
 }
 
-export async function POST(req: Request, ctx: { params: { id: string } }) {
+export async function POST(req: Request, ctx: { params: { jobId: string } }) {
   try {
-    const jobId = String(ctx?.params?.id ?? "").trim()
+    const jobId = String(ctx?.params?.jobId ?? "").trim()
     if (!jobId) return jsonError("MISSING_ID", 400)
 
     // optional body: { reason?: string }
