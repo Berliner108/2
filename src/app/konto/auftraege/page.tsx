@@ -1127,13 +1127,14 @@ const AuftraegePage: FC = () => {
                     {/* ✅ Auszahlungsbutton gleich wie Refund (rot) */}
                     <button
                       type="button"
-                      className={styles.btnDanger}
+                      className={styles.btnSuccess}   // ✅ statt btnDanger
                       disabled={isBusy || !canCustomerRelease}
                       onClick={() => triggerRelease(order.jobId)}
                       title="Auszahlung an den Dienstleister (abzüglich 7%). Danach kein Refund mehr."
                     >
                       {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
                     </button>
+
 
                     <button
                       type="button"
