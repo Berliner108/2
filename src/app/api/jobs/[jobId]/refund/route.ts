@@ -1,4 +1,4 @@
-// src/app/api/jobs/[id]/refund/route.ts
+// src/app/api/jobs/[jobId]/refund/route.ts
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { supabaseServer } from "@/lib/supabase-server"
@@ -20,10 +20,14 @@ function parseDate(v: any): Date | null {
   return Number.isFinite(+d) ? d : null
 }
 
-export async function POST(req: Request, ctx: { params: { jobId: string } }) {
+export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ jobId: string }> }
+) {
   try {
-    const jobId = String(ctx?.params?.jobId ?? "").trim()
-    if (!jobId) return jsonError("MISSING_ID", 400)
+    const { jobId } = await ctx.params
+    const jobIdStr = String(jobId ?? "").trim()
+    if (!jobIdStr) return jsonError("MISSING_ID", 400)
 
     // optional body: { reason?: string }
     const body = await req.json().catch(() => ({} as any))
@@ -41,7 +45,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
     const { data: job, error: jobErr } = await admin
       .from("jobs")
       .select("id,user_id,rueck_datum_utc,selected_offer_id,released_at,refunded_at")
-      .eq("id", jobId)
+      .eq("id", jobIdStr)
       .single()
 
     if (jobErr || !job) return jsonError("JOB_NOT_FOUND", 404, { details: jobErr?.message })
@@ -70,7 +74,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       .single()
 
     if (offErr || !offer) return jsonError("OFFER_NOT_FOUND", 404, { details: offErr?.message })
-    if (String((offer as any).job_id) !== String(jobId)) return jsonError("OFFER_JOB_MISMATCH", 409)
+    if (String((offer as any).job_id) !== String(jobIdStr)) return jsonError("OFFER_JOB_MISMATCH", 409)
 
     const ownerId = String((offer as any).owner_id ?? "").trim()
     const vendorId = String((offer as any).bieter_id ?? "").trim()
@@ -106,14 +110,12 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
     }
 
     // Refund über PaymentIntent (voller Betrag)
-    // Hinweis: Bei Connect Destination/Separate Charges ist Refund i.d.R. am PI möglich.
-    // Falls du später Partial Refund willst -> amount setzen.
     const refund = await stripe.refunds.create({
       payment_intent: paymentIntentId,
       amount: totalCents,
       reason: "requested_by_customer",
       metadata: {
-        job_id: String(jobId),
+        job_id: String(jobIdStr),
         offer_id: String(selectedOfferId),
         owner_id: ownerId,
         vendor_id: vendorId,
@@ -140,7 +142,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       })
     }
 
-    await admin.from("jobs").update({ refunded_at: refundedAtIso }).eq("id", jobId)
+    await admin.from("jobs").update({ refunded_at: refundedAtIso }).eq("id", jobIdStr)
 
     return NextResponse.json({
       ok: true,
@@ -149,7 +151,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       deadline: deadline.toISOString(),
     })
   } catch (e: any) {
-    console.error("jobs/[id]/refund failed:", e)
+    console.error("jobs/[jobId]/refund failed:", e)
     return jsonError("INTERNAL", 500, { details: String(e?.message ?? e) })
   }
 }

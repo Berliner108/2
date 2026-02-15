@@ -1,4 +1,4 @@
-// src/app/api/jobs/[id]/release/route.ts
+// src/app/api/jobs/[jobId]/release/route.ts
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { supabaseServer } from "@/lib/supabase-server"
@@ -26,10 +26,14 @@ function calcFeeCents(totalGrossCents: number) {
   return Math.max(0, fee)
 }
 
-export async function POST(req: Request, ctx: { params: { jobId: string } }) {
+export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ jobId: string }> }
+) {
   try {
-    const jobId = String(ctx?.params?.jobId ?? "").trim()
-    if (!jobId) return jsonError("MISSING_ID", 400)
+    const { jobId } = await ctx.params
+    const jobIdStr = String(jobId ?? "").trim()
+    if (!jobIdStr) return jsonError("MISSING_ID", 400)
 
     // Auth (Cookie Session)
     const sb = await supabaseServer()
@@ -43,7 +47,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
     const { data: job, error: jobErr } = await admin
       .from("jobs")
       .select("id,user_id,rueck_datum_utc,selected_offer_id,released_at,refunded_at")
-      .eq("id", jobId)
+      .eq("id", jobIdStr)
       .single()
 
     if (jobErr || !job) return jsonError("JOB_NOT_FOUND", 404, { details: jobErr?.message })
@@ -72,7 +76,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       .single()
 
     if (offErr || !offer) return jsonError("OFFER_NOT_FOUND", 404, { details: offErr?.message })
-    if (String((offer as any).job_id) !== String(jobId)) return jsonError("OFFER_JOB_MISMATCH", 409)
+    if (String((offer as any).job_id) !== String(jobIdStr)) return jsonError("OFFER_JOB_MISMATCH", 409)
 
     const ownerId = String((offer as any).owner_id ?? "").trim()
     const vendorId = String((offer as any).bieter_id ?? "").trim()
@@ -145,9 +149,9 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       amount: transferCents,
       currency,
       destination,
-      description: `job payout job=${jobId} offer=${selectedOfferId}`,
+      description: `job payout job=${jobIdStr} offer=${selectedOfferId}`,
       metadata: {
-        job_id: String(jobId),
+        job_id: String(jobIdStr),
         offer_id: String(selectedOfferId),
         owner_id: ownerId,
         vendor_id: vendorId,
@@ -176,7 +180,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       })
     }
 
-    await admin.from("jobs").update({ released_at: releasedAtIso }).eq("id", jobId)
+    await admin.from("jobs").update({ released_at: releasedAtIso }).eq("id", jobIdStr)
 
     return NextResponse.json({
       ok: true,
@@ -188,7 +192,7 @@ export async function POST(req: Request, ctx: { params: { jobId: string } }) {
       by: isCustomer ? "customer" : "vendor",
     })
   } catch (e: any) {
-    console.error("jobs/[id]/release failed:", e)
+    console.error("jobs/[jobId]/release failed:", e)
     return jsonError("INTERNAL", 500, { details: String(e?.message ?? e) })
   }
 }
