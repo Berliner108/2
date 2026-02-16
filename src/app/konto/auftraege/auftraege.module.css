@@ -737,3 +737,26 @@
   width: 100% !important;
 }
 
+
+/* Buttons-Block nach rechts schieben */
+.actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+  justify-content: flex-end;   /* ✅ rechts */
+}
+
+/* falls du nur den Stack nach rechts willst, aber einzelne Buttons links lassen willst:
+.actions .actionStack{ margin-left:auto; }  (dann justify-content wieder entfernen) */
+
+/* optional: auf Mobile wieder volle Breite/zentriert */
+@media (max-width: 680px){
+  .actions{
+    justify-content: stretch;
+  }
+  .actionStack{
+    width: 100%;
+    min-width: 0;
+  }
+}
