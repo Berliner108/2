@@ -1111,17 +1111,22 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {canCustomerReview && (
-                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'customer_to_vendor')}>
-                    Dienstleister bewerten
+                {(canCustomerReview || canVendorReview) && (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    disabled={isBusy}
+                    onClick={() =>
+                      openReviewModal(
+                        order.jobId,
+                        canCustomerReview ? 'customer_to_vendor' : 'vendor_to_customer'
+                      )
+                    }
+                  >
+                    Bewerten
                   </button>
                 )}
 
-                {canVendorReview && (
-                  <button type="button" className={styles.primaryBtn} disabled={isBusy} onClick={() => openReviewModal(order.jobId, 'vendor_to_customer')}>
-                    Auftraggeber bewerten
-                  </button>
-                )}
               </div>
             </li>
           )
