@@ -808,6 +808,28 @@ const AuftraegePage: FC = () => {
           // ✅ richtig zuordnen:
           const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
           const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
+          // PayStatus (ab paid, inkl. alle späteren Zustände)
+const myPayStatus =
+  order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+
+const isPayOk =
+  myPayStatus === 'paid' ||
+  myPayStatus === 'released' ||
+  myPayStatus === 'partially_refunded' ||
+  myPayStatus === 'refunded' ||
+  myPayStatus === 'disputed'
+
+// "mein" Reviewed-Flag (NUR der jeweilige User!)
+const myReviewed =
+  order.kind === 'vergeben' ? !!order.customerReviewed : !!order.vendorReviewed
+
+// "mein" Role fürs Submit
+const myRole: ReviewRole =
+  order.kind === 'vergeben' ? 'customer_to_vendor' : 'vendor_to_customer'
+
+// final: Button zeigen AB paid, und NUR weg wenn ICH bewertet habe
+const canMyReview = isPayOk && !myReviewed
+
 
           // ✅ Fenster aus Job ableiten (wie Backend: rueck_datum_utc + 28 Tage)
           const autoReleaseAt = computeAutoReleaseAt(j)
@@ -1039,7 +1061,7 @@ const AuftraegePage: FC = () => {
 
                 {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWindowUntilIso && (
                   <div className={styles.metaCol}>
-                    <div className={styles.metaLabel}>Release/Refund möglich bis</div>
+                    <div className={styles.metaLabel}>Freigabe/Rückerstattung möglich bis</div>
                     <div className={styles.metaValue}>{formatDate(asDateLike(buyerWindowUntilIso))}</div>
                   </div>
                 )}
@@ -1111,21 +1133,17 @@ const AuftraegePage: FC = () => {
                   </button>
                 )}
 
-                {(canCustomerReview || canVendorReview) && (
+                {canMyReview && (
                   <button
                     type="button"
                     className={styles.primaryBtn}
                     disabled={isBusy}
-                    onClick={() =>
-                      openReviewModal(
-                        order.jobId,
-                        canCustomerReview ? 'customer_to_vendor' : 'vendor_to_customer'
-                      )
-                    }
+                    onClick={() => openReviewModal(order.jobId, myRole)}
                   >
                     Bewerten
                   </button>
                 )}
+
 
               </div>
             </li>

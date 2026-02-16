@@ -607,10 +607,9 @@ const LackanfragenOrdersPage: FC = () => {
   const days = Math.floor(hours / 24)
   return days >= 1 ? `${days} ${days===1?'Tag':'Tagen'} ${hours % 24} Std` : `${hours} Std`
 }
+const alreadyRated = (o: LackOrder) => !!o.myReview
+const canRateNow   = (o: LackOrder) => !alreadyRated(o)
 
-
-  const alreadyRated = (o: LackOrder) => !!(o.myReview || o.review)
-  const canRateNow   = (o: LackOrder) => !alreadyRated(o)
 
   /* ---------- Section Renderer ---------- */
   const SectionList: FC<{
