@@ -720,3 +720,20 @@
     min-height: 42px;
   }
 }
+/* ✅ Buttons in .actionStack immer gleich breit */
+.actionStack{
+  width: clamp(260px, 22vw, 340px); /* gleiche Spaltenbreite */
+  min-width: 260px;
+}
+
+.actionStack > button{
+  width: 100% !important;
+}
+
+/* falls deine Buttons in divs/wrappers stecken */
+.actionStack .acceptBtn,
+.actionStack .btnDanger,
+.actionStack .secondaryBtn,
+.actionStack .primaryBtn{
+  width: 100% !important;
+}
