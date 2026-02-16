@@ -723,7 +723,7 @@
 /* ✅ Buttons in .actionStack immer gleich breit */
 .actionStack{
   width: clamp(260px, 22vw, 340px); /* gleiche Spaltenbreite */
-  min-width: 180px;
+  max-width: 180px;
 }
 
 .actionStack > button{
