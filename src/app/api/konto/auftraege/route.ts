@@ -17,8 +17,8 @@ type DbOffer = {
 
   artikel_cents: number | null
   versand_cents: number | null
-
   gesamt_cents: number | null
+
   created_at: string | null
   status: string | null
 
@@ -66,6 +66,7 @@ type PartyProfile = {
 type ApiOrder = {
   jobId: string
   offerId: string
+
   amountCents?: number
   artikelCents?: number
   versandCents?: number
@@ -89,7 +90,7 @@ type ApiOrder = {
   jobPayoutStatus?: DbPayoutStatus // kind='vergeben'
   offerPayoutStatus?: DbPayoutStatus // kind='angenommen'
 
-  // (alte Felder bleiben drin)
+  // legacy (alte Felder bleiben drin)
   payoutStatus: DbPayoutStatus
   payoutReleasedAt?: string
   refundedAmountCents?: number
@@ -119,10 +120,11 @@ type ApiOrder = {
   paymentIntentId?: string | null
   chargeId?: string | null
 
+  // ✅ Bewertungsflags (ohne “erst nach confirmed”)
   customerReviewed?: boolean
   vendorReviewed?: boolean
 
-  // legacy (für "vergeben" bleibt es so!)
+  // legacy
   anbieter_snapshot?: any | null
 
   // ✅ NUR für "angenommen" gedacht (Auftragnehmer sieht Auftraggeberdaten)
@@ -142,6 +144,8 @@ type ApiJob = {
   user?: any
 }
 
+/* ---------------- helpers ---------------- */
+
 function safeNum(v: any): number | undefined {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? n : undefined
@@ -150,7 +154,6 @@ function safeNumOrNull(v: any): number | null {
   const n = typeof v === 'number' ? v : Number(v)
   return Number.isFinite(n) ? n : null
 }
-
 function s(v: any): string {
   return typeof v === 'string' ? v.trim() : ''
 }
@@ -169,7 +172,7 @@ function labelFromProfile(p: any): string {
 }
 
 /**
- * ✅ WICHTIG: reviews.order_id = jobId (NICHT offerId)
+ * ✅ WICHTIG: Job-Reviews laufen über reviews.job_id (NICHT order_id)
  * map: jobId -> set(rater_id)
  */
 async function fetchReviewMapByJobId(supabase: any, jobIds: string[]) {
@@ -179,13 +182,14 @@ async function fetchReviewMapByJobId(supabase: any, jobIds: string[]) {
   const CHUNK = 200
   for (let i = 0; i < jobIds.length; i += CHUNK) {
     const batch = jobIds.slice(i, i + CHUNK)
-    const { data, error } = await supabase.from('reviews').select('order_id, rater_id').in('order_id', batch)
+    const { data, error } = await supabase.from('reviews').select('job_id, rater_id').in('job_id', batch)
     if (error) {
       console.error('[GET /api/konto/auftraege] reviews db:', error)
       continue
     }
+
     for (const r of (data ?? []) as any[]) {
-      const jid = String((r as any).order_id ?? '')
+      const jid = String((r as any).job_id ?? '')
       const rid = String((r as any).rater_id ?? '')
       if (!jid || !rid) continue
       let set = map.get(jid)
@@ -196,6 +200,7 @@ async function fetchReviewMapByJobId(supabase: any, jobIds: string[]) {
       set.add(rid)
     }
   }
+
   return map
 }
 
@@ -332,6 +337,8 @@ function calcAutoReleaseAtIso(jobRow: any | undefined, paidAtIso?: string | null
   return new Date(+d + DAYS_28_MS).toISOString()
 }
 
+/* ---------------- route ---------------- */
+
 export async function GET(req: Request) {
   const cookieStore = await cookies()
 
@@ -443,7 +450,7 @@ export async function GET(req: Request) {
     payout_transfer_id: r?.payout_transfer_id ?? null,
   }))
 
-  // ✅ Jobs vorab laden (damit wir autoReleaseAt aus rueck_datum_utc berechnen können)
+  // ✅ Jobs vorab laden
   const jobIdsFromOffers = Array.from(new Set(rows.map((r) => String(r.job_id))))
   let jobs: ApiJob[] = []
   const jobRawMap = new Map<string, any>()
@@ -458,7 +465,7 @@ export async function GET(req: Request) {
     jobs = ((jobsRaw as any[]) ?? []).map(normalizeJob)
   }
 
-  // profiles für beide IDs laden (für username/rating + für angenommene Seite auch Adresse/Firma/UID)
+  // profiles für beide IDs laden
   const ids = new Set<string>()
   for (const r of rows) {
     ids.add(String(r.owner_id))
@@ -478,10 +485,10 @@ export async function GET(req: Request) {
   const profMap = new Map<string, any>()
   for (const p of (profsRaw ?? []) as any[]) profMap.set(String(p.id), p)
 
-  // ✅ Auth meta map (nur nötig, weil Auftragnehmer Vor/Nachname sehen soll)
+  // ✅ Auth meta map (weil Auftragnehmer Vor/Nachname sehen soll)
   const authMetaMap = await fetchAuthMetaMap(admin, idList)
 
-  // ✅ Reviews: anhand jobIds (nicht offerIds!)
+  // ✅ Reviews: über job_id
   const reviewMap = await fetchReviewMapByJobId(supabase, jobIdsFromOffers)
 
   const orders: ApiOrder[] = []
@@ -511,7 +518,7 @@ export async function GET(req: Request) {
     const ownerLabel = labelFromProfile(ownerProf)
     const vendorLabel = labelFromProfile(vendorProf)
 
-    // ✅ reviewed flags: per jobId
+    // ✅ reviewed flags: per jobId (ohne Status-Bedingung!)
     const raters = reviewMap.get(jobId) ?? new Set<string>()
     const customerReviewed = raters.has(ownerId)
     const vendorReviewed = raters.has(vendorId)
@@ -579,7 +586,6 @@ export async function GET(req: Request) {
         artikelCents: artikel,
         versandCents: versand,
         gesamtCents: gesamt,
-
         acceptedAt,
         kind: 'angenommen',
         anbieter_snapshot: o.anbieter_snapshot ?? null,
