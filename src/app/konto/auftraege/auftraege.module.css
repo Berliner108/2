@@ -721,21 +721,24 @@
   }
 }
 /* ✅ 30% schmäler als vorher */
+/* ✅ Buttons in .actionStack immer gleich breit */
 .actionStack{
-  width: clamp(182px, 15.4vw, 238px); /* 260/340 -> -30% = 182/238 */
-  min-width: 182px;
+  width: clamp(260px, 22vw, 340px); /* gleiche Spaltenbreite */
+  min-width: 260px;
 }
 
 .actionStack > button{
   width: 100% !important;
 }
 
+/* falls deine Buttons in divs/wrappers stecken */
 .actionStack .acceptBtn,
 .actionStack .btnDanger,
 .actionStack .secondaryBtn,
 .actionStack .primaryBtn{
   width: 100% !important;
 }
+
 
 
 /* Buttons-Block nach rechts schieben */
