@@ -11,12 +11,15 @@ function parseMenge(d?: Record<string, any> | null): number | undefined {
   if (!d) return undefined
   const cands = [d.menge, d.menge_kg, d.max_masse, d.gewicht, d.maxMasse, d.max_gewicht]
   for (const c of cands) {
-    const n = typeof c === 'string' ? parseFloat(c.replace(',', '.'))
-            : typeof c === 'number' ? c : NaN
+    const n =
+      typeof c === 'string' ? parseFloat(c.replace(',', '.')) :
+      typeof c === 'number' ? c :
+      NaN
     if (isFinite(n) && n > 0) return n
   }
   return undefined
 }
+
 function pickRequestTitle(req?: any): string | null {
   if (!req) return null
   const base =
@@ -50,7 +53,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
         .eq('id', slug)
         .limit(1)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      if (data && data[0]) { rateeId = data[0].id; rateeProfile = data[0] }
+      if (data && data[0]) {
+        rateeId = data[0].id
+        rateeProfile = data[0]
+      }
     } else {
       const { data, error } = await admin
         .from('profiles')
@@ -58,7 +64,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
         .eq('username', slug)
         .limit(1)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      if (data && data[0]) { rateeId = data[0].id; rateeProfile = data[0] }
+      if (data && data[0]) {
+        rateeId = data[0].id
+        rateeProfile = data[0]
+      }
     }
 
     // Pagination
@@ -72,21 +81,25 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
     if (!rateeId) {
       return NextResponse.json({
         profile: { id: slug, username: null, ratingAvg: null, ratingCount: 0 },
-        page, pageSize, total: 0, items: []
+        page,
+        pageSize,
+        total: 0,
+        items: [],
       })
     }
 
-    // Reviews holen
+    // Reviews holen (✅ job_id NUR zusätzlich)
     const { data: rows, count, error: revErr } = await admin
       .from('reviews')
-      .select('id, order_id, shop_order_id, rater_id, comment, created_at, stars, rating', { count: 'exact' })
+      .select('id, order_id, shop_order_id, job_id, rater_id, comment, created_at, stars, rating', { count: 'exact' })
       .eq('ratee_id', rateeId)
       .order('created_at', { ascending: false })
       .range(from, to)
+
     if (revErr) return NextResponse.json({ error: revErr.message }, { status: 500 })
 
     // Rater-Profile (nur id + username)
-    const raterIds = Array.from(new Set((rows ?? []).map(r => r.rater_id).filter(Boolean))) as string[]
+    const raterIds = Array.from(new Set((rows ?? []).map((r: any) => r.rater_id).filter(Boolean))) as string[]
     const raters = new Map<string, any>()
     if (raterIds.length) {
       const { data: profs, error } = await admin
@@ -94,58 +107,78 @@ export async function GET(req: Request, ctx: { params: Promise<{ slug: string }>
         .select('id, username')
         .in('id', raterIds)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      for (const p of profs ?? []) raters.set(String(p.id), p)
+      for (const p of profs ?? []) raters.set(String((p as any).id), p)
     }
 
     // Reviews -> order_ids (kann lack-orders ODER shop_orders sein)
-// --- IDs getrennt sammeln ---
-const lackOrderIds = Array.from(
-  new Set((rows ?? []).map(r => r.order_id).filter(Boolean).map(String))
-) as string[]
+    // --- IDs getrennt sammeln ---
+    const lackOrderIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.order_id).filter(Boolean).map(String))
+    ) as string[]
 
-const shopOrderIds = Array.from(
-  new Set((rows ?? []).map(r => r.shop_order_id).filter(Boolean).map(String))
-) as string[]
+    const shopOrderIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.shop_order_id).filter(Boolean).map(String))
+    ) as string[]
 
-// 1) Lack-Orders -> request_id
-const ordersById = new Map<string, { request_id: string | null }>()
-if (lackOrderIds.length) {
-  const { data: ords, error } = await admin
-    .from('orders')
-    .select('id, request_id')
-    .in('id', lackOrderIds)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  for (const o of ords ?? []) {
-    ordersById.set(String((o as any).id), { request_id: (o as any).request_id ?? null })
-  }
-}
+    // ✅ NEU: jobIds (nur zusätzlich)
+    const jobIds = Array.from(
+      new Set((rows ?? []).map((r: any) => (r as any).job_id).filter(Boolean).map(String))
+    ) as string[]
 
-// 2) Shop-Orders -> article + title
-const shopById = new Map<string, { article_id: string | null; title: string | null }>()
-if (shopOrderIds.length) {
-  const { data: shops, error } = await admin
-    .from('shop_orders')
-    .select('id, article_id, articles ( title )')
-    .in('id', shopOrderIds)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    // 1) Lack-Orders -> request_id
+    const ordersById = new Map<string, { request_id: string | null }>()
+    if (lackOrderIds.length) {
+      const { data: ords, error } = await admin
+        .from('orders')
+        .select('id, request_id')
+        .in('id', lackOrderIds)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      for (const o of ords ?? []) {
+        ordersById.set(String((o as any).id), { request_id: (o as any).request_id ?? null })
+      }
+    }
 
-  for (const s of shops ?? []) {
-    const t =
-      Array.isArray((s as any).articles)
-        ? ((s as any).articles[0]?.title ?? null)
-        : ((s as any).articles?.title ?? null)
+    // 2) Shop-Orders -> article + title
+    const shopById = new Map<string, { article_id: string | null; title: string | null }>()
+    if (shopOrderIds.length) {
+      const { data: shops, error } = await admin
+        .from('shop_orders')
+        .select('id, article_id, articles ( title )')
+        .in('id', shopOrderIds)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    shopById.set(String((s as any).id), {
-      article_id: (s as any).article_id ?? null,
-      title: t,
-    })
-  }
-}
+      for (const s of shops ?? []) {
+        const t = Array.isArray((s as any).articles)
+          ? ((s as any).articles[0]?.title ?? null)
+          : ((s as any).articles?.title ?? null)
 
+        shopById.set(String((s as any).id), {
+          article_id: (s as any).article_id ?? null,
+          title: t,
+        })
+      }
+    }
 
+    // ✅ NEU: Jobs -> verfahren_1 (nur zusätzlich)
+    const jobsById = new Map<string, { verfahren_1: string | null }>()
+    if (jobIds.length) {
+      const { data: js, error } = await admin
+        .from('jobs')
+        .select('id, verfahren_1')
+        .in('id', jobIds)
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+      for (const j of js ?? []) {
+        jobsById.set(String((j as any).id), { verfahren_1: (j as any).verfahren_1 ?? null })
+      }
+    }
 
     // lack_requests -> Titel
-    const reqIds = Array.from(new Set(Array.from(ordersById.values()).map(o => o.request_id).filter(Boolean))) as string[]
+    const reqIds = Array.from(
+      new Set(Array.from(ordersById.values()).map((o) => o.request_id).filter(Boolean))
+    ) as string[]
+
     const reqById = new Map<string, any>()
     if (reqIds.length) {
       const { data: reqs, error } = await admin
@@ -164,43 +197,53 @@ if (shopOrderIds.length) {
       return 5
     }
 
-    const items = (rows ?? []).map(r => {
-  const lackOrderId = r.order_id ? String(r.order_id) : null
-  const shopOrderId = r.shop_order_id ? String(r.shop_order_id) : null
+    const items = (rows ?? []).map((r: any) => {
+      const lackOrderId = r.order_id ? String(r.order_id) : null
+      const shopOrderId = r.shop_order_id ? String(r.shop_order_id) : null
 
-  const isShop = !!shopOrderId
-  const p = raters.get(String(r.rater_id))
+      const isShop = !!shopOrderId
+      const p = raters.get(String(r.rater_id))
 
-  // Lack-Kontext
-  const requestId = !isShop && lackOrderId ? (ordersById.get(lackOrderId)?.request_id ?? null) : null
-  const req = requestId ? reqById.get(String(requestId)) : null
+      // Lack-Kontext
+      const requestId = !isShop && lackOrderId ? (ordersById.get(lackOrderId)?.request_id ?? null) : null
+      const req = requestId ? reqById.get(String(requestId)) : null
 
-  // Shop-Kontext
-  const shop = isShop && shopOrderId ? (shopById.get(shopOrderId) ?? null) : null
+      // Shop-Kontext
+      const shop = isShop && shopOrderId ? (shopById.get(shopOrderId) ?? null) : null
 
-  return {
-    id: r.id,
-    createdAt: r.created_at,
-    comment: r.comment || '',
-    stars: toStars(r),
+      // ✅ NEU: Job-Kontext (nur zusätzlich)
+      const jobId = (r as any).job_id ? String((r as any).job_id) : null
+      const jobRow = jobId ? (jobsById.get(jobId) ?? null) : null
+      const jobTitle =
+        jobRow?.verfahren_1 && String(jobRow.verfahren_1).trim()
+          ? String(jobRow.verfahren_1).trim()
+          : null
 
-    rater: p
-      ? { id: p.id, username: p.username || null }
-      : { id: r.rater_id, username: null },
+      return {
+        id: r.id,
+        createdAt: r.created_at,
+        comment: r.comment || '',
+        stars: toStars(r),
 
-    // ✅ Lack:
-    orderId: !isShop ? (lackOrderId ?? null) : null,
-    requestId: !isShop ? (requestId ? String(requestId) : null) : null,
-    requestTitle: !isShop ? pickRequestTitle(req) : null,
+        rater: p
+          ? { id: (p as any).id, username: (p as any).username || null }
+          : { id: r.rater_id, username: null },
 
-    // ✅ Shop:
-    shopOrderId: isShop ? shopOrderId : null,
-    productId: isShop ? (shop?.article_id ?? null) : null,
-    productTitle: isShop ? (shop?.title ?? null) : null,
-  }
-})
+        // ✅ Lack: (UNVERÄNDERT)
+        orderId: !isShop ? (lackOrderId ?? null) : null,
+        requestId: !isShop ? (requestId ? String(requestId) : null) : null,
+        requestTitle: !isShop ? pickRequestTitle(req) : null,
 
+        // ✅ Shop: (UNVERÄNDERT)
+        shopOrderId: isShop ? shopOrderId : null,
+        productId: isShop ? (shop?.article_id ?? null) : null,
+        productTitle: isShop ? (shop?.title ?? null) : null,
 
+        // ✅ NEU: Auftrag (nur hinzufügen)
+        jobId,
+        jobTitle,
+      }
+    })
 
     return NextResponse.json({
       profile: {
@@ -209,7 +252,10 @@ if (shopOrderIds.length) {
         ratingAvg: rateeProfile.rating_avg,
         ratingCount: rateeProfile.rating_count,
       },
-      page, pageSize, total: count ?? 0, items
+      page,
+      pageSize,
+      total: count ?? 0,
+      items,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Failed to list reviews' }, { status: 500 })
