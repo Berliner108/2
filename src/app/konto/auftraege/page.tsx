@@ -51,11 +51,9 @@ type Order = {
   deliveredAt?: string // legacy (fallback)
 }
 
-/* ---------- Payment-Status (DB) getrennt vom Ablauf-Status ---------- */
-type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
+type DbPayStatus = 'paid' | 'released' | 'refunded' | 'disputed'
+type DbPayoutStatus = 'hold' | 'released' | 'refunded' | 'transferred'
 
-// ✅ Backend: 'hold' | 'released' | 'partial_refund' | 'refunded' | 'transferred'
-type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded' | 'transferred'
 
 /* ✅ NEU: Datenblock für Auftraggeber (nur in "angenommen") */
 type PartyProfile = {
@@ -252,7 +250,6 @@ function paymentLabel(order: DbOrder): string {
   if (s === 'paid') return 'Bezahlt'
   if (s === 'released') return 'Freigegeben'
   if (s === 'refunded') return 'Rückerstattet'
-  if (s === 'partially_refunded') return 'Teilweise rückerstattet'
   if (s === 'disputed') return 'In Klärung'
   return String(s)
 }
@@ -269,7 +266,6 @@ function getPayoutStatus(order: DbOrder): DbPayoutStatus | undefined {
   const pay = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
   if (pay === 'released') return 'released'
   if (pay === 'refunded') return 'refunded'
-  if (pay === 'partially_refunded') return 'partial_refund'
   if (pay === 'paid') return 'hold'
   return undefined
 }
@@ -467,7 +463,8 @@ const AuftraegePage: FC = () => {
       const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
       const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
 
-      const allowed = new Set<DbPayStatus>(['paid', 'released', 'partially_refunded', 'refunded', 'disputed'])
+      const allowed = new Set<DbPayStatus>(['paid','released','refunded','disputed'])
+
       const filtered = nextOrders.filter(o => {
         const s = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
         return !!s && allowed.has(s)
@@ -815,7 +812,6 @@ const myPayStatus =
 const isPayOk =
   myPayStatus === 'paid' ||
   myPayStatus === 'released' ||
-  myPayStatus === 'partially_refunded' ||
   myPayStatus === 'refunded' ||
   myPayStatus === 'disputed'
 

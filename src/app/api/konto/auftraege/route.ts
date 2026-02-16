@@ -38,7 +38,7 @@ type DbOffer = {
   dispute_opened_at: string | null
   dispute_reason: string | null
 
-  payout_status: 'hold' | 'released' | 'partial_refund' | 'refunded' | null
+  payout_status: 'hold' | 'released' | 'refunded' | null
   payout_released_at: string | null
 
   // ✅ wichtig für UI: Buttons nach Transfer ausblenden
@@ -46,8 +46,8 @@ type DbOffer = {
 }
 
 /* ---------- Payment-Status fürs Frontend ---------- */
-type DbPayStatus = 'paid' | 'released' | 'partially_refunded' | 'refunded' | 'disputed'
-type DbPayoutStatus = 'hold' | 'released' | 'partial_refund' | 'refunded'
+type DbPayStatus = 'paid' | 'released' | 'refunded' | 'disputed'
+type DbPayoutStatus = 'hold' | 'released' | 'refunded'
 
 type PartyProfile = {
   firstName: string
@@ -168,26 +168,30 @@ function labelFromProfile(p: any): string {
   return u || '—'
 }
 
-async function fetchReviewMapByOrderId(supabase: any, orderIds: string[]) {
-  const map = new Map<string, Set<string>>() // order_id -> set(rater_id)
-  if (!orderIds.length) return map
+/**
+ * ✅ WICHTIG: reviews.order_id = jobId (NICHT offerId)
+ * map: jobId -> set(rater_id)
+ */
+async function fetchReviewMapByJobId(supabase: any, jobIds: string[]) {
+  const map = new Map<string, Set<string>>() // jobId -> set(rater_id)
+  if (!jobIds.length) return map
 
   const CHUNK = 200
-  for (let i = 0; i < orderIds.length; i += CHUNK) {
-    const batch = orderIds.slice(i, i + CHUNK)
+  for (let i = 0; i < jobIds.length; i += CHUNK) {
+    const batch = jobIds.slice(i, i + CHUNK)
     const { data, error } = await supabase.from('reviews').select('order_id, rater_id').in('order_id', batch)
     if (error) {
       console.error('[GET /api/konto/auftraege] reviews db:', error)
       continue
     }
     for (const r of (data ?? []) as any[]) {
-      const oid = String((r as any).order_id ?? '')
+      const jid = String((r as any).order_id ?? '')
       const rid = String((r as any).rater_id ?? '')
-      if (!oid || !rid) continue
-      let set = map.get(oid)
+      if (!jid || !rid) continue
+      let set = map.get(jid)
       if (!set) {
         set = new Set<string>()
-        map.set(oid, set)
+        map.set(jid, set)
       }
       set.add(rid)
     }
@@ -200,7 +204,6 @@ function mapPayStatus(o: DbOffer): DbPayStatus {
   if (o.dispute_opened_at) return 'disputed'
   const ps = String(o.payout_status ?? 'hold')
   if (ps === 'released') return 'released'
-  if (ps === 'partial_refund') return 'partially_refunded'
   if (ps === 'refunded') return 'refunded'
   return 'paid'
 }
@@ -377,12 +380,12 @@ export async function GET(req: Request) {
         ok: true,
         uid,
         paid_user: {
-          count: qPaidUser.count ?? null,
+          count: (qPaidUser as any).count ?? null,
           error: (qPaidUser as any).error?.message ?? null,
           sample: ((qPaidUser as any).data ?? []).slice(0, 5),
         },
         paid_admin: {
-          count: qPaidAdmin.count ?? null,
+          count: (qPaidAdmin as any).count ?? null,
           error: (qPaidAdmin as any).error?.message ?? null,
           sample: ((qPaidAdmin as any).data ?? []).slice(0, 5),
         },
@@ -478,9 +481,8 @@ export async function GET(req: Request) {
   // ✅ Auth meta map (nur nötig, weil Auftragnehmer Vor/Nachname sehen soll)
   const authMetaMap = await fetchAuthMetaMap(admin, idList)
 
-  // Reviews (über user-client)
-  const offerIds = rows.map((r) => String(r.id))
-  const reviewMap = await fetchReviewMapByOrderId(supabase, offerIds)
+  // ✅ Reviews: anhand jobIds (nicht offerIds!)
+  const reviewMap = await fetchReviewMapByJobId(supabase, jobIdsFromOffers)
 
   const orders: ApiOrder[] = []
   for (const o of rows) {
@@ -509,7 +511,8 @@ export async function GET(req: Request) {
     const ownerLabel = labelFromProfile(ownerProf)
     const vendorLabel = labelFromProfile(vendorProf)
 
-    const raters = reviewMap.get(offerId) ?? new Set<string>()
+    // ✅ reviewed flags: per jobId
+    const raters = reviewMap.get(jobId) ?? new Set<string>()
     const customerReviewed = raters.has(ownerId)
     const vendorReviewed = raters.has(vendorId)
 
