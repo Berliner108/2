@@ -763,3 +763,36 @@
     min-width: 0;
   }
 }
+.actions{
+  display:flex;
+  justify-content:flex-end; /* rechts in der Karte */
+}
+
+/* Container rechts, Buttons untereinander */
+.actionStack{
+  width: min(420px, 100%);
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* ALLE CTA Buttons gleich */
+.acceptBtn,
+.btnDanger,
+.acceptBtnBlue{
+  width: 100%;
+  min-height: 48px;
+  font-family: inherit;     /* gleiche Schrift */
+  font-size: 1rem;          /* gleiche Größe */
+  font-weight: 800;
+  border-radius: 14px;
+}
+
+/* Blau wie Lackanfragen */
+.acceptBtnBlue{
+  background: #00b5d8;
+  color:#fff;
+  border: 0;
+}
+.acceptBtnBlue:hover{ filter: brightness(.95); }

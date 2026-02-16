@@ -1094,55 +1094,43 @@ const canMyReview = isPayOk && !myReviewed
                       </div>
                     )
                   })()}
+{(canCustomerRelease || canCustomerRefund || canMyReview) && (
+  <div className={styles.actionStack}>
+    {canCustomerRelease && (
+      <button
+        type="button"
+        className={styles.acceptBtn}
+        disabled={isBusy}
+        onClick={() => triggerRelease(order.jobId)}
+      >
+        Auszahlung freigeben
+      </button>
+    )}
 
-                {(canCustomerRelease || canCustomerRefund) && (
-                  <div className={styles.actionStack}>
-                    {/* ✅ GRÜN (wie acceptBtn) */}
-                    <button
-                      type="button"
-                      className={styles.acceptBtn}
-                      disabled={isBusy || !canCustomerRelease}
-                      onClick={() => triggerRelease(order.jobId)}
-                      title="Auszahlung an den Dienstleister (abzüglich 7%). Danach kein Refund mehr."
-                    >
-                      {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung freigeben'}
-                    </button>
+    {canCustomerRefund && (
+      <button
+        type="button"
+        className={styles.btnDanger}
+        disabled={isBusy}
+        onClick={() => openRefundModal(order.jobId)}
+      >
+        Rückerstattung auslösen
+      </button>
+    )}
 
-                    {/* ✅ ROT (wie btnDanger) + Modal statt prompt */}
-                    <button
-                      type="button"
-                      className={styles.btnDanger}
-                      disabled={isBusy || !canCustomerRefund}
-                      onClick={() => openRefundModal(order.jobId)}
-                      title="Refund auf die Zahlungsmethode (nur solange Auszahlungsstatus = hold)."
-                    >
-                      {isBusy && busyKey === `refund:${order.jobId}` ? 'Sende…' : 'Rückerstattung auslösen'}
-                    </button>
-                  </div>
-                )}
+    {canMyReview && (
+      <button
+        type="button"
+        className={styles.acceptBtnBlue}   // <- neuer Style, siehe CSS unten
+        disabled={isBusy}
+        onClick={() => openReviewModal(order.jobId, myRole)}
+      >
+        Bewerten
+      </button>
+    )}
+  </div>
+)}
 
-                {canVendorRelease && (
-                  <button
-                    type="button"
-                    className={styles.acceptBtn}
-                    disabled={isBusy}
-                    onClick={() => triggerRelease(order.jobId)}
-                    title="Nach Ablauf der Frist kannst du die Auszahlung selbst auslösen."
-                  >
-                    {isBusy && busyKey === `release:${order.jobId}` ? 'Sende…' : 'Auszahlung holen'}
-                  </button>
-                )}
-
-                {canMyReview && (
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    disabled={isBusy}
-                    onClick={() => openReviewModal(order.jobId, myRole)}
-                  >
-                    Bewerten
-                  </button>
-                )}
 
 
               </div>
