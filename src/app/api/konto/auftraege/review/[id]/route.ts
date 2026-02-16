@@ -40,7 +40,7 @@ export async function POST(req: Request, ctx: any) {
 
     const admin = supabaseAdmin()
 
-    // ✅ 1) bevorzugt: selected/paid Offer (damit owner -> "richtigen" Anbieter bewertet)
+    // ✅ 1) bevorzugt: selected/paid Offer
     const { data: preferred, error: pErr } = await admin
       .from("job_offers")
       .select("id, job_id, owner_id, bieter_id, status, created_at, paid_at")
@@ -89,11 +89,11 @@ export async function POST(req: Request, ctx: any) {
     const ratee_id = role === "customer_to_vendor" ? bieterId : ownerId
     if (!ratee_id) return NextResponse.json({ error: "RATEE_MISSING" }, { status: 400 })
 
-    // ✅ Doppelbewertung abfangen (DB Unique macht’s final sicher)
+    // ✅ Doppelbewertung: bei JOBS über job_id prüfen (NICHT order_id)
     const { data: existing, error: eErr } = await admin
       .from("reviews")
       .select("id")
-      .eq("order_id", jobId)
+      .eq("job_id", jobId)
       .eq("rater_id", user.id)
       .limit(1)
 
@@ -104,10 +104,14 @@ export async function POST(req: Request, ctx: any) {
 
     const ratingEnum = String(stars) as any
 
+    // ✅ FK-SAFE INSERT:
+    // - job_id gesetzt
+    // - order_id MUSS NULL (FK -> orders.id)
     const { data: created, error: cErr } = await admin
       .from("reviews")
       .insert({
-        order_id: jobId,          // ✅ JOB-ID als order_id
+        job_id: jobId,
+        order_id: null,
         shop_order_id: null,
         rater_id: user.id,
         ratee_id,
@@ -115,7 +119,7 @@ export async function POST(req: Request, ctx: any) {
         stars,
         rating: ratingEnum,
       })
-      .select("id, order_id, rater_id, ratee_id, stars, comment, created_at")
+      .select("id, job_id, rater_id, ratee_id, stars, comment, created_at")
       .single()
 
     if (cErr) {
@@ -126,7 +130,7 @@ export async function POST(req: Request, ctx: any) {
       return NextResponse.json({ error: cErr.message }, { status: 500 })
     }
 
-    return NextResponse.json({ review: created })
+    return NextResponse.json({ review: created }, { status: 200 })
   } catch (e) {
     console.error("[POST /api/konto/auftraege/review/[id]] fatal:", e)
     return NextResponse.json({ error: "fatal" }, { status: 500 })
