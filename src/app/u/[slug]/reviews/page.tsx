@@ -140,7 +140,7 @@ function getContext(it: ReviewItem): Ctx {
       label: 'Auftrag',
       title: t || `Auftrag #${id}`,
       // ⚠️ falls dein Pfad anders ist: NUR diese Zeile anpassen
-      href: `/konto/auftraege/${encodeURIComponent(id)}`,
+      href: `/auftragsboerse/auftraege/${encodeURIComponent(id)}`,
     }
   }
 
