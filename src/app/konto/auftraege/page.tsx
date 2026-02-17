@@ -1050,7 +1050,7 @@ const canMyReview = isPayOk && !myReviewed
 
                 {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !vendorUnlockOk && autoReleaseAt && (
                   <div className={styles.metaCol}>
-                    <div className={styles.metaLabel}>Auszahlung möglich ab</div>
+                    <div className={styles.metaLabel}>Zahlung einholen ab</div>
                     <div className={styles.metaValue}>{formatDate(autoReleaseAt)}</div>
                   </div>
                 )}
@@ -1064,32 +1064,6 @@ const canMyReview = isPayOk && !myReviewed
               </div>
 
               <div className={styles.actions}>
-                {canVendorReport &&
-                  (() => {
-                    const hintId = `deliver-hint-${order.kind}-${order.jobId}`
-                    return (
-                      <div className={styles.actionStack}>
-                        <button
-                          type="button"
-                          className={styles.secondaryBtn}
-                          disabled={!canClick || isBusy}
-                          aria-disabled={!canClick || isBusy}
-                          aria-describedby={!canClick ? hintId : undefined}
-                          onClick={() => {
-                            if (canClick) setConfirmJobId(order.jobId)
-                          }}
-                          title={canClick ? 'Meldet Zustellung an Auftraggeber' : reason}
-                        >
-                          {isBusy && busyKey === `report:${order.jobId}` ? 'Sende…' : 'Auftrag abgeschlossen'}
-                        </button>
-                        {!canClick && (
-                          <div id={hintId} className={styles.btnHint}>
-                            {reason}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })()}
 {(canCustomerRelease || canCustomerRefund || canMyReview) && (
   <div className={styles.actionStack}>
     {canCustomerRelease && (
