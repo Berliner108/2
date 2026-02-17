@@ -103,6 +103,8 @@ type DbOrder = Order & {
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
+
+// ✅ Stati + Filter: paid=relevant => "Wird beschichtet", released="Freigegeben", refunded="Rückerstattet", disputed="In Klärung"
 type StatusKey = 'beschichtung' | 'freigegeben' | 'rueckerstattet' | 'klaerung'
 type FilterKey = 'alle' | StatusKey
 
@@ -139,10 +141,6 @@ function useDebouncedValue<T>(value: T, delay = 300): T {
     return () => clearTimeout(id)
   }, [value, delay])
   return debounced
-}
-
-function getMyPayStatus(order: DbOrder): DbPayStatus | undefined {
-  return order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
 }
 
 /* ---------------- Helpers ---------------- */
@@ -220,15 +218,6 @@ function canConfirmDelivered(job?: Job): { ok: boolean; reason: string } {
   return { ok: true, reason: '' }
 }
 
-/** ✅ Status nur nach Payment-Status (Filter + Badge) */
-function getStatusKeyFor(order: DbOrder): StatusKey {
-  const pay = getMyPayStatus(order)
-  if (pay === 'refunded') return 'rueckerstattet'
-  if (pay === 'released') return 'freigegeben'
-  if (pay === 'disputed') return 'klaerung'
-  return 'beschichtung' // paid oder fallback
-}
-
 function notifyNavbarCount(count: number) {
   try {
     window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'orders', count } }))
@@ -238,7 +227,7 @@ function notifyNavbarCount(count: number) {
 function paymentLabel(order: DbOrder): string {
   const s = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
   if (!s) return '—'
-  if (s === 'paid') return 'Wird beschichtet'
+  if (s === 'paid') return 'Bezahlt'
   if (s === 'released') return 'Freigegeben'
   if (s === 'refunded') return 'Rückerstattet'
   if (s === 'disputed') return 'In Klärung'
@@ -273,6 +262,26 @@ function computeAutoReleaseAt(job: Job): Date | null {
   const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
   if (!ausgabe) return null
   return new Date(+ausgabe + DAYS_28_MS)
+}
+
+/* ---------- Status/Filter Mapping (nur Payment) ---------- */
+function getMyPayStatus(order: DbOrder): DbPayStatus | undefined {
+  return order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+}
+
+function getStatusKeyFor(order: DbOrder): StatusKey {
+  const s = getMyPayStatus(order)
+  if (s === 'refunded') return 'rueckerstattet'
+  if (s === 'released') return 'freigegeben'
+  if (s === 'disputed') return 'klaerung'
+  return 'beschichtung' // paid oder fallback
+}
+
+function statusLabel(key: StatusKey): 'Wird beschichtet' | 'Freigegeben' | 'Rückerstattet' | 'In Klärung' {
+  if (key === 'freigegeben') return 'Freigegeben'
+  if (key === 'rueckerstattet') return 'Rückerstattet'
+  if (key === 'klaerung') return 'In Klärung'
+  return 'Wird beschichtet'
 }
 
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
@@ -525,7 +534,7 @@ const AuftraegePage: FC = () => {
       }
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
-      const partyName = order.kind === 'vergeben' ? (order.vendor || '') : (order.owner || getOwnerName(job))
+      const partyName = order.kind === 'vergeben' ? order.vendor || '' : order.owner || getOwnerName(job)
       return (
         String(order.jobId).toLowerCase().includes(q) ||
         title.includes(q) ||
@@ -791,26 +800,22 @@ const AuftraegePage: FC = () => {
         {slice.pageItems.map(({ order, job }) => {
           const j = job as Job
 
+          // ✅ Stati nur aus Payment ableiten
+          const sKey = getStatusKeyFor(order)
+          const display = { key: sKey, label: statusLabel(sKey) }
+
           // ✅ richtig zuordnen:
           const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
-          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenrückgabe/Warenausgabe
+          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
 
           // PayStatus (ab paid, inkl. alle späteren Zustände)
           const myPayStatus = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+
           const isPayOk =
-            myPayStatus === 'paid' || myPayStatus === 'released' || myPayStatus === 'refunded' || myPayStatus === 'disputed'
-
-          const pay = getMyPayStatus(order)
-
-          // ✅ Badge-Text = Payment-Status
-          const display =
-            pay === 'refunded'
-              ? { key: 'rueckerstattet' as const, label: 'Rückerstattet' as const }
-              : pay === 'released'
-                ? { key: 'freigegeben' as const, label: 'Freigegeben' as const }
-                : pay === 'disputed'
-                  ? { key: 'klaerung' as const, label: 'In Klärung' as const }
-                  : { key: 'beschichtung' as const, label: 'Wird beschichtet' as const }
+            myPayStatus === 'paid' ||
+            myPayStatus === 'released' ||
+            myPayStatus === 'refunded' ||
+            myPayStatus === 'disputed'
 
           // "mein" Reviewed-Flag (NUR der jeweilige User!)
           const myReviewed = order.kind === 'vergeben' ? !!order.customerReviewed : !!order.vendorReviewed
@@ -847,25 +852,35 @@ const AuftraegePage: FC = () => {
             (order.status ?? 'in_progress') === 'in_progress' &&
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released')
 
+          const canCustomerReview =
+            isCustomer &&
+            order.status === 'confirmed' &&
+            (order.jobPayStatus === 'paid' || order.jobPayStatus === 'released') &&
+            !order.customerReviewed
+
+          const canVendorReview =
+            isVendor &&
+            order.status === 'confirmed' &&
+            (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
+            !order.vendorReviewed
+
           const payout = getPayoutStatus(order)
           const transferId = getPayoutTransferId(order)
 
           // ✅ Käufer sieht Release/Refund sofort nach "paid" (keine confirmed-Bedingung)
-          const canCustomerDecide = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWindowOk
+          const canCustomerDecide =
+            isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWindowOk
 
           const canCustomerRelease = canCustomerDecide
           const canCustomerRefund = canCustomerDecide
 
+          // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn noch hold + kein Transfer)
+          const canVendorRelease =
+            isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && vendorUnlockOk
+
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
           const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
-
-          const badgeClass =
-            display.key === 'beschichtung'
-              ? styles.statusActive
-              : display.key === 'freigegeben'
-                ? styles.statusDone
-                : styles.statusPending // rueckerstattet / klaerung
 
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
@@ -876,7 +891,19 @@ const AuftraegePage: FC = () => {
                   </Link>
                 </div>
 
-                <span className={[styles.statusBadge, badgeClass].join(' ').trim()}>{display.label}</span>
+                <span
+                  className={[
+                    styles.statusBadge,
+                    display.key === 'beschichtung' ? styles.statusActive : '',
+                    display.key === 'freigegeben' ? styles.statusDone : '',
+                    display.key === 'rueckerstattet' ? styles.statusPending : '',
+                    display.key === 'klaerung' ? styles.statusPending : '',
+                  ]
+                    .join(' ')
+                    .trim()}
+                >
+                  {display.label}
+                </span>
               </div>
 
               <div
@@ -1018,7 +1045,6 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {/* ✅ Anbieter: nur Info "Zahlung einholen ab" (kein Button), bis 28d erreicht */}
                 {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !vendorUnlockOk && autoReleaseAt && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Zahlung einholen ab</div>
@@ -1026,7 +1052,6 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
 
-                {/* ✅ Käufer: Info bis wann Release/Refund möglich */}
                 {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWindowUntilIso && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Freigabe/Rückerstattung möglich bis</div>
@@ -1036,43 +1061,26 @@ const AuftraegePage: FC = () => {
               </div>
 
               <div className={styles.actions}>
-                {canVendorReport &&
-                  (() => {
-                    const hintId = `deliver-hint-${order.kind}-${order.jobId}`
-                    return (
-                      <div className={styles.actionStack}>
-                        <button
-                          type="button"
-                          className={styles.secondaryBtn}
-                          disabled={!canClick || isBusy}
-                          aria-disabled={!canClick || isBusy}
-                          aria-describedby={!canClick ? hintId : undefined}
-                          onClick={() => {
-                            if (canClick) setConfirmJobId(order.jobId)
-                          }}
-                          title={canClick ? 'Meldet Zustellung an Auftraggeber' : reason}
-                        >
-                          {isBusy && busyKey === `report:${order.jobId}` ? 'Sende…' : 'Auftrag abgeschlossen'}
-                        </button>
-                        {!canClick && (
-                          <div id={hintId} className={styles.btnHint}>
-                            {reason}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })()}
-
                 {(canCustomerRelease || canCustomerRefund || canMyReview) && (
                   <div className={styles.actionStack}>
                     {canCustomerRelease && (
-                      <button type="button" className={styles.acceptBtn} disabled={isBusy} onClick={() => triggerRelease(order.jobId)}>
+                      <button
+                        type="button"
+                        className={styles.acceptBtn}
+                        disabled={isBusy}
+                        onClick={() => triggerRelease(order.jobId)}
+                      >
                         Auszahlung freigeben
                       </button>
                     )}
 
                     {canCustomerRefund && (
-                      <button type="button" className={styles.btnDanger} disabled={isBusy} onClick={() => openRefundModal(order.jobId)}>
+                      <button
+                        type="button"
+                        className={styles.btnDanger}
+                        disabled={isBusy}
+                        onClick={() => openRefundModal(order.jobId)}
+                      >
                         Rückerstattung auslösen
                       </button>
                     )}
@@ -1080,7 +1088,7 @@ const AuftraegePage: FC = () => {
                     {canMyReview && (
                       <button
                         type="button"
-                        className={styles.acceptBtnBlue}
+                        className={styles.acceptBtnBlue} // <- neuer Style, siehe CSS unten
                         disabled={isBusy}
                         onClick={() => openReviewModal(order.jobId, myRole)}
                       >
@@ -1285,7 +1293,7 @@ const AuftraegePage: FC = () => {
         </div>
       )}
 
-      {/* ✅ Modal: Rückerstattung auslösen */}
+      {/* ✅ Modal: Rückerstattung auslösen (GENAU wie dein Look) */}
       {refundJobId !== null && (
         <div
           className={styles.modal}
