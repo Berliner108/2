@@ -54,7 +54,6 @@ type Order = {
 type DbPayStatus = 'paid' | 'released' | 'refunded' | 'disputed'
 type DbPayoutStatus = 'hold' | 'released' | 'refunded' | 'transferred'
 
-
 /* ✅ NEU: Datenblock für Auftraggeber (nur in "angenommen") */
 type PartyProfile = {
   firstName: string
@@ -104,7 +103,7 @@ type DbOrder = Order & {
 }
 
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
-type StatusKey = 'wartet' | 'aktiv' | 'fertig'
+type StatusKey = 'beschichtung' | 'freigegeben' | 'rueckerstattet' | 'klaerung'
 type FilterKey = 'alle' | StatusKey
 
 // ✅ NUR EINMAL
@@ -140,6 +139,10 @@ function useDebouncedValue<T>(value: T, delay = 300): T {
     return () => clearTimeout(id)
   }, [value, delay])
   return debounced
+}
+
+function getMyPayStatus(order: DbOrder): DbPayStatus | undefined {
+  return order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
 }
 
 /* ---------------- Helpers ---------------- */
@@ -209,20 +212,6 @@ function getOwnerName(job: Job): string {
   return '—'
 }
 
-/** „Produktionsstatus“ aus Terminen */
-function computeStatus(job: Job): {
-  key: StatusKey
-  label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt'
-} {
-  const now = Date.now()
-  const annahme = asDateLike(job.warenannahmeDatum)
-  const ausgabe = asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
-  if (annahme && now < +annahme) return { key: 'wartet', label: 'Anlieferung geplant' }
-  if (ausgabe && now < +ausgabe) return { key: 'aktiv', label: 'In Bearbeitung' }
-  if (ausgabe && now >= +ausgabe) return { key: 'fertig', label: 'Abholbereit/Versandt' }
-  return { key: 'aktiv', label: 'In Bearbeitung' }
-}
-
 /** darf „Auftrag abgeschlossen“ klicken? → erst NACH Warenausgabe(Kunde) */
 function canConfirmDelivered(job?: Job): { ok: boolean; reason: string } {
   const ausgabe = job && asDateLike(job.warenausgabeDatum ?? job.lieferDatum)
@@ -231,11 +220,13 @@ function canConfirmDelivered(job?: Job): { ok: boolean; reason: string } {
   return { ok: true, reason: '' }
 }
 
-/** Für Filterung „wartet/aktiv/fertig“ (reported/disputed/confirmed => „fertig“) */
-function getStatusKeyFor(order: Order, job: Job): StatusKey {
-  if (order.status === 'reported' || order.status === 'disputed' || order.status === 'confirmed') return 'fertig'
-  if (order.deliveredAt) return 'fertig'
-  return computeStatus(job).key
+/** ✅ Status nur nach Payment-Status (Filter + Badge) */
+function getStatusKeyFor(order: DbOrder): StatusKey {
+  const pay = getMyPayStatus(order)
+  if (pay === 'refunded') return 'rueckerstattet'
+  if (pay === 'released') return 'freigegeben'
+  if (pay === 'disputed') return 'klaerung'
+  return 'beschichtung' // paid oder fallback
 }
 
 function notifyNavbarCount(count: number) {
@@ -247,7 +238,7 @@ function notifyNavbarCount(count: number) {
 function paymentLabel(order: DbOrder): string {
   const s = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
   if (!s) return '—'
-  if (s === 'paid') return 'Bezahlt'
+  if (s === 'paid') return 'Wird beschichtet'
   if (s === 'released') return 'Freigegeben'
   if (s === 'refunded') return 'Rückerstattet'
   if (s === 'disputed') return 'In Klärung'
@@ -463,7 +454,7 @@ const AuftraegePage: FC = () => {
       const nextJobs: Job[] = Array.isArray(j?.jobs) ? j.jobs : []
       const nextOrders: DbOrder[] = Array.isArray(j?.orders) ? j.orders : []
 
-      const allowed = new Set<DbPayStatus>(['paid','released','refunded','disputed'])
+      const allowed = new Set<DbPayStatus>(['paid', 'released', 'refunded', 'disputed'])
 
       const filtered = nextOrders.filter(o => {
         const s = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
@@ -529,13 +520,17 @@ const AuftraegePage: FC = () => {
     const q = qStr.trim().toLowerCase()
     return items.filter(({ order, job }) => {
       if (statusFilter !== 'alle') {
-        const key = getStatusKeyFor(order, job)
+        const key = getStatusKeyFor(order)
         if (key !== statusFilter) return false
       }
       if (!q) return true
       const title = computeJobTitle(job).toLowerCase()
       const partyName = order.kind === 'vergeben' ? (order.vendor || '') : (order.owner || getOwnerName(job))
-      return String(order.jobId).toLowerCase().includes(q) || title.includes(q) || String(partyName).toLowerCase().includes(q)
+      return (
+        String(order.jobId).toLowerCase().includes(q) ||
+        title.includes(q) ||
+        String(partyName).toLowerCase().includes(q)
+      )
     })
   }
 
@@ -575,7 +570,7 @@ const AuftraegePage: FC = () => {
       if (srt && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(srt)) setSort(srt)
 
       const st = p.get('status') as FilterKey | null
-      if (st && ['alle', 'wartet', 'aktiv', 'fertig'].includes(st)) setStatusFilter(st)
+      if (st && ['alle', 'beschichtung', 'freigegeben', 'rueckerstattet', 'klaerung'].includes(st)) setStatusFilter(st)
 
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) setTopSection(tab)
@@ -768,7 +763,11 @@ const AuftraegePage: FC = () => {
       await loadOrders()
     } catch (e: any) {
       const msg = String(e?.message || '')
-      if (msg.toLowerCase().includes('bereits bewertet') || msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+      if (
+        msg.toLowerCase().includes('bereits bewertet') ||
+        msg.toLowerCase().includes('duplicate') ||
+        msg.toLowerCase().includes('unique')
+      ) {
         setReviewJobId(null)
         await loadOrders()
         return
@@ -791,41 +790,36 @@ const AuftraegePage: FC = () => {
       <ul className={styles.list}>
         {slice.pageItems.map(({ order, job }) => {
           const j = job as Job
-          const prodStatus = computeStatus(j)
-
-          const display =
-            order.status === 'confirmed'
-              ? { key: 'fertig' as StatusKey, label: 'Geliefert (bestätigt)' as const }
-              : order.status === 'disputed'
-                ? { key: 'fertig' as StatusKey, label: 'Reklamation offen' as const }
-                : order.status === 'reported'
-                  ? { key: 'fertig' as StatusKey, label: 'Zustellung gemeldet' as const }
-                  : prodStatus
 
           // ✅ richtig zuordnen:
           const annahme = asDateLike(j.warenannahmeDatum) // Warenannahme
-          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenausgabe/Versand
+          const ausgabe = asDateLike(j.warenausgabeDatum ?? j.lieferDatum) // Warenrückgabe/Warenausgabe
+
           // PayStatus (ab paid, inkl. alle späteren Zustände)
-const myPayStatus =
-  order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+          const myPayStatus = order.kind === 'vergeben' ? order.jobPayStatus : order.offerPayStatus
+          const isPayOk =
+            myPayStatus === 'paid' || myPayStatus === 'released' || myPayStatus === 'refunded' || myPayStatus === 'disputed'
 
-const isPayOk =
-  myPayStatus === 'paid' ||
-  myPayStatus === 'released' ||
-  myPayStatus === 'refunded' ||
-  myPayStatus === 'disputed'
+          const pay = getMyPayStatus(order)
 
-// "mein" Reviewed-Flag (NUR der jeweilige User!)
-const myReviewed =
-  order.kind === 'vergeben' ? !!order.customerReviewed : !!order.vendorReviewed
+          // ✅ Badge-Text = Payment-Status
+          const display =
+            pay === 'refunded'
+              ? { key: 'rueckerstattet' as const, label: 'Rückerstattet' as const }
+              : pay === 'released'
+                ? { key: 'freigegeben' as const, label: 'Freigegeben' as const }
+                : pay === 'disputed'
+                  ? { key: 'klaerung' as const, label: 'In Klärung' as const }
+                  : { key: 'beschichtung' as const, label: 'Wird beschichtet' as const }
 
-// "mein" Role fürs Submit
-const myRole: ReviewRole =
-  order.kind === 'vergeben' ? 'customer_to_vendor' : 'vendor_to_customer'
+          // "mein" Reviewed-Flag (NUR der jeweilige User!)
+          const myReviewed = order.kind === 'vergeben' ? !!order.customerReviewed : !!order.vendorReviewed
 
-// final: Button zeigen AB paid, und NUR weg wenn ICH bewertet habe
-const canMyReview = isPayOk && !myReviewed
+          // "mein" Role fürs Submit
+          const myRole: ReviewRole = order.kind === 'vergeben' ? 'customer_to_vendor' : 'vendor_to_customer'
 
+          // final: Button zeigen AB paid, und NUR weg wenn ICH bewertet habe
+          const canMyReview = isPayOk && !myReviewed
 
           // ✅ Fenster aus Job ableiten (wie Backend: rueck_datum_utc + 28 Tage)
           const autoReleaseAt = computeAutoReleaseAt(j)
@@ -853,35 +847,25 @@ const canMyReview = isPayOk && !myReviewed
             (order.status ?? 'in_progress') === 'in_progress' &&
             (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released')
 
-          const canCustomerReview =
-            isCustomer &&
-            order.status === 'confirmed' &&
-            (order.jobPayStatus === 'paid' || order.jobPayStatus === 'released') &&
-            !order.customerReviewed
-
-          const canVendorReview =
-            isVendor &&
-            order.status === 'confirmed' &&
-            (order.offerPayStatus === 'paid' || order.offerPayStatus === 'released') &&
-            !order.vendorReviewed
-
           const payout = getPayoutStatus(order)
           const transferId = getPayoutTransferId(order)
 
           // ✅ Käufer sieht Release/Refund sofort nach "paid" (keine confirmed-Bedingung)
-          const canCustomerDecide =
-            isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWindowOk
+          const canCustomerDecide = isCustomer && order.jobPayStatus === 'paid' && payout === 'hold' && !transferId && buyerWindowOk
 
           const canCustomerRelease = canCustomerDecide
           const canCustomerRefund = canCustomerDecide
 
-          // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn noch hold + kein Transfer)
-          const canVendorRelease =
-            isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && vendorUnlockOk
-
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
           const cnt = order.kind === 'vergeben' ? order.vendor_rating_count : order.owner_rating_count
+
+          const badgeClass =
+            display.key === 'beschichtung'
+              ? styles.statusActive
+              : display.key === 'freigegeben'
+                ? styles.statusDone
+                : styles.statusPending // rueckerstattet / klaerung
 
           return (
             <li key={`${order.kind}-${order.jobId}-${order.offerId ?? 'x'}`} className={styles.card} aria-busy={isBusy}>
@@ -892,21 +876,7 @@ const canMyReview = isPayOk && !myReviewed
                   </Link>
                 </div>
 
-                <span
-                  className={[
-                    styles.statusBadge,
-                    display.label === 'In Bearbeitung' ? styles.statusActive : '',
-                    display.label === 'Anlieferung geplant' ? styles.statusPending : '',
-                    display.label === 'Abholbereit/Versandt' ? styles.statusDone : '',
-                    display.label === 'Zustellung gemeldet' ? styles.statusPending : '',
-                    display.label === 'Reklamation offen' ? styles.statusPending : '',
-                    display.label === 'Geliefert (bestätigt)' ? styles.statusDone : '',
-                  ]
-                    .join(' ')
-                    .trim()}
-                >
-                  {display.label}
-                </span>
+                <span className={[styles.statusBadge, badgeClass].join(' ').trim()}>{display.label}</span>
               </div>
 
               <div
@@ -1048,6 +1018,7 @@ const canMyReview = isPayOk && !myReviewed
                   </div>
                 )}
 
+                {/* ✅ Anbieter: nur Info "Zahlung einholen ab" (kein Button), bis 28d erreicht */}
                 {isVendor && payout === 'hold' && order.offerPayStatus === 'paid' && !vendorUnlockOk && autoReleaseAt && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Zahlung einholen ab</div>
@@ -1055,6 +1026,7 @@ const canMyReview = isPayOk && !myReviewed
                   </div>
                 )}
 
+                {/* ✅ Käufer: Info bis wann Release/Refund möglich */}
                 {isCustomer && payout === 'hold' && order.jobPayStatus === 'paid' && buyerWindowUntilIso && (
                   <div className={styles.metaCol}>
                     <div className={styles.metaLabel}>Freigabe/Rückerstattung möglich bis</div>
@@ -1064,45 +1036,59 @@ const canMyReview = isPayOk && !myReviewed
               </div>
 
               <div className={styles.actions}>
-{(canCustomerRelease || canCustomerRefund || canMyReview) && (
-  <div className={styles.actionStack}>
-    {canCustomerRelease && (
-      <button
-        type="button"
-        className={styles.acceptBtn}
-        disabled={isBusy}
-        onClick={() => triggerRelease(order.jobId)}
-      >
-        Auszahlung freigeben
-      </button>
-    )}
+                {canVendorReport &&
+                  (() => {
+                    const hintId = `deliver-hint-${order.kind}-${order.jobId}`
+                    return (
+                      <div className={styles.actionStack}>
+                        <button
+                          type="button"
+                          className={styles.secondaryBtn}
+                          disabled={!canClick || isBusy}
+                          aria-disabled={!canClick || isBusy}
+                          aria-describedby={!canClick ? hintId : undefined}
+                          onClick={() => {
+                            if (canClick) setConfirmJobId(order.jobId)
+                          }}
+                          title={canClick ? 'Meldet Zustellung an Auftraggeber' : reason}
+                        >
+                          {isBusy && busyKey === `report:${order.jobId}` ? 'Sende…' : 'Auftrag abgeschlossen'}
+                        </button>
+                        {!canClick && (
+                          <div id={hintId} className={styles.btnHint}>
+                            {reason}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
 
-    {canCustomerRefund && (
-      <button
-        type="button"
-        className={styles.btnDanger}
-        disabled={isBusy}
-        onClick={() => openRefundModal(order.jobId)}
-      >
-        Rückerstattung auslösen
-      </button>
-    )}
+                {(canCustomerRelease || canCustomerRefund || canMyReview) && (
+                  <div className={styles.actionStack}>
+                    {canCustomerRelease && (
+                      <button type="button" className={styles.acceptBtn} disabled={isBusy} onClick={() => triggerRelease(order.jobId)}>
+                        Auszahlung freigeben
+                      </button>
+                    )}
 
-    {canMyReview && (
-      <button
-        type="button"
-        className={styles.acceptBtnBlue}   // <- neuer Style, siehe CSS unten
-        disabled={isBusy}
-        onClick={() => openReviewModal(order.jobId, myRole)}
-      >
-        Bewerten
-      </button>
-    )}
-  </div>
-)}
+                    {canCustomerRefund && (
+                      <button type="button" className={styles.btnDanger} disabled={isBusy} onClick={() => openRefundModal(order.jobId)}>
+                        Rückerstattung auslösen
+                      </button>
+                    )}
 
-
-
+                    {canMyReview && (
+                      <button
+                        type="button"
+                        className={styles.acceptBtnBlue}
+                        disabled={isBusy}
+                        onClick={() => openReviewModal(order.jobId, myRole)}
+                      >
+                        Bewerten
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </li>
           )
@@ -1160,9 +1146,10 @@ const canMyReview = isPayOk && !myReviewed
             title="Nach Status filtern"
           >
             <option value="alle">Alle</option>
-            <option value="wartet">Anlieferung geplant</option>
-            <option value="aktiv">In Bearbeitung</option>
-            <option value="fertig">Abholbereit/Versandt</option>
+            <option value="beschichtung">Wird beschichtet</option>
+            <option value="freigegeben">Freigegeben</option>
+            <option value="rueckerstattet">Rückerstattet</option>
+            <option value="klaerung">In Klärung</option>
           </select>
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
@@ -1298,7 +1285,7 @@ const canMyReview = isPayOk && !myReviewed
         </div>
       )}
 
-      {/* ✅ Modal: Rückerstattung auslösen (GENAU wie dein Look) */}
+      {/* ✅ Modal: Rückerstattung auslösen */}
       {refundJobId !== null && (
         <div
           className={styles.modal}
