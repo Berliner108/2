@@ -786,7 +786,7 @@ useEffect(() => {
           animate={{ x: [0, -4, 4, -4, 0] }}
           transition={{ duration: 0.3 }}
         >
-          Bitte fülle die Logistik vollständig und korrekt aus.
+          Bitte fülle die Logistik vollständig und korrekt aus
         </motion.p>
       )}
     </div>

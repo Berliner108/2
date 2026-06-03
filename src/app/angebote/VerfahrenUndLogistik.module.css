@@ -445,7 +445,7 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
 .warnung {
   color: red;
   font-weight: 500;
-  margin-top: 0.5rem;
+  margin-top: 0.1rem;
   font-family: 'Oswald', sans-serif;
 }
 .errorBorder {
