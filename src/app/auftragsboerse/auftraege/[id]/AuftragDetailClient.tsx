@@ -595,30 +595,6 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
                   <span className={styles.label}>Masse schwerstes Werkstück :</span>
                   <span className={styles.value}>{auftrag.masse} kg</span>
                 </div>
-                {serienauftragAktiv && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Serienauftrag:</span>
-    <span className={styles.value}>
-      Ja - Anlieferung {serienRhythmus ? ` – ${serienRhythmus}` : ''}
-    </span>
-  </div>
-)}
-{serienauftragAktiv && serienTermine.length > 0 && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Serientermine:</span>
-
-    <span className={styles.value}>
-      {serienTermine.map((termin: any, index: number) => (
-        <span key={termin.nr ?? index} className={styles.serienTerminEintrag}>
-          <span>{termin.nr ?? index + 1}.</span>
-          <span>Lieferung: {formatSerienDatum(termin.liefer)}</span>
-          <span>Abholung: {formatSerienDatum(termin.abhol)}</span>
-        </span>
-      ))}
-    </span>
-  </div>
-)}
-
                 {auftrag.user && (
                   <div className={styles.metaItem}>
                     <span className={styles.label}>User:</span>
@@ -651,6 +627,31 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
                   </div>
                 )}
               </div>
+                {serienauftragAktiv && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Serienauftrag:</span>
+    <span className={styles.value}>
+      Ja - Anlieferung {serienRhythmus ? ` – ${serienRhythmus}` : ''}
+    </span>
+  </div>
+)}
+{serienauftragAktiv && serienTermine.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Serientermine:</span>
+
+    <span className={styles.value}>
+      {serienTermine.map((termin: any, index: number) => (
+        <span key={termin.nr ?? index} className={styles.serienTerminEintrag}>
+          <span>{termin.nr ?? index + 1}.</span>
+          <span>Lieferung: {formatSerienDatum(termin.liefer)}</span>
+          <span>Abholung: {formatSerienDatum(termin.abhol)}</span>
+        </span>
+      ))}
+    </span>
+  </div>
+)}
+
+                
 
               {/* Downloads */}
               {auftrag.dateien && auftrag.dateien.length > 0 && (
