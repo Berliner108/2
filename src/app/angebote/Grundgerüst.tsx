@@ -15,7 +15,62 @@ import VerfahrenUndLogistik from './VerfahrenUndLogistik' // Pfad ggf. anpassen
 import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen'
 import LogistikSection from './LogistikSection'
 import beschreibungsStyles from './logistikbox.module.css'
+import { supabaseBrowser } from '@/lib/supabase-browser'
 
+type PreparedUpload = {
+  kind: 'image' | 'document'
+  path: string
+  token: string
+  originalName: string
+  mimeType: string | null
+  sizeBytes: number | null
+}
+
+async function uploadPreparedFilesToSupabase(params: {
+  bucket: string
+  uploads: PreparedUpload[]
+  photoFiles: File[]
+  fileFiles: File[]
+}) {
+  const supabase = supabaseBrowser()
+
+  const allFiles = [
+    ...params.photoFiles.map((file) => ({
+      kind: 'image' as const,
+      file,
+    })),
+    ...params.fileFiles.map((file) => ({
+      kind: 'document' as const,
+      file,
+    })),
+  ]
+
+  const finishedUploads: PreparedUpload[] = []
+
+  for (let i = 0; i < params.uploads.length; i++) {
+    const upload = params.uploads[i]
+    const fileItem = allFiles[i]
+
+    if (!fileItem) {
+      throw new Error('Dateizuordnung fehlgeschlagen.')
+    }
+
+    const { error } = await supabase.storage
+      .from(params.bucket)
+      .uploadToSignedUrl(upload.path, upload.token, fileItem.file, {
+        contentType: fileItem.file.type || undefined,
+      })
+
+    if (error) {
+      console.error('Direkter Upload zu Supabase fehlgeschlagen:', error)
+      throw new Error(error.message)
+    }
+
+    finishedUploads.push(upload)
+  }
+
+  return finishedUploads
+}
 /* ---------------- Fancy Loader Components ---------------- */
 
 function TopLoader() {
