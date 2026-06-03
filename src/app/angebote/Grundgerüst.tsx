@@ -99,27 +99,23 @@ async function uploadPreparedFilesToSupabase(params: {
 }) {
   const supabase = supabaseBrowser()
 
-const compressedPhotoFiles = await Promise.all(
-  params.photoFiles.map((file) => compressImageFile(file)),
-)
-
-const allFiles = [
-  ...compressedPhotoFiles.map((file) => ({
-    kind: 'image' as const,
-    file,
-  })),
-  ...params.fileFiles.map((file) => ({
-    kind: 'document' as const,
-    file,
-  })),
-]
+  const allFiles = [
+    ...params.photoFiles.map((file) => ({
+      kind: 'image' as const,
+      file,
+    })),
+    ...params.fileFiles.map((file) => ({
+      kind: 'document' as const,
+      file,
+    })),
+  ]
 
   if (params.uploads.length !== allFiles.length) {
     throw new Error('Dateizuordnung fehlgeschlagen.')
   }
 
+  const concurrency = 4
   const finishedUploads: PreparedUpload[] = []
-  const concurrency = 3
 
   for (let i = 0; i < params.uploads.length; i += concurrency) {
     const batch = params.uploads.slice(i, i + concurrency)
@@ -140,7 +136,12 @@ const allFiles = [
           throw new Error(error.message)
         }
 
-        return upload
+        return {
+          ...upload,
+          mimeType: fileItem.file.type || upload.mimeType,
+          sizeBytes: fileItem.file.size,
+          originalName: fileItem.file.name || upload.originalName,
+        }
       }),
     )
 
@@ -259,6 +260,7 @@ export default function Formular() {
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [warnungBilder, setWarnungBilder] = useState('')
+  const [bilderWerdenOptimiert, setBilderWerdenOptimiert] = useState(false)
 
   // Dateien
   const [fileFiles, setFileFiles] = useState<File[]>([])
@@ -314,7 +316,26 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
     const name = file.name.toLowerCase()
     return erlaubteEndungen.some((ext) => name.endsWith(ext))
   }
-  
+  const handlePhotoFilesChange: React.Dispatch<React.SetStateAction<File[]>> = (
+  value,
+) => {
+  const rawFiles =
+    typeof value === 'function' ? value(photoFiles) : value
+
+  setBilderWerdenOptimiert(true)
+
+  Promise.all(rawFiles.map((file) => compressImageFile(file)))
+    .then((optimizedFiles) => {
+      setPhotoFiles(optimizedFiles)
+    })
+    .catch((error) => {
+      console.error('Bildoptimierung fehlgeschlagen:', error)
+      setPhotoFiles(rawFiles)
+    })
+    .finally(() => {
+      setBilderWerdenOptimiert(false)
+    })
+}
 
   const [agbAccepted, setAgbAccepted] = useState(false)
   const [agbError, setAgbError] = useState(false)
@@ -395,6 +416,10 @@ const scrollToSection = (step: number) => {
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
   let hasError = false
+  if (bilderWerdenOptimiert) {
+  alert('Bitte kurz warten, die Bilder werden noch optimiert.')
+  return
+}
 
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
 
@@ -921,11 +946,14 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               accept="image/*"
               maxFiles={8}
               files={photoFiles}
-              setFiles={setPhotoFiles}
+              setFiles={handlePhotoFilesChange}
               type="bilder"
               setWarnung={setWarnungBilder}
               id="upload-bilder"
             />
+            {bilderWerdenOptimiert && (
+  <p className={styles.warnung}>Bilder werden optimiert …</p>
+)}
             {warnungBilder && (
               <p className={styles.warnung}>{warnungBilder}</p>
             )}
