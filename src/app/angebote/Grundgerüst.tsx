@@ -45,28 +45,37 @@ async function uploadPreparedFilesToSupabase(params: {
     })),
   ]
 
+  if (params.uploads.length !== allFiles.length) {
+    throw new Error('Dateizuordnung fehlgeschlagen.')
+  }
+
   const finishedUploads: PreparedUpload[] = []
+  const concurrency = 3
 
-  for (let i = 0; i < params.uploads.length; i++) {
-    const upload = params.uploads[i]
-    const fileItem = allFiles[i]
+  for (let i = 0; i < params.uploads.length; i += concurrency) {
+    const batch = params.uploads.slice(i, i + concurrency)
 
-    if (!fileItem) {
-      throw new Error('Dateizuordnung fehlgeschlagen.')
-    }
+    const batchResults = await Promise.all(
+      batch.map(async (upload, batchIndex) => {
+        const realIndex = i + batchIndex
+        const fileItem = allFiles[realIndex]
 
-    const { error } = await supabase.storage
-      .from(params.bucket)
-      .uploadToSignedUrl(upload.path, upload.token, fileItem.file, {
-        contentType: fileItem.file.type || undefined,
-      })
+        const { error } = await supabase.storage
+          .from(params.bucket)
+          .uploadToSignedUrl(upload.path, upload.token, fileItem.file, {
+            contentType: fileItem.file.type || undefined,
+          })
 
-    if (error) {
-      console.error('Direkter Upload zu Supabase fehlgeschlagen:', error)
-      throw new Error(error.message)
-    }
+        if (error) {
+          console.error('Direkter Upload zu Supabase fehlgeschlagen:', error)
+          throw new Error(error.message)
+        }
 
-    finishedUploads.push(upload)
+        return upload
+      }),
+    )
+
+    finishedUploads.push(...batchResults)
   }
 
   return finishedUploads
