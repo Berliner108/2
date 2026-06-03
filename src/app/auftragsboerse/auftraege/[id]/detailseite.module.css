@@ -844,3 +844,7 @@
 .serienTerminText {
   white-space: nowrap;
 }
+.serienTermineBox {
+  width: 100%;
+  box-sizing: border-box;
+}
