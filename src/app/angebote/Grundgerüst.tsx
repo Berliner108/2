@@ -39,8 +39,8 @@ async function compressImageFile(file: File): Promise<File> {
 
   const imageBitmap = await createImageBitmap(file)
 
-  const maxWidth = 1200
-  const maxHeight = 1200
+  const maxWidth = 1000
+  const maxHeight = 1000
 
   let { width, height } = imageBitmap
 
@@ -67,7 +67,7 @@ async function compressImageFile(file: File): Promise<File> {
     canvas.toBlob(
       resolve,
       'image/jpeg',
-      0.68,
+      0.6,
     )
   })
 
@@ -1411,9 +1411,13 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           <button
   type="submit"
   className={styles.absendenButton}
-  disabled={isLoading}
+  disabled={isLoading || bilderWerdenOptimiert}
 >
-  {isLoading ? 'Bitte warten…' : 'Jetzt Angebote einholen'}
+  {bilderWerdenOptimiert
+  ? 'Bilder werden optimiert…'
+  : isLoading
+    ? 'Bitte warten…'
+    : 'Jetzt Angebote einholen'}
 </button>
 
           {successMessage && (
