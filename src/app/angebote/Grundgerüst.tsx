@@ -25,7 +25,72 @@ type PreparedUpload = {
   mimeType: string | null
   sizeBytes: number | null
 }
+async function compressImageFile(file: File): Promise<File> {
+  // Nur echte Bilder komprimieren
+  if (!file.type.startsWith('image/')) {
+    return file
+  }
 
+  // Kleine Bilder nicht anfassen
+  const maxSizeBeforeCompression = 1.2 * 1024 * 1024
+  if (file.size <= maxSizeBeforeCompression) {
+    return file
+  }
+
+  const imageBitmap = await createImageBitmap(file)
+
+  const maxWidth = 1600
+  const maxHeight = 1600
+
+  let { width, height } = imageBitmap
+
+  if (width > maxWidth || height > maxHeight) {
+    const ratio = Math.min(maxWidth / width, maxHeight / height)
+    width = Math.round(width * ratio)
+    height = Math.round(height * ratio)
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    imageBitmap.close()
+    return file
+  }
+
+  ctx.drawImage(imageBitmap, 0, 0, width, height)
+  imageBitmap.close()
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(
+      resolve,
+      'image/jpeg',
+      0.78,
+    )
+  })
+
+  if (!blob) {
+    return file
+  }
+
+  // Falls Komprimierung aus irgendeinem Grund größer wird, Original behalten
+  if (blob.size >= file.size) {
+    return file
+  }
+
+  const originalNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
+
+  return new File(
+    [blob],
+    `${originalNameWithoutExt}.jpg`,
+    {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    },
+  )
+}
 async function uploadPreparedFilesToSupabase(params: {
   bucket: string
   uploads: PreparedUpload[]
@@ -34,16 +99,20 @@ async function uploadPreparedFilesToSupabase(params: {
 }) {
   const supabase = supabaseBrowser()
 
-  const allFiles = [
-    ...params.photoFiles.map((file) => ({
-      kind: 'image' as const,
-      file,
-    })),
-    ...params.fileFiles.map((file) => ({
-      kind: 'document' as const,
-      file,
-    })),
-  ]
+const compressedPhotoFiles = await Promise.all(
+  params.photoFiles.map((file) => compressImageFile(file)),
+)
+
+const allFiles = [
+  ...compressedPhotoFiles.map((file) => ({
+    kind: 'image' as const,
+    file,
+  })),
+  ...params.fileFiles.map((file) => ({
+    kind: 'document' as const,
+    file,
+  })),
+]
 
   if (params.uploads.length !== allFiles.length) {
     throw new Error('Dateizuordnung fehlgeschlagen.')
