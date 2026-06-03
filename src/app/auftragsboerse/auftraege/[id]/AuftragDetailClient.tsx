@@ -187,6 +187,25 @@ function formatSerienDatum(value: unknown): string {
     year: 'numeric',
   });
 }
+function labelSerienRhythmus(value: unknown): string {
+  const s = String(value ?? '').trim().toLowerCase();
+
+  if (!s) return '';
+
+  if (s.includes('taeglich') || s.includes('täglich') || s.includes('daily')) {
+    return 'täglich';
+  }
+
+  if (s.includes('woechentlich') || s.includes('wöchentlich') || s.includes('weekly')) {
+    return 'wöchentlich';
+  }
+
+  if (s.includes('monatlich') || s.includes('monthly')) {
+    return 'monatlich';
+  }
+
+  return String(value);
+}
 function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading, setLoading] = useState(false);
@@ -456,7 +475,7 @@ const serienRhythmus =
   (auftrag as any).serien_rhythmus ||
   (auftrag as any).serienauftrag_rhythmus ||
   '';
-
+const serienRhythmusLabel = labelSerienRhythmus(serienRhythmus);
 const serienTermine = Array.isArray((auftrag as any).serien_termine)
   ? (auftrag as any).serien_termine
   : [];
@@ -631,7 +650,7 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   <div className={styles.metaItem}>
     <span className={styles.label}>Serienauftrag:</span>
     <span className={styles.value}>
-      Ja - Anlieferung {serienRhythmus ? ` – ${serienRhythmus}` : ''}
+      Ja{serienRhythmusLabel ? ` – ${serienRhythmusLabel}` : ''}
     </span>
   </div>
 )}
@@ -639,15 +658,23 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   <div className={styles.metaItem}>
     <span className={styles.label}>Serientermine:</span>
 
-    <span className={styles.value}>
+    <div className={styles.serienTerminListe}>
       {serienTermine.map((termin: any, index: number) => (
-        <span key={termin.nr ?? index} className={styles.serienTerminEintrag}>
-          <span>{termin.nr ?? index + 1}.</span>
-          <span>Lieferung: {formatSerienDatum(termin.liefer)}</span>
-          <span>Abholung: {formatSerienDatum(termin.abhol)}</span>
-        </span>
+        <div key={termin.nr ?? index} className={styles.serienTerminEintrag}>
+          <span className={styles.serienTerminNr}>
+            {termin.nr ?? index + 1}.
+          </span>
+
+          <span className={styles.serienTerminText}>
+            Lieferung: {formatSerienDatum(termin.liefer)}
+          </span>
+
+          <span className={styles.serienTerminText}>
+            Abholung: {formatSerienDatum(termin.abhol)}
+          </span>
+        </div>
       ))}
-    </span>
+    </div>
   </div>
 )}
 
