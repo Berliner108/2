@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         agb_accepted: true,
 
         published: false,
-        status: 'uploading',
+        status: 'open',
 
         promo_score: 0,
         promo_options: [],
