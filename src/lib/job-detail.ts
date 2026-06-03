@@ -23,7 +23,13 @@ type JobRow = {
   specs: any | null
   published: boolean | null
   status: string | null
-}
+
+  serienauftrag: boolean | null
+  serienauftrag_rhythmus: string | null
+  serienauftrag_aktiv: boolean | null
+  serien_rhythmus: string | null
+  serien_termine: any[] | null
+  }
 
 type ProfileRow = {
   id: string
@@ -67,7 +73,12 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
       verfahren_2,
       specs,
       published,
-      status
+      status,
+      serienauftrag,
+      serienauftrag_rhythmus,
+      serienauftrag_aktiv,
+      serien_rhythmus,
+      serien_termine
     `)
     .eq('id', jobId)
     .single()
@@ -177,6 +188,11 @@ const ratingCount = p?.rating_count == null ? null : Number(p.rating_count)
   return {
     id: j.id,
     published: j.published ?? true, // ✅ HIER neu
+    serienauftrag: j.serienauftrag ?? false,
+    serienauftrag_rhythmus: j.serienauftrag_rhythmus ?? null,
+    serienauftrag_aktiv: j.serienauftrag_aktiv ?? false,
+    serien_rhythmus: j.serien_rhythmus ?? null,
+    serien_termine: Array.isArray(j.serien_termine) ? j.serien_termine : [],
     verfahren,
     material,
     length,

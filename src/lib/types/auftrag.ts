@@ -2,6 +2,11 @@
 export type Auftrag = {
   id: string
   published?: boolean | null
+  serienauftrag?: boolean
+serienauftrag_rhythmus?: string | null
+serienauftrag_aktiv?: boolean
+serien_rhythmus?: string | null
+serien_termine?: any[]
   verfahren: { name: string; felder: Record<string, any> }[]
 
   material: string | null
