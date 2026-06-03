@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+const JOB_FILES_BUCKET = 'job-files'
+
+function safeExtFromName(name: string) {
+  const ext = name.includes('.') ? name.split('.').pop() : 'bin'
+
+  return (
+    String(ext || 'bin')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') || 'bin'
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -98,10 +109,68 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({
-      ok: true,
-      jobId: jobInsert.id,
-    })
+    const jobId = jobInsert.id as string
+
+const bilder = Array.isArray(body.bilder) ? body.bilder : []
+const dateien = Array.isArray(body.dateien) ? body.dateien : []
+
+const uploadItems = [
+  ...bilder.map((file: any) => ({
+    kind: 'image' as const,
+    originalName: file.name,
+    mimeType: file.type || null,
+    sizeBytes: typeof file.size === 'number' ? file.size : null,
+  })),
+  ...dateien.map((file: any) => ({
+    kind: 'document' as const,
+    originalName: file.name,
+    mimeType: file.type || null,
+    sizeBytes: typeof file.size === 'number' ? file.size : null,
+  })),
+]
+
+const uploads = []
+
+for (const item of uploadItems) {
+  const folder = item.kind === 'image' ? 'images' : 'files'
+  const ext = safeExtFromName(item.originalName)
+
+  const path = `${jobId}/${folder}/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}.${ext}`
+
+  const { data, error } = await supabase.storage
+    .from(JOB_FILES_BUCKET)
+    .createSignedUploadUrl(path)
+
+  if (error || !data) {
+    console.error('Fehler beim Erzeugen der Upload-URL:', error)
+
+    return NextResponse.json(
+      {
+        error: 'signed_url_failed',
+        details: error?.message,
+      },
+      { status: 500 },
+    )
+  }
+
+  uploads.push({
+    kind: item.kind,
+    path,
+    token: data.token,
+    originalName: item.originalName,
+    mimeType: item.mimeType,
+    sizeBytes: item.sizeBytes,
+  })
+}
+
+return NextResponse.json({
+  ok: true,
+  jobId,
+  bucket: JOB_FILES_BUCKET,
+  uploads,
+})
   } catch (err: any) {
     console.error('Fehler in /api/auftrag-vorbereiten:', err)
 
