@@ -435,6 +435,18 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
 
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
   const vermittelt = auftrag.published === false;
+  const serienauftragAktiv =
+  Boolean((auftrag as any).serienauftrag_aktiv) ||
+  Boolean((auftrag as any).serienauftrag);
+
+const serienRhythmus =
+  (auftrag as any).serien_rhythmus ||
+  (auftrag as any).serienauftrag_rhythmus ||
+  '';
+
+const serienTermine = Array.isArray((auftrag as any).serien_termine)
+  ? (auftrag as any).serien_termine
+  : [];
 
 
   return (
@@ -570,6 +582,28 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
                   <span className={styles.label}>Masse schwerstes Werkstück :</span>
                   <span className={styles.value}>{auftrag.masse} kg</span>
                 </div>
+                {serienauftragAktiv && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Serienauftrag:</span>
+    <span className={styles.value}>
+      Ja{serienRhythmus ? ` – ${serienRhythmus}` : ''}
+    </span>
+  </div>
+)}
+
+{serienauftragAktiv && serienTermine.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Serientermine:</span>
+    <span className={styles.value}>
+      {serienTermine.map((termin: any) => (
+        <span key={termin.nr} style={{ display: 'block' }}>
+          #{termin.nr}: Lieferung {termin.liefer || '—'} – Abholung{' '}
+          {termin.abhol || '—'}
+        </span>
+      ))}
+    </span>
+  </div>
+)}
 
                 {auftrag.user && (
                   <div className={styles.metaItem}>
