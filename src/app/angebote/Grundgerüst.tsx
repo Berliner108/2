@@ -248,7 +248,15 @@ const fadeIn = {
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.3 },
 }
+const MAX_DOCUMENT_TOTAL_SIZE = 25 * 1024 * 1024 // 25 MB insgesamt
 
+const formatFileSize = (bytes: number) => {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  return `${Math.round(bytes / 1024)} KB`
+}
 export default function Formular() {
   const router = useRouter()
   
@@ -420,7 +428,19 @@ const handleSubmit = async (e: React.FormEvent) => {
   alert('Bitte kurz warten, die Bilder werden noch optimiert.')
   return
 }
+const dokumenteGesamtGroesse = fileFiles.reduce(
+  (sum, file) => sum + file.size,
+  0,
+)
 
+if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
+  setWarnungDateien(
+    `Die Dateien sind insgesamt zu groß. Maximal erlaubt sind ${formatFileSize(
+      MAX_DOCUMENT_TOTAL_SIZE,
+    )}.`,
+  )
+  return
+}
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
 
   // 1️⃣ BILDER
@@ -982,6 +1002,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             setWarnung={setWarnungDateien}
             id="upload-dateien"
             istGueltig={istGueltigDatei}
+            maxDateigroesseMB={10}
           />
           {warnungDateien && (
             <p className={styles.warnung}>{warnungDateien}</p>
