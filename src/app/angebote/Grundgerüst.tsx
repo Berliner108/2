@@ -400,77 +400,115 @@ const handleSubmit = async (e: React.FormEvent) => {
 setOverlayTitle('Wir veröffentlichen deinen Auftrag …')
 setOverlayText('Wir leiten gleich weiter.')
 
+try {
+const prepareRes = await fetch('/api/auftrag-vorbereiten', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    agbAccepted,
 
-  const formData = new FormData()
-  formData.append('agbAccepted', agbAccepted ? 'true' : 'false')
+    beschreibung: beschreibung.trim(),
 
-  bewerbungOptionen.forEach((option, i) => {
-    formData.append(`bewerbungOptionen[${i}]`, option)
-  })
+    materialguete: materialGuete,
+    andereMaterialguete: customMaterial,
 
-  photoFiles.forEach((file, i) => {
-    formData.append(`bilder[${i}]`, file)
-  })
+    laenge,
+    breite,
+    hoehe,
+    masse,
 
-  fileFiles.forEach((file, i) => {
-    formData.append(`dateien[${i}]`, file)
-  })
+    lieferDatum,
+    abholDatum,
+    lieferArt,
+    abholArt,
 
-  formData.append('materialguete', materialGuete)
-  if (materialGuete === 'Andere') {
-    formData.append('andereMaterialguete', customMaterial)
-  }
+    serienauftragAktiv: serienauftrag,
+    serienRhythmus: rhythmus || '',
+    serienTermine,
 
-  formData.append('lieferDatum', lieferDatum)
-  formData.append('abholDatum', abholDatum)
-  formData.append('lieferArt', lieferArt)
-  formData.append('abholArt', abholArt)
-  formData.append('serienauftragAktiv', serienauftrag ? 'true' : 'false')
-  formData.append('serienRhythmus', rhythmus || '')
-  formData.append('serienTermine', JSON.stringify(serienTermine))
+    specSelections,
+
+    verfahren1: selectedOption1,
+    verfahren2: selectedOption2,
+
+    bilder: photoFiles.map((file) => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    })),
+
+    dateien: fileFiles.map((file) => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    })),
+  }),
+})
+
+if (!prepareRes.ok) {
+  let payload: any = null
 
   try {
-    // Spezifikationen
-    formData.append('specSelections', JSON.stringify(specSelections))
+    payload = await prepareRes.json()
+  } catch {}
 
-    // Verfahren
-    formData.append('verfahren1', selectedOption1)
-    if (selectedOption2) {
-      formData.append('verfahren2', selectedOption2)
-    }
+  console.error('Fehler /api/auftrag-vorbereiten:', prepareRes.status, payload)
 
-    // Beschreibung
-    formData.append('beschreibung', beschreibung.trim())
+  throw new Error(
+    payload?.details ||
+      payload?.error ||
+      'Auftrag konnte nicht vorbereitet werden.',
+  )
+}
 
-    // Abmessungen & Masse
-    formData.append('laenge', laenge)
-    formData.append('breite', breite)
-    formData.append('hoehe', hoehe)
-    formData.append('masse', masse)
+const prepareData = await prepareRes.json()
 
-    // 1️⃣ Immer zuerst: Auftrag in jobs anlegen
-    const res = await fetch('/api/auftrag-absenden', {
-      method: 'POST',
-      body: formData,
-    })
+const jobId = prepareData?.jobId as string | undefined
+const bucket = prepareData?.bucket as string
+const uploads = prepareData?.uploads as PreparedUpload[]
 
-    if (!res.ok) {
-      let payload: any = null
-      try {
-        payload = await res.json()
-      } catch {}
+if (!jobId) {
+  console.error('Kein jobId im Response von /api/auftrag-vorbereiten', prepareData)
+  throw new Error('Auftrag konnte nicht eindeutig gespeichert werden.')
+}
 
-      console.error('API-Fehler /api/auftrag-absenden:', res.status, payload)
-      throw new Error(payload?.details || 'Fehler beim Absenden')
-    }
+setOverlayTitle('Dateien werden hochgeladen …')
+setOverlayText('Bitte Seite nicht schließen.')
 
-    const data = await res.json().catch(() => null as any)
-    const jobId = data?.jobId as string | undefined
+const finishedUploads = await uploadPreparedFilesToSupabase({
+  bucket,
+  uploads,
+  photoFiles,
+  fileFiles,
+})
 
-    if (!jobId) {
-      console.error('Kein jobId im Response von /api/auftrag-absenden', data)
-      throw new Error('Auftrag konnte nicht eindeutig gespeichert werden.')
-    }
+setOverlayTitle('Auftrag wird finalisiert …')
+setOverlayText('Wir veröffentlichen deinen Auftrag.')
+
+const finalizeRes = await fetch('/api/auftrag-finalisieren', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jobId,
+    uploads: finishedUploads,
+  }),
+})
+
+if (!finalizeRes.ok) {
+  let payload: any = null
+
+  try {
+    payload = await finalizeRes.json()
+  } catch {}
+
+  console.error('Fehler /api/auftrag-finalisieren:', finalizeRes.status, payload)
+
+  throw new Error(
+    payload?.details ||
+      payload?.error ||
+      'Auftrag konnte nicht finalisiert werden.',
+  )
+}
 
     // 2️⃣ Kein Promo-Paket gewählt → fertig wie bisher
     if (bewerbungOptionen.length === 0) {
