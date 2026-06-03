@@ -972,11 +972,12 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               id="upload-bilder"
             />
             {bilderWerdenOptimiert && (
-  <p className={styles.warnung}>Bilder werden optimiert …</p>
-)}
-            {warnungBilder && (
-              <p className={styles.warnung}>{warnungBilder}</p>
-            )}
+                <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
+              )}
+
+              {warnungBilder && (
+                <p className={styles.feldFehlerText}>{warnungBilder}</p>
+              )}
 
             {/* Vorschau Bilder */}
             <DateiVorschau
@@ -1005,7 +1006,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             maxDateigroesseMB={3}
           />
           {warnungDateien && (
-            <p className={styles.warnung}>{warnungDateien}</p>
+            <p className={styles.feldFehlerText}>{warnungDateien}</p>
           )}
 
           {/* Vorschau Dateien */}

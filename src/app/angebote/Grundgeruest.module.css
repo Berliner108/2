@@ -11,6 +11,21 @@
 .wrapper input[type='checkbox'] {
   accent-color: #00b4d8;   /* Türkis für alle Formular-Checkboxen */
 }
+.feldFehlerText {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.optimierungHinweis {
+  margin-top: 0.5rem;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+}
 .oswaldTextarea {
   width: 98%;
   font-family: 'Oswald', sans-serif;
