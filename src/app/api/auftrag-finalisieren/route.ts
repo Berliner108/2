@@ -19,12 +19,39 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    console.log('auftrag-finalisieren body:', body)
+    const jobId = body.jobId as string | undefined
+
+    if (!jobId) {
+      return NextResponse.json(
+        { error: 'missing_job_id' },
+        { status: 400 },
+      )
+    }
+
+    const { data: job, error: jobError } = await supabase
+      .from('jobs')
+      .select('id,user_id,published,status')
+      .eq('id', jobId)
+      .single()
+
+    if (jobError || !job) {
+      return NextResponse.json(
+        { error: 'job_not_found', details: jobError?.message },
+        { status: 404 },
+      )
+    }
+
+    if (job.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'forbidden' },
+        { status: 403 },
+      )
+    }
 
     return NextResponse.json({
       ok: true,
-      message: 'Finalisieren-Route funktioniert',
-      userId: user.id,
+      message: 'Job gehört eingeloggtem Benutzer',
+      job,
     })
   } catch (err: any) {
     console.error('Fehler in /api/auftrag-finalisieren:', err)
