@@ -828,3 +828,26 @@
     grid-column: 2;
   }
 }
+.serienTerminListe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.4rem;
+}
+
+.serienTerminEintrag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  align-items: baseline;
+  line-height: 1.35;
+}
+
+.serienTerminNr {
+  font-weight: 700;
+  min-width: 1.4rem;
+}
+
+.serienTerminText {
+  white-space: nowrap;
+}
