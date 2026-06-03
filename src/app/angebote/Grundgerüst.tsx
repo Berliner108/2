@@ -39,8 +39,8 @@ async function compressImageFile(file: File): Promise<File> {
 
   const imageBitmap = await createImageBitmap(file)
 
-  const maxWidth = 1600
-  const maxHeight = 1600
+  const maxWidth = 1200
+  const maxHeight = 1200
 
   let { width, height } = imageBitmap
 
@@ -67,7 +67,7 @@ async function compressImageFile(file: File): Promise<File> {
     canvas.toBlob(
       resolve,
       'image/jpeg',
-      0.78,
+      0.68,
     )
   })
 
