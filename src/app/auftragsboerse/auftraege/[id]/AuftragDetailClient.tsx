@@ -657,9 +657,9 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
                   </div>
                 )}                {serienauftragAktiv && (
                   <div className={styles.metaItem}>
-                    <span className={styles.label}>Serienauftrag:</span>
+                    <span className={styles.label}>Auftragsrhythmus:</span>
                     <span className={styles.value}>
-                      Ja{serienRhythmusLabel ? ` – ${serienRhythmusLabel}` : ''}
+                      {serienRhythmusLabel || '—'}
                     </span>
                   </div>
                 )}
