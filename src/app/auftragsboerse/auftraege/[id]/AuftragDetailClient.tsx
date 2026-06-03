@@ -192,15 +192,26 @@ function labelSerienRhythmus(value: unknown): string {
 
   if (!s) return '';
 
-  if (s.includes('taeglich') || s.includes('täglich') || s.includes('daily')) {
+  if (s === 'taeglich' || s === 'täglich' || s === 'daily') {
     return 'täglich';
   }
 
-  if (s.includes('woechentlich') || s.includes('wöchentlich') || s.includes('weekly')) {
+  if (s === 'woechentlich' || s === 'wöchentlich' || s === 'weekly') {
     return 'wöchentlich';
   }
 
-  if (s.includes('monatlich') || s.includes('monthly')) {
+  if (
+    s === 'alle_zwei_wochen' ||
+    s === 'alle-2-wochen' ||
+    s === 'alle zwei wochen' ||
+    s === 'zweiwoechentlich' ||
+    s === 'zweiwöchentlich' ||
+    s === 'biweekly'
+  ) {
+    return 'alle zwei Wochen';
+  }
+
+  if (s === 'monatlich' || s === 'monthly') {
     return 'monatlich';
   }
 
@@ -644,39 +655,39 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
                       </Link>
                     </div>
                   </div>
+                )}                {serienauftragAktiv && (
+                  <div className={styles.metaItem}>
+                    <span className={styles.label}>Serienauftrag:</span>
+                    <span className={styles.value}>
+                      Ja{serienRhythmusLabel ? ` – ${serienRhythmusLabel}` : ''}
+                    </span>
+                  </div>
+                )}
+
+                {serienauftragAktiv && serienTermine.length > 0 && (
+                  <div className={styles.metaItem}>
+                    <span className={styles.label}>Serientermine:</span>
+
+                    <div className={styles.serienTerminListe}>
+                      {serienTermine.map((termin: any, index: number) => (
+                        <div key={termin.nr ?? index} className={styles.serienTerminEintrag}>
+                          <span className={styles.serienTerminNr}>
+                            {termin.nr ?? index + 1}.
+                          </span>
+
+                          <span className={styles.serienTerminText}>
+                            Lieferung: {formatSerienDatum(termin.liefer)}
+                          </span>
+
+                          <span className={styles.serienTerminText}>
+                            Abholung: {formatSerienDatum(termin.abhol)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-                {serienauftragAktiv && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Serienauftrag:</span>
-    <span className={styles.value}>
-      Ja{serienRhythmusLabel ? ` – ${serienRhythmusLabel}` : ''}
-    </span>
-  </div>
-)}
-{serienauftragAktiv && serienTermine.length > 0 && (
-  <div className={styles.metaItem}>
-    <span className={styles.label}>Serientermine:</span>
-
-    <div className={styles.serienTerminListe}>
-      {serienTermine.map((termin: any, index: number) => (
-        <div key={termin.nr ?? index} className={styles.serienTerminEintrag}>
-          <span className={styles.serienTerminNr}>
-            {termin.nr ?? index + 1}.
-          </span>
-
-          <span className={styles.serienTerminText}>
-            Lieferung: {formatSerienDatum(termin.liefer)}
-          </span>
-
-          <span className={styles.serienTerminText}>
-            Abholung: {formatSerienDatum(termin.abhol)}
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
 
                 
 
