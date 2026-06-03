@@ -599,32 +599,23 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   <div className={styles.metaItem}>
     <span className={styles.label}>Serienauftrag:</span>
     <span className={styles.value}>
-      Ja{serienRhythmus ? ` – ${serienRhythmus}` : ''}
+      Ja - Anlieferung {serienRhythmus ? ` – ${serienRhythmus}` : ''}
     </span>
   </div>
 )}
-
 {serienauftragAktiv && serienTermine.length > 0 && (
-  <div className={styles.metaItemFull}>
+  <div className={styles.metaItem}>
     <span className={styles.label}>Serientermine:</span>
 
-    <div className={styles.serienTerminListe}>
+    <span className={styles.value}>
       {serienTermine.map((termin: any, index: number) => (
-        <div key={termin.nr ?? index} className={styles.serienTerminZeile}>
-          <span className={styles.serienTerminNummer}>
-            {termin.nr ?? index + 1}.
-          </span>
-
-          <span>
-            <strong>Lieferung:</strong> {formatSerienDatum(termin.liefer)}
-          </span>
-
-          <span>
-            <strong>Abholung:</strong> {formatSerienDatum(termin.abhol)}
-          </span>
-        </div>
+        <span key={termin.nr ?? index} className={styles.serienTerminEintrag}>
+          <span>{termin.nr ?? index + 1}.</span>
+          <span>Lieferung: {formatSerienDatum(termin.liefer)}</span>
+          <span>Abholung: {formatSerienDatum(termin.abhol)}</span>
+        </span>
       ))}
-    </div>
+    </span>
   </div>
 )}
 

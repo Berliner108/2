@@ -807,41 +807,24 @@
     box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.25);
   }
 }
-.metaItemFull {
-  grid-column: 1 / -1;
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 0.9rem;
-}
-
-.serienTerminListe {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.serienTerminZeile {
+.serienTerminEintrag {
   display: grid;
-  grid-template-columns: 32px 1fr 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 24px 1fr 1fr;
+  gap: 0.6rem;
   align-items: center;
-  padding: 0.55rem 0.7rem;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  margin-bottom: 0.25rem;
 }
 
-.serienTerminNummer {
-  font-weight: 700;
-  color: #0f172a;
+.serienTerminEintrag:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 650px) {
-  .serienTerminZeile {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
+  .serienTerminEintrag {
+    grid-template-columns: 24px 1fr;
+  }
+
+  .serienTerminEintrag span:nth-child(3) {
+    grid-column: 2;
   }
 }
