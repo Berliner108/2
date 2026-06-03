@@ -248,7 +248,7 @@ const fadeIn = {
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.3 },
 }
-const MAX_DOCUMENT_TOTAL_SIZE = 25 * 1024 * 1024 // 25 MB insgesamt
+const MAX_DOCUMENT_TOTAL_SIZE = 15 * 1024 * 1024 // 15 MB insgesamt
 
 const formatFileSize = (bytes: number) => {
   if (bytes >= 1024 * 1024) {
@@ -1002,7 +1002,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             setWarnung={setWarnungDateien}
             id="upload-dateien"
             istGueltig={istGueltigDatei}
-            maxDateigroesseMB={10}
+            maxDateigroesseMB={3}
           />
           {warnungDateien && (
             <p className={styles.warnung}>{warnungDateien}</p>
