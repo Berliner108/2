@@ -173,7 +173,20 @@ function hasMinWholeDigits(value: string, minDigits: number): boolean {
   const [wholePart] = cleaned.split(/[.,]/);
   return wholePart.length >= minDigits;
 }
+function formatSerienDatum(value: unknown): string {
+  if (!value) return '—';
 
+  const raw = String(value).trim();
+  const date = new Date(raw.includes('T') ? raw : `${raw}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) return raw;
+
+  return date.toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
 function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading, setLoading] = useState(false);
@@ -592,16 +605,26 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
 )}
 
 {serienauftragAktiv && serienTermine.length > 0 && (
-  <div className={styles.metaItem}>
+  <div className={styles.metaItemFull}>
     <span className={styles.label}>Serientermine:</span>
-    <span className={styles.value}>
-      {serienTermine.map((termin: any) => (
-        <span key={termin.nr} style={{ display: 'block' }}>
-          #{termin.nr}: Lieferung {termin.liefer || '—'} – Abholung{' '}
-          {termin.abhol || '—'}
-        </span>
+
+    <div className={styles.serienTerminListe}>
+      {serienTermine.map((termin: any, index: number) => (
+        <div key={termin.nr ?? index} className={styles.serienTerminZeile}>
+          <span className={styles.serienTerminNummer}>
+            {termin.nr ?? index + 1}.
+          </span>
+
+          <span>
+            <strong>Lieferung:</strong> {formatSerienDatum(termin.liefer)}
+          </span>
+
+          <span>
+            <strong>Abholung:</strong> {formatSerienDatum(termin.abhol)}
+          </span>
+        </div>
       ))}
-    </span>
+    </div>
   </div>
 )}
 
