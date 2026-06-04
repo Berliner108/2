@@ -295,6 +295,7 @@ export default function Formular() {
   const [logistikError, setLogistikError] = useState(false)
     const [serienauftrag, setSerienauftrag] = useState(false)
   const [rhythmus, setRhythmus] = useState('')
+  const [rhythmusError, setRhythmusError] = useState(false)
   const [serienTermine, setSerienTermine] = useState<
     { nr: number; liefer: string; abhol: string }[]
   >([])
@@ -487,19 +488,29 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   } else {
     setBeschreibungError(false)
   }
+// 6️⃣ LOGISTIK
+if (
+  !lieferDatum ||
+  !abholDatum ||
+  !lieferArt ||
+  !abholArt ||
+  (serienauftrag && !rhythmus)
+) {
+  setLogistikError(true)
+  setRhythmusError(serienauftrag && !rhythmus)
 
-  // 6️⃣ LOGISTIK
-  if (!lieferDatum || !abholDatum || !lieferArt || !abholArt) {
-    setLogistikError(true)
-    if (!firstErrorRef) firstErrorRef = logistikRef
-    hasError = true
-  } else if (new Date(lieferDatum) > new Date(abholDatum)) {
-    setLogistikError(true)
-    if (!firstErrorRef) firstErrorRef = logistikRef
-    hasError = true
-  } else {
-    setLogistikError(false)
-  }
+  if (!firstErrorRef) firstErrorRef = logistikRef
+  hasError = true
+} else if (new Date(lieferDatum) > new Date(abholDatum)) {
+  setLogistikError(true)
+  setRhythmusError(false)
+
+  if (!firstErrorRef) firstErrorRef = logistikRef
+  hasError = true
+} else {
+  setLogistikError(false)
+  setRhythmusError(false)
+}
 
   // 7️⃣ AGB
   if (!agbAccepted) {
@@ -982,6 +993,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     setLogistikError(false);
     setSerienauftrag(false);
     setRhythmus('');
+    setRhythmusError(false);
     setSerienTermine([]);
 
 
@@ -1319,22 +1331,23 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 </div>
 
 
-              <LogistikSection
-              lieferDatum={lieferDatum}
-              setLieferDatum={setLieferDatum}
-              abholDatum={abholDatum}
-              setAbholDatum={setAbholDatum}
-              lieferArt={lieferArt}
-              setLieferArt={setLieferArt}
-              abholArt={abholArt}
-              setAbholArt={setAbholArt}
-              logistikError={logistikError}
-              serienauftrag={serienauftrag}
-              setSerienauftrag={setSerienauftrag}
-              rhythmus={rhythmus}
-              setRhythmus={setRhythmus}
-              onSerienTermineChange={setSerienTermine}
-            />
+             <LogistikSection
+                lieferDatum={lieferDatum}
+                setLieferDatum={setLieferDatum}
+                abholDatum={abholDatum}
+                setAbholDatum={setAbholDatum}
+                lieferArt={lieferArt}
+                setLieferArt={setLieferArt}
+                abholArt={abholArt}
+                setAbholArt={setAbholArt}
+                logistikError={logistikError}
+                serienauftrag={serienauftrag}
+                setSerienauftrag={setSerienauftrag}
+                rhythmus={rhythmus}
+                setRhythmus={setRhythmus}
+                rhythmusError={rhythmusError}
+                onSerienTermineChange={setSerienTermine}
+              />
 
           </div>
         </div>
@@ -1427,7 +1440,13 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               </a>
               .
             </span>
-          </motion.label>
+                    </motion.label>
+
+          {agbError && (
+            <p className={styles.feldFehlerText}>
+              Bitte akzeptiere die Allgemeinen Geschäftsbedingungen.
+            </p>
+          )}
         </div>
 
         <div className={styles.vorschauWrapper}>

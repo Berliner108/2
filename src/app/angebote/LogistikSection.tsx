@@ -24,6 +24,7 @@ interface LogistikSectionProps {
   setAbholArt: (value: string) => void;
   logistikError: boolean;
   // 🔽 Serienauftrag
+  rhythmusError: boolean;
   serienauftrag: boolean;
   setSerienauftrag: (value: boolean) => void;
   rhythmus: string;
@@ -190,6 +191,7 @@ const LogistikSection: React.FC<LogistikSectionProps> = ({
   abholArt,
   setAbholArt,
   logistikError,
+  rhythmusError,
   serienauftrag,
   setSerienauftrag,
   rhythmus,
@@ -534,7 +536,9 @@ useEffect(() => {
       <div className={styles.logistikCards}>
         {/* Anlieferung */}
         <div className={styles.logistikCard}>
-          <h5 className={styles.logistikCardTitle}>Anlieferung / Abholung</h5>
+          <h5 className={styles.logistikCardTitle}>
+            Anlieferung / Abholung <span className={styles.requiredStar}>*</span>
+          </h5>
 
           <div className={styles.inputGroup} ref={lieferFieldRef}>
             <label>Warenausgabedatum</label>
@@ -582,7 +586,7 @@ useEffect(() => {
         {/* Rücktransport */}
         <div className={styles.logistikCard}>
           <h5 className={styles.logistikCardTitle}>
-            Abholung / Rücktransport
+            Abholung / Rücktransport <span className={styles.requiredStar}>*</span>
           </h5>
 
           <div className={styles.inputGroup} ref={abholFieldRef}>
@@ -696,6 +700,7 @@ useEffect(() => {
             <select
               value={rhythmus}
               onChange={(e) => setRhythmus(e.target.value)}
+              className={rhythmusError ? styles.inputError : ''}
             >
               <option value="">Bitte wählen</option>
               <option
