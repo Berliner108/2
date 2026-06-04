@@ -1026,3 +1026,25 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   font-size: 0.75rem;
   font-weight: 600;
 }
+.verfahrenSelect,
+.inputField2,
+.serienauftragSelect select {
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+}
+
+.verfahrenSelect option,
+.inputField2 option,
+.serienauftragSelect select option {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+.logistikSelect {
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+}
+
+.logistikSelect option {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}

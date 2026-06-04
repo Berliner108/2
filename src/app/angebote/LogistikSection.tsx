@@ -568,9 +568,9 @@ useEffect(() => {
             <select
               value={lieferArt}
               onChange={(e) => setLieferArt(e.target.value)}
-              className={
+              className={`${styles.logistikSelect} ${
                 logistikError && !lieferArt ? styles.inputError : ''
-              }
+              }`}
             >
               <option value="">Bitte wählen</option>
               <option value="selbst">Ich liefere selbst</option>
@@ -623,9 +623,9 @@ useEffect(() => {
               disabled={!lieferDatum}
               value={abholArt}
               onChange={(e) => setAbholArt(e.target.value)}
-              className={
+              className={`${styles.logistikSelect} ${
                 logistikError && !abholArt ? styles.inputError : ''
-              }
+              }`}
             >
               <option value="">Bitte wählen</option>
               <option value="selbst">Ich hole selbst ab</option>

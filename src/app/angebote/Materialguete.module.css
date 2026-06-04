@@ -48,8 +48,13 @@
   background: #fff;
   transition: border-color 0.2s ease;
   font-family: 'Oswald', sans-serif;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
 }
-
+.dropdown option {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
 .dropdown:focus {
   outline: none;
   border-color: #00b4d8;
