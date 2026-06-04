@@ -422,7 +422,6 @@ try {
   toastError('Dein Profil konnte nicht geprüft werden.');
   return;
 }
-
 // Connect-Ready prüfen (wie bei Lackanfragen)
 try {
       const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
