@@ -227,6 +227,8 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // Connect (Stripe) Status – identisch zur Lackanfragen-Detailseite
   const [connect, setConnect] = useState<ConnectStatus | null>(null);
   const [connectLoaded, setConnectLoaded] = useState(false);
+  const [accountType, setAccountType] = useState<string>('');
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const fetchConnect = useCallback(async () => {
     try {
@@ -237,10 +239,29 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
       setConnectLoaded(true);
     }
   }, []);
+  const fetchProfile = useCallback(async () => {
+  try {
+    const r = await fetch('/api/profile', {
+      cache: 'no-store',
+      credentials: 'include',
+    });
+
+    const j = await r.json().catch(() => ({} as any));
+
+    if (r.ok) {
+      setAccountType(String(j?.profile?.account_type || '').toLowerCase());
+    } else {
+      setAccountType('');
+    }
+  } finally {
+    setProfileLoaded(true);
+  }
+}, []);
 
   useEffect(() => {
-    fetchConnect();
-  }, [fetchConnect]);
+  fetchConnect();
+  fetchProfile();
+}, [fetchConnect, fetchProfile]);
 
   useEffect(() => {
     const onFocus = () => fetchConnect();
@@ -584,7 +605,10 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
                 </div>
               </div>
 
-              {connectLoaded && connect?.ready === false && (
+              {profileLoaded &&
+                accountType === 'business' &&
+                connectLoaded &&
+                connect?.ready === false && (
                 <div className={styles.connectNotice} role="status" aria-live="polite">
                   <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
 
