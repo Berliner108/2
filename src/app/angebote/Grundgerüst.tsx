@@ -446,7 +446,7 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
 
   // 1️⃣ BILDER
   if (photoFiles.length === 0) {
-    setWarnungBilder('Bitte lade mindestens 1 Foto hoch.')
+    setWarnungBilder('Bitte lade mindestens 1 Foto hoch')
     if (!firstErrorRef) firstErrorRef = bilderRef
     hasError = true
   } else {
@@ -1444,7 +1444,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
           {agbError && (
             <p className={styles.feldFehlerText}>
-              Bitte akzeptiere die Allgemeinen Geschäftsbedingungen.
+              Bitte akzeptiere die Allgemeinen Geschäftsbedingungen
             </p>
           )}
         </div>
