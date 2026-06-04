@@ -456,22 +456,27 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
           return;
         }
 
+        if (code === 'only_business_users_can_offer') {
+          toastError('Nur gewerbliche Nutzer können Angebote abgeben.');
+          return;
+        }
+
         toastError(j?.message || 'Angebot konnte nicht gesendet werden.');
-        return;
+        return;}
+
+        // ✅ ok
+        setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
+        toastSuccess('Angebot wurde erfolgreich abgegeben.');
+      
+
+        // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
+        // alert('Angebot wurde gesendet.');
+      } catch (err: any) {
+        toastError(String(err?.message || 'Angebot konnte nicht gesendet werden.'));
+      } finally {
+        setLoading(false);
       }
-
-      // ✅ ok
-      setOfferSent(true); // optional, aber sinnvoll damit clientseitig 2. Versuch sofort Toast gibt
-      toastSuccess('Angebot wurde erfolgreich abgegeben.');
-
-      // wenn du keinen Success-Toast hast: wir lassen es still oder du machst hier optional ein kleines alert
-      // alert('Angebot wurde gesendet.');
-    } catch (err: any) {
-      toastError(String(err?.message || 'Angebot konnte nicht gesendet werden.'));
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   const isSubmitDisabled =
     loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
