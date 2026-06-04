@@ -1288,12 +1288,17 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 <div className={styles.dividerLine} />
 
 <div ref={beschreibungRef}>
-  <BeschreibungsBox
-    text={beschreibung}
-    setText={setBeschreibung}
-    isRequired
-    showError={beschreibungError}
-  />
+<BeschreibungsBox
+  text={beschreibung}
+  setText={(value) => {
+    setBeschreibung(value)
+    if (value.trim()) {
+      setBeschreibungError(false)
+    }
+  }}
+  isRequired
+  showError={beschreibungError}
+/>
 </div>
 
         </div>
@@ -1332,22 +1337,47 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
 
              <LogistikSection
-                lieferDatum={lieferDatum}
-                setLieferDatum={setLieferDatum}
-                abholDatum={abholDatum}
-                setAbholDatum={setAbholDatum}
-                lieferArt={lieferArt}
-                setLieferArt={setLieferArt}
-                abholArt={abholArt}
-                setAbholArt={setAbholArt}
-                logistikError={logistikError}
-                serienauftrag={serienauftrag}
-                setSerienauftrag={setSerienauftrag}
-                rhythmus={rhythmus}
-                setRhythmus={setRhythmus}
-                rhythmusError={rhythmusError}
-                onSerienTermineChange={setSerienTermine}
-              />
+  lieferDatum={lieferDatum}
+  setLieferDatum={(value) => {
+    setLieferDatum(value)
+    setLogistikError(false)
+  }}
+  abholDatum={abholDatum}
+  setAbholDatum={(value) => {
+    setAbholDatum(value)
+    setLogistikError(false)
+  }}
+  lieferArt={lieferArt}
+  setLieferArt={(value) => {
+    setLieferArt(value)
+    setLogistikError(false)
+  }}
+  abholArt={abholArt}
+  setAbholArt={(value) => {
+    setAbholArt(value)
+    setLogistikError(false)
+  }}
+  logistikError={logistikError}
+  serienauftrag={serienauftrag}
+  setSerienauftrag={(value) => {
+    setSerienauftrag(value)
+
+    if (!value) {
+      setRhythmus('')
+      setRhythmusError(false)
+    }
+
+    setLogistikError(false)
+  }}
+  rhythmus={rhythmus}
+  setRhythmus={(value) => {
+    setRhythmus(value)
+    setRhythmusError(false)
+    setLogistikError(false)
+  }}
+  rhythmusError={rhythmusError}
+  onSerienTermineChange={setSerienTermine}
+/>
 
           </div>
         </div>
