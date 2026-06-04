@@ -13,7 +13,7 @@
 }
 .feldFehlerText {
   margin-top: 0.5rem;
-  color: #dc2626;
+  color: red;
   font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
