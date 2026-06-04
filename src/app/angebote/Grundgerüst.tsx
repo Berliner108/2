@@ -741,6 +741,46 @@ const materialienVerzinnen = [
   'Kupfer',
   'Andere',
 ]
+const materialienEntnickeln = [
+  'Aluminium',
+  'Aluguss',
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Zink',
+  'Andere',
+]
+
+const materialienEntzinnen = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Andere',
+]
+
+const materialienEntaluminieren = [
+  'Stahl',
+  'Edelstahl',
+  'Nickel',
+  'Andere',
+]
+
+const materialienEntzinken = [
+  'Stahl',
+  'Edelstahl',
+  'Andere',
+]
+
+const materialienEntanodisieren = [
+  'Zink',
+  'Zinn',
+  'Andere',
+]
+
+const materialienEnteloxieren = [
+  'Aluminium',
+  'Aluguss',
+]
 const materialienAluminieren = [
   'Stahl',
   'Edelstahl',
@@ -786,7 +826,23 @@ const istAnodisieren =
 
 const istVerzinnen =
   selectedOption1 === 'Verzinnen' || selectedOption2 === 'Verzinnen'
+const istEntnickeln =
+  selectedOption1 === 'Entnickeln' || selectedOption2 === 'Entnickeln'
 
+const istEntzinnen =
+  selectedOption1 === 'Entzinnen' || selectedOption2 === 'Entzinnen'
+
+const istEntaluminieren =
+  selectedOption1 === 'Entaluminieren' || selectedOption2 === 'Entaluminieren'
+
+const istEntzinken =
+  selectedOption1 === 'Entzinken' || selectedOption2 === 'Entzinken'
+
+const istEntanodisieren =
+  selectedOption1 === 'Entanodisieren' || selectedOption2 === 'Entanodisieren'
+
+const istEnteloxieren =
+  selectedOption1 === 'Enteloxieren' || selectedOption2 === 'Enteloxieren'
 const istAluminieren =
   selectedOption1 === 'Aluminieren' || selectedOption2 === 'Aluminieren'
 
@@ -811,6 +867,18 @@ if (istEloxieren) {
   materialienAktiv = materialienAnodisieren
 } else if (istVerzinnen) {
   materialienAktiv = materialienVerzinnen
+} else if (istEntnickeln) {
+  materialienAktiv = materialienEntnickeln
+} else if (istEntzinnen) {
+  materialienAktiv = materialienEntzinnen
+} else if (istEntaluminieren) {
+  materialienAktiv = materialienEntaluminieren
+} else if (istEntzinken) {
+  materialienAktiv = materialienEntzinken
+} else if (istEntanodisieren) {
+  materialienAktiv = materialienEntanodisieren
+} else if (istEnteloxieren) {
+  materialienAktiv = materialienEnteloxieren
 } else if (istAluminieren) {
   materialienAktiv = materialienAluminieren
 } else if (istVernickeln) {
