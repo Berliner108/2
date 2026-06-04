@@ -912,7 +912,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
                     <p>
                       {
                         [
-                          'Lade Skizzen, Zeichnungen oder Fotos deiner Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer Ihre Daten, desto präziser das Angebot.',
+                          'Lade Skizzen, Zeichnungen oder Fotos deiner Teile hoch – ganz einfach per Drag & Drop oder Klick. Je genauer deine Daten, desto präziser das Angebot.',
                           'Wähle die gewünschten Bearbeitungsverfahren und was dir wichtig ist: besondere Anforderungen an Schichtdicke, Verpackung, Termine, Rückfragen',
                           'Teile uns mit, ob es ein Serienauftrag werden soll oder, ob dein Material abgeholt & geliefert werden soll, oder du es selbst bringen möchtest.',
                         ][index]
@@ -949,12 +949,12 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               <span className={styles.iconTooltip}>
                 <HelpCircle size={18} />
                 <span className={styles.tooltipText}>
-                  Du kannst bis zu 8 Dateien zu Ihrem Auftrag hinzufügen (alle
+                  Du kannst bis zu 8 Dateien zu deinem Auftrag hinzufügen (alle
                   gängigen Dateitypen).<br />
                   Beschichter möchten alle Details kennen, um alle
                   Anforderungen an den Auftrag erfüllen zu können.<br />
                   Dies gibt dir und dem Beschichter die nötige Sicherheit für
-                  die Produktion Ihres Auftrags.
+                  die Produktion deines Auftrags.
                 </span>
               </span>
             </h2>
