@@ -55,7 +55,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
 
     const gefiltert = istGueltig ? dropped.filter(istGueltig) : dropped;
     if (gefiltert.length === 0) {
-      setWarnung(type === 'bilder' ? 'Bitte lade mindestens ein Bild hoch.' : 'Bitte lade mindestens eine gültige Datei hoch.');
+      setWarnung(type === 'bilder' ? 'Bitte lade mindestens ein Bild hoch' : 'Bitte lade mindestens eine gültige Datei hoch');
       return;
     }
 

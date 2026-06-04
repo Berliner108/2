@@ -62,7 +62,7 @@ Bei Bedarf kannst du Prüfprotokolle, Sichtseiten, Nebensichtseiten und Nichtsic
 
         {showError && (
           <p className={styles.errorText}>
-            Bitte gib eine kurze Beschreibung deines Auftrags ein.
+            Bitte gib eine kurze Beschreibung deines Auftrags ein
           </p>
         )}
       </div>

@@ -826,6 +826,7 @@ const istAnodisieren =
 
 const istVerzinnen =
   selectedOption1 === 'Verzinnen' || selectedOption2 === 'Verzinnen'
+
 const istEntnickeln =
   selectedOption1 === 'Entnickeln' || selectedOption2 === 'Entnickeln'
 
@@ -843,6 +844,7 @@ const istEntanodisieren =
 
 const istEnteloxieren =
   selectedOption1 === 'Enteloxieren' || selectedOption2 === 'Enteloxieren'
+
 const istAluminieren =
   selectedOption1 === 'Aluminieren' || selectedOption2 === 'Aluminieren'
 
