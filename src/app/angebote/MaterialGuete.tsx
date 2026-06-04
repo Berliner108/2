@@ -12,6 +12,7 @@ interface MaterialGueteProps {
   customMaterial: string
   setCustomMaterial: (value: string) => void
   selectedVerfahren: string[]
+  materialienAktiv: string[]
   laenge: string
   setLaenge: (value: string) => void
   breite: string
@@ -23,21 +24,6 @@ interface MaterialGueteProps {
   materialGueteError: boolean
   abmessungError: boolean
 }
-
-const materialOptions = [
-  'Aluminium',
-  'Aluguss',
-  'Stahl',
-  'Edelstahl',
-  'Eloxiert',
-  'Anodisiert',
-  'Kupfer',
-  'Zink',
-  'Zinn',
-  'Nickel',
-  'Chrom',
-  'Andere'
-]
 
 const sanitizePositiveInt = (raw: string, maxDigits: number) => {
   const digits = raw.replace(/\D/g, "").slice(0, maxDigits)
@@ -62,6 +48,7 @@ export default function MaterialGuete({
   customMaterial,
   setCustomMaterial,
   selectedVerfahren,
+  materialienAktiv,
   laenge,
   setLaenge,
   breite,
@@ -127,8 +114,7 @@ useEffect(() => {
           }}
           disabled={isEloxieren}
         >
-          <option value="">Bitte Materialgüte wählen</option>
-          {materialOptions.map((option) => (
+          {materialienAktiv.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>

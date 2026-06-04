@@ -707,7 +707,32 @@ useEffect(() => {
 
   setSelectedVerfahren(auswahl)
 }, [selectedOption1, selectedOption2])
+const materialienAlle = [
+  'Aluminium',
+  'Aluguss',
+  'Stahl',
+  'Edelstahl',
+  'Eloxiert',
+  'Anodisiert',
+  'Kupfer',
+  'Zink',
+  'Zinn',
+  'Nickel',
+  'Chrom',
+  'Andere',
+]
 
+const materialienVerzinken = [
+  'Stahl',
+  'Andere',
+]
+
+const istVerzinken =
+  selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
+
+const materialienAktiv = istVerzinken
+  ? materialienVerzinken
+  : materialienAlle
 const lieferArtLabel: Record<string, string> = {
   selbst: 'Ich liefere selbst',
   abholung: 'Abholung an meinem Standort',
@@ -1078,6 +1103,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   materialGueteError={materialGueteError}
   abmessungError={abmessungError}
   selectedVerfahren={selectedVerfahren}
+  materialienAktiv={materialienAktiv}
 />
 
 <div className={styles.dividerLine} />
