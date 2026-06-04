@@ -275,6 +275,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
     if (profErr || !prof) {
       return NextResponse.json({ ok: false, error: 'profile_not_found' }, { status: 409 })
     }
+    if (String(prof.account_type).toLowerCase() !== 'business') {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'only_business_users_can_offer',
+      message: 'Nur gewerbliche Nutzer können Angebote abgeben.',
+    },
+    { status: 403 },
+  )
+}
 
     const addr: any = prof.address || {}
     const meta: any = user.user_metadata || {}
