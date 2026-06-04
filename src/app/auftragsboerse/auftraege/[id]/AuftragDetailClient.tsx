@@ -398,8 +398,33 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
 
     const gesamtCents = artikelCents + versandCents;
 
-    // Connect-Ready prüfen (wie bei Lackanfragen)
-    try {
+// Profil prüfen: Nur gewerbliche Nutzer dürfen Angebote abgeben
+try {
+  const profileRes = await fetch('/api/profile', {
+    cache: 'no-store',
+    credentials: 'include',
+  });
+
+  const profileJson = await profileRes.json().catch(() => ({} as any));
+
+  if (!profileRes.ok) {
+    toastError('Dein Profil konnte nicht geprüft werden. Bitte erneut anmelden.');
+    return;
+  }
+
+  const accountType = String(profileJson?.profile?.account_type || '').toLowerCase();
+
+  if (accountType !== 'business') {
+    toastError('Nur gewerbliche Nutzer können Angebote abgeben.');
+    return;
+  }
+} catch {
+  toastError('Dein Profil konnte nicht geprüft werden.');
+  return;
+}
+
+// Connect-Ready prüfen (wie bei Lackanfragen)
+try {
       const stRes = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
       const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false } as ConnectStatus));
 
