@@ -726,7 +726,10 @@ const materialienVerzinken = [
   'Stahl',
   'Andere',
 ]
-
+const materialienEloxieren = [
+  'Aluminium',
+  'Aluguss',
+]
 const materialienSandstrahlen = [
   'Stahl',
   'Edelstahl',
@@ -748,7 +751,8 @@ const materialienGlasperlen = [
   'Kupfer',
   'Andere',
 ]
-
+const istEloxieren =
+  selectedOption1 === 'Eloxieren' || selectedOption2 === 'Eloxieren'
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
 
@@ -761,7 +765,9 @@ const strahlVerfahren =
 
 let materialienAktiv = materialienAlle
 
-if (istVerzinken) {
+if (istEloxieren) {
+  materialienAktiv = materialienEloxieren
+} else if (istVerzinken) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {
   materialienAktiv = materialienSandstrahlen
