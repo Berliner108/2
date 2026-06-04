@@ -735,6 +735,12 @@ const materialienAnodisieren = [
   'Zinn',
   'Andere',
 ]
+const materialienVerzinnen = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Andere',
+]
 const materialienSandstrahlen = [
   'Stahl',
   'Edelstahl',
@@ -760,6 +766,8 @@ const istEloxieren =
   selectedOption1 === 'Eloxieren' || selectedOption2 === 'Eloxieren'
   const istAnodisieren =
   selectedOption1 === 'Anodisieren' || selectedOption2 === 'Anodisieren'
+  const istVerzinnen =
+  selectedOption1 === 'Verzinnen' || selectedOption2 === 'Verzinnen'
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
 
@@ -776,6 +784,8 @@ if (istEloxieren) {
   materialienAktiv = materialienEloxieren
 } else if (istAnodisieren) {
   materialienAktiv = materialienAnodisieren
+} else if (istVerzinnen) {
+  materialienAktiv = materialienVerzinnen 
 } else if (istVerzinken) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {
