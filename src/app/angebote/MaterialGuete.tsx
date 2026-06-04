@@ -112,6 +112,7 @@ useEffect(() => {
           }}
           disabled={isEloxieren}
         >
+          <option value="">Bitte Materialgüte wählen</option>
           {materialienAktiv.map((option) => (
             <option key={option} value={option}>
               {option}

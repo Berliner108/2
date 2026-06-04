@@ -727,12 +727,55 @@ const materialienVerzinken = [
   'Andere',
 ]
 
+const materialienSandstrahlen = [
+  'Stahl',
+  'Edelstahl',
+  'Andere',
+]
+
+const materialienStaubstrahlen = [
+  'Aluminium',
+  'Aluguss',
+  'Stahl',
+  'Edelstahl',
+  'Andere',
+]
+
+const materialienGlasperlen = [
+  'Aluminium',
+  'Aluguss',
+  'Edelstahl',
+  'Kupfer',
+  'Andere',
+]
+
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
 
-const materialienAktiv = istVerzinken
-  ? materialienVerzinken
-  : materialienAlle
+const strahlVerfahrenRaw =
+  specSelections['v1__Strahlen__verfahren'] ||
+  specSelections['v2__Strahlen__verfahren']
+
+const strahlVerfahren =
+  typeof strahlVerfahrenRaw === 'string' ? strahlVerfahrenRaw : ''
+
+let materialienAktiv = materialienAlle
+
+if (istVerzinken) {
+  materialienAktiv = materialienVerzinken
+} else if (strahlVerfahren === 'Sandstrahlen') {
+  materialienAktiv = materialienSandstrahlen
+} else if (strahlVerfahren === 'Staubstrahlen') {
+  materialienAktiv = materialienStaubstrahlen
+} else if (strahlVerfahren === 'Glasperlen') {
+  materialienAktiv = materialienGlasperlen
+}
+useEffect(() => {
+  if (materialGuete && !materialienAktiv.includes(materialGuete)) {
+    setMaterialGuete('')
+    setCustomMaterial('')
+  }
+}, [materialGuete, materialienAktiv])
 const lieferArtLabel: Record<string, string> = {
   selbst: 'Ich liefere selbst',
   abholung: 'Abholung an meinem Standort',
