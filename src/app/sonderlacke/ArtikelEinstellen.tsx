@@ -1280,11 +1280,11 @@ if (bootLoading) {
                     <div className={styles.radioOptionsHorizontal}>
                       <label className={styles.radioLabel}>
                         <input type="radio" name="zustand" value="neu" checked={zustand === 'neu'} onChange={() => setZustand('neu')} />
-                        <span>Neu und ungeöffnet</span>
+                        <span>Neu / ungeöffnet</span>
                       </label>
                       <label className={styles.radioLabel}>
                         <input type="radio" name="zustand" value="geöffnet" checked={zustand === 'geöffnet'} onChange={() => setZustand('geöffnet')} />
-                        <span>Geöffnet und einwandfrei</span>
+                        <span>Geöffnet / einwandfrei</span>
                       </label>
                       {warnungZustand && <p className={styles.validierungsfehlerradio}>{warnungZustand}</p>}
                     </div>
