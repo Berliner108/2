@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {})
 const DAYS_28_MS = 28 * 24 * 60 * 60 * 1000
-const PLATFORM_FEE_PCT = 0.7
+const PLATFORM_FEE_PCT = 0.07
 
 function jsonError(code: string, status = 400, extra?: Record<string, any>) {
   return NextResponse.json({ error: code, ...(extra ?? {}) }, { status })

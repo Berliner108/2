@@ -55,10 +55,26 @@ type JobOffersReceivedResp = {
   ok?: boolean
   offers?: Array<{ id: string; created_at?: string }>
 }
-
+type JobAccountOrdersResp = {
+  orders?: Array<{
+    jobId: string | number
+    kind: 'vergeben' | 'angenommen'
+    jobPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
+    offerPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
+    acceptedAt?: string
+    paidAt?: string
+    releasedAt?: string
+    refundedAt?: string
+    deliveredReportedAt?: string
+    deliveredConfirmedAt?: string
+    disputeOpenedAt?: string
+    lastEventAt?: string
+  }>
+}
 const JOB_OFFERS_RECEIVED_API = '/api/offers/received'
 const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
-
+const JOB_ORDERS_API = '/api/konto/auftraege'
+const JOB_ORDERS_LASTSEEN_KEY = 'jobOrders:lastSeen'
 const NAV_SCROLL_KEY = 'navbar:scrollLeft'
 
 // ✅ wenn deine Buyer-API anders heißt, NUR diesen String anpassen:
@@ -244,8 +260,59 @@ try {
 } catch {
   // ignore
 }
+// 6) ✅ Job-Aufträge – bezahlt / freigegeben / erstattet
+let jobOrdersNew = 0
 
-        if (alive) setKontoNew(offersNew + ordersBadge + shopSalesNew + shopBuysNew + jobOffersNew)
+try {
+  const res = await fetch(JOB_ORDERS_API, {
+    cache: 'no-store',
+    credentials: 'include',
+  })
+
+  if (res.ok) {
+    const j: JobAccountOrdersResp = await res.json()
+    const orders = Array.isArray(j?.orders) ? j.orders : []
+
+    const rawLastSeen = Number(localStorage.getItem(JOB_ORDERS_LASTSEEN_KEY) || '0')
+    const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+    jobOrdersNew = orders.reduce((acc, o) => {
+      const payStatus = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
+
+      const relevant =
+        payStatus === 'paid' ||
+        payStatus === 'released' ||
+        payStatus === 'refunded' ||
+        payStatus === 'disputed'
+
+      if (!relevant) return acc
+
+      const ts =
+        tsOf(o.lastEventAt) ||
+        tsOf(o.refundedAt) ||
+        tsOf(o.releasedAt) ||
+        tsOf(o.deliveredConfirmedAt) ||
+        tsOf(o.deliveredReportedAt) ||
+        tsOf(o.disputeOpenedAt) ||
+        tsOf(o.paidAt) ||
+        tsOf(o.acceptedAt)
+
+      return ts > lastSeen ? acc + 1 : acc
+    }, 0)
+  }
+} catch {
+  // ignore
+}
+        if (alive) {
+  setKontoNew(
+    offersNew +
+      ordersBadge +
+      shopSalesNew +
+      shopBuysNew +
+      jobOffersNew +
+      jobOrdersNew
+  )
+}
       } catch {
         // ignore
       }
@@ -290,25 +357,24 @@ try {
     nav.addEventListener('scroll', save, { passive: true })
     return () => nav.removeEventListener('scroll', save)
   }, [])
+useLayoutEffect(() => {
+  const nav = navbarRef.current
+  if (!nav) return
 
-  useLayoutEffect(() => {
-    const nav = navbarRef.current
-    if (!nav) return
+  let x = 0
+  try {
+    x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
+  } catch {
+    // ignore
+  }
 
-    let x = 0
-    try {
-      x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
-    } catch {
-      // ignore
-    }
-
-    // 2 Frames warten, damit active-styles + Layout fertig sind
+  // 2 Frames warten, damit active-styles + Layout fertig sind
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        nav.scrollTo({ left: x, behavior: 'auto' })
-      })
+      nav.scrollTo({ left: x, behavior: 'auto' })
     })
-  }, [pathname])
+  })
+}, [pathname])
 
   // --- Sichtbarkeitsprüfung per BoundingClientRect ---
   useEffect(() => {
@@ -385,6 +451,11 @@ try {
     localStorage.setItem(JOB_OFFERS_LASTSEEN_KEY, String(Date.now()))
     reloadCountsRef.current?.()
   }
+  // ✅ Job-Aufträge als gesehen markieren
+if (pathname.startsWith('/konto/auftraege')) {
+  localStorage.setItem(JOB_ORDERS_LASTSEEN_KEY, String(Date.now()))
+  reloadCountsRef.current?.()
+}
 } catch {
   // ignore
 }

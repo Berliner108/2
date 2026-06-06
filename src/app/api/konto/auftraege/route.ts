@@ -116,6 +116,7 @@ type ApiOrder = {
 
   paidAt?: string
   releasedAt?: string
+  lastEventAt?: string
   currency?: string | null
   paymentIntentId?: string | null
   chargeId?: string | null
@@ -336,7 +337,18 @@ function calcAutoReleaseAtIso(jobRow: any | undefined, paidAtIso?: string | null
   if (isNaN(+d)) return undefined
   return new Date(+d + DAYS_28_MS).toISOString()
 }
-
+function lastEventAtForOffer(o: DbOffer): string | undefined {
+  return (
+    o.refunded_at ||
+    o.payout_released_at ||
+    o.delivered_confirmed_at ||
+    o.delivered_reported_at ||
+    o.dispute_opened_at ||
+    o.paid_at ||
+    o.created_at ||
+    undefined
+  )
+}
 /* ---------------- route ---------------- */
 
 export async function GET(req: Request) {
@@ -524,7 +536,7 @@ export async function GET(req: Request) {
     const vendorReviewed = raters.has(vendorId)
 
     const acceptedAt = o.paid_at || o.created_at || new Date().toISOString()
-
+    const lastEventAt = lastEventAtForOffer(o)
     const jobRow = jobRawMap.get(jobId)
     const autoReleaseAt = calcAutoReleaseAtIso(jobRow, o.paid_at)
     const payoutTransferId = o.payout_transfer_id ?? null
@@ -566,6 +578,7 @@ export async function GET(req: Request) {
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,
+        lastEventAt,
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,
@@ -614,6 +627,7 @@ export async function GET(req: Request) {
 
         paidAt: o.paid_at || undefined,
         releasedAt: o.payout_released_at || undefined,
+        lastEventAt,
         currency: o.currency ?? null,
         paymentIntentId: o.payment_intent_id ?? null,
         chargeId: o.charge_id ?? null,

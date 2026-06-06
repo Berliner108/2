@@ -61,10 +61,26 @@ type JobOffersReceivedResp = {
   ok?: boolean
   offers?: Array<{ id: string; created_at?: string; createdAt?: string }>
 }
-
+type JobAccountOrdersResp = {
+  orders?: Array<{
+    jobId: string | number
+    kind: 'vergeben' | 'angenommen'
+    jobPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
+    offerPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
+    acceptedAt?: string
+    paidAt?: string
+    releasedAt?: string
+    refundedAt?: string
+    deliveredReportedAt?: string
+    deliveredConfirmedAt?: string
+    disputeOpenedAt?: string
+    lastEventAt?: string
+  }>
+}
 const JOB_OFFERS_RECEIVED_API = '/api/offers/received'
 const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
-
+const JOB_ORDERS_API = '/api/konto/auftraege'
+const JOB_ORDERS_LASTSEEN_KEY = 'jobOrders:lastSeen'
 export default function Page() {
   const [offersNew, setOffersNew] = useState(0) // Badge für Lackanfragen-Angebote
   const [ordersBadge, setOrdersBadge] = useState(0) // Badge für Lackanfragen-Deals
@@ -75,8 +91,9 @@ export default function Page() {
 
   // ✅ NEU: Job-Angebote Badge für /konto/angebote
   const [jobOffersBadge, setJobOffersBadge] = useState(0)
+  const [jobOrdersBadge, setJobOrdersBadge] = useState(0)
 
-  const tsOf = (iso?: string) => (iso ? +new Date(iso) : 0)
+  const tsOf = (iso?: string | null) => (iso ? +new Date(iso) : 0)
   const lastEventTs = (o: LackOrder) =>
     tsOf(
       o.lastEventAt ||
@@ -176,6 +193,70 @@ export default function Page() {
       clearInterval(id)
     }
   }, [])
+  // ✅ Job-Aufträge – Badge für /konto/auftraege
+useEffect(() => {
+  let alive = true
+
+  async function loadJobOrders() {
+    try {
+      const res = await fetch(JOB_ORDERS_API, {
+        cache: 'no-store',
+        credentials: 'include',
+      })
+
+      if (!res.ok) {
+        if (alive) setJobOrdersBadge(0)
+        return
+      }
+
+      const j: JobAccountOrdersResp = await res.json()
+      const orders = Array.isArray(j?.orders) ? j.orders : []
+
+      const now = Date.now()
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+      const sevenDaysAgo = now - SEVEN_DAYS
+
+      const rawLastSeen = Number(localStorage.getItem(JOB_ORDERS_LASTSEEN_KEY) || '0')
+      const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+
+      const count = orders.reduce((acc, o) => {
+        const payStatus = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
+
+        const relevant =
+          payStatus === 'paid' ||
+          payStatus === 'released' ||
+          payStatus === 'refunded' ||
+          payStatus === 'disputed'
+
+        if (!relevant) return acc
+
+        const ts =
+          tsOf(o.lastEventAt) ||
+          tsOf(o.refundedAt) ||
+          tsOf(o.releasedAt) ||
+          tsOf(o.deliveredConfirmedAt) ||
+          tsOf(o.deliveredReportedAt) ||
+          tsOf(o.disputeOpenedAt) ||
+          tsOf(o.paidAt) ||
+          tsOf(o.acceptedAt)
+
+        return ts > lastSeen ? acc + 1 : acc
+      }, 0)
+
+      if (alive) setJobOrdersBadge(count)
+    } catch {
+      if (alive) setJobOrdersBadge(0)
+    }
+  }
+
+  loadJobOrders()
+  const id = setInterval(loadJobOrders, 60_000)
+
+  return () => {
+    alive = false
+    clearInterval(id)
+  }
+}, [])
 
   // Orders (Deals): Neu + Handlungsbedarf
   useEffect(() => {
@@ -210,12 +291,13 @@ export default function Page() {
         // Optional: auch Navbar live „pingen“
         try {
           const total =
-            (offersNew || 0) +
-            newEvents +
-            pending +
-            (shopSalesBadge || 0) +
-            (shopBuysBadge || 0) +
-            (jobOffersBadge || 0)
+          (offersNew || 0) +
+          newEvents +
+          pending +
+          (shopSalesBadge || 0) +
+          (shopBuysBadge || 0) +
+          (jobOffersBadge || 0) +
+          (jobOrdersBadge || 0)
 
           window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { total } }))
         } catch {}
@@ -227,7 +309,7 @@ export default function Page() {
       alive = false
       clearInterval(id)
     }
-  }, [offersNew, shopSalesBadge, shopBuysBadge, jobOffersBadge])
+  }, [offersNew, shopSalesBadge, shopBuysBadge, jobOffersBadge, jobOrdersBadge])
 
   // ✅ NEU: Shop-Verkäufe Badge (Verkäufer) – zählt paid + complaint_open + released + refunded (wie "Events")
   useEffect(() => {
@@ -366,6 +448,7 @@ export default function Page() {
   const displayShopSales = shopSalesBadge > 9 ? '9+' : String(shopSalesBadge)
   const displayShopBuys = shopBuysBadge > 9 ? '9+' : String(shopBuysBadge)
   const displayJobOffers = jobOffersBadge > 9 ? '9+' : String(jobOffersBadge)
+  const displayJobOrders = jobOrdersBadge > 9 ? '9+' : String(jobOrdersBadge)
 
   return (
     <>
@@ -388,6 +471,16 @@ export default function Page() {
                       {displayJobOffers}
                     </span>
                   )}
+                  {/* ✅ Kreis-Badge: Job-Aufträge */}
+                    {item.href === '/konto/auftraege' && jobOrdersBadge > 0 && (
+                      <span
+                        className={styles.kontoCardBadge}
+                        aria-label={`${jobOrdersBadge} neue Auftrags-Ereignisse`}
+                        title={`${jobOrdersBadge} neue Auftrags-Ereignisse`}
+                      >
+                        {displayJobOrders}
+                      </span>
+                    )}
 
                   {/* Kreis-Badge: Angebote */}
                   {item.href === '/konto/lackanfragen' && offersNew > 0 && (
