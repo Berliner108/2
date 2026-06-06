@@ -98,12 +98,17 @@ export async function POST(req: Request, ctx: any) {
 
     // Muss bezahlt sein
     const paidAt = parseDate((offer as any).paid_at)
-    const paymentIntentId = String((offer as any).payment_intent_id ?? "").trim()
-    const totalCents = Number((offer as any).gesamt_cents ?? 0)
+const paymentIntentId = String((offer as any).payment_intent_id ?? "").trim()
+const chargeId = String((offer as any).charge_id ?? "").trim()
+const totalCents = Number((offer as any).gesamt_cents ?? 0)
 
     if (!paidAt || !paymentIntentId || !Number.isFinite(totalCents) || totalCents <= 0) {
-      return jsonError("NOT_PAID", 409)
-    }
+  return jsonError("NOT_PAID", 409)
+}
+
+if (!chargeId) {
+  return jsonError("MISSING_CHARGE_ID", 409)
+}
 
     // Variante A Fristlogik:
     // - Käufer darf release nur BIS deadline
@@ -142,11 +147,12 @@ export async function POST(req: Request, ctx: any) {
 
     // Transfer Plattform -> Connected
     const transfer = await stripe.transfers.create({
-      amount: transferCents,
-      currency,
-      destination,
-      description: `job payout job=${jobId} offer=${selectedOfferId}`,
-      metadata: {
+  amount: transferCents,
+  currency,
+  destination,
+  source_transaction: chargeId,
+  description: `job payout job=${jobId} offer=${selectedOfferId}`,
+  metadata: {
         job_id: String(jobId),
         offer_id: String(selectedOfferId),
         owner_id: ownerId,
