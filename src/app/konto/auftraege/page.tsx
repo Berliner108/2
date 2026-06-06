@@ -658,16 +658,23 @@ const AuftraegePage: FC = () => {
 
   /* ---------- Actions (Server) ---------- */
   async function postJson(url: string, body: any) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body ?? {}),
-    })
-    const j = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(j?.error || 'request_failed')
-    return j
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body ?? {}),
+  })
+
+  const j = await res.json().catch(() => ({} as any))
+
+  if (!res.ok) {
+    const code = String(j?.error || 'request_failed')
+    const details = j?.details ? `\n\nDetails: ${j.details}` : ''
+    throw new Error(`${code}${details}`)
   }
+
+  return j
+}
 
   async function reportDelivered(jobId: string | number) {
     const key = `report:${jobId}`
@@ -691,9 +698,9 @@ const AuftraegePage: FC = () => {
       if (!ok) return
       await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
       await loadOrders()
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      alert('Auszahlung fehlgeschlagen.')
+      alert(`Auszahlung fehlgeschlagen:\n\n${String(e?.message || e)}`)
     } finally {
       setBusyKey(null)
     }
