@@ -1109,17 +1109,22 @@ async function confirmAccept() {
     await resetAfterCancel()
     toastErr('Zahlung abgebrochen – Auswahl zurückgesetzt.')
   }}
-  onSuccessAction={async () => {
-    closeReasonRef.current = 'success'
-    toastOk('Zahlung erfolgreich.')
+ onSuccessAction={async () => {
+  closeReasonRef.current = 'success'
+  toastOk('Zahlung erfolgreich.')
 
-    setCheckoutOpen(false)
-    setClientSecret(null)
-    setPendingJobId(null)
-    setPendingOfferId(null)
+  setCheckoutOpen(false)
+  setClientSecret(null)
+  setPendingJobId(null)
+  setPendingOfferId(null)
 
-    checkoutEverOpenedRef.current = false
-  }}
+  checkoutEverOpenedRef.current = false
+
+  setTimeout(() => {
+    router.push('/konto/auftraege')
+    router.refresh()
+  }, 700)
+}}
 />
 
     </>
