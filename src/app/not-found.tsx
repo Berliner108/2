@@ -35,7 +35,7 @@ export default function NotFound() {
             <span className={styles.quickText}>Lacke und Restposten finden</span>
           </Link>
 
-          <Link href="/shop" className={styles.quickLink}>
+          <Link href="/kaufen" className={styles.quickLink}>
             <span className={styles.quickTitle}>Shop</span>
             <span className={styles.quickText}>Produkte durchsuchen</span>
           </Link>
