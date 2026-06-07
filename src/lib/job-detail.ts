@@ -115,9 +115,10 @@ const { data: profile, error: profileError } = await supabase
 
   // 3) Files separat holen
   const { data: fileRows, error: filesError } = await supabase
-    .from('job_files')
-    .select('job_id, kind, bucket, path, original_name')
-    .eq('job_id', j.id)
+  .from('job_files')
+  .select('job_id, kind, bucket, path, original_name')
+  .eq('job_id', j.id)
+  .order('path', { ascending: true })
 
   if (filesError) {
     console.error('fetchJobDetail job_files error:', filesError)

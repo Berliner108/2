@@ -611,6 +611,9 @@ if (!jobId) {
 setOverlayTitle('Dateien werden hochgeladen …')
 setOverlayText('Bitte Seite nicht schließen.')
 
+userErrorMessage =
+  'Ein oder mehrere Bilder oder Dateien konnten nicht hochgeladen werden. Bitte prüfe deine Internetverbindung, entferne die betroffenen Dateien und versuche es erneut.'
+
 const finishedUploads = await uploadPreparedFilesToSupabase({
   bucket,
   uploads,
