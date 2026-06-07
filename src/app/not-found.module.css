@@ -1,5 +1,5 @@
 .page {
-  min-height: 100vh;
+  min-height: calc(100vh - 80px);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -15,7 +15,7 @@
 .card {
   position: relative;
   z-index: 2;
-  width: min(100%, 680px);
+  width: min(100%, 620px);
   padding: 54px 34px;
   text-align: center;
   border-radius: 28px;
@@ -55,7 +55,6 @@
 .actions {
   display: flex;
   justify-content: center;
-  margin-bottom: 26px;
 }
 
 .primaryButton {
@@ -81,51 +80,6 @@
   transform: translateY(-2px);
   background: #009ec2;
   box-shadow: 0 18px 38px rgba(0, 180, 216, 0.36);
-}
-
-.quickLinks {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-top: 8px;
-}
-
-.quickLink {
-  min-height: 96px;
-  padding: 18px 14px;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid #111111;
-  text-decoration: none;
-  color: #0b263d;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-.quickLink:hover {
-  transform: translateY(-3px);
-  border-color: #00b4d8;
-  background: #f8fdff;
-  box-shadow: 0 14px 30px rgba(11, 38, 61, 0.1);
-}
-
-.quickTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0b263d;
-}
-
-.quickText {
-  font-size: 12.5px;
-  line-height: 1.35;
-  color: #64748b;
 }
 
 .circleOne,
@@ -197,6 +151,7 @@
 
 @media (max-width: 560px) {
   .page {
+    min-height: calc(100vh - 70px);
     padding: 18px;
   }
 
@@ -215,15 +170,6 @@
 
   .primaryButton {
     width: 100%;
-  }
-
-  .quickLinks {
-    grid-template-columns: 1fr;
-  }
-
-  .quickLink {
-    min-height: auto;
-    padding: 16px;
   }
 
   .circleOne,
