@@ -1,11 +1,11 @@
 .page {
-  min-height: calc(100vh - 80px);
+  min-height: calc(130vh - 80px);
   position: relative;
   overflow: hidden;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 24px;
+  padding: 70px 24px 90px;
   background:
     radial-gradient(circle at top left, rgba(0, 180, 216, 0.12), transparent 34%),
     linear-gradient(135deg, #f8fafc 0%, #eef4f8 100%);
@@ -16,7 +16,7 @@
   position: relative;
   z-index: 2;
   width: min(100%, 620px);
-  padding: 54px 34px;
+  padding: 72px 38px;
   text-align: center;
   border-radius: 28px;
   background: #ffffff;
@@ -151,12 +151,12 @@
 
 @media (max-width: 560px) {
   .page {
-    min-height: calc(100vh - 70px);
-    padding: 18px;
+    min-height: calc(125vh - 70px);
+    padding: 46px 18px 70px;
   }
 
   .card {
-    padding: 42px 22px;
+    padding: 56px 22px;
     border-radius: 22px;
   }
 
