@@ -95,32 +95,49 @@ const cleanUploads = uploads.filter((file) => {
   return file.path.startsWith(expectedPrefix)
 })
 
-const paths = cleanUploads.map((file) => file.path)
+const existingPathSet = new Set<string>()
 
-const { data: existingObjects, error: objectsErr } = paths.length
-  ? await admin
-      .schema('storage')
-      .from('objects')
-      .select('name')
-      .eq('bucket_id', JOB_FILES_BUCKET)
-      .in('name', paths)
-  : { data: [], error: null }
+for (const file of cleanUploads) {
+  const lastSlashIndex = file.path.lastIndexOf('/')
 
-if (objectsErr) {
-  console.error('Fehler beim Prüfen der Storage-Dateien:', objectsErr)
+  if (lastSlashIndex === -1) {
+    return NextResponse.json(
+      {
+        error: 'invalid_upload_paths',
+        invalid: [file.path],
+      },
+      { status: 400 },
+    )
+  }
 
-  return NextResponse.json(
-    {
-      error: 'storage_check_failed',
-      details: objectsErr.message,
-    },
-    { status: 500 },
-  )
+  const folderPath = file.path.slice(0, lastSlashIndex)
+  const fileName = file.path.slice(lastSlashIndex + 1)
+
+  const { data: objects, error: listErr } = await admin.storage
+    .from(JOB_FILES_BUCKET)
+    .list(folderPath, {
+      limit: 100,
+      search: fileName,
+    })
+
+  if (listErr) {
+    console.error('Fehler beim Prüfen der Storage-Datei:', listErr)
+
+    return NextResponse.json(
+      {
+        error: 'storage_check_failed',
+        details: listErr.message,
+      },
+      { status: 500 },
+    )
+  }
+
+  const exists = (objects ?? []).some((obj) => obj.name === fileName)
+
+  if (exists) {
+    existingPathSet.add(file.path)
+  }
 }
-
-const existingPathSet = new Set(
-  (existingObjects ?? []).map((o: any) => String(o.name)),
-)
 
 const missingUploads = cleanUploads.filter(
   (file) => !existingPathSet.has(file.path),
