@@ -531,6 +531,8 @@ if (
   setIsLoading(true)
 
   let willNavigate = false
+  let userErrorMessage =
+  'Fehler beim Absenden. Dein Auftrag wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.'
 setOverlayTitle('Wir veröffentlichen deinen Auftrag …')
 setOverlayText('Wir leiten gleich weiter.')
 
@@ -637,6 +639,20 @@ if (!finalizeRes.ok) {
 
   console.error('Fehler /api/auftrag-finalisieren:', finalizeRes.status, payload)
 
+  if (
+    payload?.error === 'uploaded_files_missing_in_storage' ||
+    payload?.error === 'invalid_upload_paths'
+  ) {
+    userErrorMessage =
+      'Ein oder mehrere Bilder oder Dateien konnten nicht vollständig hochgeladen werden. Bitte entferne die betroffenen Dateien, lade sie erneut hoch und versuche es noch einmal.'
+  } else if (payload?.error === 'storage_check_failed') {
+    userErrorMessage =
+      'Die hochgeladenen Dateien konnten gerade nicht geprüft werden. Bitte versuche es in wenigen Minuten erneut.'
+  } else {
+    userErrorMessage =
+      'Der Auftrag konnte nicht veröffentlicht werden. Bitte versuche es erneut.'
+  }
+
   throw new Error(
     payload?.details ||
       payload?.error ||
@@ -700,11 +716,9 @@ return
 
 }
   } catch (err) {
-    console.error('❌ Fehler beim Absenden / Promo:', err)
-    alert(
-      'Fehler beim Absenden. Dein Auftrag wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.',
-    )
-  } finally {
+  console.error('❌ Fehler beim Absenden / Promo:', err)
+  alert(userErrorMessage)
+} finally {
   if (!willNavigate) setIsLoading(false)
 }
 }

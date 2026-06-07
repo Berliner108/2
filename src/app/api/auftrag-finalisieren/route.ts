@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const JOB_FILES_BUCKET = 'job-files'
 
@@ -14,6 +15,7 @@ type UploadedFile = {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await supabaseServer()
+    const admin = supabaseAdmin()
 
     const {
       data: { user },
@@ -61,18 +63,89 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const fileRows = uploads
-      .filter((file) => file.path && (file.kind === 'image' || file.kind === 'document'))
-      .map((file) => ({
-        job_id: jobId,
-        kind: file.kind,
-        bucket: JOB_FILES_BUCKET,
-        path: file.path,
-        original_name: file.originalName || null,
-        mime_type: file.mimeType || null,
-        size_bytes:
-          typeof file.sizeBytes === 'number' ? file.sizeBytes : null,
-      }))
+const validKinds = ['image', 'document'] as const
+
+const invalidUploads = uploads.filter((file) => {
+  if (!file.path) return true
+  if (!validKinds.includes(file.kind)) return true
+
+  const expectedFolder = file.kind === 'image' ? 'images' : 'files'
+  const expectedPrefix = `${jobId}/${expectedFolder}/`
+
+  return !file.path.startsWith(expectedPrefix)
+})
+
+if (invalidUploads.length > 0) {
+  return NextResponse.json(
+    {
+      error: 'invalid_upload_paths',
+      invalid: invalidUploads.map((file) => file.path),
+    },
+    { status: 400 },
+  )
+}
+
+const cleanUploads = uploads.filter((file) => {
+  if (!file.path) return false
+  if (file.kind !== 'image' && file.kind !== 'document') return false
+
+  const expectedFolder = file.kind === 'image' ? 'images' : 'files'
+  const expectedPrefix = `${jobId}/${expectedFolder}/`
+
+  return file.path.startsWith(expectedPrefix)
+})
+
+const paths = cleanUploads.map((file) => file.path)
+
+const { data: existingObjects, error: objectsErr } = paths.length
+  ? await admin
+      .schema('storage')
+      .from('objects')
+      .select('name')
+      .eq('bucket_id', JOB_FILES_BUCKET)
+      .in('name', paths)
+  : { data: [], error: null }
+
+if (objectsErr) {
+  console.error('Fehler beim Prüfen der Storage-Dateien:', objectsErr)
+
+  return NextResponse.json(
+    {
+      error: 'storage_check_failed',
+      details: objectsErr.message,
+    },
+    { status: 500 },
+  )
+}
+
+const existingPathSet = new Set(
+  (existingObjects ?? []).map((o: any) => String(o.name)),
+)
+
+const missingUploads = cleanUploads.filter(
+  (file) => !existingPathSet.has(file.path),
+)
+
+if (missingUploads.length > 0) {
+  return NextResponse.json(
+    {
+      error: 'uploaded_files_missing_in_storage',
+      missing: missingUploads.map((file) => file.path),
+    },
+    { status: 400 },
+  )
+}
+
+const fileRows = cleanUploads.map((file) => ({
+  job_id: jobId,
+  kind: file.kind,
+  bucket: JOB_FILES_BUCKET,
+  path: file.path,
+  original_name: file.originalName || null,
+  mime_type: file.mimeType || null,
+  size_bytes:
+    typeof file.sizeBytes === 'number' ? file.sizeBytes : null,
+}))
 
     if (fileRows.length > 0) {
       const { error: filesErr } = await supabase
