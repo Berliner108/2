@@ -30,14 +30,15 @@ export default function NotFound() {
             <span className={styles.quickText}>Beschichtungsaufträge ansehen</span>
           </Link>
 
-          <Link href="/lackanfragen" className={styles.quickLink}>
-            <span className={styles.quickTitle}>Lackanfragen</span>
-            <span className={styles.quickText}>Lacke und Restposten finden</span>
-          </Link>
+          
 
           <Link href="/kaufen" className={styles.quickLink}>
             <span className={styles.quickTitle}>Shop</span>
             <span className={styles.quickText}>Produkte durchsuchen</span>
+          </Link>
+          <Link href="/lackanfragen" className={styles.quickLink}>
+            <span className={styles.quickTitle}>Lackanfragen</span>
+            <span className={styles.quickText}>Lacke und Restposten finden</span>
           </Link>
         </div>
       </section>
