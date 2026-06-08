@@ -272,7 +272,7 @@
 /* Desktop: Buttonblock rechts höher ziehen */
 @media (min-width: 900px) {
   .actions {
-    margin-top: -90px;
+    margin-top: -75px;
     padding-right: 4px;
   }
 
