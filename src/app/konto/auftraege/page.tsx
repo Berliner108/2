@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './auftraege.module.css'
 import Navbar from '../../components/navbar/Navbar'
+import BoerseLoading from '../../components/loading/BoerseLoading'
 
 type Verfahren = { name: string; felder: Record<string, any> }
 type Job = {
@@ -656,6 +657,10 @@ const AuftraegePage: FC = () => {
     if (sliceA.safePage !== pageA) setPageA(sliceA.safePage)
   }, [sliceA.safePage, pageA])
 
+  if (loading && orders.length === 0 && jobs.length === 0) {
+      return <BoerseLoading />
+  }    
+
   /* ---------- Actions (Server) ---------- */
   async function postJson(url: string, body: any) {
   const res = await fetch(url, {
@@ -1188,76 +1193,59 @@ const AuftraegePage: FC = () => {
             </button>
           </div>
         </div>
+{topSection === 'vergeben' ? (
+  <>
+    <h2 className={styles.heading}>Vergebene Aufträge</h2>
+    <div className={styles.kontoContainer}>
+      {sliceV.total === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Noch keine bezahlten Aufträge.</strong>
+        </div>
+      ) : (
+        <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
+      )}
+    </div>
 
-        {topSection === 'vergeben' ? (
-          <>
-            <h2 className={styles.heading}>Vergebene Aufträge</h2>
-            <div className={styles.kontoContainer}>
-              {loading ? (
-                <div className={styles.emptyState}>
-                  <strong>Lade bezahlte Aufträge…</strong>
-                </div>
-              ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}>
-                  <strong>Noch keine bezahlten Aufträge.</strong>
-                </div>
-              ) : (
-                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
-              )}
-            </div>
+    <hr className={styles.divider} />
 
-            <hr className={styles.divider} />
+    <h2 className={styles.heading}>Angenommene Aufträge</h2>
+    <div className={styles.kontoContainer}>
+      {sliceA.total === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Noch keine bezahlten Aufträge.</strong>
+        </div>
+      ) : (
+        <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
+      )}
+    </div>
+  </>
+) : (
+  <>
+    <h2 className={styles.heading}>Angenommene Aufträge</h2>
+    <div className={styles.kontoContainer}>
+      {sliceA.total === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Noch keine bezahlten Aufträge.</strong>
+        </div>
+      ) : (
+        <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
+      )}
+    </div>
 
-            <h2 className={styles.heading}>Angenommene Aufträge</h2>
-            <div className={styles.kontoContainer}>
-              {loading ? (
-                <div className={styles.emptyState}>
-                  <strong>Lade bezahlte Aufträge…</strong>
-                </div>
-              ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}>
-                  <strong>Noch keine bezahlten Aufträge.</strong>
-                </div>
-              ) : (
-                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className={styles.heading}>Angenommene Aufträge</h2>
-            <div className={styles.kontoContainer}>
-              {loading ? (
-                <div className={styles.emptyState}>
-                  <strong>Lade bezahlte Aufträge…</strong>
-                </div>
-              ) : sliceA.total === 0 ? (
-                <div className={styles.emptyState}>
-                  <strong>Noch keine bezahlten Aufträge.</strong>
-                </div>
-              ) : (
-                <SectionList kind="angenommen" slice={sliceA} idPrefix="a" />
-              )}
-            </div>
+    <hr className={styles.divider} />
 
-            <hr className={styles.divider} />
-
-            <h2 className={styles.heading}>Vergebene Aufträge</h2>
-            <div className={styles.kontoContainer}>
-              {loading ? (
-                <div className={styles.emptyState}>
-                  <strong>Lade bezahlte Aufträge…</strong>
-                </div>
-              ) : sliceV.total === 0 ? (
-                <div className={styles.emptyState}>
-                  <strong>Noch keine bezahlten Aufträge.</strong>
-                </div>
-              ) : (
-                <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
-              )}
-            </div>
-          </>
-        )}
+    <h2 className={styles.heading}>Vergebene Aufträge</h2>
+    <div className={styles.kontoContainer}>
+      {sliceV.total === 0 ? (
+        <div className={styles.emptyState}>
+          <strong>Noch keine bezahlten Aufträge.</strong>
+        </div>
+      ) : (
+        <SectionList kind="vergeben" slice={sliceV} idPrefix="v" />
+      )}
+    </div>
+  </>
+)}
       </div>
 
       {/* Modal: Auftragnehmer meldet „abgeschlossen“ */}

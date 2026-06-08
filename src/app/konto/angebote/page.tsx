@@ -4,6 +4,7 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
+import BoerseLoading from '../../components/loading/BoerseLoading'
 import styles from './angebote.module.css'
 import CheckoutModal from '../../components/checkout/CheckoutModal'
 
@@ -623,7 +624,9 @@ const pruneExpiredOffers = () => {
   const sub = sliceByPage(submitted, pageSub, psSub)
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
-
+    if (loadingJobs && jobs.length === 0) {
+    return <BoerseLoading />
+    }
 
   function openConfirm(jobId: string | number, offerId: string, amountCents: number) {
   setConfirmOffer({ jobId, offerId, amountCents })
@@ -716,9 +719,7 @@ async function confirmAccept() {
     <>
       <h2 className={styles.heading}>Erhaltene Angebote für deine zu vergebenen Aufträge</h2>
       <div className={styles.kontoContainer}>
-        {loadingJobs ? (
-          <div className={styles.emptyState}><strong>Lade deine Aufträge…</strong></div>
-        ) : rec.total === 0 ? (
+        {rec.total === 0 ? (
           <div className={styles.emptyState}><strong>Keine offenen Aufträge gefunden.</strong></div>
         ) : (
           <>
