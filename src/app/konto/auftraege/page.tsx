@@ -1118,7 +1118,7 @@ const AuftraegePage: FC = () => {
                         disabled={isBusy}
                         onClick={() => openRefundModal(order.jobId)}
                       >
-                        Rückerstattung auslösen
+                        Rückerstattung anfordern
                       </button>
                     )}
 
@@ -1367,16 +1367,21 @@ const AuftraegePage: FC = () => {
         >
           <div className={styles.modalContent}>
             <h3 id="refundTitle" className={styles.modalTitle}>
-              Rückerstattung auslösen
+              Rückerstattung anfordern
             </h3>
-            <p className={styles.modalText}>Bitte gib kurz den Grund an (optional). Der Text wird gespeichert/weitergegeben.</p>
+            <p className={styles.modalText}>
+              Die Angabe eines Grundes ist optional, hilft aber bei der Nachvollziehbarkeit.
+              Mit der Rückerstattungsanforderung bestätigst du, dass aus deiner Sicht ein berechtigter Grund vorliegt.
+              Es gelten die gesetzlichen Bestimmungen sowie die vereinbarten Auftragsbedingungen.
+              BeschichterScout trifft keine rechtliche Entscheidung über den Anspruch, kann im Streitfall aber auf Wunsch bei der Lösungsfindung unterstützen.
+            </p>
 
             <textarea
               className={styles.reviewBox}
               value={refundText}
               onChange={e => setRefundText(e.target.value.slice(0, 800))}
               maxLength={800}
-              placeholder="z. B. nicht geliefert, Menge/Qualität weicht ab…"
+              placeholder="Bitte beschreibe den Grund möglichst genau, z. B. nicht geliefert, erhebliche Abweichung von den Auftragsbedingungen oder beschädigte Ware…"
               rows={4}
             />
 
@@ -1389,7 +1394,7 @@ const AuftraegePage: FC = () => {
                 Abbrechen
               </button>
               <button type="button" className={styles.btnDanger} onClick={confirmRefundModal} disabled={refundBusy}>
-                {refundBusy ? 'Wird erstattet…' : 'Rückerstattung bestätigen'}
+                {refundBusy ? 'Wird angefordert…' : 'Rückerstattung anfordern'}
               </button>
             </div>
           </div>
