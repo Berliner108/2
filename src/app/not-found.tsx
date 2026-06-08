@@ -18,9 +18,8 @@ export default function NotFound() {
           <h1 className={styles.title}>Seite nicht gefunden</h1>
 
           <p className={styles.text}>
-            Der Link ist möglicherweise veraltet oder die Seite wurde
-            verschoben. Über die Navigation oder den Startseite-Button findest du zurück zu den wichtigsten
-            Bereichen.
+            Die Seite konnte nicht gefunden werden. Möglicherweise wurde die Seite verschoben oder du bist nicht 
+            berechtigt, diesen Bereich aufzurufen. Über die Navigation oder den Startseite-Button gelangst du zurück zu den wichtigsten Bereichen.
           </p>
 
           <div className={styles.actions}>
