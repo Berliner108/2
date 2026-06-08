@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import Image from 'next/image';
 import styles from './detailseite.module.css';
 import Navbar from '../../../components/navbar/Navbar';
@@ -221,15 +221,33 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading, setLoading] = useState(false);
   const [offerSent, setOfferSent] = useState(false);
-    useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 
-    const raf = requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    });
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
 
-    return () => cancelAnimationFrame(raf);
+    window.history.scrollRestoration = 'manual';
+
+    const scrollTop = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    scrollTop();
+
+    const raf = requestAnimationFrame(scrollTop);
+    const t1 = window.setTimeout(scrollTop, 50);
+    const t2 = window.setTimeout(scrollTop, 250);
+    const t3 = window.setTimeout(scrollTop, 600);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
   }, [auftrag.id]);
+  
 
   const { error: toastError, success: toastSuccess } = useLocalToast();
 
