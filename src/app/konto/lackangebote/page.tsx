@@ -5,47 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
+import BoerseLoading from '../../components/loading/BoerseLoading'
 import styles from './lackangebote.module.css'
 
-/* ---------- Fancy Loader Components ---------- */
-function TopLoader() {
-  return (
-    <div className={styles.topLoader} aria-hidden>
-      <div className={styles.topLoaderInner} />
-    </div>
-  )
-}
+
 // Link zur Plattform-Rechnung (PDF) für diese Order
 const invoiceUrl = (o: LackOrder) => `/api/invoices/${encodeURIComponent(String(o.orderId))}`
-
-function FormSkeleton() {
-  return (
-    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
-      <div className={styles.skelHeader}>
-        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-        <div className={styles.skelLine} />
-      </div>
-
-      <div className={styles.skelBlock} />
-      <div className={styles.skelBlockSmall} />
-
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      <div className={styles.skelDrop} />
-      <div className={styles.skelDropSmall} />
-
-      <div className={styles.skelGrid}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-    </div>
-  )
-}
 
 /* ---------- Status / Typen ---------- */
 type OrderStatus = 'in_progress' | 'reported' | 'disputed' | 'confirmed'
@@ -906,17 +871,9 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
   )
 
   /* ---------- Ladezustände ---------- */
-  if (isLoading) {
-    return (
-      <>
-        <Navbar />
-        <TopLoader />
-        <div className={styles.wrapper}>
-          <FormSkeleton />
-        </div>
-      </>
-    )
-  }
+  if (isLoading && orders.length === 0) {
+  return <BoerseLoading />
+}
 
   if (error) {
     return (
