@@ -1,5 +1,5 @@
 import Navbar from '../navbar/Navbar'
-import styles from './BoerseLoading.module.css'
+import styles from '../../auftragsboerse/auftragsboerse.module.css'
 
 function TopLoader() {
   return (
