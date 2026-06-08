@@ -315,6 +315,20 @@ const sortierteAuftraege = useMemo(() => {
   const seiten   = sortierteAuftraege.slice(startIndex, endIndex);
   const anzeigen = page === 1 ? sortierteAuftraege.slice(0, anzeigenLimit) : seiten;
 
+  const scrollTopBeforeDetailOpen = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const link = target.closest('a');
+
+    if (!link) return;
+
+    const href = link.getAttribute('href') || '';
+
+    if (!href.includes('/auftragsboerse/auftraege/')) return;
+
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
   return (
     <>
       <Navbar />
@@ -434,7 +448,7 @@ const sortierteAuftraege = useMemo(() => {
           </h3>
 
 
-          <div className={styles.grid}>
+          <div className={styles.grid} onClickCapture={scrollTopBeforeDetailOpen}>
             {anzeigen.map((a) => (
               <ArtikelContainerAuftragsboerse key={a.id} artikel={a} />
             ))}
