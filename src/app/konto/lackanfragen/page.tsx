@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
+import BoerseLoading from '../../components/loading/BoerseLoading'
 import styles from './lackanfragen.module.css'
 import CheckoutModal from '../../components/checkout/CheckoutModal'
 
@@ -168,33 +169,6 @@ function useToast() {
   }
 }
 
-/* ============ Skeleton Components ============ */
-const GroupSkeleton: FC = () => (
-  <div style={{display:'grid', gap:12}}>
-    <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-    <div className={styles.skelLine} />
-    <div className={styles.skelDropSmall} />
-  </div>
-)
-
-const PageSkeleton: FC = () => (
-  <div className={styles.skeletonPage} role="status" aria-busy="true" aria-label="Lade Angebote">
-    <div className={styles.skelHeader}>
-      <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelBlockSmall} />
-      </div>
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelBlock} />
-        <div className={styles.skelBlock} />
-      </div>
-    </div>
-    <div className={styles.skelGrid}>
-      {Array.from({length: 4}).map((_, i) => <GroupSkeleton key={i} />)}
-    </div>
-  </div>
-)
 
 /* ================= Component ================= */
 const DEFAULTS = { q: '', sort: 'date_desc' as SortKey, tab: 'received' as TopSection, psRec: 10, psSub: 10, pageRec: 1, pageSub: 1 }
@@ -809,10 +783,15 @@ const normalizeOffer = (o: any): LackOffer => {
     </>
   )
 
-  if (error)     return <div className={styles.wrapper}>Konnte Daten nicht laden.</div>
-  if (isLoading) return <PageSkeleton />
+  if (error) {
+  return <div className={styles.wrapper}>Konnte Daten nicht laden.</div>
+    }
 
-  return (
+    if (isLoading) {
+      return <BoerseLoading />
+    }
+
+    return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
