@@ -943,14 +943,8 @@ const AuftraegePage: FC = () => {
                 </span>
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 12,
-                  alignItems: 'start',
-                }}
-              >
+                            <div className={styles.cardBody}>
+                <div className={styles.metaGrid}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
                   <div className={styles.metaValue}>
@@ -1095,9 +1089,9 @@ const AuftraegePage: FC = () => {
                     <div className={styles.metaValue}>{formatDate(asDateLike(buyerWindowUntilIso))}</div>
                   </div>
                 )}
-              </div>
+                </div>
 
-              <div className={styles.actions}>
+                <div className={styles.actions}>
                 {(canCustomerRelease || canCustomerRefund || canMyReview) && (
                   <div className={styles.actionStack}>
                     {canCustomerRelease && (
@@ -1135,6 +1129,7 @@ const AuftraegePage: FC = () => {
                   </div>
                 )}
               </div>
+              </div>
             </li>
           )
         })}
@@ -1166,7 +1161,7 @@ const AuftraegePage: FC = () => {
             type="search"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Auftrags-Nr., Name oder Titel…"
+            placeholder="Verfahren, Farbe oder Materialgüte…"
             className={styles.search}
           />
 

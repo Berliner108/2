@@ -118,7 +118,6 @@
 }
 
 .card {
-  position: relative;
   background: #fff;
   border: 2px solid darkgray;
   border-radius: 12px;
@@ -158,6 +157,92 @@
   text-decoration-thickness: 2px;
 }
 
+/* ===== Card Body / Meta / Actions ===== */
+.cardBody {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.metaCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.metaLabel {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.2rem;
+  font-weight: 700;
+}
+
+.metaValue {
+  font-weight: 700;
+  color: #111;
+}
+
+.actions {
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.actionStack {
+  width: min(420px, 100%);
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.actionStack > button {
+  width: 100%;
+}
+
+.btnHint {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* Desktop: links Daten, rechts Buttons */
+@media (min-width: 900px) {
+  .cardBody {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    column-gap: 32px;
+    align-items: end;
+  }
+
+  .metaGrid {
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 14px 22px;
+  }
+
+  .actions {
+    align-self: end;
+    justify-content: flex-end;
+  }
+
+  .actionStack {
+    width: 340px;
+    min-width: 340px;
+    gap: 8px;
+  }
+}
+
 /* ===== Status Badge ===== */
 .statusBadge {
   display: inline-block;
@@ -186,26 +271,7 @@
   border-color: #baf2d2;
 }
 
-/* ===== Meta ===== */
-.metaCol {
-  display: flex;
-  flex-direction: column;
-}
-
-.metaLabel {
-  font-size: 0.8rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  margin-bottom: 0.2rem;
-  font-weight: 700;
-}
-
-.metaValue {
-  font-weight: 700;
-  color: #111;
-}
-
+/* Username + Rating */
 .vendor,
 .vendorRatingSmall {
   color: #000;
@@ -242,58 +308,6 @@
   text-align: center;
 }
 
-/* ===== Actions ===== */
-.actions {
-  margin-top: 14px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.actionStack {
-  width: min(420px, 100%);
-  min-width: 260px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-}
-
-.actionStack > button {
-  width: 100%;
-}
-
-.btnHint {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: #777;
-}
-
-/* Desktop: Buttonblock rechts höher platzieren, ohne Inhalt abzuschneiden */
-@media (min-width: 900px) {
-  .card {
-    padding-right: 390px;
-    min-height: 250px;
-  }
-
-  .actions {
-    position: absolute;
-    right: 20px;
-    top: 265px;
-    width: 340px;
-    margin-top: 0;
-    padding-right: 0;
-    justify-content: flex-start;
-  }
-
-  .actionStack {
-    width: 340px;
-    min-width: 340px;
-    gap: 8px;
-  }
-}
-
 /* ===== Buttons ===== */
 .primaryBtn {
   display: inline-flex;
@@ -302,7 +316,6 @@
   gap: 0.5rem;
   text-align: center;
   max-height: 40px;
-
   background: #00b5d8;
   color: #fff !important;
   border: 0;
@@ -709,10 +722,11 @@
 }
 
 @media (max-width: 899px) {
+  .cardBody {
+    grid-template-columns: 1fr;
+  }
+
   .actions {
-    margin-top: 14px;
-    position: static;
-    width: auto;
     justify-content: flex-end;
   }
 
