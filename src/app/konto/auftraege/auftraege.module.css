@@ -118,6 +118,7 @@
 }
 
 .card {
+  position: relative;
   background: #fff;
   border: 2px solid darkgray;
   border-radius: 12px;
@@ -269,11 +270,21 @@
   color: #777;
 }
 
-/* Desktop: Buttonblock rechts höher ziehen */
+/* Desktop: Buttonblock rechts höher platzieren, ohne Inhalt abzuschneiden */
 @media (min-width: 900px) {
+  .card {
+    padding-right: 390px;
+    min-height: 250px;
+  }
+
   .actions {
-    margin-top: -75px;
-    padding-right: 4px;
+    position: absolute;
+    right: 20px;
+    top: 265px;
+    width: 340px;
+    margin-top: 0;
+    padding-right: 0;
+    justify-content: flex-start;
   }
 
   .actionStack {
@@ -312,7 +323,6 @@
   transform: translateY(1px);
 }
 
-/* animierter Verlauf */
 @keyframes btnGradientMove {
   0% {
     background-position: 0% 50%;
@@ -698,6 +708,20 @@
   }
 }
 
+@media (max-width: 899px) {
+  .actions {
+    margin-top: 14px;
+    position: static;
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .actionStack {
+    width: min(420px, 100%);
+    min-width: 260px;
+  }
+}
+
 @media (max-width: 768px) {
   .toolbar {
     grid-template-columns: 1fr;
@@ -722,6 +746,17 @@
   }
 }
 
+@media (max-width: 680px) {
+  .actions {
+    justify-content: stretch;
+  }
+
+  .actionStack {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .pageInfo {
     width: 100%;
@@ -735,18 +770,6 @@
 @media (max-width: 600px) {
   .segmentedBtn {
     padding: 0.4rem 0.7rem;
-  }
-}
-
-@media (max-width: 680px) {
-  .actions {
-    margin-top: 14px;
-    justify-content: stretch;
-  }
-
-  .actionStack {
-    width: 100%;
-    min-width: 0;
   }
 }
 
