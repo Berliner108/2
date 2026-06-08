@@ -221,6 +221,15 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
   const [loading, setLoading] = useState(false);
   const [offerSent, setOfferSent] = useState(false);
+    useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [auftrag.id]);
 
   const { error: toastError, success: toastSuccess } = useLocalToast();
 
