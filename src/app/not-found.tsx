@@ -19,7 +19,7 @@ export default function NotFound() {
 
           <p className={styles.text}>
             Der Link ist möglicherweise veraltet oder die Seite wurde
-            verschoben. Über die Navigation findest du zurück zu den wichtigsten
+            verschoben. Über die Navigation oder den Startseite-Button findest du zurück zu den wichtigsten
             Bereichen.
           </p>
 

@@ -9,6 +9,7 @@ import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelCard';
+import BoerseLoading from '../components/loading/BoerseLoading';
 
 /* ===================== Filterlisten ===================== */
 
@@ -69,34 +70,6 @@ type ApiItem = {
 
 /* ===================== Fancy Loader Components ===================== */
 
-function TopLoader() {
-  return (
-    <div className={styles.topLoader} aria-hidden>
-      <div className={styles.topLoaderInner} />
-    </div>
-  );
-}
-
-function ListSkeleton() {
-  return (
-    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
-      <div className={styles.skelHeader}>
-        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-        <div className={styles.skelLine} />
-      </div>
-
-      <div className={styles.skelGrid}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} style={{ display: 'grid', gap: 10 }}>
-            <div className={styles.skelDrop} />
-            <div className={styles.skelLine} />
-            <div className={styles.skelLine} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 /* ===================== Helfer / Normalisierung ===================== */
 
@@ -550,16 +523,11 @@ export default function KaufenSeite() {
 
   // Nur während des ersten Loads → Skeleton + TopLoader
   const bootLoading = loading && liste.length === 0;
-
   if (bootLoading) {
-    return (
-      <>
-        <Navbar />
-        <TopLoader />
-        <ListSkeleton />
-      </>
-    );
-  }
+  return <BoerseLoading />;
+}
+
+
 
   return (
     <>
@@ -700,7 +668,7 @@ export default function KaufenSeite() {
 
         {/* CONTENT */}
         <div className={styles.content}>
-          {loading && <TopLoader />}
+          
 
           <h3 className={styles.anfrageUeberschrift}>
             {loading ? 'Lade...' : `${gefiltert.length} ${gefiltert.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}`}
