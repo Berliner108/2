@@ -106,7 +106,8 @@ type DbOrder = Order & {
 type SortKey = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 
 // ✅ Stati + Filter: paid=relevant => "Wird beschichtet", released="Freigegeben", refunded="Rückerstattet", disputed="In Klärung"
-type StatusKey = 'beschichtung' | 'freigegeben' | 'rueckerstattet' | 'klaerung'
+// ✅ Sichtbare Stati + Filter für bezahlte Aufträge
+type StatusKey = 'aktiv' | 'freigegeben' | 'rueckerstattet'
 type FilterKey = 'alle' | StatusKey
 
 // ✅ NUR EINMAL
@@ -271,18 +272,27 @@ function getMyPayStatus(order: DbOrder): DbPayStatus | undefined {
 }
 
 function getStatusKeyFor(order: DbOrder): StatusKey {
-  const s = getMyPayStatus(order)
-  if (s === 'refunded') return 'rueckerstattet'
-  if (s === 'released') return 'freigegeben'
-  if (s === 'disputed') return 'klaerung'
-  return 'beschichtung' // paid oder fallback
+  const pay = getMyPayStatus(order)
+
+  if (pay === 'refunded') return 'rueckerstattet'
+
+  if (
+    pay === 'released' ||
+    order.status === 'confirmed' ||
+    order.deliveredConfirmedAt ||
+    order.releasedAt
+  ) {
+    return 'freigegeben'
+  }
+
+  return 'aktiv'
 }
 
-function statusLabel(key: StatusKey): 'Wird beschichtet' | 'Freigegeben' | 'Rückerstattet' | 'In Klärung' {
-  if (key === 'freigegeben') return 'Freigegeben'
+function statusLabel(key: StatusKey): string {
+  if (key === 'aktiv') return 'Auftrag aktiv'
+  if (key === 'freigegeben') return 'Abgeschlossen'
   if (key === 'rueckerstattet') return 'Rückerstattet'
-  if (key === 'klaerung') return 'In Klärung'
-  return 'Wird beschichtet'
+  return 'Auftrag aktiv'
 }
 
 /* ============ Pagination-UI (wie auf den anderen Seiten) ============ */
@@ -594,7 +604,9 @@ const AuftraegePage: FC = () => {
       if (srt && ['date_desc', 'date_asc', 'price_desc', 'price_asc'].includes(srt)) setSort(srt)
 
       const st = p.get('status') as FilterKey | null
-      if (st && ['alle', 'beschichtung', 'freigegeben', 'rueckerstattet', 'klaerung'].includes(st)) setStatusFilter(st)
+      if (st && ['alle', 'aktiv', 'freigegeben', 'rueckerstattet'].includes(st)) {
+      setStatusFilter(st)
+      }
 
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) setTopSection(tab)
@@ -920,10 +932,9 @@ const AuftraegePage: FC = () => {
                 <span
                   className={[
                     styles.statusBadge,
-                    display.key === 'beschichtung' ? styles.statusActive : '',
+                    display.key === 'aktiv' ? styles.statusActive : '',
                     display.key === 'freigegeben' ? styles.statusDone : '',
                     display.key === 'rueckerstattet' ? styles.statusPending : '',
-                    display.key === 'klaerung' ? styles.statusPending : '',
                   ]
                     .join(' ')
                     .trim()}
@@ -1180,10 +1191,9 @@ const AuftraegePage: FC = () => {
             title="Nach Status filtern"
           >
             <option value="alle">Alle</option>
-            <option value="beschichtung">Wird beschichtet</option>
-            <option value="freigegeben">Freigegeben</option>
+            <option value="aktiv">Auftrag aktiv</option>
+            <option value="freigegeben">Abgeschlossen</option>
             <option value="rueckerstattet">Rückerstattet</option>
-            <option value="klaerung">In Klärung</option>
           </select>
 
           <div className={styles.segmented} role="tablist" aria-label="Reihenfolge wählen">
