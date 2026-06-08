@@ -426,6 +426,8 @@ const AuftraegePage: FC = () => {
 
   const [confirmJobId, setConfirmJobId] = useState<string | number | null>(null)
 
+  const [releaseJobId, setReleaseJobId] = useState<string | number | null>(null)
+
   const [reviewJobId, setReviewJobId] = useState<string | number | null>(null)
   const [reviewRole, setReviewRole] = useState<ReviewRole>('customer_to_vendor')
   const [rating, setRating] = useState(5)
@@ -438,21 +440,33 @@ const AuftraegePage: FC = () => {
   const [refundBusy, setRefundBusy] = useState(false)
 
   // ESC schließt Modals
-  useEffect(() => {
-    if (confirmJobId == null && reviewJobId == null && refundJobId == null) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setConfirmJobId(null)
-        setReviewJobId(null)
-        if (!refundBusy) {
-          setRefundJobId(null)
-          setRefundText('')
-        }
+  
+    useEffect(() => {
+  if (
+    confirmJobId == null &&
+    releaseJobId == null &&
+    reviewJobId == null &&
+    refundJobId == null
+  ) {
+    return
+  }
+
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setConfirmJobId(null)
+      setReleaseJobId(null)
+      setReviewJobId(null)
+
+      if (!refundBusy) {
+        setRefundJobId(null)
+        setRefundText('')
       }
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [confirmJobId, reviewJobId, refundJobId, refundBusy])
+  }
+
+  window.addEventListener('keydown', onKey)
+  return () => window.removeEventListener('keydown', onKey)
+}, [confirmJobId, releaseJobId, reviewJobId, refundJobId, refundBusy])
 
   async function loadOrders() {
     setLoading(true)
@@ -699,9 +713,9 @@ const AuftraegePage: FC = () => {
     const key = `release:${jobId}`
     setBusyKey(key)
     try {
-      const ok = window.confirm('Auszahlung wirklich freigeben? (danach kein Refund mehr möglich)')
-      if (!ok) return
+      
       await postJson(`/api/jobs/${encodeURIComponent(String(jobId))}/release`, {})
+      setReleaseJobId(null)
       await loadOrders()
     } catch (e: any) {
       console.error(e)
@@ -1080,7 +1094,7 @@ const AuftraegePage: FC = () => {
                         type="button"
                         className={styles.acceptBtn}
                         disabled={isBusy}
-                        onClick={() => triggerRelease(order.jobId)}
+                        onClick={() => setReleaseJobId(order.jobId)}
                       >
                         Auszahlung freigeben
                       </button>
@@ -1287,6 +1301,48 @@ const AuftraegePage: FC = () => {
           </div>
         </div>
       )}
+      {releaseJobId !== null && (
+  <div
+    className={styles.modal}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="releaseTitle"
+    onClick={e => {
+      if (e.target === e.currentTarget) setReleaseJobId(null)
+    }}
+  >
+    <div className={styles.modalContent}>
+      <h3 id="releaseTitle" className={styles.modalTitle}>
+        Auszahlung freigeben?
+      </h3>
+
+      <p className={styles.modalText}>
+        Wenn du die Auszahlung freigibst, bestätigst du, dass der Auftrag aus deiner Sicht erfüllt wurde.
+        Danach ist eine Rückerstattung über diesen Auftrag nicht mehr möglich.
+      </p>
+
+      <div className={styles.modalActions}>
+        <button
+          type="button"
+          className={styles.btnGhost}
+          onClick={() => setReleaseJobId(null)}
+          disabled={busyKey === `release:${releaseJobId}`}
+        >
+          Abbrechen
+        </button>
+
+        <button
+          type="button"
+          className={styles.acceptBtn}
+          onClick={() => triggerRelease(releaseJobId)}
+          disabled={busyKey === `release:${releaseJobId}`}
+        >
+          {busyKey === `release:${releaseJobId}` ? 'Wird freigegeben…' : 'Auszahlung freigeben'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ✅ Modal: Rückerstattung auslösen (GENAU wie dein Look) */}
       {refundJobId !== null && (
