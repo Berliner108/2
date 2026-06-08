@@ -85,7 +85,7 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem; /* ✅ Abstand damit Chip nicht klebt */
+  gap: 0.55rem;
   font-family: inherit;
   white-space: nowrap;
 }
@@ -125,7 +125,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s ease, transform 0.06s ease;
 
-  /* Performance */
   content-visibility: auto;
   contain-intrinsic-size: 200px 400px;
 }
@@ -146,13 +145,11 @@
   font-weight: 800;
 }
 
-/* Link normal: keine Unterstreichung */
 .titleLink {
   color: inherit;
   text-decoration: none;
 }
 
-/* 1x Unterstreichung NUR bei Hover/Focus */
 .titleLink:hover,
 .titleLink:focus-visible {
   text-decoration: underline;
@@ -175,11 +172,13 @@
   color: #065f6a;
   border-color: #bdeff8;
 }
+
 .statusPending {
   background: #fff7e6;
   color: #7a4b00;
   border-color: #ffe1a6;
 }
+
 .statusDone {
   background: #eafff3;
   color: #065f46;
@@ -206,20 +205,18 @@
   color: #111;
 }
 
-/* Username + Rating immer schwarz */
 .vendor,
 .vendorRatingSmall {
   color: #000;
   opacity: 1;
 }
 
-/* wichtig: verhindert doppelte Unterstreichung durch innere Elemente */
 .titleLink .vendor,
 .titleLink .vendorRatingSmall {
   text-decoration: none;
 }
 
-/* Snapshot Block (Adresse/Firma/UID) */
+/* Snapshot Block */
 .vendorSnapshot {
   margin-top: 8px;
   padding: 10px 12px;
@@ -244,20 +241,26 @@
   text-align: center;
 }
 
-/* ===== Actions & Buttons ===== */
+/* ===== Actions ===== */
 .actions {
-  margin-top: 0.9rem;
+  margin-top: 14px;
   display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .actionStack {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  width: min(420px, 100%);
   min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.actionStack > button {
+  width: 100%;
 }
 
 .btnHint {
@@ -266,7 +269,21 @@
   color: #777;
 }
 
-/* ===== Buttons (Primary / Secondary / Accept / Danger / Ghost) ===== */
+/* Desktop: Buttonblock rechts höher ziehen */
+@media (min-width: 900px) {
+  .actions {
+    margin-top: -72px;
+    padding-right: 4px;
+  }
+
+  .actionStack {
+    width: 340px;
+    min-width: 340px;
+    gap: 8px;
+  }
+}
+
+/* ===== Buttons ===== */
 .primaryBtn {
   display: inline-flex;
   align-items: center;
@@ -295,20 +312,21 @@
   transform: translateY(1px);
 }
 
-/* animierter Verlauf (shared) */
+/* animierter Verlauf */
 @keyframes btnGradientMove {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 200% 50%;
   }
 }
 
-/* Secondary (dein "Auftrag abgeschlossen") */
 .secondaryBtn {
   position: relative;
   display: inline-flex;
@@ -350,7 +368,7 @@
   animation: none;
 }
 
-/* ✅ acceptBtn = GRÜN (für Auszahlung freigeben / Auszahlung holen) */
+/* Grün */
 .acceptBtn {
   box-sizing: border-box;
   min-height: 40px;
@@ -396,15 +414,17 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
 
-/* ✅ Danger = ROT (Refund + Confirm Buttons in Modals) */
+/* Rot */
 .btnDanger {
   appearance: none;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -459,6 +479,32 @@
   background: #f9fafb;
 }
 
+/* Blau */
+.acceptBtnBlue {
+  width: 100%;
+  min-height: 40px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #00b5d8;
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+}
+
+.acceptBtnBlue:hover {
+  filter: brightness(0.95);
+}
+
+/* Einheitliche CTA-Breite */
+.acceptBtn,
+.btnDanger,
+.acceptBtnBlue {
+  width: 100%;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .secondaryBtn,
@@ -483,13 +529,14 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 .modalContent {
-  width: min(520px, 92vw); /* ✅ genau: nicht zu breit */
+  width: min(520px, 92vw);
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
@@ -504,6 +551,7 @@
     transform: translateY(12px);
     opacity: 0.9;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -530,7 +578,6 @@
   margin-top: 12px;
 }
 
-/* Textarea im Modal: passt immer */
 .reviewBox {
   width: 100%;
   max-width: 100%;
@@ -557,7 +604,7 @@
   cursor: pointer;
 }
 
-/* ===== Pagination (wie Angebote) ===== */
+/* ===== Pagination ===== */
 .pagination {
   display: flex;
   align-items: center;
@@ -645,6 +692,7 @@
   .wrapper {
     padding: 1rem;
   }
+
   .heading {
     font-size: 1.35rem;
   }
@@ -660,7 +708,6 @@
     flex-direction: column;
   }
 
-  /* Segmented-Control strecken */
   .toolbar .segmented {
     display: flex;
     width: 100%;
@@ -679,6 +726,7 @@
   .pageInfo {
     width: 100%;
   }
+
   .pageNow {
     min-width: auto;
   }
@@ -690,7 +738,18 @@
   }
 }
 
-/* Extra: Buttons auf sehr schmalen Screens volle Breite */
+@media (max-width: 680px) {
+  .actions {
+    margin-top: 14px;
+    justify-content: stretch;
+  }
+
+  .actionStack {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 520px) {
   .card {
     margin: 0 -8px;
@@ -706,93 +765,13 @@
     gap: 8px;
   }
 
-  .actionStack {
-    width: 100%;
-    min-width: 0;
-  }
-
   .primaryBtn,
   .secondaryBtn,
   .acceptBtn,
   .btnDanger,
-  .btnGhost {
+  .btnGhost,
+  .acceptBtnBlue {
     width: 100%;
     min-height: 42px;
   }
 }
-/* ✅ 30% schmäler als vorher */
-/* ✅ Buttons in .actionStack immer gleich breit */
-.actionStack{
-  width: clamp(260px, 22vw, 340px); /* gleiche Spaltenbreite */
-  min-width: 260px;
-}
-
-.actionStack > button{
-  width: 100% !important;
-}
-
-/* falls deine Buttons in divs/wrappers stecken */
-.actionStack .acceptBtn,
-.actionStack .btnDanger,
-.actionStack .secondaryBtn,
-.actionStack .primaryBtn{
-  width: 100% !important;
-}
-
-
-
-/* Buttons-Block nach rechts schieben */
-.actions{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 14px;
-  justify-content: flex-end;   /* ✅ rechts */
-}
-
-/* falls du nur den Stack nach rechts willst, aber einzelne Buttons links lassen willst:
-.actions .actionStack{ margin-left:auto; }  (dann justify-content wieder entfernen) */
-
-/* optional: auf Mobile wieder volle Breite/zentriert */
-@media (max-width: 680px){
-  .actions{
-    justify-content: stretch;
-  }
-  .actionStack{
-    width: 100%;
-    min-width: 0;
-  }
-}
-.actions{
-  display:flex;
-  justify-content:flex-end; /* rechts in der Karte */
-}
-
-/* Container rechts, Buttons untereinander */
-.actionStack{
-  width: min(420px, 100%);
-  display:flex;
-  flex-direction:column;
-  gap: 12px;
-  align-items: stretch;
-}
-
-/* ALLE CTA Buttons gleich */
-.acceptBtn,
-.btnDanger,
-.acceptBtnBlue{
-  width: 100%;
-  min-height: 48px;
-  font-family: inherit;     /* gleiche Schrift */
-  font-size: 1rem;          /* gleiche Größe */
-  font-weight: 800;
-  border-radius: 14px;
-}
-
-/* Blau wie Lackanfragen */
-.acceptBtnBlue{
-  background: #00b5d8;
-  color:#fff;
-  border: 0;
-}
-.acceptBtnBlue:hover{ filter: brightness(.95); }
