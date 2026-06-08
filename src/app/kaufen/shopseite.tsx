@@ -8,6 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
+import BoerseLoading from '../components/loading/BoerseLoading';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
@@ -432,9 +433,16 @@ export default function Shopseite() {
   }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
 
   // für Pagination
-  const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
+    const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
 
-  return (
+    // Nur beim ersten Laden: einheitliches Börsen-Loading
+    const bootLoading = loading && artikelDaten.length === 0;
+
+    if (bootLoading) {
+      return <BoerseLoading />;
+    }
+
+    return (
     <>
       <Navbar />
             {promoToast && (
@@ -576,7 +584,7 @@ export default function Shopseite() {
         {/* CONTENT */}
         <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {loading ? 'Lade Artikel…' : `${sortierteArtikel.length} Artikel im Shop`}
+            {sortierteArtikel.length} Artikel im Shop
           </h3>
 
           {loadError && (
