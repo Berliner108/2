@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './bestellungen.module.css'
 import { useSearchParams, useRouter } from "next/navigation"
-
+import BoerseLoading from '../../components/loading/BoerseLoading'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -519,8 +519,11 @@ function ratingTxt(r?: number | null, c?: number | null) {
     : "keine Bewertungen";
 }
 
+if (loading && orders.length === 0) {
+  return <BoerseLoading />
+}
 
-  return (
+return (
     <>
       <Navbar />
 
@@ -562,11 +565,7 @@ function ratingTxt(r?: number | null, c?: number | null) {
         <h2 className={styles.heading}>Meine Bestellungen</h2>
 
         <div className={styles.kontoContainer}>
-              {loading ? (
-                <div className={styles.emptyState}>
-                  <strong>Lade deine Bestellungen…</strong>
-                </div>
-              ) : slice.total === 0 ? (
+              {slice.total === 0 ? (
                 <div className={styles.emptyState}>
                   <strong>Keine Bestellungen sichtbar.</strong>
                 </div>

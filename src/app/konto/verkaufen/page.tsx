@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import styles from './kaufen.module.css'
 import Navbar from '../../components/navbar/Navbar'
+import BoerseLoading from '../../components/loading/BoerseLoading'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -582,13 +583,16 @@ async function sellerRelease(sale: MySale) {
     alert("Bewertung fehlgeschlagen");
   }
 }
-function invoiceHref(s: MySale) {
-  // s.id ist die shop_order_id -> Route akzeptiert id oder shop_order_id
-  return `/api/shop-invoices/${encodeURIComponent(s.id)}/download`
-}
+    function invoiceHref(s: MySale) {
+      // s.id ist die shop_order_id -> Route akzeptiert id oder shop_order_id
+      return `/api/shop-invoices/${encodeURIComponent(s.id)}/download`
+    }
 
+    if ((mineLoading || salesLoading) && articles.length === 0 && sales.length === 0) {
+      return <BoerseLoading />
+    }
 
-  return (
+    return (
     <>
       <Navbar />
       <div className={styles.wrapper}>
@@ -651,11 +655,7 @@ function invoiceHref(s: MySale) {
         <hr className={styles.divider} />
 
         {/* Global state */}
-        {mineLoading && (
-          <div className={styles.emptyState}>
-            <strong>Lade deine Artikel…</strong>
-          </div>
-        )}
+        
 
         {!mineLoading && mineError && (
           <div className={styles.emptyState}>
