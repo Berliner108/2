@@ -915,6 +915,8 @@ const AuftraegePage: FC = () => {
           // Vendor: nach Ablauf des Fensters selbst releasen (nur wenn noch hold + kein Transfer)
           const canVendorRelease =
             isVendor && order.offerPayStatus === 'paid' && payout === 'hold' && !transferId && vendorUnlockOk
+          const canDownloadJobInvoice =
+            isVendor && getStatusKeyFor(order) === 'freigegeben'
 
           // ✅ Rating genau aus API-Feldern
           const avg = order.kind === 'vergeben' ? order.vendor_rating_avg : order.owner_rating_avg
@@ -1092,43 +1094,54 @@ const AuftraegePage: FC = () => {
                 </div>
 
                 <div className={styles.actions}>
-                {(canCustomerRelease || canCustomerRefund || canMyReview) && (
-                  <div className={styles.actionStack}>
-                    {canCustomerRelease && (
-                      <button
-                        type="button"
-                        className={styles.acceptBtn}
-                        disabled={isBusy}
-                        onClick={() => setReleaseJobId(order.jobId)}
-                      >
-                        Auszahlung freigeben
-                      </button>
-                    )}
+  {(canCustomerRelease || canCustomerRefund || canMyReview || canDownloadJobInvoice) && (
+    <div className={styles.actionStack}>
+      {canCustomerRelease && (
+        <button
+          type="button"
+          className={styles.acceptBtn}
+          disabled={isBusy}
+          onClick={() => setReleaseJobId(order.jobId)}
+        >
+          Auszahlung freigeben
+        </button>
+      )}
 
-                    {canCustomerRefund && (
-                      <button
-                        type="button"
-                        className={styles.btnDanger}
-                        disabled={isBusy}
-                        onClick={() => openRefundModal(order.jobId)}
-                      >
-                        Rückerstattung anfordern
-                      </button>
-                    )}
+      {canCustomerRefund && (
+        <button
+          type="button"
+          className={styles.btnDanger}
+          disabled={isBusy}
+          onClick={() => openRefundModal(order.jobId)}
+        >
+          Rückerstattung anfordern
+        </button>
+      )}
 
-                    {canMyReview && (
-                      <button
-                        type="button"
-                        className={styles.acceptBtnBlue} // <- neuer Style, siehe CSS unten
-                        disabled={isBusy}
-                        onClick={() => openReviewModal(order.jobId, myRole)}
-                      >
-                        Bewerten
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+      {canMyReview && (
+        <button
+          type="button"
+          className={styles.acceptBtnBlue}
+          disabled={isBusy}
+          onClick={() => openReviewModal(order.jobId, myRole)}
+        >
+          Bewerten
+        </button>
+      )}
+
+      {canDownloadJobInvoice && (
+        <a
+          className={styles.acceptBtnBlue}
+          href={`/api/job-invoices/${encodeURIComponent(String(order.jobId))}/download`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Rechnung herunterladen
+        </a>
+      )}
+    </div>
+  )}
+</div>
               </div>
             </li>
           )
