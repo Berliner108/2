@@ -291,7 +291,7 @@ export async function ensureJobInvoiceForOffer(jobId: string, offerId: string) {
     const split = splitGrossInclusive(feeCents, appliedVatRate)
     feeNetCents = split.net
     feeVatCents = split.vat
-    notes.push('Die 7% Provision enthält die gesetzliche österreichische Steuer.')
+    notes.push('Die 7% Plattformprovision enthält die gesetzliche österreichische Umsatzsteuer.')
   } else if (taxMode === 'REVERSE_CHARGE') {
     notes.push('Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / §3a UStG).')
   } else {

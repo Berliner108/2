@@ -138,7 +138,7 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     const s = splitGrossInclusive(feeGrossCents, appliedVatRate)
     feeNetCents = s.net
     feeVatCents = s.vat
-    notes.push('Die 7% Provision enthält die gesetzliche österreichische Steuer.')
+    notes.push('Die 7% Plattformprovision enthält die gesetzliche österreichische Umsatzsteuer.')
   } else if (taxMode === 'REVERSE_CHARGE') {
     appliedVatRate = 0
     notes.push('Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / §3a UStG).')
