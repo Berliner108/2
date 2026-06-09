@@ -141,10 +141,10 @@ export async function createCommissionInvoiceForOrder(orderId: string) {
     notes.push('Die 7% Plattformprovision enthält die gesetzliche österreichische Umsatzsteuer.')
   } else if (taxMode === 'REVERSE_CHARGE') {
     appliedVatRate = 0
-    notes.push('Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers (Art. 196 MwStSystRL / §3a UStG).')
+    notes.push('Reverse Charge: Steuerschuldnerschaft des Leistungsempfängers.')
   } else {
     appliedVatRate = 0
-    notes.push('Leistung außerhalb des Anwendungsbereichs der österreichischen USt (Drittland).')
+    notes.push('Reverse Charge – Steuerschuldnerschaft des Leistungsempfängers.')
   }
 
   const payoutCents = Math.max(0, orderGrossCents - feeGrossCents)
