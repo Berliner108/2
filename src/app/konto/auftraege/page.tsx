@@ -1147,7 +1147,6 @@ const AuftraegePage: FC = () => {
           )
         })}
       </ul>
-
       <Pagination
         page={slice.safePage}
         setPage={idPrefix === 'v' ? setPageV : setPageA}
