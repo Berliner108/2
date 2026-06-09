@@ -524,7 +524,8 @@
 /* Einheitliche CTA-Breite */
 .acceptBtn,
 .btnDanger,
-.acceptBtnBlue {
+.acceptBtnBlue,
+.invoiceBtn {
   width: 100%;
 }
 
@@ -803,12 +804,52 @@
   }
 
   .primaryBtn,
-  .secondaryBtn,
-  .acceptBtn,
-  .btnDanger,
-  .btnGhost,
-  .acceptBtnBlue {
-    width: 100%;
-    min-height: 42px;
-  }
+.secondaryBtn,
+.acceptBtn,
+.btnDanger,
+.btnGhost,
+.acceptBtnBlue,
+.invoiceBtn {
+  width: 100%;
+  min-height: 42px;
+}
+}
+/* Kupfer - Rechnung */
+.invoiceBtn {
+  width: 100%;
+  min-height: 40px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #B87333;
+  color: #fff;
+  border: 1px solid #B87333;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: filter 0.15s ease, transform 0.06s ease, box-shadow 0.15s ease;
+}
+
+.invoiceBtn:hover {
+  background: #965A25;
+  border-color: #965A25;
+  color: #fff;
+  text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.invoiceBtn:active {
+  transform: translateY(0);
+}
+
+.invoiceBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(184, 115, 51, 0.35);
 }

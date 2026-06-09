@@ -1131,7 +1131,7 @@ const AuftraegePage: FC = () => {
 
       {canDownloadJobInvoice && (
         <a
-          className={styles.acceptBtnBlue}
+          className={styles.invoiceBtn}
           href={`/api/job-invoices/${encodeURIComponent(String(order.jobId))}/download`}
           target="_blank"
           rel="noopener noreferrer"
