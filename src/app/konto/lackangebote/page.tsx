@@ -127,7 +127,13 @@ function statusFromLiefer(d?: Date): { key: 'wartet' | 'aktiv' | 'fertig'; label
 }
 
 function notifyNavbarCount(count: number) {
-  try { window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { key: 'lackOrders', count } })) } catch {}
+  try {
+    window.dispatchEvent(
+      new CustomEvent('navbar:badge', {
+        detail: { total: count }
+      })
+    )
+  } catch {}
 }
 function endOfDayIso(d?: string | null): string | undefined {
   if (!d) return undefined
@@ -241,12 +247,19 @@ const LackanfragenOrdersPage: FC = () => {
 
   // Orders in lokalen State übernehmen
   useEffect(() => {
-    if (!apiOrders) return
-    const merged = [...(apiOrders.vergeben ?? []), ...(apiOrders.angenommen ?? [])]
-    setOrders(merged)
-    try { localStorage.setItem(LS_KEY, JSON.stringify(merged)) } catch {}
-    notifyNavbarCount(merged.length)
-  }, [apiOrders])
+  if (!apiOrders) return
+
+  const merged = [...(apiOrders.vergeben ?? []), ...(apiOrders.angenommen ?? [])]
+
+  setOrders(merged)
+
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(merged))
+    localStorage.setItem(LS_SEEN_ORDERS, String(Date.now()))
+  } catch {}
+
+  notifyNavbarCount(0)
+}, [apiOrders])
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
