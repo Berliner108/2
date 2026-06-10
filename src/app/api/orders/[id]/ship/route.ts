@@ -38,12 +38,23 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   .or(`auto_refund_at.is.null,auto_refund_at.gt.${nowIso}`)   // ⬅️ NEU
   .select('id, request_id')
   .limit(1)
+console.log('[orders/ship] user.id:', user.id)
+console.log('[orders/ship] order.id:', id)
+console.log('[orders/ship] nowIso:', nowIso)
+if (error) {
+  console.error('[orders/ship] update error:', error)
+  return NextResponse.json(
+    { error: error.message },
+    { status: 500 }
+  )
+}
 
-if (!updated?.length) return NextResponse.json({ error: 'DEADLINE_PASSED_OR_NOT_ALLOWED' }, { status: 409 })
-
-    if (!updated || updated.length === 0) {
-      return NextResponse.json({ error: 'Bereits gemeldet oder unzulässig' }, { status: 409 })
-    }
+if (!updated || updated.length === 0) {
+  return NextResponse.json(
+    { error: 'ORDER_NOT_FOUND_OR_NOT_ALLOWED' },
+    { status: 409 }
+  )
+}
 
     // ---- lack_requests.data.{shipped_at,reported_at} setzen (idempotent) ----
     const admin = supabaseAdmin()
