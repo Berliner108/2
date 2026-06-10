@@ -8,15 +8,18 @@ import PageviewPing from './components/PageviewPing'
 
 export default function Chrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const hide = pathname === '/login' // nur auf /login ausblenden
+  const hideFooter = pathname === '/login'
 
   return (
     <>
-      {!hide && <Header />}
+      <Header />
+
       {/* Tracker schickt Pageviews an /api/track */}
       <PageviewPing />
+
       <main>{children}</main>
-      {!hide && <Footer />}
+
+      {!hideFooter && <Footer />}
     </>
   )
 }
