@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const LACK_FILES_BUCKET = 'lack-requests'
 
@@ -35,6 +36,7 @@ function toAddressString(a: {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await supabaseServer()
+    const admin = supabaseAdmin()
 
     const {
       data: { user },
@@ -194,9 +196,9 @@ export async function POST(req: NextRequest) {
         .toString(36)
         .slice(2)}.${ext}`
 
-      const { data, error } = await supabase.storage
-        .from(LACK_FILES_BUCKET)
-        .createSignedUploadUrl(path)
+      const { data, error } = await admin.storage
+  .from(LACK_FILES_BUCKET)
+  .createSignedUploadUrl(path)
 
       if (error || !data) {
   const storageError = error as any
