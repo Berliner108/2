@@ -473,10 +473,36 @@ useEffect(() => {
   const [warnung, setWarnung] = useState<string>('');
 
   // Refs
+  // Refs
   const herstellerRef = useRef<HTMLDivElement>(null);
   const farbpaletteRef = useRef<HTMLDivElement>(null);
   const glanzgradRef = useRef<HTMLDivElement>(null);
   const agbRef = useRef<HTMLDivElement>(null);
+
+  const bilderRef = useRef<HTMLDivElement>(null);
+  const kategorieRef = useRef<HTMLDivElement>(null);
+  const titelRef = useRef<HTMLLabelElement>(null);
+  const mengeRef = useRef<HTMLLabelElement>(null);
+  const farbtonRef = useRef<HTMLLabelElement>(null);
+  const farbpaletteFehlerRef = useRef<HTMLLabelElement>(null);
+  const glanzgradFehlerRef = useRef<HTMLLabelElement>(null);
+  const zustandRef = useRef<HTMLFieldSetElement>(null);
+  const oberflaecheRef = useRef<HTMLFieldSetElement>(null);
+  const anwendungRef = useRef<HTMLFieldSetElement>(null);
+  const beschreibungRef = useRef<HTMLLabelElement>(null);
+  const lieferDatumRef = useRef<HTMLFieldSetElement>(null);
+  const adresseRef = useRef<HTMLDivElement>(null);
+  const aufladungRef = useRef<HTMLFieldSetElement>(null);
+  const scrollToBlock = (ref: React.RefObject<HTMLElement>) => {
+  if (!ref.current) return;
+
+  const y = ref.current.getBoundingClientRect().top + window.scrollY - 90;
+
+  window.scrollTo({
+    top: y,
+    behavior: 'smooth',
+  });
+};
 
   // Herstellerlisten
   const herstellerListePulver = [
@@ -622,8 +648,12 @@ useEffect(() => {
 
   Promise.all(rawFiles.map((file) => compressImageFile(file)))
     .then((optimizedFiles) => {
-      setBilder(optimizedFiles)
-    })
+  setBilder(optimizedFiles)
+
+  if (optimizedFiles.length > 0) {
+    setWarnungBilder('')
+  }
+})
     .catch((error) => {
       console.error('Bildoptimierung fehlgeschlagen:', error)
       setBilder(rawFiles)
@@ -636,10 +666,22 @@ useEffect(() => {
   // Menge (nur Zahl, 1 Nachkommastelle)
   const [menge, setMenge] = useState<number>(0);
   function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const val = e.target.value.replace(',', '.');
-    if (val === '') setMenge(0);
-    else if (/^\d{0,4}(\.\d{0,1})?$/.test(val)) setMenge(parseFloat(val));
+  const val = e.target.value.replace(',', '.');
+
+  if (val === '') {
+    setMenge(0);
+    return;
   }
+
+  if (/^\d{0,4}(\.\d{0,1})?$/.test(val)) {
+    const parsed = parseFloat(val);
+    setMenge(parsed);
+
+    if (!isNaN(parsed) && parsed > 0) {
+      setWarnungMenge('');
+    }
+  }
+}
 
   const fadeIn = {
     initial: { opacity: 0, y: -10 },
@@ -832,120 +874,149 @@ useEffect(() => {
   setFormAbgesendet(true);
 
   let fehler = false;
+  let firstErrorRef: React.RefObject<HTMLElement> | null = null;
+
+const setFirstError = (ref: React.RefObject<HTMLElement>) => {
+  if (!firstErrorRef) {
+    firstErrorRef = ref;
+  }
+};
 
   // Pflichtfelder
-  if (!kategorie) {
-    setWarnungKategorie('Bitte wähle eine Kategorie aus.');
-    fehler = true;
-  } else {
-    setWarnungKategorie('');
-  }
+ 
+if (!kategorie) {
+  setWarnungKategorie('Bitte wähle eine Kategorie aus.');
+  setFirstError(kategorieRef);
+  fehler = true;
+} else {
+  setWarnungKategorie('');
+}
 
-  if (bilder.length === 0) {
-    setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
-    fehler = true;
-  } else {
-    setWarnungBilder('');
-  }
+if (bilder.length === 0) {
+  setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
+  setFirstError(bilderRef);
+  fehler = true;
+} else {
+  setWarnungBilder('');
+}
 
-  if (!titel.trim()) {
-    setWarnungTitel('Bitte gib einen Titel an.');
-    fehler = true;
-  } else {
-    setWarnungTitel('');
-  }
+if (!titel.trim()) {
+  setWarnungTitel('Bitte gib einen Titel an.');
+  setFirstError(titelRef);
+  fehler = true;
+} else {
+  setWarnungTitel('');
+}
 
-  if (isNaN(menge) || menge <= 0) {
-    setWarnungMenge('Bitte gib eine gültige Menge an.');
-    fehler = true;
-  } else {
-    setWarnungMenge('');
-  }
+if (isNaN(menge) || menge <= 0) {
+  setWarnungMenge('Bitte gib eine gültige Menge an.');
+  setFirstError(mengeRef);
+  fehler = true;
+} else {
+  setWarnungMenge('');
+}
 
-  if (!glanzgrad) {
-    setWarnungGlanzgrad('Bitte gib den Glanzgrad an.');
-    fehler = true;
-  } else {
-    setWarnungGlanzgrad('');
-  }
+if (!glanzgrad) {
+  setWarnungGlanzgrad('Bitte gib den Glanzgrad an.');
+  setFirstError(glanzgradFehlerRef);
+  fehler = true;
+} else {
+  setWarnungGlanzgrad('');
+}
 
-  if (!farbpaletteWert) {
-    setWarnungPalette('Bitte wähle eine Farbpalette aus.');
-    fehler = true;
-  } else {
-    setWarnungPalette('');
-  }
+if (!farbpaletteWert) {
+  setWarnungPalette('Bitte wähle eine Farbpalette aus.');
+  setFirstError(farbpaletteFehlerRef);
+  fehler = true;
+} else {
+  setWarnungPalette('');
+}
 
-  if (!oberflaeche) {
-    setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.');
-    fehler = true;
-  } else {
-    setWarnungOberflaeche('');
-  }
+if (!oberflaeche) {
+  setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.');
+  setFirstError(oberflaecheRef);
+  fehler = true;
+} else {
+  setWarnungOberflaeche('');
+}
 
-  if (!anwendung) {
-    setWarnungAnwendung('Bitte wähle eine Anwendung aus.');
-    fehler = true;
-  } else {
-    setWarnungAnwendung('');
-  }
+if (!anwendung) {
+  setWarnungAnwendung('Bitte wähle eine Anwendung aus.');
+  setFirstError(anwendungRef);
+  fehler = true;
+} else {
+  setWarnungAnwendung('');
+}
 
-  if (!zustand) {
-    setWarnungZustand('Bitte wähle den Zustand aus.');
-    fehler = true;
-  } else {
-    setWarnungZustand('');
-  }
+if (!zustand) {
+  setWarnungZustand('Bitte wähle den Zustand aus.');
+  setFirstError(zustandRef);
+  fehler = true;
+} else {
+  setWarnungZustand('');
+}
 
-  if (!farbton.trim()) {
-    setWarnungFarbton('Bitte gib den Farbton an.');
-    fehler = true;
-  } else {
-    setWarnungFarbton('');
-  }
+if (!farbton.trim()) {
+  setWarnungFarbton('Bitte gib den Farbton an.');
+  setFirstError(farbtonRef);
+  fehler = true;
+} else {
+  setWarnungFarbton('');
+}
 
-  if (kategorie === 'pulverlack' && aufladung.length === 0) {
+if (kategorie === 'pulverlack' && aufladung.length === 0) {
+  setFirstError(aufladungRef);
+  fehler = true;
+}
+
+if (!beschreibung.trim()) {
+  setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+  setFirstError(beschreibungRef);
+  fehler = true;
+} else {
+  setWarnungBeschreibung('');
+}
+
+if (!lieferDatum || isDisabledDay(lieferDatum)) {
+  setWarnung('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
+  setFirstError(lieferDatumRef);
+  fehler = true;
+} else {
+  setWarnung('');
+}
+
+if (!agbAccepted) {
+  setAgbError(true);
+  setFirstError(agbRef);
+  fehler = true;
+} else {
+  setAgbError(false);
+}
+
+if (lieferadresseOption === 'manuell') {
+  if (
+    !vorname.trim() ||
+    !nachname.trim() ||
+    !strasse.trim() ||
+    !hausnummer.trim() ||
+    !plz.trim() ||
+    !ort.trim() ||
+    !land.trim()
+  ) {
+    setFirstError(adresseRef);
     fehler = true;
   }
-
-  if (!beschreibung.trim()) {
-    setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
-    fehler = true;
-  } else {
-    setWarnungBeschreibung('');
-  }
-
-  if (!lieferDatum || isDisabledDay(lieferDatum)) {
-    alert('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
-    fehler = true;
-  }
-
-  if (!agbAccepted) {
-    setAgbError(true);
-    agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    fehler = true;
-  } else {
-    setAgbError(false);
-  }
-
-  if (lieferadresseOption === 'manuell') {
-    if (
-      !vorname.trim() ||
-      !nachname.trim() ||
-      !strasse.trim() ||
-      !hausnummer.trim() ||
-      !plz.trim() ||
-      !ort.trim() ||
-      !land.trim()
-    ) {
-      fehler = true;
-    }
-  }
+}
 
   if (fehler) {
-    setLadeStatus(false);
-    return;
+  setLadeStatus(false);
+
+  if (firstErrorRef) {
+    scrollToBlock(firstErrorRef);
   }
+
+  return;
+}
 
   setLadeStatus(true);
 
@@ -1276,8 +1347,11 @@ useEffect(() => {
   }, [calOpen]);
 
   useEffect(() => {
-    if (lieferDatum) setCalOpen(false);
-  }, [lieferDatum]);
+  if (lieferDatum) {
+    setCalOpen(false);
+    setWarnung('');
+  }
+}, [lieferDatum]);
 
   /* ---------- Skeleton beim Initial-Load ---------- */
   const [showBootUI, setShowBootUI] = useState(false);
@@ -1325,16 +1399,25 @@ if (bootLoading) {
         </p>
 
         {/* Bilder */}
-        <Dropzone
-          type="bilder"
-          label="Fotos hierher ziehen oder klicken (max. 8)"
-          accept="image/*"
-          maxFiles={8}
-          files={bilder}
-          setFiles={handleBilderChange}
-          setWarnung={setWarnungBilder}
-          id="fotoUpload"
-        />
+        {/* Bilder */}
+        <div ref={bilderRef}>
+          <Dropzone
+            type="bilder"
+            label="Fotos hierher ziehen oder klicken (max. 8)"
+            accept="image/*"
+            maxFiles={8}
+            files={bilder}
+            setFiles={handleBilderChange}
+            setWarnung={setWarnungBilder}
+            id="fotoUpload"
+          />
+
+          {bilderWerdenOptimiert && (
+            <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
+          )}
+
+          {warnungBilder && <p className={styles.validierungsfehler}>{warnungBilder}</p>}
+        </div>
 
         {bilderWerdenOptimiert && (
           <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
@@ -1369,19 +1452,27 @@ if (bootLoading) {
         />
 
         {/* Kategorie-Auswahl */}
-        <div className={styles.kategorieContainer}>
+        <div className={styles.kategorieContainer} ref={kategorieRef}>
           <h2 className={styles.centeredHeading}>Ich möchte Angebote für einen</h2>
           <div className={`${styles.iconRow} ${!kategorie && warnungKategorie ? styles.kategorieFehler : ''}`}>
             <div
               className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''}`}
-              onClick={() => { resetFieldsExceptCategory(); setKategorie('nasslack'); }}
+              onClick={() => {
+                resetFieldsExceptCategory();
+                setKategorie('nasslack');
+                setWarnungKategorie('');
+              }}
             >
               <FaSprayCan size={32} />
               <span>Nasslack</span>
             </div>
             <div
               className={`${styles.iconBox} ${kategorie === 'pulverlack' ? styles.activeIcon : ''}`}
-              onClick={() => { resetFieldsExceptCategory(); setKategorie('pulverlack'); }}
+              onClick={() => {
+                resetFieldsExceptCategory();
+                setKategorie('pulverlack');
+                setWarnungKategorie('');
+              }}
             >
               <FaCloud size={32} />
               <span>Pulverlack</span>
@@ -1405,16 +1496,19 @@ if (bootLoading) {
             >
               {(kategorie === 'pulverlack' || kategorie === 'nasslack') && (
                 <>
-                  <label>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
+                  <label ref={titelRef}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    Titel für meine Anzeige: <span style={{ color: 'red' }}>*</span>
                     </span>
                     <input
                       type="text"
                       className={styles.input}
                       maxLength={60}
                       value={titel}
-                      onChange={(e) => setTitel(e.target.value)}
+                      onChange={(e) => {
+                      setTitel(e.target.value);
+                      if (e.target.value.trim()) setWarnungTitel('');
+                    }}
                     />
                     <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
                   </label>
@@ -1452,7 +1546,7 @@ if (bootLoading) {
                   </label>
 
                   {/* Menge */}
-                  <label className={styles.labelmenge}>
+                  <label className={styles.labelmenge} ref={mengeRef}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                       Benötigte Menge (kg): <span style={{ color: 'red' }}>*</span>
                     </span>
@@ -1471,7 +1565,7 @@ if (bootLoading) {
                   {warnungMenge && <p className={styles.validierungsfehler}>{warnungMenge}</p>}
 
                   {/* Farbpalette */}
-                  <label className={styles.label}>
+                  <label className={styles.label} ref={farbpaletteFehlerRef}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.0rem' }}>
                       Farbpalette: <span style={{ color: 'red' }}>*</span>
                     </span>
@@ -1501,7 +1595,12 @@ if (bootLoading) {
                             <div
                               key={farbe.value}
                               className={`${styles.optionItem} ${farbpaletteWert === farbe.value ? styles.activeOption : ''}`}
-                              onClick={(e) => { e.stopPropagation(); setFarbpaletteWert(farbe.value); setFarbpaletteDropdownOffen(false); }}
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFarbpaletteWert(farbe.value);
+                                  setWarnungPalette('');
+                                  setFarbpaletteDropdownOffen(false);
+                                }}
                             >
                               {farbe.name}
                             </div>
@@ -1513,16 +1612,19 @@ if (bootLoading) {
                   {warnungPalette && <p className={styles.validierungsfehler}>{warnungPalette}</p>}
 
                   {/* Farbton / Farbcode */}
-                  <label className={styles.label}>
+                  <label className={styles.label} ref={farbtonRef}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      Farbtonbezeichung: <span style={{ color: 'red' }}>*</span>
+                      Farbtonbezeichnung: <span style={{ color: 'red' }}>*</span>
                     </span>
                     <input
                       type="text"
                       className={styles.input}
                       maxLength={20}
                       value={farbton}
-                      onChange={(e) => setFarbton(e.target.value)}
+                      onChange={(e) => {
+                        setFarbton(e.target.value);
+                        if (e.target.value.trim()) setWarnungFarbton('');
+                      }}
                       placeholder="z. B. 9010 (RAL) oder S-8500 (NCS)"
                       aria-invalid={Boolean(warnungFarbton)}
                     />
@@ -1544,46 +1646,68 @@ if (bootLoading) {
                   </label>
 
                   {/* Glanzgrad */}
-                  <label className={styles.label}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      Glanzgrad: <span style={{ color: 'red' }}>*</span>
-                    </span>
+<label className={styles.label} ref={glanzgradFehlerRef}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    Glanzgrad: <span style={{ color: 'red' }}>*</span>
+  </span>
 
-                    <select
-                      value={glanzgrad}
-                      onChange={() => {}}
-                      aria-hidden
-                      tabIndex={-1}
-                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: -1 }}
-                    >
-                      <option value="">Bitte wählen</option>
-                      {glanzgradListe.map(g => <option key={g.value} value={g.value}>{g.name}</option>)}
-                    </select>
+  <select
+    value={glanzgrad}
+    onChange={() => {}}
+    aria-hidden
+    tabIndex={-1}
+    style={{
+      position: 'absolute',
+      opacity: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: -1,
+    }}
+  >
+    <option value="">Bitte wählen</option>
+    {glanzgradListe.map((g) => (
+      <option key={g.value} value={g.value}>
+        {g.name}
+      </option>
+    ))}
+  </select>
 
-                    <div
-                      ref={glanzgradRef}
-                      className={styles.customSelect}
-                      onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
-                    >
-                      <div className={styles.selectedValue}>
-                        {glanzgradListe.find(g => g.value === glanzgrad)?.name || 'Bitte wählen'}
-                      </div>
-                      {glanzgradDropdownOffen && (
-                        <div className={styles.optionList}>
-                          {glanzgradListe.map(g => (
-                            <div
-                              key={g.value}
-                              className={`${styles.optionItem} ${glanzgrad === g.value ? styles.activeOption : ''}`}
-                              onClick={(e) => { e.stopPropagation(); setGlanzgrad(g.value); setGlanzgradDropdownOffen(false); }}
-                            >
-                              {g.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                  {warnungGlanzgrad && <p className={styles.validierungsfehler}>{warnungGlanzgrad}</p>}
+  <div
+    ref={glanzgradRef}
+    className={styles.customSelect}
+    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+  >
+    <div className={styles.selectedValue}>
+      {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
+    </div>
+
+    {glanzgradDropdownOffen && (
+      <div className={styles.optionList}>
+        {glanzgradListe.map((g) => (
+          <div
+            key={g.value}
+            className={`${styles.optionItem} ${
+              glanzgrad === g.value ? styles.activeOption : ''
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setGlanzgrad(g.value);
+              setWarnungGlanzgrad('');
+              setGlanzgradDropdownOffen(false);
+            }}
+          >
+            {g.name}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</label>
+
+{warnungGlanzgrad && (
+  <p className={styles.validierungsfehler}>{warnungGlanzgrad}</p>
+)}
 
                   {/* Qualität (optional) */}
                   {kategorie === 'pulverlack' && (
@@ -1628,17 +1752,23 @@ if (bootLoading) {
                   )}
 
                   {/* Zustand */}
-                  <fieldset className={styles.radioGroup}>
+                  <fieldset className={styles.radioGroup} ref={zustandRef}>
                     <legend className={styles.radioLegend}>
                       Zustand: <span style={{ color: 'red' }}>*</span>
                     </legend>
                     <div className={styles.radioOptionsHorizontal}>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="zustand" value="neu" checked={zustand === 'neu'} onChange={() => setZustand('neu')} />
+                        <input type="radio" name="zustand" value="neu" checked={zustand === 'neu'} onChange={() => {
+                        setZustand('neu');
+                        setWarnungZustand('');
+                      }} />
                         <span>Neu / ungeöffnet</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="zustand" value="geöffnet" checked={zustand === 'geöffnet'} onChange={() => setZustand('geöffnet')} />
+                        <input type="radio" name="zustand" value="geöffnet" checked={zustand === 'geöffnet'} onChange={() => {
+                          setZustand('geöffnet');
+                          setWarnungZustand('');
+                        }} />
                         <span>Geöffnet / einwandfrei</span>
                       </label>
                       {warnungZustand && <p className={styles.validierungsfehlerradio}>{warnungZustand}</p>}
@@ -1646,21 +1776,30 @@ if (bootLoading) {
                   </fieldset>
 
                   {/* Oberfläche */}
-                  <fieldset className={styles.radioGroup}>
+                  <fieldset className={styles.radioGroup} ref={oberflaecheRef}>
                     <legend className={styles.radioLegend}>
                       Oberfläche: <span style={{ color: 'red' }}>*</span>
                     </legend>
                     <div className={styles.radioOptionsHorizontal}>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="oberflaeche" value="glatt" checked={oberflaeche === 'glatt'} onChange={() => setOberflaeche('glatt')} />
+                        <input type="radio" name="oberflaeche" value="glatt" checked={oberflaeche === 'glatt'} onChange={() => {
+                          setOberflaeche('glatt');
+                          setWarnungOberflaeche('');
+                        }} />
                         <span>Glatt</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="oberflaeche" value="feinstruktur" checked={oberflaeche === 'feinstruktur'} onChange={() => setOberflaeche('feinstruktur')} />
+                        <input type="radio" name="oberflaeche" value="feinstruktur" checked={oberflaeche === 'feinstruktur'} onChange={() => {
+                          setOberflaeche('feinstruktur');
+                          setWarnungOberflaeche('');
+                        }} />
                         <span>Feinstruktur</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="oberflaeche" value="grobstruktur" checked={oberflaeche === 'grobstruktur'} onChange={() => setOberflaeche('grobstruktur')} />
+                        <input type="radio" name="oberflaeche" value="grobstruktur" checked={oberflaeche === 'grobstruktur'} onChange={() => {
+                          setOberflaeche('grobstruktur');
+                          setWarnungOberflaeche('');
+                        }} />
                         <span>Grobstruktur</span>
                       </label>
                       {WarnungOberflaeche && <p className={styles.validierungsfehlerradio}>{WarnungOberflaeche}</p>}
@@ -1668,25 +1807,37 @@ if (bootLoading) {
                   </fieldset>
 
                   {/* Anwendung */}
-                  <fieldset className={styles.radioGroup}>
+                  <fieldset className={styles.radioGroup} ref={anwendungRef}>
                     <legend className={styles.radioLegend}>
                       Anwendung: <span style={{ color: 'red' }}>*</span>
                     </legend>
                     <div className={styles.radioOptionsHorizontal}>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="anwendung" value="universal" checked={anwendung === 'universal'} onChange={() => setAnwendung('universal')} />
+                        <input type="radio" name="anwendung" value="universal" checked={anwendung === 'universal'} onChange={() => {
+                          setAnwendung('universal');
+                          setWarnungAnwendung('');
+                        }} />
                         <span>Universal</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="anwendung" value="innen" checked={anwendung === 'innen'} onChange={() => setAnwendung('innen')} />
+                        <input type="radio" name="anwendung" value="innen" checked={anwendung === 'innen'} onChange={() => {
+                          setAnwendung('innen');
+                          setWarnungAnwendung('');
+                        }} />
                         <span>Innen</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="anwendung" value="außen" checked={anwendung === 'außen'} onChange={() => setAnwendung('außen')} />
+                        <input type="radio" name="anwendung" value="außen" checked={anwendung === 'außen'} onChange={() => {
+                          setAnwendung('außen');
+                          setWarnungAnwendung('');
+                        }} />
                         <span>Außen</span>
                       </label>
                       <label className={styles.radioLabel}>
-                        <input type="radio" name="anwendung" value="industrie" checked={anwendung === 'industrie'} onChange={() => setAnwendung('industrie')} />
+                        <input type="radio" name="anwendung" value="industrie" checked={anwendung === 'industrie'} onChange={() => {
+                          setAnwendung('industrie');
+                          setWarnungAnwendung('');
+                        }} />
                         <span>Industrie</span>
                       </label>
                       {warnungAnwendung && <p className={styles.validierungsfehlerradio}>{warnungAnwendung}</p>}
@@ -1851,7 +2002,10 @@ if (bootLoading) {
 
                   {/* Pulverlack: Aufladung */}
                   {kategorie === 'pulverlack' && (
-                    <fieldset className={`${styles.radioGroup} ${formAbgesendet && aufladung.length === 0 ? styles.feldError : ''}`}>
+                      <fieldset
+                        ref={aufladungRef}
+                        className={`${styles.radioGroup} ${formAbgesendet && aufladung.length === 0 ? styles.feldError : ''}`}
+                      >
                       <legend className={styles.radioLegend}>
                         Aufladung: <span style={{ color: 'red' }}>*</span>
                       </legend>
@@ -1896,7 +2050,7 @@ if (bootLoading) {
                   )}
 
                   {/* Beschreibung */}
-                  <label className={styles.label}>
+                  <label className={styles.label} ref={beschreibungRef}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
                       Beschreibung: <span style={{ color: 'red' }}>*</span>
                     </span>
@@ -1905,7 +2059,10 @@ if (bootLoading) {
                       maxLength={600}
                       rows={6}
                       value={beschreibung}
-                      onChange={(e) => setBeschreibung(e.target.value)}
+                      onChange={(e) => {
+                        setBeschreibung(e.target.value);
+                        if (e.target.value.trim()) setWarnungBeschreibung('');
+                      }}
                       placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
                     />
                     <div className={styles.counter}>{beschreibung.length} / 600 Zeichen</div>
@@ -1918,16 +2075,16 @@ if (bootLoading) {
         )}
 
         {/* Lieferdetails */}
-        <fieldset className={styles.radioGroupliefercontainer}>
-          <legend className={styles.radioLegendlieferdetails}>
-            Lieferdetails: <span style={{ color: 'red' }}>*</span>
-          </legend>
+<fieldset className={styles.radioGroupliefercontainer} ref={lieferDatumRef}>
+  <legend className={styles.radioLegendlieferdetails}>
+    Lieferdetails: <span style={{ color: 'red' }}>*</span>
+  </legend>
 
-          <div className={styles.lieferContainer}>
-            {/* Werktags-Datepicker */}
-            <label className={styles.label} style={{ position: 'relative' }}>
-              Lieferdatum:
-              <div ref={dateFieldRef} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+  <div className={styles.lieferContainer}>
+    {/* Werktags-Datepicker */}
+    <label className={styles.label} style={{ position: 'relative' }}>
+      Lieferdatum: <span style={{ color: 'red' }}>*</span>
+      <div ref={dateFieldRef} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
                 <input
                   type="text"
                   className={styles.input}
@@ -1940,9 +2097,16 @@ if (bootLoading) {
                   Datum wählen
                 </button>
                 {lieferDatum && (
-                  <button type="button" className={styles.zuruecksetzenButton} onClick={() => setLieferDatum(null)}>
-                    Löschen
-                  </button>
+                  <button
+  type="button"
+  className={styles.zuruecksetzenButton}
+  onClick={() => {
+    setLieferDatum(null);
+    setWarnung('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
+  }}
+>
+  Löschen
+</button>
                 )}
               </div>
 
@@ -1954,18 +2118,25 @@ if (bootLoading) {
                   aria-label="Kalender"
                 >
                   <MiniCalendar
-                    month={calMonth}
-                    onMonthChange={setCalMonth}
-                    selected={lieferDatum}
-                    onSelect={(d: Date) => setLieferDatum(d)}
-                    isDisabled={isDisabledDay}
-                    minDate={minDate}
-                  />
+  month={calMonth}
+  onMonthChange={setCalMonth}
+  selected={lieferDatum}
+  onSelect={(d: Date) => {
+    setLieferDatum(d);
+    setWarnung('');
+    setCalOpen(false);
+  }}
+  isDisabled={isDisabledDay}
+  minDate={minDate}
+/>
                 </div>
               )}
             </label>
 
             {/* Lieferadresse wählen */}
+            {warnung && !lieferDatum && (
+  <p className={styles.validierungsfehler}>{warnung}</p>
+)}
             <fieldset className={styles.radioGrouplieferadressewaehlen}>
               <legend className={styles.radioLegendwaehlen}>
                 Lieferadresse wählen: <span style={{ color: 'red' }}>*</span>
