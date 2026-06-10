@@ -1053,10 +1053,8 @@ useEffect(() => {
   });
 
   userErrorMessage =
-    payload?.details ||
-    payload?.message ||
-    payload?.error ||
-    'Die Lackanfrage konnte nicht vorbereitet werden. Bitte prüfe deine Eingaben und versuche es erneut.';
+    `Vorbereitung fehlgeschlagen: ${payload?.stage || payload?.error || 'unbekannte Stelle'}\n\n` +
+    `${payload?.message || payload?.details || 'Keine Detailmeldung vorhanden.'}`;
 
   throw new Error(userErrorMessage);
 }

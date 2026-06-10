@@ -147,16 +147,25 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (insertError || !inserted) {
-      console.error('Fehler beim Anlegen der Lackanfrage:', insertError)
+  console.error('[lackanfrage-vorbereiten] lack_requests insert failed:', {
+    message: insertError?.message,
+    code: insertError?.code,
+    details: insertError?.details,
+    hint: insertError?.hint,
+  })
 
-      return NextResponse.json(
-        {
-          error: 'lack_request_insert_failed',
-          details: insertError?.message,
-        },
-        { status: 500 },
-      )
-    }
+  return NextResponse.json(
+    {
+      error: 'lack_request_insert_failed',
+      stage: 'lack_requests_insert',
+      message: insertError?.message ?? 'Insert in lack_requests fehlgeschlagen.',
+      details: insertError?.details ?? null,
+      hint: insertError?.hint ?? null,
+      code: insertError?.code ?? null,
+    },
+    { status: 500 },
+  )
+}
 
     const requestId = inserted.id as string
 
@@ -190,16 +199,33 @@ export async function POST(req: NextRequest) {
         .createSignedUploadUrl(path)
 
       if (error || !data) {
-        console.error('Fehler beim Erzeugen der Upload-URL:', error)
+  const storageError = error as any
 
-        return NextResponse.json(
-          {
-            error: 'signed_url_failed',
-            details: error?.message,
-          },
-          { status: 500 },
-        )
-      }
+  console.error('[lackanfrage-vorbereiten] signed upload url failed:', {
+    bucket: LACK_FILES_BUCKET,
+    path,
+    message: storageError?.message,
+    code: storageError?.code,
+    details: storageError?.details,
+    hint: storageError?.hint,
+  })
+
+  return NextResponse.json(
+    {
+      error: 'signed_url_failed',
+      stage: 'storage_create_signed_upload_url',
+      bucket: LACK_FILES_BUCKET,
+      path,
+      message:
+        storageError?.message ??
+        'Signed Upload URL konnte nicht erstellt werden.',
+      details: storageError?.details ?? null,
+      hint: storageError?.hint ?? null,
+      code: storageError?.code ?? null,
+    },
+    { status: 500 },
+  )
+}
 
       uploads.push({
         kind: item.kind,
@@ -218,14 +244,18 @@ export async function POST(req: NextRequest) {
       uploads,
     })
   } catch (err: any) {
-    console.error('Fehler in /api/lackanfrage-vorbereiten:', err)
+  console.error('[lackanfrage-vorbereiten] internal error:', err)
 
-    return NextResponse.json(
-      {
-        error: 'internal_error',
-        details: err?.message ?? String(err),
-      },
-      { status: 500 },
-    )
-  }
+  return NextResponse.json(
+    {
+      error: 'internal_error',
+      stage: 'catch_block',
+      message: err?.message ?? String(err),
+      details: err?.details ?? null,
+      hint: err?.hint ?? null,
+      code: err?.code ?? null,
+    },
+    { status: 500 },
+  )
+}
 }
