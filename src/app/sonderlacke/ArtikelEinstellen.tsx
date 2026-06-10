@@ -2317,30 +2317,7 @@ if (bootLoading) {
 </AnimatePresence>
 
       {/* ---------- POPUP: während des Ladens sichtbar ---------- */}
-      <AnimatePresence>
-        {ladeStatus && (
-          <motion.div
-            className={styles.modalOverlay}
-            role="dialog"
-            aria-modal="true"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className={styles.modalCard}
-              initial={{ y: 10, scale: 0.98, opacity: 0 }}
-              animate={{ y: 0, scale: 1, opacity: 1 }}
-              exit={{ y: 10, scale: 0.98, opacity: 0 }}
-              transition={{ duration: 0.18 }}
-            >
-              <Loader2 className={styles.modalIcon} />
-              <h3 className={styles.modalTitle}>Wir veröffentlichen deine Anzeige …</h3>
-              <p className={styles.modalText}>Wir leiten gleich weiter.</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
     </>
   );
 }
