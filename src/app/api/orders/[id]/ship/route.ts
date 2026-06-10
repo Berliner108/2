@@ -35,7 +35,6 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   .is('refunded_at', null)
   .is('reported_at', null)
   .is('shipped_at', null)
-  .or(`auto_refund_at.is.null,auto_refund_at.gt.${nowIso}`)   // ⬅️ NEU
   .select('id, request_id')
   .limit(1)
 console.log('[orders/ship] user.id:', user.id)
