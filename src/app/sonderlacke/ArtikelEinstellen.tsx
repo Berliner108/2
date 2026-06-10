@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
 import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
+import { supabaseBrowser } from '@/lib/supabase-browser';
 
 import {
   gemeinsameFeiertageDEAT,
@@ -231,7 +232,153 @@ const formatEUR = (cents: number) =>
   (cents / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
 
 /* ---------------- Seite ---------------- */
+type PreparedUpload = {
+  kind: 'image' | 'document'
+  path: string
+  token: string
+  originalName: string
+  mimeType: string | null
+  sizeBytes: number | null
+}
 
+async function compressImageFile(file: File): Promise<File> {
+  // Nur echte Bilder komprimieren
+  if (!file.type.startsWith('image/')) {
+    return file
+  }
+
+  // Kleine Bilder nicht anfassen
+  const maxSizeBeforeCompression = 1.2 * 1024 * 1024
+  if (file.size <= maxSizeBeforeCompression) {
+    return file
+  }
+
+  const imageBitmap = await createImageBitmap(file)
+
+  const maxWidth = 1000
+  const maxHeight = 1000
+
+  let { width, height } = imageBitmap
+
+  if (width > maxWidth || height > maxHeight) {
+    const ratio = Math.min(maxWidth / width, maxHeight / height)
+    width = Math.round(width * ratio)
+    height = Math.round(height * ratio)
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    imageBitmap.close()
+    return file
+  }
+
+  ctx.drawImage(imageBitmap, 0, 0, width, height)
+  imageBitmap.close()
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(
+      resolve,
+      'image/jpeg',
+      0.6,
+    )
+  })
+
+  if (!blob) {
+    return file
+  }
+
+  // Falls Komprimierung aus irgendeinem Grund größer wird, Original behalten
+  if (blob.size >= file.size) {
+    return file
+  }
+
+  const originalNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
+
+  return new File(
+    [blob],
+    `${originalNameWithoutExt}.jpg`,
+    {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    },
+  )
+}
+
+async function uploadPreparedFilesToSupabase(params: {
+  bucket: string
+  uploads: PreparedUpload[]
+  photoFiles: File[]
+  fileFiles: File[]
+}) {
+  const supabase = supabaseBrowser()
+
+  const allFiles = [
+    ...params.photoFiles.map((file) => ({
+      kind: 'image' as const,
+      file,
+    })),
+    ...params.fileFiles.map((file) => ({
+      kind: 'document' as const,
+      file,
+    })),
+  ]
+
+  if (params.uploads.length !== allFiles.length) {
+    throw new Error('Dateizuordnung fehlgeschlagen.')
+  }
+
+  const concurrency = 4
+  const finishedUploads: PreparedUpload[] = []
+
+  for (let i = 0; i < params.uploads.length; i += concurrency) {
+    const batch = params.uploads.slice(i, i + concurrency)
+
+    const batchResults = await Promise.all(
+      batch.map(async (upload, batchIndex) => {
+        const realIndex = i + batchIndex
+        const fileItem = allFiles[realIndex]
+
+        const { error } = await supabase.storage
+          .from(params.bucket)
+          .uploadToSignedUrl(upload.path, upload.token, fileItem.file, {
+            contentType: fileItem.file.type || undefined,
+          })
+
+        if (error) {
+          console.error('Direkter Upload zu Supabase fehlgeschlagen:', error)
+          throw new Error(error.message)
+        }
+
+        return {
+          ...upload,
+          mimeType: fileItem.file.type || upload.mimeType,
+          sizeBytes: fileItem.file.size,
+          originalName: fileItem.file.name || upload.originalName,
+        }
+      }),
+    )
+
+    finishedUploads.push(...batchResults)
+  }
+
+  return finishedUploads
+}
+
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
+
+const MAX_DOCUMENT_TOTAL_SIZE = 15 * 1024 * 1024 // 15 MB insgesamt
+
+const formatFileSize = (bytes: number) => {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  return `${Math.round(bytes / 1024)} KB`
+}
 function ArtikelEinstellen() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -292,6 +439,7 @@ useEffect(() => {
   const [bilder, setBilder] = useState<File[]>([]);
   const [dateien, setDateien] = useState<File[]>([]);
   const [bildPreviews, setBildPreviews] = useState<string[]>([]);
+  const [bilderWerdenOptimiert, setBilderWerdenOptimiert] = useState(false);
 
   // UI/State
   const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState<boolean>(false);
@@ -302,6 +450,8 @@ useEffect(() => {
   const [vorschauAktiv, setVorschauAktiv] = useState<boolean>(false);
   const [ladeStatus, setLadeStatus] = useState<boolean>(false);
   const [formAbgesendet, setFormAbgesendet] = useState<boolean>(false);
+  const [overlayTitle, setOverlayTitle] = useState('Wir veröffentlichen deine Lackanfrage …');
+  const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.');
 
   // Promo
   const [packages, setPackages] = useState<PromoPackage[]>([]);
@@ -462,6 +612,26 @@ useEffect(() => {
     setBildPreviews(urls);
     return () => urls.forEach(url => URL.revokeObjectURL(url));
   }, [bilder]);
+  const handleBilderChange: React.Dispatch<React.SetStateAction<File[]>> = (
+  value,
+) => {
+  const rawFiles =
+    typeof value === 'function' ? value(bilder) : value
+
+  setBilderWerdenOptimiert(true)
+
+  Promise.all(rawFiles.map((file) => compressImageFile(file)))
+    .then((optimizedFiles) => {
+      setBilder(optimizedFiles)
+    })
+    .catch((error) => {
+      console.error('Bildoptimierung fehlgeschlagen:', error)
+      setBilder(rawFiles)
+    })
+    .finally(() => {
+      setBilderWerdenOptimiert(false)
+    })
+}
 
   // Menge (nur Zahl, 1 Nachkommastelle)
   const [menge, setMenge] = useState<number>(0);
@@ -638,250 +808,431 @@ useEffect(() => {
   
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    setFormAbgesendet(true);
+  e.preventDefault();
 
-    let fehler = false;
+  if (bilderWerdenOptimiert) {
+    alert('Bitte kurz warten, die Bilder werden noch optimiert.');
+    return;
+  }
 
-    // Pflichtfelder
-    if (!kategorie) { setWarnungKategorie('Bitte wähle eine Kategorie aus.'); fehler = true; } else { setWarnungKategorie(''); }
-    if (bilder.length === 0) { setWarnungBilder('Bitte lade mindestens ein Bild hoch.'); fehler = true; } else { setWarnungBilder(''); }
-    if (!titel.trim()) { setWarnungTitel('Bitte gib einen Titel an.'); fehler = true; } else { setWarnungTitel(''); }
-    if (isNaN(menge) || menge <= 0) { setWarnungMenge('Bitte gib eine gültige Menge an.'); fehler = true; } else { setWarnungMenge(''); }
-    if (!glanzgrad) { setWarnungGlanzgrad('Bitte gib den Glanzgrad an.'); fehler = true; } else { setWarnungGlanzgrad(''); }
-    if (!farbpaletteWert) { setWarnungPalette('Bitte wähle eine Farbpalette aus.'); fehler = true; } else { setWarnungPalette(''); }
-    if (!oberflaeche) { setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.'); fehler = true; } else { setWarnungOberflaeche(''); }
-    if (!anwendung) { setWarnungAnwendung('Bitte wähle eine Anwendung aus.'); fehler = true; } else { setWarnungAnwendung(''); }
-    if (!zustand) { setWarnungZustand('Bitte wähle den Zustand aus.'); fehler = true; } else { setWarnungZustand(''); }
-    if (!farbton.trim()) { setWarnungFarbton('Bitte gib den Farbton an.'); fehler = true; } else { setWarnungFarbton(''); }
+  const dokumenteGesamtGroesse = dateien.reduce(
+    (sum, file) => sum + file.size,
+    0,
+  );
 
-    // Aufladung (Pulverlack) – minimaler Fix
-    if (kategorie === 'pulverlack' && aufladung.length === 0) {
+  if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
+    setWarnung(
+      `Die Dateien sind insgesamt zu groß. Maximal erlaubt sind ${formatFileSize(
+        MAX_DOCUMENT_TOTAL_SIZE,
+      )}.`,
+    );
+    return;
+  }
+
+  setFormAbgesendet(true);
+
+  let fehler = false;
+
+  // Pflichtfelder
+  if (!kategorie) {
+    setWarnungKategorie('Bitte wähle eine Kategorie aus.');
+    fehler = true;
+  } else {
+    setWarnungKategorie('');
+  }
+
+  if (bilder.length === 0) {
+    setWarnungBilder('Bitte lade mindestens ein Bild hoch.');
+    fehler = true;
+  } else {
+    setWarnungBilder('');
+  }
+
+  if (!titel.trim()) {
+    setWarnungTitel('Bitte gib einen Titel an.');
+    fehler = true;
+  } else {
+    setWarnungTitel('');
+  }
+
+  if (isNaN(menge) || menge <= 0) {
+    setWarnungMenge('Bitte gib eine gültige Menge an.');
+    fehler = true;
+  } else {
+    setWarnungMenge('');
+  }
+
+  if (!glanzgrad) {
+    setWarnungGlanzgrad('Bitte gib den Glanzgrad an.');
+    fehler = true;
+  } else {
+    setWarnungGlanzgrad('');
+  }
+
+  if (!farbpaletteWert) {
+    setWarnungPalette('Bitte wähle eine Farbpalette aus.');
+    fehler = true;
+  } else {
+    setWarnungPalette('');
+  }
+
+  if (!oberflaeche) {
+    setWarnungOberflaeche('Bitte wähle eine Oberfläche aus.');
+    fehler = true;
+  } else {
+    setWarnungOberflaeche('');
+  }
+
+  if (!anwendung) {
+    setWarnungAnwendung('Bitte wähle eine Anwendung aus.');
+    fehler = true;
+  } else {
+    setWarnungAnwendung('');
+  }
+
+  if (!zustand) {
+    setWarnungZustand('Bitte wähle den Zustand aus.');
+    fehler = true;
+  } else {
+    setWarnungZustand('');
+  }
+
+  if (!farbton.trim()) {
+    setWarnungFarbton('Bitte gib den Farbton an.');
+    fehler = true;
+  } else {
+    setWarnungFarbton('');
+  }
+
+  if (kategorie === 'pulverlack' && aufladung.length === 0) {
+    fehler = true;
+  }
+
+  if (!beschreibung.trim()) {
+    setWarnungBeschreibung('Bitte gib eine Beschreibung ein.');
+    fehler = true;
+  } else {
+    setWarnungBeschreibung('');
+  }
+
+  if (!lieferDatum || isDisabledDay(lieferDatum)) {
+    alert('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
+    fehler = true;
+  }
+
+  if (!agbAccepted) {
+    setAgbError(true);
+    agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    fehler = true;
+  } else {
+    setAgbError(false);
+  }
+
+  if (lieferadresseOption === 'manuell') {
+    if (
+      !vorname.trim() ||
+      !nachname.trim() ||
+      !strasse.trim() ||
+      !hausnummer.trim() ||
+      !plz.trim() ||
+      !ort.trim() ||
+      !land.trim()
+    ) {
       fehler = true;
     }
+  }
 
-    if (!beschreibung.trim()) { setWarnungBeschreibung('Bitte gib eine Beschreibung ein.'); fehler = true; } else { setWarnungBeschreibung(''); }
+  if (fehler) {
+    setLadeStatus(false);
+    return;
+  }
 
-    // Lieferdatum prüfen
-    if (!lieferDatum || isDisabledDay(lieferDatum)) {
-      alert('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
-      fehler = true;
-    }
+  setLadeStatus(true);
 
-    // AGB
-    if (!agbAccepted) {
-      setAgbError(true);
-      agbRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      fehler = true;
-    } else {
-      setAgbError(false);
-    }
+  let willNavigate = false;
+  let userErrorMessage =
+    'Fehler beim Absenden. Deine Lackanfrage wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.';
 
-    // Lieferadresse manuell -> Pflichtfelder
-    if (lieferadresseOption === 'manuell') {
-      if (!vorname.trim() || !nachname.trim() || !strasse.trim() ||
-          !hausnummer.trim() || !plz.trim() || !ort.trim() || !land.trim()) {
-        fehler = true;
-      }
-    }
+  setOverlayTitle('Wir veröffentlichen deine Lackanfrage …');
+  setOverlayText('Wir leiten gleich weiter.');
 
-    if (fehler) {
+  const hasPromo = bewerbungOptionen.length > 0;
+
+  const adr: Adresse =
+    lieferadresseOption === 'profil'
+      ? profilAdresse
+      : {
+          vorname,
+          nachname,
+          firma,
+          strasse,
+          hausnummer,
+          plz,
+          ort,
+          land,
+        };
+
+  const lieferort = [adr.plz, adr.ort].filter(Boolean).join(' ') || adr.ort || '';
+  const lieferadresseString = toAddressString(adr);
+
+  try {
+    const payload = {
+      kategorie,
+      zertifizierungen: zertifizierungen.join(', '),
+      titel,
+      farbton: farbton.trim(),
+      glanzgrad,
+      hersteller: hersteller === 'Alle' ? '' : hersteller,
+      zustand,
+      farbpalette: farbpaletteWert,
+      beschreibung,
+      anwendung,
+      oberflaeche,
+      farbcode,
+      effekt: effekt.join(', '),
+      sondereffekte: sondereffekte.join(', '),
+      qualitaet,
+      menge,
+
+      account_type: accountType,
+      nutzerTyp,
+      istGewerblich: accountType === 'business',
+      lieferdatum: toYMD(lieferDatum!),
+
+      vorname: adr.vorname,
+      nachname: adr.nachname,
+      firma: adr.firma,
+      strasse: adr.strasse,
+      hausnummer: adr.hausnummer,
+      plz: adr.plz,
+      ort: adr.ort,
+      land: adr.land,
+
+      lieferort,
+      lieferadresse: lieferadresseString,
+      lieferadresseOption,
+
+      aufladung: kategorie === 'pulverlack' ? aufladung.join(', ') : '',
+
+      bilder: bilder.map((file) => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      })),
+
+      dateien: dateien.map((file) => ({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      })),
+    };
+
+    const prepareRes = await fetch('/api/lackanfrage-vorbereiten', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (prepareRes.status === 401 || prepareRes.status === 403) {
       setLadeStatus(false);
+      router.replace('/login?next=/sonderlacke');
       return;
     }
 
-    // Popup sofort zeigen
-    setLadeStatus(true);
+    if (!prepareRes.ok) {
+      let payload: any = null;
 
-    const hasPromo = bewerbungOptionen.length > 0;
-
-    // Adresse für Anzeige
-    const adr: Adresse = (lieferadresseOption === 'profil') ? profilAdresse : {
-      vorname, nachname, firma, strasse, hausnummer, plz, ort, land
-    };
-
-    const lieferort = [adr.plz, adr.ort].filter(Boolean).join(' ') || adr.ort || '';
-    const lieferadresseString = toAddressString(adr);
-
-    // FormData
-    const formData = new FormData();
-    formData.append('kategorie', kategorie!);
-    formData.append('zertifizierungen', zertifizierungen.join(', '));
-    formData.append('titel', titel);
-    formData.append('farbton', farbton.trim());
-    formData.append('glanzgrad', glanzgrad);
-    formData.append('hersteller', hersteller === 'Alle' ? '' : hersteller);
-    formData.append('zustand', zustand);
-    formData.append('farbpalette', farbpaletteWert);
-    formData.append('beschreibung', beschreibung);
-    formData.append('anwendung', anwendung);
-    formData.append('oberflaeche', oberflaeche);
-    formData.append('farbcode', farbcode);
-    formData.append('effekt', effekt.join(', '));
-    formData.append('sondereffekte', sondereffekte.join(', '));
-    formData.append('qualitaet', qualitaet);
-    formData.append('menge', menge.toString());
-
-    // Registrierung / Lieferdatum
-    formData.append('account_type', accountType);
-    formData.append('nutzerTyp', nutzerTyp);
-    formData.append('istGewerblich', String(accountType === 'business'));
-    formData.append('lieferdatum', toYMD(lieferDatum!));
-
-    // Adresse (Einzelteile)
-    formData.append('vorname', adr.vorname);
-    formData.append('nachname', adr.nachname);
-    formData.append('firma', adr.firma);
-    formData.append('strasse', adr.strasse);
-    formData.append('hausnummer', adr.hausnummer);
-    formData.append('plz', adr.plz);
-    formData.append('ort', adr.ort);
-    formData.append('land', adr.land);
-
-    // Normalisierte Felder (nur PLZ+Ort nach außen)
-    formData.append('lieferort', lieferort);
-    formData.append('lieferadresse', lieferadresseString);
-
-    if (kategorie === 'pulverlack') {
-      formData.append('aufladung', aufladung.join(', '));
-    }
-    bilder.forEach((file: File) => formData.append('bilder', file));
-    dateien.forEach((file: File) => formData.append('dateien', file));
-
-    try {
-      // 1) Anzeige ganz normal veröffentlichen (bestehende Logik bleibt)
-      const resCreate = await fetch('/api/angebot-einstellen', {
-  method: 'POST',
-  body: formData,
-  credentials: 'include', // ← NEU: Session-Cookies mitschicken
-});
-if (resCreate.status === 401 || resCreate.status === 403) {
-  setLadeStatus(false);
-  router.replace('/login?next=/sonderlacke'); // Zielroute ggf. anpassen
-  return;
-}
-
-
-      if (!resCreate.ok) throw new Error('Fehler beim Hochladen');
-      const created = await resCreate.json().catch(() => ({} as any));
-const requestId: string | undefined = created?.id || created?.insertedId || created?.angebotId;
-if (!requestId) {
-  setLadeStatus(false);
-  alert('Anzeige erstellt, aber ohne ID zurückgegeben. Bitte erneut versuchen.');
-  return;
-}
-
-
-      // Best effort: In Börse publishen (wie gehabt)
       try {
-        await fetch('/api/lackanfragen/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ← NEU
-        body: JSON.stringify({ id: requestId }),
-      });
+        payload = await prepareRes.json();
+      } catch {}
 
-      } catch (err) {
-        console.warn('Veröffentlichen in Börse fehlgeschlagen:', err);
-      }
+      console.error('Fehler /api/lackanfrage-vorbereiten:', prepareRes.status, payload);
 
-     // 2) Falls Promo-Pakete gewählt → Promo-Checkout starten
-if (hasPromo) {
-  try {
-    // Gewählte Pakete auflösen (aus deiner packages-Liste)
-    const selected = bewerbungOptionen
-      .map(id => packages.find(p => p.id === id))
-      .filter(Boolean) as PromoPackage[];
+      userErrorMessage =
+        'Die Lackanfrage konnte nicht vorbereitet werden. Bitte prüfe deine Eingaben und versuche es erneut.';
 
-    // → Stripe-Codes (aus product.metadata.code); Fallback: id
-    const packageCodes = selected.map(p => (p.code || p.id).toLowerCase());
+      throw new Error(
+        payload?.details ||
+          payload?.error ||
+          'Lackanfrage konnte nicht vorbereitet werden.',
+      );
+    }
 
-    // → optional: direkte Stripe Price-IDs, falls gepflegt
-    const priceIds = selected
-      .map(p => p.stripe_price_id || null)
-      .filter(Boolean) as string[];
+    const prepareData = await prepareRes.json();
 
-    const checkoutRes = await fetch('/api/promo/checkout', {
+    const requestId = prepareData?.requestId as string | undefined;
+    const bucket = prepareData?.bucket as string;
+    const uploads = prepareData?.uploads as PreparedUpload[];
+
+    if (!requestId) {
+      console.error('Keine requestId im Response von /api/lackanfrage-vorbereiten', prepareData);
+
+      userErrorMessage =
+        'Die Lackanfrage konnte nicht eindeutig gespeichert werden. Bitte versuche es erneut.';
+
+      throw new Error('Lackanfrage konnte nicht eindeutig gespeichert werden.');
+    }
+
+    setOverlayTitle('Dateien werden hochgeladen …');
+    setOverlayText('Bitte Seite nicht schließen.');
+
+    userErrorMessage =
+      'Ein oder mehrere Bilder oder Dateien konnten nicht hochgeladen werden. Bitte prüfe deine Internetverbindung, entferne die betroffenen Dateien und versuche es erneut.';
+
+    const finishedUploads = await uploadPreparedFilesToSupabase({
+      bucket,
+      uploads,
+      photoFiles: bilder,
+      fileFiles: dateien,
+    });
+
+    setOverlayTitle('Lackanfrage wird finalisiert …');
+    setOverlayText('Wir veröffentlichen deine Lackanfrage.');
+
+    const finalizeRes = await fetch('/api/lackanfrage-finalisieren', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        request_id: requestId,
-        package_ids: packageCodes, // <— WICHTIG: Codes schicken, nicht UI-IDs
-        price_ids: priceIds,       // <— optional; wenn vorhanden, spart Mapping im Backend
+        requestId,
+        uploads: finishedUploads,
       }),
     });
 
-    let checkoutUrl: string | null = null;
-    const ct = (checkoutRes.headers.get('content-type') || '').toLowerCase();
-    let payload: any = null;
+    if (!finalizeRes.ok) {
+      let payload: any = null;
 
-    // a) JSON-Antwort bevorzugt lesen
-    if (ct.includes('application/json')) {
-      payload = await checkoutRes.json().catch(() => null);
+      try {
+        payload = await finalizeRes.json();
+      } catch {}
 
-      if (checkoutRes.ok && payload?.url) {
-        checkoutUrl = String(payload.url);
+      console.error('Fehler /api/lackanfrage-finalisieren:', finalizeRes.status, payload);
+
+      if (
+        payload?.error === 'uploaded_files_missing_in_storage' ||
+        payload?.error === 'invalid_upload_paths'
+      ) {
+        userErrorMessage =
+          'Ein oder mehrere Bilder oder Dateien konnten nicht vollständig hochgeladen werden. Bitte entferne die betroffenen Dateien, lade sie erneut hoch und versuche es noch einmal.';
+      } else if (payload?.error === 'storage_check_failed') {
+        userErrorMessage =
+          'Die hochgeladenen Dateien konnten gerade nicht geprüft werden. Bitte versuche es in wenigen Minuten erneut.';
+      } else {
+        userErrorMessage =
+          'Die Lackanfrage konnte nicht veröffentlicht werden. Bitte versuche es erneut.';
       }
 
-      if (!checkoutRes.ok) {
-        console.error('Promo checkout error (json)', {
+      throw new Error(
+        payload?.details ||
+          payload?.error ||
+          'Lackanfrage konnte nicht finalisiert werden.',
+      );
+    }
+
+    if (hasPromo) {
+      setOverlayTitle('Lackanfrage gespeichert');
+      setOverlayText('Wir öffnen den Checkout …');
+
+      try {
+        const selected = bewerbungOptionen
+          .map((id) => packages.find((p) => p.id === id))
+          .filter(Boolean) as PromoPackage[];
+
+        const packageCodes = selected.map((p) => (p.code || p.id).toLowerCase());
+
+        const priceIds = selected
+          .map((p) => p.stripe_price_id || null)
+          .filter(Boolean) as string[];
+
+        const checkoutRes = await fetch('/api/promo/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            request_id: requestId,
+            package_ids: packageCodes,
+            price_ids: priceIds,
+          }),
+        });
+
+        let checkoutUrl: string | null = null;
+        const ct = (checkoutRes.headers.get('content-type') || '').toLowerCase();
+        let payload: any = null;
+
+        if (ct.includes('application/json')) {
+          payload = await checkoutRes.json().catch(() => null);
+
+          if (checkoutRes.ok && payload?.url) {
+            checkoutUrl = String(payload.url);
+          }
+
+          if (!checkoutRes.ok) {
+            console.error('Promo checkout error (json)', {
+              status: checkoutRes.status,
+              payload,
+            });
+
+            userErrorMessage =
+              payload?.message ||
+              payload?.details ||
+              payload?.error ||
+              'Die Lackanfrage wurde gespeichert, aber der Checkout konnte nicht gestartet werden.';
+
+            willNavigate = true;
+            router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+            return;
+          }
+        } else {
+          const loc = checkoutRes.headers.get('location');
+          if (loc) checkoutUrl = loc;
+        }
+
+        if (checkoutUrl) {
+          willNavigate = true;
+          await nextFrame();
+          window.location.assign(checkoutUrl);
+          return;
+        }
+
+        console.error('Promo checkout error (no url)', {
           status: checkoutRes.status,
+          headers: Object.fromEntries(checkoutRes.headers.entries()),
           payload,
         });
-        setLadeStatus(false);
-        alert(
-  JSON.stringify(
-    payload?.details?.stripe ?? payload ?? { error: 'Unbekannter Fehler' },
-    null,
-    2
-  )
-);
 
+        userErrorMessage =
+          `Checkout-Start fehlgeschlagen (keine URL; HTTP ${checkoutRes.status}).`;
+
+        willNavigate = true;
+        router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+        return;
+      } catch (err: any) {
+        console.error('Promo checkout request failed', err);
+
+        userErrorMessage =
+          err?.message ||
+          'Netzwerkfehler beim Checkout.';
+
+        willNavigate = true;
         router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
         return;
       }
-    } else {
-      // b) Nicht-JSON → Location-Header probieren
-      const loc = checkoutRes.headers.get('location');
-      if (loc) checkoutUrl = loc;
     }
 
-    // c) Weiterleiten oder Fehler
-    if (checkoutUrl) {
-      window.location.assign(checkoutUrl);
-      return;
-    }
-
-    console.error('Promo checkout error (no url)', {
-      status: checkoutRes.status,
-      headers: Object.fromEntries(checkoutRes.headers.entries()),
-      payload,
-    });
-
-    setLadeStatus(false);
-    alert(`Checkout-Start fehlgeschlagen (keine URL; HTTP ${checkoutRes.status}).`);
-    router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
+    willNavigate = true;
+    await nextFrame();
+    router.replace(`/konto/lackanfragen?published=1&requestId=${encodeURIComponent(requestId)}`);
     return;
-  } catch (err: any) {
-    console.error('Promo checkout request failed', err);
-    setLadeStatus(false);
-    alert(err?.message || 'Netzwerkfehler beim Checkout.');
-    router.replace(`/konto/lackanfragen?published=1&promo=failed&requestId=${encodeURIComponent(requestId)}`);
-    return;
-  }
-}
-
-
-
-      // 3) Ohne Promo → wie bisher weiter ins Konto
-      router.replace(`/konto/lackanfragen?published=1${requestId ? `&requestId=${encodeURIComponent(requestId)}` : ''}`);
-    } catch (error) {
-      console.error(error);
+  } catch (error) {
+    console.error('❌ Fehler beim Absenden / Promo:', error);
+    alert(userErrorMessage);
+  } finally {
+    if (!willNavigate) {
       setLadeStatus(false);
-      alert((error as Error).message || 'Serverfehler');
     }
-  };
+  }
+};
 
   const toggleBewerbung = (packageId: string): void => {
     setBewerbungOptionen(prev =>
@@ -980,10 +1331,14 @@ if (bootLoading) {
           accept="image/*"
           maxFiles={8}
           files={bilder}
-          setFiles={setBilder}
+          setFiles={handleBilderChange}
           setWarnung={setWarnungBilder}
           id="fotoUpload"
         />
+
+        {bilderWerdenOptimiert && (
+          <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
+        )}
         {warnungBilder && <p className={styles.validierungsfehler}>{warnungBilder}</p>}
 
         {/* Vorschau Bilder */}
@@ -1907,15 +2262,17 @@ if (bootLoading) {
         </AnimatePresence>
 
         {/* Submit */}
-        <button type="submit" className={styles.submitBtn} disabled={ladeStatus}>
-          {ladeStatus ? (
-            <>
-              Anzeige wird veröffentlicht
-              <span className={styles.spinner}></span>
-            </>
-          ) : (
-            'Anzeige veröffentlichen'
-          )}
+        <button type="submit" className={styles.submitBtn} disabled={ladeStatus || bilderWerdenOptimiert}>
+          {bilderWerdenOptimiert ? (
+              'Bilder werden optimiert…'
+            ) : ladeStatus ? (
+              <>
+                Bitte warten…
+                <span className={styles.spinner}></span>
+              </>
+            ) : (
+              'Anzeige veröffentlichen'
+            )}
         </button>
 
         {/* Reset */}
@@ -1934,6 +2291,30 @@ if (bootLoading) {
           </div>
         </div>
       </form>
+      <AnimatePresence>
+  {ladeStatus && (
+    <motion.div
+      className={styles.modalOverlay}
+      role="dialog"
+      aria-modal="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className={styles.modalCard}
+        initial={{ y: 10, scale: 0.98, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        exit={{ y: 10, scale: 0.98, opacity: 0 }}
+        transition={{ duration: 0.18 }}
+      >
+        <Loader2 className={styles.modalIcon} />
+        <h3 className={styles.modalTitle}>{overlayTitle}</h3>
+        <p className={styles.modalText}>{overlayText}</p>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* ---------- POPUP: während des Ladens sichtbar ---------- */}
       <AnimatePresence>

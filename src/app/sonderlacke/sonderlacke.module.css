@@ -900,3 +900,52 @@
   margin-bottom: 0.5rem;
   text-align: center;
 }}
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modalCard {
+  width: min(420px, 100%);
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.28);
+}
+
+.modalIcon {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.modalTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  color: #0f172a;
+}
+
+.modalText {
+  margin: 0;
+  color: #475569;
+}
+
+.optimierungHinweis {
+  margin-top: 0.5rem;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
