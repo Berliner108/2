@@ -1,5 +1,6 @@
 'use client';
 
+import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './sonderlacke.module.css';
 import { FaSprayCan, FaCloud } from 'react-icons/fa';
@@ -2020,7 +2021,9 @@ if (bootLoading) {
                             checked={aufladung.includes('Corona')}
                             onChange={(e) => {
                               const checked = e.target.checked;
-                              setAufladung(prev => checked ? [...prev, 'Corona'] : prev.filter(v => v !== 'Corona'));
+                              setAufladung(prev =>
+                                checked ? [...prev, 'Corona'] : prev.filter(v => v !== 'Corona')
+                              );
                             }}
                           />
                           <span>Corona</span>
@@ -2033,7 +2036,9 @@ if (bootLoading) {
                             checked={aufladung.includes('Tribo')}
                             onChange={(e) => {
                               const checked = e.target.checked;
-                              setAufladung(prev => checked ? [...prev, 'Tribo'] : prev.filter(v => v !== 'Tribo'));
+                              setAufladung(prev =>
+                                checked ? [...prev, 'Tribo'] : prev.filter(v => v !== 'Tribo')
+                              );
                             }}
                           />
                           <span>Tribo</span>
@@ -2162,7 +2167,7 @@ if (bootLoading) {
             </fieldset>
 
             {lieferadresseOption === 'manuell' && (
-              <div className={styles.grid3spaltig}>
+              <div className={styles.grid3spaltig} ref={adresseRef}>
                 <label className={styles.inputLabel}>
                   Vorname
                   <input
