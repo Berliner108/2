@@ -1419,10 +1419,6 @@ if (bootLoading) {
           {warnungBilder && <p className={styles.validierungsfehler}>{warnungBilder}</p>}
         </div>
 
-        {bilderWerdenOptimiert && (
-          <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
-        )}
-        {warnungBilder && <p className={styles.validierungsfehler}>{warnungBilder}</p>}
 
         {/* Vorschau Bilder */}
         <DateiVorschau
