@@ -1041,23 +1041,25 @@ useEffect(() => {
     }
 
     if (!prepareRes.ok) {
-      let payload: any = null;
+  let payload: any = null;
 
-      try {
-        payload = await prepareRes.json();
-      } catch {}
+  try {
+    payload = await prepareRes.json();
+  } catch {}
 
-      console.error('Fehler /api/lackanfrage-vorbereiten:', prepareRes.status, payload);
+  console.error('Fehler /api/lackanfrage-vorbereiten:', {
+    status: prepareRes.status,
+    payload,
+  });
 
-      userErrorMessage =
-        'Die Lackanfrage konnte nicht vorbereitet werden. Bitte prüfe deine Eingaben und versuche es erneut.';
+  userErrorMessage =
+    payload?.details ||
+    payload?.message ||
+    payload?.error ||
+    'Die Lackanfrage konnte nicht vorbereitet werden. Bitte prüfe deine Eingaben und versuche es erneut.';
 
-      throw new Error(
-        payload?.details ||
-          payload?.error ||
-          'Lackanfrage konnte nicht vorbereitet werden.',
-      );
-    }
+  throw new Error(userErrorMessage);
+}
 
     const prepareData = await prepareRes.json();
 
