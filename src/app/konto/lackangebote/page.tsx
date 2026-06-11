@@ -62,7 +62,7 @@ type LackOrder = {
 type SortKey   = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
 
 // ✅ Neue Status/Filter-Keys
-type StatusKey = 'wartet' | 'offen' | 'reported' | 'disputed' | 'confirmed' | 'refunded'
+type StatusKey = 'waiting' | 'shipped' | 'done' | 'refunded'
 type FilterKey = 'alle' | StatusKey
 
 const LS_KEY       = 'myLackOrdersV1'
@@ -169,22 +169,35 @@ async function apiPost(path: string, body?: any) {
 
 /* ===== Display-Status aus Serverstatus + Lieferdatum ableiten ===== */
 function getDisplayStatus(order: LackOrder): { key: StatusKey; label: string } {
-  // Refunds sichtbar machen
-  if (order.refundedAt || (order as any).status === 'canceled') {
+  // Erstattet / Reklamiert / Storniert
+  if (
+    order.refundedAt ||
+    order.disputeOpenedAt ||
+    order.status === 'disputed' ||
+    (order as any).status === 'canceled'
+  ) {
     return { key: 'refunded', label: 'Erstattet' }
   }
-  if (order.disputeOpenedAt) {
-    return { key: 'disputed', label: 'Reklamiert' } // optional „(erstattet)“ anhängen falls refundedAt gesetzt
-  }
-  if (order.status === 'confirmed') return { key: 'confirmed', label: 'Geliefert (bestätigt)' }
-  if (order.status === 'disputed')  return { key: 'disputed',  label: 'Reklamiert' }
-  if (order.status === 'reported')  return { key: 'reported',  label: 'Versandt' }
 
-  const liefer = asDateLike(order.lieferdatum)
-  if (liefer && Date.now() < +liefer) {
-    return { key: 'wartet', label: 'Versand in Vorbereitung' }
+  // Abgeschlossen / Zahlung freigegeben
+  if (
+    order.deliveredConfirmedAt ||
+    order.status === 'confirmed'
+  ) {
+    return { key: 'done', label: 'Abgeschlossen' }
   }
-  return { key: 'offen', label: 'Offen' }
+
+  // Versand wurde gemeldet
+  if (
+    order.deliveredReportedAt ||
+    order.shippedAt ||
+    order.status === 'reported'
+  ) {
+    return { key: 'shipped', label: 'Versand gemeldet' }
+  }
+
+  // Standard: bezahlt, aber Versand noch nicht gemeldet
+  return { key: 'waiting', label: 'Wartet auf Versand' }
 }
 
 
@@ -414,7 +427,9 @@ const LackanfragenOrdersPage: FC = () => {
 
       // ✅ erlaubte Statuswerte aktualisiert
       const st = p.get('status') as FilterKey | null
-      if (st && ['alle','wartet','offen','reported','disputed','confirmed'].includes(st)) setStatusFilter(st)
+      if (st && ['alle', 'waiting', 'shipped', 'done', 'refunded'].includes(st)) {
+          setStatusFilter(st)
+        }
 
       const tab = p.get('tab') as OrderKind | null
       if (tab && (tab === 'vergeben' || tab === 'angenommen')) {
@@ -641,13 +656,10 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
                 </div>
                 <span className={[
                   styles.statusBadge,
-                  display.key === 'offen'     ? styles.statusActive  : '',
-                  display.key === 'wartet'    ? styles.statusPending : '',
-                  display.key === 'reported'  ? styles.statusPending : '',
-                  display.key === 'disputed'  ? styles.statusDisputed  : '', // 👈 HIER
-                  display.key === 'confirmed' ? styles.statusDone    : '',
+                  display.key === 'waiting'  ? styles.statusPending : '',
+                  display.key === 'shipped'  ? styles.statusPending : '',
+                  display.key === 'done'     ? styles.statusDone : '',
                   display.key === 'refunded' ? styles.statusRefunded : '',
-
                 ].join(' ').trim()}>
                   {display.label}
                 </span>
@@ -932,11 +944,9 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
             title="Nach Status filtern"
           >
             <option value="alle">Alle</option>
-            <option value="wartet">Versand in Vorbereitung</option>
-            <option value="offen">Offen</option>
-            <option value="reported">Versandt</option>
-            <option value="disputed">Reklamiert</option>
-            <option value="confirmed">Geliefert (bestätigt)</option>
+            <option value="waiting">Wartet auf Versand</option>
+            <option value="shipped">Versand gemeldet</option>
+            <option value="done">Abgeschlossen</option>
             <option value="refunded">Erstattet</option>
           </select>
 
