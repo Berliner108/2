@@ -163,14 +163,19 @@ export async function GET(req: Request) {
           const fee = Number.isFinite(r.fee_cents) ? Number(r.fee_cents) : Math.round(Number(r.amount_cents) * 0.07)
           const sellerAmount = Math.max(0, Number(r.amount_cents) - fee)
 
-          const tr = await stripe.transfers.create({
-            amount: sellerAmount,
-            currency: (r.currency || 'eur').toLowerCase(),
-            destination,
-            source_transaction: r.charge_id as string,
-            transfer_group: `order_${r.id}`,
-            metadata: { order_id: String(r.id), role: 'auto_release' },
-          })
+          const tr = await stripe.transfers.create(
+            {
+              amount: sellerAmount,
+              currency: (r.currency || 'eur').toLowerCase(),
+              destination,
+              source_transaction: r.charge_id as string,
+              transfer_group: `order_${r.id}`,
+              metadata: { order_id: String(r.id), role: 'auto_release' },
+            },
+            {
+              idempotencyKey: `auto-release:${r.id}`,
+            }
+          )
 
           await admin.from('orders').update({
             transfer_id: tr.id,
