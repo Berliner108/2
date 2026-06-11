@@ -1,0 +1,929 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import styles from "./ArtikelDetail.module.css";
+import Navbar from "../../../components/navbar/Navbar";
+import Lightbox from "yet-another-react-lightbox";
+import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
+import "yet-another-react-lightbox/styles.css";
+import "yet-another-react-lightbox/plugins/thumbnails.css";
+import { supabaseBrowser } from "@/lib/supabase-browser";
+import { FaFilePdf } from "react-icons/fa";
+
+/* ===================== Typen ===================== */
+type Tier = {
+  id: string;
+  unit: "kg" | "stueck";
+  min_qty: number;
+  max_qty: number | null;
+  price: number;
+  shipping?: number | null;
+};
+
+type Seller = {
+  id: string;
+  username: string | null;
+  account_type: "business" | "private" | string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+};
+
+type Article = {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  sell_to?: "gewerblich" | "beide" | null;
+  manufacturer?: string | null;
+  promo_score?: number | null;
+  delivery_days?: number | null;
+  delivery_date_iso?: string | null;
+  stock_status?: "auf_lager" | "begrenzt" | null;
+  qty_kg?: number | null;
+  qty_piece?: number | null;
+  image_urls?: string[] | null;
+  file_urls?: string[] | null;
+  sale_type: "gesamt" | "pro_kg" | "pro_stueck";
+  condition?: string | null;
+
+  price_from?: number | null;
+  price_unit?: "kg" | "stueck" | null;
+  pieces_per_unit?: number | null;
+  size?: string | null;
+    color_palette?: string | null;
+  gloss_level?: string | null;
+  surface?: string | null;
+  application?: string | null;
+  color_tone?: string | null;
+  color_code?: string | null;
+  quality?: string | null;
+
+  effect?: string[] | string | null;
+  special_effects?: string[] | string | null;
+  certifications?: string[] | string | null;
+  charge?: string[] | string | null;
+
+
+};
+
+/* ===================== UI Helper ===================== */
+function TopLoader() {
+  return (
+    <div className={styles.topLoader} aria-hidden>
+      <div className={styles.topLoaderInner} />
+    </div>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+      <div className={styles.skelHeader}>
+        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
+        <div className={styles.skelLine} />
+      </div>
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelDrop} />
+        <div className={styles.skelGrid}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+      </div>
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+    </div>
+  );
+}
+
+function unitLabel(u: "kg" | "stueck") {
+  return u === "stueck" ? "Stück" : "kg";
+}
+function normalizeStringArray(v: any): string[] {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(Boolean).map(String);
+
+  if (typeof v === "string") {
+    const s = v.trim();
+    if (!s) return [];
+
+    // falls Supabase/Route JSON-String liefert
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean).map(String);
+    } catch {}
+
+    // fallback: komma-separiert
+    return s.split(",").map((x) => x.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
+function pickTier(tiers: Tier[], unit: "kg" | "stueck", qty: number): Tier | null {
+  const list = tiers.filter((t) => t.unit === unit).sort((a, b) => a.min_qty - b.min_qty);
+
+  for (const t of list) {
+    const maxOk = t.max_qty == null ? true : qty <= t.max_qty;
+    if (qty >= t.min_qty && maxOk) return t;
+  }
+  if (list.length) return list[list.length - 1];
+  return null;
+}
+
+/* ===== Handle/Reviews/Kontakt (wie Lackanfragen) ===== */
+const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
+const looksLikeHandle = (s?: string | null) => !!(s && HANDLE_RE.test(s.trim()));
+
+function profileReviewsHref(username: string | null | undefined): string | undefined {
+  if (!username) return undefined;
+  if (!looksLikeHandle(username)) return undefined;
+  return `/u/${username}/reviews`;
+}
+
+/* ===================== Seite ===================== */
+export default function ArtikelDetailPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [article, setArticle] = useState<Article | null>(null);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [seller, setSeller] = useState<Seller | null>(null);
+
+  // Viewer (profiles.account_type)
+  const [viewerChecked, setViewerChecked] = useState(false);
+  const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
+
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  // Kaufen UI
+  const unit: "kg" | "stueck" = useMemo(() => {
+  if (!article) return "kg";
+  if (article.sale_type === "pro_stueck") return "stueck";
+  return "kg"; // pro_kg oder default
+}, [article]);
+
+  const [qty, setQty] = useState<number>(1);
+
+  const [qtyHint, setQtyHint] = useState<string | null>(null);
+    const [buyLoading, setBuyLoading] = useState(false);
+  const [buyError, setBuyError] = useState<string | null>(null);
+
+
+  // 1) Viewer laden (profiles.account_type)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadViewer() {
+      try {
+        const supa = supabaseBrowser();
+        const { data } = await supa.auth.getUser();
+        const user = data.user;
+
+        if (!user) {
+          if (!cancelled) setViewerIsBusiness(false);
+          return;
+        }
+
+        const { data: prof, error } = await supa
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          if (!cancelled) setViewerIsBusiness(false);
+          return;
+        }
+
+        if (!cancelled) setViewerIsBusiness(prof?.account_type === "business");
+      } finally {
+        if (!cancelled) setViewerChecked(true);
+      }
+    }
+
+    loadViewer();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 2) Artikel laden
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoading(true);
+        setLoadError(null);
+
+        const res = await fetch(`/api/articles/${params.id}`, { cache: "no-store" });
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            setArticle(null);
+            setTiers([]);
+            setSeller(null);
+            return;
+          }
+          throw new Error(json?.error ?? "Fehler beim Laden");
+        }
+
+        const a = json.article as Article;
+        const t = (json.tiers ?? []) as Tier[];
+        const s = (json.seller ?? null) as Seller | null;
+
+        if (!cancelled) {
+          setArticle(a);
+          setTiers(t);
+          setSeller(s);
+
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setLoadError(e?.message ?? "Unbekannter Fehler");
+          setArticle(null);
+          setTiers([]);
+          setSeller(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id]);
+
+  const bilder = article?.image_urls ?? [];
+  const dateien = article?.file_urls ?? [];
+  const effectList = useMemo(() => normalizeStringArray(article?.effect), [article?.effect]);
+const specialEffectsList = useMemo(() => normalizeStringArray(article?.special_effects), [article?.special_effects]);
+const certificationsList = useMemo(() => normalizeStringArray(article?.certifications), [article?.certifications]);
+const chargeList = useMemo(() => normalizeStringArray(article?.charge), [article?.charge]);
+
+  const slides = bilder.map((src) => ({ src }));
+
+  const deliveryDateText = useMemo(() => {
+    if (!article?.delivery_date_iso) return "—";
+    return new Date(`${article.delivery_date_iso}T00:00:00`).toLocaleDateString("de-DE");
+  }, [article?.delivery_date_iso]);
+
+  const sellerTypeLabel =
+    seller?.account_type === "business"
+      ? "Gewerblich"
+      : seller?.account_type === "private"
+      ? "Privat"
+      : null;
+
+  const sellerTypeClass =
+    seller?.account_type === "business"
+      ? styles.gewerblich
+      : seller?.account_type === "private"
+      ? styles.privat
+      : "";
+
+  const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
+  const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
+
+  const availableUnits = useMemo(() => {
+    const set = new Set<"kg" | "stueck">();
+    for (const t of tiers) set.add(t.unit);
+    return Array.from(set);
+  }, [tiers]);
+
+  // ✅ echte Staffelpreise? (mind. 2 Tiers für die aktuell gewählte Einheit)
+  const hasStaffelpreise = useMemo(() => {
+    if (!article) return false;
+    if (article.sale_type === "gesamt") return false;
+    return tiers.filter((t) => t.unit === unit).length > 1;
+  }, [article, tiers, unit]);
+
+const stockLimit = useMemo(() => {
+  if (!article) return null;
+  if (article.stock_status !== "begrenzt") return null;
+  return unit === "kg" ? article.qty_kg ?? null : article.qty_piece ?? null;
+}, [article, unit]);
+
+useEffect(() => {
+  if (stockLimit != null && qty > stockLimit) {
+    setQty(stockLimit);
+    setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+  } else if (qtyHint) {
+    setQtyHint(null);
+  }
+  if (qty < 1) setQty(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [stockLimit]);
+
+const chosenTier = useMemo(() => {
+  if (!article) return null;
+  if (article.sale_type === "gesamt") return tiers[0] ?? null;
+  return pickTier(tiers, unit, qty);
+}, [article, tiers, unit, qty]);
+
+
+  const priceCalc = useMemo(() => {
+    if (!article || !chosenTier) return null;
+
+    const p = Number(chosenTier.price ?? 0);
+    const ship = Number(chosenTier.shipping ?? 0);
+
+    if (article.sale_type === "gesamt") {
+      return { unitPrice: p, shipping: ship, total: p + ship };
+    }
+
+    const total = qty * p + ship;
+    return { unitPrice: p, shipping: ship, total };
+  }, [article, chosenTier, qty]);
+
+  const disableBuy = useMemo(() => {
+    if (!article) return true;
+    if (!chosenTier) return true;
+    if (qty < 1) return true;
+    if (stockLimit != null && qty > stockLimit) return true;
+    return false;
+  }, [article, chosenTier, qty, stockLimit]);
+
+  // ===== Loading
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <TopLoader />
+        <div className={styles.container}>
+          <DetailSkeleton />
+        </div>
+      </>
+    );
+  }
+
+  // ===== Not found
+  if (!article) {
+    return (
+      <>
+        <Navbar />
+        <div className={styles.container}>
+          <h1 className={styles.title}>Artikel nicht gefunden</h1>
+          <button className={styles.submitOfferButton} onClick={() => router.push("/kaufen")}>
+            Zurück zum Shop
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  // ===== Zugriffsschutz (sell_to = gewerblich)
+  if (viewerChecked && (article.sell_to ?? "beide") === "gewerblich" && !viewerIsBusiness) {
+    return (
+      <>
+        <Navbar />
+        <div className={styles.container}>
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              display: "block",
+              marginTop: 16,
+              padding: "16px 20px",
+              border: "2px solid #d9d9d9",
+              background: "#fafafa",
+              color: "#444",
+              fontWeight: 600,
+              textAlign: "center",
+              borderRadius: 12,
+            }}
+          >
+            Dieser Artikel ist nur für <strong>gewerbliche</strong> Nutzer sichtbar.
+          </div>
+          <button
+            className={styles.submitOfferButton}
+            style={{ marginTop: 12 }}
+            onClick={() => router.push("/kaufen")}
+          >
+            Zurück zum Shop
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+
+      <div className={styles.container}>
+        {loadError && (
+          <div style={{ padding: "10px 0" }}>
+            <strong>Fehler:</strong> {loadError}
+          </div>
+        )}
+
+        <div className={styles.detailGrid}>
+          {/* Linke Spalte: Bilder */}
+          <div className={styles.leftColumn}>
+            <img
+              src={bilder?.[photoIndex] || "/images/platzhalter.jpg"}
+              alt={article.title}
+              className={styles.image}
+              onClick={() => setLightboxOpen(true)}
+              style={{ cursor: "pointer" }}
+            />
+            <div className={styles.thumbnails}>
+              {bilder?.map((bild, i) => (
+                <img
+                  key={i}
+                  src={bild}
+                  alt={`Bild ${i + 1}`}
+                  className={`${styles.thumbnail} ${i === photoIndex ? styles.activeThumbnail : ""}`}
+                  onClick={() => setPhotoIndex(i)}
+                  style={{ cursor: "pointer" }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Rechte Spalte: Infos */}
+          <div className={styles.rightColumn}>
+            <div className={styles.titleRow}>
+  <h1 className={styles.title}>{article.title}</h1>
+
+  <div className={styles.badges}>
+    {(article.promo_score ?? 0) > 0 && (
+      <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>
+    )}
+
+    {sellerTypeLabel && (
+      <span className={`${styles.badge} ${sellerTypeClass}`}>{sellerTypeLabel}</span>
+    )}
+  </div>
+</div>
+
+
+            <div className={styles.meta}>
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Lieferdatum bis:</span>
+                <span className={styles.value}>{deliveryDateText}</span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Hersteller:</span>
+                <span className={styles.value}>{article.manufacturer ?? "—"}</span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Kategorie:</span>
+                <span className={styles.value}>{article.category ?? "—"}</span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.label}>Zustand:</span>
+                <span className={styles.value}>{article.condition ?? "—"}</span>
+              </div>
+              {article.color_palette && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbpalette:</span>
+    <span className={styles.value}>{article.color_palette}</span>
+  </div>
+)}
+
+{article.gloss_level && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Glanzgrad:</span>
+    <span className={styles.value}>{article.gloss_level}</span>
+  </div>
+)}
+
+{article.surface && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Oberfläche:</span>
+    <span className={styles.value}>{article.surface}</span>
+  </div>
+)}
+
+{article.application && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Anwendung:</span>
+    <span className={styles.value}>{article.application}</span>
+  </div>
+)}
+
+{article.color_tone && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbton:</span>
+    <span className={styles.value}>{article.color_tone}</span>
+  </div>
+)}
+
+{article.color_code && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Farbcode:</span>
+    <span className={styles.value}>{article.color_code}</span>
+  </div>
+)}
+
+{article.quality && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Qualität:</span>
+    <span className={styles.value}>{article.quality}</span>
+  </div>
+)}
+
+{effectList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Effekt:</span>
+    <span className={styles.value}>{effectList.join(", ")}</span>
+  </div>
+)}
+
+{specialEffectsList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Sondereffekte:</span>
+    <span className={styles.value}>{specialEffectsList.join(", ")}</span>
+  </div>
+)}
+
+{certificationsList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Zertifizierungen:</span>
+    <span className={styles.value}>{certificationsList.join(", ")}</span>
+  </div>
+)}
+
+{chargeList.length > 0 && (
+  <div className={styles.metaItem}>
+    <span className={styles.label}>Aufladung:</span>
+    <span className={styles.value}>{chargeList.join(", ")}</span>
+  </div>
+)}
+
+
+              {/* ✅ FIX: Preis ab -> Preis, wenn keine Staffelpreise */}
+          <div className={styles.metaItem}>
+  <span className={styles.label}>{hasStaffelpreise ? "Preis ab:" : "Preis:"}</span>
+  <span className={styles.value}>
+    {article.price_from != null ? Number(article.price_from).toFixed(2) : "—"} €
+    {article.sale_type === "gesamt"
+      ? ""
+      : (article.price_unit ? ` / ${unitLabel(article.price_unit)}` : "")
+    }
+  </span>
+</div>
+
+
+
+
+                {/* Verfügbarkeit */}
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Verfügbarkeit:</span>
+                  <span className={styles.value}>
+                    {article.stock_status === "auf_lager"
+                      ? "Auf Lager"
+                      : article.qty_kg != null
+                      ? `${Number(article.qty_kg)} kg verfügbar`
+                      : article.qty_piece != null
+                      ? `${Number(article.qty_piece)} Stück verfügbar`
+                      : "Verfügbar"}
+                  </span>
+                </div>
+
+              {article.pieces_per_unit != null && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Enthaltene Stück:</span>
+                  <span className={styles.value}>{article.pieces_per_unit}</span>
+                </div>
+              )}
+
+              {article.size && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Größe:</span>
+                  <span className={styles.value}>{article.size}</span>
+                </div>
+              )}
+
+
+              {/* Seller Box */}
+              {seller?.username && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>User:</span>
+                  <span className={styles.value}>
+                    {reviewsHref ? (
+                      <Link href={reviewsHref} className={styles.kontaktLink} title="Zu den Bewertungen">
+                        {seller.username}
+                      </Link>
+                    ) : (
+                      seller.username
+                    )}
+                  </span>
+
+                  <div className={styles.userRating} style={{ marginTop: 6 }}>
+                    {seller.rating_count && Number(seller.rating_count) > 0 && seller.rating_avg != null ? (
+                      <>
+                        Bewertung: {Number(seller.rating_avg).toFixed(2)}/5 · {Number(seller.rating_count)} Bewertung
+                        {Number(seller.rating_count) === 1 ? "" : "en"}
+                      </>
+                    ) : (
+                      <>Bewertung: Noch keine Bewertungen</>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: 6 }}>
+                    <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
+                      User kontaktieren
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {/* ✅ Dateien: nur anzeigen, wenn vorhanden (als metaItem wie Lackanfragen) */}
+              {dateien.length > 0 && (
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Dateien:</span>
+
+                  <ul className={styles.downloadList} style={{ marginTop: 6 }}>
+                    {dateien.map((url, i) => {
+                      const name = decodeURIComponent(url.split("/").pop() ?? `Datei-${i + 1}`);
+                      return (
+                        <li key={`${url}-${i}`} className={styles.downloadItem}>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.downloadLink}
+                          >
+                            <FaFilePdf className={styles.pdfIcon} aria-hidden />
+                            {name}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {article.description && (
+              <div className={styles.beschreibung}>
+                <h2>Beschreibung</h2>
+                <p className={styles.preserveNewlines}>{article.description}</p>
+              </div>
+            )}
+{/* Staffelpreise / Preisübersicht (userfreundlich) */}
+<div className={styles.priceCard}>
+  <div className={styles.priceHeader}>
+    <h2 className={styles.priceTitle}>
+      {article.sale_type === "gesamt" ? "Preisübersicht" : "Staffelpreise"}
+    </h2>
+
+    {/* Live-Zusammenfassung zur aktuellen Auswahl */}
+    {article.sale_type !== "gesamt" && chosenTier && priceCalc && (
+      <div className={styles.priceSummary}>
+        Deine Auswahl: <strong>{qty} {unitLabel(unit)}</strong> ·{" "}
+        <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit)} ·{" "}
+        Versand <strong>{priceCalc.shipping.toFixed(2)} €</strong> ·{" "}
+        Gesamt <strong>{priceCalc.total.toFixed(2)} €</strong>
+      </div>
+    )}
+  </div>
+
+  {tiers.length === 0 ? (
+    <p>Keine Preisinformationen gefunden.</p>
+  ) : article.sale_type === "gesamt" ? (
+    <div className={styles.singlePriceBox}>
+      <div>
+        Gesamtpreis: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
+      </div>
+      <div>
+        Versand: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
+      </div>
+      <div className={styles.totalLine}>
+        Gesamt:{" "}
+        <strong>
+          {(Number(tiers[0]?.price ?? 0) + Number(tiers[0]?.shipping ?? 0)).toFixed(2)} €
+        </strong>
+      </div>
+    </div>
+  ) : (
+    <div className={styles.tiersTable}>
+      <div className={styles.tiersHead}>
+        <span>Menge</span>
+        <span>Preis / {unitLabel(unit)}</span>
+        <span>Versand</span>
+      </div>
+
+      {tiers
+        .filter((t) => t.unit === unit)
+        .map((t) => {
+          const isActive = chosenTier?.id === t.id;
+          const range =
+            t.max_qty != null
+              ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit)}`
+              : `ab ${t.min_qty} ${unitLabel(t.unit)}`;
+
+          return (
+            <div
+              key={t.id}
+              className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
+              aria-current={isActive ? "true" : undefined}
+            >
+              <span className={styles.tiersRange}>
+                {range}
+                {isActive ? <span className={styles.activePill}>aktiv</span> : null}
+              </span>
+
+              <span><strong>{Number(t.price).toFixed(2)} €</strong></span>
+
+              <span>{t.shipping != null ? `${Number(t.shipping).toFixed(2)} €` : "—"}</span>
+            </div>
+          );
+        })}
+    </div>
+  )}
+</div>
+
+
+            {/* Kaufen UI (ohne Warenkorb) */}
+            <div className={styles.offerBox}>
+              <div className={styles.inputGroup}>
+
+                <div className={styles.inputRow1}>
+                    <label style={{ fontWeight: 600 }}>Menge:</label>
+
+                    <div className={styles.qtyStepper}>
+                      <button
+                        type="button"
+                        className={styles.stepBtn}
+                        onClick={() => setQty((q) => {
+                          const next = Math.max(1, (Number.isFinite(q) ? q : 1) - 1);
+                          return next;
+                        })}
+                        disabled={article.sale_type === "gesamt" || qty <= 1}
+                        aria-label="Menge verringern"
+                      >
+                        –
+                      </button>
+
+                      <input
+                        className={styles.qtyInput}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={article.sale_type === "gesamt" ? 1 : qty}
+                        disabled={article.sale_type === "gesamt"}
+                        onChange={(e) => {
+                          const raw = String(e.target.value).replace(/\D/g, "");
+                          const num = raw ? parseInt(raw, 10) : 1;
+
+                          let next = Math.max(1, num);
+
+                          if (stockLimit != null && next > stockLimit) {
+                            next = stockLimit;
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                          } else {
+                            setQtyHint(null);
+                          }
+
+                          setQty(next);
+                        }}
+                        aria-label="Menge"
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.stepBtn}
+                        onClick={() => setQty((q) => {
+                          let next = (Number.isFinite(q) ? q : 1) + 1;
+
+                          if (stockLimit != null && next > stockLimit) {
+                            next = stockLimit;
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                          } else {
+                            setQtyHint(null);
+                          }
+
+                          return next;
+                        })}
+                        disabled={article.sale_type === "gesamt" || (stockLimit != null && qty >= stockLimit)}
+                        aria-label="Menge erhöhen"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span className={styles.unitSuffix}>
+                      {article.sale_type === "gesamt" ? "" : unitLabel(unit)}
+                    </span>
+                  </div>
+
+
+                {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
+
+
+                {stockLimit != null && (
+                  <div style={{ marginTop: 8, opacity: 0.85 }}>
+                    Max verfügbar: {stockLimit} {unitLabel(unit)}
+                  </div>
+                )}
+                {chosenTier && priceCalc && (
+                  <div className={styles.buyTotal}>
+                    Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
+                  </div>
+                )}
+
+                <div className={styles.buttonRow}>
+                  <button
+                  className={styles.submitOfferButton}
+                  disabled={disableBuy || buyLoading}
+                  onClick={async () => {
+                    try {
+                      setBuyLoading(true);
+                      setBuyError(null);
+
+                      if (!chosenTier) {
+                        setBuyError("Keine passende Preisstaffel gefunden.");
+                        return;
+                      }
+
+                      const res = await fetch("/api/shop/checkout-session", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          articleId: article.id,
+                          tierId: chosenTier.id,
+                          unit: chosenTier.unit,
+                          qty: article.sale_type === "gesamt" ? 1 : qty,
+                        }),
+                      });
+
+                      const json = await res.json().catch(() => ({}));
+
+                      if (!res.ok) {
+                        // Wenn nicht eingeloggt -> Login (oder du hast eine eigene Login-Route)
+                        if (res.status === 401) {
+                          router.push("/login");
+                          return;
+                        }
+                        throw new Error(json?.error ?? "Checkout fehlgeschlagen");
+                      }
+
+                      if (!json?.url) throw new Error("Keine Checkout-URL erhalten.");
+                      window.location.href = json.url;
+                    } catch (e: any) {
+                      setBuyError(e?.message ?? "Unbekannter Fehler");
+                    } finally {
+                      setBuyLoading(false);
+                    }
+                  }}
+                >
+                  {buyLoading ? "Weiterleitung…" : "Jetzt kaufen"}
+                </button>
+
+                </div>
+                {buyError && (
+                  <p className={styles.offerNote} style={{ color: "#b00020" }}>
+                    {buyError}
+                  </p>
+                )}
+
+
+                {disableBuy && (
+                  <p className={styles.offerNote} style={{ color: "#b00020" }}>
+                    Bitte Menge/Einheit prüfen (oder Bestand überschritten).
+                  </p>
+                )}
+
+                <p className={styles.offerNote}>
+                  Preise sind <strong>Brutto</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {lightboxOpen && slides.length > 0 && (
+        <Lightbox
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          slides={slides}
+          index={photoIndex}
+          plugins={[Thumbnails]}
+          thumbnails={{ vignette: true }}
+          on={{ view: ({ index }) => setPhotoIndex(index) }}
+        />
+      )}
+    </>
+  );
+}

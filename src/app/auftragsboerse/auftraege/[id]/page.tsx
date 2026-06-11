@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       material ? `Material: ${material}.` : '',
       masse ? `Masse: ${masse}.` : '',
       standort ? `Standort: ${standort}.` : '',
-      'Jetzt Details ansehen oder als Beschichter ein Angebot abgeben.',
+      'Jetzt als Beschichter ein Angebot abgeben.',
     ]
       .filter(Boolean)
       .join(' ')
