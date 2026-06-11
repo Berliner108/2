@@ -371,6 +371,10 @@ useEffect(() => {
 
           <Slideshow />
 
+          <h1 className={styles.visuallyHidden}>
+            BeschichterScout – Auftragsbörse, Lackbörse und Shop für Beschichter
+          </h1>
+
           {/* Auftragsbörse */}
           <section className={styles.sectionWrapper}>
             <div className={styles.articleLinkContainer}>
