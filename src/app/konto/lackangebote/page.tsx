@@ -933,7 +933,6 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
             <option value="price_desc">Höchster Preis zuerst</option>
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
-
           {/* ✅ Neuer Status-Filter */}
           <label className={styles.visuallyHidden} htmlFor="status">Status</label>
           <select
