@@ -1,5 +1,6 @@
 import '../styles/layout.css'
 import React, { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { Oswald } from 'next/font/google'
 import Chrome from './Chrome'
 
@@ -8,7 +9,26 @@ const oswald = Oswald({
   weight: ['300', '400', '500', '600', '700'],
 })
 
-export const metadata = { title: 'Beschichter Scout' }
+export const metadata: Metadata = {
+  title: {
+    default: 'BeschichterScout – Beschichter finden & Aufträge vergeben',
+    template: '%s | BeschichterScout',
+  },
+  description:
+    'BeschichterScout verbindet Auftraggeber mit Beschichtern für Pulverbeschichtung, Nasslackierung, Eloxieren, Verzinken und weitere Oberflächenverfahren.',
+  alternates: {
+    canonical: 'https://www.beschichterscout.com',
+  },
+  openGraph: {
+    title: 'BeschichterScout – Beschichter finden & Aufträge vergeben',
+    description:
+      'Aufträge für Pulverbeschichtung, Nasslackierung, Eloxieren, Verzinken und weitere Oberflächenverfahren einstellen und passende Beschichter finden.',
+    url: 'https://www.beschichterscout.com',
+    siteName: 'BeschichterScout',
+    locale: 'de_AT',
+    type: 'website',
+  },
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -21,6 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/png" sizes="192x192" href="/web-app-manifest-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
       </head>
+
       <body className={oswald.className}>
         <Suspense fallback={null}>
           <Chrome>{children}</Chrome>
