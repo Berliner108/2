@@ -12,10 +12,13 @@ const SEVEN_D_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(req: Request) {
   // optional: nur Vercel-Cron zulassen
-  if (process.env.REQUIRE_CRON_HEADER === '1') {
-    const isCron = req.headers.get('x-vercel-cron') === '1'
-    if (!isCron) return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  if (process.env.CRON_SECRET) {
+  const authHeader = req.headers.get('authorization')
+
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
+}
 
   const admin = supabaseAdmin()
   const stripe = getStripe()
