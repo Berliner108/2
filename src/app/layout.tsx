@@ -11,18 +11,18 @@ const oswald = Oswald({
 
 export const metadata: Metadata = {
   title: {
-    default: 'BeschichterScout – Beschichter finden & Aufträge vergeben',
+    default: 'BeschichterScout – Auftragsbörse, Lackbörse & Shop für Beschichter',
     template: '%s | BeschichterScout',
   },
   description:
-    'BeschichterScout verbindet Auftraggeber mit Beschichtern für Pulverbeschichtung, Nasslackierung, Eloxieren, Verzinken und weitere Oberflächenverfahren.',
+    'BeschichterScout ist die Plattform für Beschichter und Auftraggeber: Beschichtungsaufträge vergeben, Lacke handeln, Lackanfragen finden sowie Arbeitsmittel und Restposten kaufen oder anbieten.',
   alternates: {
     canonical: 'https://www.beschichterscout.com',
   },
   openGraph: {
-    title: 'BeschichterScout – Beschichter finden & Aufträge vergeben',
+    title: 'BeschichterScout – Auftragsbörse, Lackbörse & Shop für Beschichter',
     description:
-      'Aufträge für Pulverbeschichtung, Nasslackierung, Eloxieren, Verzinken und weitere Oberflächenverfahren einstellen und passende Beschichter finden.',
+      'Auftragsbörse, Lackbörse und Beschichter-Shop für Pulverbeschichtung, Nasslackierung, Eloxieren, Lackhandel, Arbeitsmittel und Restposten.',
     url: 'https://www.beschichterscout.com',
     siteName: 'BeschichterScout',
     locale: 'de_AT',
