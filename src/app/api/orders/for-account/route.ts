@@ -96,6 +96,7 @@ export async function GET(req: Request) {
       .select(`
         id, created_at, buyer_id, supplier_id, kind, request_id, offer_id,
         amount_cents, currency, status,
+        payment_intent_id, charge_id,
         reported_at, released_at, refunded_at, dispute_opened_at, dispute_reason,
         auto_release_at, shipped_at, auto_refund_at
       `)
