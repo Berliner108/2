@@ -65,17 +65,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${titleText} kaufen`
 
   const description = truncate(
-    [
-      `${titleText} im Beschichter-Shop auf BeschichterScout.`,
-      category ? `Kategorie: ${category}.` : '',
-      manufacturer ? `Hersteller: ${manufacturer}.` : '',
-      colorCode || colorTone ? `Farbe: ${[colorCode, colorTone].filter(Boolean).join(' ')}.` : '',
-      price ? `Preis ab ${price}.` : '',
-      'Lacke, Restposten und Arbeitsmittel für Beschichter kaufen oder anbieten.',
-    ]
-      .filter(Boolean)
-      .join(' ')
-  )
+  [
+    `${titleText} im Beschichter-Shop auf BeschichterScout.`,
+    category ? `Kategorie: ${category}.` : '',
+    manufacturer ? `Hersteller: ${manufacturer}.` : '',
+    colorCode || colorTone ? `Farbe: ${[colorCode, colorTone].filter(Boolean).join(' ')}.` : '',
+    'Jetzt Details ansehen.',
+  ]
+    .filter(Boolean)
+    .join(' ')
+)
 
   return {
     title,
