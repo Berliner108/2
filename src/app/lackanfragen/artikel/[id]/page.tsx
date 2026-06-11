@@ -22,13 +22,54 @@ function normalizeArticle(raw: any) {
   const data = item?.data ?? item ?? {}
 
   return {
-    title: cleanText(item?.title ?? item?.titel ?? data?.title ?? data?.titel, 'Lackanfrage'),
-    category: cleanText(item?.category ?? data?.category ?? data?.kategorie),
-    manufacturer: cleanText(data?.manufacturer ?? data?.hersteller ?? item?.manufacturer),
-    colorCode: cleanText(data?.color_code ?? data?.farbcode ?? item?.color_code),
-    colorTone: cleanText(data?.color_tone ?? data?.farbton ?? item?.color_tone),
-    quality: cleanText(data?.quality ?? data?.qualität ?? item?.quality),
-    amount: data?.menge ?? item?.menge ?? null,
+    category: cleanText(
+      item?.category ??
+        item?.kategorie ??
+        data?.category ??
+        data?.kategorie
+    ),
+
+    manufacturer: cleanText(
+      item?.manufacturer ??
+        item?.hersteller ??
+        data?.manufacturer ??
+        data?.hersteller
+    ),
+
+    colorCode: cleanText(
+      item?.color_code ??
+        item?.farbcode ??
+        data?.color_code ??
+        data?.farbcode
+    ),
+
+    colorPalette: cleanText(
+      item?.color_palette ??
+        item?.farbpalette ??
+        data?.color_palette ??
+        data?.farbpalette
+    ),
+
+    colorTone: cleanText(
+      item?.color_tone ??
+        item?.farbton ??
+        data?.color_tone ??
+        data?.farbton
+    ),
+
+    quality: cleanText(
+      item?.quality ??
+        item?.qualität ??
+        data?.quality ??
+        data?.qualität
+    ),
+
+    effect: cleanText(
+      item?.effect ??
+        item?.effekt ??
+        data?.effect ??
+        data?.effekt
+    ),
   }
 }
 
@@ -70,23 +111,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  const titleText = artikel.title
   const category = artikel.category
   const manufacturer = artikel.manufacturer
   const colorCode = artikel.colorCode
+  const colorPalette = artikel.colorPalette
   const colorTone = artikel.colorTone
   const quality = artikel.quality
+  const effect = artikel.effect
 
-  const title = `${titleText} gesucht`
+  const title = [
+    category ? `${category} gesucht` : 'Lackanfrage gesucht',
+    colorCode ? colorCode : '',
+    colorPalette ? colorPalette : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const description = truncate(
     [
-      `${titleText} als Lackanfrage auf BeschichterScout.`,
+      'Lackanfrage auf BeschichterScout.',
       category ? `Kategorie: ${category}.` : '',
       manufacturer ? `Hersteller: ${manufacturer}.` : '',
-      colorCode || colorTone ? `Farbe: ${[colorCode, colorTone].filter(Boolean).join(' ')}.` : '',
+      colorCode ? `Farbcode: ${colorCode}.` : '',
+      colorPalette ? `Farbpalette: ${colorPalette}.` : '',
+      colorTone ? `Farbton: ${colorTone}.` : '',
       quality ? `Qualität: ${quality}.` : '',
-      'Jetzt Details ansehen und Angebot abgeben.',
+      effect ? `Effekt: ${effect}.` : '',
+      'Details ansehen.',
     ]
       .filter(Boolean)
       .join(' ')
