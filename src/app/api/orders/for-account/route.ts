@@ -105,6 +105,23 @@ export async function GET(req: Request) {
 
     if (ordErr) return NextResponse.json({ error: ordErr.message }, { status: 500 })
     let rows = orders ?? []
+      rows = rows.filter(r => {
+      const status = String(r.status ?? '').toLowerCase()
+
+      // Unbezahlte / nicht abgeschlossene PaymentIntent-Orders nicht im Konto anzeigen
+      if (
+        status === 'requires_confirmation' &&
+        !r.charge_id &&
+        !r.reported_at &&
+        !r.released_at &&
+        !r.refunded_at &&
+        !r.dispute_opened_at
+      ) {
+        return false
+      }
+
+      return true
+    })
 
     // Optional: stornierte/erstattete ausblenden (default)
     if (!includeCanceled) {
