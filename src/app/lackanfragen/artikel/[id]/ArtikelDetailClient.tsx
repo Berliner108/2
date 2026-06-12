@@ -1089,7 +1089,7 @@ function PageBody() {
                 </h2>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>
-                    Gesamtpreis in € (inkl. Steuern & Gebühren excl. Versand)
+                    Gesamtpreis (inkl. Steuern & Gebühren excl. Versand) in €
                   </label>
                   <input
                     type="text"
@@ -1106,7 +1106,7 @@ function PageBody() {
 
                 <div className={styles.inputGroup} style={{ marginTop: 10 }}>
                   <label className={styles.label}>
-                    Versandkosten in € (separat, inkl. Steuern & Gebühren)
+                    Versandkosten (separat, inkl. Steuern & Gebühren) in €
                   </label>
                   <input
                     type="text"
