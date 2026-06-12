@@ -1017,3 +1017,24 @@
     background-position: 0% 50%;
   }
 }
+/* Problem-melden-Zeile auf volle Buttonbreite bringen */
+.disputeInfoWrapper {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.disputeInfoWrapper .btnGhost {
+  width: 100%;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.disputeInfoIcon {
+  flex-shrink: 0;
+}
