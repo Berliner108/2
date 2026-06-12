@@ -622,14 +622,8 @@ const normalizeOffer = (o: any): LackOffer => {
                                 ) : (
                                   <span className={styles.vendor}>{o.vendorName}</span>
                                 )}
-                                <span
-                                  className={`${styles.accountBadge} ${
-                                    o.vendorAccountType === 'business'
-                                      ? styles.accountBusiness
-                                      : styles.accountPrivate
-                                  }`}
-                                >
-                                  Typ: {String(o.vendorAccountType)}
+                                <span className={styles.vendorRatingSmall}>
+                                  {' '}· {o.vendorAccountType === 'business' ? 'Gewerblich' : 'Privat'}
                                 </span>
                                 <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                                 {o.priceCents === bestPrice && offers.length > 1 && (
