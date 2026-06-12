@@ -879,3 +879,60 @@
   opacity: 1;
   pointer-events: auto;
 }
+/* ===== Button-Layout wie bei Aufträge ===== */
+
+.actions {
+  margin-top: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.actionStack {
+  width: min(420px, 100%);
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.actionStack > button,
+.actionStack > a {
+  width: 100%;
+}
+
+/* Desktop: kompakte Buttonspalte rechts */
+@media (min-width: 900px) {
+  .actions {
+    align-self: end;
+    justify-content: flex-end;
+  }
+
+  .actionStack {
+    width: 340px;
+    min-width: 340px;
+    gap: 8px;
+  }
+}
+
+/* Mobil: volle Breite */
+@media (max-width: 680px) {
+  .actions {
+    justify-content: stretch;
+  }
+
+  .actionStack {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}

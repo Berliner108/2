@@ -761,11 +761,13 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
                 ) : <div />}
 
                 {/* Actions rechts */}
-                <aside className={styles.sideCol}>
+                
+                <aside className={styles.actions}>
+                  <div className={styles.actionStack}>
                   {isVendor && order.status === 'confirmed' && (
                     <a
                       href={`/api/invoices/${order.orderId}/download`}
-                      className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                      className={styles.invoiceBtn}
                       target="_blank" rel="noopener"
                     >
                       Rechnung herunterladen (PDF)
@@ -783,7 +785,7 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
                     <>
                       <button
                         type="button"
-                        className={`${styles.ctaBtn} ${styles.ctaSecondary}`}
+                        className={styles.btnDanger}
                         onClick={() => setShipOrder(order)}
                       >
                         Versandt melden
@@ -807,7 +809,7 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
   <>
     <button
       type="button"
-      className={`${styles.ctaBtn} ${styles.ctaConfirm}`}
+      className={styles.acceptBtn}
       onClick={() => doRelease(order)}
     >
       Empfang bestätigen & Zahlung freigeben
@@ -817,7 +819,7 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
     <div className={styles.disputeInfoWrapper}>
       <button
         type="button"
-        className={`${styles.ctaBtn} ${styles.ctaGhost}`}
+        className={styles.btnGhost}
         onClick={() => openDispute(order)}
       >
         Problem melden
@@ -867,12 +869,13 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
                   {canRateNow(order) && (
                     <button
                       type="button"
-                      className={`${styles.ctaBtn} ${styles.ctaPrimary}`}
+                      className={styles.acceptBtnBlue}
                       onClick={() => { setRateOrderId(order.orderId); setRatingStars(5); setRatingText('') }}
                     >
                       Bewertung abgeben
                     </button>
                   )}
+                  </div>
                 </aside>
               </div>
 
@@ -933,7 +936,7 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
             <option value="price_desc">Höchster Preis zuerst</option>
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
-          
+
           {/* ✅ Neuer Status-Filter */}
           <label className={styles.visuallyHidden} htmlFor="status">Status</label>
           <select
