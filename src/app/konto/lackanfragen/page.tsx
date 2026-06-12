@@ -17,6 +17,7 @@ type LackOffer = {
   vendorHandle?: string | null
   vendorRating: number | null
   vendorRatingCount: number | null
+  vendorAccountType?: string | null
   priceCents: number
   itemCents?: number
   shippingCents?: number
@@ -243,14 +244,15 @@ const normalizeOffer = (o: any): LackOffer => {
     null;
 
   return {
-    ...o,
-    // UI verwendet dieses Feld – hier steht ab jetzt NUR noch der Handle oder "Anbieter"
-    vendorHandle: handle,
-    vendorName: handle || 'Anbieter',
-    itemCents: item,
-    shippingCents: ship,
-    priceCents: total,
-  } as LackOffer;
+  ...o,
+  vendorHandle: handle,
+  vendorName: handle || 'Anbieter',
+  vendorAccountType:
+    String(o.vendorAccountType ?? o.vendor_account_type ?? '').toLowerCase() || null,
+  itemCents: item,
+  shippingCents: ship,
+  priceCents: total,
+} as LackOffer;
 };
 
 
@@ -620,12 +622,20 @@ const normalizeOffer = (o: any): LackOffer => {
                                 ) : (
                                   <span className={styles.vendor}>{o.vendorName}</span>
                                 )}
+                                <span
+                                  className={`${styles.accountBadge} ${
+                                    o.vendorAccountType === 'business'
+                                      ? styles.accountBusiness
+                                      : styles.accountPrivate
+                                  }`}
+                                >
+                                  Typ: {String(o.vendorAccountType)}
+                                </span>
                                 <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
                                 {o.priceCents === bestPrice && offers.length > 1 && (
                                   <span className={styles.tagBest}>Bester Preis</span>
                                 )}
                                 </div>
-
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
                                   <div>{formatEUR(o.priceCents)}</div>
                                   <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
