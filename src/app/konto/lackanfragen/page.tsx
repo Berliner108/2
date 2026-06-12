@@ -596,7 +596,7 @@ const normalizeOffer = (o: any): LackOffer => {
                             <div role="columnheader">Anbieter</div>
                             <div role="columnheader">Preis</div>
                             <div role="columnheader">Angebot gültig bis</div>
-                            <div role="columnheader" className={styles.colAction}>Aktion</div>
+                            <div role="columnheader" className={styles.colAction}>Angebot</div>
                           </div>
                         )}
 
