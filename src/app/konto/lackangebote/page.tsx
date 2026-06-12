@@ -876,7 +876,13 @@ function readableDisputeReason(reason?: string | null): string {
 
                   {order.disputeReason && (
                     <div className={styles.btnHint} style={{ whiteSpace: 'pre-wrap' }}>
-                      {readableDisputeReason(order.disputeReason)}
+                      {order.disputeReason === 'NO_SHIPMENT_TIMEOUT' ? (
+                        readableDisputeReason(order.disputeReason)
+                      ) : (
+                        <>
+                          <strong>Grund:</strong> {readableDisputeReason(order.disputeReason)}
+                        </>
+                      )}
                     </div>
                   )}
 
