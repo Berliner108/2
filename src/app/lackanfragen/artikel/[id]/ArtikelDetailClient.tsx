@@ -1084,6 +1084,9 @@ function PageBody() {
               </div>
             ) : (
               <div className={styles.offerBox}>
+                <h2 className={styles.priceHeading}>
+                  Mach ein Angebot für diese Lackanfrage
+                </h2>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>
                     Gesamtpreis in € (inkl. Steuern & Gebühren excl. Versand)
@@ -1103,7 +1106,7 @@ function PageBody() {
 
                 <div className={styles.inputGroup} style={{ marginTop: 10 }}>
                   <label className={styles.label}>
-                    Versandkosten in € (separat)
+                    Versandkosten in € (separat, inkl. Steuern & Gebühren)
                   </label>
                   <input
                     type="text"
