@@ -1038,3 +1038,18 @@
 .disputeInfoIcon {
   flex-shrink: 0;
 }
+.counterpartySubLine {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #333;
+}
+
+.counterpartyRatingLine {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #333;
+}

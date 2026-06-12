@@ -36,7 +36,11 @@ type LackOrder = {
   vendorDisplay?: string | null
   vendorRating?: number | null
   vendorRatingCount?: number | null
+  vendorAccountType?: string | null
+  vendorCountry?: string | null
 
+  ownerAccountType?: string | null
+  ownerCountry?: string | null
   ownerHandle?: string | null
   ownerDisplay?: string | null
   ownerRating?: number | null
@@ -377,6 +381,28 @@ const LackanfragenOrdersPage: FC = () => {
       ? `${rating.toFixed(1)}/5 · ${ratingCt}`
       : 'keine Bewertungen'
   }
+  function labelAccountType(value?: string | null): string {
+  const s = String(value ?? '').toLowerCase()
+
+  if (s === 'business') return 'Gewerblich'
+  if (s === 'private') return 'Privat'
+
+  return ''
+}
+
+function pickCounterpartySubLine(order: LackOrder): string {
+  const country =
+    order.kind === 'vergeben'
+      ? order.vendorCountry
+      : order.ownerCountry
+
+  const accountType =
+    order.kind === 'vergeben'
+      ? labelAccountType(order.vendorAccountType)
+      : labelAccountType(order.ownerAccountType)
+
+  return [country, accountType].filter(Boolean).join(' · ')
+}
 
   const allVergeben   = useMemo(() => orders.filter(o => o.kind === 'vergeben'),   [orders])
   const allAngenommen = useMemo(() => orders.filter(o => o.kind === 'angenommen'), [orders])
@@ -635,6 +661,7 @@ function readableDisputeReason(reason?: string | null): string {
           const contactLabel = order.kind === 'vergeben' ? 'Anbieter' : 'Auftraggeber'
           const contactName  = pickCounterpartyName(order)
           const ratingTxt    = pickCounterpartyRatingTxt(order)
+          const counterpartySubLine = pickCounterpartySubLine(order)
           const title        = pickTitle(order)
           const menge        = typeof order.mengeKg === 'number' ? order.mengeKg : undefined
 
@@ -682,15 +709,24 @@ function readableDisputeReason(reason?: string | null): string {
               <div className={styles.meta}>
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>{contactLabel}</div>
-                  <div className={styles.metaValue}>
-                    {(() => {
-                      const href = profileReviewsHref(order)
-                      return href
-                        ? <Link href={href} className={styles.titleLink}>{contactName}</Link>
-                        : <>{contactName}</>
-                    })()}
-                    <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
-                  </div>
+                 <div className={styles.metaValue}>
+                  {(() => {
+                    const href = profileReviewsHref(order)
+                    return href
+                      ? <Link href={href} className={styles.titleLink}>{contactName}</Link>
+                      : <>{contactName}</>
+                  })()}
+
+                  {counterpartySubLine && (
+                    <span className={styles.counterpartySubLine}>
+                      {counterpartySubLine}
+                    </span>
+                  )}
+
+                  <span className={styles.counterpartyRatingLine}>
+                    Bewertung: {ratingTxt}
+                  </span>
+                </div>
                 </div>
 
                 <div className={styles.metaCol}>

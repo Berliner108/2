@@ -412,6 +412,11 @@ export async function GET(req: Request) {
         vendorName,
         vendorUsername,
         vendorDisplay,
+        vendorAccountType: vProf?.account_type ? String(vProf.account_type).toLowerCase() : null,
+        vendorCountry:
+          typeof vProf?.address?.country === 'string'
+            ? vProf.address.country
+            : null,
         vendorRating,
         vendorRatingCount,
         vendorId: r.supplier_id ?? null,
@@ -424,6 +429,11 @@ export async function GET(req: Request) {
 
         ownerHandle,
         ownerDisplay,
+        ownerAccountType: oProf?.account_type ? String(oProf.account_type).toLowerCase() : null,
+        ownerCountry:
+          typeof oProf?.address?.country === 'string'
+            ? oProf.address.country
+            : null,
         ownerRating,
         ownerRatingCount,
 
