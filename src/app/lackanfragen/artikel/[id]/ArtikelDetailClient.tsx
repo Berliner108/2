@@ -1152,7 +1152,7 @@ function PageBody() {
                 </button>
 
                 <p className={styles.offerNote}>
-                  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können. Dein Angebot ist
+                  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere AGB zu akzeptieren. Dein Angebot ist
                   72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
                 </p>
               </div>
