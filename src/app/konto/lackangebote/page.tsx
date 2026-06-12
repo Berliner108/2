@@ -604,7 +604,8 @@ const alreadyRated = (o: LackOrder) => !!o.myReview
 const canRateNow   = (o: LackOrder) => !alreadyRated(o)
 
 function readableDisputeReason(reason?: string | null): string {
-  if (!reason) return ''
+  const clean = String(reason ?? '').trim()
+  if (!clean) return ''
 
   const map: Record<string, string> = {
     NO_SHIPMENT_TIMEOUT:
@@ -615,7 +616,7 @@ function readableDisputeReason(reason?: string | null): string {
       'Eine Rückerstattung wurde angefordert.',
   }
 
-  return map[reason] ?? 'Es wurde eine Rückerstattung oder Klärung zu diesem Auftrag vermerkt.'
+  return map[clean] ?? clean
 }
   /* ---------- Section Renderer ---------- */
   const SectionList: FC<{
