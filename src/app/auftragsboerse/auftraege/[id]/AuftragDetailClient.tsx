@@ -882,7 +882,7 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
       {brauchtLogistikPreis && (
         <>
           <label htmlFor="logistikpreis" className={styles.label} style={{ marginTop: '0.75rem' }}>
-            Logistikkosten in € (Transport/Spedition)
+            Logistikkosten (für Transport/Spedition; inkl. Steuern und Gebühren) in €
           </label>
 
           <div className={styles.priceRow}>
