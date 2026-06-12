@@ -888,9 +888,7 @@ async function confirmAccept() {
                        <div className={styles.priceCell}>
                         <div className={styles.priceMain}>{formatEUR(o.gesamt_cents)}</div>
                         <div className={styles.priceSplit}>
-                          {formatEUR(o.artikel_cents)} (Auftrag) ·{' '}
-                          {formatEUR(o.versand_cents)} (Logistik)
-                          {o.versand_cents === 0 ? ' (Selbstanlieferung & Selbstabholung)' : ''}
+                          {formatEUR(o.artikel_cents)} Auftrag · {formatEUR(o.versand_cents)} Logistik
                         </div>
                       </div>
 
@@ -927,11 +925,6 @@ async function confirmAccept() {
     >
       läuft ab in {remaining.text}
     </span>
-  </span>
-
-  <span className={styles.metaItem}>
-    Preisaufschlüsselung: Auftrag {formatEUR(o.artikel_cents)} · Logistik{' '}
-    {o.versand_cents === 0 ? '0,00 € (Selbstanlieferung & Selbstabholung)' : formatEUR(o.versand_cents)}
   </span>
 </div>
 
