@@ -1085,7 +1085,7 @@ function PageBody() {
             ) : (
               <div className={styles.offerBox}>
                 <div className={styles.inputGroup}>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                  <label className={styles.label}>
                     Gesamtpreis in € (inkl. Steuern & Gebühren excl. Versand)
                   </label>
                   <input
@@ -1102,7 +1102,7 @@ function PageBody() {
                 </div>
 
                 <div className={styles.inputGroup} style={{ marginTop: 10 }}>
-                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>
+                  <label className={styles.label}>
                     Versandkosten in € (separat)
                   </label>
                   <input
