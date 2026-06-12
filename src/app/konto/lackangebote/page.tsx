@@ -603,7 +603,20 @@ const LackanfragenOrdersPage: FC = () => {
 const alreadyRated = (o: LackOrder) => !!o.myReview
 const canRateNow   = (o: LackOrder) => !alreadyRated(o)
 
+function readableDisputeReason(reason?: string | null): string {
+  if (!reason) return ''
 
+  const map: Record<string, string> = {
+    NO_SHIPMENT_TIMEOUT:
+      'Automatische Rückerstattung, weil der Versand nicht innerhalb der Frist gemeldet wurde.',
+    CUSTOMER_DISPUTE:
+      'Der Käufer hat ein Problem mit der Bestellung gemeldet.',
+    REFUND_REQUESTED:
+      'Eine Rückerstattung wurde angefordert.',
+  }
+
+  return map[reason] ?? 'Es wurde eine Rückerstattung oder Klärung zu diesem Auftrag vermerkt.'
+}
   /* ---------- Section Renderer ---------- */
   const SectionList: FC<{
     kind: OrderKind
@@ -861,8 +874,8 @@ const canRateNow   = (o: LackOrder) => !alreadyRated(o)
 
 
                   {order.disputeReason && (
-                    <div className={styles.btnHint} style={{whiteSpace:'pre-wrap'}}>
-                      <strong>Reklamationsgrund:</strong> {order.disputeReason}
+                    <div className={styles.btnHint} style={{ whiteSpace: 'pre-wrap' }}>
+                      {readableDisputeReason(order.disputeReason)}
                     </div>
                   )}
 
