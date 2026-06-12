@@ -288,7 +288,12 @@
 /* ===== Angebotsbereich / Preis-Accordion ===== */
 
 .priceSection {
+  border: 2px solid black;
+  border-radius: 8px;
   padding: 1rem;
+  margin-top: 2rem;
+  background-color: #fff;
+  text-align: left;
 }
 
 .disclosureBtn {
