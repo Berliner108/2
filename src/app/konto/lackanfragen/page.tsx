@@ -17,6 +17,7 @@ type LackOffer = {
   vendorHandle?: string | null
   vendorRating: number | null
   vendorRatingCount: number | null
+  vendorCountry?: string | null
   vendorAccountType?: string | null
   priceCents: number
   itemCents?: number
@@ -243,12 +244,14 @@ const normalizeOffer = (o: any): LackOffer => {
     asHandleOrNull(o.ownerHandle) ||
     null;
 
-  return {
+return {
   ...o,
   vendorHandle: handle,
   vendorName: handle || 'Anbieter',
   vendorAccountType:
     String(o.vendorAccountType ?? o.vendor_account_type ?? '').toLowerCase() || null,
+  vendorCountry:
+    String(o.vendorCountry ?? o.vendor_country ?? '').trim() || null,
   itemCents: item,
   shippingCents: ship,
   priceCents: total,
@@ -615,20 +618,27 @@ const normalizeOffer = (o: any): LackOffer => {
                             return (
                               <div key={o.id} className={styles.offerRow} role="row" style={{ gridTemplateColumns: cols }}>
                                 <div role="cell" data-label="Anbieter">
-                                {o.vendorHandle ? (
-                                  <Link href={`/u/${o.vendorHandle}/reviews`} className={styles.titleLink}>
+                                  {o.vendorHandle ? (
+                                    <Link href={`/u/${o.vendorHandle}/reviews`} className={styles.titleLink}>
+                                      <span className={styles.vendor}>{o.vendorName}</span>
+                                    </Link>
+                                  ) : (
                                     <span className={styles.vendor}>{o.vendorName}</span>
-                                  </Link>
-                                ) : (
-                                  <span className={styles.vendor}>{o.vendorName}</span>
-                                )}
-                                <span className={styles.vendorRatingSmall}>
-                                  {' '}· {o.vendorAccountType === 'business' ? 'Gewerblich' : 'Privat'}
-                                </span>
-                                <span className={styles.vendorRatingSmall}> · {ratingTxt}</span>
-                                {o.priceCents === bestPrice && offers.length > 1 && (
-                                  <span className={styles.tagBest}>Bester Preis</span>
-                                )}
+                                  )}
+
+                                  <span className={styles.vendorSubLine}>
+                                    {[o.vendorCountry, o.vendorAccountType === 'business' ? 'Gewerblich' : 'Privat']
+                                      .filter(Boolean)
+                                      .join(' · ')}
+                                  </span>
+
+                                  <span className={styles.vendorRatingLine}>
+                                    Bewertung: {ratingTxt}
+                                  </span>
+
+                                  {o.priceCents === bestPrice && offers.length > 1 && (
+                                    <span className={styles.tagBest}>Bester Preis</span>
+                                  )}
                                 </div>
                                 <div role="cell" className={styles.priceCell} data-label="Preis">
                                   <div>{formatEUR(o.priceCents)}</div>

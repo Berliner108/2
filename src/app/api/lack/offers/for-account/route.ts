@@ -99,6 +99,7 @@ export async function GET() {
       handle: string | null
       display: string | null
       account_type?: string | null
+      country?: string | null
       rating?: number | null
       rating_count?: number | null
     }>()
@@ -106,7 +107,7 @@ export async function GET() {
     if (supplierIds.length) {
       const { data: profs, error: profErr } = await admin
         .from('profiles')
-        .select('id, username, company_name, account_type, rating_avg, rating_count')
+        .select('id, username, company_name, account_type, address, rating_avg, rating_count')
         .in('id', supplierIds)
 
       if (profErr) return NextResponse.json({ error: profErr.message }, { status: 400 })
@@ -122,6 +123,12 @@ export async function GET() {
           handle,
           display,
           account_type: p.account_type ? String(p.account_type).toLowerCase() : null,
+          country:
+            typeof p.address?.land === 'string'
+              ? p.address.land
+              : typeof p.address?.country === 'string'
+                ? p.address.country
+                : null,
           rating,
           rating_count,
         })
@@ -151,6 +158,7 @@ export async function GET() {
         vendorUsername,
         vendorDisplay,
         vendorAccountType: v?.account_type ?? null,
+        vendorCountry: v?.country ?? null,
         vendorRating,
         vendorRatingCount,
         priceCents: total,

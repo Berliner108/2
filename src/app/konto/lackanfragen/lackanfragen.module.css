@@ -853,3 +853,18 @@
     padding: .55rem .9rem;
   }
 }
+.vendorSubLine {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #333;
+}
+
+.vendorRatingLine {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #333;
+}
