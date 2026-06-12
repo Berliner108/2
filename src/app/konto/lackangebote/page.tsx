@@ -987,8 +987,8 @@ function readableDisputeReason(reason?: string | null): string {
           />
           <label className={styles.visuallyHidden} htmlFor="sort">Sortierung</label>
           <select id="sort" value={sort} onChange={(e)=>setSort(e.target.value as SortKey)} className={styles.select}>
-            <option value="date_desc">Neueste zuerst</option>
-            <option value="date_asc">Älteste zuerst</option>
+            <option value="date_desc">Zuletzt angenommen zuerst</option>
+            <option value="date_asc">Zuerst angenommen zuerst</option>
             <option value="price_desc">Höchster Preis zuerst</option>
             <option value="price_asc">Niedrigster Preis zuerst</option>
           </select>
