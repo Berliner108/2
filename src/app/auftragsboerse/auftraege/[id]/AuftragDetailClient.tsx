@@ -914,17 +914,17 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
         </div>
       )}
       {(gesamtPreis.trim() || logistikPreis.trim()) && (
-  <div className={styles.priceTotal}>
-    Gesamt:{' '}
-    {(
-      (parseMoneyOrNull(gesamtPreis) ?? 0) +
-      (brauchtLogistikPreis ? parseMoneyOrNull(logistikPreis) ?? 0 : 0)
-    ).toLocaleString('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    })}
-  </div>
-)}
+        <div className={styles.priceTotal}>
+        Gesamt:{' '}
+        {(
+          (parseMoneyOrNull(gesamtPreis) ?? 0) +
+          (brauchtLogistikPreis ? parseMoneyOrNull(logistikPreis) ?? 0 : 0)
+        ).toLocaleString('de-DE', {
+          style: 'currency',
+          currency: 'EUR',
+        })}
+      </div>
+        )}
 
       <button type="submit" className={styles.buyButton} disabled={isSubmitDisabled}>
         {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}
