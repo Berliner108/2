@@ -894,39 +894,38 @@ async function confirmAccept() {
 
                     </div>
                     <div className={styles.cardMeta}>
-  <span className={styles.metaItem}>
-    Auftrags-Nr.: <strong>{o.jobId}</strong>
-  </span>
+                    <span className={styles.metaItem}>
+                      Auftrags-Nr.: <strong>{o.jobId}</strong>
+                    </span>
 
-  <span className={styles.metaItem}>
-  Auftraggeber:{' '}
-  {o.owner_username ? (
-    <Link href={`/u/${o.owner_username}/reviews`} className={styles.titleLink}>
-      <strong>{o.owner_username}</strong>
-    </Link>
-  ) : (
-    <strong>—</strong>
-  )}
-  <span className={styles.vendorRating}>
-    {' '}· {o.owner_rating_count && o.owner_rating_count > 0
-      ? `${Number(o.owner_rating_avg ?? 0).toFixed(1)}/5 · ${o.owner_rating_count}`
-      : 'keine Bewertungen'}
-  </span>
-</span>
-
-  <span className={styles.metaItem}>
-    Gültig bis: {formatDateTime(validUntil)}{' '}
-    <span
-      className={[
-        styles.expBadge,
-        remaining.level === 'soon' ? styles.expSoon : '',
-        remaining.level === 'critical' ? styles.expCritical : '',
-      ].join(' ')}
-    >
-      läuft ab in {remaining.text}
-    </span>
-  </span>
-</div>
+                    <span className={styles.metaItem}>
+                    Auftraggeber:{' '}
+                    {o.owner_username ? (
+                      <Link href={`/u/${o.owner_username}/reviews`} className={styles.titleLink}>
+                        <strong>{o.owner_username}</strong>
+                      </Link>
+                    ) : (
+                      <strong>—</strong>
+                    )}
+                    <span className={styles.vendorRating}>
+                      {' '}· {o.owner_rating_count && o.owner_rating_count > 0
+                        ? `${Number(o.owner_rating_avg ?? 0).toFixed(1)}/5 · ${o.owner_rating_count}`
+                        : 'keine Bewertungen'}
+                    </span>
+                  </span>
+                  <span className={styles.metaItem}>
+                    Gültig bis: {formatDateTime(validUntil)}{' '}
+                    <span
+                      className={[
+                        styles.expBadge,
+                        remaining.level === 'soon' ? styles.expSoon : '',
+                        remaining.level === 'critical' ? styles.expCritical : '',
+                      ].join(' ')}
+                    >
+                      läuft ab in {remaining.text}
+                    </span>
+                  </span>
+                </div>
 
                   </li>
                 )

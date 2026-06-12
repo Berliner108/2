@@ -853,3 +853,26 @@
     padding: .55rem .9rem;
   }
 }
+.accountBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.accountBusiness {
+  background: #e6f6ec;
+  color: #0f7b3e;
+  border: 1px solid #b6e2c8;
+}
+
+.accountPrivate {
+  background: #e8f1ff;
+  color: #0051a3;
+  border: 1px solid #b8d4ff;
+}

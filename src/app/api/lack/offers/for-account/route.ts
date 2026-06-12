@@ -98,6 +98,7 @@ export async function GET() {
     const vendors = new Map<string, {
       handle: string | null
       display: string | null
+      account_type?: string | null
       rating?: number | null
       rating_count?: number | null
     }>()
@@ -105,7 +106,7 @@ export async function GET() {
     if (supplierIds.length) {
       const { data: profs, error: profErr } = await admin
         .from('profiles')
-        .select('id, username, company_name, rating_avg, rating_count')
+        .select('id, username, company_name, account_type, rating_avg, rating_count')
         .in('id', supplierIds)
 
       if (profErr) return NextResponse.json({ error: profErr.message }, { status: 400 })
@@ -117,7 +118,13 @@ export async function GET() {
                     : (p.rating_avg != null ? Number(p.rating_avg) : null)
         const rating_count = typeof p.rating_count === 'number' ? p.rating_count
                           : (p.rating_count != null ? Number(p.rating_count) : null)
-        vendors.set(p.id, { handle, display, rating, rating_count })
+        vendors.set(p.id, {
+          handle,
+          display,
+          account_type: p.account_type ? String(p.account_type).toLowerCase() : null,
+          rating,
+          rating_count,
+        })
       }
     }
 
@@ -143,6 +150,7 @@ export async function GET() {
         vendorName,
         vendorUsername,
         vendorDisplay,
+        vendorAccountType: v?.account_type ?? null,
         vendorRating,
         vendorRatingCount,
         priceCents: total,
