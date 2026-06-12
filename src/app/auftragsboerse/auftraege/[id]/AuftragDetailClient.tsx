@@ -909,10 +909,22 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
         </div>
       ) : (
         <div className={styles.priceHint}>
-          Mit der Angebotsabgabe bestätigst du, alle Kundenanforderungen zum Auftrag vollständig erfüllen zu können.
+          Mit der Angebotsabgabe bestätigst du, alle Kundenanforderungen zum Auftrag vollständig erfüllen zu können und unsere AGB zu akzeptieren.
           Dein Angebot ist 72&nbsp;h oder bis zum Tag der Warenausgabe gültig.
         </div>
       )}
+      {(gesamtPreis.trim() || logistikPreis.trim()) && (
+  <div className={styles.priceTotal}>
+    Gesamt:{' '}
+    {(
+      (parseMoneyOrNull(gesamtPreis) ?? 0) +
+      (brauchtLogistikPreis ? parseMoneyOrNull(logistikPreis) ?? 0 : 0)
+    ).toLocaleString('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+    })}
+  </div>
+)}
 
       <button type="submit" className={styles.buyButton} disabled={isSubmitDisabled}>
         {offerSent ? 'Angebot erfolgreich abgegeben' : loading ? 'Sende…' : 'Angebot abgeben'}

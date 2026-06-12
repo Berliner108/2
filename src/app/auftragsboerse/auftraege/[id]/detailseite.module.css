@@ -295,7 +295,12 @@
   background-color: #fff;
   text-align: left;
 }
-
+.priceTotal {
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+}
 .disclosureBtn {
   width: 100%;
   display: flex;
