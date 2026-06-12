@@ -1685,18 +1685,23 @@ const submitDisabled = ladeStatus || !stripeReady;
           Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.
         </p>
         <Dropzone
-  type="bilder"
-  label="Fotos hierher ziehen oder klicken (max. 8)"
-  accept="image/*"
-  maxFiles={8}
-  files={bilder}
-  setFiles={setBilder}
-  setWarnung={setWarnungBilder} // <-- das ist korrekt
-  id="fotoUpload"
-/>
-{warnungBilder && (
-  <p className={styles.validierungsfehler}>{warnungBilder}</p>
-)}       
+          type="bilder"
+          label="Fotos hierher ziehen oder klicken (max. 8)"
+          accept="image/*"
+          maxFiles={8}
+          files={bilder}
+          setFiles={(nextFiles) => {
+            setBilder(nextFiles);
+            if (nextFiles.length > 0) {
+              setWarnungBilder('');
+            }
+          }}
+          setWarnung={setWarnungBilder}
+          id="fotoUpload"
+        />
+        {warnungBilder && (
+          <p className={styles.validierungsfehler}>{warnungBilder}</p>
+        )}       
 
           {/* Vorschau Bilder */}
           <DateiVorschau
@@ -1736,10 +1741,11 @@ const submitDisabled = ladeStatus || !stripeReady;
                 className={`${styles.iconBox} ${kategorie === 'nasslack' ? styles.activeIcon : ''} ${isEditMode ? styles.disabledIcon : ''}`}
 
                   onClick={() => {
-                  if (isEditMode) return;
-                  resetFieldsExceptCategory();
-                  setKategorie('nasslack');
-                }}
+                    if (isEditMode) return;
+                    resetFieldsExceptCategory();
+                    setKategorie('nasslack');
+                    setWarnungKategorie('');
+                  }}
 
                 >
               <FaSprayCan size={32} />
@@ -1752,6 +1758,7 @@ const submitDisabled = ladeStatus || !stripeReady;
                           if (isEditMode) return;
                           resetFieldsExceptCategory();
                           setKategorie('pulverlack');
+                          setWarnungKategorie('');
                         }}
 
                     >
@@ -1766,6 +1773,7 @@ const submitDisabled = ladeStatus || !stripeReady;
                     if (isEditMode) return;
                     resetFieldsExceptCategory();
                     setKategorie('arbeitsmittel');
+                    setWarnungKategorie('');
                   }}
 
                 >
@@ -1788,7 +1796,10 @@ const submitDisabled = ladeStatus || !stripeReady;
           name="verkaufAn"
           value="gewerblich"
           checked={verkaufAn === 'gewerblich'}
-          onChange={() => setVerkaufAn('gewerblich')}
+          onChange={() => {
+            setVerkaufAn('gewerblich');
+            setWarnungVerkaufAn('');
+          }}
         />
         <span>Nur gewerbliche Käufer</span>
       </label>
@@ -1799,7 +1810,10 @@ const submitDisabled = ladeStatus || !stripeReady;
           name="verkaufAn"
           value="beide"
           checked={verkaufAn === 'beide'}
-          onChange={() => setVerkaufAn('beide')}
+          onChange={() => {
+            setVerkaufAn('beide');
+            setWarnungVerkaufAn('');
+          }}
         />
         <span>Privat & gewerblich</span>
       </label>
@@ -1833,12 +1847,20 @@ const submitDisabled = ladeStatus || !stripeReady;
   </span>
 
   <input
-    type="text"
-    className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
-    maxLength={60}
-    value={titel}
-    onChange={(e) => setTitel(e.target.value)}
-  />
+  type="text"
+  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+  maxLength={60}
+  value={titel}
+  onChange={(e) => {
+    setTitel(e.target.value);
+    if (e.target.value.trim()) {
+      setWarnungTitel('');
+    }
+  }}
+  onFocus={() => {
+    if (warnungTitel) setWarnungTitel('');
+  }}
+/>
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
 
@@ -1853,10 +1875,13 @@ const submitDisabled = ladeStatus || !stripeReady;
     Hersteller: <span style={{ color: 'red' }}>*</span>
   </span>
   <div
-    ref={herstellerRef}
-    className={styles.customSelect}
-    onClick={() => setHerstellerDropdownOffen(prev => !prev)}
-  >
+  ref={herstellerRef}
+  className={styles.customSelect}
+  onClick={() => {
+    setHerstellerDropdownOffen(prev => !prev);
+    if (warnungHersteller) setWarnungHersteller('');
+  }}
+>
     <div className={styles.selectedValue}>
   {hersteller === HERSTELLER_ANDERE_VALUE
     ? (herstellerAndere ? `Andere: ${herstellerAndere}` : 'Andere…')
@@ -1870,6 +1895,7 @@ const submitDisabled = ladeStatus || !stripeReady;
           onClick={e => {
             e.stopPropagation();
             setHersteller('');
+            setWarnungHersteller('');
             setHerstellerDropdownOffen(false);
           }}
         >
@@ -1880,18 +1906,20 @@ const submitDisabled = ladeStatus || !stripeReady;
             key={option}
             className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
            onClick={e => {
-  e.stopPropagation();
+            e.stopPropagation();
 
-  if (option === 'Andere…') {
-    setHersteller(HERSTELLER_ANDERE_VALUE);
-    setHerstellerDropdownOffen(false);
-    return;
-  }
+            if (option === 'Andere…') {
+            setHersteller(HERSTELLER_ANDERE_VALUE);
+            setWarnungHersteller('');
+            setHerstellerDropdownOffen(false);
+            return;
+          }
 
-  setHersteller(option);
-  setHerstellerAndere(''); // Freitext leeren wenn normal gewählt
-  setHerstellerDropdownOffen(false);
-}}
+          setHersteller(option);
+          setHerstellerAndere('');
+          setWarnungHersteller('');
+          setHerstellerDropdownOffen(false);
+          }}
 
           >
             {option}
@@ -1909,7 +1937,15 @@ const submitDisabled = ladeStatus || !stripeReady;
       className={styles.input}
       maxLength={30}
       value={herstellerAndere}
-      onChange={(e) => setHerstellerAndere(e.target.value)}
+      onChange={(e) => {
+        setHerstellerAndere(e.target.value);
+        if (e.target.value.trim()) {
+          setWarnungHersteller('');
+        }
+      }}
+      onFocus={() => {
+        if (warnungHersteller) setWarnungHersteller('');
+      }}
       placeholder="Hersteller eingeben…"
     />
     <div className={styles.counter}>{herstellerAndere.length} / 30 Zeichen</div>
@@ -1933,7 +1969,10 @@ const submitDisabled = ladeStatus || !stripeReady;
         type="radio"
         name="mengeOption"
         checked={aufLager}
-        onChange={() => setAufLager(true)}
+        onChange={() => {
+          setAufLager(true);
+          setWarnungMenge('');
+        }}
       />
       Auf Lager
     </label>
@@ -1942,7 +1981,10 @@ const submitDisabled = ladeStatus || !stripeReady;
         type="radio"
         name="mengeOption"
         checked={!aufLager}
-        onChange={() => setAufLager(false)}
+        onChange={() => {
+          setAufLager(false);
+          setWarnungMenge('');
+        }}
       />
       Begrenzte Menge
     </label>
@@ -1953,20 +1995,28 @@ const submitDisabled = ladeStatus || !stripeReady;
     <label className={styles.mengeNumberLabel}>
       <span>Menge (kg):</span>
       <input
-  type="number"
-  step={1}
-  min={1}
-  max={999999}
-  className={styles.mengeNumberInput}
-  value={menge === 0 ? '' : menge}
-  onChange={(e) => {
-    const v = e.target.value;
-    if (v === '' || (/^\d+$/.test(v) && Number(v) <= 999999)) {
-      setMenge(v === '' ? 0 : Number(v));
-    }
-  }}
-  placeholder="z. B. 10"
-/>
+          type="number"
+          step={1}
+          min={1}
+          max={999999}
+          className={styles.mengeNumberInput}
+          value={menge === 0 ? '' : menge}
+          onChange={(e) => {
+            const v = e.target.value;
+
+            if (v === '' || (/^\d+$/.test(v) && Number(v) <= 999999)) {
+              setMenge(v === '' ? 0 : Number(v));
+
+              if (Number(v) >= 1) {
+                setWarnungMenge('');
+              }
+            }
+          }}
+          onFocus={() => {
+            if (warnungMenge) setWarnungMenge('');
+          }}
+          placeholder="z. B. 10"
+        />
 
     </label>
   )}
@@ -2011,8 +2061,11 @@ const submitDisabled = ladeStatus || !stripeReady;
 
   {/* Unsichtbares echtes Select (optional, aber gut für Accessibility) */}
   <select
-    value={farbpaletteWert}
-    onChange={(e) => setFarbpaletteWert(e.target.value)}
+  value={farbpaletteWert}
+  onChange={(e) => {
+    setFarbpaletteWert(e.target.value);
+    if (e.target.value) setWarnungPalette('');
+  }}
     style={{
       position: 'absolute',
       opacity: 0,
@@ -2033,7 +2086,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   <div
     ref={farbpaletteRef}
     className={`${styles.customSelect} ${warnungPalette ? styles.selectError : ''}`}
-    onClick={() => setFarbpaletteDropdownOffen((prev) => !prev)}
+    onClick={() => {
+      setFarbpaletteDropdownOffen((prev) => !prev);
+      if (warnungPalette) setWarnungPalette('');
+    }}
   >
     <div className={styles.selectedValue}>
       {farbpalette.find((p) => p.value === farbpaletteWert)?.name || 'Bitte wählen'}
@@ -2072,7 +2128,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   {/* Unsichtbares echtes Select für Pflicht/Keyboard/Screenreader */}
 <select
   value={glanzgrad}
-  onChange={(e) => setGlanzgrad(e.target.value)}
+  onChange={(e) => {
+    setGlanzgrad(e.target.value);
+    if (e.target.value) setWarnungGlanzgrad('');
+  }}
   style={{
     position: 'absolute',
     opacity: 0,
@@ -2095,7 +2154,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   <div
     ref={glanzgradRef}
     className={`${styles.customSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
-    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+    onClick={() => {
+      setGlanzgradDropdownOffen(!glanzgradDropdownOffen);
+      if (warnungGlanzgrad) setWarnungGlanzgrad('');
+    }}
   >
     <div className={styles.selectedValue}>
       {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
@@ -2111,9 +2173,10 @@ const submitDisabled = ladeStatus || !stripeReady;
             onClick={(e) => {
               e.stopPropagation();
               setGlanzgrad(g.value);
+              setWarnungGlanzgrad('');
               setGlanzgradDropdownOffen(false);
             }}
-          >
+            >
             {g.name}
           </div>
         ))}
@@ -2205,23 +2268,29 @@ const submitDisabled = ladeStatus || !stripeReady;
   <div className={styles.radioOptionsHorizontal}>
     <label className={styles.radioLabel}>
   <input
-    type="radio"
-    name="zustand"
-    value="neu"
-    checked={zustand === 'neu'}
-    onChange={() => setZustand('neu')}
-  />
+  type="radio"
+  name="zustand"
+  value="neu"
+  checked={zustand === 'neu'}
+  onChange={() => {
+    setZustand('neu');
+    setWarnungZustand('');
+  }}
+/>
   <span>Neu und ungeöffnet</span>
 </label>
 
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="zustand"
-        value="geöffnet"
-        checked={zustand === 'geöffnet'}
-        onChange={() => setZustand('geöffnet')}
-      />
+  type="radio"
+  name="zustand"
+  value="geöffnet"
+  checked={zustand === 'geöffnet'}
+  onChange={() => {
+    setZustand('geöffnet');
+    setWarnungZustand('');
+  }}
+/>
       <span>Geöffnet und einwandfrei</span>
     </label>
   </div>
@@ -2237,32 +2306,41 @@ const submitDisabled = ladeStatus || !stripeReady;
   <div className={styles.radioOptionsHorizontal}>
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="oberflaeche"
-        value="glatt"
-        checked={oberflaeche === 'glatt'}
-        onChange={() => setOberflaeche('glatt')}
-      />
+  type="radio"
+  name="oberflaeche"
+  value="glatt"
+  checked={oberflaeche === 'glatt'}
+  onChange={() => {
+    setOberflaeche('glatt');
+    setWarnungOberflaeche('');
+  }}
+/>
       <span>Glatt</span>
     </label>
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="oberflaeche"
-        value="feinstruktur"
-        checked={oberflaeche === 'feinstruktur'}
-        onChange={() => setOberflaeche('feinstruktur')}
-      />
+  type="radio"
+  name="oberflaeche"
+  value="feinstruktur"
+  checked={oberflaeche === 'feinstruktur'}
+  onChange={() => {
+    setOberflaeche('feinstruktur');
+    setWarnungOberflaeche('');
+  }}
+/>
       <span>Feinstruktur</span>
     </label>
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="oberflaeche"
-        value="grobstruktur"
-        checked={oberflaeche === 'grobstruktur'}
-        onChange={() => setOberflaeche('grobstruktur')}
-      />
+  type="radio"
+  name="oberflaeche"
+  value="grobstruktur"
+  checked={oberflaeche === 'grobstruktur'}
+  onChange={() => {
+    setOberflaeche('grobstruktur');
+    setWarnungOberflaeche('');
+  }}
+/>
       <span>Grobstruktur</span>
     </label>
   </div>
@@ -2277,22 +2355,28 @@ const submitDisabled = ladeStatus || !stripeReady;
   <div className={styles.radioOptionsHorizontal}>
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="anwendung"
-        value="universal"
-        checked={anwendung === 'universal'}
-        onChange={() => setAnwendung('universal')}
-      />
+  type="radio"
+  name="anwendung"
+  value="universal"
+  checked={anwendung === 'universal'}
+  onChange={() => {
+    setAnwendung('universal');
+    setWarnungAnwendung('');
+  }}
+/>
       <span>Universal</span>
     </label>
     <label className={styles.radioLabel}>
       <input
-        type="radio"
-        name="anwendung"
-        value="innen"
-        checked={anwendung === 'innen'}
-        onChange={() => setAnwendung('innen')}
-      />
+  type="radio"
+  name="anwendung"
+  value="innen"
+  checked={anwendung === 'innen'}
+  onChange={() => {
+    setAnwendung('innen');
+    setWarnungAnwendung('');
+  }}
+/>
       <span>Innen</span>
     </label>
     <label className={styles.radioLabel}>
@@ -2301,7 +2385,10 @@ const submitDisabled = ladeStatus || !stripeReady;
         name="anwendung"
         value="außen"
         checked={anwendung === 'außen'}
-        onChange={() => setAnwendung('außen')}
+        onChange={() => {
+          setAnwendung('außen');
+          setWarnungAnwendung('');
+        }}
       />
       <span>Außen</span>
     </label>
@@ -2311,7 +2398,10 @@ const submitDisabled = ladeStatus || !stripeReady;
         name="anwendung"
         value="industrie"
         checked={anwendung === 'industrie'}
-        onChange={() => setAnwendung('industrie')}
+        onChange={() => {
+          setAnwendung('industrie');
+          setWarnungAnwendung('');
+        }}
       />
       <span>Industrie</span>
     </label>
