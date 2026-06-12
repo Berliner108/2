@@ -372,14 +372,10 @@ if (verkaufsArt === 'gesamt') {
 
   total++; // Versand
   if (versandKosten !== '' && moneyToNumber(versandKosten) >= 0) filled++;
-} else if (verkaufsArt === 'pro_stueck') {
+} else if (verkaufsArt === 'pro_kg') {
   total++; // Staffeln
   if (staffelnSindGueltig(staffeln)) filled++;
 }
-
-
-
-
     // Pulverlack-spezifisch: Aufladung
     if (kategorie === 'pulverlack') {
       total++;
@@ -499,6 +495,8 @@ const fetchConnect = useCallback(async () => {
 useEffect(() => {
   if (aufLager && verkaufsArt === "gesamt") {
     setVerkaufsArt("");
+    setWarnungPreis('');
+    setWarnungVersand('');
   }
 }, [aufLager, verkaufsArt]);
 
@@ -1489,8 +1487,6 @@ const fixStaffelMaxOnBlur = (index: number) => {
     return normalized;
   });
 };
-
-
 const updateStaffelRange = (
   index: number,
   field: 'minMenge' | 'maxMenge',
@@ -1507,9 +1503,11 @@ const updateStaffelRange = (
     copy[index][field] = cleaned;
     return normalizeFromIndex(copy, index);
   });
+
+  if (warnungStaffeln) {
+    setWarnungStaffeln('');
+  }
 };
-
-
 
 const addStaffel = () => {
   setStaffeln((prev) => {
@@ -1613,8 +1611,6 @@ const moneyToNumber = (v: string) => {
   const n = Number((v ?? '').replace(',', '.'));
   return Number.isFinite(n) ? n : 0;
 };
-
-
 const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
   setStaffeln((prev) => {
     const copy = prev.map((r) => ({ ...r }));
@@ -1626,6 +1622,10 @@ const updateStaffel = (index: number, patch: Partial<Staffelzeile>) => {
     copy[index] = next;
     return copy;
   });
+
+  if (warnungStaffeln) {
+    setWarnungStaffeln('');
+  }
 };
 
 const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
@@ -2654,11 +2654,20 @@ const submitDisabled = ladeStatus || !stripeReady;
         value="Corona"
         checked={aufladung.includes('Corona')}
         onChange={(e) => {
-          const checked = e.target.checked;
-          setAufladung((prev) =>
-            checked ? [...prev, 'Corona'] : prev.filter((v) => v !== 'Corona')
-          );
-        }}
+        const checked = e.target.checked;
+
+        setAufladung(prev => {
+          const next = checked
+            ? [...prev, 'Corona']
+            : prev.filter(v => v !== 'Corona');
+
+          if (next.length > 0) {
+            setWarnungAufladung('');
+          }
+
+          return next;
+        });
+      }}
       />
       <span>Corona</span>
     </label>
@@ -2670,9 +2679,18 @@ const submitDisabled = ladeStatus || !stripeReady;
         checked={aufladung.includes('Tribo')}
         onChange={(e) => {
           const checked = e.target.checked;
-          setAufladung((prev) =>
-            checked ? [...prev, 'Tribo'] : prev.filter((v) => v !== 'Tribo')
-          );
+
+          setAufladung(prev => {
+            const next = checked
+              ? [...prev, 'Tribo']
+              : prev.filter(v => v !== 'Tribo');
+
+            if (next.length > 0) {
+              setWarnungAufladung('');
+            }
+
+            return next;
+          });
         }}
       />
       <span>Tribo</span>
@@ -2689,7 +2707,16 @@ const submitDisabled = ladeStatus || !stripeReady;
   maxLength={1200}
   rows={6}
   value={beschreibung}
-  onChange={(e) => setBeschreibung(e.target.value)}
+  onChange={(e) => {
+  setBeschreibung(e.target.value);
+
+  if (e.target.value.trim()) {
+    setWarnungBeschreibung('');
+  }
+}}
+onFocus={() => {
+  if (warnungBeschreibung) setWarnungBeschreibung('');
+}}
   placeholder="Beschreibe deinen Artikel oder besondere Hinweise..."
 />
   <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
@@ -2709,12 +2736,21 @@ const submitDisabled = ladeStatus || !stripeReady;
   </span>
 
   <input
-    type="text"
-    className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
-    maxLength={60}
-    value={titel}
-    onChange={(e) => setTitel(e.target.value)}
-  />
+  type="text"
+  className={`${styles.input} ${warnungTitel ? styles.inputError : ''}`}
+  maxLength={60}
+  value={titel}
+  onChange={(e) => {
+    setTitel(e.target.value);
+
+    if (e.target.value.trim()) {
+      setWarnungTitel('');
+    }
+  }}
+  onFocus={() => {
+    if (warnungTitel) setWarnungTitel('');
+  }}
+/>
   <div className={styles.counter}>{titel.length} / 60 Zeichen</div>
 </label>
 
@@ -2728,13 +2764,22 @@ const submitDisabled = ladeStatus || !stripeReady;
   </span>
 
   <input
-    type="text"
-    className={`${styles.input} ${warnungHersteller ? styles.inputError : ''}`}
-    maxLength={30}
-    value={hersteller}
-    onChange={(e) => setHersteller(e.target.value)}
-    placeholder="z. B. Bosch, Makita, …"
-  />
+  type="text"
+  className={`${styles.input} ${warnungHersteller ? styles.inputError : ''}`}
+  maxLength={30}
+  value={hersteller}
+  onChange={(e) => {
+    setHersteller(e.target.value);
+
+    if (e.target.value.trim()) {
+      setWarnungHersteller('');
+    }
+  }}
+  onFocus={() => {
+    if (warnungHersteller) setWarnungHersteller('');
+  }}
+  placeholder="z. B. Bosch, Makita, …"
+/>
 
   <div className={styles.counter}>{hersteller.length} / 30 Zeichen</div>
 </label>
@@ -2757,7 +2802,10 @@ const submitDisabled = ladeStatus || !stripeReady;
       type="radio"
       name="mengeOptionArbeitsmittel"
       checked={aufLager}
-      onChange={() => setAufLager(true)}
+      onChange={() => {
+        setAufLager(true);
+        setWarnungMenge('');
+      }}
     />
     Auf Lager
   </label>
@@ -2766,7 +2814,10 @@ const submitDisabled = ladeStatus || !stripeReady;
       type="radio"
       name="mengeOptionArbeitsmittel"
       checked={!aufLager}
-      onChange={() => setAufLager(false)}
+      onChange={() => {
+        setAufLager(false);
+        setWarnungMenge('');
+      }}
     />
     Begrenzte Menge
   </label>
@@ -2783,19 +2834,26 @@ const submitDisabled = ladeStatus || !stripeReady;
       className={styles.mengeNumberInput}
       value={mengeStueck === 0 ? '' : mengeStueck}
       onChange={(e) => {
-        const value = e.target.value;
+  const value = e.target.value;
 
-        if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
-          const next = value === '' ? 0 : Number(value);
-          setMengeStueck(next);
+  if (value === '' || (/^\d+$/.test(value) && Number(value) <= 999999)) {
+    const next = value === '' ? 0 : Number(value);
+    setMengeStueck(next);
 
-          // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
-          if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
-            setStueckProEinheit(next >= 1 ? String(next) : '');
-            setWarnungStueckProEinheit('');
-          }
-        }
-      }}
+    if (next >= 1) {
+      setWarnungMenge('');
+    }
+
+    // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
+    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
+      setStueckProEinheit(next >= 1 ? String(next) : '');
+      setWarnungStueckProEinheit('');
+    }
+  }
+}}
+onFocus={() => {
+  if (warnungMenge) setWarnungMenge('');
+}}
       placeholder="z. B. 10"
     />
   </label>
@@ -2821,14 +2879,22 @@ const submitDisabled = ladeStatus || !stripeReady;
   value={stueckProEinheit}
   disabled={kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt'}
   onChange={(e) => {
-    // wenn gesamt aktiv -> nicht editierbar
-    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') return;
+  // wenn gesamt aktiv -> nicht editierbar
+  if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') return;
 
-    const value = e.target.value;
-    if (value === '' || (Number(value) >= 1 && Number(value) <= 999)) {
-      setStueckProEinheit(value);
+  const value = e.target.value;
+
+  if (value === '' || (/^\d+$/.test(value) && Number(value) <= 9999)) {
+    setStueckProEinheit(value);
+
+    if (Number(value) >= 1) {
+      setWarnungStueckProEinheit('');
     }
-  }}
+  }
+}}
+onFocus={() => {
+  if (warnungStueckProEinheit) setWarnungStueckProEinheit('');
+}}
 />
 
 </label>
@@ -2842,12 +2908,19 @@ const submitDisabled = ladeStatus || !stripeReady;
   </span>
   <input
     type="text"
-    className={styles.input}
-    maxLength={15} // Eingabe auf 50 Zeichen begrenzen
+    className={`${styles.input} ${warnungGroesse ? styles.inputError : ''}`}
+    maxLength={15}
     value={groesse}
-    onChange={e => {
-      const val = e.target.value.replace(/^\s+/, ''); // entfernt führende Leerzeichen
+    onChange={(e) => {
+      const val = e.target.value.replace(/^\s+/, '');
       setGroesse(val);
+
+      if (val.trim()) {
+        setWarnungGroesse('');
+      }
+    }}
+    onFocus={() => {
+      if (warnungGroesse) setWarnungGroesse('');
     }}
     placeholder="z. B. XS, S, M, L, XL oder L×B×H in cm"
   />
@@ -2865,7 +2938,16 @@ const submitDisabled = ladeStatus || !stripeReady;
   maxLength={1200}
   rows={6}
   value={beschreibung}
-  onChange={(e) => setBeschreibung(e.target.value)}
+  onChange={(e) => {
+  setBeschreibung(e.target.value);
+
+  if (e.target.value.trim()) {
+    setWarnungBeschreibung('');
+  }
+}}
+onFocus={() => {
+  if (warnungBeschreibung) setWarnungBeschreibung('');
+}}
 />
   <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
 </label>
@@ -2892,13 +2974,19 @@ const submitDisabled = ladeStatus || !stripeReady;
         title={aufLager ? 'Bei "Auf Lager" ist "Nur als Gesamtmenge" deaktiviert.' : undefined}
       >
         <input
-          type="radio"
-          name="verkaufsArt"
-          value="gesamt"
-          checked={verkaufsArt === 'gesamt'}
-          onChange={() => setVerkaufsArt('gesamt')}
-          disabled={aufLager}
-        />
+  type="radio"
+  name="verkaufsArt"
+  value="gesamt"
+  checked={verkaufsArt === 'gesamt'}
+  onChange={() => {
+    setVerkaufsArt('gesamt');
+    setWarnungVerkaufsArt('');
+    setWarnungStaffeln('');
+    setWarnungPreis('');
+    setWarnungVersand('');
+  }}
+  disabled={aufLager}
+/>
         <span>Nur als Gesamtmenge</span>
       </label>
 
@@ -2906,12 +2994,17 @@ const submitDisabled = ladeStatus || !stripeReady;
       {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
         <label className={styles.radioLabel}>
           <input
-            type="radio"
-            name="verkaufsArt"
-            value="pro_kg"
-            checked={verkaufsArt === 'pro_kg'}
-            onChange={() => setVerkaufsArt('pro_kg')}
-          />
+  type="radio"
+  name="verkaufsArt"
+  value="pro_kg"
+  checked={verkaufsArt === 'pro_kg'}
+  onChange={() => {
+    setVerkaufsArt('pro_kg');
+    setWarnungVerkaufsArt('');
+    setWarnungPreis('');
+    setWarnungVersand('');
+  }}
+/>
           <span>Verkauf mit gestaffelten Preisen</span>
         </label>
       )}
@@ -2919,12 +3012,17 @@ const submitDisabled = ladeStatus || !stripeReady;
       {kategorie === 'arbeitsmittel' && (
         <label className={styles.radioLabel}>
           <input
-            type="radio"
-            name="verkaufsArt"
-            value="pro_stueck"
-            checked={verkaufsArt === 'pro_stueck'}
-            onChange={() => setVerkaufsArt('pro_stueck')}
-          />
+  type="radio"
+  name="verkaufsArt"
+  value="pro_stueck"
+  checked={verkaufsArt === 'pro_stueck'}
+  onChange={() => {
+    setVerkaufsArt('pro_stueck');
+    setWarnungVerkaufsArt('');
+    setWarnungPreis('');
+    setWarnungVersand('');
+  }}
+/>
           <span>Verkauf pro Stück</span>
         </label>
       )}
@@ -3075,6 +3173,13 @@ const submitDisabled = ladeStatus || !stripeReady;
     // nur Ziffern, max 2 Stellen
     const cleaned = e.target.value.replace(/\D/g, '').slice(0, 2);
     setLieferWerktage(cleaned);
+
+    if (cleaned) {
+      setWarnungWerktage('');
+    }
+  }}
+  onFocus={() => {
+    if (warnungWerktage) setWarnungWerktage('');
   }}
   onBlur={() => {
     // optional: führende 0 entfernen (z.B. "07" -> "7")
@@ -3102,7 +3207,16 @@ const submitDisabled = ladeStatus || !stripeReady;
         inputMode="decimal"
         className={`${styles.dateInput} ${warnungPreis ? styles.numberInputError : ''}`}
         value={preis}
-        onChange={(e) => setPreis(cleanMoney(e.target.value))}
+        onChange={(e) => {
+            setPreis(cleanMoney(e.target.value));
+
+            if (warnungPreis) {
+              setWarnungPreis('');
+            }
+          }}
+          onFocus={() => {
+            if (warnungPreis) setWarnungPreis('');
+          }}
         onBlur={() => setPreis(formatMoneyOnBlur(preis))}
         placeholder="z. B. 1299,90"
       />
@@ -3118,7 +3232,16 @@ const submitDisabled = ladeStatus || !stripeReady;
         inputMode="decimal"
         className={`${styles.dateInput} ${warnungVersand ? styles.numberInputError : ''}`}
         value={versandKosten}
-        onChange={(e) => setVersandKosten(cleanMoney(e.target.value))}
+        onChange={(e) => {
+          setVersandKosten(cleanMoney(e.target.value));
+
+          if (warnungVersand) {
+            setWarnungVersand('');
+          }
+        }}
+        onFocus={() => {
+          if (warnungVersand) setWarnungVersand('');
+        }}
         onBlur={() => setVersandKosten(formatMoneyOnBlur(versandKosten))}
         placeholder="z. B. 0,00"
       />
