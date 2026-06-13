@@ -133,8 +133,7 @@
 .validierungsfehler {
   color: #b91c1c;
   padding: 0.75rem;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
+  margin-top: -0.5rem;
   font-weight: 500;
 }
 
