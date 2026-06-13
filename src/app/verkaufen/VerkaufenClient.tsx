@@ -1820,10 +1820,12 @@ const submitDisabled = ladeStatus || !stripeReady;
     </div>
 
     {warnungVerkaufAn && (
-      <p className={styles.validierungsfehler}>{warnungVerkaufAn}</p>
-    )}
-  </fieldset>
-)}
+        <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+          {warnungVerkaufAn}
+        </p>
+      )}
+        </fieldset>
+      )}
 
                         
           {/* Dynamische Felder animiert */}

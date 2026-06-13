@@ -136,7 +136,10 @@
   margin-top: -0.5rem;
   font-weight: 500;
 }
-
+.validierungsfehlerKompakt {
+  margin-top: -0.6rem;
+  margin-bottom: 0.25rem;
+}
 .vorschau {
   margin-top: 1rem;
   margin-bottom: 2rem;
