@@ -1868,7 +1868,9 @@ const submitDisabled = ladeStatus || !stripeReady;
 
 {/* ⬇️ NEU */}
 {warnungTitel && (
-  <p className={styles.validierungsfehler}>{warnungTitel}</p>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungTitel}
+  </p>
 )}
 
 
@@ -2724,7 +2726,9 @@ onFocus={() => {
   <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
 </label>
 {warnungBeschreibung && (
-  <p className={styles.validierungsfehler}>{warnungBeschreibung}</p>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungBeschreibung}
+  </p>
 )}
 
   </>
@@ -2758,7 +2762,9 @@ onFocus={() => {
 
 {/* ⬇️ NEU */}
 {warnungTitel && (
-  <p className={styles.validierungsfehler}>{warnungTitel}</p>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungTitel}
+  </p>
 )}
 <label>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -2953,7 +2959,11 @@ onFocus={() => {
 />
   <div className={styles.counter}>{beschreibung.length} / 1200 Zeichen</div>
 </label>
-    {warnungBeschreibung && <p className={styles.validierungsfehler}>{warnungBeschreibung}</p>}
+    {warnungBeschreibung && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungBeschreibung}
+  </p>
+)}
   </>
 )}
     </motion.div>    
