@@ -1953,8 +1953,11 @@ const submitDisabled = ladeStatus || !stripeReady;
       placeholder="Hersteller eingeben…"
     />
     <div className={styles.counter}>{herstellerAndere.length} / 30 Zeichen</div>
-    {warnungHersteller && (
-  <p className={styles.validierungsfehler}>{warnungHersteller}</p>
+    
+  {warnungHersteller && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungHersteller}
+  </p>
 )}
   </label>
 )}
@@ -2793,7 +2796,9 @@ onFocus={() => {
 </label>
 
 {warnungHersteller && (
-  <p className={styles.validierungsfehler}>{warnungHersteller}</p>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungHersteller}
+  </p>
 )}
 
    {/* Stückzahl */}
@@ -2907,7 +2912,11 @@ onFocus={() => {
 
 </label>
 
-      {warnungStueckProEinheit && <p className={styles.validierungsfehler}>{warnungStueckProEinheit}</p>}
+      {warnungStueckProEinheit && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungStueckProEinheit}
+  </p>
+)}
 
     {/* Größe */}
 <label className={styles.label}>
@@ -2933,7 +2942,11 @@ onFocus={() => {
     placeholder="z. B. XS, S, M, L, XL oder L×B×H in cm"
   />
 </label>
-{warnungGroesse && <p className={styles.validierungsfehler}>{warnungGroesse}</p>}
+{warnungGroesse && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungGroesse}
+  </p>
+)}
 
 
     {/* Beschreibung */}
@@ -3041,8 +3054,10 @@ onFocus={() => {
     </div>
 
     {warnungVerkaufsArt && (
-      <p className={styles.validierungsfehler}>{warnungVerkaufsArt}</p>
-    )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungVerkaufsArt}
+  </p>
+)}
   </fieldset>
 )}
 {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') && (
