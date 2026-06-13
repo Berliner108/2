@@ -141,6 +141,10 @@
   margin-bottom: -0.25rem;
   font-weight: 300;
 }
+.validierungsfehlerRadioKompakt {
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
+}
 .vorschau {
   margin-top: 1rem;
   margin-bottom: 2rem;

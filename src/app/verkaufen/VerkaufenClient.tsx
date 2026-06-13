@@ -1820,10 +1820,10 @@ const submitDisabled = ladeStatus || !stripeReady;
     </div>
 
     {warnungVerkaufAn && (
-        <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
-          {warnungVerkaufAn}
-        </p>
-      )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerRadioKompakt}`}>
+    {warnungVerkaufAn}
+  </p>
+)}
         </fieldset>
       )}
 
@@ -3066,7 +3066,7 @@ onFocus={() => {
     </div>
 
     {warnungVerkaufsArt && (
-  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerRadioKompakt}`}>
     {warnungVerkaufsArt}
   </p>
 )}
