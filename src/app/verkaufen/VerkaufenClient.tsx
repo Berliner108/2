@@ -1868,7 +1868,7 @@ const submitDisabled = ladeStatus || !stripeReady;
 
 {/* ⬇️ NEU */}
 {warnungTitel && (
-  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt1}`}>
     {warnungTitel}
   </p>
 )}
