@@ -2125,7 +2125,11 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </label>
 
-{warnungPalette && <p className={styles.validierungsfehler}>{warnungPalette}</p>}
+{warnungPalette && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungPalette}
+  </p>
+)}
 
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -2192,8 +2196,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </label>
  {warnungGlanzgrad && (
-   <p className={styles.validierungsfehler}>{warnungGlanzgrad}</p>
- )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungGlanzgrad}
+  </p>
+)}
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
@@ -2303,8 +2309,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </fieldset>  
 {warnungZustand && (
-     <p className={styles.validierungsfehler}>{warnungZustand}</p>
- )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungZustand}
+  </p>
+)}
 
  <fieldset className={`${styles.radioGroup} ${warnungOberflaeche ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
@@ -2353,8 +2361,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </fieldset>
 {warnungOberflaeche && (
-   <p className={styles.validierungsfehler}>{warnungOberflaeche}</p>
- )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungOberflaeche}
+  </p>
+)}
 <fieldset className={`${styles.radioGroup} ${warnungAnwendung ? styles.radioGroupError : ''}`}>
   <legend className={styles.radioLegend}>
     Anwendung: <span style={{ color: 'red' }}>*</span>
@@ -2415,8 +2425,10 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </fieldset>
 {warnungAnwendung && (
-   <p className={styles.validierungsfehler}>{warnungAnwendung}</p>
- )}
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungAnwendung}
+  </p>
+)}
 {kategorie === 'pulverlack' && (
 <fieldset className={styles.radioGroup}>
   <legend className={styles.radioLegend}>Zertifizierungen (optional):</legend>
