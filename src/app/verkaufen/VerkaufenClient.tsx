@@ -3325,8 +3325,11 @@ onFocus={() => {
       id="agbCheckbox"
       checked={agbAccepted}
       onChange={(e) => {
-        setAgbAccepted(e.target.checked)
-        setAgbError(false)
+        setAgbAccepted(e.target.checked);
+
+        if (e.target.checked) {
+          setAgbError(false);
+        }
       }}
     />
     <span>
@@ -3338,6 +3341,12 @@ onFocus={() => {
       </a>.
     </span>
   </motion.label>
+
+  {agbError && (
+    <p className={styles.validierungsfehler}>
+      Bitte akzeptiere die Allgemeinen Geschäftsbedingungen.
+    </p>
+  )}
 </div>
  <button
   type="button"
