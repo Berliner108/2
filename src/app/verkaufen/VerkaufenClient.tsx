@@ -2724,7 +2724,7 @@ const submitDisabled = ladeStatus || !stripeReady;
 )}
 
 {warnungAufladung && (
-  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerRadioKompakt}`}>
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerRadioKompakt1}`}>
     {warnungAufladung}
   </p>
 )}
