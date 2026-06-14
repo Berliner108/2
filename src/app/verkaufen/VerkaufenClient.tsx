@@ -833,34 +833,51 @@ useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
     })
 }
   
-async function uploadPublicFilesBrowser(bucket: string, basePath: string, files: File[]) {
-  const supa = supabaseBrowser();
-  const urls: string[] = [];
+async function uploadPublicFilesBrowser(
+  bucket: string,
+  basePath: string,
+  files: File[],
+) {
+  const supa = supabaseBrowser()
+  const MAX = 25 * 1024 * 1024
+  const concurrency = 4
+  const urls: string[] = []
 
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i];
-
-    // Optional: Limit im Frontend (z.B. 25 MB)
-    const MAX = 25 * 1024 * 1024;
-    if (f.size > MAX) {
-      throw new Error(`Datei zu groß: ${f.name} (max. 25 MB)`);
+  const uploadOne = async (file: File, index: number) => {
+    if (file.size > MAX) {
+      throw new Error(`Datei zu groß: ${file.name} (max. 25 MB)`)
     }
 
-    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${basePath}/${String(i + 1).padStart(2, "0")}-${Date.now()}-${safeName}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const path = `${basePath}/${String(index + 1).padStart(
+      2,
+      '0',
+    )}-${Date.now()}-${safeName}`
 
-    const { error } = await supa.storage.from(bucket).upload(path, f, {
-      contentType: f.type || "application/octet-stream",
+    const { error } = await supa.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'application/octet-stream',
       upsert: false,
-    });
+    })
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message)
+    }
 
-    const { data } = supa.storage.from(bucket).getPublicUrl(path);
-    urls.push(data.publicUrl);
+    const { data } = supa.storage.from(bucket).getPublicUrl(path)
+    return data.publicUrl
   }
 
-  return urls;
+  for (let i = 0; i < files.length; i += concurrency) {
+    const batch = files.slice(i, i + concurrency)
+
+    const batchUrls = await Promise.all(
+      batch.map((file, batchIndex) => uploadOne(file, i + batchIndex)),
+    )
+
+    urls.push(...batchUrls)
+  }
+
+  return urls
 }
 
 
