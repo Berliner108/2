@@ -3243,7 +3243,7 @@ onFocus={() => {
 />
 
         {warnungWerktage && (
-        <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+        <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt2}`}>
           {warnungWerktage}
         </p>
       )}
