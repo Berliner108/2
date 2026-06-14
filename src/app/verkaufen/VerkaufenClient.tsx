@@ -72,6 +72,68 @@ const promoPackages = [
 ] as const
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
+const MAX_DOCUMENT_TOTAL_SIZE = 15 * 1024 * 1024 // 15 MB insgesamt
+
+const formatFileSize = (bytes: number) => {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  return `${Math.round(bytes / 1024)} KB`
+}
+
+async function compressImageFile(file: File): Promise<File> {
+  if (!file.type.startsWith('image/')) {
+    return file
+  }
+
+  const maxSizeBeforeCompression = 1.2 * 1024 * 1024
+
+  if (file.size <= maxSizeBeforeCompression) {
+    return file
+  }
+
+  const imageBitmap = await createImageBitmap(file)
+
+  const maxWidth = 1000
+  const maxHeight = 1000
+
+  let { width, height } = imageBitmap
+
+  if (width > maxWidth || height > maxHeight) {
+    const ratio = Math.min(maxWidth / width, maxHeight / height)
+    width = Math.round(width * ratio)
+    height = Math.round(height * ratio)
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    imageBitmap.close()
+    return file
+  }
+
+  ctx.drawImage(imageBitmap, 0, 0, width, height)
+  imageBitmap.close()
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, 'image/jpeg', 0.6)
+  })
+
+  if (!blob || blob.size >= file.size) {
+    return file
+  }
+
+  const originalNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
+
+  return new File([blob], `${originalNameWithoutExt}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: Date.now(),
+  })
+}
 
 function useOnClickOutside(
   ref: React.RefObject<HTMLElement>,
@@ -660,6 +722,7 @@ useEffect(() => {
 
   const [bilder, setBilder] = useState<File[]>([]);
   const [dateien, setDateien] = useState<File[]>([]);
+  const [bilderWerdenOptimiert, setBilderWerdenOptimiert] = useState(false)
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
 const [existingFileUrls, setExistingFileUrls] = useState<string[]>([]);
 const [editArticleId, setEditArticleId] = useState<string | null>(null);
@@ -741,11 +804,57 @@ useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
     setBildPreviews(urls);
     return () => urls.forEach(url => URL.revokeObjectURL(url));
   }, [bilder]);
+  const handleBilderChange: React.Dispatch<React.SetStateAction<File[]>> = (
+  value,
+) => {
+  const rawFiles =
+    typeof value === 'function' ? value(bilder) : value
+
+  setBilderWerdenOptimiert(true)
+
+  Promise.all(rawFiles.map((file) => compressImageFile(file)))
+    .then((optimizedFiles) => {
+      setBilder(optimizedFiles)
+
+      if (optimizedFiles.length > 0) {
+        setWarnungBilder('')
+      }
+    })
+    .catch((error) => {
+      console.error('Bildoptimierung fehlgeschlagen:', error)
+      setBilder(rawFiles)
+
+      if (rawFiles.length > 0) {
+        setWarnungBilder('')
+      }
+    })
+    .finally(() => {
+      setBilderWerdenOptimiert(false)
+    })
+}
   
 
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   if (submitDisabled) return;
+  if (bilderWerdenOptimiert) {
+  alert('Bitte kurz warten, die Bilder werden noch optimiert.')
+  return
+}
+
+const dokumenteGesamtGroesse = dateien.reduce(
+  (sum, file) => sum + file.size,
+  0,
+)
+
+if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
+  setWarnung(
+    `Die Dateien sind insgesamt zu groß. Maximal erlaubt sind ${formatFileSize(
+      MAX_DOCUMENT_TOTAL_SIZE,
+    )}.`,
+  )
+  return
+}
   let willNavigate = false
 setOverlayTitle('Wir stellen deinen Artikel ein …')
 setOverlayText('Wir leiten gleich weiter.')
@@ -1147,30 +1256,45 @@ formData.append('versandKosten', moneyToNumber(versandKosten).toString());
 
 formData.append('lieferWerktage', (parseInt(lieferWerktage) || 0).toString());
 
-// ✅ Bestehende URLs behalten + neue optional hochladen
-let mergedImageUrls = [...existingImageUrls];
-let mergedFileUrls  = [...existingFileUrls];
+
+try {
+  setOverlayTitle('Dateien werden hochgeladen …')
+setOverlayText('Bitte Seite nicht schließen.')
+
+let mergedImageUrls = [...existingImageUrls]
+let mergedFileUrls = [...existingFileUrls]
 
 if (bilder.length > 0 || dateien.length > 0) {
-  const folder = `uploads/${crypto.randomUUID()}`;
+  const folder = `uploads/${crypto.randomUUID()}`
 
   if (bilder.length > 0) {
-    const newImageUrls = await uploadPublicFilesBrowser("articles", `${folder}/images`, bilder);
-    mergedImageUrls = [...mergedImageUrls, ...newImageUrls];
+    const newImageUrls = await uploadPublicFilesBrowser(
+      'articles',
+      `${folder}/images`,
+      bilder,
+    )
+
+    mergedImageUrls = [...mergedImageUrls, ...newImageUrls]
   }
 
   if (dateien.length > 0) {
-    const newFileUrls = await uploadPublicFilesBrowser("articles", `${folder}/files`, dateien);
-    mergedFileUrls = [...mergedFileUrls, ...newFileUrls];
+    const newFileUrls = await uploadPublicFilesBrowser(
+      'articles',
+      `${folder}/files`,
+      dateien,
+    )
+
+    mergedFileUrls = [...mergedFileUrls, ...newFileUrls]
   }
 }
 
-// ✅ URLs schicken (bestehend + neu)
-formData.append("imageUrls", JSON.stringify(mergedImageUrls));
-formData.append("fileUrls", JSON.stringify(mergedFileUrls));
+formData.append('imageUrls', JSON.stringify(mergedImageUrls))
+formData.append('fileUrls', JSON.stringify(mergedFileUrls))
 
-
-try {
+setOverlayTitle(
+  isEditMode ? 'Artikel wird aktualisiert …' : 'Artikel wird gespeichert …',
+)
+setOverlayText('Wir veröffentlichen deinen Artikel.')
 // ✅ Edit braucht ID
 if (isEditMode) {
   if (!editArticleId) {
@@ -1639,7 +1763,7 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
 
   const progress = berechneFortschritt();
   const stripeReady = connectLoaded && connect?.ready === true;
-const submitDisabled = ladeStatus || !stripeReady;
+  const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady;
 
 
   return (
@@ -1690,18 +1814,19 @@ const submitDisabled = ladeStatus || !stripeReady;
           accept="image/*"
           maxFiles={8}
           files={bilder}
-          setFiles={(nextFiles) => {
-            setBilder(nextFiles);
-            if (nextFiles.length > 0) {
-              setWarnungBilder('');
-            }
-          }}
+          setFiles={handleBilderChange}
           setWarnung={setWarnungBilder}
           id="fotoUpload"
         />
-        {warnungBilder && (
-          <p className={styles.validierungsfehler}>{warnungBilder}</p>
-        )}       
+
+{bilderWerdenOptimiert && (
+  <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
+)}
+
+{warnungBilder && (
+  <p className={styles.validierungsfehler}>{warnungBilder}</p>
+)}
+         
 
           {/* Vorschau Bilder */}
           <DateiVorschau
