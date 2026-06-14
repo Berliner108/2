@@ -1933,6 +1933,11 @@ const submitDisabled = ladeStatus || !stripeReady;
     )}
   </div>
 </label>
+{warnungHersteller && hersteller !== HERSTELLER_ANDERE_VALUE && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
+    {warnungHersteller}
+  </p>
+)}
 {hersteller === HERSTELLER_ANDERE_VALUE && (
   <label className={styles.label2}>
     Hersteller (Andere):
@@ -2717,6 +2722,13 @@ const submitDisabled = ladeStatus || !stripeReady;
   </div>
 </fieldset>
 )}
+
+{warnungAufladung && (
+  <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerRadioKompakt}`}>
+    {warnungAufladung}
+  </p>
+)}
+
 <label className={styles.label}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
   Beschreibung: <span style={{ color: 'red' }}>*</span>
