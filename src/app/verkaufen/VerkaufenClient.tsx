@@ -833,6 +833,36 @@ useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
     })
 }
   
+async function uploadPublicFilesBrowser(bucket: string, basePath: string, files: File[]) {
+  const supa = supabaseBrowser();
+  const urls: string[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+
+    // Optional: Limit im Frontend (z.B. 25 MB)
+    const MAX = 25 * 1024 * 1024;
+    if (f.size > MAX) {
+      throw new Error(`Datei zu groß: ${f.name} (max. 25 MB)`);
+    }
+
+    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${basePath}/${String(i + 1).padStart(2, "0")}-${Date.now()}-${safeName}`;
+
+    const { error } = await supa.storage.from(bucket).upload(path, f, {
+      contentType: f.type || "application/octet-stream",
+      upsert: false,
+    });
+
+    if (error) throw new Error(error.message);
+
+    const { data } = supa.storage.from(bucket).getPublicUrl(path);
+    urls.push(data.publicUrl);
+  }
+
+  return urls;
+}
+
 
  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
@@ -1203,36 +1233,6 @@ if (kategorie === 'arbeitsmittel') {
   if (kategorie === 'pulverlack') {
     formData.append('aufladung', JSON.stringify(aufladung));
   }
-}
-
-async function uploadPublicFilesBrowser(bucket: string, basePath: string, files: File[]) {
-  const supa = supabaseBrowser();
-  const urls: string[] = [];
-
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i];
-
-    // Optional: Limit im Frontend (z.B. 25 MB)
-    const MAX = 25 * 1024 * 1024;
-    if (f.size > MAX) {
-      throw new Error(`Datei zu groß: ${f.name} (max. 25 MB)`);
-    }
-
-    const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${basePath}/${String(i + 1).padStart(2, "0")}-${Date.now()}-${safeName}`;
-
-    const { error } = await supa.storage.from(bucket).upload(path, f, {
-      contentType: f.type || "application/octet-stream",
-      upsert: false,
-    });
-
-    if (error) throw new Error(error.message);
-
-    const { data } = supa.storage.from(bucket).getPublicUrl(path);
-    urls.push(data.publicUrl);
-  }
-
-  return urls;
 }
 
 
