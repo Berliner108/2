@@ -257,6 +257,7 @@ const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   const [qualitaetOffen, setQualitaetOffen] = useState(false);
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
+  const submitLockRef = useRef(false);
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([]);
 
 
@@ -879,15 +880,15 @@ async function uploadPublicFilesBrowser(
 
   return urls
 }
-
-
- const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-  if (submitDisabled) return;
-  if (bilderWerdenOptimiert) {
-  alert('Bitte kurz warten, die Bilder werden noch optimiert.')
-  return
-}
+
+  if (submitDisabled || submitLockRef.current) return;
+
+  submitLockRef.current = true;
+  setLadeStatus(true);
+  
+
 
 const dokumenteGesamtGroesse = dateien.reduce(
   (sum, file) => sum + file.size,
@@ -900,6 +901,9 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
       MAX_DOCUMENT_TOTAL_SIZE,
     )}.`,
   )
+
+  submitLockRef.current = false
+  setLadeStatus(false)
   return
 }
   let willNavigate = false
@@ -1148,6 +1152,9 @@ if (!verkaufAn) {
 
 
 if (fehler) {
+  submitLockRef.current = false;
+  setLadeStatus(false);
+
   // 🔽 zum obersten Fehler scrollen
   setTimeout(() => {
     const selector = [
@@ -1182,21 +1189,26 @@ try {
   const st: ConnectStatus = await stRes.json().catch(() => ({ ready: false }));
 
   if (!stRes.ok) {
-    alert('Dein Anbieter-Status konnte nicht geprüft werden. Bitte versuche es erneut.');
-    return;
-  }
-
-  if (!st.ready) {
-    await goToStripeOnboarding();
-    return;
-  }
-} catch {
-  alert('Dein Anbieter-Status konnte nicht geprüft werden.');
+  alert('Dein Anbieter-Status konnte nicht geprüft werden. Bitte versuche es erneut.');
+  submitLockRef.current = false;
+  setLadeStatus(false);
   return;
 }
 
-// ab hier darfst du erst wirklich senden
-setLadeStatus(true);
+if (!st.ready) {
+  submitLockRef.current = false;
+  setLadeStatus(false);
+  await goToStripeOnboarding();
+  return;
+}
+} catch {
+  alert('Dein Anbieter-Status konnte nicht geprüft werden.');
+  submitLockRef.current = false;
+  setLadeStatus(false);
+  return;
+}
+
+
 const zustandForSubmit =
   kategorie === "arbeitsmittel" ? "Neu & Ungeöffnet" : zustand;
 
@@ -1418,7 +1430,10 @@ const res = await fetch('/api/verkaufen', {
   console.error(error);
   alert('Serverfehler');
 } finally {
-  if (!willNavigate) setLadeStatus(false);
+  if (!willNavigate) {
+    submitLockRef.current = false;
+    setLadeStatus(false);
+  }
 }
 
 };
@@ -3655,14 +3670,15 @@ onFocus={() => {
 </AnimatePresence>
 
 <button type="submit" className={styles.submitBtn} disabled={submitDisabled}>
-  {ladeStatus
-  ? 'Bitte warten…'
-  : !connectLoaded
-  ? 'Stripe-Status wird geprüft…'
-  : !stripeReady
-  ? 'Stripe-Verifizierung erforderlich'
-  : 'Artikel kostenlos einstellen'}
-
+  {bilderWerdenOptimiert
+    ? 'Bilder werden optimiert…'
+    : ladeStatus
+      ? 'Bitte warten…'
+      : !connectLoaded
+        ? 'Stripe-Status wird geprüft…'
+        : !stripeReady
+          ? 'Stripe-Verifizierung erforderlich'
+          : 'Artikel kostenlos einstellen'}
 </button>
 
 {connectLoaded && connect?.ready === false && (
