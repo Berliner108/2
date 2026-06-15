@@ -1186,6 +1186,7 @@
 }
 .staffelTableRow input {
   min-height: 30px;
+  max-height: 30px;
   padding: 0.75rem 0.85rem;
   font-size: 1rem;
 }
