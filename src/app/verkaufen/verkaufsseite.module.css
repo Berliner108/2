@@ -1185,9 +1185,8 @@
   align-items:end;
 }
 .staffelTableRow input {
-  min-height: 20px;
-  max-height: 20px;
-  padding: 0.75rem 0.85rem;
+  min-height: 42px;
+  padding: 0.5rem 0.7rem;
   font-size: 1rem;
 }
 .staffelCell{
