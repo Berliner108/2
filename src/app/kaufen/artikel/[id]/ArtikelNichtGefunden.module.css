@@ -27,10 +27,10 @@
 
 .label {
   margin: 0;
-  font-size: clamp(66px, 13.6vw, 120px);
-  line-height: 0.9;
+  font-size: clamp(28px, 6vw, 56px);
+  line-height: 1;
   font-weight: 800;
-  letter-spacing: 4px;
+  letter-spacing: 1px;
   color: #00b4d8;
   text-shadow: 0 14px 34px rgba(0, 180, 216, 0.22);
   animation: floatNumber 3.4s ease-in-out infinite;

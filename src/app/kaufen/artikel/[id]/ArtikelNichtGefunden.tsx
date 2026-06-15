@@ -10,23 +10,24 @@ export default function ArtikelNichtGefunden() {
       <Navbar />
 
       <main className={styles.page}>
-        <span className={styles.circleOne} />
-        <span className={styles.circleTwo} />
-        <span className={styles.circleThree} />
+        <span className={styles.circleOne} aria-hidden="true" />
+        <span className={styles.circleTwo} aria-hidden="true" />
+        <span className={styles.circleThree} aria-hidden="true" />
 
         <section className={styles.card}>
-          <p className={styles.label}>404</p>
+          <p className={styles.label}>Shop-Hinweis</p>
 
-          <h1 className={styles.title}>Artikel nicht gefunden</h1>
+          <h1 className={styles.title}>Artikel derzeit nicht im Shop</h1>
 
           <p className={styles.text}>
-            Dieser Artikel ist nicht mehr verfügbar, wurde entfernt oder der Link ist nicht korrekt.
-            Du kannst zurück zum Shop gehen und nach ähnlichen Artikeln suchen.
+            Der gesuchte Artikel ist aktuell nicht gelistet. Er wurde möglicherweise
+            bereits verkauft, entfernt oder vorübergehend ausgeblendet. Im Shop findest
+            du weitere Angebote, die zu deiner Suche passen könnten.
           </p>
 
           <div className={styles.actions}>
             <Link href="/kaufen" className={styles.primaryButton}>
-              Zurück zum Shop
+              Passende Artikel im Shop suchen
             </Link>
           </div>
         </section>
