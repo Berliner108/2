@@ -11,6 +11,7 @@ import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { FaFilePdf } from "react-icons/fa";
+import ArtikelNichtGefunden from "./ArtikelNichtGefunden";
 
 /* ===================== Typen ===================== */
 type Tier = {
@@ -372,19 +373,9 @@ const chosenTier = useMemo(() => {
   }
 
   // ===== Not found
-  if (!article) {
-    return (
-      <>
-        <Navbar />
-        <div className={styles.container}>
-          <h1 className={styles.title}>Artikel nicht gefunden</h1>
-          <button className={styles.submitOfferButton} onClick={() => router.push("/kaufen")}>
-            Zurück zum Shop
-          </button>
-        </div>
-      </>
-    );
-  }
+if (!article) {
+  return <ArtikelNichtGefunden />;
+}
 
   // ===== Zugriffsschutz (sell_to = gewerblich)
   if (viewerChecked && (article.sell_to ?? "beide") === "gewerblich" && !viewerIsBusiness) {

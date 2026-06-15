@@ -1,0 +1,180 @@
+.page {
+  min-height: calc(130vh - 80px);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 70px 24px 90px;
+  background:
+    radial-gradient(circle at top left, rgba(0, 180, 216, 0.12), transparent 34%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4f8 100%);
+  font-family: "Oswald", Arial, sans-serif;
+}
+
+.card {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 620px);
+  padding: 72px 38px;
+  text-align: center;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(11, 38, 61, 0.08);
+  box-shadow: 0 24px 70px rgba(11, 38, 61, 0.12);
+  animation: cardEnter 0.65s ease both;
+}
+
+.label {
+  margin: 0;
+  font-size: clamp(66px, 13.6vw, 120px);
+  line-height: 0.9;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #00b4d8;
+  text-shadow: 0 14px 34px rgba(0, 180, 216, 0.22);
+  animation: floatNumber 3.4s ease-in-out infinite;
+}
+
+.title {
+  margin: 22px 0 12px;
+  font-size: clamp(22px, 4vw, 34px);
+  line-height: 1.15;
+  color: #0b263d;
+  font-weight: 700;
+}
+
+.text {
+  max-width: 520px;
+  margin: 0 auto 30px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #64748b;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.primaryButton {
+  min-height: 48px;
+  padding: 0 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #00b4d8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0, 180, 216, 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  background: #009ec2;
+  box-shadow: 0 18px 38px rgba(0, 180, 216, 0.36);
+}
+
+.circleOne,
+.circleTwo,
+.circleThree {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(0, 180, 216, 0.1);
+  border: 1px solid rgba(0, 180, 216, 0.16);
+  animation: floatCircle 7s ease-in-out infinite;
+}
+
+.circleOne {
+  width: 190px;
+  height: 190px;
+  top: 12%;
+  left: 10%;
+}
+
+.circleTwo {
+  width: 110px;
+  height: 110px;
+  right: 13%;
+  top: 22%;
+  animation-delay: 1.2s;
+}
+
+.circleThree {
+  width: 150px;
+  height: 150px;
+  right: 18%;
+  bottom: 12%;
+  animation-delay: 2s;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatNumber {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes floatCircle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-18px) scale(1.04);
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    min-height: calc(125vh - 70px);
+    padding: 46px 18px 70px;
+  }
+
+  .card {
+    padding: 56px 22px;
+    border-radius: 22px;
+  }
+
+  .label {
+    letter-spacing: 2px;
+  }
+
+  .text {
+    font-size: 13px;
+  }
+
+  .primaryButton {
+    width: 100%;
+  }
+
+  .circleOne,
+  .circleTwo,
+  .circleThree {
+    opacity: 0.55;
+  }
+}
