@@ -1219,23 +1219,80 @@
 }
 
 /* Mobile: aus „Tabelle“ wird „Karte“ */
-@media (max-width: 900px){
-  .staffelTableHead{ display:none; }
-
-  .staffelTableRow{
-    grid-template-columns: 1fr 1fr;
-    border:1px solid #e2e8f0;
-    border-radius:14px;
-    padding:12px;
-    margin-bottom:10px;
+@media (max-width: 600px) {
+  .staffelHeaderRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
-  .staffelMobileLabel{ display:block; }
+  .staffelHeading {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
 
-  .staffelCellEnd{
+  .staffelAddBtn {
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+
+  .staffelTableHead {
+    display: none;
+  }
+
+  .staffelTableRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .staffelMobileLabel {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .staffelInput {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .staffelCellEnd {
     grid-column: 1 / -1;
-    justify-content:flex-end;
-    margin-top:4px;
+    justify-content: stretch;
+  }
+
+  .staffelRemoveBtn {
+    width: 100%;
+  }
+}
+@media (min-width: 601px) and (max-width: 900px) {
+  .staffelTableHead {
+    display: none;
+  }
+
+  .staffelTableRow {
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .staffelMobileLabel {
+    display: block;
+  }
+
+  .staffelCellEnd {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    margin-top: 4px;
   }
 }
 .staffelAddBtn:disabled{
