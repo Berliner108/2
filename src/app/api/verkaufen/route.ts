@@ -111,7 +111,69 @@ function parseUrlList(fd: FormData, keys: string[]) {
   }
   return null;
 }
+async function assertSellerImprintComplete(
+  supabase: SupabaseClientType,
+  userId: string
+) {
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select(`
+      account_type,
+      company_name,
+      vat_number,
+      address,
+      imprint_email,
+      imprint_phone,
+      imprint_represented_by
+    `)
+    .eq("id", userId)
+    .maybeSingle();
 
+  if (error) {
+    return {
+      ok: false,
+      status: 500,
+      error: "Profil konnte nicht geprüft werden.",
+    };
+  }
+
+  if (!profile) {
+    return {
+      ok: false,
+      status: 400,
+      error: "Bitte vervollständige zuerst dein Profil.",
+    };
+  }
+
+  if (profile.account_type !== "business") {
+    return { ok: true };
+  }
+
+  const address = (profile.address ?? {}) as any;
+
+  const missing =
+    !profile.company_name ||
+    !profile.vat_number ||
+    !address.street ||
+    !address.houseNumber ||
+    !address.zip ||
+    !address.city ||
+    !address.country ||
+    !profile.imprint_email ||
+    !profile.imprint_phone ||
+    !profile.imprint_represented_by;
+
+  if (missing) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        "Bitte vervollständige zuerst dein Verkäufer-Impressum in den Kontoeinstellungen.",
+    };
+  }
+
+  return { ok: true };
+}
 export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseRouteClient();
@@ -128,6 +190,13 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
+if (!imprintCheck.ok) {
+  return NextResponse.json(
+    { error: imprintCheck.error },
+    { status: imprintCheck.status }
+  );
+}
 
     const fd = await req.formData();
     // ✅ Lack-Felder (Formular-Keys) -> DB-Spalten
@@ -403,6 +472,13 @@ export async function PUT(req: Request) {
     if (!user) {
       return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
     }
+    const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
+if (!imprintCheck.ok) {
+  return NextResponse.json(
+    { error: imprintCheck.error },
+    { status: imprintCheck.status }
+  );
+}
 
     const fd = await req.formData();
     const id = toStr(fd.get("id")).trim();
