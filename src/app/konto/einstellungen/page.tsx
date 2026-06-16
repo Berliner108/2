@@ -24,6 +24,17 @@ const COMPANY_MAX = 80
 const ZIP_MAX = 5
 const COUNTRY_MAX = 56
 const DELETE_REASON_MAX = 400
+const IMPRINT_EMAIL_MAX = 120
+const IMPRINT_PHONE_MAX = 32
+const IMPRINT_NAME_MAX = 80
+const IMPRINT_LEGAL_FORM_MAX = 40
+const IMPRINT_REGISTER_NUMBER_MAX = 40
+const IMPRINT_REGISTER_COURT_MAX = 80
+const IMPRINT_CHAMBER_MAX = 100
+const IMPRINT_AUTHORITY_MAX = 100
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const PHONE_RE = /^[0-9+\-\/() ]{6,32}$/
 
 const ONLY_LETTERS_SANITIZE = /[^A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß ]/g
 const ONLY_LETTERS_VALIDATE = /^[A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+(?: [A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüß]+)*$/
@@ -258,6 +269,19 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
     setHouseNumber(digits + letter)
   }
   const onChangeVat = (v: string) => setVatNumber(v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 14))
+  const onChangeImprintPhone = (v: string) =>
+  setImprintPhone(v.replace(/[^0-9+\-\/() ]/g, '').slice(0, IMPRINT_PHONE_MAX))
+
+const onChangeImprintEmail = (v: string) =>
+  setImprintEmail(v.trim().slice(0, IMPRINT_EMAIL_MAX))
+
+const onChangeImprintText = (
+  value: string,
+  setter: (v: string) => void,
+  max: number
+) => {
+  setter(value.slice(0, max))
+}
 
   const loadInvites = async (page = 1) => {
   try {
@@ -330,16 +354,58 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
         return
       }
 
-      if (!isPrivatePerson) {
-        if (!companyName.trim() || companyName.length > COMPANY_MAX) {
-          setToast({ type: 'error', message: `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).` })
-          return
-        }
-        if (!VAT_RE.test(vatNumber.trim().toUpperCase())) {
-          setToast({ type: 'error', message: "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-')." })
-          return
-        }
-      }
+   
+        if (!isPrivatePerson) {
+  if (!companyName.trim() || companyName.length > COMPANY_MAX) {
+    setToast({ type: 'error', message: `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).` })
+    return
+  }
+
+  if (!VAT_RE.test(vatNumber.trim().toUpperCase())) {
+    setToast({ type: 'error', message: "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-')." })
+    return
+  }
+
+  if (!EMAIL_RE.test(imprintEmail.trim()) || imprintEmail.trim().length > IMPRINT_EMAIL_MAX) {
+    setToast({ type: 'error', message: 'Bitte eine gültige Impressums-E-Mail eingeben.' })
+    return
+  }
+
+  if (!PHONE_RE.test(imprintPhone.trim())) {
+    setToast({ type: 'error', message: 'Bitte eine gültige Telefonnummer für das Impressum eingeben.' })
+    return
+  }
+
+  if (!imprintRepresentedBy.trim() || imprintRepresentedBy.trim().length > IMPRINT_NAME_MAX) {
+    setToast({ type: 'error', message: `Bitte "Vertreten durch / Inhaber" ausfüllen (max. ${IMPRINT_NAME_MAX} Zeichen).` })
+    return
+  }
+
+  if (imprintLegalForm.trim().length > IMPRINT_LEGAL_FORM_MAX) {
+    setToast({ type: 'error', message: `Rechtsform: max. ${IMPRINT_LEGAL_FORM_MAX} Zeichen.` })
+    return
+  }
+
+  if (imprintRegisterNumber.trim().length > IMPRINT_REGISTER_NUMBER_MAX) {
+    setToast({ type: 'error', message: `Firmenbuch-/Registernummer: max. ${IMPRINT_REGISTER_NUMBER_MAX} Zeichen.` })
+    return
+  }
+
+  if (imprintRegisterCourt.trim().length > IMPRINT_REGISTER_COURT_MAX) {
+    setToast({ type: 'error', message: `Firmenbuch-/Registergericht: max. ${IMPRINT_REGISTER_COURT_MAX} Zeichen.` })
+    return
+  }
+
+  if (imprintChamber.trim().length > IMPRINT_CHAMBER_MAX) {
+    setToast({ type: 'error', message: `Kammer / Berufsverband: max. ${IMPRINT_CHAMBER_MAX} Zeichen.` })
+    return
+  }
+
+  if (imprintSupervisoryAuthority.trim().length > IMPRINT_AUTHORITY_MAX) {
+    setToast({ type: 'error', message: `Aufsichtsbehörde: max. ${IMPRINT_AUTHORITY_MAX} Zeichen.` })
+    return
+  }
+}
 
       const acctTypeDB: DbAccountType = isPrivatePerson ? 'private' : 'business'
 
@@ -608,11 +674,55 @@ const canSaveKonto = useMemo(() => {
     return streetOk && hnrOk && zipOk && cityOk && countryOk
   }
   const companyOk = !!companyName.trim() && companyName.trim().length <= COMPANY_MAX
-  const vatOk     = VAT_RE.test(vatNumber.trim().toUpperCase())
+const vatOk = VAT_RE.test(vatNumber.trim().toUpperCase())
 
-  return streetOk && hnrOk && zipOk && cityOk && countryOk && companyOk && vatOk
+const imprintEmailOk =
+  EMAIL_RE.test(imprintEmail.trim()) &&
+  imprintEmail.trim().length <= IMPRINT_EMAIL_MAX
+
+const imprintPhoneOk = PHONE_RE.test(imprintPhone.trim())
+
+const imprintRepresentedByOk =
+  !!imprintRepresentedBy.trim() &&
+  imprintRepresentedBy.trim().length <= IMPRINT_NAME_MAX
+
+const imprintOptionalOk =
+  imprintLegalForm.trim().length <= IMPRINT_LEGAL_FORM_MAX &&
+  imprintRegisterNumber.trim().length <= IMPRINT_REGISTER_NUMBER_MAX &&
+  imprintRegisterCourt.trim().length <= IMPRINT_REGISTER_COURT_MAX &&
+  imprintChamber.trim().length <= IMPRINT_CHAMBER_MAX &&
+  imprintSupervisoryAuthority.trim().length <= IMPRINT_AUTHORITY_MAX
+
+return (
+  streetOk &&
+  hnrOk &&
+  zipOk &&
+  cityOk &&
+  countryOk &&
+  companyOk &&
+  vatOk &&
+  imprintEmailOk &&
+  imprintPhoneOk &&
+  imprintRepresentedByOk &&
+  imprintOptionalOk
+)
 }, [
-  isPrivatePerson, street, houseNumber, zip, city, country, companyName, vatNumber
+  isPrivatePerson,
+  street,
+  houseNumber,
+  zip,
+  city,
+  country,
+  companyName,
+  vatNumber,
+  imprintEmail,
+  imprintPhone,
+  imprintRepresentedBy,
+  imprintLegalForm,
+  imprintRegisterNumber,
+  imprintRegisterCourt,
+  imprintChamber,
+  imprintSupervisoryAuthority,
 ])
 
 
@@ -815,8 +925,8 @@ const canSaveKonto = useMemo(() => {
           </button>
           {!canSaveKonto && (
   <small style={{ color: '#6b7280' }}>
-    Prüfe Straße, Hausnr., PLZ, Ort, Land
-    {!isPrivatePerson && ' sowie Firmenname und USt-ID.'}
+    Prüfe Straße, Hausnr., PLZ, Ort und Land
+    {!isPrivatePerson && ' sowie Firmenname, USt-ID und Verkäufer-Impressum.'}
   </small>
 )}
 
@@ -838,23 +948,27 @@ const canSaveKonto = useMemo(() => {
         <div className={styles.inputGroup}>
           <label>Impressums-E-Mail</label>
           <input
-            type="email"
-            value={imprintEmail}
-            onChange={(e) => setImprintEmail(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. office@firma.at"
-          />
+  type="email"
+  value={imprintEmail}
+  onChange={(e) => onChangeImprintEmail(e.target.value)}
+  className={styles.input}
+  placeholder="z. B. office@firma.at"
+  maxLength={IMPRINT_EMAIL_MAX}
+  required
+/>
         </div>
 
         <div className={styles.inputGroup}>
           <label>Telefon</label>
           <input
-            type="text"
-            value={imprintPhone}
-            onChange={(e) => setImprintPhone(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. +43 ..."
-          />
+  type="text"
+  value={imprintPhone}
+  onChange={(e) => onChangeImprintPhone(e.target.value)}
+  className={styles.input}
+  placeholder="z. B. +43 ..."
+  maxLength={IMPRINT_PHONE_MAX}
+  required
+/>
         </div>
       </div>
 
@@ -862,23 +976,30 @@ const canSaveKonto = useMemo(() => {
         <div className={styles.inputGroup}>
           <label>Vertreten durch / Inhaber</label>
           <input
-            type="text"
-            value={imprintRepresentedBy}
-            onChange={(e) => setImprintRepresentedBy(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. Max Mustermann"
-          />
+  type="text"
+  value={imprintRepresentedBy}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintRepresentedBy, IMPRINT_NAME_MAX)
+  }
+  className={styles.input}
+  placeholder="z. B. Max Mustermann"
+  maxLength={IMPRINT_NAME_MAX}
+  required
+/>
         </div>
 
         <div className={styles.inputGroup}>
           <label>Rechtsform</label>
           <input
-            type="text"
-            value={imprintLegalForm}
-            onChange={(e) => setImprintLegalForm(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. Einzelunternehmen, GmbH"
-          />
+  type="text"
+  value={imprintLegalForm}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintLegalForm, IMPRINT_LEGAL_FORM_MAX)
+  }
+  className={styles.input}
+  placeholder="z. B. Einzelunternehmen, GmbH"
+  maxLength={IMPRINT_LEGAL_FORM_MAX}
+/>
         </div>
       </div>
 
@@ -886,23 +1007,29 @@ const canSaveKonto = useMemo(() => {
         <div className={styles.inputGroup}>
           <label>Firmenbuch-/Registernummer</label>
           <input
-            type="text"
-            value={imprintRegisterNumber}
-            onChange={(e) => setImprintRegisterNumber(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. FN 123456a"
-          />
+  type="text"
+  value={imprintRegisterNumber}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintRegisterNumber, IMPRINT_REGISTER_NUMBER_MAX)
+  }
+  className={styles.input}
+  placeholder="z. B. FN 123456a"
+  maxLength={IMPRINT_REGISTER_NUMBER_MAX}
+/>
         </div>
 
         <div className={styles.inputGroup}>
           <label>Firmenbuch-/Registergericht</label>
           <input
-            type="text"
-            value={imprintRegisterCourt}
-            onChange={(e) => setImprintRegisterCourt(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. Landesgericht Feldkirch"
-          />
+  type="text"
+  value={imprintRegisterCourt}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintRegisterCourt, IMPRINT_REGISTER_COURT_MAX)
+  }
+  className={styles.input}
+  placeholder="z. B. Landesgericht Feldkirch"
+  maxLength={IMPRINT_REGISTER_COURT_MAX}
+/>
         </div>
       </div>
 
@@ -910,23 +1037,29 @@ const canSaveKonto = useMemo(() => {
         <div className={styles.inputGroup}>
           <label>Kammer / Berufsverband</label>
           <input
-            type="text"
-            value={imprintChamber}
-            onChange={(e) => setImprintChamber(e.target.value)}
-            className={styles.input}
-            placeholder="z. B. Wirtschaftskammer Vorarlberg"
-          />
+  type="text"
+  value={imprintChamber}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintChamber, IMPRINT_CHAMBER_MAX)
+  }
+  className={styles.input}
+  placeholder="z. B. Wirtschaftskammer Vorarlberg"
+  maxLength={IMPRINT_CHAMBER_MAX}
+/>
         </div>
 
         <div className={styles.inputGroup}>
           <label>Aufsichtsbehörde</label>
           <input
-            type="text"
-            value={imprintSupervisoryAuthority}
-            onChange={(e) => setImprintSupervisoryAuthority(e.target.value)}
-            className={styles.input}
-            placeholder="falls zutreffend"
-          />
+  type="text"
+  value={imprintSupervisoryAuthority}
+  onChange={(e) =>
+    onChangeImprintText(e.target.value, setImprintSupervisoryAuthority, IMPRINT_AUTHORITY_MAX)
+  }
+  className={styles.input}
+  placeholder="falls zutreffend"
+  maxLength={IMPRINT_AUTHORITY_MAX}
+/>
         </div>
       </div>
 
