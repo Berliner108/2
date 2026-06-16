@@ -588,7 +588,7 @@ const checkSellerImprint = useCallback(async () => {
       !!p?.imprintRepresentedBy;
 
     if (isBusiness && !imprintComplete) {
-      router.replace('/konto/einstellungen#impressum');
+      router.replace('/konto/einstellungen?hinweis=impressum#impressum')
       return;
     }
 

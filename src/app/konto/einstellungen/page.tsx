@@ -5,7 +5,7 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import Navbar from '../../components/navbar/Navbar';
 import styles from './einstellungen.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { AcceptInvitationOnMount } from '../../components/invitations/AcceptInvitationOnMount'
@@ -159,7 +159,8 @@ const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose 
 /* ---------- Seite ---------- */
 const Einstellungen = (): JSX.Element => {
   const router = useRouter()
-  const [toast, setToast] = useState<ToastState>(null)
+const searchParams = useSearchParams()
+const [toast, setToast] = useState<ToastState>(null)
 
   // Anzeige-Basics
   const [username, setUsername] = useState<string>('') // read-only
@@ -258,6 +259,16 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  useEffect(() => {
+  const hinweis = searchParams.get('hinweis')
+
+  if (hinweis === 'impressum') {
+    setToast({
+      type: 'info',
+      message: 'Bitte vervollständige zuerst dein Verkäufer-Impressum, damit du einen Artikel einstellen kannst.',
+    })
+  }
+}, [searchParams])
 
   // ===== Helpers =====
   const onChangeStreet = (v: string) => setStreet(v.replace(ONLY_LETTERS_SANITIZE, '').slice(0, STREET_MAX))
