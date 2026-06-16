@@ -17,7 +17,7 @@ export default function ArtikelNichtGefunden() {
         <section className={styles.card}>
           <p className={styles.label}>Shop-Hinweis</p>
 
-          <h1 className={styles.title}>Artikel derzeit nicht im Shop</h1>
+          <h1 className={styles.title}>Dieser Artikel ist derzeit nicht im Shop verfügbar</h1>
 
           <p className={styles.text}>
             Der gesuchte Artikel ist aktuell nicht gelistet. Er wurde möglicherweise

@@ -47,12 +47,21 @@ type ApiGetResponse = {
   id: string
   email: string
   profile: {
-    username: string
-    account_type: '' | DbAccountType
-    company: string
-    vatNumber: string
-    address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
-  }
+  username: string
+  account_type: '' | DbAccountType
+  company: string
+  vatNumber: string
+  address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
+
+  imprintEmail?: string
+  imprintPhone?: string
+  imprintRepresentedBy?: string
+  imprintLegalForm?: string
+  imprintRegisterNumber?: string
+  imprintRegisterCourt?: string
+  imprintChamber?: string
+  imprintSupervisoryAuthority?: string
+}
 }
 type DeleteStatus = 'open' | 'rejected' | 'done'
 
@@ -154,6 +163,14 @@ const Einstellungen = (): JSX.Element => {
   const [country, setCountry] = useState<string>('') // dropdown value (Pflicht)
   const [companyName, setCompanyName] = useState('')
   const [vatNumber, setVatNumber] = useState('')
+  const [imprintEmail, setImprintEmail] = useState('')
+const [imprintPhone, setImprintPhone] = useState('')
+const [imprintRepresentedBy, setImprintRepresentedBy] = useState('')
+const [imprintLegalForm, setImprintLegalForm] = useState('')
+const [imprintRegisterNumber, setImprintRegisterNumber] = useState('')
+const [imprintRegisterCourt, setImprintRegisterCourt] = useState('')
+const [imprintChamber, setImprintChamber] = useState('')
+const [imprintSupervisoryAuthority, setImprintSupervisoryAuthority] = useState('')
 
   // Passwort ändern
   const [password, setPassword] = useState('')
@@ -209,6 +226,14 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
 
         setCompanyName(j.profile.company || '')
         setVatNumber(j.profile.vatNumber || '')
+        setImprintEmail(j.profile.imprintEmail || '')
+        setImprintPhone(j.profile.imprintPhone || '')
+        setImprintRepresentedBy(j.profile.imprintRepresentedBy || '')
+        setImprintLegalForm(j.profile.imprintLegalForm || '')
+        setImprintRegisterNumber(j.profile.imprintRegisterNumber || '')
+        setImprintRegisterCourt(j.profile.imprintRegisterCourt || '')
+        setImprintChamber(j.profile.imprintChamber || '')
+        setImprintSupervisoryAuthority(j.profile.imprintSupervisoryAuthority || '')
 
                 const origin = window.location.origin.replace(/\/$/, '')
         setInviteLink(`${origin}/registrieren?invited_by=${j.id}`)
@@ -346,11 +371,20 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          account_type: acctTypeDB,
-          address: { street, houseNumber, zip, city, country },
-          company_name: isPrivatePerson ? null : companyName.trim(),
-          vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
-        }),
+  account_type: acctTypeDB,
+  address: { street, houseNumber, zip, city, country },
+  company_name: isPrivatePerson ? null : companyName.trim(),
+  vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
+
+  imprint_email: isPrivatePerson ? null : imprintEmail.trim(),
+  imprint_phone: isPrivatePerson ? null : imprintPhone.trim(),
+  imprint_represented_by: isPrivatePerson ? null : imprintRepresentedBy.trim(),
+  imprint_legal_form: isPrivatePerson ? null : imprintLegalForm.trim(),
+  imprint_register_number: isPrivatePerson ? null : imprintRegisterNumber.trim(),
+  imprint_register_court: isPrivatePerson ? null : imprintRegisterCourt.trim(),
+  imprint_chamber: isPrivatePerson ? null : imprintChamber.trim(),
+  imprint_supervisory_authority: isPrivatePerson ? null : imprintSupervisoryAuthority.trim(),
+}),
       })
 
       let j: any = {}
@@ -491,7 +525,8 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = [
   { id: 'profil', label: 'Profil' },
-  { id: 'konto',  label: 'Kontoart & Anschrift' },      // <— NEU
+  { id: 'konto',  label: 'Kontoart & Anschrift' },
+  { id: 'impressum', label: 'Verkäufer-Impressum' },
   { id: 'passwort', label: 'Passwort' },
   { id: 'bewertungen', label: 'Bewertungen' },
   { id: 'einladungen', label: 'Einladungen' },
@@ -789,6 +824,126 @@ const canSaveKonto = useMemo(() => {
           </div>
         </form>
       </div>
+      {/* --- Verkäufer-Impressum --- */}
+{!isPrivatePerson && (
+  <div id="impressum" className={styles.kontoContainer}>
+    <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
+      <h3 className={styles.subSectionTitle}>Verkäufer-Impressum</h3>
+
+      <p className={styles.description} style={{ marginTop: 0 }}>
+        Diese Angaben werden bei gewerblichen Verkäufern öffentlich auf der Shop-Detailseite angezeigt.
+      </p>
+
+      <div className={styles.inputRowCompany}>
+        <div className={styles.inputGroup}>
+          <label>Impressums-E-Mail</label>
+          <input
+            type="email"
+            value={imprintEmail}
+            onChange={(e) => setImprintEmail(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. office@firma.at"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label>Telefon</label>
+          <input
+            type="text"
+            value={imprintPhone}
+            onChange={(e) => setImprintPhone(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. +43 ..."
+          />
+        </div>
+      </div>
+
+      <div className={styles.inputRowCompany}>
+        <div className={styles.inputGroup}>
+          <label>Vertreten durch / Inhaber</label>
+          <input
+            type="text"
+            value={imprintRepresentedBy}
+            onChange={(e) => setImprintRepresentedBy(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. Max Mustermann"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label>Rechtsform</label>
+          <input
+            type="text"
+            value={imprintLegalForm}
+            onChange={(e) => setImprintLegalForm(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. Einzelunternehmen, GmbH"
+          />
+        </div>
+      </div>
+
+      <div className={styles.inputRowCompany}>
+        <div className={styles.inputGroup}>
+          <label>Firmenbuch-/Registernummer</label>
+          <input
+            type="text"
+            value={imprintRegisterNumber}
+            onChange={(e) => setImprintRegisterNumber(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. FN 123456a"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label>Firmenbuch-/Registergericht</label>
+          <input
+            type="text"
+            value={imprintRegisterCourt}
+            onChange={(e) => setImprintRegisterCourt(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. Landesgericht Feldkirch"
+          />
+        </div>
+      </div>
+
+      <div className={styles.inputRowCompany}>
+        <div className={styles.inputGroup}>
+          <label>Kammer / Berufsverband</label>
+          <input
+            type="text"
+            value={imprintChamber}
+            onChange={(e) => setImprintChamber(e.target.value)}
+            className={styles.input}
+            placeholder="z. B. Wirtschaftskammer Vorarlberg"
+          />
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label>Aufsichtsbehörde</label>
+          <input
+            type="text"
+            value={imprintSupervisoryAuthority}
+            onChange={(e) => setImprintSupervisoryAuthority(e.target.value)}
+            className={styles.input}
+            placeholder="falls zutreffend"
+          />
+        </div>
+      </div>
+
+      <div className={styles.inputGroup}>
+        <button
+          type="button"
+          onClick={handleSave}
+          className={styles.saveButton}
+          disabled={!canSaveKonto}
+          aria-disabled={!canSaveKonto}
+        >
+          Impressum speichern
+        </button>
+      </div>
+    </form>
+  </div>
+)}
 
       {/* --- Container 2: Passwort ändern --- */}
 <div id="passwort" className={styles.kontoContainer}>

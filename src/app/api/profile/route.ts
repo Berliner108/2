@@ -46,6 +46,14 @@ const ALLOWED: Record<string, true> = {
   accountType: true,
   companyName: true,
   vatNumber: true,
+  imprint_email: true,
+  imprint_phone: true,
+  imprint_represented_by: true,
+  imprint_legal_form: true,
+  imprint_register_number: true,
+  imprint_register_court: true,
+  imprint_chamber: true,
+  imprint_supervisory_authority: true,
 };
 
 // Eingabe-Aliase (Eingabe-Key -> DB-Spaltenname)
@@ -119,7 +127,22 @@ export async function GET() {
 
     const { data: row } = await admin
       .from('profiles')
-      .select('id, username, account_type, company_name, vat_number, address')
+      .select(`
+        id,
+        username,
+        account_type,
+        company_name,
+        vat_number,
+        address,
+        imprint_email,
+        imprint_phone,
+        imprint_represented_by,
+        imprint_legal_form,
+        imprint_register_number,
+        imprint_register_court,
+        imprint_chamber,
+        imprint_supervisory_authority
+      `)
       .eq('id', user.id)
       .maybeSingle();
 
@@ -154,6 +177,14 @@ export async function GET() {
             city: dbAddr.city ?? mdAddr.city ?? '',
             country: dbAddr.country ?? mdAddr.country ?? '',
           },
+                    imprintEmail: row?.imprint_email || '',
+          imprintPhone: row?.imprint_phone || '',
+          imprintRepresentedBy: row?.imprint_represented_by || '',
+          imprintLegalForm: row?.imprint_legal_form || '',
+          imprintRegisterNumber: row?.imprint_register_number || '',
+          imprintRegisterCourt: row?.imprint_register_court || '',
+          imprintChamber: row?.imprint_chamber || '',
+          imprintSupervisoryAuthority: row?.imprint_supervisory_authority || '',
         },
       },
       { headers: { 'Cache-Control': 'no-store' } }
@@ -186,14 +217,15 @@ export async function PUT(req: Request) {
     for (const k of Object.keys(body)) {
       if (!ALLOWED[k]) continue;
       if (
-        k === 'address' ||
-        k === 'account_type' ||
-        k === 'company_name' ||
-        k === 'vat_number' ||
-        k === 'username'
-      ) {
-        continue;
-      }
+  k === 'address' ||
+  k === 'account_type' ||
+  k === 'company_name' ||
+  k === 'vat_number' ||
+  k === 'username' ||
+  k.startsWith('imprint_')
+) {
+  continue;
+}
       const v = body[k];
       update[k] = typeof v === 'string' && v.trim() === '' ? null : v;
     }
@@ -221,9 +253,18 @@ export async function PUT(req: Request) {
       update.account_type = accountTypeDb;
 
       if (accountTypeDb === 'private') {
-        update.company_name = null;
-        update.vat_number = null;
-      } else {
+  update.company_name = null;
+  update.vat_number = null;
+
+  update.imprint_email = null;
+  update.imprint_phone = null;
+  update.imprint_represented_by = null;
+  update.imprint_legal_form = null;
+  update.imprint_register_number = null;
+  update.imprint_register_court = null;
+  update.imprint_chamber = null;
+  update.imprint_supervisory_authority = null;
+} else {
         const cn = String(body.company_name ?? '').trim();
         if (!cn || cn.length > COMPANY_MAX) {
           return NextResponse.json({ ok: false, error: 'invalid_company_name' }, { status: 400 });
@@ -249,6 +290,23 @@ export async function PUT(req: Request) {
         if (vat === '') update.vat_number = null;
         else if (VAT_RE.test(vat)) update.vat_number = vat;
         else return NextResponse.json({ ok: false, error: 'invalid_vat_number' }, { status: 400 });
+      }
+    }
+        const imprintFields = [
+      'imprint_email',
+      'imprint_phone',
+      'imprint_represented_by',
+      'imprint_legal_form',
+      'imprint_register_number',
+      'imprint_register_court',
+      'imprint_chamber',
+      'imprint_supervisory_authority',
+    ];
+
+    for (const key of imprintFields) {
+      if (key in body) {
+        const value = String(body[key] ?? '').trim();
+        update[key] = value === '' ? null : value;
       }
     }
 
