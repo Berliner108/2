@@ -944,7 +944,6 @@ const canSaveKonto = useMemo(() => {
     </form>
   </div>
 )}
-
       {/* --- Container 2: Passwort ändern --- */}
 <div id="passwort" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
