@@ -315,6 +315,7 @@ const [warnungStueckProEinheit, setWarnungStueckProEinheit] = useState<string>('
 const [agbAccepted, setAgbAccepted] = useState(false)
 const [agbError, setAgbError] = useState(false)
 const agbRef = useRef<HTMLDivElement>(null)
+const [profileChecked, setProfileChecked] = useState(false);
 const [connect, setConnect] = useState<ConnectStatus | null>(null);
 const [connectLoaded, setConnectLoaded] = useState(false);
 const [warnungHersteller, setWarnungHersteller] = useState('');
@@ -555,6 +556,47 @@ const fetchConnect = useCallback(async () => {
     setConnectLoaded(true);
   }
 }, []);
+const checkSellerImprint = useCallback(async () => {
+  try {
+    const res = await fetch('/api/profile', {
+      cache: 'no-store',
+      credentials: 'include',
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      router.replace('/konto/einstellungen');
+      return;
+    }
+
+    const p = json?.profile;
+    const a = p?.address || {};
+
+    const isBusiness = p?.account_type === 'business';
+
+    const imprintComplete =
+      !!p?.company &&
+      !!p?.vatNumber &&
+      !!a?.street &&
+      !!a?.houseNumber &&
+      !!a?.zip &&
+      !!a?.city &&
+      !!a?.country &&
+      !!p?.imprintEmail &&
+      !!p?.imprintPhone &&
+      !!p?.imprintRepresentedBy;
+
+    if (isBusiness && !imprintComplete) {
+      router.replace('/konto/einstellungen#impressum');
+      return;
+    }
+
+    setProfileChecked(true);
+  } catch {
+    router.replace('/konto/einstellungen');
+  }
+}, [router]);
 useEffect(() => {
   if (aufLager && verkaufsArt === "gesamt") {
     setVerkaufsArt("");
@@ -658,6 +700,9 @@ useEffect(() => {
 useEffect(() => {
   fetchConnect();
 }, [fetchConnect]);
+useEffect(() => {
+  checkSellerImprint();
+}, [checkSellerImprint]);
 
 useEffect(() => {
   const onFocus = () => {
@@ -1794,11 +1839,20 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
 
 
   const progress = berechneFortschritt();
-  const stripeReady = connectLoaded && connect?.ready === true;
-  const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady;
+const stripeReady = connectLoaded && connect?.ready === true;
+const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady;
 
-
+if (!profileChecked) {
   return (
+    <div className={styles.container}>
+      <div className={styles.infoBox}>
+        Verkäuferdaten werden geprüft …
+      </div>
+    </div>
+  );
+}
+
+return (
     
     <>
     
