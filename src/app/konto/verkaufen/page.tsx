@@ -700,7 +700,6 @@ const filteredSales = useMemo(() => {
   </>
 )}
 
-          <div />
 
           {/* Segmented */}
           <div className={styles.segmented} role="tablist" aria-label="Ansicht wählen">
