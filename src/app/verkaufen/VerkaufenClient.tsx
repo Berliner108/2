@@ -332,7 +332,7 @@ const berechneFortschritt = () => {
 
     // 2. Bilder
     total++;
-    if (bilder.length > 0) filled++;
+    if (bilder.length > 0 || existingImageUrls.length > 0) filled++;
 
     // 3. Menge (Stück)
     total++;
@@ -387,7 +387,7 @@ if (verkaufsArt === 'gesamt') {
 
     // 2. Bilder
     total++;
-    if (bilder.length > 0) filled++;
+    if (bilder.length > 0 || existingImageUrls.length > 0) filled++;
 
     // 3. Menge (kg)
 total++;
@@ -672,15 +672,58 @@ useEffect(() => {
   setZustand(p.zustand ?? 'neu');
 
   setAufLager(!!p.aufLager);
-  setLieferWerktage(String(p.lieferWerktage ?? ''));
+setLieferWerktage(String(p.lieferWerktage ?? ''));
 
-  if (p.kategorie === 'arbeitsmittel') {
-    setMengeStueck(Number(p.mengeStueck ?? 0));
-  } else {
-    setMenge(Number(p.mengeKg ?? 0));
-  }
+// ✅ Verkaufsart, Preis und Staffeln im Edit-Modus setzen
+const safeVerkaufsArt =
+  p.verkaufsArt === 'gesamt' ||
+  p.verkaufsArt === 'pro_kg' ||
+  p.verkaufsArt === 'pro_stueck'
+    ? p.verkaufsArt
+    : '';
 
-  if (p.kategorie === 'nasslack' || p.kategorie === 'pulverlack') {
+setVerkaufsArt(safeVerkaufsArt);
+
+if (p.verkaufsArt === 'gesamt') {
+  setPreis(
+    p.preis !== null && p.preis !== undefined
+      ? String(p.preis).replace('.', ',')
+      : ''
+  );
+
+  setVersandKosten(
+    p.versandKosten !== null && p.versandKosten !== undefined
+      ? String(p.versandKosten).replace('.', ',')
+      : ''
+  );
+
+  setStaffeln([{ minMenge: '1', maxMenge: '', preis: '', versand: '' }]);
+}
+
+if (p.verkaufsArt === 'pro_kg' || p.verkaufsArt === 'pro_stueck') {
+  const rows = Array.isArray(p.staffeln) && p.staffeln.length > 0
+    ? p.staffeln.map((s: any) => ({
+        minMenge: String(s.minMenge ?? '1'),
+        maxMenge: String(s.maxMenge ?? ''),
+        preis: String(s.preis ?? '').replace('.', ','),
+        versand: String(s.versand ?? '').replace('.', ','),
+      }))
+    : [{ minMenge: '1', maxMenge: '', preis: '', versand: '' }];
+
+  setStaffeln(rows);
+  setPreis('');
+  setVersandKosten('');
+}
+
+if (p.kategorie === 'arbeitsmittel') {
+  setMengeStueck(Number(p.mengeStueck ?? 0));
+  setGroesse(p.groesse ?? '');
+  setStueckProEinheit(String(p.stueckProEinheit ?? ''));
+} else {
+  setMenge(Number(p.mengeKg ?? 0));
+}
+
+if (p.kategorie === 'nasslack' || p.kategorie === 'pulverlack') {
     setFarbpaletteWert(p.farbpalette ?? '');
     setGlanzgrad(p.glanzgrad ?? '');
     setOberflaeche(p.oberflaeche ?? '');
@@ -1881,9 +1924,13 @@ return (
     </div>
   )}
      
-        <h1 className={styles.heading}>Artikel verkaufen </h1>
+        <h1 className={styles.heading}>
+          {isEditMode ? 'Artikel bearbeiten' : 'Artikel verkaufen'}
+        </h1>
         <p className={styles.description}>
-          Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.
+          {isEditMode
+            ? 'Bearbeite die Angaben zu deinem Artikel. Die Kategorie ist aus Sicherheitsgründen gesperrt, damit bestehende Artikeldaten nicht versehentlich falsch zugeordnet werden.'
+            : 'Bitte lade aussagekräftige Bilder und relevante Unterlagen zu deinem Artikel hoch. Das erste Bild das du hochlädst wird dein Titelbild.'}
         </p>
         <Dropzone
           type="bilder"
@@ -1911,28 +1958,85 @@ return (
           files={bilder}
           previews={bildPreviews}
           onRemove={(idx) => setBilder(prev => prev.filter((_, i) => i !== idx))}
-        />
-   <Dropzone
-  type="dateien"
-  label="Dateien hierher ziehen oder klicken (max. 8)"
-  accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
-  maxFiles={8}
-  files={dateien}
-  setFiles={setDateien}
-  istGueltig={istGueltigeDatei}
-  setWarnung={setWarnung}
-  id="dateiUpload"
-/>
+                />
+                {isEditMode && existingImageUrls.length > 0 && (
+  <div className={styles.existingMediaBox}>
+    <h3 className={styles.existingMediaTitle}>Bereits vorhandene Bilder</h3>
 
-{warnung && (
-  <p className={styles.validierungsfehler}>{warnung}</p>
+    <div className={styles.existingImageGrid}>
+      {existingImageUrls.map((url, index) => (
+        <div key={url} className={styles.existingImageItem}>
+          <img
+            src={url}
+            alt={`Vorhandenes Artikelbild ${index + 1}`}
+            className={styles.existingImage}
+          />
+
+          <button
+            type="button"
+            className={styles.removeExistingBtn}
+            onClick={() =>
+              setExistingImageUrls((prev) => prev.filter((_, i) => i !== index))
+            }
+          >
+            Entfernen
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
 )}
+          <Dropzone
+          type="dateien"
+          label="Dateien hierher ziehen oder klicken (max. 8)"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
+          maxFiles={8}
+          files={dateien}
+          setFiles={setDateien}
+          istGueltig={istGueltigeDatei}
+          setWarnung={setWarnung}
+          id="dateiUpload"
+        />
+
+        {warnung && (
+          <p className={styles.validierungsfehler}>{warnung}</p>
+        )}
 
         {/* Vorschau Dateien */}
         <DateiVorschau
           files={dateien}
           onRemove={(idx) => setDateien(prev => prev.filter((_, i) => i !== idx))}
-        />       
+        />   
+        {isEditMode && existingFileUrls.length > 0 && (
+  <div className={styles.existingMediaBox}>
+    <h3 className={styles.existingMediaTitle}>Bereits vorhandene Dokumente</h3>
+
+    <ul className={styles.existingFileList}>
+      {existingFileUrls.map((url, index) => {
+        const rawName = url.split('/').pop() ?? `Dokument ${index + 1}`;
+        const name = decodeURIComponent(rawName);
+
+        return (
+          <li key={url} className={styles.existingFileItem}>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {name}
+            </a>
+
+            <button
+              type="button"
+              className={styles.removeExistingBtn}
+              onClick={() =>
+                setExistingFileUrls((prev) => prev.filter((_, i) => i !== index))
+              }
+            >
+              Entfernen
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+)}    
 
         {/* Kategorie-Auswahl */}
         <div className={styles.kategorieContainer}>
@@ -3718,12 +3822,16 @@ onFocus={() => {
   {bilderWerdenOptimiert
     ? 'Bilder werden optimiert…'
     : ladeStatus
-      ? 'Bitte warten…'
+      ? isEditMode
+        ? 'Änderungen werden gespeichert …'
+        : 'Artikel wird eingestellt …'
       : !connectLoaded
         ? 'Stripe-Status wird geprüft…'
         : !stripeReady
           ? 'Stripe-Verifizierung erforderlich'
-          : 'Artikel kostenlos einstellen'}
+          : isEditMode
+            ? 'Änderungen speichern'
+            : 'Artikel kostenlos einstellen'}
 </button>
 
 {connectLoaded && connect?.ready === false && (

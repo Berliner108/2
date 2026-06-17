@@ -68,6 +68,8 @@ if (!user) {
     aufLager: (article.menge_status ?? article.stock_status ?? "") === "auf_lager",
     mengeKg: Number(article.menge_kg ?? article.qty_kg ?? 0),
     mengeStueck: Number(article.menge_stueck ?? article.qty_piece ?? 0),
+    groesse: article.groesse ?? article.size ?? "",
+    stueckProEinheit: article.stueck_pro_einheit ?? article.pieces_per_unit ?? "",
 
     lieferWerktage: String(article.liefer_werktage ?? article.delivery_days ?? ""),
 
