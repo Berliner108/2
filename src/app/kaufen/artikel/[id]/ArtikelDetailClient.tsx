@@ -288,13 +288,24 @@ export default function ArtikelDetailPage() {
       cancelled = true;
     };
   }, [params.id]);
+  // 3) Artikelaufruf zählen
+useEffect(() => {
+  if (!params.id) return;
+
+  fetch(`/api/articles/${encodeURIComponent(params.id)}/view`, {
+    method: "POST",
+    cache: "no-store",
+  }).catch(() => {
+    // bewusst ignorieren: Der View-Zähler darf die Detailseite nie blockieren
+  });
+}, [params.id]);
 
   const bilder = article?.image_urls ?? [];
   const dateien = article?.file_urls ?? [];
   const effectList = useMemo(() => normalizeStringArray(article?.effect), [article?.effect]);
-const specialEffectsList = useMemo(() => normalizeStringArray(article?.special_effects), [article?.special_effects]);
-const certificationsList = useMemo(() => normalizeStringArray(article?.certifications), [article?.certifications]);
-const chargeList = useMemo(() => normalizeStringArray(article?.charge), [article?.charge]);
+  const specialEffectsList = useMemo(() => normalizeStringArray(article?.special_effects), [article?.special_effects]);
+  const certificationsList = useMemo(() => normalizeStringArray(article?.certifications), [article?.certifications]);
+  const chargeList = useMemo(() => normalizeStringArray(article?.charge), [article?.charge]);
 
   const slides = bilder.map((src) => ({ src }));
 
