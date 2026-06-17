@@ -265,7 +265,7 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
   if (hinweis === 'impressum') {
     setToast({
       type: 'info',
-      message: 'Bitte vervollständige zuerst dein Verkäufer-Impressum, damit du einen Artikel einstellen kannst.',
+      message: 'Bitte vervollständige zuerst dein Verkäufer-Impressum, damit du Artikel einstellen kannst.',
     })
   }
 }, [searchParams])
@@ -602,13 +602,15 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = [
   { id: 'profil', label: 'Profil' },
-  { id: 'konto',  label: 'Kontoart & Anschrift' },
-  { id: 'impressum', label: 'Verkäufer-Impressum' },
+  { id: 'konto', label: 'Kontoart & Anschrift' },
+  ...(!isPrivatePerson
+    ? [{ id: 'impressum', label: 'Verkäufer-Impressum' }]
+    : []),
   { id: 'passwort', label: 'Passwort' },
   { id: 'bewertungen', label: 'Bewertungen' },
   { id: 'einladungen', label: 'Einladungen' },
   { id: 'loeschen', label: 'Löschen' },
-] as const;
+];
 
 
 const [activeId, setActiveId] = useState<string>('profil');
@@ -635,7 +637,7 @@ useEffect(() => {
     if (el) obs.observe(el);
   });
   return () => obs.disconnect();
-}, []);
+}, [sections]);
 
 // in page.tsx, oben im Component-Body:
 const scrollToId = (id: string) => {
