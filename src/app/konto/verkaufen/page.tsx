@@ -670,7 +670,7 @@ const filteredSales = useMemo(() => {
       value={filterArtikel}
       onChange={(e) => setFilterArtikel(e.target.value as ArtikelFilter)}
     >
-      <option value="alle">Alle Status</option>
+      <option value="alle">Alle</option>
       <option value="aktiv">Aktiv</option>
       <option value="pausiert">Pausiert</option>
       <option value="verkauft">Verkauft</option>
