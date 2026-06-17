@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     .from("articles")
     .select("*")
     .eq("id", id)
-    .eq("user_id", auth.user.id)
+    .eq("owner_id", auth.user.id)
     .single();
 
   if (aErr || !article) {
