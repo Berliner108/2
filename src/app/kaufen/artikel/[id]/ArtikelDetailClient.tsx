@@ -29,6 +29,25 @@ type Seller = {
   account_type: "business" | "private" | string | null;
   rating_avg: number | null;
   rating_count: number | null;
+
+  company_name?: string | null;
+  vat_number?: string | null;
+  address?: {
+    street?: string;
+    houseNumber?: string;
+    zip?: string;
+    city?: string;
+    country?: string;
+  } | null;
+
+  imprint_email?: string | null;
+  imprint_phone?: string | null;
+  imprint_represented_by?: string | null;
+  imprint_legal_form?: string | null;
+  imprint_register_number?: string | null;
+  imprint_register_court?: string | null;
+  imprint_chamber?: string | null;
+  imprint_supervisory_authority?: string | null;
 };
 
 type Article = {
@@ -299,6 +318,8 @@ const chargeList = useMemo(() => normalizeStringArray(article?.charge), [article
 
   const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
+  const showSellerImprint = seller?.account_type === "business";
+  const sellerAddress = seller?.address ?? null;
 
   const availableUnits = useMemo(() => {
     const set = new Set<"kg" | "stueck">();
@@ -638,6 +659,75 @@ if (!article) {
                   </div>
                 </div>
               )}
+              {/* Verkäufer-Impressum */}
+{showSellerImprint && (
+  <div className={`${styles.metaItem} ${styles.impressumBox}`}>
+    <span className={styles.label}>Verkäufer-Impressum:</span>
+
+    <div className={styles.impressumContent}>
+      {seller.company_name && (
+        <div>
+          <strong>{seller.company_name}</strong>
+        </div>
+      )}
+
+      {seller.imprint_legal_form && (
+        <div>Rechtsform: {seller.imprint_legal_form}</div>
+      )}
+
+      {seller.imprint_represented_by && (
+        <div>Vertreten durch: {seller.imprint_represented_by}</div>
+      )}
+
+      {sellerAddress && (
+        <div>
+          {sellerAddress.street} {sellerAddress.houseNumber}
+          <br />
+          {sellerAddress.zip} {sellerAddress.city}
+          {sellerAddress.country ? (
+            <>
+              <br />
+              {sellerAddress.country}
+            </>
+          ) : null}
+        </div>
+      )}
+
+      {seller.imprint_email && (
+        <div>
+          E-Mail:{" "}
+          <a href={`mailto:${seller.imprint_email}`} className={styles.kontaktLink}>
+            {seller.imprint_email}
+          </a>
+        </div>
+      )}
+
+      {seller.imprint_phone && (
+        <div>Telefon: {seller.imprint_phone}</div>
+      )}
+
+      {seller.vat_number && (
+        <div>USt-ID: {seller.vat_number}</div>
+      )}
+
+      {seller.imprint_register_number && (
+        <div>Firmenbuch-/Registernummer: {seller.imprint_register_number}</div>
+      )}
+
+      {seller.imprint_register_court && (
+        <div>Firmenbuch-/Registergericht: {seller.imprint_register_court}</div>
+      )}
+
+      {seller.imprint_chamber && (
+        <div>Kammer / Berufsverband: {seller.imprint_chamber}</div>
+      )}
+
+      {seller.imprint_supervisory_authority && (
+        <div>Aufsichtsbehörde: {seller.imprint_supervisory_authority}</div>
+      )}
+    </div>
+  </div>
+)}
 
               {/* ✅ Dateien: nur anzeigen, wenn vorhanden (als metaItem wie Lackanfragen) */}
               {dateien.length > 0 && (

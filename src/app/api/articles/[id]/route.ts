@@ -164,30 +164,71 @@ export async function GET(req: Request) {
 
     // Seller-Profil aus profiles (username + rating)
     let seller: null | {
-      id: string;
-      username: string | null;
-      account_type: "business" | "private" | string | null;
-      rating_avg: number | null;
-      rating_count: number | null;
-    } = null;
+  id: string;
+  username: string | null;
+  account_type: "business" | "private" | string | null;
+  rating_avg: number | null;
+  rating_count: number | null;
+
+  company_name: string | null;
+  vat_number: string | null;
+  address: any | null;
+  imprint_email: string | null;
+  imprint_phone: string | null;
+  imprint_represented_by: string | null;
+  imprint_legal_form: string | null;
+  imprint_register_number: string | null;
+  imprint_register_court: string | null;
+  imprint_chamber: string | null;
+  imprint_supervisory_authority: string | null;
+} = null;
 
     const ownerId = (article as any).owner_id as string | null | undefined;
     if (ownerId) {
       const { data: prof, error: profErr } = await admin
         .from("profiles")
-        .select("id, username, account_type, rating_avg, rating_count")
+        .select(`
+  id,
+  username,
+  account_type,
+  rating_avg,
+  rating_count,
+  company_name,
+  vat_number,
+  address,
+  imprint_email,
+  imprint_phone,
+  imprint_represented_by,
+  imprint_legal_form,
+  imprint_register_number,
+  imprint_register_court,
+  imprint_chamber,
+  imprint_supervisory_authority
+`)
         .eq("id", ownerId)
         .maybeSingle();
 
       if (!profErr && prof) {
         seller = {
-          id: (prof as any).id,
-          username: (prof as any).username ?? null,
-          account_type: (prof as any).account_type ?? null,
-          rating_avg: (prof as any).rating_avg != null ? Number((prof as any).rating_avg) : null,
-          rating_count:
-            (prof as any).rating_count != null ? Number((prof as any).rating_count) : null,
-        };
+  id: (prof as any).id,
+  username: (prof as any).username ?? null,
+  account_type: (prof as any).account_type ?? null,
+  rating_avg: (prof as any).rating_avg != null ? Number((prof as any).rating_avg) : null,
+  rating_count:
+    (prof as any).rating_count != null ? Number((prof as any).rating_count) : null,
+
+  company_name: (prof as any).company_name ?? null,
+  vat_number: (prof as any).vat_number ?? null,
+  address: (prof as any).address ?? null,
+  imprint_email: (prof as any).imprint_email ?? null,
+  imprint_phone: (prof as any).imprint_phone ?? null,
+  imprint_represented_by: (prof as any).imprint_represented_by ?? null,
+  imprint_legal_form: (prof as any).imprint_legal_form ?? null,
+  imprint_register_number: (prof as any).imprint_register_number ?? null,
+  imprint_register_court: (prof as any).imprint_register_court ?? null,
+  imprint_chamber: (prof as any).imprint_chamber ?? null,
+  imprint_supervisory_authority: (prof as any).imprint_supervisory_authority ?? null,
+};
       }
     }
 

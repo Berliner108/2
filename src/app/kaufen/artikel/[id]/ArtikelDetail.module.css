@@ -1089,3 +1089,27 @@
   font-size: 1.265rem;  /* 1.1 * 1.15 */
   font-weight: 800;
 }
+.impressumBox {
+  flex: 1 1 100%;
+  border: 1px solid #d9e2ec;
+  background: #f8fafc;
+}
+
+.impressumContent {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  line-height: 1.45;
+  color: #222;
+}
+
+.impressumContent strong {
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .impressumBox {
+    width: 100%;
+  }
+}
