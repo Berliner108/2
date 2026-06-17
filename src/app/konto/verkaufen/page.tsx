@@ -848,8 +848,8 @@ const filteredSales = useMemo(() => {
             <div className={styles.kontoContainer}>
               {sliceSales.total === 0 ? (
                 <div className={styles.emptyState}>
-                  <strong>Keine Verkäufe sichtbar.</strong>
-                  <div style={{ marginTop: 8, opacity: 0.9 }}>Kommt sobald Orders/Checkout existieren.</div>
+                  <strong>Du hast noch keine (entsprechenden) Verkäufe.</strong>
+                  <div style={{ marginTop: 8, opacity: 0.9 }}>Sobald du deinen ersten (entsprechenden) Artikel verkauft hast, kannst du ihn hier sehen.</div>
                 </div>
               ) : (
                 <>

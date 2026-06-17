@@ -34,7 +34,7 @@ export async function GET() {
     // 1) meine Artikel (✅ sale_type dazu, damit Einheit/Staffeln korrekt ermittelt werden können)
     const { data: articles, error: aErr } = await supabase
       .from("articles")
-      .select("id, title, category, sale_type, created_at, published, sold_out, archived")
+      .select("id, title, category, sale_type, created_at, published, sold_out, archived, views_count")
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -116,7 +116,7 @@ export async function GET() {
         category: normalizeCategory(a.category), // ✅ sauber formatiert
         createdAtIso: a.created_at ?? null,
         status,
-        views: 0, // später: echtes Tracking
+        views: Number(a.views_count ?? 0),
         priceCents: Math.round(minPriceEUR * 100),
         hasStaffelpreise, // ✅ für "Preis" vs "Preis ab" im UI
       };
