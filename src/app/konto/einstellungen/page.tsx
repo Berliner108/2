@@ -168,6 +168,7 @@ const [toast, setToast] = useState<ToastState>(null)
 
   // Stammdaten
   const [isPrivatePerson, setIsPrivatePerson] = useState<boolean>(false)
+const [profileLoaded, setProfileLoaded] = useState(false)
   const [street, setStreet] = useState('')
   const [houseNumber, setHouseNumber] = useState('')
   const [zip, setZip] = useState('')
@@ -210,16 +211,18 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
         const sb = supabaseBrowser()
         const { data: { user } } = await sb.auth.getUser()
         if (!user) {
-          setToast({ type: 'info', message: 'Bitte melde dich an.' })
-          return
-        }
+  setToast({ type: 'info', message: 'Bitte melde dich an.' })
+  setProfileLoaded(true)
+  return
+}
 
         const res = await fetch('/api/profile', { cache: 'no-store' })
         const j: ApiGetResponse = await res.json()
         if (!res.ok) {
-          setToast({ type: 'error', message: 'Profil konnte nicht geladen werden.' })
-          return
-        }
+  setToast({ type: 'error', message: 'Profil konnte nicht geladen werden.' })
+  setProfileLoaded(true)
+  return
+}
 
         setEmail(j.email ?? '')
         setUsername(j.profile.username ?? (j.email?.split('@')[0] ?? ''))
@@ -252,8 +255,10 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
 
         loadInvites(1)
         await loadDeleteRequest()   // 👈 HIER NEU
+        setProfileLoaded(true)
       } catch {
         setToast({ type: 'error', message: 'Fehler beim Laden des Profils.' })
+        setProfileLoaded(true)
       }
 
     })()
@@ -600,7 +605,7 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
   }
 
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
-const sections = [
+const sections = useMemo(() => [
   { id: 'profil', label: 'Profil' },
   { id: 'konto', label: 'Kontoart & Anschrift' },
   ...(!isPrivatePerson
@@ -610,34 +615,38 @@ const sections = [
   { id: 'bewertungen', label: 'Bewertungen' },
   { id: 'einladungen', label: 'Einladungen' },
   { id: 'loeschen', label: 'Löschen' },
-];
+], [isPrivatePerson])
 
 
 const [activeId, setActiveId] = useState<string>('profil');
 
 useEffect(() => {
+  if (!profileLoaded) return;
+
   const obs = new IntersectionObserver(
     (entries) => {
       const visible = entries.filter(e => e.isIntersecting);
       if (!visible.length) return;
+
       const best = visible.reduce((a, b) =>
         a.intersectionRatio > b.intersectionRatio ? a : b
       );
+
       setActiveId(best.target.id);
     },
     {
-      // Oberer Puffer für Sticky-Nav; unten aggressiver, damit die nächste Section später „gewinnt“
       rootMargin: '-80px 0px -55% 0px',
       threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
     }
   );
 
-  sections.forEach(s => {
+  sections.forEach((s) => {
     const el = document.getElementById(s.id);
     if (el) obs.observe(el);
   });
+
   return () => obs.disconnect();
-}, [sections]);
+}, [sections, profileLoaded]);
 
 // in page.tsx, oben im Component-Body:
 const scrollToId = (id: string) => {
@@ -750,20 +759,22 @@ return (
     <AcceptInvitationOnMount />   {/* 👈 löst /api/invitations/accept aus */}
     <div className={styles.page}></div>
     <h3 className={styles.title}>Kontoeinstellungen</h3>
-    <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
-        <div className={styles.stickyNavTrack}>
-          {sections.map(s => (
-            <a
-              key={s.id}
-              href={`#${s.id}`}
-              onClick={(e) => { e.preventDefault(); scrollToId(s.id); }}
-              className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
-            >
-              {s.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+    {profileLoaded && (
+  <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
+    <div className={styles.stickyNavTrack}>
+      {sections.map(s => (
+        <a
+          key={s.id}
+          href={`#${s.id}`}
+          onClick={(e) => { e.preventDefault(); scrollToId(s.id); }}
+          className={`${styles.navItem} ${activeId === s.id ? styles.navItemActive : ''}`}
+        >
+          {s.label}
+        </a>
+      ))}
+    </div>
+  </nav>
+)}
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
