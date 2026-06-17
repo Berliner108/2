@@ -554,7 +554,7 @@ const filteredSales = useMemo(() => {
   function artikelBadge(a: MyArticle) {
     if (a.status === 'aktiv') return { cls: styles.statusActive, label: 'Aktiv' }
     if (a.status === 'pausiert') return { cls: styles.statusPending, label: 'Pausiert' }
-    return { cls: styles.statusDone, label: 'Verkauft' }
+    return { cls: styles.statusDone, label: 'Ausverkauft' }
   }
   function saleBadge(s: MySale) {
   if (s.orderStatus === 'paid') {
@@ -673,7 +673,7 @@ const filteredSales = useMemo(() => {
       <option value="alle">Alle</option>
       <option value="aktiv">Aktiv</option>
       <option value="pausiert">Pausiert</option>
-      <option value="verkauft">Verkauft</option>
+      <option value="verkauft">Ausverkauft</option>
     </select>
   </>
 ) : (
