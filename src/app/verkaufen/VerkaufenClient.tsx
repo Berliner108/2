@@ -1840,17 +1840,8 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
 
   const progress = berechneFortschritt();
 const stripeReady = connectLoaded && connect?.ready === true;
-const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady;
+const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady || !profileChecked;
 
-if (!profileChecked) {
-  return (
-    <div className={styles.container}>
-      <div className={styles.infoBox}>
-        Verkäuferdaten werden geprüft …
-      </div>
-    </div>
-  );
-}
 
 return (
     
