@@ -177,6 +177,7 @@ export default function ArtikelDetailPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [seller, setSeller] = useState<Seller | null>(null);
+  const [impressumOpen, setImpressumOpen] = useState(false);
 
   // Viewer (profiles.account_type)
   const [viewerChecked, setViewerChecked] = useState(false);
@@ -660,72 +661,81 @@ if (!article) {
                 </div>
               )}
               {/* Verkäufer-Impressum */}
+{/* Verkäufer-Impressum */}
 {showSellerImprint && (
   <div className={`${styles.metaItem} ${styles.impressumBox}`}>
-    <span className={styles.label}>Verkäufer-Impressum:</span>
+    <button
+      type="button"
+      className={styles.impressumToggle}
+      onClick={() => setImpressumOpen((prev) => !prev)}
+      aria-expanded={impressumOpen}
+    >
+      <span>Verkäufer-Impressum</span>
+      <span className={styles.impressumChevron}>
+        {impressumOpen ? "−" : "+"}
+      </span>
+    </button>
 
-    <div className={styles.impressumContent}>
-      {seller.company_name && (
-        <div>
-          <strong>{seller.company_name}</strong>
-        </div>
-      )}
+    {impressumOpen && (
+      <div className={styles.impressumContent}>
+        {seller.company_name && (
+          <div>
+            <strong>{seller.company_name}</strong>
+          </div>
+        )}
 
-      {seller.imprint_legal_form && (
-        <div>Rechtsform: {seller.imprint_legal_form}</div>
-      )}
+        {seller.imprint_legal_form && (
+          <div>Rechtsform: {seller.imprint_legal_form}</div>
+        )}
 
-      {seller.imprint_represented_by && (
-        <div>Vertreten durch: {seller.imprint_represented_by}</div>
-      )}
+        {seller.imprint_represented_by && (
+          <div>Vertreten durch: {seller.imprint_represented_by}</div>
+        )}
 
-      {sellerAddress && (
-        <div>
-          {sellerAddress.street} {sellerAddress.houseNumber}
-          <br />
-          {sellerAddress.zip} {sellerAddress.city}
-          {sellerAddress.country ? (
-            <>
-              <br />
-              {sellerAddress.country}
-            </>
-          ) : null}
-        </div>
-      )}
+        {sellerAddress && (
+          <div>
+            {sellerAddress.street} {sellerAddress.houseNumber}
+            <br />
+            {sellerAddress.zip} {sellerAddress.city}
+            {sellerAddress.country ? (
+              <>
+                <br />
+                {sellerAddress.country}
+              </>
+            ) : null}
+          </div>
+        )}
 
-      {seller.imprint_email && (
-        <div>
-          E-Mail:{" "}
-          <a href={`mailto:${seller.imprint_email}`} className={styles.kontaktLink}>
-            {seller.imprint_email}
-          </a>
-        </div>
-      )}
+        {seller.imprint_email && (
+          <div>
+            E-Mail:{" "}
+            <a href={`mailto:${seller.imprint_email}`} className={styles.kontaktLink}>
+              {seller.imprint_email}
+            </a>
+          </div>
+        )}
 
-      {seller.imprint_phone && (
-        <div>Telefon: {seller.imprint_phone}</div>
-      )}
+        {seller.imprint_phone && <div>Telefon: {seller.imprint_phone}</div>}
 
-      {seller.vat_number && (
-        <div>USt-ID: {seller.vat_number}</div>
-      )}
+        {seller.vat_number && <div>USt-ID: {seller.vat_number}</div>}
 
-      {seller.imprint_register_number && (
-        <div>Firmenbuch-/Registernummer: {seller.imprint_register_number}</div>
-      )}
+        {seller.imprint_register_number && (
+          <div>Firmenbuch-/Registernummer: {seller.imprint_register_number}</div>
+        )}
 
-      {seller.imprint_register_court && (
-        <div>Firmenbuch-/Registergericht: {seller.imprint_register_court}</div>
-      )}
+        {seller.imprint_register_court && (
+          <div>Firmenbuch-/Registergericht: {seller.imprint_register_court}</div>
+        )}
 
-      {seller.imprint_chamber && (
-        <div>Kammer / Berufsverband: {seller.imprint_chamber}</div>
-      )}
+        {seller.imprint_chamber && (
+          <div>Kammer / Berufsverband: {seller.imprint_chamber}</div>
+        )}
 
-      {seller.imprint_supervisory_authority && (
-        <div>Aufsichtsbehörde: {seller.imprint_supervisory_authority}</div>
-      )}
-    </div>
+        {seller.imprint_supervisory_authority && (
+          <div>Aufsichtsbehörde: {seller.imprint_supervisory_authority}</div>
+        )}
+      </div>
+    )}
   </div>
 )}
 
