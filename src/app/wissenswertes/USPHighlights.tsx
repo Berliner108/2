@@ -6,7 +6,7 @@ import styles from './uspHighlights.module.css';
 const highlights = [
    {
     title: 'Risikoarm für alle User',
-    text: 'Kein Deal - Keine Kosten. Erst bei erfolgtem Abschluss erfolgt einer Provisionsverrechnung.',
+    text: 'Kein Deal - Keine Kosten. Erst bei erfolgtem Abschluss erfolgt eine Provisionsverrechnung.',
   },
   {
     title: 'Angebote in Minuten',
