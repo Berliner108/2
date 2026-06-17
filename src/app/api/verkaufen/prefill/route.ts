@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseRouteClient } from "@/lib/supabase-route";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = await createSupabaseRouteClient();
 
-  const { data: auth, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !auth?.user) {
-    return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
-  }
+const { data: sessionRes, error: sessionErr } = await supabase.auth.getSession();
+
+if (sessionErr) {
+  return NextResponse.json({ error: sessionErr.message }, { status: 401 });
+}
+
+const user = sessionRes?.session?.user;
+
+if (!user) {
+  return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
+}
 
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
@@ -23,7 +30,7 @@ export async function GET(req: Request) {
     .from("articles")
     .select("*")
     .eq("id", id)
-    .eq("owner_id", auth.user.id)
+    .eq("owner_id", user.id)
     .single();
 
   if (aErr || !article) {
