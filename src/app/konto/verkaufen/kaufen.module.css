@@ -65,12 +65,16 @@
 /* ===== Toolbar ===== */
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) 190px 130px max-content;
+  grid-template-columns: minmax(360px, 560px) 190px 130px max-content;
   gap: 0.75rem;
   align-items: center;
+  justify-content: start;
   margin: 0 0 1rem;
 }
-
+.search {
+  width: 100%;
+  box-sizing: border-box;
+}
 .search,
 .select {
   border: 2px solid #e0e0e0;
