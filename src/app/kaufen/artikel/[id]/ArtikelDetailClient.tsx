@@ -296,7 +296,7 @@ useEffect(() => {
     method: "POST",
     cache: "no-store",
   }).catch(() => {
-    // bewusst ignorieren: Der View-Zähler darf die Detailseite nie blockieren
+    // bewusst ignorieren: Der View-Zähler darf die Detailseite nie blockieren oder
   });
 }, [params.id]);
 
