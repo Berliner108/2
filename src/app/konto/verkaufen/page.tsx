@@ -139,7 +139,7 @@ const Pagination: FC<{
 
 /* ================= Data Types ================= */
 type ArtikelStatus = 'aktiv' | 'pausiert' | 'verkauft'
-type VerkaufStatus = 'bezahlt' | 'versandt' | 'geliefert'
+
 
 type MyArticle = {
   id: string
@@ -170,7 +170,6 @@ buyerRatingCount?: number | null;
 shippingCents?: number | null
 
   dateIso: string
-  status: VerkaufStatus
   invoiceId: string
   rated?: boolean
 
@@ -184,7 +183,6 @@ shippingCents?: number | null
 }
 
 type ShopOrderStatus =
-  | "payment_pending"
   | "paid"
   | "shipped"
   | "released"
@@ -227,6 +225,15 @@ const articlePathBy = (id: string) => `/kaufen/artikel/${encodeURIComponent(Stri
 type TabKey = 'artikel' | 'verkaeufe'
 type SortKeyArtikel = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc' | 'views_desc'
 type SortKeySales = 'date_desc' | 'date_asc' | 'price_desc' | 'price_asc'
+type ArtikelFilter = 'alle' | 'aktiv' | 'pausiert' | 'verkauft'
+
+type SalesFilter =
+  | 'alle'
+  | 'paid'
+  | 'shipped'
+  | 'released'
+  | 'complaint_open'
+  | 'refunded'
 
 const KontoVerkaufenPage: FC = () => {
   const router = useRouter()
@@ -239,6 +246,8 @@ const KontoVerkaufenPage: FC = () => {
   const [mineLoading, setMineLoading] = useState(true)
   const [mineError, setMineError] = useState<string | null>(null)
   const [salesLoading, setSalesLoading] = useState(true)
+  const [filterArtikel, setFilterArtikel] = useState<ArtikelFilter>('alle')
+const [filterSales, setFilterSales] = useState<SalesFilter>('alle')
 
 
   // ========= API Helpers (wichtig für Refresh nach PATCH) =========
@@ -277,12 +286,7 @@ const KontoVerkaufenPage: FC = () => {
   };
 }, []);
 
-  function mapSaleStatus(s: ShopOrderStatus): VerkaufStatus {
-  if (s === "paid") return "bezahlt";
-  if (s === "shipped") return "versandt";
-  // released / complaint_open / refunded / payment_pending
-  return "geliefert";
-}
+
 
 
   async function patchArticle(id: string, patch: { published?: boolean }) {
@@ -341,7 +345,6 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     shippingCents: (o as any).shipping_gross_cents ?? null,
 
     dateIso: o.created_at,
-    status: mapSaleStatus(o.status),
     invoiceId: o.id,
     rated: !!(o as any).my_reviewed,
 
@@ -464,42 +467,64 @@ async function sellerRelease(sale: MySale) {
 
 
   // Page reset bei Suche / Sort
-  useEffect(() => {
-    setPageArtikel(1)
-    setPageSales(1)
-  }, [query, sortArtikel, sortSales])
+useEffect(() => {
+  setPageArtikel(1)
+  setPageSales(1)
+}, [query, sortArtikel, sortSales, filterArtikel, filterSales])
 
   /* -------- Filtering + Sorting -------- */
-  const filteredArticles = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const base = q ? articles.filter((a) => `${a.title} ${a.category} ${a.status}`.toLowerCase().includes(q)) : articles.slice()
+const filteredArticles = useMemo(() => {
+  const q = query.trim().toLowerCase()
 
-    base.sort((a, b) => {
-      if (sortArtikel === 'date_desc') return +new Date(b.createdAtIso ?? 0) - +new Date(a.createdAtIso ?? 0)
-      if (sortArtikel === 'date_asc') return +new Date(a.createdAtIso ?? 0) - +new Date(b.createdAtIso ?? 0)
-      if (sortArtikel === 'price_desc') return b.priceCents - a.priceCents
-      if (sortArtikel === 'price_asc') return a.priceCents - b.priceCents
-      if (sortArtikel === 'views_desc') return b.views - a.views
-      return 0
-    })
+  let base = articles.slice()
 
-    return base
-  }, [articles, query, sortArtikel])
+  if (filterArtikel !== 'alle') {
+    base = base.filter((a) => a.status === filterArtikel)
+  }
 
-  const filteredSales = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const base = q ? sales.filter((s) => `${s.title} ${s.buyerName} ${s.status}`.toLowerCase().includes(q)) : sales.slice()
+  if (q) {
+    base = base.filter((a) =>
+      `${a.title} ${a.category} ${a.status}`.toLowerCase().includes(q)
+    )
+  }
 
-    base.sort((a, b) => {
-      if (sortSales === 'date_desc') return +new Date(b.dateIso) - +new Date(a.dateIso)
-      if (sortSales === 'date_asc') return +new Date(a.dateIso) - +new Date(b.dateIso)
-      if (sortSales === 'price_desc') return b.amountCents - a.amountCents
-      if (sortSales === 'price_asc') return a.amountCents - b.amountCents
-      return 0
-    })
+  base.sort((a, b) => {
+    if (sortArtikel === 'date_desc') return +new Date(b.createdAtIso ?? 0) - +new Date(a.createdAtIso ?? 0)
+    if (sortArtikel === 'date_asc') return +new Date(a.createdAtIso ?? 0) - +new Date(b.createdAtIso ?? 0)
+    if (sortArtikel === 'price_desc') return b.priceCents - a.priceCents
+    if (sortArtikel === 'price_asc') return a.priceCents - b.priceCents
+    if (sortArtikel === 'views_desc') return b.views - a.views
+    return 0
+  })
 
-    return base
-  }, [sales, query, sortSales])
+  return base
+}, [articles, query, sortArtikel, filterArtikel])
+
+const filteredSales = useMemo(() => {
+  const q = query.trim().toLowerCase()
+
+  let base = sales.slice()
+
+  if (filterSales !== 'alle') {
+    base = base.filter((s) => s.orderStatus === filterSales)
+  }
+
+  if (q) {
+    base = base.filter((s) =>
+      `${s.title} ${s.buyerName} ${s.orderStatus}`
+    )
+  }
+
+  base.sort((a, b) => {
+    if (sortSales === 'date_desc') return +new Date(b.dateIso) - +new Date(a.dateIso)
+    if (sortSales === 'date_asc') return +new Date(a.dateIso) - +new Date(b.dateIso)
+    if (sortSales === 'price_desc') return b.amountCents - a.amountCents
+    if (sortSales === 'price_asc') return a.amountCents - b.amountCents
+    return 0
+  })
+
+  return base
+}, [sales, query, sortSales, filterSales])
 
   const sliceArtikel = useMemo(() => sliceByPage(filteredArticles, pageArtikel, psArtikel), [filteredArticles, pageArtikel, psArtikel])
   const sliceSales = useMemo(() => sliceByPage(filteredSales, pageSales, psSales), [filteredSales, pageSales, psSales])
@@ -530,10 +555,28 @@ async function sellerRelease(sale: MySale) {
     return { cls: styles.statusDone, label: 'Verkauft' }
   }
   function saleBadge(s: MySale) {
-    if (s.status === 'bezahlt') return { cls: styles.statusPending, label: 'Bezahlt' }
-    if (s.status === 'versandt') return { cls: styles.statusPending, label: 'Versandt' }
-    return { cls: styles.statusDone, label: 'Geliefert' }
+  if (s.orderStatus === 'paid') {
+    return { cls: styles.statusPending, label: 'Bezahlt' }
   }
+
+  if (s.orderStatus === 'shipped') {
+    return { cls: styles.statusPending, label: 'Versandt' }
+  }
+
+  if (s.orderStatus === 'released') {
+    return { cls: styles.statusDone, label: 'Abgeschlossen' }
+  }
+
+  if (s.orderStatus === 'complaint_open') {
+    return { cls: styles.statusPending, label: 'Reklamation offen' }
+  }
+
+  if (s.orderStatus === 'refunded') {
+    return { cls: styles.statusDone, label: 'Erstattet' }
+  }
+
+  return { cls: styles.statusPending, label: 'Unbekannt' }
+}
 
   /* -------- Review Modal (Dummy) -------- */
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -611,21 +654,49 @@ async function sellerRelease(sale: MySale) {
 
           {/* Sort */}
           {tab === 'artikel' ? (
-            <select className={styles.select} value={sortArtikel} onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}>
-              <option value="date_desc">Neueste zuerst</option>
-              <option value="date_asc">Älteste zuerst</option>
-              <option value="price_desc">Preis: hoch → niedrig</option>
-              <option value="price_asc">Preis: niedrig → hoch</option>
-              <option value="views_desc">Aufrufe: hoch → niedrig</option>
-            </select>
-          ) : (
-            <select className={styles.select} value={sortSales} onChange={(e) => setSortSales(e.target.value as SortKeySales)}>
-              <option value="date_desc">Neueste zuerst</option>
-              <option value="date_asc">Älteste zuerst</option>
-              <option value="price_desc">Preis: hoch → niedrig</option>
-              <option value="price_asc">Preis: niedrig → hoch</option>
-            </select>
-          )}
+  <>
+    <select className={styles.select} value={sortArtikel} onChange={(e) => setSortArtikel(e.target.value as SortKeyArtikel)}>
+      <option value="date_desc">Neueste zuerst</option>
+      <option value="date_asc">Älteste zuerst</option>
+      <option value="price_desc">Preis: hoch → niedrig</option>
+      <option value="price_asc">Preis: niedrig → hoch</option>
+      <option value="views_desc">Aufrufe: hoch → niedrig</option>
+    </select>
+
+    <select
+      className={styles.select}
+      value={filterArtikel}
+      onChange={(e) => setFilterArtikel(e.target.value as ArtikelFilter)}
+    >
+      <option value="alle">Alle Status</option>
+      <option value="aktiv">Aktiv</option>
+      <option value="pausiert">Pausiert</option>
+      <option value="verkauft">Verkauft</option>
+    </select>
+  </>
+) : (
+  <>
+    <select className={styles.select} value={sortSales} onChange={(e) => setSortSales(e.target.value as SortKeySales)}>
+      <option value="date_desc">Neueste zuerst</option>
+      <option value="date_asc">Älteste zuerst</option>
+      <option value="price_desc">Preis: hoch → niedrig</option>
+      <option value="price_asc">Preis: niedrig → hoch</option>
+    </select>
+
+    <select
+      className={styles.select}
+      value={filterSales}
+      onChange={(e) => setFilterSales(e.target.value as SalesFilter)}
+    >
+      <option value="alle">Alle Status</option>
+      <option value="paid">Bezahlt</option>
+      <option value="shipped">Versandt</option>
+      <option value="released">Abgeschlossen</option>
+      <option value="complaint_open">Reklamation offen</option>
+      <option value="refunded">Erstattet</option>
+    </select>
+  </>
+)}
 
           <div />
 
