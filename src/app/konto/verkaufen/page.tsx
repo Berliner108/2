@@ -694,7 +694,6 @@ const filteredSales = useMemo(() => {
       <option value="paid">Bezahlt</option>
       <option value="shipped">Versandt</option>
       <option value="released">Abgeschlossen</option>
-      <option value="complaint_open">Reklamation offen</option>
       <option value="refunded">Erstattet</option>
     </select>
   </>
