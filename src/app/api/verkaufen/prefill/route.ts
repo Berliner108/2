@@ -53,6 +53,20 @@ if (!user) {
           versand: t.shipping == null ? "" : String(t.shipping).replace(".", ","),
         }))
       : [{ minMenge: "1", maxMenge: "", preis: "", versand: "" }];
+      const firstTier =
+  Array.isArray(tiers) && tiers.length > 0 ? tiers[0] : null;
+
+const prefillPreis =
+  article.preis ??
+  article.price ??
+  firstTier?.price ??
+  null;
+
+const prefillVersandKosten =
+  article.versand_kosten ??
+  article.shipping ??
+  firstTier?.shipping ??
+  null;
 
   // ✅ Prefill-Shape wie in deinem useEffect erwartet
   const prefill = {
@@ -91,8 +105,8 @@ if (!user) {
     aufladung: Array.isArray(article.aufladung ?? article.charge) ? (article.aufladung ?? article.charge) : [],
 
     verkaufsArt: article.verkaufs_art ?? article.sale_type ?? "",
-    preis: article.preis ?? article.price ?? null,
-    versandKosten: article.versand_kosten ?? article.shipping ?? null,
+    preis: prefillPreis,
+versandKosten: prefillVersandKosten,
 
     imageUrls: Array.isArray(article.image_urls) ? article.image_urls : [],
     fileUrls: Array.isArray(article.file_urls) ? article.file_urls : [],
