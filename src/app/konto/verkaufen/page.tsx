@@ -510,10 +510,12 @@ const filteredSales = useMemo(() => {
   }
 
   if (q) {
-    base = base.filter((s) =>
-      `${s.title} ${s.buyerName} ${s.orderStatus}`
-    )
-  }
+  base = base.filter((s) =>
+    `${s.title} ${s.buyerName} ${s.orderStatus}`
+      .toLowerCase()
+      .includes(q)
+  )
+}
 
   base.sort((a, b) => {
     if (sortSales === 'date_desc') return +new Date(b.dateIso) - +new Date(a.dateIso)
