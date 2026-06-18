@@ -2,9 +2,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Navbar from "../../../../components/navbar/Navbar";
+import Navbar from "../../../components/navbar/Navbar";
 import styles from "../../bestellungen/bestellungen.module.css";
-import BoerseLoading from "../../../../components/loading/BoerseLoading";
+import BoerseLoading from "../../../components/loading/BoerseLoading";
 
 function formatEUR(cents?: number | null) {
   const v = (typeof cents === "number" ? cents : 0) / 100;
