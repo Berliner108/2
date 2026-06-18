@@ -96,6 +96,8 @@ type ApiShopOrder = {
 
 
   article_id: string;
+  article_title: string | null;
+  article_snapshot: any | null;
   articles?: { title: string | null } | { title: string | null }[] | null;
   seller_id: string;
   seller_username: string | null;
@@ -119,6 +121,7 @@ type MyOrder = {
   id: string
   articleId: string
   articleTitle: string
+  articleSnapshot?: any | null
   sellerName: string
   sellerUsername?: string | null
  sellerRating?: number | null
@@ -228,8 +231,12 @@ const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
     id: o.id,
     articleId: o.article_id,
     articleTitle:
-      (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
-      `Artikel ${o.article_id.slice(0, 8)}`,
+    o.article_snapshot?.title ??
+    o.article_title ??
+    (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
+    `Artikel ${o.article_id.slice(0, 8)}`,
+
+articleSnapshot: o.article_snapshot ?? null,
 
     sellerUsername,
     sellerName: sellerUsername ?? "Verkäufer",
@@ -596,10 +603,10 @@ return (
 
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
-                          <Link href={articlePathBy(o.articleId)} className={styles.titleLink}>
+                          <span className={styles.titleLink}>
                             {o.articleTitle}
-                          </Link>
-                        </div>
+                          </span>
+                          </div>
                         <span className={`${styles.statusBadge} ${b.cls}`}>{b.label}</span>
                       </div>
 
@@ -607,21 +614,21 @@ return (
                         <div className={styles.metaCol}>
                           <div className={styles.metaLabel}>Verkäufer</div>
 
-<div className={styles.metaValue}>
-  {(() => {
-    const href = sellerReviewsHref(o.sellerUsername ?? o.sellerName);
-    return href ? (
-      <Link href={href} className={styles.titleLink}>
-        {o.sellerName}
-      </Link>
-    ) : (
-      <>{o.sellerName}</>
-    );
-  })()}
-  <span className={styles.vendorRatingSmall}>
-    {" "}· {ratingTxt(o.sellerRating, o.sellerRatingCount)}
-  </span>
-</div>
+              <div className={styles.metaValue}>
+                {(() => {
+                  const href = sellerReviewsHref(o.sellerUsername ?? o.sellerName);
+                  return href ? (
+                    <Link href={href} className={styles.titleLink}>
+                      {o.sellerName}
+                    </Link>
+                  ) : (
+                    <>{o.sellerName}</>
+                  );
+                })()}
+                <span className={styles.vendorRatingSmall}>
+                  {" "}· {ratingTxt(o.sellerRating, o.sellerRatingCount)}
+                </span>
+              </div>
 
 
 

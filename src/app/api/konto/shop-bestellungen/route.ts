@@ -46,6 +46,8 @@ export async function GET() {
         "seller_profile:profiles!shop_orders_seller_id_fkey ( username, rating_avg, rating_count )",
 
         "article_id",
+        "article_title",
+        "article_snapshot",
         "articles ( title )",
       ].join(",")
     )
