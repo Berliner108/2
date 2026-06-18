@@ -78,7 +78,36 @@ export async function POST(req: Request) {
   // 3) article laden (inkl. Bestand)
   const { data: article, error: aErr } = await admin
     .from("articles")
-    .select("id, title, owner_id, sale_type, published, sold_out, archived, qty_kg, qty_piece")
+    .select(`
+  id,
+  title,
+  description,
+  manufacturer,
+  category,
+  condition,
+  sale_type,
+  owner_id,
+  published,
+  sold_out,
+  archived,
+  qty_kg,
+  qty_piece,
+  image_urls,
+  file_urls,
+  color_palette,
+  gloss_level,
+  surface,
+  application,
+  color_tone,
+  color_code,
+  quality,
+  effect,
+  special_effects,
+  certifications,
+  charge,
+  pieces_per_unit,
+  size
+`)
     .eq("id", body.articleId)
     .maybeSingle();
 
@@ -184,6 +213,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Reservierung fehlgeschlagen: " + rErr.message }, { status: 500 });
     }
   }
+  const articleSnapshot = {
+  id: (article as any).id,
+  title: (article as any).title ?? null,
+  description: (article as any).description ?? null,
+  manufacturer: (article as any).manufacturer ?? null,
+  category: (article as any).category ?? null,
+  condition: (article as any).condition ?? null,
+  sale_type: (article as any).sale_type ?? null,
+
+  image_urls: (article as any).image_urls ?? [],
+  file_urls: (article as any).file_urls ?? [],
+
+  color_palette: (article as any).color_palette ?? null,
+  gloss_level: (article as any).gloss_level ?? null,
+  surface: (article as any).surface ?? null,
+  application: (article as any).application ?? null,
+  color_tone: (article as any).color_tone ?? null,
+  color_code: (article as any).color_code ?? null,
+  quality: (article as any).quality ?? null,
+
+  effect: (article as any).effect ?? null,
+  special_effects: (article as any).special_effects ?? null,
+  certifications: (article as any).certifications ?? null,
+  charge: (article as any).charge ?? null,
+
+  pieces_per_unit: (article as any).pieces_per_unit ?? null,
+  size: (article as any).size ?? null,
+
+  unit: body.unit,
+  qty,
+  tier_id: (tier as any).id,
+  price_gross_cents: unitPriceCents,
+  shipping_gross_cents: shippingCents,
+  total_gross_cents: totalCents,
+
+  created_at: new Date().toISOString(),
+};
 
   // 6) Order anlegen (RLS)
   const { data: order, error: oErr } = await supabase
@@ -193,6 +259,8 @@ export async function POST(req: Request) {
       buyer_id: user.id,
       seller_id: sellerId,
       article_id: (article as any).id,
+      article_title: (article as any).title ?? null,
+      article_snapshot: articleSnapshot,
 
       unit: body.unit,
       qty,
