@@ -880,7 +880,7 @@ const filteredSales = useMemo(() => {
                         <li key={s.id} className={`${styles.card} ${styles.cardCyan}`}>
                           <div className={styles.cardHeader}>
                             <div className={styles.cardTitle}>
-                              <Link href={articlePathBy(s.articleId)} className={styles.titleLink}>
+                              <Link href={`/konto/shop-orders/${encodeURIComponent(s.id)}`} className={styles.titleLink}>
                                 {s.title}
                               </Link>
                             </div>
@@ -945,8 +945,8 @@ const filteredSales = useMemo(() => {
                               <div className={styles.metaValue}>{formatDate(s.dateIso)}</div>
                             </div>
                             <div className={styles.metaCol}>
-                              <div className={styles.metaLabel}>Artikel-ID</div>
-                              <div className={styles.metaValue}>{s.articleId}</div>
+                              <div className={styles.metaLabel}>Bestell-Nr.</div>
+                              <div className={styles.metaValue}>{s.id}</div>
                             </div>
                           </div>
 

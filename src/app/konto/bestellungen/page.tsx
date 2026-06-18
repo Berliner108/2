@@ -607,9 +607,9 @@ return (
 
                       <div className={styles.cardHeader}>
                         <div className={styles.cardTitle}>
-                          <span className={styles.titleLink}>
+                          <Link href={`/konto/shop-orders/${encodeURIComponent(o.id)}`} className={styles.titleLink}>
                             {o.articleTitle}
-                          </span>
+                          </Link>
                           </div>
                         <span className={`${styles.statusBadge} ${b.cls}`}>{b.label}</span>
                       </div>
