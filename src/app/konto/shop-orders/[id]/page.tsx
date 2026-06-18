@@ -207,15 +207,7 @@ export default function ShopOrderDetailPage() {
       <Navbar />
 
       <div className={styles.container}>
-        <button
-          type="button"
-          className={`${styles.submitOfferButton} ${styles.orderBackButton}`}
-          onClick={() => router.back()}
-          style={{ marginBottom: 14 }}
-        >
-          Zurück
-        </button>
-
+        
         {error && (
           <div className={styles.beschreibung}>
             <strong>Fehler:</strong> {error}
