@@ -199,6 +199,9 @@ shipping_gross_cents: number;
   total_gross_cents: number;
 
   article_id: string;
+  article_title: string | null;
+  article_snapshot: any | null;
+
   // Achtung: je nach Supabase-Select kann das Objekt ODER Array sein
   articles?: { title: string | null } | { title: string | null }[] | null;
 
@@ -317,9 +320,12 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     const orders: ApiShopSale[] = Array.isArray(json?.orders) ? json.orders : []
 
     const mapped: MySale[] = orders.map((o) => {
-  const title = Array.isArray(o.articles)
+  const title =
+  o.article_snapshot?.title ??
+  o.article_title ??
+  (Array.isArray(o.articles)
     ? (o.articles[0]?.title ?? null)
-    : (o.articles?.title ?? null);
+    : (o.articles?.title ?? null));
 
   // buyer_profile kann als Objekt ODER Array kommen (je nach select)
   const bpAny: any = (o as any).buyer_profile;
