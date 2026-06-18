@@ -222,9 +222,11 @@ export async function POST(req: Request) {
   condition: (article as any).condition ?? null,
   sale_type: (article as any).sale_type ?? null,
 
+  qty_kg: (article as any).qty_kg ?? null,
+  qty_piece: (article as any).qty_piece ?? null,
+
   image_urls: (article as any).image_urls ?? [],
   file_urls: (article as any).file_urls ?? [],
-
   color_palette: (article as any).color_palette ?? null,
   gloss_level: (article as any).gloss_level ?? null,
   surface: (article as any).surface ?? null,
