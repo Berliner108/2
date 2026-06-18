@@ -175,9 +175,32 @@ export async function POST(req: Request) {
 
   // 5) profile snapshots
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
-    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", user.id).maybeSingle(),
-    admin.from("profiles").select("username, account_type, company_name, vat_number, address").eq("id", sellerId).maybeSingle(),
-  ]);
+  admin
+    .from("profiles")
+    .select("username, account_type, company_name, vat_number, address")
+    .eq("id", user.id)
+    .maybeSingle(),
+
+  admin
+    .from("profiles")
+    .select(`
+      username,
+      account_type,
+      company_name,
+      vat_number,
+      address,
+      imprint_email,
+      imprint_phone,
+      imprint_represented_by,
+      imprint_legal_form,
+      imprint_register_number,
+      imprint_register_court,
+      imprint_chamber,
+      imprint_supervisory_authority
+    `)
+    .eq("id", sellerId)
+    .maybeSingle(),
+]);
 
   const buyerSnap: ProfileSnap = {
     username: (buyerProf as any)?.username ?? null,
@@ -194,6 +217,19 @@ export async function POST(req: Request) {
     vat_number: (sellerProf as any)?.vat_number ?? null,
     address: (sellerProf as any)?.address ?? null,
   };
+  const sellerImprintSnapshot = {
+  company_name: (sellerProf as any)?.company_name ?? null,
+  vat_number: (sellerProf as any)?.vat_number ?? null,
+  address: (sellerProf as any)?.address ?? null,
+  imprint_email: (sellerProf as any)?.imprint_email ?? null,
+  imprint_phone: (sellerProf as any)?.imprint_phone ?? null,
+  imprint_represented_by: (sellerProf as any)?.imprint_represented_by ?? null,
+  imprint_legal_form: (sellerProf as any)?.imprint_legal_form ?? null,
+  imprint_register_number: (sellerProf as any)?.imprint_register_number ?? null,
+  imprint_register_court: (sellerProf as any)?.imprint_register_court ?? null,
+  imprint_chamber: (sellerProf as any)?.imprint_chamber ?? null,
+  imprint_supervisory_authority: (sellerProf as any)?.imprint_supervisory_authority ?? null,
+};
 
   // ✅ (2) "gesamt" sofort reservieren (OHNE stock_status wegen DB-Constraint)
   if (saleType === "gesamt") {

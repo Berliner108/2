@@ -95,6 +95,7 @@ export async function GET(
         "seller_vat_number",
         "seller_address",
         "seller_display_name",
+        "seller_imprint_snapshot",        
 
         "article_id",
         "article_title",
