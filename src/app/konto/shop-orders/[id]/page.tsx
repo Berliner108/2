@@ -519,7 +519,6 @@ export default function ShopOrderDetailPage() {
     </div>
   </div>
 )}
-
               {/* Beteiligte */}
               <div className={styles.meta}>
                 <div className={styles.metaItem}>
