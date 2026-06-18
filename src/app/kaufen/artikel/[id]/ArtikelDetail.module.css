@@ -1139,3 +1139,61 @@
 .impressumToggle:hover {
   color: #0070f3;
 }
+.orderBackButton {
+  margin-bottom: 14px;
+  width: auto;
+  min-width: 180px;
+}
+
+.orderDetailBox {
+  margin-top: 1rem;
+  border: 2px solid #111;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.orderDetailTitle {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.orderDetailGrid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.orderPartyBox {
+  margin-top: 1rem;
+}
+
+.orderStatusBadge {
+  background: #007acc;
+  color: #fff;
+}
+
+.orderRoleBadge {
+  background: #f0f0f0;
+  color: #555;
+}
+
+@media (max-width: 768px) {
+  .orderBackButton {
+    width: 100%;
+  }
+
+  .orderDetailBox {
+    padding: 0.75rem;
+  }
+
+  .orderDetailTitle {
+    font-size: 1.15rem;
+  }
+
+  .orderDetailGrid {
+    gap: 0.75rem;
+  }
+}

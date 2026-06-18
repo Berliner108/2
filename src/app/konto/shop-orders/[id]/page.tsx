@@ -209,7 +209,7 @@ export default function ShopOrderDetailPage() {
       <div className={styles.container}>
         <button
           type="button"
-          className={styles.submitOfferButton}
+          className={`${styles.submitOfferButton} ${styles.orderBackButton}`}
           onClick={() => router.back()}
           style={{ marginBottom: 14 }}
         >
@@ -415,13 +415,13 @@ export default function ShopOrderDetailPage() {
               )}
 
               {/* Kaufdetails statt Kaufen-Box */}
-              <div className={styles.offerBox}>
+              <div className={styles.orderDetailBox}>
                 <div className={styles.inputGroup}>
-                  <h2 style={{ margin: 0 }}>
+                  <h2 className={styles.orderDetailTitle}>
                     {role === "seller" ? "Details zum Verkauf" : "Details zum Kauf"}
                   </h2>
 
-                  <div className={styles.meta} style={{ width: "100%" }}>
+                  <div className={styles.orderDetailGrid}>
                     <div className={styles.metaItem}>
                       <span className={styles.label}>Artikelpreis:</span>
                       <span className={styles.value}>{formatEUR(order.price_gross_cents)}</span>
