@@ -161,6 +161,7 @@ export default function ShopOrderDetailPage() {
   }, [orderId]);
 
   const snapshot = order?.article_snapshot ?? {};
+  const sellerImprint = order?.seller_imprint_snapshot ?? {};
 
   const joinedTitle = Array.isArray(order?.articles)
     ? order?.articles?.[0]?.title
@@ -460,6 +461,64 @@ export default function ShopOrderDetailPage() {
                   </div>
                 </div>
               </div>
+              {sellerImprint && Object.values(sellerImprint).some(Boolean) && (
+  <div className={`${styles.metaItem} ${styles.impressumBox}`}>
+    <span className={styles.label}>Verkäufer-Impressum zum Kaufzeitpunkt:</span>
+
+    <div className={styles.impressumContent}>
+      {sellerImprint.company_name && (
+        <div>
+          <strong>{sellerImprint.company_name}</strong>
+        </div>
+      )}
+
+      {sellerImprint.imprint_legal_form && (
+        <div>Rechtsform: {sellerImprint.imprint_legal_form}</div>
+      )}
+
+      {sellerImprint.imprint_represented_by && (
+        <div>Vertreten durch: {sellerImprint.imprint_represented_by}</div>
+      )}
+
+      {sellerImprint.address && (
+        <div>Adresse: {formatAddress(sellerImprint.address)}</div>
+      )}
+
+      {sellerImprint.imprint_email && (
+        <div>
+          E-Mail:{" "}
+          <a href={`mailto:${sellerImprint.imprint_email}`} className={styles.kontaktLink}>
+            {sellerImprint.imprint_email}
+          </a>
+        </div>
+      )}
+
+      {sellerImprint.imprint_phone && (
+        <div>Telefon: {sellerImprint.imprint_phone}</div>
+      )}
+
+      {sellerImprint.vat_number && (
+        <div>UID: {sellerImprint.vat_number}</div>
+      )}
+
+      {sellerImprint.imprint_register_number && (
+        <div>Registernummer: {sellerImprint.imprint_register_number}</div>
+      )}
+
+      {sellerImprint.imprint_register_court && (
+        <div>Registergericht: {sellerImprint.imprint_register_court}</div>
+      )}
+
+      {sellerImprint.imprint_chamber && (
+        <div>Kammer / Berufsverband: {sellerImprint.imprint_chamber}</div>
+      )}
+
+      {sellerImprint.imprint_supervisory_authority && (
+        <div>Aufsichtsbehörde: {sellerImprint.imprint_supervisory_authority}</div>
+      )}
+    </div>
+  </div>
+)}
 
               {/* Beteiligte */}
               <div className={styles.meta}>
