@@ -147,6 +147,8 @@ sellerRatingCount?: number | null
   buyerVatNumber?: string | null;
   sellerVatNumber?: string | null;
   sellerDisplayName?: string | null;
+  qty: number
+  unit: "kg" | "stueck"
 
 }
 /* ================= Routes ================= */
@@ -235,8 +237,10 @@ const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
     o.article_title ??
     (Array.isArray(o.articles) ? o.articles[0]?.title : o.articles?.title) ??
     `Artikel ${o.article_id.slice(0, 8)}`,
+    qty: o.qty,
+    unit: o.unit,
 
-articleSnapshot: o.article_snapshot ?? null,
+    articleSnapshot: o.article_snapshot ?? null,
 
     sellerUsername,
     sellerName: sellerUsername ?? "Verkäufer",
@@ -663,14 +667,22 @@ return (
 
 
                         <div className={styles.metaCol}>
-                          <div className={styles.metaLabel}>Preis</div>
+                          <div className={styles.metaLabel}>Kaufdetails</div>
                           <div className={styles.metaValue}>
-  <div>Artikel: {formatEUR(o.itemCents ?? 0)}</div>
-  <div>
-    Versand: {(o.shippingCents ?? 0) === 0 ? 'kostenlos' : formatEUR(o.shippingCents ?? 0)}
-  </div>
-  <div><strong>Gesamt: {formatEUR(o.amountCents)}</strong></div>
-</div>
+                            <div>
+                              Menge: {o.qty} {o.unit === "stueck" ? "Stück" : "kg"}
+                            </div>
+
+                            <div>Artikel: {formatEUR(o.itemCents ?? 0)}</div>
+
+                            <div>
+                              Versand: {(o.shippingCents ?? 0) === 0 ? "kostenlos" : formatEUR(o.shippingCents ?? 0)}
+                            </div>
+
+                            <div>
+                              <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
+                            </div>
+                          </div>
 
                         </div>
 
