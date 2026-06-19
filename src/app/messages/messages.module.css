@@ -264,11 +264,10 @@
   }
 
   .messageList {
-  flex: 1;
-  min-height: 320px;
-  max-height: none;
-  overflow-y: auto;
-}
+    flex: none;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
 
   .messageItem {
     max-width: 90%;
@@ -289,25 +288,5 @@
   .sendButton {
     width: 100%;
     height: 50px;
-  }
-}
-@media (max-width: 900px) and (orientation: landscape) {
-  .chatWrapper {
-    min-height: calc(100dvh - 80px);
-    padding-bottom: 1.5rem;
-  }
-
-  .messageList {
-    min-height: 260px;
-    max-height: none;
-    flex: 1;
-  }
-
-  .chatExtras {
-    margin-top: 0.5rem;
-  }
-
-  .notice {
-    font-size: 0.78rem;
   }
 }
