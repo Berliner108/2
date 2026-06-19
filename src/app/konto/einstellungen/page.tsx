@@ -337,158 +337,195 @@ const onChangeImprintText = (
 
 
   // ===== Speichern =====
-  const handleSave = async () => {
-    const sb = supabaseBrowser()
-    try {
-      const { data: { user } } = await sb.auth.getUser()
-      if (!user) {
-        setToast({ type: 'error', message: 'Sitzung abgelaufen. Bitte erneut einloggen.' })
+  const saveProfile = async (payload: any) => {
+  const profRes = await fetch('/api/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  let j: any = {}
+  try { j = await profRes.json() } catch {}
+
+  if (!profRes.ok) {
+    const extra = [j?.message, j?.details, j?.hint, j?.code].filter(Boolean).join(' • ')
+    const nicer = /invalid_account_type|invalid input value for enum/i.test(extra)
+      ? 'Ungültiger Konto-Typ.'
+      : extra
+
+    setToast({
+      type: 'error',
+      message: `Profil konnte nicht gespeichert werden.${nicer ? ' — ' + nicer : ''}`,
+    })
+    return false
+  }
+
+  return true
+}
+
+const handleSaveKonto = async () => {
+  const sb = supabaseBrowser()
+
+  try {
+    const { data: { user } } = await sb.auth.getUser()
+
+    if (!user) {
+      setToast({ type: 'error', message: 'Sitzung abgelaufen. Bitte erneut einloggen.' })
+      return
+    }
+
+    if (!ONLY_LETTERS_VALIDATE.test(street) || street.length > STREET_MAX) {
+      setToast({ type: 'error', message: `Straße: nur Buchstaben/Leerzeichen, max. ${STREET_MAX} Zeichen.` })
+      return
+    }
+
+    if (!HNR_RE.test(houseNumber)) {
+      setToast({ type: 'error', message: 'Hausnr.: max. 3 Ziffern + optional 1 Kleinbuchstabe (z. B. 12a).' })
+      return
+    }
+
+    if (!ZIP_RE.test(zip)) {
+      setToast({ type: 'error', message: 'PLZ: nur Ziffern, max. 5.' })
+      return
+    }
+
+    if (!ONLY_LETTERS_VALIDATE.test(city) || city.length > CITY_MAX) {
+      setToast({ type: 'error', message: `Ort: nur Buchstaben/Leerzeichen, max. ${CITY_MAX} Zeichen.` })
+      return
+    }
+
+    if (!country || !(COUNTRY_OPTIONS as readonly string[]).includes(country)) {
+      setToast({ type: 'error', message: 'Bitte ein gültiges Land auswählen.' })
+      return
+    }
+
+    if (!isPrivatePerson) {
+      if (!companyName.trim() || companyName.length > COMPANY_MAX) {
+        setToast({ type: 'error', message: `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).` })
         return
       }
 
-      // Validierung
-      if (!ONLY_LETTERS_VALIDATE.test(street) || street.length > STREET_MAX) {
-        setToast({ type: 'error', message: `Straße: nur Buchstaben/Leerzeichen, max. ${STREET_MAX} Zeichen.` })
+      if (!VAT_RE.test(vatNumber.trim().toUpperCase())) {
+        setToast({ type: 'error', message: "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-')." })
         return
       }
-      if (!HNR_RE.test(houseNumber)) {
-        setToast({ type: 'error', message: 'Hausnr.: max. 3 Ziffern + optional 1 Kleinbuchstabe (z. B. 12a).' })
-        return
-      }
-      if (!ZIP_RE.test(zip)) {
-        setToast({ type: 'error', message: 'PLZ: nur Ziffern, max. 5.' })
-        return
-      }
-      if (!ONLY_LETTERS_VALIDATE.test(city) || city.length > CITY_MAX) {
-        setToast({ type: 'error', message: `Ort: nur Buchstaben/Leerzeichen, max. ${CITY_MAX} Zeichen.` })
-        return
-      }
+    }
 
-      // >>> Land ist Pflicht (privat & gewerblich) <<<
-      if (!country || !(COUNTRY_OPTIONS as readonly string[]).includes(country)) {
-        setToast({ type: 'error', message: 'Bitte ein gültiges Land auswählen.' })
-        return
-      }
+    const acctTypeDB: DbAccountType = isPrivatePerson ? 'private' : 'business'
 
-   
-        if (!isPrivatePerson) {
-  if (!companyName.trim() || companyName.length > COMPANY_MAX) {
-    setToast({ type: 'error', message: `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).` })
-    return
-  }
+    const currentMeta = (user.user_metadata || {}) as any
+    const nextMeta = {
+      ...currentMeta,
+      accountType: acctTypeDB,
+      address: {
+        ...(currentMeta.address || {}),
+        street,
+        houseNumber,
+        zip,
+        city,
+        country,
+      },
+      companyName: isPrivatePerson ? null : companyName.trim(),
+      vatNumber: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
+    }
 
-  if (!VAT_RE.test(vatNumber.trim().toUpperCase())) {
-    setToast({ type: 'error', message: "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-')." })
-    return
-  }
+    const { error: metaErr } = await sb.auth.updateUser({ data: nextMeta })
 
-  if (!EMAIL_RE.test(imprintEmail.trim()) || imprintEmail.trim().length > IMPRINT_EMAIL_MAX) {
-    setToast({ type: 'error', message: 'Bitte eine gültige Impressums-E-Mail eingeben.' })
-    return
-  }
+    if (metaErr) {
+      setToast({
+        type: 'error',
+        message: metaErr.message || 'Profil-Metadaten konnten nicht gespeichert werden.',
+      })
+      return
+    }
 
-  if (!PHONE_RE.test(imprintPhone.trim())) {
-    setToast({ type: 'error', message: 'Bitte eine gültige Telefonnummer für das Impressum eingeben.' })
-    return
-  }
+    const ok = await saveProfile({
+      account_type: acctTypeDB,
+      address: { street, houseNumber, zip, city, country },
+      company_name: isPrivatePerson ? null : companyName.trim(),
+      vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
+    })
 
-  if (!imprintRepresentedBy.trim() || imprintRepresentedBy.trim().length > IMPRINT_NAME_MAX) {
-    setToast({ type: 'error', message: `Bitte "Vertreten durch / Inhaber" ausfüllen (max. ${IMPRINT_NAME_MAX} Zeichen).` })
-    return
-  }
+    if (!ok) return
 
-  if (imprintLegalForm.trim().length > IMPRINT_LEGAL_FORM_MAX) {
-    setToast({ type: 'error', message: `Rechtsform: max. ${IMPRINT_LEGAL_FORM_MAX} Zeichen.` })
-    return
-  }
-
-  if (imprintRegisterNumber.trim().length > IMPRINT_REGISTER_NUMBER_MAX) {
-    setToast({ type: 'error', message: `Firmenbuch-/Registernummer: max. ${IMPRINT_REGISTER_NUMBER_MAX} Zeichen.` })
-    return
-  }
-
-  if (imprintRegisterCourt.trim().length > IMPRINT_REGISTER_COURT_MAX) {
-    setToast({ type: 'error', message: `Firmenbuch-/Registergericht: max. ${IMPRINT_REGISTER_COURT_MAX} Zeichen.` })
-    return
-  }
-
-  if (imprintChamber.trim().length > IMPRINT_CHAMBER_MAX) {
-    setToast({ type: 'error', message: `Kammer / Berufsverband: max. ${IMPRINT_CHAMBER_MAX} Zeichen.` })
-    return
-  }
-
-  if (imprintSupervisoryAuthority.trim().length > IMPRINT_AUTHORITY_MAX) {
-    setToast({ type: 'error', message: `Aufsichtsbehörde: max. ${IMPRINT_AUTHORITY_MAX} Zeichen.` })
-    return
+    setToast({ type: 'success', message: 'Kontoangaben erfolgreich gespeichert.' })
+    router.refresh()
+  } catch (err) {
+    console.error('[handleSaveKonto fatal]', err)
+    setToast({ type: 'error', message: 'Fehler beim Speichern der Kontoangaben.' })
   }
 }
 
-      const acctTypeDB: DbAccountType = isPrivatePerson ? 'private' : 'business'
-
-      // Metadaten MERGEN (firstName/lastName bleiben erhalten)
-      const currentMeta = (user.user_metadata || {}) as any
-      const nextMeta = {
-        ...currentMeta,
-        accountType: acctTypeDB,
-        address: {
-          ...(currentMeta.address || {}),
-          street,
-          houseNumber,
-          zip,
-          city,
-          country,
-        },
-        companyName: isPrivatePerson ? null : companyName.trim(),
-        vatNumber: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
-      }
-
-      const { error: metaErr } = await sb.auth.updateUser({ data: nextMeta })
-      if (metaErr) {
-        setToast({ type: 'error', message: metaErr.message || 'Profil-Metadaten konnten nicht gespeichert werden.' })
-        return
-      }
-
-      // Profile-API (DB-ENUM erwartet 'private'|'business')
-      const profRes = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-  account_type: acctTypeDB,
-  address: { street, houseNumber, zip, city, country },
-  company_name: isPrivatePerson ? null : companyName.trim(),
-  vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
-
-  imprint_email: isPrivatePerson ? null : imprintEmail.trim(),
-  imprint_phone: isPrivatePerson ? null : imprintPhone.trim(),
-  imprint_represented_by: isPrivatePerson ? null : imprintRepresentedBy.trim(),
-  imprint_legal_form: isPrivatePerson ? null : imprintLegalForm.trim(),
-  imprint_register_number: isPrivatePerson ? null : imprintRegisterNumber.trim(),
-  imprint_register_court: isPrivatePerson ? null : imprintRegisterCourt.trim(),
-  imprint_chamber: isPrivatePerson ? null : imprintChamber.trim(),
-  imprint_supervisory_authority: isPrivatePerson ? null : imprintSupervisoryAuthority.trim(),
-}),
-      })
-
-      let j: any = {}
-      try { j = await profRes.json() } catch {}
-
-      if (!profRes.ok) {
-        const extra = [j?.message, j?.details, j?.hint, j?.code].filter(Boolean).join(' • ')
-        const nicer = /invalid_account_type|invalid input value for enum/i.test(extra)
-          ? 'Ungültiger Konto-Typ.'
-          : extra
-        setToast({ type: 'error', message: `Profil konnte nicht gespeichert werden.${nicer ? ' — ' + nicer : ''}` })
-        return
-      }
-
-      setToast({ type: 'success', message: 'Änderungen erfolgreich gespeichert.' })
-      router.refresh()
-    } catch (err) {
-      console.error('[handleSave fatal]', err)
-      setToast({ type: 'error', message: 'Fehler beim Speichern der Änderungen.' })
+const handleSaveImpressum = async () => {
+  try {
+    if (isPrivatePerson) {
+      setToast({ type: 'info', message: 'Privatpersonen benötigen kein Verkäufer-Impressum.' })
+      return
     }
-  }
 
+    if (!EMAIL_RE.test(imprintEmail.trim()) || imprintEmail.trim().length > IMPRINT_EMAIL_MAX) {
+      setToast({ type: 'error', message: 'Bitte eine gültige Impressums-E-Mail eingeben.' })
+      return
+    }
+
+    if (!PHONE_RE.test(imprintPhone.trim())) {
+      setToast({ type: 'error', message: 'Bitte eine gültige Telefonnummer für das Impressum eingeben.' })
+      return
+    }
+
+    if (!imprintRepresentedBy.trim() || imprintRepresentedBy.trim().length > IMPRINT_NAME_MAX) {
+      setToast({
+        type: 'error',
+        message: `Bitte "Vertreten durch / Inhaber" ausfüllen (max. ${IMPRINT_NAME_MAX} Zeichen).`,
+      })
+      return
+    }
+
+    if (imprintLegalForm.trim().length > IMPRINT_LEGAL_FORM_MAX) {
+      setToast({ type: 'error', message: `Rechtsform: max. ${IMPRINT_LEGAL_FORM_MAX} Zeichen.` })
+      return
+    }
+
+    if (imprintRegisterNumber.trim().length > IMPRINT_REGISTER_NUMBER_MAX) {
+      setToast({ type: 'error', message: `Firmenbuch-/Registernummer: max. ${IMPRINT_REGISTER_NUMBER_MAX} Zeichen.` })
+      return
+    }
+
+    if (imprintRegisterCourt.trim().length > IMPRINT_REGISTER_COURT_MAX) {
+      setToast({ type: 'error', message: `Firmenbuch-/Registergericht: max. ${IMPRINT_REGISTER_COURT_MAX} Zeichen.` })
+      return
+    }
+
+    if (imprintChamber.trim().length > IMPRINT_CHAMBER_MAX) {
+      setToast({ type: 'error', message: `Kammer / Berufsverband: max. ${IMPRINT_CHAMBER_MAX} Zeichen.` })
+      return
+    }
+
+    if (imprintSupervisoryAuthority.trim().length > IMPRINT_AUTHORITY_MAX) {
+      setToast({ type: 'error', message: `Aufsichtsbehörde: max. ${IMPRINT_AUTHORITY_MAX} Zeichen.` })
+      return
+    }
+
+    const ok = await saveProfile({
+      imprint_email: imprintEmail.trim(),
+      imprint_phone: imprintPhone.trim(),
+      imprint_represented_by: imprintRepresentedBy.trim(),
+      imprint_legal_form: imprintLegalForm.trim(),
+      imprint_register_number: imprintRegisterNumber.trim(),
+      imprint_register_court: imprintRegisterCourt.trim(),
+      imprint_chamber: imprintChamber.trim(),
+      imprint_supervisory_authority: imprintSupervisoryAuthority.trim(),
+    })
+
+    if (!ok) return
+
+    setToast({ type: 'success', message: 'Verkäufer-Impressum erfolgreich gespeichert.' })
+    router.refresh()
+  } catch (err) {
+    console.error('[handleSaveImpressum fatal]', err)
+    setToast({ type: 'error', message: 'Fehler beim Speichern des Verkäufer-Impressums.' })
+  }
+}
   // ===== Passwort ändern =====
   const handleChangePassword = async () => {
     const sb = supabaseBrowser()
@@ -686,48 +723,20 @@ useEffect(() => {
   if (inviteTARef.current) autoGrow(inviteTARef.current);
 }, []);
 const canSaveKonto = useMemo(() => {
-  const streetOk  = ONLY_LETTERS_VALIDATE.test(street) && street.length <= STREET_MAX && street.length > 0
-  const hnrOk     = HNR_RE.test(houseNumber)
-  const zipOk     = ZIP_RE.test(zip)
-  const cityOk    = ONLY_LETTERS_VALIDATE.test(city) && city.length <= CITY_MAX && city.length > 0
+  const streetOk = ONLY_LETTERS_VALIDATE.test(street) && street.length <= STREET_MAX && street.length > 0
+  const hnrOk = HNR_RE.test(houseNumber)
+  const zipOk = ZIP_RE.test(zip)
+  const cityOk = ONLY_LETTERS_VALIDATE.test(city) && city.length <= CITY_MAX && city.length > 0
   const countryOk = !!country && (COUNTRY_OPTIONS as readonly string[]).includes(country)
 
   if (isPrivatePerson) {
     return streetOk && hnrOk && zipOk && cityOk && countryOk
   }
+
   const companyOk = !!companyName.trim() && companyName.trim().length <= COMPANY_MAX
-const vatOk = VAT_RE.test(vatNumber.trim().toUpperCase())
+  const vatOk = VAT_RE.test(vatNumber.trim().toUpperCase())
 
-const imprintEmailOk =
-  EMAIL_RE.test(imprintEmail.trim()) &&
-  imprintEmail.trim().length <= IMPRINT_EMAIL_MAX
-
-const imprintPhoneOk = PHONE_RE.test(imprintPhone.trim())
-
-const imprintRepresentedByOk =
-  !!imprintRepresentedBy.trim() &&
-  imprintRepresentedBy.trim().length <= IMPRINT_NAME_MAX
-
-const imprintOptionalOk =
-  imprintLegalForm.trim().length <= IMPRINT_LEGAL_FORM_MAX &&
-  imprintRegisterNumber.trim().length <= IMPRINT_REGISTER_NUMBER_MAX &&
-  imprintRegisterCourt.trim().length <= IMPRINT_REGISTER_COURT_MAX &&
-  imprintChamber.trim().length <= IMPRINT_CHAMBER_MAX &&
-  imprintSupervisoryAuthority.trim().length <= IMPRINT_AUTHORITY_MAX
-
-return (
-  streetOk &&
-  hnrOk &&
-  zipOk &&
-  cityOk &&
-  countryOk &&
-  companyOk &&
-  vatOk &&
-  imprintEmailOk &&
-  imprintPhoneOk &&
-  imprintRepresentedByOk &&
-  imprintOptionalOk
-)
+  return streetOk && hnrOk && zipOk && cityOk && countryOk && companyOk && vatOk
 }, [
   isPrivatePerson,
   street,
@@ -737,6 +746,35 @@ return (
   country,
   companyName,
   vatNumber,
+])
+const canSaveImpressum = useMemo(() => {
+  if (isPrivatePerson) return true
+
+  const imprintEmailOk =
+    EMAIL_RE.test(imprintEmail.trim()) &&
+    imprintEmail.trim().length <= IMPRINT_EMAIL_MAX
+
+  const imprintPhoneOk = PHONE_RE.test(imprintPhone.trim())
+
+  const imprintRepresentedByOk =
+    !!imprintRepresentedBy.trim() &&
+    imprintRepresentedBy.trim().length <= IMPRINT_NAME_MAX
+
+  const imprintOptionalOk =
+    imprintLegalForm.trim().length <= IMPRINT_LEGAL_FORM_MAX &&
+    imprintRegisterNumber.trim().length <= IMPRINT_REGISTER_NUMBER_MAX &&
+    imprintRegisterCourt.trim().length <= IMPRINT_REGISTER_COURT_MAX &&
+    imprintChamber.trim().length <= IMPRINT_CHAMBER_MAX &&
+    imprintSupervisoryAuthority.trim().length <= IMPRINT_AUTHORITY_MAX
+
+  return (
+    imprintEmailOk &&
+    imprintPhoneOk &&
+    imprintRepresentedByOk &&
+    imprintOptionalOk
+  )
+}, [
+  isPrivatePerson,
   imprintEmail,
   imprintPhone,
   imprintRepresentedBy,
@@ -746,7 +784,6 @@ return (
   imprintChamber,
   imprintSupervisoryAuthority,
 ])
-
 
   /* (NEU) Eigener Reviews-Link aus dem Benutzernamen ableiten */
   const myReviewsHref = useMemo(() => {
@@ -840,7 +877,7 @@ return (
       required
       inputMode="text"
       className={styles.input}
-      pattern="\d{1,3}[a-z]?"
+      pattern="[0-9]{1,3}[a-z]?"
       title="z. B. 12a (max. 3 Ziffern + 1 Kleinbuchstabe)"
       placeholder="z. B. 12a"
       autoComplete="address-line2"
@@ -859,7 +896,7 @@ return (
       required
       inputMode="numeric"
       className={styles.input}
-      pattern="\d{1,5}"
+      pattern="[0-9]{1,5}"
       maxLength={ZIP_MAX}
       placeholder="PLZ"
     />
@@ -939,7 +976,7 @@ return (
           <div className={styles.inputGroup}>
             <button
             type="button"
-            onClick={handleSave}
+            onClick={handleSaveKonto}
             className={styles.saveButton}
             disabled={!canSaveKonto}
             aria-disabled={!canSaveKonto}
@@ -950,7 +987,7 @@ return (
           {!canSaveKonto && (
   <small style={{ color: '#6b7280' }}>
     Prüfe Straße, Hausnr., PLZ, Ort und Land
-    {!isPrivatePerson && ' sowie Firmenname, USt-ID und Verkäufer-Impressum.'}
+    {!isPrivatePerson && ' sowie Firmenname und USt-ID.'}
   </small>
 )}
 
@@ -1089,14 +1126,20 @@ return (
 
       <div className={styles.inputGroup}>
         <button
-          type="button"
-          onClick={handleSave}
-          className={styles.saveButton}
-          disabled={!canSaveKonto}
-          aria-disabled={!canSaveKonto}
-        >
-          Impressum speichern
-        </button>
+  type="button"
+  onClick={handleSaveImpressum}
+  className={styles.saveButton}
+  disabled={!canSaveImpressum}
+  aria-disabled={!canSaveImpressum}
+  title={!canSaveImpressum ? 'Bitte alle Pflichtfelder korrekt ausfüllen' : undefined}
+>
+  Impressum speichern
+</button>
+{!canSaveImpressum && (
+  <small style={{ color: '#6b7280' }}>
+    Prüfe Impressums-E-Mail, Telefon und Vertreten durch / Inhaber.
+  </small>
+)}
       </div>
     </form>
   </div>
