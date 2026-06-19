@@ -531,7 +531,7 @@ const Register = () => {
                   onChange={handleInputChange}
                   required
                   inputMode="numeric"
-                  pattern="\\d{1,5}"
+                  pattern="[0-9]{1,5}"
                   maxLength={5}
                 />
                 {errors.zip && <p className={styles.error}>{errors.zip}</p>}
@@ -583,7 +583,7 @@ const Register = () => {
                     onChange={handleInputChange}
                     required
                     inputMode="numeric"
-                    pattern="\\d{1,5}"
+                    pattern="[0-9]{1,5}"
                     maxLength={5}
                   />
                   {errors.zip && <p className={styles.error}>{errors.zip}</p>}
