@@ -18,7 +18,7 @@ export default function Nutzungsbedingungen() {
         <h2 className={styles.sectionTitle}>1. Geltungsbereich</h2>
         <p className={styles.text}>
           Diese Nutzungsbedingungen regeln die Nutzung der Plattform{" "}
-          <strong>BeschichterScout</strong>, betrieben durch{" "}
+          <strong>Beschichter Scout</strong>, betrieben durch{" "}
           <strong>Martin Zajac, Einzelunternehmer</strong>, durch
           registrierte und nicht registrierte Nutzer. Mit der Nutzung der
           Plattform erkennen Sie diese Bedingungen als verbindlich an.
@@ -55,7 +55,7 @@ export default function Nutzungsbedingungen() {
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>4. Rolle des Plattformbetreibers</h2>
         <p className={styles.text}>
-          BeschichterScout stellt eine digitale Plattform zur Verfügung, über die
+          Beschichter Scout stellt eine digitale Plattform zur Verfügung, über die
           Nutzer Beschichtungsaufträge, Lackanfragen, Angebote und sonstige
           plattformbezogene Inhalte einstellen, suchen und abwickeln können. Der
           Plattformbetreiber wird grundsätzlich nicht selbst Vertragspartner der

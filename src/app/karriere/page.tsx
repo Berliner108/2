@@ -29,7 +29,7 @@ const KarrierePage = () => {
       <div className={styles.highlight}>
   	      Engagierte Menschen, die gemeinsam mit uns an zukunftsweisenden Lösungen arbeiten und Innovationen vorantreiben möchten, finden bei uns garantiert den passenden Platz.
       </div>
-      <p className={styles.ceo}>Martin Zajac, CEO</p>
+      <p className={styles.ceo}>Martin Zajac, Inhaber</p>
 
 
       <section className={styles.jobs}>

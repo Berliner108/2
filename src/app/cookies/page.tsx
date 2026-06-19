@@ -1,89 +1,133 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link'; // Importiere Link
+import Link from 'next/link';
 import styles from './cookies.module.css';
-
 
 const CookiePage = () => {
   return (
     <div className={styles.container}>
-      <h1 className={styles.heading}>Cookie Richtlinie</h1>
+      <h1 className={styles.heading}>Cookie-Richtlinie</h1>
 
       <section className={styles.section}>
-        <h2 className={styles.subheading}>Informationen über unsere Verwendung von Cookies:</h2>
+        <h2 className={styles.subheading}>Informationen über unsere Verwendung von Cookies</h2>
         <p>
-        Unsere Website und Apps (unsere „Seite“) werden von Beschichter Scout betrieben, einem in Österreich registrierten Unternehmen mit Sitz in Seestraße 1, 
-        A-6900 Bregenz („Beschichter Scout“, „wir“, „uns“ oder „unser“). Die Seite verwendet Cookies, 
-        um Sie von anderen Nutzern zu unterscheiden. Dies hilft uns, Ihnen eine bessere Erfahrung beim Besuch unserer Seite zu bieten und unsere Website zu verbessern.
-        Wenn Sie Cookies, die von unserer Seite auf Ihrem Gerät gespeichert wurden, entfernen oder zukünftige Speicherung von Cookies durch unsere Seite verhindern 
-        möchten, können Sie dies jederzeit tun (siehe unten für weitere Informationen).
+          Unsere Website und Apps (unsere „Seite“) werden von Beschichter Scout,
+          betrieben durch Martin Zajac, Einzelunternehmer, Riedergasse 2,
+          A-6900 Bregenz, Österreich („Beschichter Scout“, „wir“, „uns“ oder
+          „unser“), betrieben. Die Seite verwendet Cookies und ähnliche
+          Technologien, um bestimmte Funktionen bereitzustellen, die Nutzung der
+          Seite zu ermöglichen und die Benutzerfreundlichkeit zu verbessern.
+        </p>
+        <p>
+          Cookies helfen uns beispielsweise dabei, Nutzer wiederzuerkennen,
+          Sitzungen aufrechtzuerhalten, Sicherheitseinstellungen zu speichern und
+          die Nutzung unserer Seite besser zu verstehen. Wenn Sie Cookies, die
+          von unserer Seite auf Ihrem Gerät gespeichert wurden, entfernen oder
+          die zukünftige Speicherung verhindern möchten, können Sie dies
+          jederzeit über Ihre Browser-Einstellungen tun.
         </p>
       </section>
-      
+
       <section className={styles.section}>
         <h2 className={styles.subheading}>Was sind Cookies?</h2>
         <p>
-        Ein Cookie ist eine kleine Datei mit Buchstaben und Zahlen, die – mit Ihrer Zustimmung – auf Ihrem Browser oder der Festplatte Ihres Computers gespeichert wird. Cookies enthalten Informationen, die auf die Festplatte Ihres Computers übertragen werden.
+          Ein Cookie ist eine kleine Textdatei, die auf Ihrem Gerät gespeichert
+          wird, wenn Sie eine Website besuchen. Cookies enthalten Informationen,
+          die dazu dienen können, Ihren Browser bei einem späteren Besuch wieder
+          zu erkennen oder bestimmte Funktionen der Website zu ermöglichen.
+        </p>
 
-        Wir verwenden folgende Arten von Cookies:</p>
         <p><b>1. Unbedingt erforderliche Cookies</b></p>
         <p>
-        Diese Cookies sind für den Betrieb unserer Seite erforderlich. Dazu gehören z. B. Cookies, die es Ihnen ermöglichen, sich in geschützte Bereiche unserer 
-        Seite einzuloggen oder elektronische Rechnungsdienste zu nutzen. Wir benötigen für diese Cookies keine Zustimmung. Sie können diese Cookies möglicherweise 
-        in Ihren Geräteeinstellungen oder im Browser blockieren, aber dadurch könnte unsere Seite nicht mehr ordnungsgemäß funktionieren.
+          Diese Cookies sind für den Betrieb unserer Seite erforderlich. Dazu
+          gehören insbesondere Cookies, die für Login-Funktionen, Sicherheit,
+          Sitzungsverwaltung, Warenkorb- oder Zahlungsfunktionen sowie für
+          grundlegende technische Abläufe notwendig sind. Für diese Cookies ist
+          keine gesonderte Einwilligung erforderlich. Sie können diese Cookies
+          zwar in Ihrem Browser blockieren, jedoch kann die Seite dann
+          möglicherweise nicht mehr ordnungsgemäß funktionieren.
         </p>
-        <p><b>2. Nicht unbedingt erforderliche Cookies</b></p>
-        <p><b>Analytische/Performance-Cookies</b></p>
-        <p>Diese Cookies helfen uns, Besucher zu erkennen und zu zählen sowie deren Nutzung unserer Seite nachzuvollziehen. Dadurch können wir die Funktionalität der 
-          Website verbessern, beispielsweise indem wir sicherstellen, dass Nutzer die gesuchten Informationen leicht finden. Zudem nutzen wir diese Cookies, um 
-          Statistiken über Besucherzahlen, genutzte Technologien (z. B. Mac oder Windows), Verweildauer auf der Seite und betrachtete Seiten zu erfassen. Das hilft uns, 
-          unsere Website kontinuierlich zu optimieren.
-        </p>
-        <p><b>Funktions-Cookies</b></p>
-        <p>Diese Cookies erkennen Sie, wenn Sie auf unsere Seite zurückkehren. Dadurch können wir Inhalte für Sie personalisieren, Sie mit Ihrem Namen begrüßen und Ihre 
-          Einstellungen (z. B. bevorzugte Sprache oder Region) speichern.
-        </p>
-        <p><b>Targeting-Cookies</b></p>
-        <p>Diese Cookies speichern Informationen über Ihren Besuch auf unserer Seite, besuchte Seiten und angeklickte Links. Diese Daten nutzen wir (und Drittanbieter), 
-          um Ihnen relevantere Inhalte und Werbung anzuzeigen. Wir können diese Informationen auch mit Dritten zu diesem Zweck teilen.
-        </p>
-        <p><b>Cookies sozialer Netzwerke</b></p>
-        <p>Damit Sie Inhalte leicht „liken“ oder teilen können, haben wir auf unserer Seite Schaltflächen für soziale Netzwerke wie Facebook und Twitter integriert. 
-          Diese Cookies werden von den jeweiligen sozialen Netzwerken gesetzt, darunter: Facebook, Twitter, LinkedIn, Xing, Youtube, Tiktok</p>
-        <p>
-         Die Datenschutzrichtlinien dieser sozialen Netzwerke bestimmen, welche Daten gesammelt und wie sie verwendet werden. Weitere Informationen hierzu finden Sie in den jeweiligen Datenschutz- und Cookie-Richtlinien der Anbieter.
 
-         Bitte beachten Sie, dass auch Drittanbieter wie Werbenetzwerke oder Dienstleister für Web-Traffic-Analysen Cookies verwenden können, auf die wir keinen Einfluss haben. Diese sind meist analytische oder Targeting-Cookies.
+        <p><b>2. Nicht unbedingt erforderliche Cookies</b></p>
+
+        <p><b>Analyse-/Performance-Cookies</b></p>
+        <p>
+          Diese Cookies helfen uns zu verstehen, wie Besucher unsere Seite
+          nutzen. Dadurch können wir beispielsweise erkennen, welche Seiten
+          besonders häufig besucht werden, wo technische Probleme auftreten oder
+          wie wir die Benutzerführung verbessern können. Solche Cookies werden
+          nur eingesetzt, wenn Sie zuvor eingewilligt haben.
         </p>
-        
+
+        <p><b>Funktions-Cookies</b></p>
+        <p>
+          Diese Cookies ermöglichen zusätzliche Funktionen und Komfortmerkmale,
+          etwa das Speichern von Einstellungen wie Sprache, Region oder
+          bevorzugten Anzeigeoptionen. Auch diese Cookies werden nur gesetzt,
+          soweit dies erforderlich ist oder Sie eingewilligt haben.
+        </p>
+
+        <p><b>Marketing- und Targeting-Cookies</b></p>
+        <p>
+          Diese Cookies können verwendet werden, um Ihnen relevantere Inhalte
+          oder Werbung anzuzeigen und die Wirksamkeit von Werbemaßnahmen zu
+          messen. Solche Cookies werden nur eingesetzt, wenn Sie zuvor
+          eingewilligt haben.
+        </p>
+
+        <p><b>Cookies von Drittanbietern</b></p>
+        <p>
+          Auf unserer Seite können Dienste von Drittanbietern eingebunden sein,
+          zum Beispiel Zahlungsanbieter, Analyse-Dienste, Karten, Videos oder
+          soziale Netzwerke. Dabei können Drittanbieter eigene Cookies setzen
+          oder ähnliche Technologien verwenden. Auf diese Cookies haben wir
+          teilweise keinen direkten Einfluss. Es gelten zusätzlich die
+          Datenschutz- und Cookie-Richtlinien der jeweiligen Anbieter.
+        </p>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.subheading}>Cookies blockieren oder entfernen</h2>
         <p>
-        Sie können Cookies in Ihrem Browser blockieren oder löschen. Beachten Sie jedoch, dass das Deaktivieren aller Cookies (einschließlich essenzieller Cookies) 
-        dazu führen kann, dass Sie nicht mehr auf bestimmte Teile unserer Seite zugreifen können.
-
-        Unsere Seite nutzt auch Funktionen von Drittanbietern, z. B. eingebettete Videos von YouTube oder Vimeo. Wenn Sie alle Cookies deaktivieren, können solche 
-        Funktionen möglicherweise nicht mehr genutzt werden.
+          Sie können Cookies über die Einstellungen Ihres Browsers blockieren
+          oder löschen. Beachten Sie jedoch, dass das Deaktivieren aller Cookies,
+          insbesondere essenzieller Cookies, dazu führen kann, dass bestimmte
+          Funktionen der Seite nicht oder nur eingeschränkt nutzbar sind.
+        </p>
+        <p>
+          Zusätzlich können Sie Ihre Cookie-Einstellungen, sofern ein
+          Cookie-Banner oder Cookie-Einstellungsbereich bereitgestellt wird,
+          jederzeit dort ändern oder widerrufen.
         </p>
       </section>
 
       <section className={styles.section}>
         <h2 className={styles.subheading}>Weitere Informationen</h2>
         <p>
-          Falls Sie Fragen oder Anmerkungen zu unserer Cookie-Richtlinie oder deren Nutzung haben, können Sie unseren Datenschutzbeauftragten per E-Mail kontaktieren:  
-         <a href="mailto:cookies@beschichterscout.com" className={styles.mailLink}> cookies@beschichterscout.com.</a></p>
+          Weitere Informationen zur Verarbeitung personenbezogener Daten finden
+          Sie in unserer Datenschutzerklärung. Bei Fragen zu dieser
+          Cookie-Richtlinie oder zur Nutzung von Cookies können Sie uns per
+          E-Mail kontaktieren:
+          <a
+            href="mailto:kontakt@beschichterscout.com"
+            className={styles.mailLink}
+          >
+            {' '}kontakt@beschichterscout.com
+          </a>
+        </p>
       </section>
+
       <section className={styles.section}>
         <h2 className={styles.subheading}>Änderungen an dieser Cookie-Richtlinie</h2>
         <p>
-        Alle zukünftigen Änderungen an dieser Cookie-Richtlinie werden auf dieser Seite veröffentlicht. Zudem werden wir angemessene Maßnahmen ergreifen, um Sie über 
-        Aktualisierungen zu informieren, etwa durch ein Update unseres Cookie-Banners oder Pop-ups.
+          Wir behalten uns vor, diese Cookie-Richtlinie bei Bedarf anzupassen,
+          insbesondere wenn sich technische, rechtliche oder organisatorische
+          Änderungen ergeben. Die jeweils aktuelle Fassung wird auf dieser Seite
+          veröffentlicht.
         </p>
         <p>
-         Diese Richtlinie wurde zuletzt überprüft und aktualisiert: Juni 2025.
+          Diese Richtlinie wurde zuletzt überprüft und aktualisiert: Juni 2026.
         </p>
       </section>
 
@@ -97,4 +141,3 @@ const CookiePage = () => {
 };
 
 export default CookiePage;
-
