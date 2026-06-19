@@ -351,31 +351,80 @@
     width: 100%;
   }
 }
-
 /* Handy/Tablet quer */
 @media (max-width: 900px) and (orientation: landscape) {
   .container {
-    height: auto;
-    min-height: auto;
-    overflow-x: hidden;
+    flex-direction: row;
+    height: calc(100dvh - 56px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: 240px;
+    max-width: 240px;
+    height: 100%;
+    overflow-y: auto;
+    border-radius: 0;
+    padding: 1rem;
+    flex-shrink: 0;
+  }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
   }
 
   .chatWrapper {
-    min-height: calc(100dvh - 80px);
-    padding-bottom: 1.5rem;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chatWrapper h1 {
+    font-size: 1.15rem;
+    margin: 0 0 0.5rem 0;
+    flex-shrink: 0;
   }
 
   .messageList {
-    min-height: 260px;
+    flex: 1 1 auto;
+    min-height: 0;
     max-height: none;
-    flex: 1;
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .inputWrapper {
+    flex-direction: row;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .textInput {
+    width: auto;
+    min-height: 52px;
+    height: 52px;
+  }
+
+  .sendButton {
+    width: auto;
+    min-width: 105px;
+    height: 52px;
   }
 
   .chatExtras {
-    margin-top: 0.5rem;
-  }
-
-  .notice {
-    font-size: 0.78rem;
+    display: none;
   }
 }
