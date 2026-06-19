@@ -25,6 +25,7 @@ type ShopOrder = {
   stock_reverted: boolean;
 
   stripe_payment_intent_id: string | null;
+  stripe_charge_id: string | null;
 };
 
 type Article = {
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
   const loadOrder = async (orderId: string) => {
     const { data, error } = await admin
       .from("shop_orders")
-      .select("id,status,paid_at,refunded_at,released_at,article_id,unit,qty,stock_adjusted,stock_reverted,stripe_payment_intent_id")
+      .select("id,status,paid_at,refunded_at,released_at,article_id,unit,qty,stock_adjusted,stock_reverted,stripe_payment_intent_id,stripe_charge_id")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -194,45 +195,62 @@ export async function POST(req: Request) {
   try {
     // ✅ 1) Zahlung erfolgreich -> paid + Bestand abziehen
     if (event.type === "payment_intent.succeeded") {
-      const pi = event.data.object as Stripe.PaymentIntent;
-      const orderId = (pi.metadata?.shop_order_id as string | undefined) ?? null;
-      if (!orderId) return NextResponse.json({ ok: true, skipped: "missing_order_id" });
+  const pi = event.data.object as Stripe.PaymentIntent;
 
-      const order = await loadOrder(orderId);
-      if (!order) return NextResponse.json({ ok: true, skipped: "order_not_found" });
+  const chargeId =
+    typeof pi.latest_charge === "string"
+      ? pi.latest_charge
+      : pi.latest_charge?.id ?? null;
 
-      // paid setzen (nur aus payment_pending, idempotent)
-      if (order.status === "payment_pending" && !order.paid_at) {
-        const { error: payErr } = await admin
-          .from("shop_orders")
-          .update({
-            status: "paid",
-            paid_at: nowIso,
-            stripe_payment_intent_id: pi.id,
-            updated_at: nowIso,
-          })
-          .eq("id", orderId)
-          .in("status", ["payment_pending"])
-          .is("paid_at", null);
+  const orderId = (pi.metadata?.shop_order_id as string | undefined) ?? null;
+  if (!orderId) return NextResponse.json({ ok: true, skipped: "missing_order_id" });
 
-        if (payErr) return NextResponse.json({ error: payErr.message }, { status: 500 });
-      } else if (!order.stripe_payment_intent_id) {
-        // PI nachpflegen, falls leer
-        const { error: piErr } = await admin
-          .from("shop_orders")
-          .update({ stripe_payment_intent_id: pi.id, updated_at: nowIso })
-          .eq("id", orderId)
-          .is("stripe_payment_intent_id", null);
+  const order = await loadOrder(orderId);
+  if (!order) return NextResponse.json({ ok: true, skipped: "order_not_found" });
 
-        if (piErr) return NextResponse.json({ error: piErr.message }, { status: 500 });
-      }
+  // paid setzen (nur aus payment_pending, idempotent)
+  if (order.status === "payment_pending" && !order.paid_at) {
+    const { error: payErr } = await admin
+      .from("shop_orders")
+      .update({
+        status: "paid",
+        paid_at: nowIso,
+        stripe_payment_intent_id: pi.id,
+        stripe_charge_id: chargeId,
+        updated_at: nowIso,
+      })
+      .eq("id", orderId)
+      .eq("status", "payment_pending")
+      .is("paid_at", null);
 
-      // Bestand abziehen (nur 1x)
-      await adjustStock(order);
+    if (payErr) return NextResponse.json({ error: payErr.message }, { status: 500 });
+  } else if (!order.stripe_payment_intent_id || !order.stripe_charge_id) {
+    // PI / Charge nachpflegen, falls leer
+    const patch: any = {
+      updated_at: nowIso,
+    };
 
-      return NextResponse.json({ ok: true, handled: "payment_intent.succeeded" });
+    if (!order.stripe_payment_intent_id) {
+      patch.stripe_payment_intent_id = pi.id;
     }
 
+    if (!order.stripe_charge_id && chargeId) {
+      patch.stripe_charge_id = chargeId;
+    }
+
+    const { error: piErr } = await admin
+      .from("shop_orders")
+      .update(patch)
+      .eq("id", orderId);
+
+    if (piErr) return NextResponse.json({ error: piErr.message }, { status: 500 });
+  }
+
+  // Bestand abziehen (nur 1x)
+  await adjustStock(order);
+
+  return NextResponse.json({ ok: true, handled: "payment_intent.succeeded" });
+}
     // ✅ 2) Zahlung fehlgeschlagen -> ggf. gesamt-Reservierung freigeben
     if (event.type === "payment_intent.payment_failed") {
       const pi = event.data.object as Stripe.PaymentIntent;
