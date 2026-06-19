@@ -315,13 +315,13 @@ export async function POST(req: Request) {
       buyer_vat_number: buyerSnap.vat_number,
       buyer_address: buyerSnap.address,
       buyer_display_name: buyerDisplayName,
-
       seller_username: sellerSnap.username,
       seller_account_type: sellerSnap.account_type,
       seller_company_name: sellerSnap.company_name,
       seller_vat_number: sellerSnap.vat_number,
       seller_address: sellerSnap.address,
       seller_display_name: sellerDisplayName,
+      seller_imprint_snapshot: sellerImprintSnapshot,
     })
     .select("id")
     .single();
