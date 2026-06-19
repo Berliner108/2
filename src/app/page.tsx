@@ -84,18 +84,33 @@ const formatZustand = (z?: string) => {
 };
 
 /* ================= Delayed Skeleton (kein Flash) ================= */
-function useDelayedSkeleton(loading: boolean, hasData: boolean, delayMs = 220) {
-  const [show, setShow] = useState(false);
+/* ================= Minimum Skeleton (kein Weiß, kein Flackern) ================= */
+function useMinimumSkeleton(loading: boolean, minMs = 220) {
+  const [show, setShow] = useState(loading);
+  const startRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (hasData || !loading) {
-      setShow(false);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    if (loading) {
+      startRef.current = Date.now();
+      setShow(true);
       return;
     }
-    setShow(false);
-    const t = setTimeout(() => setShow(true), delayMs);
-    return () => clearTimeout(t);
-  }, [loading, hasData, delayMs]);
+
+    const startedAt = startRef.current;
+    const elapsed = startedAt ? Date.now() - startedAt : minMs;
+    const remaining = Math.max(minMs - elapsed, 0);
+
+    timer = setTimeout(() => {
+      setShow(false);
+      startRef.current = null;
+    }, remaining);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading, minMs]);
 
   return show;
 }
@@ -370,9 +385,9 @@ useEffect(() => {
   };
 
   // ✅ Skeleton nur, wenn Laden wirklich dauert (kein Flash)
-  const showSkeletonAuftraege = useDelayedSkeleton(loadingAuftraege, auftraege.length > 0, 220);
-  const showSkeletonShop = useDelayedSkeleton(loadingShop, shopArtikel.length > 0, 220);
-  const showSkeletonLack = useDelayedSkeleton(loadingLack, lackanfragen.length > 0, 220);
+  const showSkeletonAuftraege = useMinimumSkeleton(loadingAuftraege, 220);
+const showSkeletonShop = useMinimumSkeleton(loadingShop, 220);
+const showSkeletonLack = useMinimumSkeleton(loadingLack, 220);
 
   return (
     <>

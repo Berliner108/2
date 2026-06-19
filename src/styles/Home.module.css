@@ -475,25 +475,6 @@
   }
 }
 /* ---------- Skeleton Cards ---------- */
-.skelCard {
-  flex: 0 0 clamp(240px, 28vw, 320px);
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
-  overflow: hidden;
-  min-height: 400px; /* hält die Höhe stabil */
-  margin-top: 20px;
-  margin-bottom: 20px;
-  max-width: 210px;
-}
-
-.skelImg {
-  height: 160px;
-  background: #f1f5f9;
-}
 
 .skelBody {
   padding: 12px;
@@ -567,7 +548,7 @@
 }
 
 .skelCardAuftrag {
-  height: 660px;
+  height: 530px;
 }
 
 .skelCardShop {
