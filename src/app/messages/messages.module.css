@@ -3,7 +3,7 @@
 .container,
 .sidebar,
 .content,
-.chatPage
+.chatPage,
 .chatWrapper,
 .inputWrapper,
 .textInput,
@@ -365,65 +365,83 @@
 @media (orientation: landscape) and (max-height: 600px) {
   .container {
     flex-direction: row;
-    height: calc(100dvh - 56px);
-    min-height: 0;
-    overflow: hidden;
+    height: auto;
+    min-height: calc(100dvh - 72px);
+    overflow-x: hidden;
+    overflow-y: visible;
+    padding-top: 72px;
   }
 
   .sidebar {
-    width: 240px;
-    max-width: 240px;
-    height: 100%;
+    width: 220px;
+    max-width: 220px;
+    height: auto;
+    min-height: calc(100dvh - 72px);
     overflow-y: auto;
     border-radius: 0;
-    padding: 1rem;
+    padding: 0.75rem;
     flex-shrink: 0;
+  }
+
+  .sidebar h2 {
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .sidebar li {
+    margin-bottom: 0.65rem;
   }
 
   .content {
     flex: 1;
     min-width: 0;
-    height: 100%;
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
   }
 
   .chatPage {
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
+    flex: 1;
+    height: auto;
+    min-height: calc(100dvh - 72px);
+    overflow: visible;
   }
 
   .chatWrapper {
-    height: 100%;
-    min-height: 0;
+    height: auto;
+    min-height: calc(100dvh - 72px);
     max-height: none;
-    overflow: hidden;
-    padding: 0.65rem 1rem;
+    overflow: visible;
+    padding: 0.65rem 0.85rem 1.25rem;
     display: flex;
     flex-direction: column;
   }
 
   .chatWrapper h1 {
-    font-size: 1.1rem;
-    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    margin: 0 0 0.45rem 0;
     flex-shrink: 0;
   }
 
   .messageList {
-    flex: 1 1 auto;
-    min-height: 0;
-    height: auto;
-    max-height: none;
+    flex: none;
+    height: 280px;
+    min-height: 280px;
+    max-height: 280px;
     overflow-y: auto;
     overflow-x: hidden;
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.5rem;
     padding: 0.65rem;
+  }
+
+  .messageItem {
+    max-width: 88%;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.9rem;
   }
 
   .inputWrapper {
     flex-direction: row;
     align-items: flex-end;
-    flex-shrink: 0;
     gap: 0.5rem;
     padding-top: 0.45rem;
   }
@@ -441,6 +459,16 @@
   }
 
   .chatExtras {
-    display: none;
+    display: flex;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .notice p {
+    line-height: 1.25;
+  }
+
+  .reportButton {
+    width: auto;
   }
 }
