@@ -235,7 +235,6 @@
 .sendButton:hover {
   background: linear-gradient(to right, #00b4d8,#00e5ff );
 }
-
 /* Responsive */
 @media (max-width: 768px) {
   .container {
@@ -276,6 +275,14 @@
 
   .inputWrapper {
     flex-direction: column;
+  }
+  .textInput {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inputWrapper {
+    width: 100%;
   }
 
   .sendButton {
