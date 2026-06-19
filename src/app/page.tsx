@@ -139,11 +139,26 @@ type ShopArtikel = {
 };
 
 /* ---------- Skeleton-Karten (Horizontalscroller) ---------- */
-function SkeletonRow({ cards = 12 }: { cards?: number }) {
+function SkeletonRow({
+  cards = 12,
+  variant = 'auftrag',
+}: {
+  cards?: number;
+  variant?: 'auftrag' | 'shop' | 'lack';
+}) {
   return (
     <>
       {Array.from({ length: cards }).map((_, i) => (
-        <div key={i} className={styles.skelCard}>
+        <div
+  key={i}
+  className={`${styles.skelCard} ${
+    variant === 'shop'
+      ? styles.skelCardShop
+      : variant === 'lack'
+        ? styles.skelCardLack
+        : styles.skelCardAuftrag
+  }`}
+>
           <div className={`${styles.skelImg} ${styles.skeleton}`} />
           <div className={styles.skelBody}>
             <div className={`${styles.skelLine} ${styles.skeleton} ${styles.w80}`} />
@@ -390,7 +405,7 @@ useEffect(() => {
                 style={loadingAuftraege ? { minHeight: 280 } : undefined}
               >
                 {showSkeletonAuftraege ? (
-                  <SkeletonRow cards={12} />
+                  <SkeletonRow cards={12} variant="auftrag" />
                 ) : (
                   auftraege.map((a) => (
                     <Link
@@ -450,7 +465,7 @@ useEffect(() => {
                 style={loadingShop ? { minHeight: 280 } : undefined}
               >
                 {showSkeletonShop ? (
-  <SkeletonRow cards={12} />
+  <SkeletonRow cards={12} variant="shop" />
 ) : (
   shopArtikel.map((art) => {
     const href = `/kaufen/artikel/${encodeURIComponent(String(art.id))}`;
@@ -534,33 +549,37 @@ const unitSuffix =
                 style={loadingLack ? { minHeight: 280 } : undefined}
               >
                 {showSkeletonLack ? (
-                  <SkeletonRow cards={12} />
-                ) : lackanfragen.length === 0 ? (
-                  <div className={styles.emptyState}>Keine Einträge gefunden.</div>
-                ) : (
-                  lackanfragen.map((anfrage) => (
-                    <Link key={anfrage.id} href={`/lackanfragen/artikel/${anfrage.id}`} className={styles.articleBox3}>
-                      <img
-                        src={anfrage.bilder?.[0] ?? '/images/platzhalter.jpg'}
-                        alt="Lackanfrage-Bild"
-                        className={styles.articleImg}
-                      />
-                      <div className={styles.articleText}>
-                        <h3>{anfrage.titel}</h3>
-                        <p><strong>Menge:</strong> {anfrage.menge} kg</p>
-                        <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
-                        <p><strong>Hersteller:</strong> {anfrage.hersteller || 'Alle'}</p>
-                        <p><strong>Farbtonbezeichnung:</strong> {anfrage.farbton || '—'}</p>
-                        <p><strong>Zustand:</strong> {formatZustand(anfrage.zustand) || '—'}</p>
-                        <p><strong>Kategorie:</strong> {anfrage.kategorie || '—'}</p>
-                        <p>
-                          <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-                          {anfrage.ort || '—'}
-                        </p>
-                      </div>
-                    </Link>
-                  ))
-                )}
+  <SkeletonRow cards={12} variant="lack" />
+) : loadingLack ? null : lackanfragen.length === 0 ? (
+  <div className={styles.emptyState}>Keine Einträge gefunden.</div>
+) : (
+  lackanfragen.map((anfrage) => (
+    <Link
+      key={anfrage.id}
+      href={`/lackanfragen/artikel/${anfrage.id}`}
+      className={styles.articleBox3}
+    >
+      <img
+        src={anfrage.bilder?.[0] ?? '/images/platzhalter.jpg'}
+        alt="Lackanfrage-Bild"
+        className={styles.articleImg}
+      />
+      <div className={styles.articleText}>
+        <h3>{anfrage.titel}</h3>
+        <p><strong>Menge:</strong> {anfrage.menge} kg</p>
+        <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
+        <p><strong>Hersteller:</strong> {anfrage.hersteller || 'Alle'}</p>
+        <p><strong>Farbtonbezeichnung:</strong> {anfrage.farbton || '—'}</p>
+        <p><strong>Zustand:</strong> {formatZustand(anfrage.zustand) || '—'}</p>
+        <p><strong>Kategorie:</strong> {anfrage.kategorie || '—'}</p>
+        <p>
+          <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+          {anfrage.ort || '—'}
+        </p>
+      </div>
+    </Link>
+  ))
+)}
               </div>
 
               <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLackanfragen, -1)}>
