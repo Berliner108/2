@@ -1,13 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap');
 
+.container,
+.sidebar,
+.content,
+.chatWrapper,
+.inputWrapper,
+.textInput,
+.messageList {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .container {
   display: flex;
-  height: 100vh; /* oder 100% je nach Struktur */
+  height: 100vh;
   width: 100%;
   font-family: 'Oswald', sans-serif;
   background: white;
-  
-  
+  overflow-x: hidden;
 }
 
 /* Sidebar bleibt links */
@@ -20,64 +30,17 @@
   flex-shrink: 0;
   border-top-right-radius: 8px;
   border-bottom-right-radius: 8px;
-  
 }
 
 .sidebar h2 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
-.chatExtras {
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #555;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  
-}
-
-.fileLabel {
-  font-weight: 500;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  
-}
-
-.fileInput {
-  margin-top: 0.25rem;
-}
-
-.notice p {
-  margin: 0;
-  line-height: 1.4;
-}
-
-.reportButton {
-  align-self: flex-start;
-  margin-top: 0.5rem;
-  background: transparent;
-  color: #cc0000;
-  border: 1px solid #cc0000;
-  border-radius: 4px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  
-}
-
-.reportButton:hover {
-  background: #cc0000;
-  color: white;
-}
 
 .sidebar ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  
 }
 
 .sidebar li {
@@ -87,6 +50,8 @@
 .sidebar a {
   color: white;
   text-decoration: none;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .activeLink {
@@ -95,6 +60,14 @@
 }
 
 /* Chatbereich */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
 .chatWrapper {
   flex: 1;
   display: flex;
@@ -102,48 +75,10 @@
   padding: 1.5rem;
   background: #fff;
   height: 100%;
-  max-height: 100%; /* Falls nötig */
+  max-height: 100%;
   overflow: hidden;
   box-sizing: border-box;
-}
-.filePreview {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  margin-bottom: 10px;
-  background-color: #f0f0f0;
-  border-radius: 16px;
-  font-size: 14px;
-  color: #333;
-  max-width: 100%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.filePreview button {
-  background: transparent;
-  border: none;
-  color: #888;
-  font-weight: bold;
-  font-size: 18px;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  transition: color 0.2s ease;
-}
-
-.filePreview button:hover {
-  color: #e00;
-}
-
-
-.content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;  
-  box-sizing: border-box;
-  
-  
+  min-width: 0;
 }
 
 .chatWrapper h1 {
@@ -156,6 +91,7 @@
 .messageList {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid #ddd;
   padding: 1rem;
   border-radius: 8px;
@@ -164,7 +100,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  
+  min-width: 0;
 }
 
 /* Nachrichten-Stil */
@@ -174,7 +110,14 @@
   border-radius: 12px;
   position: relative;
   word-break: break-word;
+  overflow-wrap: anywhere;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  min-width: 0;
+}
+
+.messageItem a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .messageLeft {
@@ -203,7 +146,8 @@
   align-items: flex-end;
   padding-top: 0.5rem;
   border-top: 1px solid #ccc;
-  
+  width: 100%;
+  min-width: 0;
 }
 
 .textInput {
@@ -216,7 +160,7 @@
   resize: none;
   overflow: hidden;
   font-family: 'Oswald', sans-serif;
-  
+  min-width: 0;
 }
 
 .sendButton {
@@ -230,63 +174,208 @@
   transition: background 0.3s ease;
   height: 60px;
   font-family: 'Oswald', sans-serif;
+  flex-shrink: 0;
 }
 
 .sendButton:hover {
-  background: linear-gradient(to right, #00b4d8,#00e5ff );
+  background: linear-gradient(to right, #00b4d8, #00e5ff);
 }
-/* Responsive */
+
+/* Datei-Vorschau */
+.filePreview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  background-color: #f0f0f0;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #333;
+  max-width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-wrap: anywhere;
+}
+
+.filePreview button {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.filePreview button:hover {
+  color: #e00;
+}
+
+/* Extras */
+.chatExtras {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fileLabel {
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fileInput {
+  margin-top: 0.25rem;
+  max-width: 100%;
+}
+
+.notice p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.reportButton {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  background: transparent;
+  color: #cc0000;
+  border: 1px solid #cc0000;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: 'Oswald', sans-serif;
+}
+
+.reportButton:hover {
+  background: #cc0000;
+  color: white;
+}
+
+/* Mobile */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
     height: auto;
     min-height: auto;
+    overflow-x: hidden;
   }
 
   .content {
+    width: 100%;
+    max-width: 100%;
     min-height: auto;
+    overflow-x: hidden;
   }
 
   .sidebar {
     width: 100%;
+    max-width: 100%;
     height: auto;
     max-height: none;
     border-radius: 0;
+    box-sizing: border-box;
   }
 
   .chatWrapper {
+    width: 100%;
+    max-width: 100%;
     height: auto;
     min-height: auto;
     max-height: none;
     overflow: visible;
     padding: 1rem;
     padding-bottom: 4rem;
+    box-sizing: border-box;
+  }
+
+  .chatWrapper h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
   }
 
   .messageList {
-    flex: none;
-    max-height: 55vh;
+    width: 100%;
+    max-width: 100%;
+    flex: 1;
+    min-height: 320px;
+    max-height: none;
     overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .messageItem {
     max-width: 90%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .inputWrapper {
     flex-direction: column;
-  }
-  .textInput {
     width: 100%;
-    box-sizing: border-box;
+    max-width: 100%;
+    align-items: stretch;
   }
 
-  .inputWrapper {
+  .textInput {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .sendButton {
     width: 100%;
     height: 50px;
+  }
+
+  .chatExtras {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .fileInput {
+    width: 100%;
+  }
+
+  .reportButton {
+    width: 100%;
+  }
+}
+
+/* Handy/Tablet quer */
+@media (max-width: 900px) and (orientation: landscape) {
+  .container {
+    height: auto;
+    min-height: auto;
+    overflow-x: hidden;
+  }
+
+  .chatWrapper {
+    min-height: calc(100dvh - 80px);
+    padding-bottom: 1.5rem;
+  }
+
+  .messageList {
+    min-height: 260px;
+    max-height: none;
+    flex: 1;
+  }
+
+  .chatExtras {
+    margin-top: 0.5rem;
+  }
+
+  .notice {
+    font-size: 0.78rem;
   }
 }
