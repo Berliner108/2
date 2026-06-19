@@ -137,10 +137,10 @@ const chatId = Array.isArray(rawChatId) ? rawChatId[0] : rawChatId;
     setSelectedFile(null);
   }
 
-  return (
-    <div className={styles.container}>
-      <div
-        className={styles.chatWrapper}
+return (
+  <div className={styles.chatPage}>
+    <div
+      className={styles.chatWrapper}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         style={{ position: 'relative' }}
