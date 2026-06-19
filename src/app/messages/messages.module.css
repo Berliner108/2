@@ -313,15 +313,17 @@
   }
 
   .messageList {
-    width: 100%;
-    max-width: 100%;
-    flex: 1;
-    min-height: 320px;
-    max-height: none;
-    overflow-y: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-  }
+  width: 100%;
+  max-width: 100%;
+  flex: none;
+  height: clamp(320px, 48dvh, 520px);
+  min-height: 0;
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
 
   .messageItem {
     max-width: 90%;
