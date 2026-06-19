@@ -240,15 +240,34 @@
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
+    height: auto;
+    min-height: auto;
+  }
+
+  .content {
+    min-height: auto;
   }
 
   .sidebar {
     width: 100%;
     height: auto;
+    max-height: none;
+    border-radius: 0;
   }
 
   .chatWrapper {
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
     padding: 1rem;
+    padding-bottom: 4rem;
+  }
+
+  .messageList {
+    flex: none;
+    max-height: 55vh;
+    overflow-y: auto;
   }
 
   .messageItem {
