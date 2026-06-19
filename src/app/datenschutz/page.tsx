@@ -11,12 +11,7 @@ const DatenschutzPage = () => {
       <h1 className={styles.heading}>Datenschutzerklärung</h1>
 
       <section className={styles.section}>
-        <h2 className={styles.subheading}>Verantwortlicher für die Datenverarbeitung ist:</h2>
-        <p>
-          BeschichterScout GmbH</p> 
-          <p>Seestraße 1</p>
-          <p>A-6900 Bregenz</p>
-          <p>datenschutz@beschichterscout.com</p>
+        
           <p>Wir freuen uns über Ihr Interesse an unserem Online-Portal. Der Schutz Ihrer Privatsphäre ist für uns sehr wichtig. 
               Wir behandeln Ihre personenbezogenen Daten
               vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.Nachstehend informieren wir Sie ausführlich über den Umgang mit Ihren Daten. 
@@ -138,7 +133,7 @@ const DatenschutzPage = () => {
 
           <p>Datenschutzbeauftragter:</p>
           <p>Martin Zajac</p>
-          <p>Seestraße 1</p>
+          <p>Riedergasse 2</p>
           <p>6900 Bregenz</p>
 
           <p>datenschutz@beschichterscout.com
