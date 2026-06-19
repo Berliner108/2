@@ -511,7 +511,7 @@ const Register = () => {
                 onChange={handleInputChange}
                 required
                 inputMode="text"
-                pattern="\\d{1,3}[a-z]?"
+                pattern="[0-9]{1,3}[a-z]?"
                 title="z. B. 12a (max. 3 Ziffern + optional 1 Kleinbuchstabe)"
                 autoComplete="address-line2"
               />
