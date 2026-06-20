@@ -546,7 +546,7 @@ const unitSuffix =
           </section>
 
           <div className={styles.imageContainer}>
-            <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
+            <img src="/images/sonderlacke.png" alt="Artikelbild" className={styles.articleImage} />
           </div>
 
           {/* Lackanfragen */}
