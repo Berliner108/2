@@ -678,16 +678,20 @@ const Register = () => {
       }}
     />
     <span>
-      Ich habe die{' '}
-      <Link href="/agb" target="_blank" rel="noopener noreferrer">
-        AGB
-      </Link>
-      , die{' '}
-      <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
-        Datenschutzerklärung
-      </Link>{' '}
-      und die Nutzungsbedingungen gelesen und akzeptiere diese.
-    </span>
+  Ich habe die{' '}
+  <Link href="/agb" target="_blank" rel="noopener noreferrer">
+    AGB
+  </Link>
+  , die{' '}
+  <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
+    Datenschutzerklärung
+  </Link>{' '}
+  und die{' '}
+  <Link href="/nutzungsbedingungen" target="_blank" rel="noopener noreferrer">
+    Nutzungsbedingungen
+  </Link>{' '}
+  gelesen und akzeptiere diese.
+</span>
   </label>
 
   {errors.termsAccepted && (
