@@ -289,6 +289,34 @@ useEffect(() => {
     Farbton und Besonderheiten vollständig angeben. Die gewünschte Erwartung an das
     Beschichtungsergebnis kann ebenfalls beschrieben werden.
   </li>
+  <li>
+  <strong>Zertifizierungen:</strong> Auftraggeber:innen können vor der Auftragsvergabe
+  benötigte Zertifizierungen, Normen oder Qualitätsanforderungen angeben.
+  Informationen zu möglichen Zertifizierungen sind unten bei den jeweiligen Verfahren zu finden.
+</li>
+
+<li>
+  <strong>Bewegliche Teile:</strong> Bewegliche, mehrteilige oder montierte Werkstücke
+  sollten unbedingt vorab beschrieben werden. Dazu gehören insbesondere Gelenke,
+  Scharniere, drehbare oder verschiebbare Bereiche, Hohlräume, verdeckte Flächen,
+  Lagerstellen oder Bauteile, die nicht beschichtet, verklebt, blockiert oder in ihrer
+  Funktion beeinträchtigt werden dürfen.
+</li>
+
+<li>
+  <strong>Kontaktier- und Aufhängestellen:</strong> Bei galvanischen, elektrolytischen
+  oder hängend ausgeführten Beschichtungsverfahren müssen Werkstücke kontaktiert
+  bzw. aufgehängt werden. Auftraggeber:innen sollten daher angeben, an welchen
+  Stellen Klammern, Haken, Aufhängungen oder Kontaktierungen zulässig sind.
+  An diesen Stellen können technisch bedingt sichtbare Spuren, unbeschichtete,
+  schwächer beschichtete oder optisch abweichende Bereiche entstehen.
+</li>
+
+<li>
+  <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
+  Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
+  Rost sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.
+</li>
 
   <li>
     <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
