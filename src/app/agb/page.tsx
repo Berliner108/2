@@ -837,9 +837,13 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>39. Gebühren</h2>
       <section className={styles.section}>
         <p>
+  Das Einstellen von Auftragsanfragen, Lackanfragen und Artikeln ist für Nutzer:innen bis auf Widerruf kostenlos.
+</p>
+        <p>
           Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom <strong>Brutto-Auftrags- bzw. Warenwert</strong> an.
           Gebühren werden transparent im Buchungsprozess ausgewiesen und können im Rahmen der Stripe-Zahlungsabwicklung berücksichtigt werden.
         </p>
+        
       </section>
 
       <h2 className={styles.subheading}>40. Rangfolge und Zusatzbedingungen</h2>

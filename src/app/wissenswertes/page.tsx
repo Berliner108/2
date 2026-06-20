@@ -265,16 +265,44 @@ useEffect(() => {
     <h2>Standardablauf & Vorbereitung</h2>
 
     <p className={styles.standardCompactIntro}>
-      Vor der Auftragsvergabe sollten alle Angaben vollständig, verständlich und korrekt gemacht werden.
+      Vor der Auftragsvergabe sollten alle Angaben vollständig, verständlich und korrekt gemacht werden um ein sauberes Beschichtungsergebnis erzielen zu können.
     </p>
 
     <ul className={styles.standardCompactList}>
-      <li><strong>Standardablauf:</strong> Abholung, Zustellung, Verpackung, Be- und Entladung, Bearbeitung und Termine angeben.</li>
-      <li><strong>Zeiten:</strong> Mo–Do 08:00–12:00 und 13:00–16:00 Uhr, Fr 08:00–12:00 Uhr. Abweichungen vorher vereinbaren.</li>
-      <li><strong>Logistik:</strong> Ladezeiten, Zufahrt, Stapler, Hebehilfen, Rampen oder zusätzliches Personal vorab mitteilen.</li>
-      <li><strong>Teilezustand:</strong> Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbton und Besonderheiten vollständig angeben.</li>
-      <li><strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke Öl-/Fettrückstände, Klebereste, Silikon oder Anhaftungen sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.</li>
-    </ul>
+  <li>
+    <strong>Standardablauf:</strong> Abholung, Zustellung, Verpackung, Be- und Entladung,
+    Bearbeitung und Termine angeben.
+  </li>
+
+  <li>
+    <strong>Zeiten:</strong> Mo–Do 08:00–12:00 und 13:00–16:00 Uhr, Fr 08:00–12:00 Uhr.
+    Abweichungen vorher vereinbaren.
+  </li>
+
+  <li>
+    <strong>Logistik:</strong> Ladezeiten, Zufahrt, Stapler, Hebehilfen, Rampen oder zusätzliches
+    Personal vorab mitteilen.
+  </li>
+
+  <li>
+    <strong>Teilezustand:</strong> Stückzahlen, Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen,
+    Farbton und Besonderheiten vollständig angeben. Die gewünschte Erwartung an das
+    Beschichtungsergebnis kann ebenfalls beschrieben werden.
+  </li>
+
+  <li>
+    <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
+    Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
+    Rost sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.
+  </li>
+
+  <li>
+    <strong>Thermische Verfahren:</strong> Bei thermischen Verfahren wie Pulverbeschichten oder
+    Feuerverzinken ist darauf zu achten, dass die zu beschichtenden Teile der Hitzeeinwirkung
+    standhalten. Schweißnähte, Fügeflächen und kritische Stellen sollten sauber verarbeitet sein,
+    damit ein entsprechendes Beschichtungsergebnis erreicht werden kann.
+  </li>
+</ul>
 
     <p className={styles.standardCompactNotice}>
       Fehlende, falsche oder nachträglich geänderte Angaben können zu Verzögerungen oder Mehrkosten führen.
