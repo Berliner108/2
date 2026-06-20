@@ -296,13 +296,18 @@ useEffect(() => {
     </motion.article>
 
     <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.15 }} viewport={{ once: true }}>
-      <span className={styles.standardNumber}>04</span>
-      <h3>Mehrkosten vermeiden</h3>
-      <p>
-        Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbtonangaben,
-        Spezifikationen, Beschädigungen, Verschmutzungen oder Altbeschichtungen müssen vorab angegeben werden.
-      </p>
-    </motion.article>
+  <span className={styles.standardNumber}>04</span>
+  <h3>Mehrkosten vermeiden</h3>
+  <p>
+    Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbtonangaben,
+    Spezifikationen, Beschädigungen, Verschmutzungen oder Altbeschichtungen müssen vorab angegeben werden.
+    Die Teile werden standardmäßig vorbehandelt, z. B. entfettet, gegebenenfalls gebeizt und passiviert.
+    Um zusätzliche manuelle Reinigung und Mehrkosten zu vermeiden, dürfen die Teile nur oberflächlichen
+    Schmutz aufweisen. Fremdstoffe wie Späne, starke Öl- oder Fettrückstände, Klebereste, Silikon,
+    Dichtmassen oder sonstige Anhaftungen sind vorab so weit zu entfernen bzw. gering zu halten,
+    dass sie durch eine übliche Spritz- oder Tauchvorbehandlung ohne mechanische Sonderreinigung entfernt werden können.
+  </p>
+</motion.article>
   </div>
 
   <div className={styles.standardNotice}>
