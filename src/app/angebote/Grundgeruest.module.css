@@ -935,3 +935,20 @@
     transition: none !important;
   }
 }
+.standardHinweisZeile {
+  text-align: center;
+  margin: 1.4rem 0 0.7rem;
+}
+
+.standardHinweisLink {
+  display: inline-block;
+  color: #007a86;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.standardHinweisLink:hover {
+  color: #00b4d8;
+}

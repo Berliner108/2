@@ -1687,6 +1687,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             )}
           </AnimatePresence>
         </div>
+        <div className={styles.standardHinweisZeile}>
+  <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
+    Was muss ich bei der Auftragsvergabe beachten?
+  </a>
+</div>
 
                 <div style={{ textAlign: 'center' }}>
           <button
