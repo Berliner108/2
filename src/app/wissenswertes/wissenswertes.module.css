@@ -314,3 +314,35 @@
 
 
 }
+.content h3 {
+  font-size: 1.35rem;
+  margin-top: 1.6rem;
+  margin-bottom: 0.6rem;
+  color: #1a1a1a;
+  font-weight: 700;
+  text-align: left;
+}
+
+.content ul {
+  margin: 0.8rem 0 1.2rem 1.4rem;
+  padding-left: 1rem;
+  text-align: left;
+}
+
+.content li {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .content h3 {
+    font-size: 1.15rem;
+    margin-top: 1.3rem;
+  }
+
+  .content li {
+    font-size: 16px;
+  }
+}
