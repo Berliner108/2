@@ -266,7 +266,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className={`${styles.content} ${styles.open}`}>
+      <div className={`${styles.content} ${styles.open} ${styles.standardContent}`}>
         <p>
           Damit ein Auftrag ohne Verzögerungen oder unnötige Mehrkosten abgewickelt werden kann,
           sollten Auftraggeber:innen den geplanten Standardablauf möglichst vollständig beschreiben.
