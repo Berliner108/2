@@ -254,75 +254,33 @@ useEffect(() => {
     <USPHighlights />
   </section>
 
-  <section className={styles.standardSection} id="standardablauf">
+  <section className={styles.standardCompactSection} id="standardablauf">
   <motion.div
-    className={styles.standardIntro}
-    initial={{ opacity: 0, y: 30 }}
+    className={styles.standardCompactBox}
+    initial={{ opacity: 0, y: 24 }}
     whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.7 }}
+    transition={{ duration: 0.5 }}
     viewport={{ once: true }}
   >
-    <span className={styles.standardBadge}>Vor dem Auftrag bitte unbedingt beachten</span>
+    <h2>Standardablauf & Vorbereitung</h2>
 
-    <h2 className={styles.standardTitle}>
-      Standardablauf & Vorbereitung
-    </h2>
+    <p className={styles.standardCompactIntro}>
+      Vor der Auftragsvergabe sollten alle Angaben vollständig, verständlich und korrekt gemacht werden.
+    </p>
 
-    <p className={styles.standardLead}>
-      Damit Auftragnehmer:innen und Lieferant:innen den Auftrag richtig planen können,
-      sollten alle wichtigen Angaben vorab vollständig, verständlich und korrekt gemacht werden.
+    <ul className={styles.standardCompactList}>
+      <li><strong>Standardablauf:</strong> Abholung, Zustellung, Verpackung, Be- und Entladung, Bearbeitung und Termine angeben.</li>
+      <li><strong>Zeiten:</strong> Mo–Do 08:00–12:00 und 13:00–16:00 Uhr, Fr 08:00–12:00 Uhr. Abweichungen vorher vereinbaren.</li>
+      <li><strong>Logistik:</strong> Ladezeiten, Zufahrt, Stapler, Hebehilfen, Rampen oder zusätzliches Personal vorab mitteilen.</li>
+      <li><strong>Teilezustand:</strong> Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbton und Besonderheiten vollständig angeben.</li>
+      <li><strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke Öl-/Fettrückstände, Klebereste, Silikon oder Anhaftungen sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.</li>
+    </ul>
+
+    <p className={styles.standardCompactNotice}>
+      Fehlende, falsche oder nachträglich geänderte Angaben können zu Verzögerungen oder Mehrkosten führen.
     </p>
   </motion.div>
 
-  <div className={styles.standardGrid}>
-    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} viewport={{ once: true }}>
-      <span className={styles.standardNumber}>01</span>
-      <h3>Standardablauf angeben</h3>
-      <p>
-        Beschreibe Abholung, Zustellung, Übergabe, Verpackung, Be- und Entladung,
-        gewünschte Bearbeitung, Liefer- oder Rückgabetermine, Unterlagen und besondere Anforderungen.
-      </p>
-    </motion.article>
-
-    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.05 }} viewport={{ once: true }}>
-      <span className={styles.standardNumber}>02</span>
-      <h3>Abhol- und Zustellzeiten</h3>
-      <p>
-        Standardzeiten sind Montag bis Donnerstag von 08:00 bis 12:00 Uhr und von
-        13:00 bis 16:00 Uhr sowie Freitag von 08:00 bis 12:00 Uhr.
-        Abweichende Zeiten müssen vorher vereinbart werden.
-      </p>
-    </motion.article>
-
-    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }} viewport={{ once: true }}>
-      <span className={styles.standardNumber}>03</span>
-      <h3>Be- und Entladung klären</h3>
-      <p>
-        Gib an, wie lange Be- und Entladen dauert und ob Stapler, Hebehilfen,
-        Rampen, Zufahrt, zusätzliches Personal oder besondere Sicherheitsmaßnahmen erforderlich sind.
-      </p>
-    </motion.article>
-
-    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.15 }} viewport={{ once: true }}>
-  <span className={styles.standardNumber}>04</span>
-  <h3>Mehrkosten vermeiden</h3>
-  <p>
-    Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbtonangaben,
-    Spezifikationen, Beschädigungen, Verschmutzungen oder Altbeschichtungen müssen vorab angegeben werden.
-    Die Teile werden standardmäßig vorbehandelt, z. B. entfettet, gegebenenfalls gebeizt und passiviert.
-    Um zusätzliche manuelle Reinigung und Mehrkosten zu vermeiden, dürfen die Teile nur oberflächlichen
-    Schmutz aufweisen. Fremdstoffe wie Späne, starke Öl- oder Fettrückstände, Klebereste, Silikon,
-    Dichtmassen oder sonstige Anhaftungen sind vorab so weit zu entfernen bzw. gering zu halten,
-    dass sie durch eine übliche Spritz- oder Tauchvorbehandlung ohne mechanische Sonderreinigung entfernt werden können.
-  </p>
-</motion.article>
-  </div>
-
-  <div className={styles.standardNotice}>
-    <strong>Wichtig:</strong> Fehlende, falsche oder nachträglich geänderte Angaben,
-    nicht eingehaltene Zeiten, fehlende Lademöglichkeiten, Wartezeiten oder Zusatzfahrten
-    können zu Verzögerungen oder Mehrkosten führen.
-  </div>
 </section>
       <div className={styles.pageContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
