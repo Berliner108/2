@@ -66,6 +66,7 @@ header {
     display: flex;
     justify-content: space-between;
     margin-top: 25px;
+    display: none;
   }  
   .socialLinks a {
     color: white;
