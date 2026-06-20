@@ -536,6 +536,27 @@ const AgbPage = () => {
     gesetzlich zulässig. Zwingende gesetzliche Rechte bleiben unberührt.
   </p>
 </section>
+<h2 className={styles.subheading}>20c. Standardablauf, Übergabezeiten und Mitwirkungspflichten</h2>
+<section className={styles.section}>
+  <p>
+    Auftraggeber:innen und Auftragnehmer:innen sind verpflichtet, alle für Abholung, Zustellung, Übergabe, Be- und Entladung
+    sowie Auftragsdurchführung relevanten Informationen vorab vollständig und wahrheitsgemäß mitzuteilen. Dazu gehören insbesondere
+    Übergabezeiten, Be- und Entladezeiten, Zufahrtsmöglichkeiten, Lademöglichkeiten, benötigte Hilfsmittel, Personalbedarf,
+    Verpackung, Zustand der Teile, besondere Anforderungen und abweichende Abläufe.
+  </p>
+
+  <p>
+    Standardmäßig sind Abholungen, Zustellungen und Übergaben – sofern nichts Abweichendes vereinbart wurde – Montag bis Donnerstag
+    von 08:00 bis 12:00 Uhr und von 13:00 bis 16:00 Uhr sowie Freitag von 08:00 bis 12:00 Uhr möglich. Abweichende Zeiten müssen
+    vorab ausdrücklich mit der Gegenpartei abgestimmt werden.
+  </p>
+
+  <p>
+    Werden vereinbarte oder angegebene Zeiten, Mitwirkungspflichten oder Übergabevoraussetzungen nicht eingehalten, können daraus
+    entstehende Wartezeiten, erfolglose Anfahrten, Zusatzfahrten, Lagerkosten, Verzögerungen oder sonstige Mehrkosten der verursachenden
+    Partei zugerechnet werden, soweit gesetzlich zulässig. Zwingende gesetzliche Rechte bleiben unberührt.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>21. Nutzungsrechte an Inhalten</h2>
       <section className={styles.section}>
