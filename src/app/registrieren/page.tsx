@@ -6,6 +6,7 @@ import styles from './register.module.css';
 import Image from 'next/image';
 import { Eye, EyeOff, Check } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
+import Link from 'next/link';
 
 const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
   <button
@@ -104,6 +105,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Resend Confirmation
   const [resending, setResending] = useState(false);
@@ -210,6 +212,10 @@ const Register = () => {
         newErrors.vatNumber = "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-').";
       }
     }
+    if (!termsAccepted) {
+  newErrors.termsAccepted =
+    'Bitte akzeptiere die AGB, Nutzungsbedingungen und Datenschutzerklärung.';
+}
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -655,6 +661,39 @@ const Register = () => {
               </div>
             </div>
           )}
+          <div className={styles.termsBox}>
+  <label className={styles.termsLabel}>
+    <input
+      type="checkbox"
+      checked={termsAccepted}
+      onChange={(e) => {
+        setTermsAccepted(e.target.checked);
+        if (e.target.checked) {
+          setErrors((prev) => {
+            const next = { ...prev };
+            delete next.termsAccepted;
+            return next;
+          });
+        }
+      }}
+    />
+    <span>
+      Ich habe die{' '}
+      <Link href="/agb" target="_blank" rel="noopener noreferrer">
+        AGB
+      </Link>
+      , die{' '}
+      <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
+        Datenschutzerklärung
+      </Link>{' '}
+      und die Nutzungsbedingungen gelesen und akzeptiere diese.
+    </span>
+  </label>
+
+  {errors.termsAccepted && (
+    <p className={styles.error}>{errors.termsAccepted}</p>
+  )}
+</div>
 
           <button type="submit" disabled={isLoading}>
             {isLoading ? <span className={styles.spinner}></span> : 'Registrieren'}

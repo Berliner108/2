@@ -7,6 +7,15 @@ const AgbPage = () => {
   return (
     <div className={styles.container}>
       <h1 className={styles.heading}>Allgemeine Geschäftsbedingungen (AGB)</h1>
+      <section className={styles.section}>
+  <p>
+    <strong>Stand:</strong> 20.06.2026
+  </p>
+  <p>
+    Diese AGB gelten ergänzend zum Impressum, zur Datenschutzerklärung sowie zu allen auf der Plattform
+    angezeigten Hinweisen im jeweiligen Buchungs-, Angebots- oder Kaufprozess.
+  </p>
+</section>
 
       {/* NEU: Überschriften / Auslegung */}
       <h2 className={styles.subheading}>0. Auslegung und Überschriften</h2>
@@ -26,6 +35,17 @@ const AgbPage = () => {
         </p>
         <p>Die Plattform richtet sich an Nutzer:innen in Deutschland (DE), Österreich (AT), der Schweiz (CH) und Liechtenstein (FL).</p>
       </section>
+      <h2 className={styles.subheading}>1a. Betreiber der Plattform und Kontakt</h2>
+<section className={styles.section}>
+  <p>
+    Betreiber der Plattform ist der im Impressum genannte Plattformbetreiber. Die jeweils aktuellen
+    Kontaktdaten, Unternehmensangaben und Pflichtinformationen sind im Impressum abrufbar.
+  </p>
+  <p>
+    Rechtlich relevante Mitteilungen an die Plattform sind über die im Impressum angegebene Kontaktadresse
+    zu richten, sofern auf der Plattform keine spezielle Funktion hierfür bereitgestellt wird.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>2. Rolle der Plattform</h2>
       <section className={styles.section}>
@@ -62,7 +82,14 @@ const AgbPage = () => {
           verpflichtet, missbräuchliche Nutzung oder Sicherheitsvorfälle (z. B. unbefugter Zugriff) unverzüglich zu melden und geeignete
           Maßnahmen (z. B. Passwortänderung) zu setzen.
         </p>
-      </section>
+        <p>
+          Der gewählte Benutzername muss sachlich, neutral und angemessen sein. Unzulässig sind insbesondere beleidigende,
+          diskriminierende, irreführende, anstößige, rechtswidrige oder fremde Rechte verletzende Benutzernamen sowie Namen,
+          die geeignet sind, eine falsche Identität, eine nicht bestehende Unternehmenszugehörigkeit oder eine offizielle
+          Stellung gegenüber der Plattform vorzutäuschen. Die Plattform kann solche Benutzernamen ändern, sperren oder die
+          Änderung durch den/die Nutzer:in verlangen.
+        </p>
+        </section>
 
       <h2 className={styles.subheading}>5. Nichtübertragbarkeit von Nutzerkonten</h2>
       <section className={styles.section}>
@@ -161,6 +188,21 @@ const AgbPage = () => {
           sperren oder dauerhaft schließen.
         </p>
       </section>
+      <h2 className={styles.subheading}>12a. Faires, redliches und gesetzeskonformes Verhalten</h2>
+<section className={styles.section}>
+  <p>
+    Nutzer:innen verpflichten sich zu einem fairen, redlichen und gesetzeskonformen Verhalten gegenüber der Plattform, anderen
+    Nutzer:innen sowie Dritten. Unzulässig sind insbesondere Täuschung, Betrug, Manipulation, missbräuchliche Nutzung der Plattform,
+    vorsätzlich falsche Angaben, Drohungen, Beleidigungen, diskriminierende Äußerungen, Einschüchterungen, unlautere Kontaktaufnahme
+    sowie jedes Verhalten, das geeignet ist, anderen Nutzer:innen, der Plattform oder Dritten zu schaden.
+  </p>
+  <p>
+    Die Plattform kann bei Verstößen Inhalte entfernen, Funktionen einschränken, Nutzerkonten vorübergehend oder dauerhaft sperren
+    und weitere Maßnahmen ergreifen. Bei schwerwiegenden Verstößen, Betrugsverdacht, rechtswidrigem Verhalten oder Schädigung der
+    Plattform oder anderer Nutzer:innen behält sich die Plattform vor, zivilrechtliche und strafrechtliche Schritte einzuleiten sowie
+    zuständige Behörden einzuschalten.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>13. Anbieterstatus, Preise und Pflichten</h2>
       <section className={styles.section}>
@@ -170,6 +212,59 @@ const AgbPage = () => {
           Rechnungslegung). Preise sind als Bruttopreise anzugeben, soweit gesetzlich erforderlich.
         </p>
       </section>
+      <h2 className={styles.subheading}>13a. Verkäuferangaben und Anbieter-Impressum</h2>
+<section className={styles.section}>
+  <p>
+    Gewerbliche Anbieter:innen sind verpflichtet, vor dem Einstellen von Angeboten oder vor der Annahme
+    von Aufträgen die erforderlichen Anbieter- und Impressumsangaben vollständig und wahrheitsgemäß zu
+    hinterlegen. Dazu zählen insbesondere Name/Firma, ladungsfähige Anschrift, Kontaktangaben sowie
+    – soweit erforderlich – Umsatzsteuer-Identifikationsnummer, Unternehmensregisterdaten und sonstige
+    gesetzliche Pflichtangaben.
+  </p>
+  <p>
+    Die Plattform kann gewerbliche Anbieter:innen daran hindern, Angebote einzustellen oder Zahlungen zu
+    empfangen, solange erforderliche Anbieterangaben fehlen, unvollständig oder offensichtlich unrichtig sind.
+  </p>
+  <p>
+    Private Nutzer:innen dürfen nicht als gewerbliche Anbieter:innen auftreten, wenn tatsächlich eine
+    gewerbliche Tätigkeit vorliegt. Für die korrekte Einstufung als privat oder gewerblich ist der jeweilige
+    Nutzer selbst verantwortlich.
+  </p>
+</section>
+<h2 className={styles.subheading}>13b. Zustand und Verwendung von Lacken und Beschichtungsmaterialien</h2>
+<section className={styles.section}>
+  <p>
+    Lacke, Pulverlacke und sonstige Beschichtungsmaterialien müssen unabhängig davon, ob sie als „neu und originalverpackt“,
+    „geöffnet und einwandfrei“ oder in einem vergleichbaren Zustand angeboten werden, in einem einwandfreien, verwendbaren
+    und gebrauchsfertigen Zustand sein. Die angebotenen Materialien dürfen insbesondere nicht unbrauchbar, verunreinigt,
+    unsachgemäß gelagert, falsch gekennzeichnet, überaltert oder in ihrer bestimmungsgemäßen Verwendung wesentlich beeinträchtigt sein.
+  </p>
+
+  <p>
+    „Gebrauchsfertig“ bedeutet, dass das Material grundsätzlich bestimmungsgemäß eingesetzt werden kann. Erforderliche übliche
+    Verarbeitungsschritte nach Herstellerangaben, wie z. B. Aufrühren, Temperieren, Filtern, Dosieren, Einstellen der Viskosität
+    oder die Verwendung geeigneter Härter, Verdünner, Additive oder sonstiger Systemkomponenten, bleiben davon unberührt, sofern sie
+    für das jeweilige Material üblich und korrekt angegeben sind.
+  </p>
+
+  <p>
+    Anbieter:innen sind verpflichtet, bekannte Einschränkungen, Lagerbedingungen, Haltbarkeitsangaben, Chargeninformationen,
+    angebrochene Gebinde, notwendige Systemkomponenten sowie sonstige für die sichere und sachgerechte Verwendung relevante Angaben
+    vollständig und wahrheitsgemäß im Angebot anzugeben.
+  </p>
+
+  <p>
+    Empfänger:innen bzw. Verwender:innen von Lacken, Pulverlacken oder sonstigen Beschichtungsmaterialien sind verpflichtet, vor der
+    Beschichtung von Werkstücken oder Serienteilen anhand eines geeigneten Testteils, Musters oder einer Probebeschichtung zu prüfen,
+    ob das Material für den vorgesehenen Einsatzzweck geeignet ist und ein einwandfreies Ergebnis liefert.
+  </p>
+
+  <p>
+    Unterbleibt eine angemessene Prüfung vor der Verwendung, können daraus entstehende Schäden, Fehlbeschichtungen, Ausschuss,
+    Nacharbeiten oder Folgekosten nicht ohne Weiteres dem/der Anbieter:in oder der Plattform zugerechnet werden, soweit gesetzlich
+    zulässig. Zwingende gesetzliche Rechte bleiben unberührt.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>14. Steuern, Rechnungen und Preisangaben</h2>
       <section className={styles.section}>
@@ -210,6 +305,25 @@ const AgbPage = () => {
           zumutbaren Rahmen zu bearbeiten, vereinbarte Leistungen/Waren ordnungsgemäß zu erbringen bzw. zu liefern und gesetzliche Pflichten
           einzuhalten.
         </p>
+        <h2 className={styles.subheading}>16. Pflichten von Käufer:innen und Anbieter:innen</h2>
+<section className={styles.section}>
+  <p>
+    Käufer:innen verpflichten sich, nur ernsthafte und verbindliche Beauftragungen/Käufe vorzunehmen, vereinbarte Zahlungen fristgerecht
+    zu leisten und im Rahmen der gesetzlichen Möglichkeiten an einer ordnungsgemäßen Abwicklung mitzuwirken (z. B. Erreichbarkeit,
+    Bereitstellung erforderlicher Informationen).
+  </p>
+  <p>
+    Anbieter:innen verpflichten sich, vollständige und wahrheitsgemäße Angaben zu ihren Angeboten zu machen, Anfragen und Aufträge im
+    zumutbaren Rahmen zu bearbeiten, vereinbarte Leistungen/Waren ordnungsgemäß zu erbringen bzw. zu liefern und gesetzliche Pflichten
+    einzuhalten.
+  </p>
+  <p>
+    Käufer:innen und Anbieter:innen wird empfohlen, sich während der gesamten Abwicklung durch geeignete Nachweise abzusichern.
+    Dazu zählen insbesondere Fotos vom Zustand der Ware, Werkstücke oder Verpackung, Versand- und Übergabenachweise,
+    Lieferscheine, Prüfprotokolle, Chatverläufe, Angebotsunterlagen, Rechnungen sowie Dokumentationen von Mängeln,
+    Beschädigungen oder Abweichungen. Solche Nachweise können im Streitfall zur Klärung des Sachverhalts beitragen.
+  </p>
+</section>
       </section>
 
       <h2 className={styles.subheading}>17. Vertragsabschluss und Verbindlichkeit</h2>
@@ -223,6 +337,60 @@ const AgbPage = () => {
           Bestimmungen. Die Plattform kann technische Möglichkeiten zur Stornierung bereitstellen, ist hierzu jedoch nicht verpflichtet.
         </p>
       </section>
+      <h2 className={styles.subheading}>17a. Weitervergabe von Beschichtungsaufträgen und Lackanfragen</h2>
+<section className={styles.section}>
+  <p>
+    Die Weitervergabe von Beschichtungsaufträgen, Lackanfragen oder damit verbundenen Teilleistungen an geeignete Dritte ist grundsätzlich
+    erlaubt, sofern zwischen Käufer:in und Anbieter:in nichts Abweichendes ausdrücklich vereinbart wurde und keine gesetzlichen,
+    vertraglichen oder vertraulichkeitsbezogenen Gründe entgegenstehen.
+  </p>
+  <p>
+    Der/die Anbieter:in bleibt gegenüber dem/der Käufer:in für die ordnungsgemäße Erfüllung des angenommenen Auftrags verantwortlich. Dies gilt
+    auch dann, wenn der Auftrag ganz oder teilweise durch Subunternehmer:innen, Partnerbetriebe oder sonstige Dritte ausgeführt wird.
+  </p>
+  <p>
+    Soweit für die Durchführung des Auftrags sensible Informationen, technische Zeichnungen, Dateien, personenbezogene Daten oder vertrauliche
+    Unterlagen weitergegeben werden, ist der/die Anbieter:in dafür verantwortlich, dass die Weitergabe rechtmäßig erfolgt und erforderliche
+    Vertraulichkeits-, Datenschutz- oder Geheimhaltungspflichten eingehalten werden.
+  </p>
+</section>
+<h2 className={styles.subheading}>17b. Weitergabe erforderlicher Daten an die Gegenpartei</h2>
+<section className={styles.section}>
+  <p>
+    Nutzer:innen erklären sich damit einverstanden, dass im Falle eines erfolgreichen Abschlusses über die Plattform die zur
+    Vertragsdurchführung erforderlichen Daten an die jeweilige Gegenpartei weitergegeben werden. Dies betrifft insbesondere
+    Name bzw. Unternehmensname, Kontakt- und Adressdaten, auftrags- oder kaufbezogene Angaben sowie sonstige Informationen,
+    die zur Abwicklung, Lieferung, Übergabe, Rechnungsstellung, Kommunikation oder Erfüllung gesetzlicher Pflichten erforderlich sind.
+  </p>
+  <p>
+    Die Weitergabe erfolgt ausschließlich, soweit sie für die Durchführung des jeweiligen Vertrags, die Abwicklung des Auftrags
+    oder Kaufs, die Kommunikation zwischen den Parteien oder zur Erfüllung gesetzlicher Pflichten erforderlich ist.
+  </p>
+  <p>
+    Die Gegenpartei darf die erhaltenen Daten nur zur Durchführung und Abwicklung des jeweiligen Vertrags verwenden. Eine darüber
+    hinausgehende Nutzung, Weitergabe oder Veröffentlichung der Daten ist untersagt, sofern keine gesetzliche Pflicht oder keine
+    ausdrückliche Einwilligung der betroffenen Person vorliegt.
+  </p>
+</section>
+<h2 className={styles.subheading}>17c. Rücktritt vor Beginn der Auftragsausführung</h2>
+<section className={styles.section}>
+  <p>
+    Auftragnehmer:innen akzeptieren, dass Auftraggeber:innen vor Beginn der Auftragsausführung vom Auftrag zurücktreten können,
+    sofern noch keine Ware, kein Werkstück und kein sonstiger Auftragsgegenstand an den/die Auftragnehmer:in übergeben,
+    versendet, abgeholt oder zur Bearbeitung freigegeben wurde und noch keine auftragsbezogenen Leistungen begonnen wurden.
+  </p>
+  <p>
+    Als Beginn der Auftragsausführung gilt insbesondere der Zeitpunkt der Warenübergabe, Warenabholung, Warenversendung,
+    Warenausgabe, Bereitstellung zur Bearbeitung oder der tatsächliche Beginn von Vorbereitungs-, Prüf-, Bearbeitungs-,
+    Beschichtungs-, Lackier- oder sonstigen auftragsbezogenen Leistungen.
+  </p>
+  <p>
+    Nach Beginn der Auftragsausführung ist ein grundloser Rücktritt durch den/die Auftraggeber:in ausgeschlossen, soweit keine
+    zwingenden gesetzlichen Rechte entgegenstehen. Rücktritte, Stornierungen, Reklamationen oder sonstige Ansprüche nach Beginn
+    der Auftragsausführung richten sich nach den gesetzlichen Bestimmungen, den Vereinbarungen zwischen den Parteien sowie den
+    auf der Plattform vorgesehenen Reklamations- und Abwicklungsprozessen.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>18. Definition: Lieferdatum</h2>
       <section className={styles.section}>
@@ -249,15 +417,60 @@ const AgbPage = () => {
           der Anzeige oder Übermittlung können eine Fristwahrung nicht ersetzen.
         </p>
       </section>
+      <h2 className={styles.subheading}>19a. Gesetzliche Bestimmungen und abweichende Plattformfristen</h2>
+<section className={styles.section}>
+  <p>
+    Soweit diese AGB, die Plattformprozesse oder die zwischen den Nutzer:innen getroffenen Vereinbarungen keine abweichenden
+    Regelungen enthalten, gelten die allgemeinen gesetzlichen Bestimmungen.
+  </p>
 
-      <h2 className={styles.subheading}>20. Versand, Übergabe und Transport</h2>
-      <section className={styles.section}>
-        <p>
-          Versand, Übergabe, Transport, Verpackung, Versicherung sowie Risiko- und Gefahrenübergang sind – soweit anwendbar – ausschließlich
-          Angelegenheit zwischen Käufer:in und Anbieter:in. Die Plattform übernimmt hierfür keine Verantwortung und haftet nicht für Schäden,
-          Verzögerungen oder Verlust im Zusammenhang mit Transport/Übergabe, soweit gesetzlich zulässig.
-        </p>
-      </section>
+  <p>
+    Nutzer:innen akzeptieren mit der Nutzung der Plattform, dass für bestimmte Plattformprozesse besondere Fristen und Abläufe gelten
+    können, insbesondere für Reklamationen, Rückerstattungen, Zahlungsfreigaben, Auszahlungen, Stornierungen, Nachbesserungen und
+    sonstige Abwicklungsprozesse.
+  </p>
+
+  <p>
+    Solche Plattformfristen gelten, soweit sie rechtlich zulässig sind und keine zwingenden gesetzlichen Rechte entgegenstehen.
+    Zwingende Verbraucherrechte, Gewährleistungsrechte, Widerrufsrechte oder sonstige zwingende gesetzliche Ansprüche bleiben
+    unberührt.
+  </p>
+
+  <p>
+    Insbesondere können Reklamationen, Zahlungsfreigaben und Auszahlungen nach den in diesen AGB genannten Fristen und den auf der
+    Plattform vorgesehenen Abläufen behandelt werden. Durch die Nutzung der Plattform erklären sich Nutzer:innen mit diesen
+    besonderen Fristen und Abläufen einverstanden.
+  </p>
+</section>
+
+      <h2 className={styles.subheading}>20. Versand, Übergabe, Abholung und Transport</h2>
+<section className={styles.section}>
+  <p>
+    Versand, Übergabe, Abholung, Zustellung, Transport, Verpackung, Versicherung sowie Risiko- und Gefahrenübergang sind – soweit
+    anwendbar – ausschließlich Angelegenheit zwischen Käufer:in und Anbieter:in. Die Plattform übernimmt hierfür keine Verantwortung
+    und haftet nicht für Schäden, Verzögerungen oder Verlust im Zusammenhang mit Transport, Abholung, Zustellung oder Übergabe,
+    soweit gesetzlich zulässig.
+  </p>
+
+  <p>
+    Auftraggeber:innen und Auftragnehmer:innen sind verpflichtet, bei vereinbarter Abholung oder Zustellung die Übergabe ordnungsgemäß
+    vorzubereiten und im zumutbaren Umfang beim Be- und Entladen mitzuwirken. Dazu gehört insbesondere, dass Ware, Werkstücke oder
+    sonstige Auftragsgegenstände zum vereinbarten Zeitpunkt zugänglich, transportbereit und sachgerecht verpackt oder bereitgestellt sind.
+  </p>
+
+  <p>
+    Ist eine Partei nicht in der Lage, beim Be- oder Entladen mitzuwirken oder sind besondere Hilfsmittel, Personal, Zufahrtsmöglichkeiten,
+    Hebezeuge, Stapler, Ladehilfen, Verpackungen oder Sicherheitsmaßnahmen erforderlich, muss dies der jeweils anderen Partei rechtzeitig
+    vor Abholung oder Zustellung mitgeteilt werden. Die abholende oder zustellende Partei muss dadurch die Möglichkeit erhalten, sich
+    organisatorisch und technisch darauf einzustellen.
+  </p>
+
+  <p>
+    Unterbleibt eine rechtzeitige Mitteilung über besondere Anforderungen oder fehlende Be- bzw. Entlademöglichkeiten, können daraus
+    entstehende Verzögerungen, Zusatzkosten, erfolglose Anfahrten, Schäden oder Mehraufwände der verursachenden Partei zugerechnet
+    werden, soweit gesetzlich zulässig.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>21. Nutzungsrechte an Inhalten</h2>
       <section className={styles.section}>
@@ -323,14 +536,40 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>26. Zahlungsabwicklung über Stripe</h2>
-      <section className={styles.section}>
-        <p>
-          Zahlungen erfolgen über den externen Zahlungsdienstleister Stripe. Die Zahlungsabwicklung (inkl. Rückerstattungen/Disputes) erfolgt
-          ausschließlich gemäß den Bedingungen von Stripe. Die Plattform verwaltet keine Gelder im eigenen Namen und trifft keine
-          Ermessensentscheidungen über den Geldfluss. Es besteht <strong>kein Treuhandverhältnis</strong> im rechtlichen Sinne.
-        </p>
-      </section>
+<h2 className={styles.subheading}>26. Zahlungsabwicklung über Stripe</h2>
+<section className={styles.section}>
+  <p>
+    Zahlungen erfolgen über den externen Zahlungsdienstleister Stripe. Nutzer:innen akzeptieren, dass Zahlungen
+    technisch über das Stripe-Zahlungssystem und je nach Zahlungsmodell über ein Plattform-Zahlungskonto bzw.
+    Plattformkonto abgewickelt werden können, bevor eine Auszahlung an Anbieter:innen oder eine Rückerstattung
+    an Käufer:innen erfolgt.
+  </p>
+
+  <p>
+    Die Zahlungsabwicklung einschließlich Zahlungsannahme, Rückerstattungen, Rückbuchungen, Streitfällen,
+    Auszahlungen und gegebenenfalls verzögerter Auszahlungen erfolgt nach den jeweils geltenden Bedingungen
+    und technischen Abläufen von Stripe sowie den auf der Plattform vorgesehenen Abwicklungsprozessen.
+  </p>
+
+  <p>
+    BeschichterScout entscheidet nicht frei oder willkürlich darüber, wem Gelder zustehen oder wohin Gelder
+    fließen. Auszahlungen, Rückerstattungen oder sonstige Zahlungsbewegungen werden ausschließlich nach Maßgabe
+    dieser AGB, der auf der Plattform vorgesehenen Prozesse, der dokumentierten Transaktionsdaten, der technischen
+    Möglichkeiten von Stripe sowie zwingender gesetzlicher Vorgaben ausgelöst.
+  </p>
+
+  <p>
+    Eine Auszahlung an Anbieter:innen kann nach Maßgabe dieser AGB und des jeweiligen Plattformprozesses erst nach
+    Bestätigung, Ablauf bestimmter Fristen oder Abschluss erforderlicher Prüfungen ausgelöst werden. Nutzer:innen
+    akzeptieren diesen Ablauf als Bestandteil der Nutzung der Plattform.
+  </p>
+
+  <p>
+    Die Plattform übernimmt keine eigenständige Zahlungsdienstleistung, keine Bankdienstleistung und keine rechtliche
+    Treuhandfunktion. Maßgeblich für die Zahlungsabwicklung sind ergänzend die Bedingungen des Zahlungsdienstleisters
+    Stripe.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>27. Auszahlung an Anbieter:innen</h2>
       <section className={styles.section}>
@@ -352,9 +591,16 @@ const AgbPage = () => {
           wird. Der Button kann dabei z. B. als „Reklamieren“ oder „Problem melden“ bezeichnet sein.
         </p>
         <p>
-          Mit Einreichung einer Reklamation wird eine Rückerstattung über Stripe ausgelöst. Gesetzliche Rechte und Pflichten zwischen Käufer:in
-          und Anbieter:in bleiben davon unberührt; insbesondere können Ansprüche (z. B. aus Gewährleistung oder Schadenersatz) ausschließlich
-          zwischen den Vertragspartner:innen geltend gemacht werden.
+  Die über die Plattform vorgesehene Reklamationsfrist und der dazugehörige Reklamationsprozess dienen der technischen
+  Zahlungsabwicklung, Rückerstattung, Zahlungsfreigabe und internen Streitfallbearbeitung über die Plattform. Gesetzliche
+  Gewährleistungsrechte, Widerrufsrechte, Schadenersatzansprüche oder sonstige zwingende gesetzliche Rechte der Nutzer:innen
+  bleiben davon unberührt.
+</p>
+        <p>
+          Mit Einreichung einer Reklamation kann nach Maßgabe des Plattformprozesses eine Rückerstattung, Zahlungsunterbrechung,
+          Prüfung oder sonstige Abwicklungsmaßnahme über Stripe ausgelöst werden. Gesetzliche Rechte und Pflichten zwischen Käufer:in
+          und Anbieter:in bleiben davon unberührt; insbesondere können Ansprüche (z. B. aus Gewährleistung oder Schadenersatz)
+          ausschließlich zwischen den Vertragspartner:innen geltend gemacht werden.
         </p>
         <p>
           Die Plattform kann auf Wunsch zwischen den Vertragspartner:innen vermittelnd bzw. streitschlichtend unterstützen, trifft jedoch keine
@@ -392,6 +638,26 @@ const AgbPage = () => {
           Vertragspartner und übernimmt hierfür keine Verantwortung.
         </p>
       </section>
+      <h2 className={styles.subheading}>31a. Widerrufsrecht und Online-Widerrufsfunktion</h2>
+<section className={styles.section}>
+  <p>
+    Soweit Verbraucher:innen gegenüber gewerblichen Anbieter:innen ein gesetzliches Widerrufs- bzw.
+    Rücktrittsrecht zusteht, richtet sich dieses ausschließlich nach den gesetzlichen Bestimmungen und ist
+    gegenüber dem jeweiligen Anbieter bzw. der jeweiligen Anbieterin auszuüben. Die Plattform ist nicht
+    Vertragspartner des Kauf- oder Dienstleistungsvertrags.
+  </p>
+  <p>
+    Die Plattform kann eine technische Funktion bereitstellen, über die Verbraucher:innen einen Widerruf,
+    Rücktritt oder eine vergleichbare Erklärung online übermitteln können. Die Bereitstellung einer solchen
+    Funktion ändert nichts daran, dass die Erklärung rechtlich gegenüber dem jeweiligen Vertragspartner
+    abgegeben wird.
+  </p>
+  <p>
+    Gewerbliche Anbieter:innen sind verpflichtet, Verbraucher:innen ordnungsgemäß über ein bestehendes
+    oder nicht bestehendes Widerrufsrecht, über Fristen, Bedingungen und Folgen des Widerrufs sowie über
+    etwaige Ausnahmen zu informieren.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>32. Offensichtliche Irrtümer und Korrekturen</h2>
       <section className={styles.section}>
@@ -415,19 +681,37 @@ const AgbPage = () => {
         </p>
       </section>
 
-      <h2 className={styles.subheading}>34. Umgehungsverbot, Vertragsstrafe und Schadenersatz</h2>
-      <section className={styles.section}>
-        <p>
-          Nutzer:innen dürfen keine Geschäfte unter Umgehung der Plattform abwickeln. Es ist insbesondere untersagt, nach Kontaktaufnahme über
-          die Plattform einen Kauf, Verkauf oder eine Beauftragung außerhalb der Plattform abzuschließen, um Gebühren oder Provisionen zu
-          umgehen.
-        </p>
-        <p>
-          Bei Verstößen kann die Plattform Nutzerkonten sperren oder löschen und – soweit gesetzlich zulässig – eine angemessene
-          pauschalierte Vertragsstrafe bzw. Schadenersatz geltend machen. Unberührt bleibt der Nachweis eines höheren Schadens sowie der
-          Nachweis, dass kein oder ein geringerer Schaden entstanden ist.
-        </p>
-      </section>
+      <h2 className={styles.subheading}>34. Umgehungsverbot, Preisumgehung, Vertragsstrafe und Schadenersatz</h2>
+<section className={styles.section}>
+  <p>
+    Nutzer:innen dürfen keine Geschäfte unter Umgehung der Plattform abwickeln. Es ist insbesondere untersagt, nach Kontaktaufnahme,
+    Anfrage, Angebotslegung, Kommunikation oder sonstiger Geschäftsanbahnung über die Plattform einen Kauf, Verkauf, Auftrag oder eine
+    Dienstleistung außerhalb der Plattform abzuschließen, um Gebühren, Provisionen oder sonstige Plattformentgelte zu umgehen.
+  </p>
+
+  <p>
+    Artikel, Waren, Beschichtungsaufträge, Lackanfragen oder Dienstleistungen, deren Geschäftsanbahnung über die Plattform erfolgt ist,
+    dürfen der jeweiligen Gegenpartei nicht außerhalb der Plattform zu einem günstigeren Preis oder zu wirtschaftlich besseren Bedingungen
+    angeboten oder verkauft werden, wenn dadurch die Plattformprovision oder sonstige Plattformgebühren umgangen werden sollen.
+  </p>
+
+  <p>
+    Dies gilt insbesondere, wenn Nutzer:innen die Plattform zur Suche, Kontaktaufnahme, Angebotsfindung, Preisverhandlung,
+    Auftragsanbahnung oder Vermittlung genutzt haben und anschließend versuchen, denselben oder einen wirtschaftlich gleichwertigen
+    Auftrag, Kauf oder Verkauf außerhalb der Plattform abzuwickeln.
+  </p>
+
+  <p>
+    Zulässig bleiben allgemeine Angebote, Preislisten oder Geschäftsbeziehungen, die unabhängig von der Plattform bestehen und nicht auf
+    einer konkreten über die Plattform angebahnten Transaktion beruhen.
+  </p>
+
+  <p>
+    Bei Verstößen kann die Plattform Nutzerkonten sperren oder löschen und – soweit gesetzlich zulässig – eine angemessene
+    pauschalierte Vertragsstrafe bzw. Schadenersatz geltend machen. Unberührt bleibt der Nachweis eines höheren Schadens sowie der
+    Nachweis, dass kein oder ein geringerer Schaden entstanden ist.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>35. Bewertungen und Rezensionen</h2>
       <section className={styles.section}>
@@ -558,6 +842,19 @@ const AgbPage = () => {
           Die Plattform behält sich das Recht vor, diese AGB zu ändern, soweit dies erforderlich ist und Nutzer:innen dadurch nicht unangemessen benachteiligt werden.
           Wesentliche Änderungen werden in geeigneter Weise mitgeteilt. Widerspricht ein:e Nutzer:in nicht innerhalb von 14 Tagen oder nutzt die Plattform weiter,
           gelten die Änderungen als akzeptiert.
+        </p>
+      </section>
+      <h2 className={styles.subheading}>48a. Außergerichtliche Streitbeilegung</h2>
+      <section className={styles.section}>
+        <p>
+          Die Plattform ist bemüht, bei Problemen zwischen Nutzer:innen vermittelnd zu unterstützen, ist hierzu
+          jedoch nicht verpflichtet und trifft keine bindende Entscheidung über Ansprüche zwischen Käufer:innen
+          und Anbieter:innen.
+        </p>
+        <p>
+          Die Europäische Online-Streitbeilegungsplattform (OS-Plattform/ODR-Plattform) wurde eingestellt.
+          Hinweise zu zuständigen Verbraucherschlichtungsstellen können über die jeweils zuständigen nationalen
+          Stellen abgerufen werden.
         </p>
       </section>
 

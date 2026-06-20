@@ -56,14 +56,40 @@ const DatenschutzPage = () => {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.subheading}>3. Datenweitergabe</h2>
-        <p>
-        Zur Vertragserfüllung gemäß Art. 6 Abs. 1 S. 1 lit. b DSGVO geben wir Ihre Daten an das mit der Lieferung beauftragte Versandunternehmen weiter, 
-        soweit dies zur Lieferung bestellter Waren erforderlich ist. Je nach dem, welchen Zahlungsdienstleister Sie im Bestellprozess auswählen, 
-        geben wir zur Abwicklung von Zahlungen die hierfür erhobenen Zahlungsdaten an das mit der Zahlung beauftragte Kreditinstitut und ggf. von uns 
-        beauftragte Zahlungsdienstleister weiter.
-        </p>
-      </section>
+  <h2 className={styles.subheading}>3. Datenweitergabe</h2>
+  <p>
+    Zur Vertragserfüllung gemäß Art. 6 Abs. 1 lit. b DSGVO geben wir personenbezogene Daten weiter,
+    soweit dies zur Durchführung eines Kaufs, Auftrags, Angebots, einer Lackanfrage, Lieferung,
+    Zahlungsabwicklung, Rechnungsstellung oder sonstigen Vertragsabwicklung erforderlich ist.
+  </p>
+
+  <p>
+    Kommt über die Plattform ein erfolgreicher Abschluss zustande, können die zur Abwicklung erforderlichen
+    Daten an die jeweilige Gegenpartei weitergegeben werden. Dies betrifft insbesondere Name bzw.
+    Unternehmensname, Kontakt- und Adressdaten, auftrags- oder kaufbezogene Angaben, Liefer- und
+    Abholdaten, Rechnungsangaben sowie Kommunikations- und Transaktionsinformationen, soweit diese für
+    die Durchführung des jeweiligen Vertrags erforderlich sind.
+  </p>
+
+  <p>
+    Die Weitergabe kann insbesondere zwischen Käufer:in und Anbieter:in, Auftraggeber:in und Auftragnehmer:in,
+    Verkäufer:in und Käufer:in sowie an Versand-, Logistik-, Zahlungs- oder technische Dienstleister erfolgen,
+    soweit dies für die Abwicklung notwendig ist.
+  </p>
+
+  <p>
+    Die jeweilige Gegenpartei darf die erhaltenen personenbezogenen Daten ausschließlich zur Durchführung
+    und Abwicklung des konkreten Vertrags verwenden. Eine darüber hinausgehende Nutzung, Veröffentlichung
+    oder Weitergabe ist untersagt, sofern keine gesetzliche Pflicht, keine andere Rechtsgrundlage oder keine
+    ausdrückliche Einwilligung der betroffenen Person besteht.
+  </p>
+
+  <p>
+    Je nach ausgewählter Zahlungsart geben wir zur Abwicklung von Zahlungen die hierfür erforderlichen
+    Zahlungs- und Transaktionsdaten an den Zahlungsdienstleister Stripe sowie gegebenenfalls an beteiligte
+    Kreditinstitute oder Zahlungsdienstleister weiter.
+  </p>
+</section>
 
       <section className={styles.section}>
         <h2 className={styles.subheading}>4. E-mail-Newsletter</h2>

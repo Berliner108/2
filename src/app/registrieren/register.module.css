@@ -474,3 +474,28 @@
   line-height: 1.4;
   margin-top: 2px;      /* kannst dann das inline-style entfernen */
 }
+.termsBox {
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.termsLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #222;
+}
+
+.termsLabel input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.termsLabel a {
+  color: #00b5d8;
+  font-weight: 600;
+  text-decoration: underline;
+}
