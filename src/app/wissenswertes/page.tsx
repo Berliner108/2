@@ -254,7 +254,7 @@ useEffect(() => {
     transition={{ duration: 0.7 }}
     viewport={{ once: true }}
   >
-    <span className={styles.standardBadge}>Vor dem Auftrag beachten</span>
+    <span className={styles.standardBadge}>Vor dem Auftrag bitte unbedingt beachten</span>
 
     <h2 className={styles.standardTitle}>
       Standardablauf & Vorbereitung
