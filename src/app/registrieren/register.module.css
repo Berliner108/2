@@ -475,7 +475,7 @@
   margin-top: 2px;      /* kannst dann das inline-style entfernen */
 }
 .termsBox {
-  width: 100%;
+  width: 90%;
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
@@ -487,15 +487,32 @@
   font-size: 0.9rem;
   line-height: 1.4;
   color: #222;
+  text-align: left;
 }
 
 .termsLabel input {
-  margin-top: 0.2rem;
+  width: auto;
+  margin-top: 0.25rem;
   flex-shrink: 0;
+  accent-color: #00b5d8;
+}
+
+.termsLabel span {
+  display: block;
 }
 
 .termsLabel a {
   color: #00b5d8;
   font-weight: 600;
   text-decoration: underline;
+}
+
+@media (max-width: 1100px) {
+  .termsBox {
+    width: 100%;
+  }
+
+  .termsLabel {
+    font-size: 0.85rem;
+  }
 }
