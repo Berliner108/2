@@ -1689,8 +1689,8 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
         </div>
         <div className={styles.standardHinweisZeile}>
   <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
-    Was muss ich bei der Auftragsvergabe beachten?
-  </a>
+  Hinweise zur Auftragsvergabe findest du hier.
+</a>
 </div>
 
                 <div style={{ textAlign: 'center' }}>

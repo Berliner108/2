@@ -137,15 +137,23 @@ const Wissenswertes = () => {
 }, [isClient]);
 
 useEffect(() => {
-    if (isClient) {
-      const hash = window.location.hash;
+  if (isClient) {
+    const hash = window.location.hash;
 
-      // Überprüfen des URL-Fragmentes (Hash-Wertes) und öffne den entsprechenden Container
-      if (hash === "#Sofunktioniert’s") {
-        document.getElementById("Sofunktioniert’s")?.scrollIntoView({ behavior: "smooth" });
-      }
+    if (hash === "#Sofunktioniert’s") {
+      document.getElementById("Sofunktioniert’s")?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [isClient]);
+
+    if (hash === "#standardablauf") {
+      setTimeout(() => {
+        document.getElementById("standardablauf")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+  }
+}, [isClient]);
 
 
 
