@@ -471,6 +471,71 @@ const AgbPage = () => {
     werden, soweit gesetzlich zulässig.
   </p>
 </section>
+<h2 className={styles.subheading}>20a. Nichtlieferung, Nichtbereitstellung und Annahmeverzug</h2>
+<section className={styles.section}>
+  <p>
+    Auftraggeber:innen und Auftragnehmer:innen sind verpflichtet, vereinbarte Übergaben, Abholungen, Zustellungen, Lieferungen und
+    sonstige Mitwirkungshandlungen fristgerecht und ordnungsgemäß zu erfüllen. Dazu gehört insbesondere, dass Ware, Werkstücke,
+    Unterlagen, Dateien, Lacke, Beschichtungsmaterialien oder sonstige Auftragsgegenstände rechtzeitig bereitgestellt, übergeben,
+    angenommen oder versendet werden.
+  </p>
+
+  <p>
+    Liefert, übergibt oder stellt eine Partei die erforderlichen Auftragsgegenstände nicht rechtzeitig bereit oder nimmt eine vereinbarte
+    Lieferung, Abholung oder Übergabe nicht an, obwohl dies für die Durchführung des Auftrags erforderlich ist, kann dies als
+    Pflichtverletzung gewertet werden. Die betroffene Gegenpartei ist berechtigt, den Sachverhalt zu dokumentieren und die Plattform
+    darüber zu informieren.
+  </p>
+
+  <p>
+    Entstehen durch Nichtlieferung, verspätete Lieferung, Nichtbereitstellung, fehlende Annahme, erfolglose Abholung, Wartezeiten,
+    zusätzliche Fahrten, Lagerung, Mehraufwand oder Verzögerungen Kosten oder Schäden, können diese der verursachenden Partei
+    zugerechnet werden, soweit gesetzlich zulässig.
+  </p>
+
+  <p>
+    Wird ein Auftrag durch fehlende Mitwirkung einer Partei unmöglich, erheblich verzögert oder wirtschaftlich unzumutbar, können
+    Stornierung, Rückabwicklung, Zahlungsfreigabe, Rückerstattung oder sonstige Abwicklungsmaßnahmen nach Maßgabe dieser AGB, der
+    Plattformprozesse, der dokumentierten Nachweise und der gesetzlichen Bestimmungen erfolgen.
+  </p>
+
+  <p>
+    Beide Parteien sind verpflichtet, absehbare Verzögerungen, Lieferprobleme, Annahmehindernisse oder sonstige Umstände, die die
+    ordnungsgemäße Durchführung des Auftrags gefährden können, unverzüglich der Gegenpartei mitzuteilen und im zumutbaren Umfang an
+    einer Lösung mitzuwirken.
+  </p>
+</section>
+<h2 className={styles.subheading}>20b. Beschädigt angelieferte oder übergebene Auftragsgegenstände</h2>
+<section className={styles.section}>
+  <p>
+    Werden Ware, Werkstücke, Teile, Lacke, Beschichtungsmaterialien oder sonstige Auftragsgegenstände beschädigt, unvollständig,
+    verschmutzt, falsch verpackt oder in sonstigem nicht vertragsgemäßem Zustand angeliefert oder übergeben, ist die empfangende
+    Partei verpflichtet, dies unverzüglich zu dokumentieren und der Gegenpartei mitzuteilen.
+  </p>
+
+  <p>
+    Die Dokumentation sollte insbesondere Fotos, Videos, Versand- oder Übergabenachweise, Verpackungszustand, sichtbare Schäden,
+    fehlende Teile, abweichende Mengen sowie Datum und Uhrzeit der Anlieferung oder Übergabe enthalten. Soweit möglich, sind Schäden
+    bereits bei Übergabe gegenüber dem Transportdienstleister oder der übergebenden Person zu vermerken.
+  </p>
+
+  <p>
+    Die empfangende Partei ist nicht verpflichtet, offensichtlich beschädigte, unvollständige oder ungeeignete Auftragsgegenstände
+    ohne vorherige Klärung weiterzubearbeiten. Sie hat die Gegenpartei jedoch unverzüglich über den Zustand zu informieren und im
+    zumutbaren Umfang an einer Lösung mitzuwirken.
+  </p>
+
+  <p>
+    Beginnt die empfangende Partei trotz erkennbarer Schäden, Mängel oder Unstimmigkeiten ohne vorherige Dokumentation und Mitteilung
+    mit der Bearbeitung, kann dies bei der späteren Klärung von Ansprüchen berücksichtigt werden, soweit gesetzlich zulässig.
+  </p>
+
+  <p>
+    Entstehen durch beschädigte, falsch verpackte, unvollständige oder ungeeignete Auftragsgegenstände Verzögerungen, Mehraufwand,
+    Zusatzkosten, Ausschuss, Nacharbeiten oder sonstige Schäden, können diese der verursachenden Partei zugerechnet werden, soweit
+    gesetzlich zulässig. Zwingende gesetzliche Rechte bleiben unberührt.
+  </p>
+</section>
 
       <h2 className={styles.subheading}>21. Nutzungsrechte an Inhalten</h2>
       <section className={styles.section}>
