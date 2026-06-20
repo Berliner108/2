@@ -311,13 +311,6 @@ useEffect(() => {
   An diesen Stellen können technisch bedingt sichtbare Spuren, unbeschichtete,
   schwächer beschichtete oder optisch abweichende Bereiche entstehen.
 </li>
-
-<li>
-  <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
-  Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
-  Rost sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.
-</li>
-
   <li>
     <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
     Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
