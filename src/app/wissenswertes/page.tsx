@@ -284,6 +284,29 @@ useEffect(() => {
     Beschichtungsergebnis kann ebenfalls beschrieben werden.
   </li>
   <li>
+  <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten, Hauptansichtsflächen
+  oder optisch besonders wichtige Bereiche sollten eindeutig angegeben werden.
+  Auftraggeber:innen sollten beschreiben, welche Flächen später sichtbar sind und
+  bei welchen Bereichen kleine technisch bedingte Spuren, Kontaktstellen oder
+  optische Abweichungen eher zulässig sind.
+</li>
+
+<li>
+  <strong>Funktionsflächen, Passungen und Bohrungen:</strong> Funktionsrelevante
+  Flächen wie Passungen, Dichtflächen, Lagerstellen, Bolzenbohrungen,
+  Führungen, Auflageflächen oder Montageflächen sollten klar gekennzeichnet werden.
+  Je nach Verfahren kann eine Beschichtung an diesen Stellen Maßhaltigkeit,
+  Beweglichkeit, Montage oder Funktion beeinflussen.
+</li>
+
+<li>
+  <strong>Gewinde und Abdeckbereiche:</strong> Innen- und Außengewinde,
+  Sacklöcher, Durchgangsbohrungen oder empfindliche Bereiche sollten vorab
+  angegeben werden. Auftraggeber:innen sollten klar mitteilen, ob diese Bereiche
+  mitbeschichtet werden dürfen oder ob sie abgedeckt, verschlossen, maskiert,
+  freigelassen oder nachbearbeitet werden müssen.
+</li>
+  <li>
   <strong>Zertifizierungen:</strong> Auftraggeber:innen können vor der Auftragsvergabe
   benötigte Zertifizierungen, Normen oder Qualitätsanforderungen angeben.
   Informationen zu möglichen Zertifizierungen sind unten bei den jeweiligen Verfahren zu finden.
@@ -310,6 +333,8 @@ useEffect(() => {
     Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
     Rost sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.
   </li>
+
+  
 
   <li>
     <strong>Thermische Verfahren:</strong> Bei thermischen Verfahren wie Pulverbeschichten oder
