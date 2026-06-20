@@ -246,116 +246,71 @@ useEffect(() => {
     <USPHighlights />
   </section>
 
-  <section className={styles.aboutUsContainer} id="standardablauf">
-    <motion.h2
-      className={styles.aboutUsTitle}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      viewport={{ once: true }}
-    >
+  <section className={styles.standardSection} id="standardablauf">
+  <motion.div
+    className={styles.standardIntro}
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.7 }}
+    viewport={{ once: true }}
+  >
+    <span className={styles.standardBadge}>Vor dem Auftrag beachten</span>
+
+    <h2 className={styles.standardTitle}>
       Standardablauf & Vorbereitung
-    </motion.h2>
+    </h2>
 
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.headerTextContainer}>
-          <p className={styles.headerText}>
-            Was vor einem Auftrag wichtig ist
-          </p>
-        </div>
-      </div>
+    <p className={styles.standardLead}>
+      Damit Auftragnehmer:innen und Lieferant:innen den Auftrag richtig planen können,
+      sollten alle wichtigen Angaben vorab vollständig, verständlich und korrekt gemacht werden.
+    </p>
+  </motion.div>
 
-      <div className={`${styles.content} ${styles.open} ${styles.standardContent}`}>
-        <p>
-          Damit ein Auftrag ohne Verzögerungen oder unnötige Mehrkosten abgewickelt werden kann,
-          sollten Auftraggeber:innen den geplanten Standardablauf möglichst vollständig beschreiben.
-          Dazu gehören insbesondere Abholung, Zustellung, Übergabe, Verpackung, Be- und Entladung,
-          gewünschte Bearbeitung, Liefer- oder Rückgabetermine, besondere Prüfungen, benötigte
-          Unterlagen sowie sonstige Anforderungen an die Durchführung.
-        </p>
+  <div className={styles.standardGrid}>
+    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} viewport={{ once: true }}>
+      <span className={styles.standardNumber}>01</span>
+      <h3>Standardablauf angeben</h3>
+      <p>
+        Beschreibe Abholung, Zustellung, Übergabe, Verpackung, Be- und Entladung,
+        gewünschte Bearbeitung, Liefer- oder Rückgabetermine, Unterlagen und besondere Anforderungen.
+      </p>
+    </motion.article>
 
-        <p>
-          Alle Punkte, die vom üblichen Ablauf abweichen oder für Auftragnehmer:innen bzw.
-          Lieferant:innen relevant sein können, sollten vorab angegeben werden. Dazu zählen
-          insbesondere besondere Öffnungszeiten, eingeschränkte Zufahrten, fehlende Lademöglichkeiten,
-          empfindliche oder schwere Teile, notwendige Hilfsmittel, Staplerbedarf, spezielle Verpackung,
-          Terminbindungen, Vorarbeiten, Musterteile, Prüfpflichten, Qualitätsanforderungen oder
-          besondere Dokumentationswünsche.
-        </p>
+    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.05 }} viewport={{ once: true }}>
+      <span className={styles.standardNumber}>02</span>
+      <h3>Abhol- und Zustellzeiten</h3>
+      <p>
+        Standardzeiten sind Montag bis Donnerstag von 08:00 bis 12:00 Uhr und von
+        13:00 bis 16:00 Uhr sowie Freitag von 08:00 bis 12:00 Uhr.
+        Abweichende Zeiten müssen vorher vereinbart werden.
+      </p>
+    </motion.article>
 
-        <h3>Abhol- und Zustellzeiten</h3>
+    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }} viewport={{ once: true }}>
+      <span className={styles.standardNumber}>03</span>
+      <h3>Be- und Entladung klären</h3>
+      <p>
+        Gib an, wie lange Be- und Entladen dauert und ob Stapler, Hebehilfen,
+        Rampen, Zufahrt, zusätzliches Personal oder besondere Sicherheitsmaßnahmen erforderlich sind.
+      </p>
+    </motion.article>
 
-        <p>
-          Abholungen, Zustellungen, Übergaben sowie Be- und Entladevorgänge sind grundsätzlich nur
-          innerhalb der angegebenen Annahme- und Ausgabezeiten möglich. Standardzeiten sind Montag
-          bis Donnerstag von 08:00 bis 12:00 Uhr und von 13:00 bis 16:00 Uhr sowie Freitag von
-          08:00 bis 12:00 Uhr.
-        </p>
+    <motion.article className={styles.standardCard} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.15 }} viewport={{ once: true }}>
+      <span className={styles.standardNumber}>04</span>
+      <h3>Mehrkosten vermeiden</h3>
+      <p>
+        Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen, Farbtonangaben,
+        Spezifikationen, Beschädigungen, Verschmutzungen oder Altbeschichtungen müssen vorab angegeben werden.
+      </p>
+    </motion.article>
+  </div>
 
-        <p>
-          Abweichende Zeiten müssen vorab ausdrücklich mit der Gegenpartei vereinbart werden.
-          Eine Anlieferung, Abholung oder Übergabe außerhalb der genannten Zeiten kann verweigert
-          werden.
-        </p>
-
-        <h3>Be- und Entladezeiten</h3>
-
-        <p>
-          Auftraggeber:innen sollten vorab angeben, wie viel Zeit für das Be- und Entladen
-          voraussichtlich benötigt wird. Dazu zählen insbesondere Wartezeiten, Zugänglichkeit
-          der Ware, benötigtes Personal, Ladehilfen, Stapler, Hebezeuge, Rampen,
-          Zufahrtsmöglichkeiten und besondere Sicherheitsanforderungen.
-        </p>
-
-        <p>
-          Ist das Be- oder Entladen nur zu bestimmten Zeiten möglich oder dauert es voraussichtlich
-          länger als üblich, muss dies vorab mitgeteilt werden. Das gilt auch, wenn Teile besonders
-          schwer, sperrig, empfindlich oder nur mit zusätzlichem Personal bzw. Hilfsmitteln bewegt
-          werden können.
-        </p>
-
-        <h3>Was muss der Auftraggeber vorbereiten?</h3>
-
-        <p>
-          Damit die Standardabwicklung ohne Mehrkosten möglich ist, müssen Werkstücke, Teile,
-          Materialien, Fotos, Zeichnungen, Farbtonangaben, Spezifikationen und sonstige Unterlagen
-          rechtzeitig, vollständig und korrekt bereitgestellt werden. Teile müssen zugänglich,
-          transportbereit und sachgerecht verpackt sein.
-        </p>
-
-        <p>
-          Auch Beschädigungen, Verschmutzungen, Altbeschichtungen, Rost, Fett, Silikon, Klebereste,
-          empfindliche Oberflächen, besondere Verpackungsanforderungen oder sonstige Besonderheiten
-          sollten vorab angegeben werden.
-        </p>
-
-        <h3>Wann können Mehrkosten entstehen?</h3>
-
-        <p>
-          Fehlende, falsche oder nachträglich geänderte Angaben können zu Rückfragen, Verzögerungen,
-          Ablehnung der Ausführung oder Mehrkosten führen. Das gilt insbesondere bei fehlenden
-          Lademöglichkeiten, Wartezeiten, erfolglosen Anfahrten, Zusatzfahrten, beschädigten oder
-          falsch verpackten Teilen, nicht bereitgestellten Unterlagen oder nachträglichen Änderungen
-          am Auftrag.
-        </p>
-
-        <p>
-          Änderungen nach Auftragsannahme sollten rechtzeitig mit der Gegenpartei abgestimmt werden,
-          da sie Auswirkungen auf Preis, Fristen, Machbarkeit oder Durchführung haben können.
-        </p>
-
-        <h3>Nachweise für beide Seiten</h3>
-
-        <p>
-          Auftraggeber:innen und Auftragnehmer:innen sollten sich während der gesamten Abwicklung
-          durch geeignete Nachweise absichern. Dazu zählen insbesondere Fotos, Videos, Lieferscheine,
-          Versand- und Übergabenachweise, Chatverläufe, Prüfprotokolle sowie Dokumentationen von
-          Zustand, Beschädigungen, Verpackung, Übergabe und Rückgabe.
-        </p>
-      </div>
-    </div>
-  </section>
+  <div className={styles.standardNotice}>
+    <strong>Wichtig:</strong> Fehlende, falsche oder nachträglich geänderte Angaben,
+    nicht eingehaltene Zeiten, fehlende Lademöglichkeiten, Wartezeiten oder Zusatzfahrten
+    können zu Verzögerungen oder Mehrkosten führen.
+  </div>
+</section>
       <div className={styles.pageContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
           <div key={index} className={styles.container} id={`container-${index}`}>
