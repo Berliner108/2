@@ -842,6 +842,31 @@ function PageBody() {
 const stripeBlockiertAngebot =
   connectLoaded &&
   connect?.ready === false;
+  const basisPreisGueltig = (() => {
+  const value = basisPreis.trim()
+
+  if (!value) return false
+  if (!MONEY_REGEX_FINAL.test(value)) return false
+  if (toNum(value) <= 0) return false
+
+  return true
+})()
+
+const versandPreisGueltig = (() => {
+  const value = versandPreis.trim()
+
+  if (!value) return true
+  if (!MONEY_REGEX_FINAL.test(value)) return false
+
+  return true
+})()
+
+const isSubmitDisabled =
+  submitting ||
+  !basisPreisGueltig ||
+  !versandPreisGueltig ||
+  shippingTooHigh
+
 
   return (
     <>
@@ -1148,15 +1173,23 @@ const stripeBlockiertAngebot =
                   Gesamt (inkl. Versand): {formatEUR(gesamtPreis)}
                 </div>
 
-                <button
-                  className={styles.submitOfferButton}
-                  onClick={handleSubmitOffer}
-                  disabled={submitting || shippingTooHigh}
-                  aria-busy={submitting}
-                  title={shippingTooHigh ? 'Versandkosten überschreiten 50% des Artikelpreises' : 'Lack verbindlich anbieten'}
-                >
-                  {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
-                </button>
+<button
+  className={styles.submitOfferButton}
+  onClick={handleSubmitOffer}
+  disabled={isSubmitDisabled}
+  aria-busy={submitting}
+  title={
+    !basisPreisGueltig
+      ? 'Bitte zuerst einen gültigen Gesamtpreis eingeben'
+      : !versandPreisGueltig
+        ? 'Bitte gültige Versandkosten eingeben oder leer lassen'
+        : shippingTooHigh
+          ? 'Versandkosten überschreiten 50% des Artikelpreises'
+          : 'Lack verbindlich anbieten'
+  }
+>
+  {submitting ? 'Wird gesendet…' : 'Lack verbindlich anbieten'}
+</button>
 
                 <p className={styles.offerNote}>
   Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere AGB zu akzeptieren. Dein Angebot ist

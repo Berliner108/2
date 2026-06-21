@@ -332,7 +332,10 @@
 .submitOfferButton:hover {
   background-color: #0099c5;
 }
-
+.submitOfferButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 .offerNote {
   font-size: 0.9rem;
   margin-top: 0.5rem;
