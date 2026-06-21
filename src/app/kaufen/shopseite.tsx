@@ -595,7 +595,11 @@ export default function Shopseite() {
 
           {!loading && !loadError && sortierteArtikel.length === 0 && (
             <div style={{ padding: '10px 0', opacity: 0.9 }}>
-              <strong>Keine Artikel sichtbar.</strong> (Wenn du private bist, können „nur Gewerblich“-Artikel verborgen sein.)
+              <strong>
+                {artikelDaten.length === 0
+                  ? 'Keine Artikel im Shop.'
+                  : 'Keine passenden Artikel gefunden.'}
+              </strong>
             </div>
           )}
 
