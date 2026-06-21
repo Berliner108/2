@@ -835,6 +835,13 @@ function PageBody() {
   /* === NEU: Reviews-/Kontakt-Links berechnen (UI-only) === */
   const reviewsHref = profileReviewsHrefFromView(artikel);
   const messageTarget = encodeURIComponent(artikel.user_handle || artikel.user || '');
+  const darfAngebotAbgeben =
+  connectLoaded &&
+  connect?.ready === true;
+
+const stripeBlockiertAngebot =
+  connectLoaded &&
+  connect?.ready === false;
 
   return (
     <>
@@ -870,27 +877,6 @@ function PageBody() {
               <h1 className={styles.title}>{artikel.titel}</h1>
               {artikel.gesponsert && <span className={`${styles.badge} ${styles.gesponsert}`}>Gesponsert</span>}
             </div>
-
-            {/* Hinweis Onboarding – stabil sichtbar wenn not ready */}
-            {connectLoaded && connect?.ready === false && (
-              <div className={styles.connectNotice} role="status" aria-live="polite">
-                <p>Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.</p>
-
-                {connect?.reason && (
-                  <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
-                )}
-
-                <div className={styles.connectActions}>
-                  <button
-                    type="button"
-                    className={styles.connectBtn}
-                    onClick={goToStripeOnboarding}
-                  >
-                    Jetzt bei Stripe verifizieren
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* === META-GRID === */}
             <div className={styles.meta}>
@@ -1083,11 +1069,32 @@ function PageBody() {
                 <strong>Anfrage erfolgreich vermittelt</strong>
               </div>
             ) : (
-              <div className={styles.offerBox}>
-                <h2 className={styles.priceHeading}>
-                  Mach ein Angebot für diese Lackanfrage
-                </h2>
-                <div className={styles.inputGroup}>
+                  <div className={styles.offerBox}>
+                    <h2 className={styles.priceHeading}>
+                      Mach ein Angebot für diese Lackanfrage
+                    </h2>
+
+                    {stripeBlockiertAngebot && (
+                      <div className={styles.connectNotice} role="status" aria-live="polite">
+                        <p>
+                          Bevor du ein Angebot abgeben kannst, musst du dein Auszahlungskonto vollständig einrichten.
+                        </p>
+
+                        <div className={styles.connectActions}>
+                          <button
+                            type="button"
+                            className={styles.connectBtn}
+                            onClick={goToStripeOnboarding}
+                          >
+                            Jetzt bei Stripe verifizieren
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {darfAngebotAbgeben && (
+                      <>
+                        <div className={styles.inputGroup}>
                   <label className={styles.label}>
                     Gesamtpreis (inkl. Steuern & Gebühren excl. Versand) in €
                   </label>
@@ -1152,10 +1159,12 @@ function PageBody() {
                 </button>
 
                 <p className={styles.offerNote}>
-                  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere AGB zu akzeptieren. Dein Angebot ist
-                  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
-                </p>
-              </div>
+  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere AGB zu akzeptieren. Dein Angebot ist
+  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
+</p>
+      </>
+    )}
+</div>
             )}
             {/* === /Angebotsbereich === */}
           </div>
