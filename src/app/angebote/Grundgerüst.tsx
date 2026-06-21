@@ -351,6 +351,7 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
   const agbRef = useRef<HTMLDivElement>(null)
   const bilderRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<HTMLDivElement>(null)
+const materialGueteRef = useRef<HTMLDivElement>(null)
   const logistikRef = useRef<HTMLDivElement>(null) // 🔁 vorher FieldSet
   const step1Ref = useRef<HTMLDivElement>(null)
 const step2Ref = useRef<HTMLDivElement>(null)
@@ -463,20 +464,20 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   }
 
   // 3️⃣ MATERIALGÜTE
-  if (!materialGuete || (materialGuete === 'Andere' && !customMaterial)) {
-    setMaterialGueteError(true)
-    if (!firstErrorRef) firstErrorRef = materialRef
-    hasError = true
-  } else {
+  if (!materialGuete || (materialGuete === 'Andere' && !customMaterial.trim())) {
+  setMaterialGueteError(true)
+  if (!firstErrorRef) firstErrorRef = materialGueteRef
+  hasError = true
+} else {
     setMaterialGueteError(false)
   }
 
   // 4️⃣ ABMESSUNGEN
-  if (!laenge || !breite || !hoehe || !masse) {
-    setAbmessungError(true)
-    if (!firstErrorRef) firstErrorRef = materialRef
-    hasError = true
-  } else {
+if (!laenge || !breite || !hoehe || !masse) {
+  setAbmessungError(true)
+  if (!firstErrorRef) firstErrorRef = materialGueteRef
+  hasError = true
+} else {
     setAbmessungError(false)
   }
 
@@ -1283,24 +1284,26 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
 <div className={styles.dividerLine} />
 
-<MaterialGuete
-  materialGuete={materialGuete}
-  setMaterialGuete={setMaterialGuete}
-  customMaterial={customMaterial}
-  setCustomMaterial={setCustomMaterial}
-  laenge={laenge}
-  setLaenge={setLaenge}
-  breite={breite}
-  setBreite={setBreite}
-  hoehe={hoehe}
-  setHoehe={setHoehe}
-  masse={masse}
-  setMasse={setMasse}
-  materialGueteError={materialGueteError}
-  abmessungError={abmessungError}
-  selectedVerfahren={selectedVerfahren}
-  materialienAktiv={materialienAktiv}
-/>
+<div ref={materialGueteRef}>
+  <MaterialGuete
+    materialGuete={materialGuete}
+    setMaterialGuete={setMaterialGuete}
+    customMaterial={customMaterial}
+    setCustomMaterial={setCustomMaterial}
+    laenge={laenge}
+    setLaenge={setLaenge}
+    breite={breite}
+    setBreite={setBreite}
+    hoehe={hoehe}
+    setHoehe={setHoehe}
+    masse={masse}
+    setMasse={setMasse}
+    materialGueteError={materialGueteError}
+    abmessungError={abmessungError}
+    selectedVerfahren={selectedVerfahren}
+    materialienAktiv={materialienAktiv}
+  />
+</div>
 
 <div className={styles.dividerLine} />
 
