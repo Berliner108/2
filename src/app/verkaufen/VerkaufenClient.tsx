@@ -72,7 +72,7 @@ const promoPackages = [
 ] as const
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
-const MAX_DOCUMENT_TOTAL_SIZE = 15 * 1024 * 1024 // 15 MB insgesamt
+const MAX_DOCUMENT_TOTAL_SIZE = 25 * 1024 * 1024 // 25 MB insgesamt
 
 const formatFileSize = (bytes: number) => {
   if (bytes >= 1024 * 1024) {
@@ -153,23 +153,26 @@ function useOnClickOutside(
 }
 
 function istGueltigeDatei(file: File): boolean {
-  const erlaubteMimeTypen = [
-    'application/pdf',
-    'application/vnd.dwg',
-    'application/dxf',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'text/csv',
-    'model/step',
-    'model/stl',
-  ];
+const erlaubteMimeTypen = [
+  'application/pdf',
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/vnd.dwg',
+  'application/dxf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'text/csv',
+  'model/step',
+  'model/stl',
+];
 
   const erlaubteEndungen = [
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv', '.dwg', '.dxf', '.step', '.stp'
-  ];
+  '.pdf', '.zip', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv',
+  '.dwg', '.dxf', '.step', '.stp'
+];
 
   const dateiname = file.name.toLowerCase();
 
@@ -1989,13 +1992,14 @@ return (
           <Dropzone
           type="dateien"
           label="Dateien hierher ziehen oder klicken (max. 8)"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
+          accept=".pdf,.zip,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp"
           maxFiles={8}
           files={dateien}
           setFiles={setDateien}
           istGueltig={istGueltigeDatei}
           setWarnung={setWarnung}
           id="dateiUpload"
+          maxDateigroesseMB={10}
         />
 
         {warnung && (

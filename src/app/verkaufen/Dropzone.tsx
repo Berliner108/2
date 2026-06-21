@@ -40,7 +40,9 @@ const Dropzone: React.FC<DropzoneProps> = ({
     const dropped = Array.from(e.dataTransfer.files);
     const zuGross = dropped.filter(istZuGross);
     if (zuGross.length > 0) {
-      setWarnung(`Einige Dateien überschreiten ${maxDateigroesseMB} MB.`);
+      setWarnung(
+  `Mindestens eine Datei ist zu groß. Maximal erlaubt sind ${maxDateigroesseMB} MB pro Datei.`
+);
       return;
     }
 
@@ -74,7 +76,9 @@ const Dropzone: React.FC<DropzoneProps> = ({
       const auswahl = Array.from(e.target.files);
       const zuGross = auswahl.filter(istZuGross);
       if (zuGross.length > 0) {
-        setWarnung(`Einige Dateien überschreiten ${maxDateigroesseMB} MB.`);
+        setWarnung(
+  `Mindestens eine Datei ist zu groß. Maximal erlaubt sind ${maxDateigroesseMB} MB pro Datei.`
+);
         return;
       }
 

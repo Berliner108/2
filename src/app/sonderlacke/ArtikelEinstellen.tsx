@@ -174,10 +174,13 @@ function istGueltigeDatei(file: File): boolean {
     'model/step',
     'model/stl',
     'application/octet-stream',
+    'application/zip',
+    'application/x-zip-compressed',
   ];
   const erlaubteEndungen = [
-    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv', '.dwg', '.dxf', '.step', '.stp', '.stl'
-  ];
+  '.pdf', '.zip', '.doc', '.docx', '.xls', '.xlsx', '.txt', '.csv',
+  '.dwg', '.dxf', '.step', '.stp', '.stl'
+];
   const dateiname = file.name.toLowerCase();
   const hatErlaubteEndung = erlaubteEndungen.some(ext => dateiname.endsWith(ext));
   const istErlaubterTyp = erlaubteMimeTypen.includes(file.type);
@@ -371,7 +374,7 @@ async function uploadPreparedFilesToSupabase(params: {
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
-const MAX_DOCUMENT_TOTAL_SIZE = 15 * 1024 * 1024 // 15 MB insgesamt
+const MAX_DOCUMENT_TOTAL_SIZE = 25 * 1024 * 1024 // 25 MB insgesamt
 
 const formatFileSize = (bytes: number) => {
   if (bytes >= 1024 * 1024) {
@@ -1433,13 +1436,14 @@ if (bootLoading) {
         <Dropzone
           type="dateien"
           label="Dateien hierher ziehen oder klicken (max. 8)"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp,.stl"
+          accept=".pdf,.zip,.doc,.docx,.xls,.xlsx,.txt,.csv,.dwg,.dxf,.step,.stp,.stl"
           maxFiles={8}
           files={dateien}
           setFiles={setDateien}
           istGueltig={istGueltigeDatei}
           setWarnung={setWarnung}
           id="dateiUpload"
+          maxDateigroesseMB={10}
         />
 
         {/* Vorschau Dateien */}
