@@ -143,6 +143,11 @@ const displayKategorie = (k?: string) => {
   return k ?? '—';
 };
 
+const einheitFuerKategorie = (k?: string) => {
+  const v = (k || '').toLowerCase();
+  return v === 'nasslack' ? 'Liter' : 'kg';
+};
+
 const filterKategorieKey = (k?: string) => {
   const v = (k || '').toLowerCase();
   return v === 'pulverlack' ? 'Pulverlack'
@@ -243,7 +248,8 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           </div>
 
           <div className={styles.cardText2}>
-            Benötigte Menge: {menge ?? '—'}{menge != null ? ' kg' : ''}
+            Benötigte Menge: {menge ?? '—'}
+            {menge != null ? ` ${einheitFuerKategorie(kategorie)}` : ''}
           </div>
 
           <div className={styles.cardText6}>Kategorie: {displayKategorie(kategorie)}</div>
