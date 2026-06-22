@@ -56,7 +56,12 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
   } = artikel;
 
   const katAnzeige = formatKategorie(kategorie);
-  const einheitLabel = artikel.einheit === 'stueck' ? 'Stück' : 'kg';
+  const einheitLabel =
+  artikel.einheit === 'stueck'
+    ? 'Stück'
+    : (kategorie ?? '').toLowerCase() === 'nasslack'
+      ? 'Liter'
+      : 'kg';
 
   // ✅ Badge-Text + Klasse = Verkäufer-Typ
   const sellerLabel =

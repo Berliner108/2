@@ -1043,7 +1043,11 @@ if (!hasAnyImages) {
 if (kategorie === 'pulverlack' || kategorie === 'nasslack') {
    // ✅ NEU: Menge prüfen (nur wenn nicht "Auf Lager")
   if (!aufLager && menge < 1) {
-    setWarnungMenge('Bitte gib mindestens 1 kg an.');
+    setWarnungMenge(
+  kategorie === 'nasslack'
+    ? 'Bitte gib mindestens 1 Liter an.'
+    : 'Bitte gib mindestens 1 kg an.'
+);
     fehler = true;
   } else {
     setWarnungMenge('');
@@ -3398,7 +3402,11 @@ onFocus={() => {
   <div className={styles.staffelContainer}>
     <div className={styles.staffelHeaderRow}>
       <h3 className={styles.staffelHeading}>
-        Preis- & Versandstaffel ({verkaufsArt === 'pro_kg' ? 'pro kg' : 'pro Stück'})
+        Preis- & Versandstaffel (
+  {verkaufsArt === 'pro_kg'
+    ? `pro ${kategorie === 'nasslack' ? 'Liter' : 'kg'}`
+    : 'pro Stück'}
+)
       </h3>
 
       
@@ -3778,7 +3786,7 @@ onFocus={() => {
   verkaufsArt === 'gesamt'
     ? 'Nur als Gesamtmenge'
     : verkaufsArt === 'pro_kg'
-    ? 'Gestaffelte Preise (pro kg)'
+  ? `Gestaffelte Preise (pro ${kategorie === 'nasslack' ? 'Liter' : 'kg'})`
     : verkaufsArt === 'pro_stueck'
     ? 'Verkauf pro Stück (Staffeln)'
     : '–'
@@ -3786,7 +3794,12 @@ onFocus={() => {
 
 {/* Menge in der Vorschau sauber */}
 {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
-  <p><strong>Menge:</strong> {aufLager ? 'Auf Lager' : `${menge || '–'} kg`}</p>
+  <p>
+  <strong>Menge:</strong>{' '}
+  {aufLager
+    ? 'Auf Lager'
+    : `${menge || '–'} ${kategorie === 'nasslack' ? 'Liter' : 'kg'}`}
+</p>
 )}
 
 {kategorie === 'arbeitsmittel' && (
