@@ -357,13 +357,18 @@ const stockLimit = useMemo(() => {
 useEffect(() => {
   if (stockLimit != null && qty > stockLimit) {
     setQty(stockLimit);
-    setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
-  } else if (qtyHint) {
+    setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article?.category)}`);
+    return;
+  }
+
+  if (qtyHint) {
     setQtyHint(null);
   }
-  if (qty < 1) setQty(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [stockLimit]);
+
+  if (qty < 1) {
+    setQty(1);
+  }
+}, [stockLimit, qty, unit, article?.category, qtyHint]);
 
 const chosenTier = useMemo(() => {
   if (!article) return null;
@@ -834,8 +839,8 @@ if (!article) {
           const isActive = chosenTier?.id === t.id;
           const range =
             t.max_qty != null
-              ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit)}`
-              : `ab ${t.min_qty} ${unitLabel(t.unit)}`;
+              ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit, article.category)}`
+              : `ab ${t.min_qty} ${unitLabel(t.unit, article.category)}`;
 
           return (
             <div
