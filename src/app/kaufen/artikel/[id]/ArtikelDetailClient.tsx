@@ -120,9 +120,11 @@ function DetailSkeleton() {
     </div>
   );
 }
+function unitLabel(u: "kg" | "stueck", category?: string | null) {
+  if (u === "stueck") return "Stück";
 
-function unitLabel(u: "kg" | "stueck") {
-  return u === "stueck" ? "Stück" : "kg";
+  const kat = (category ?? "").toLowerCase().trim();
+  return kat === "nasslack" ? "Liter" : "kg";
 }
 function normalizeStringArray(v: any): string[] {
   if (!v) return [];
@@ -602,7 +604,7 @@ if (!article) {
     {article.price_from != null ? Number(article.price_from).toFixed(2) : "—"} €
     {article.sale_type === "gesamt"
       ? ""
-      : (article.price_unit ? ` / ${unitLabel(article.price_unit)}` : "")
+      : article.price_unit ? ` / ${unitLabel(article.price_unit, article.category)}` : ""
     }
   </span>
 </div>
@@ -617,7 +619,7 @@ if (!article) {
                     {article.stock_status === "auf_lager"
                       ? "Auf Lager"
                       : article.qty_kg != null
-                      ? `${Number(article.qty_kg)} kg verfügbar`
+                      ? `${Number(article.qty_kg)} ${unitLabel("kg", article.category)} verfügbar`
                       : article.qty_piece != null
                       ? `${Number(article.qty_piece)} Stück verfügbar`
                       : "Verfügbar"}
@@ -793,8 +795,8 @@ if (!article) {
     {/* Live-Zusammenfassung zur aktuellen Auswahl */}
     {article.sale_type !== "gesamt" && chosenTier && priceCalc && (
       <div className={styles.priceSummary}>
-        Deine Auswahl: <strong>{qty} {unitLabel(unit)}</strong> ·{" "}
-        <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit)} ·{" "}
+        Deine Auswahl: <strong>{qty} {unitLabel(unit, article.category)}</strong> ·{" "}
+        <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit, article.category)} ·{" "}
         Versand <strong>{priceCalc.shipping.toFixed(2)} €</strong> ·{" "}
         Gesamt <strong>{priceCalc.total.toFixed(2)} €</strong>
       </div>
@@ -822,7 +824,7 @@ if (!article) {
     <div className={styles.tiersTable}>
       <div className={styles.tiersHead}>
         <span>Menge</span>
-        <span>Preis / {unitLabel(unit)}</span>
+        <span>Preis / {unitLabel(unit, article.category)}</span>
         <span>Versand</span>
       </div>
 
@@ -892,7 +894,7 @@ if (!article) {
 
                           if (stockLimit != null && next > stockLimit) {
                             next = stockLimit;
-                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`);
                           } else {
                             setQtyHint(null);
                           }
@@ -910,7 +912,7 @@ if (!article) {
 
                           if (stockLimit != null && next > stockLimit) {
                             next = stockLimit;
-                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit)}`);
+                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`);
                           } else {
                             setQtyHint(null);
                           }
@@ -925,7 +927,7 @@ if (!article) {
                     </div>
 
                     <span className={styles.unitSuffix}>
-                      {article.sale_type === "gesamt" ? "" : unitLabel(unit)}
+                      {article.sale_type === "gesamt" ? "" : unitLabel(unit, article.category)}
                     </span>
                   </div>
 
@@ -935,7 +937,7 @@ if (!article) {
 
                 {stockLimit != null && (
                   <div style={{ marginTop: 8, opacity: 0.85 }}>
-                    Max verfügbar: {stockLimit} {unitLabel(unit)}
+                    Max verfügbar: {stockLimit} {unitLabel(unit, article.category)}
                   </div>
                 )}
                 {chosenTier && priceCalc && (
