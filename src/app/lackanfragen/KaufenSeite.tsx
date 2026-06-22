@@ -580,7 +580,9 @@ export default function KaufenSeite() {
             />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div className={styles.mengeText}>Max. Menge:</div>
+              <div className={styles.mengeText}>
+                Max. Menge {kategorie === 'Nasslack' ? '(Liter)' : kategorie === 'Pulverlack' ? '(kg)' : '(kg / Liter)'}:
+              </div>
               {/* Text statt number: verhindert automatische 0 beim Tippen */}
               <input
                 className={styles.input}
@@ -592,9 +594,9 @@ export default function KaufenSeite() {
                 onBlur={commitNumInput}
                 onKeyDown={(e) => { if (e.key === 'Enter') commitNumInput(); }}
                 style={{ width: 90 }}
-                aria-label="Maximale Menge in kg"
+                aria-label="Maximale Menge"
               />
-              <span>kg</span>
+              <span>{kategorie === 'Nasslack' ? 'Liter' : kategorie === 'Pulverlack' ? 'kg' : 'kg / Liter'}</span>
             </div>
           </div>
 

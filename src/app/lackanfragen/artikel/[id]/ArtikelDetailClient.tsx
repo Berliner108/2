@@ -113,10 +113,16 @@ function toDateOrNull(s?: string | null): Date | null {
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
-function formatKg(n?: number | null): string {
+function formatMenge(n?: number | null, kategorie?: string): string {
   if (typeof n !== 'number' || !isFinite(n)) return '—';
+
   const s = n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
-  return `${s} kg`;
+  const einheit =
+    kategorie === 'Nasslack' || kategorie === 'nasslack'
+      ? 'Liter'
+      : 'kg';
+
+  return `${s} ${einheit}`;
 }
 function normKategorie(k?: string): string {
   const v = (k || '').toLowerCase();
@@ -916,7 +922,7 @@ const isSubmitDisabled =
               {typeof artikel.menge === 'number' && (
                 <div className={styles.metaItem1}>
                   <span className={styles.label}>Benötigte Menge:</span>
-                  <span className={styles.value}>{formatKg(artikel.menge)}</span>
+                  {formatMenge(artikel.menge, artikel.kategorie)}
                 </div>
               )}
 
