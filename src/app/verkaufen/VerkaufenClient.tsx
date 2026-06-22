@@ -2285,7 +2285,7 @@ return (
 <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
 
   <legend className={styles.mengeLegend}>
-    Menge (kg): <span style={{ color: 'red' }}>*</span>
+    Menge ({kategorie === 'nasslack' ? 'Liter' : 'kg'}): <span style={{ color: 'red' }}>*</span>
   </legend>
 
   {/* Radio-Buttons nebeneinander */}
@@ -2319,7 +2319,7 @@ return (
 
   {!aufLager && (
     <label className={styles.mengeNumberLabel}>
-      <span>Menge (kg):</span>
+      <span>Menge ({kategorie === 'nasslack' ? 'Liter' : 'kg'}):</span>
       <input
           type="number"
           step={1}
@@ -3429,7 +3429,11 @@ onFocus={() => {
     <div className={styles.staffelTableHead} aria-hidden>
       <div>Ab</div>
       <div>Bis (optional)</div>
-      <div>Preis {verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}</div>
+      <div>
+  Preis {verkaufsArt === 'pro_kg'
+    ? `€/${kategorie === 'nasslack' ? 'Liter' : 'kg'}`
+    : '€/Stück'}
+</div>
       <div>Versand (€)</div>
       <div></div>
     </div>
@@ -3815,7 +3819,13 @@ onFocus={() => {
   </>
 ) : (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') ? (
   <>
-    <p><strong>Preisstaffeln ({verkaufsArt === 'pro_kg' ? '€/kg' : '€/Stück'}):</strong></p>
+    <p>
+  <strong>
+    Preisstaffeln ({verkaufsArt === 'pro_kg'
+      ? `€/${kategorie === 'nasslack' ? 'Liter' : 'kg'}`
+      : '€/Stück'}):
+  </strong>
+</p>
     <ul>
       {staffeln
         .filter(s => [s.minMenge, s.maxMenge, s.preis, s.versand].some(x => (x ?? '').trim() !== ''))
