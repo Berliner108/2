@@ -418,6 +418,8 @@ useEffect(() => {
   const [hersteller, setHersteller] = useState<string>('');
   const [aufladung, setAufladung] = useState<string[]>([]);
   const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
+  const einheitFuerKategorie = (kat: 'nasslack' | 'pulverlack' | null) =>
+  kat === 'nasslack' ? 'Liter' : 'kg';
 
   // Adresse/Profil
   const [lieferadresseOption, setLieferadresseOption] = useState<'profil' | 'manuell'>('profil');
@@ -1547,22 +1549,26 @@ if (bootLoading) {
                   </label>
 
                   {/* Menge */}
-                  <label className={styles.labelmenge} ref={mengeRef}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      Benötigte Menge (kg): <span style={{ color: 'red' }}>*</span>
-                    </span>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      max="9999.9"
-                      className={styles.input}
-                      value={menge === 0 ? '' : menge}
-                      onChange={handleMengeChange}
-                      placeholder="z. B. 5.5"
-                      onKeyDown={(e) => { if (['e','E','+','-'].includes(e.key)) e.preventDefault(); }}
-                    />
-                  </label>
+                    <label className={styles.labelmenge} ref={mengeRef}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        Benötigte Menge ({einheitFuerKategorie(kategorie)}):{' '}
+                        <span style={{ color: 'red' }}>*</span>
+                      </span>
+
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        max="9999.9"
+                        className={styles.input}
+                        value={menge === 0 ? '' : menge}
+                        onChange={handleMengeChange}
+                        placeholder={`z. B. 5.5 ${einheitFuerKategorie(kategorie)}`}
+                        onKeyDown={(e) => {
+                          if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+                        }}
+                      />
+                    </label>
                   {warnungMenge && <p className={styles.validierungsfehler}>{warnungMenge}</p>}
 
                   {/* Farbpalette */}
