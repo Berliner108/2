@@ -167,7 +167,12 @@ function profileReviewsHref(username: string | null | undefined): string | undef
   if (!looksLikeHandle(username)) return undefined;
   return `/u/${username}/reviews`;
 }
-
+function euro(n: number) {
+  return n.toLocaleString("de-DE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 /* ===================== Seite ===================== */
 export default function ArtikelDetailPage() {
   const params = useParams<{ id: string }>();
@@ -350,8 +355,12 @@ useEffect(() => {
 
 const stockLimit = useMemo(() => {
   if (!article) return null;
-  if (article.stock_status !== "begrenzt") return null;
-  return unit === "kg" ? article.qty_kg ?? null : article.qty_piece ?? null;
+
+  if (unit === "kg") {
+    return article.qty_kg != null ? Number(article.qty_kg) : null;
+  }
+
+  return article.qty_piece != null ? Number(article.qty_piece) : null;
 }, [article, unit]);
 
 useEffect(() => {
@@ -813,7 +822,7 @@ if (!article) {
   ) : article.sale_type === "gesamt" ? (
     <div className={styles.singlePriceBox}>
       <div>
-        Gesamtpreis: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
+        Artikel: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
       </div>
       <div>
         Versand: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
@@ -946,27 +955,53 @@ if (!article) {
                   </div>
                 )}
                 {chosenTier && priceCalc && (
-                  <div className={styles.buyPriceSummary}>
-                    {article.sale_type !== "gesamt" && (
-                      <div className={styles.buyPriceLine}>
-                        <span>Einzelpreis:</span>
-                        <strong>
-                          {priceCalc.unitPrice.toFixed(2)} € / {unitLabel(unit, article.category)}
-                        </strong>
-                      </div>
-                    )}
+  <div className={styles.buyPriceSummary}>
+    {article.sale_type === "gesamt" ? (
+      <>
+        <div className={styles.buyPriceLine}>
+          <span>Artikel:</span>
+          <strong>{euro(priceCalc.unitPrice)} €</strong>
+        </div>
 
-                    <div className={styles.buyPriceLine}>
-                      <span>Versand:</span>
-                      <strong>{priceCalc.shipping.toFixed(2)} €</strong>
-                    </div>
+        <div className={styles.buyPriceLine}>
+          <span>Versand:</span>
+          <strong>{euro(priceCalc.shipping)} €</strong>
+        </div>
 
-                    <div className={styles.buyTotal}>
-                      <span>Gesamt:</span>
-                      <strong>{priceCalc.total.toFixed(2)} €</strong>
-                    </div>
-                  </div>
-                )}
+        <div className={styles.buyTotal}>
+          <span>Gesamt:</span>
+          <strong>{euro(priceCalc.total)} €</strong>
+        </div>
+      </>
+    ) : (
+      <>
+        {hasStaffelpreise && (
+          <div className={styles.buyPriceLine}>
+            <span>Einzelpreis:</span>
+            <strong>
+              {euro(priceCalc.unitPrice)} € / {unitLabel(unit, article.category)}
+            </strong>
+          </div>
+        )}
+
+        <div className={styles.buyPriceLine}>
+          <span>Artikel:</span>
+          <strong>{euro(qty * priceCalc.unitPrice)} €</strong>
+        </div>
+
+        <div className={styles.buyPriceLine}>
+          <span>Versand:</span>
+          <strong>{euro(priceCalc.shipping)} €</strong>
+        </div>
+
+        <div className={styles.buyTotal}>
+          <span>Gesamt:</span>
+          <strong>{euro(priceCalc.total)} €</strong>
+        </div>
+      </>
+    )}
+  </div>
+)}
 
                 <div className={styles.buttonRow}>
                   <button
