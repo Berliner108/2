@@ -512,7 +512,7 @@ const showSkeletonLack = useMinimumSkeleton(loadingLack, 220);
     const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
 const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
 
-// ✅ nur bei "Preis ab:" Einheit zeigen
+// ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
 const unitSuffix =
   art.price_unit
     ? ` / ${art.price_unit === "stueck" ? "Stück" : einheitFuerKategorie(art.kategorie)}`
