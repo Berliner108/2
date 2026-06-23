@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 function getBerlinTodayISO(): string {
-  // YYYY-MM-DD in Europe/Berlin
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Berlin",
     year: "numeric",
@@ -16,7 +15,6 @@ function getBerlinTodayISO(): string {
 }
 
 function parseISODateToUTC(iso: string): Date {
-  // iso = YYYY-MM-DD
   return new Date(`${iso}T00:00:00Z`);
 }
 
@@ -66,7 +64,6 @@ export async function GET(req: Request) {
 
     const admin = supabaseAdmin();
 
-    // 1) Artikel holen: beworbene Artikel nach promo_score, bei Gleichstand nach updated_at/created_at/id
     const { data: articles, error } = await admin
       .from("articles")
       .select(
@@ -85,7 +82,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 1b) Feiertage laden für Lieferdatum-Berechnung
     const todayISO = getBerlinTodayISO();
 
     const maxDeliveryDays =
@@ -98,7 +94,6 @@ export async function GET(req: Request) {
         return d > max ? d : max;
       }, 0) || 0;
 
-    // Buffer, weil wir beim Iterieren Wochenenden/Feiertage überspringen
     const endDate = new Date(
       parseISODateToUTC(todayISO).getTime() +
         (maxDeliveryDays + 40) * 24 * 60 * 60 * 1000
@@ -119,7 +114,6 @@ export async function GET(req: Request) {
       (holidayRows ?? []).map((h: any) => h.holiday_date)
     );
 
-    // 2) Seller-Profile für Badges holen
     const ownerIds = Array.from(
       new Set((articles ?? []).map((a: any) => a.owner_id).filter(Boolean))
     ) as string[];
@@ -144,12 +138,15 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3) price_from Brutto für diese Artikel ermitteln
     const articleIds = (articles ?? []).map((a: any) => a.id);
 
     const minPriceByArticle: Record<
       string,
-      { price_from: number | null; unit: "kg" | "stueck" | null }
+      {
+        price_from: number | null;
+        unit: "kg" | "stueck" | null;
+        tier_count: number;
+      }
     > = {};
 
     if (articleIds.length) {
@@ -163,32 +160,49 @@ export async function GET(req: Request) {
       }
 
       for (const t of tiers ?? []) {
-        const key = t.article_id;
+        const key = String(t.article_id);
         const price = typeof t.price === "number" ? t.price : Number(t.price);
         const unit = t.unit as "kg" | "stueck";
 
+        if (!key) continue;
         if (!Number.isFinite(price)) continue;
         if (unit !== "kg" && unit !== "stueck") continue;
 
         const current = minPriceByArticle[key];
 
-        if (!current || current.price_from === null || price < current.price_from) {
-          minPriceByArticle[key] = { price_from: price, unit };
+        if (!current) {
+          minPriceByArticle[key] = {
+            price_from: price,
+            unit,
+            tier_count: 1,
+          };
+          continue;
+        }
+
+        current.tier_count += 1;
+
+        if (current.price_from === null || price < current.price_from) {
+          current.price_from = price;
+          current.unit = unit;
         }
       }
     }
 
-    // 4) Artikel anreichern
     const list = (articles ?? []).map((a: any) => {
       const dDays =
         typeof a.delivery_days === "number"
           ? a.delivery_days
           : Number(a.delivery_days ?? 0);
 
+      const priceInfo = minPriceByArticle[a.id] ?? null;
+
       return {
         ...a,
-        price_from: minPriceByArticle[a.id]?.price_from ?? null,
-        price_unit: minPriceByArticle[a.id]?.unit ?? null,
+        price_from: priceInfo?.price_from ?? null,
+        price_unit: priceInfo?.unit ?? null,
+        price_is_from:
+          (a.sale_type ?? "gesamt") !== "gesamt" &&
+          (priceInfo?.tier_count ?? 0) > 1,
         seller_account_type: a.owner_id
           ? sellerById[a.owner_id]?.account_type ?? null
           : null,
@@ -196,7 +210,6 @@ export async function GET(req: Request) {
       };
     });
 
-    // 5) Promo-Artikel exakt nach Score sortieren
     const sponsored = list
       .filter((a) => Number(a.promo_score ?? 0) > 0)
       .sort((a, b) => {
@@ -212,7 +225,6 @@ export async function GET(req: Request) {
         return String(b.id).localeCompare(String(a.id));
       });
 
-    // 6) Normale Artikel bleiben random
     const rest = list.filter((a) => Number(a.promo_score ?? 0) <= 0);
 
     for (let i = rest.length - 1; i > 0; i--) {
