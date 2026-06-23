@@ -16,15 +16,47 @@ function computeOrtShort(d: any): string {
   const joined = joinPlzOrt(d?.plz, d?.ort)
   return joined || '—'
 }
+function sortImageUrls(urls: unknown): string[] {
+  if (!Array.isArray(urls)) return []
 
+  return urls
+    .filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+    .sort((a, b) => {
+      const getName = (url: string) => {
+        try {
+          return decodeURIComponent(url.split('/').pop() ?? url)
+        } catch {
+          return url
+        }
+      }
+
+      return getName(a).localeCompare(getName(b), 'de', {
+        numeric: true,
+        sensitivity: 'base',
+      })
+    })
+}
 function normalizeBilder(d: any): string[] {
   const b = d?.bilder
+
+  let bilder: string[] = []
+
   if (Array.isArray(b)) {
-    if (typeof b[0] === 'string') return b as string[]
-    if (typeof b[0] === 'object' && b[0]?.url) return (b as any[]).map(x => x.url).filter(Boolean)
+    if (typeof b[0] === 'string') {
+      bilder = b.filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+    } else if (typeof b[0] === 'object' && b[0]?.url) {
+      bilder = (b as any[])
+        .map((x) => x?.url)
+        .filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+    }
+  } else if (typeof b === 'string' && b.trim()) {
+    bilder = b
+      .split(',')
+      .map((s: string) => s.trim())
+      .filter(Boolean)
   }
-  if (typeof b === 'string' && b.trim()) return b.split(',').map((s: string) => s.trim()).filter(Boolean)
-  return []
+
+  return sortImageUrls(bilder)
 }
 
 type DateiItem = { name: string; url: string }
