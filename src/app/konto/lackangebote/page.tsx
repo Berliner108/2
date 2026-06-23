@@ -51,6 +51,7 @@ type LackOrder = {
   ort?: string | null
   lieferdatum?: string | null
   mengeKg?: number | null
+  kategorie?: string | null
 
   status?: OrderStatus
   deliveredReportedAt?: string
@@ -121,6 +122,10 @@ const formatEUR = (c?: number) =>
 
 const formatDate = (d?: Date) =>
   d ? new Intl.DateTimeFormat('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d) : '—'
+const einheitFuerKategorie = (kategorie?: string | null) => {
+  const v = (kategorie ?? '').trim().toLowerCase()
+  return v === 'nasslack' ? 'Liter' : 'kg'
+}
 
 // (darf bleiben, wird für Anzeige nicht mehr verwendet)
 function statusFromLiefer(d?: Date): { key: 'wartet' | 'aktiv' | 'fertig'; label: 'Anlieferung geplant' | 'In Bearbeitung' | 'Abholbereit/Versandt' } {
@@ -359,7 +364,12 @@ const LackanfragenOrdersPage: FC = () => {
   const pickLiefer = (order: LackOrder) => asDateLike(order.lieferdatum)
   const pickTitle  = (order: LackOrder) => {
     if (order.title && order.title.trim()) {
-      const extras = [order.ort, typeof order.mengeKg === 'number' ? `${order.mengeKg} kg` : ''].filter(Boolean).join(' · ')
+      const extras = [
+    order.ort,
+    typeof order.mengeKg === 'number'
+      ? `${order.mengeKg} ${einheitFuerKategorie(order.kategorie ?? (order as any).category)}`
+      : ''
+  ].filter(Boolean).join(' · ')
       return [order.title, extras].filter(Boolean).join(' — ')
     }
     return `Anfrage #${String(order.requestId).slice(0, 8)}`
@@ -748,7 +758,11 @@ function readableDisputeReason(reason?: string | null): string {
 
                 <div className={styles.metaCol}>
                   <div className={styles.metaLabel}>Menge</div>
-                  <div className={styles.metaValue}>{typeof menge === 'number' ? `${menge} kg` : '—'}</div>
+                  <div className={styles.metaValue}>
+                    {typeof menge === 'number'
+                      ? `${menge} ${einheitFuerKategorie(order.kategorie ?? (order as any).category)}`
+                      : '—'}
+                  </div>
                 </div>
 
                 {order.deliveredReportedAt && (

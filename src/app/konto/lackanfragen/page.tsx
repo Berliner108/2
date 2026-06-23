@@ -67,6 +67,10 @@ const itemPathBy = (id: string | number) => `/lackanfragen/artikel/${encodeURICo
 const formatEUR = (c: number) => (c / 100).toLocaleString('de-AT', { style: 'currency', currency: 'EUR' })
 const formatDate = (d?: Date) => (d ? d.toLocaleDateString('de-AT') : '—')
 const formatDateTime = (d?: Date) => (d ? d.toLocaleString('de-AT') : '—')
+const einheitFuerKategorie = (kategorie?: string | null) => {
+  const v = (kategorie ?? '').trim().toLowerCase()
+  return v === 'nasslack' ? 'Liter' : 'kg'
+}
 // Username = 2–32 Zeichen, alphanumerisch, . _ - erlaubt (nicht am Rand)
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/;
 const asHandleOrNull = (v?: unknown) => {
@@ -331,7 +335,8 @@ return {
        `Anfrage #${id}`) as string
     const ort = (meta?.data?.ort || meta?.ort || '').toString().trim()
     const mm = parseMaxMasse(meta?.data)
-    const extras = [ort, (typeof mm === 'number' ? `${mm} kg` : '')].filter(Boolean).join(' · ')
+    const einheit = einheitFuerKategorie(meta?.data?.kategorie)
+    const extras = [ort, (typeof mm === 'number' ? `${mm} ${einheit}` : '')].filter(Boolean).join(' · ')
     return [verfahrenstitel, extras].filter(Boolean).join(' — ')
   }
 
