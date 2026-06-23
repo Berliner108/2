@@ -165,6 +165,7 @@ export async function fetchBoersenJobs(opts?: { limit?: number }): Promise<Auftr
       bilder,
       standort,
       gesponsert,
+      promoScore: job.promo_score ?? 0,
       gewerblich,
       privat,
       beschreibung: job.description ?? null,

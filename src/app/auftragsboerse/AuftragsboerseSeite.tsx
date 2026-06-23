@@ -260,9 +260,11 @@ const sortierteAuftraege = useMemo(() => {
   arr.sort((a, b) => {
     // ✅ Gesponsert NUR pinnen, wenn keine Sortierung gewählt ist
     if (!sortierung) {
-      if (a.gesponsert && !b.gesponsert) return -1
-      if (!a.gesponsert && b.gesponsert) return 1
-    }
+  const promoA = Number((a as any).promoScore ?? 0)
+  const promoB = Number((b as any).promoScore ?? 0)
+
+  if (promoA !== promoB) return promoB - promoA
+}
 
     const na = normLogistik(a)
     const nb = normLogistik(b)
