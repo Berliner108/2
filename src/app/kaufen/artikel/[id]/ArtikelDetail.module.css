@@ -256,19 +256,17 @@
 }
 
 .inputGroup {
-  margin-top: 0rem;
+  margin-top: 0;
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  font-size: 1.2rem;
-  font-weight: bolder;
+  gap: 0.55rem;
+  font-size: 1rem;
+  font-weight: 500;
   align-items: flex-start;
   justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: 0rem;
   text-align: left;
 }
-
 .preisLabel {
   font-weight: bold;
   font-size: 1rem;
@@ -290,8 +288,8 @@
 .inputRow1 {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 0.2rem;
+  gap: 0.75rem;
+  margin-top: 0;
   flex-wrap: wrap;
 }
 .inputRow {
@@ -390,11 +388,30 @@
 .offerBox {
   border: 2px solid black;
   border-radius: 8px;
-  padding: 0.9rem;
+  padding: 1rem;
+  margin-top: 1rem;
   background-color: #fff;
   text-align: left;
+  font-size: 1rem;
 }
-
+.buyTotal {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+}
+.qtyInput {
+  width: 60px;
+  height: 30px;
+  text-align: center;
+  border: none;
+  outline: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: transparent;
+}
 .priceField,
 .altPriceField {
   padding: 0.5rem;
@@ -1060,80 +1077,6 @@
     grid-template-columns: 1fr;
   }
 }
-/* =========================
-   Offerbox: nur hier skalieren
-   ========================= */
-/* =========================
-   Kaufbereich: Schriftgrößen wie Auftrag-Detailseite
-   ========================= */
-
-.offerBox {
-  font-size: 1rem;
-}
-
-.offerBox .inputGroup {
-  font-size: 1rem;
-  font-weight: 500;
-  margin-top: 0;
-  gap: 0.5rem;
-}
-
-.offerBox .inputRow1 label {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #555;
-}
-
-.offerBox .inputRow1 span,
-.offerBox .unitSuffix {
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.offerBox .qtyStepper {
-  font-size: 1rem;
-}
-
-.offerBox .qtyInput {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.offerBox .stepBtn {
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.offerBox .buyTotal {
-  margin-top: 0.75rem;
-  margin-bottom: -8px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #222;
-}
-
-.offerBox .submitOfferButton {
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.offerBox .offerNote {
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #333;
-}
-
-.offerBox .qtyHint {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.stockInfo {
-  margin-top: 0.5rem;
-  opacity: 0.85;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
 .impressumBox {
   flex: 1 1 100%;
   border: 1px solid #d9e2ec;
@@ -1241,94 +1184,4 @@
   .orderDetailGrid {
     gap: 0.75rem;
   }
-}
-/* =========================
-   Kaufbereich kompakter wie Auftrag-Detailseite
-   ========================= */
-
-.offerBox {
-  border: 2px solid black;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-top: 1rem;
-  background-color: #fff;
-  text-align: left;
-}
-
-.offerBox .inputGroup {
-  margin-top: 0;
-  margin-bottom: 0;
-  gap: 0.55rem;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.offerBox .inputRow1 {
-  margin-top: 0;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.offerBox .inputRow1 label {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #555;
-}
-
-.offerBox .qtyStepper {
-  height: 36px;
-  padding: 0.25rem 0.35rem;
-  gap: 0.45rem;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-}
-
-.offerBox .stepBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  font-size: 0.95rem;
-}
-
-.offerBox .qtyInput {
-  width: 60px;
-  height: 30px;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.offerBox .unitSuffix {
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.stockInfo {
-  margin-top: 0.4rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333;
-  opacity: 1;
-}
-
-.offerBox .buyTotal {
-  margin-top: 1rem;
-  margin-bottom: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #222;
-}
-
-.offerBox .submitOfferButton {
-  margin-top: 0.15rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 800;
-  border-radius: 8px;
-}
-
-.offerBox .offerNote {
-  margin-top: 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 400;
-  color: #333;
 }
