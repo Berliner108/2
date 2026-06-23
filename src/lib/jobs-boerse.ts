@@ -32,12 +32,13 @@ type ProfileRow = {
 }
 
 type JobFileRow = {
+  id: string
   job_id: string
   kind: 'image' | 'document'
   bucket: string
   path: string
   original_name: string | null
-  created_at?: string
+  created_at?: string | null
 }
 
 // ✅ limit optional, Börse bleibt unverändert wenn nicht gesetzt
@@ -107,11 +108,12 @@ export async function fetchBoersenJobs(opts?: { limit?: number }): Promise<Auftr
   // 3) job_files holen (für Titelbild reicht: nur images!)
   const jobIds = jobs.map((j) => j.id)
   const { data: filesData, error: filesError } = await supabase
-    .from('job_files')
-    .select('job_id, kind, bucket, path, original_name, created_at')
-    .in('job_id', jobIds)
-    .eq('kind', 'image') // ✅ nur Bilder
-    .order('created_at', { ascending: true }) // ✅ erstes Bild = Titelbild
+  .from('job_files')
+  .select('id, job_id, kind, bucket, path, original_name, created_at')
+  .in('job_id', jobIds)
+  .eq('kind', 'image')
+  .order('created_at', { ascending: true })
+  .order('id', { ascending: true })
 
   if (filesError) {
     console.error('fetchBoersenJobs job_files error:', filesError)
