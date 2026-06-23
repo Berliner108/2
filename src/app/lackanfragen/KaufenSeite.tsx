@@ -39,6 +39,7 @@ type CardArtikel = {
   ort: string;
   bilder: string[];
   gesponsert?: boolean;
+  promoScore?: number;
   gewerblich?: boolean;
   privat?: boolean;
 
@@ -319,7 +320,9 @@ export default function KaufenSeite() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/lackanfragen', { cache: 'no-store' });
+        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=200', {
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         const rawItems: ApiItem[] = json?.items || [];
@@ -370,6 +373,7 @@ export default function KaufenSeite() {
             ort: resolveLieferort({ data: d, ...it }) || '—',
             bilder,
             gesponsert: Boolean(d.gesponsert ?? (it as any).gesponsert),
+            promoScore: Number((it as any).promoScore ?? (it as any).promo_score ?? 0),
             gewerblich: istGewerblich,
             privat: istGewerblich === false ? true : false,
 
@@ -431,8 +435,13 @@ export default function KaufenSeite() {
     const getTime = (x: CardArtikel) => (x.lieferdatum ? x.lieferdatum.getTime() : Number.MAX_SAFE_INTEGER);
     arr.sort((a, b) => {
       // Gesponsert nach oben
-      if (a.gesponsert && !b.gesponsert) return -1;
-      if (!a.gesponsert && b.gesponsert) return 1;
+      // Ohne aktive Sortierung: nach echter Promo-Score-Höhe
+      if (!sortierung) {
+        const promoA = Number(a.promoScore ?? 0);
+        const promoB = Number(b.promoScore ?? 0);
+
+        if (promoA !== promoB) return promoB - promoA;
+      }
 
       switch (sortierung) {
         case 'lieferdatum-auf':
