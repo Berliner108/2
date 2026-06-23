@@ -64,6 +64,10 @@ const normKategorie = (k?: string) => {
   if (v === 'nasslack') return 'Nasslack';
   return k ?? '';
 };
+const einheitFuerKategorie = (kategorie?: string | null) => {
+  const v = (kategorie ?? '').trim().toLowerCase();
+  return v === 'nasslack' ? 'Liter' : 'kg';
+};
 
 /** Zustand formatieren mit „und“ statt „&“ */
 const stripDiacritics = (s: string) =>
@@ -490,13 +494,13 @@ const showSkeletonLack = useMinimumSkeleton(loadingLack, 220);
       : undefined;
 
     const availability =
-      art.stock_status === "auf_lager"
-        ? "Auf Lager"
-        : art.qty_kg != null
-        ? `${art.qty_kg} kg verfügbar`
-        : art.qty_piece != null
-        ? `${art.qty_piece} Stück verfügbar`
-        : "Verfügbar";
+  art.stock_status === "auf_lager"
+    ? "Auf Lager"
+    : art.qty_kg != null
+    ? `${art.qty_kg} ${einheitFuerKategorie(art.kategorie)} verfügbar`
+    : art.qty_piece != null
+    ? `${art.qty_piece} Stück verfügbar`
+    : "Verfügbar";
 
     const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
 const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
@@ -504,7 +508,7 @@ const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)}
 // ✅ nur bei "Preis ab:" Einheit zeigen
 const unitSuffix =
   art.price_is_from && art.price_unit
-    ? ` / ${art.price_unit === "stueck" ? "Stück" : "kg"}`
+    ? ` / ${art.price_unit === "stueck" ? "Stück" : einheitFuerKategorie(art.kategorie)}`
     : "";
 
 
@@ -581,7 +585,7 @@ const unitSuffix =
       />
       <div className={styles.articleText}>
         <h3>{anfrage.titel}</h3>
-        <p><strong>Menge:</strong> {anfrage.menge} kg</p>
+        <p><strong>Menge:</strong> {anfrage.menge} {einheitFuerKategorie(anfrage.kategorie)}</p>
         <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
         <p><strong>Hersteller:</strong> {anfrage.hersteller || 'Alle'}</p>
         <p><strong>Farbtonbezeichnung:</strong> {anfrage.farbton || '—'}</p>
