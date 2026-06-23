@@ -1181,16 +1181,23 @@ if (verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') {
     setWarnungStaffeln('Bitte gib mindestens eine Staffel an.');
     fehler = true;
   } else {
-    const komplett = aktive.every((s) =>
-      s.minMenge.trim() !== '' &&
-      s.maxMenge.trim() !== '' &&
-      s.preis.trim() !== ''
-      // Versand darf leer sein (= 0)
-    );
+    const komplett = aktive.every((s, i) => {
+  const istLetzteZeile = i === aktive.length - 1;
+
+  const darfBisLeerSein =
+    aufLager && istLetzteZeile;
+
+  return (
+    s.minMenge.trim() !== '' &&
+    (darfBisLeerSein || s.maxMenge.trim() !== '') &&
+    s.preis.trim() !== ''
+    // Versand darf leer sein (= 0)
+  );
+});
 
     if (!komplett) {
       setWarnungStaffeln(
-        'Bitte fülle jede Staffelzeile vollständig aus (Ab, Bis, Preis). Versand kann kostenlos sein.'
+        'Bitte fülle Ab und Preis aus. Bei „Auf Lager“ darf die letzte Bis-Angabe leer bleiben (= unendlich). Versand kann kostenlos sein.'
       );
       fehler = true;
     } else if (!staffelnSindGueltig(staffeln)) {
