@@ -340,14 +340,21 @@ useEffect(() => {
       setLoadingShop(true);
 
       // ✅ IMMER Top 12 – unabhängig von gesponsert
-      const res = await fetch(`/api/artikel?limit=12&v=${Date.now()}`, { cache: "no-store" });
+      // ✅ gleiche API wie die Shopseite
+// ✅ Sortierung kommt aus /api/articles/route.ts
+const res = await fetch(`/api/articles?limit=200&offset=0`, {
+  cache: "no-store",
+});
 
-      if (!res.ok) throw new Error("HTTP " + res.status);
+if (!res.ok) throw new Error("HTTP " + res.status);
 
-      const json = await res.json().catch(() => ({}));
-      const raw = Array.isArray(json?.items) ? (json.items as any[]) : [];
+const json = await res.json().catch(() => ({}));
+const raw = Array.isArray(json?.articles) ? (json.articles as any[]) : [];
 
-      const mapped: ShopArtikel[] = raw.map((a) => ({
+// ✅ exakt die ersten 12 aus der Shop-Reihenfolge
+const top12 = raw.slice(0, 12);
+
+const mapped: ShopArtikel[] = top12.map((a) => ({
         id: a.id,
         titel: a.title ?? "Unbenannt",
         bilder: Array.isArray(a.image_urls) && a.image_urls.length ? a.image_urls : ["/images/platzhalter.jpg"],
