@@ -1066,7 +1066,8 @@ if (!article) {
                 )}
 
                 <p className={styles.offerNote}>
-                  Preise sind <strong>Brutto</strong>.
+                  Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer. 
+                  Mit dem Kauf bestätigst du die geltenden AGB zu akzeptieren.
                 </p>
               </div>
             </div>
