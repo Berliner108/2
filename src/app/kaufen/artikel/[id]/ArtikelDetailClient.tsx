@@ -805,17 +805,7 @@ if (!article) {
     <h2 className={styles.priceTitle}>
       {article.sale_type === "gesamt" ? "Preisübersicht" : "Staffelpreise"}
     </h2>
-
-    {/* Live-Zusammenfassung zur aktuellen Auswahl */}
-    {article.sale_type !== "gesamt" && chosenTier && priceCalc && (
-      <div className={styles.priceSummary}>
-        Deine Auswahl: <strong>{qty} {unitLabel(unit, article.category)}</strong> ·{" "}
-        <strong>{priceCalc.unitPrice.toFixed(2)} €</strong> / {unitLabel(unit, article.category)} ·{" "}
-        Versand <strong>{priceCalc.shipping.toFixed(2)} €</strong> ·{" "}
-        Gesamt <strong>{priceCalc.total.toFixed(2)} €</strong>
-      </div>
-    )}
-  </div>
+    </div>
 
   {tiers.length === 0 ? (
     <p>Keine Preisinformationen gefunden.</p>
@@ -877,89 +867,104 @@ if (!article) {
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
 
-                <div className={styles.inputRow1}>
-                    <label className={styles.buyLabel}>Menge:</label>
+                <div className={styles.qtyBox}>
+  <div className={styles.qtyBoxHeader}>
+    <span>Menge auswählen</span>
 
-                    <div className={styles.qtyStepper}>
-                      <button
-                        type="button"
-                        className={styles.stepBtn}
-                        onClick={() => setQty((q) => {
-                          const next = Math.max(1, (Number.isFinite(q) ? q : 1) - 1);
-                          return next;
-                        })}
-                        disabled={article.sale_type === "gesamt" || qty <= 1}
-                        aria-label="Menge verringern"
-                      >
-                        –
-                      </button>
+    {article.sale_type !== "gesamt" && stockLimit != null && (
+      <small>
+        Max. {stockLimit} {unitLabel(unit, article.category)}
+      </small>
+    )}
+  </div>
 
-                      <input
-                        className={styles.qtyInput}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={article.sale_type === "gesamt" ? 1 : qty}
-                        disabled={article.sale_type === "gesamt"}
-                        onChange={(e) => {
-                          const raw = String(e.target.value).replace(/\D/g, "");
-                          const num = raw ? parseInt(raw, 10) : 1;
+  <div className={styles.qtyControl}>
+    <button
+      type="button"
+      className={styles.stepBtn}
+      onClick={() =>
+        setQty((q) => {
+          const next = Math.max(1, (Number.isFinite(q) ? q : 1) - 1);
+          return next;
+        })
+      }
+      disabled={article.sale_type === "gesamt" || qty <= 1}
+      aria-label="Menge verringern"
+    >
+      –
+    </button>
 
-                          let next = Math.max(1, num);
+    <div className={styles.qtyDisplay}>
+      <input
+        className={styles.qtyInput}
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={article.sale_type === "gesamt" ? 1 : qty}
+        disabled={article.sale_type === "gesamt"}
+        onChange={(e) => {
+          const raw = String(e.target.value).replace(/\D/g, "");
+          const num = raw ? parseInt(raw, 10) : 1;
 
-                          if (stockLimit != null && next > stockLimit) {
-                            next = stockLimit;
-                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`);
-                          } else {
-                            setQtyHint(null);
-                          }
+          let next = Math.max(1, num);
 
-                          setQty(next);
-                        }}
-                        aria-label="Menge"
-                      />
+          if (stockLimit != null && next > stockLimit) {
+            next = stockLimit;
+            setQtyHint(
+              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
+            );
+          } else {
+            setQtyHint(null);
+          }
 
-                      <button
-                        type="button"
-                        className={styles.stepBtn}
-                        onClick={() => setQty((q) => {
-                          let next = (Number.isFinite(q) ? q : 1) + 1;
+          setQty(next);
+        }}
+        aria-label="Menge"
+      />
 
-                          if (stockLimit != null && next > stockLimit) {
-                            next = stockLimit;
-                            setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`);
-                          } else {
-                            setQtyHint(null);
-                          }
+      {article.sale_type !== "gesamt" && (
+        <span>{unitLabel(unit, article.category)}</span>
+      )}
+    </div>
 
-                          return next;
-                        })}
-                        disabled={article.sale_type === "gesamt" || (stockLimit != null && qty >= stockLimit)}
-                        aria-label="Menge erhöhen"
-                      >
-                        +
-                      </button>
-                    </div>
+    <button
+      type="button"
+      className={styles.stepBtn}
+      onClick={() =>
+        setQty((q) => {
+          let next = (Number.isFinite(q) ? q : 1) + 1;
 
-                    <span className={styles.unitSuffix}>
-                      {article.sale_type === "gesamt" ? "" : unitLabel(unit, article.category)}
-                    </span>
-                  </div>
+          if (stockLimit != null && next > stockLimit) {
+            next = stockLimit;
+            setQtyHint(
+              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
+            );
+          } else {
+            setQtyHint(null);
+          }
+
+          return next;
+        })
+      }
+      disabled={
+        article.sale_type === "gesamt" ||
+        (stockLimit != null && qty >= stockLimit)
+      }
+      aria-label="Menge erhöhen"
+    >
+      +
+    </button>
+  </div>
+</div>
 
 
                 {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
 
-
-                {stockLimit != null && (
-                  <div className={styles.stockInfo}>
-                    Max verfügbar: {stockLimit} {unitLabel(unit, article.category)}
-                  </div>
-                )}
                 {chosenTier && priceCalc && (
   <div className={styles.buyPriceSummary}>
     {article.sale_type === "gesamt" ? (
       <>
         <div className={styles.buyPriceLine}>
-          <span>Artikel:</span>
+          <span>Artikelpreis:</span>
           <strong>{euro(priceCalc.unitPrice)} €</strong>
         </div>
 
@@ -985,9 +990,15 @@ if (!article) {
         )}
 
         <div className={styles.buyPriceLine}>
-          <span>Artikel:</span>
-          <strong>{euro(qty * priceCalc.unitPrice)} €</strong>
-        </div>
+  <span>
+    Artikelpreis:
+    <small className={styles.priceLineSub}>
+      {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
+    </small>
+  </span>
+
+  <strong>{euro(qty * priceCalc.unitPrice)} €</strong>
+</div>
 
         <div className={styles.buyPriceLine}>
           <span>Versand:</span>

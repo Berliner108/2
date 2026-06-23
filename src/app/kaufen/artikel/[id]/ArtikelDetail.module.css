@@ -1225,3 +1225,64 @@
     gap: 0.75rem;
   }
 }
+.qtyBox {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.75rem;
+  border: 1px solid #e1e1e1;
+  border-radius: 10px;
+  background: #f7f7f7;
+}
+
+.qtyBoxHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.qtyBoxHeader span {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.qtyBoxHeader small {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.qtyDisplay {
+  min-width: 130px;
+  height: 38px;
+  padding: 0 0.65rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.qtyDisplay span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #444;
+}
+
+.priceLineSub {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #777;
+}
