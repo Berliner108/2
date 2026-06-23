@@ -416,6 +416,8 @@ useEffect(() => {
   const [beschreibung, setBeschreibung] = useState<string>('');
   const [farbton, setFarbton] = useState<string>('');
   const [hersteller, setHersteller] = useState<string>('');
+  const ANDERER_HERSTELLER = '__ANDERER_HERSTELLER__';
+  const [herstellerAndere, setHerstellerAndere] = useState<string>('');
   const [aufladung, setAufladung] = useState<string[]>([]);
   const displayHersteller = (v?: string) => (v && v.trim() ? v : 'Alle');
   const einheitFuerKategorie = (kat: 'nasslack' | 'pulverlack' | null) =>
@@ -521,7 +523,8 @@ useEffect(() => {
   ];
   const herstellerListeNass = [
     'Sherwin-Williams', 'Brillux','PPG Industries','Akzo Nobel','Nippon Paint','RPM International','Axalta','BASF','Kansai',
-    'Asian Paints','Jotun','Hempel','Adler Lacke','Berger','Nerolac','Benjamin Moore'
+    'Asian Paints','Jotun','Hempel','Adler Lacke','Berger','Nerolac','Benjamin Moore',
+    'Anderer Hersteller'
   ];
   const aktuelleHerstellerListe =
     kategorie === 'nasslack'
@@ -737,6 +740,7 @@ useEffect(() => {
   const resetFieldsExceptCategory = (): void => {
     setTitel('');
     setHersteller('');
+    setHerstellerAndere('');
     setMenge(0);
     setFarbpaletteWert('');
     setFarbton('');
@@ -760,6 +764,7 @@ useEffect(() => {
     setGlanzgrad('');
     setFarbcode('');
     setHersteller('');
+    setHerstellerAndere('');
     setBeschreibung('');
     setMenge(0);
     setZustand('');
@@ -1052,6 +1057,13 @@ if (lieferadresseOption === 'manuell') {
   const lieferort = [adr.plz, adr.ort].filter(Boolean).join(' ') || adr.ort || '';
   const lieferadresseString = toAddressString(adr);
 
+  const finalHersteller =
+  hersteller === ANDERER_HERSTELLER
+    ? herstellerAndere.trim()
+    : hersteller === 'Alle'
+    ? ''
+    : hersteller.trim();
+
   try {
     const payload = {
       kategorie,
@@ -1059,7 +1071,7 @@ if (lieferadresseOption === 'manuell') {
       titel,
       farbton: farbton.trim(),
       glanzgrad,
-      hersteller: hersteller === 'Alle' ? '' : hersteller,
+      hersteller: finalHersteller,
       zustand,
       farbpalette: farbpaletteWert,
       beschreibung,
@@ -1525,12 +1537,21 @@ if (bootLoading) {
                       className={styles.customSelect}
                       onClick={() => setHerstellerDropdownOffen(prev => !prev)}
                     >
-                      <div className={styles.selectedValue}>{hersteller || 'Alle'}</div>
+                      <div className={styles.selectedValue}>
+                        {hersteller === ANDERER_HERSTELLER
+                          ? (herstellerAndere.trim() ? `Andere: ${herstellerAndere}` : 'Anderer Hersteller')
+                          : (hersteller || 'Alle')}
+                      </div>
                       {herstellerDropdownOffen && (
                         <div className={styles.optionList}>
                           <div
                             className={styles.optionItem}
-                            onClick={(e) => { e.stopPropagation(); setHersteller('Alle'); setHerstellerDropdownOffen(false); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHersteller('Alle');
+                              setHerstellerAndere('');
+                              setHerstellerDropdownOffen(false);
+                            }}
                           >
                             Alle
                           </div>
@@ -1538,7 +1559,19 @@ if (bootLoading) {
                             <div
                               key={option}
                               className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
-                              onClick={(e) => { e.stopPropagation(); setHersteller(option); setHerstellerDropdownOffen(false); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+
+                                if (option === 'Anderer Hersteller') {
+                                  setHersteller(ANDERER_HERSTELLER);
+                                  setHerstellerDropdownOffen(false);
+                                  return;
+                                }
+
+                                setHersteller(option);
+                                setHerstellerAndere('');
+                                setHerstellerDropdownOffen(false);
+                              }}
                             >
                               {option}
                             </div>
@@ -1547,6 +1580,20 @@ if (bootLoading) {
                       )}
                     </div>
                   </label>
+                  {hersteller === ANDERER_HERSTELLER && (
+                    <label className={styles.label}>
+                      Anderen Hersteller eingeben:
+                      <input
+                        type="text"
+                        className={styles.input}
+                        maxLength={60}
+                        value={herstellerAndere}
+                        onChange={(e) => setHerstellerAndere(e.target.value)}
+                        placeholder="z. B. Mipa, Glasurit, Lesonal ..."
+                      />
+                      <div className={styles.counter}>{herstellerAndere.length} / 60 Zeichen</div>
+                    </label>
+                  )}
 
                   {/* Menge */}
                     <label className={styles.labelmenge} ref={mengeRef}>
