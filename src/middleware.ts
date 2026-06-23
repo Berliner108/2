@@ -7,7 +7,6 @@ function isAuthPath(path: string) { return path === '/auth' || path.startsWith('
 function isPublic(path: string) {
   return path === '/login' || isAuthPath(path)
 }
-
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
 
