@@ -370,7 +370,7 @@ const mapped: ShopArtikel[] = top12.map((a) => ({
         qty_piece: a.qty_piece ?? null,
 
         price_from: a.price_from ?? null,
-        price_unit: a.price_unit ?? null,
+        price_unit: a.sale_type === "gesamt" ? null : a.price_unit ?? null,
         price_is_from: !!a.price_is_from,
       }));
 
@@ -514,7 +514,7 @@ const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)}
 
 // ✅ nur bei "Preis ab:" Einheit zeigen
 const unitSuffix =
-  art.price_is_from && art.price_unit
+  art.price_unit
     ? ` / ${art.price_unit === "stueck" ? "Stück" : einheitFuerKategorie(art.kategorie)}`
     : "";
 
