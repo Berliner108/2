@@ -946,8 +946,25 @@ if (!article) {
                   </div>
                 )}
                 {chosenTier && priceCalc && (
-                  <div className={styles.buyTotal}>
-                    Gesamt: <strong>{priceCalc.total.toFixed(2)} €</strong>
+                  <div className={styles.buyPriceSummary}>
+                    {article.sale_type !== "gesamt" && (
+                      <div className={styles.buyPriceLine}>
+                        <span>Einzelpreis:</span>
+                        <strong>
+                          {priceCalc.unitPrice.toFixed(2)} € / {unitLabel(unit, article.category)}
+                        </strong>
+                      </div>
+                    )}
+
+                    <div className={styles.buyPriceLine}>
+                      <span>Versand:</span>
+                      <strong>{priceCalc.shipping.toFixed(2)} €</strong>
+                    </div>
+
+                    <div className={styles.buyTotal}>
+                      <span>Gesamt:</span>
+                      <strong>{priceCalc.total.toFixed(2)} €</strong>
+                    </div>
                   </div>
                 )}
 

@@ -320,12 +320,45 @@
   border: 1px solid #ffd59e;
   color: #8a4b00;
 }
-.buyTotal{
-  margin-top: 12px;
-  font-size: 1.1rem;
-  font-weight: 800;
+.buyPriceSummary {
+  margin-top: 0.9rem;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
+.buyPriceLine,
+.buyTotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 1rem;
+  color: #222;
+}
+
+.buyPriceLine span,
+.buyTotal span {
+  font-weight: 500;
+  color: #555;
+}
+
+.buyPriceLine strong {
+  font-weight: 700;
+  color: #222;
+}
+
+.buyTotal {
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid #ddd;
+  font-weight: 700;
+}
+
+.buyTotal strong {
+  font-weight: 800;
+}
 .extraTextarea {
   width: 100%;
   min-height: 80px;
@@ -393,13 +426,6 @@
   background-color: #fff;
   text-align: left;
   font-size: 1rem;
-}
-.buyTotal {
-  margin-top: 1rem;
-  margin-bottom: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #222;
 }
 .qtyInput {
   width: 60px;
