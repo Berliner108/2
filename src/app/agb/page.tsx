@@ -840,9 +840,9 @@ const AgbPage = () => {
   Das Einstellen von Auftragsanfragen, Lackanfragen und Artikeln ist für Nutzer:innen bis auf Widerruf kostenlos.
 </p>
         <p>
-          Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom <strong>Brutto-Auftrags- bzw. Warenwert</strong> an.
-          Gebühren werden transparent im Buchungsprozess ausgewiesen und können im Rahmen der Stripe-Zahlungsabwicklung berücksichtigt werden.
-        </p>
+  Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom <strong>Brutto-Auftrags- bzw. Warenwert</strong> an.
+  Die jeweils geltenden Gebühren sind in diesen AGB geregelt und können im Rahmen der Stripe-Zahlungsabwicklung berücksichtigt werden.
+</p>
         
       </section>
 

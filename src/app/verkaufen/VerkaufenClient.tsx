@@ -2355,12 +2355,6 @@ return (
   )}
   {warnungMenge && <p className={styles.mengeWarning}>{warnungMenge}</p>}
 </fieldset>
-
-
-
-
-
-
     {/* Dropdown: Farbton */}
 <label>
   Farbton (optional):
