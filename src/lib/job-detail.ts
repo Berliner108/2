@@ -46,6 +46,7 @@ type JobFileRow = {
   bucket: string
   path: string
   original_name: string | null
+  created_at?: string | null
 }
 
 export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
@@ -125,8 +126,21 @@ const { data: profile, error: profileError } = await supabase
   }
 
   const files = (fileRows ?? []) as unknown as JobFileRow[]
-  const imageFiles = files.filter(f => f.kind === 'image')
-  const docFiles = files.filter(f => f.kind === 'document')
+  const imageFiles = files
+  .filter(f => f.kind === 'image')
+  .sort((a: any, b: any) => {
+    const ta = new Date(a.created_at ?? 0).getTime()
+    const tb = new Date(b.created_at ?? 0).getTime()
+    return ta - tb
+  })
+
+const docFiles = files
+  .filter(f => f.kind === 'document')
+  .sort((a: any, b: any) => {
+    const ta = new Date(a.created_at ?? 0).getTime()
+    const tb = new Date(b.created_at ?? 0).getTime()
+    return ta - tb
+  })
 
   // alle Bilder
   const bilder = imageFiles.map(f => {
