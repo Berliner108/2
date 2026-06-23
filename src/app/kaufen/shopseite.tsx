@@ -83,6 +83,7 @@ type ShopArtikel = {
   einheit: 'kg' | 'stueck';
   seller_account_type?: "business" | "private" | null;
   gesponsert?: boolean;
+  promo_score?: number;
   gewerblich?: boolean;
   privat?: boolean;
   sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
@@ -309,6 +310,7 @@ export default function Shopseite() {
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
             seller_account_type: (a as any).seller_account_type ?? null,
             einheit: unit,
+            promo_score: safeNumber(a.promo_score, 0),
             gesponsert: safeNumber(a.promo_score, 0) > 0,
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
@@ -372,10 +374,13 @@ export default function Shopseite() {
 
   // Default: sponsored first, rest in API order (stable partition)
   const sponsoredFirst = useMemo(() => {
-    const sponsored = suchErgebnis.filter((a) => a.gesponsert);
-    const rest = suchErgebnis.filter((a) => !a.gesponsert);
-    return [...sponsored, ...rest];
-  }, [suchErgebnis]);
+  return [...suchErgebnis].sort((a, b) => {
+    const promoDiff = safeNumber(b.promo_score, 0) - safeNumber(a.promo_score, 0);
+    if (promoDiff !== 0) return promoDiff;
+
+    return b.lieferdatum.getTime() - a.lieferdatum.getTime();
+  });
+}, [suchErgebnis]);
 
   // Sortierung (optional)
   const sortierteArtikel = useMemo(() => {
