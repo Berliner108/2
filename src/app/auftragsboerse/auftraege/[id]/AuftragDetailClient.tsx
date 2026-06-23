@@ -327,6 +327,10 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  useEffect(() => {
+  setPhotoIndex(0);
+  setLightboxOpen(false);
+}, [auftrag.id]);
 
   // Preisbereich: 2 Felder
   const [gesamtPreis, setGesamtPreis] = useState<string>('');

@@ -90,5 +90,5 @@ export default async function Page({ params }: Props) {
   const auftrag = await fetchJobDetail(id)
   if (!auftrag) notFound()
 
-  return <AuftragDetailClient auftrag={auftrag} />
+  return <AuftragDetailClient key={auftrag.id} auftrag={auftrag} />
 }
