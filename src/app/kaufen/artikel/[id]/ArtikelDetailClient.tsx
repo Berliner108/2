@@ -869,7 +869,7 @@ if (!article) {
               <div className={styles.inputGroup}>
 
                 <div className={styles.inputRow1}>
-                    <label style={{ fontWeight: 600 }}>Menge:</label>
+                    <label className={styles.buyLabel}>Menge:</label>
 
                     <div className={styles.qtyStepper}>
                       <button

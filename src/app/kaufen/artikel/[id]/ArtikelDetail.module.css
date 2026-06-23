@@ -320,6 +320,17 @@
   border: 1px solid #ffd59e;
   color: #8a4b00;
 }
+.stockInfo {
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+.buyLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #555;
+}
 .buyPriceSummary {
   margin-top: 0.9rem;
   width: 100%;
@@ -395,17 +406,7 @@
   cursor:not-allowed;
 }
 
-.qtyInput{
-  width:70px;
-  height:40px;
-  text-align:center;
-  border:none;
-  outline:none;
-  font-family:'Oswald', sans-serif;
-  font-size:1.05rem;
-  font-weight:700;
-  background:transparent;
-}
+
 
 .unitSuffix{
   opacity:.85;
@@ -437,6 +438,7 @@
   font-size: 0.95rem;
   font-weight: 700;
   background: transparent;
+  font-family:'Oswald', sans-serif;
 }
 .priceField,
 .altPriceField {
