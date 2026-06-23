@@ -449,9 +449,12 @@
 }
 
 .shopQtyInput:focus {
-  box-shadow: inset 0 0 0 2px rgba(0, 180, 216, 0.25);
+  box-shadow: none;
 }
-
+.shopQtyField:focus-within {
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.12);
+}
 .shopQtyUnit {
   padding: 0 0.75rem 0 0.35rem;
   font-size: 0.95rem;
@@ -1240,28 +1243,17 @@
   }
 }
 
-.qtyBoxHeader span {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #333;
-}
-
-.qtyBoxHeader small {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #666;
-}
-
-.qtyDisplay span {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #444;
-}
-
 .priceLineSub {
   display: block;
   margin-top: 0.15rem;
   font-size: 0.82rem;
   font-weight: 500;
   color: #777;
+}
+.shopQtyPackage {
+  padding: 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+  white-space: nowrap;
 }

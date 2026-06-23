@@ -363,6 +363,14 @@ const stockLimit = useMemo(() => {
   return article.qty_piece != null ? Number(article.qty_piece) : null;
 }, [article, unit]);
 
+const packageQuantityText = useMemo(() => {
+  if (!article) return null;
+  if (article.sale_type !== "gesamt") return null;
+  if (stockLimit == null) return null;
+
+  return `1 × ${stockLimit} ${unitLabel(unit, article.category)}`;
+}, [article, stockLimit, unit]);
+
 useEffect(() => {
   if (stockLimit != null && qty > stockLimit) {
     setQty(stockLimit);
@@ -873,65 +881,63 @@ if (!article) {
   </label>
 
   <div className={styles.shopQtyField}>
-    <input
-      id="buyQty"
-      className={styles.shopQtyInput}
-      type="number"
-      min={1}
-      max={stockLimit ?? undefined}
-      step={1}
-      value={article.sale_type === "gesamt" ? 1 : qty}
-      disabled={article.sale_type === "gesamt"}
-      onChange={(e) => {
-        const raw = e.target.value;
+  {article.sale_type === "gesamt" ? (
+    <span className={styles.shopQtyPackage}>
+      {packageQuantityText ?? "1"}
+    </span>
+  ) : (
+    <>
+      <input
+        id="buyQty"
+        className={styles.shopQtyInput}
+        type="number"
+        min={1}
+        max={stockLimit ?? undefined}
+        step={1}
+        value={qty}
+        onChange={(e) => {
+          const raw = e.target.value;
 
-        if (raw === "") {
-          setQty(1);
-          return;
-        }
+          if (raw === "") {
+            setQty(1);
+            return;
+          }
 
-        const num = Number(raw);
+          const num = Number(raw);
 
-        if (!Number.isFinite(num)) {
-          setQty(1);
-          return;
-        }
+          if (!Number.isFinite(num)) {
+            setQty(1);
+            return;
+          }
 
-        let next = Math.max(1, Math.floor(num));
+          let next = Math.max(1, Math.floor(num));
 
-        if (stockLimit != null && next > stockLimit) {
-          next = stockLimit;
-          setQtyHint(
-            `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
-          );
-        } else {
-          setQtyHint(null);
-        }
+          if (stockLimit != null && next > stockLimit) {
+            next = stockLimit;
+            setQtyHint(
+              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
+            );
+          } else {
+            setQtyHint(null);
+          }
 
-        setQty(next);
-      }}
-      onBlur={() => {
-        if (qty < 1) setQty(1);
+          setQty(next);
+        }}
+        onBlur={() => {
+          if (qty < 1) setQty(1);
 
-        if (stockLimit != null && qty > stockLimit) {
-          setQty(stockLimit);
-        }
-      }}
-    />
+          if (stockLimit != null && qty > stockLimit) {
+            setQty(stockLimit);
+          }
+        }}
+      />
 
-    {article.sale_type !== "gesamt" && (
       <span className={styles.shopQtyUnit}>
         {unitLabel(unit, article.category)}
       </span>
-    )}
-  </div>
-
-  {article.sale_type !== "gesamt" && stockLimit != null && (
-    <span className={styles.shopQtyAvailable}>
-      Verfügbar: {stockLimit} {unitLabel(unit, article.category)}
-    </span>
+    </>
   )}
-</div>
+</div></div>
 
 
                 {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
@@ -941,9 +947,17 @@ if (!article) {
     {article.sale_type === "gesamt" ? (
       <>
         <div className={styles.buyPriceLine}>
-          <span>Artikelpreis:</span>
-          <strong>{euro(priceCalc.unitPrice)} €</strong>
-        </div>
+  <span>
+    Artikelpreis:
+    {packageQuantityText && (
+      <small className={styles.priceLineSub}>
+        {packageQuantityText}
+      </small>
+    )}
+  </span>
+
+  <strong>{euro(priceCalc.unitPrice)} €</strong>
+</div>
 
         <div className={styles.buyPriceLine}>
           <span>Versand:</span>
