@@ -867,93 +867,70 @@ if (!article) {
             <div className={styles.offerBox}>
               <div className={styles.inputGroup}>
 
-                <div className={styles.qtyBox}>
-  <div className={styles.qtyBoxHeader}>
-    <span>Menge auswählen</span>
+                <div className={styles.shopQtyRow}>
+  <label className={styles.shopQtyLabel} htmlFor="buyQty">
+    Menge:
+  </label>
 
-    {article.sale_type !== "gesamt" && stockLimit != null && (
-      <small>
-        Max. {stockLimit} {unitLabel(unit, article.category)}
-      </small>
+  <div className={styles.shopQtyField}>
+    <input
+      id="buyQty"
+      className={styles.shopQtyInput}
+      type="number"
+      min={1}
+      max={stockLimit ?? undefined}
+      step={1}
+      value={article.sale_type === "gesamt" ? 1 : qty}
+      disabled={article.sale_type === "gesamt"}
+      onChange={(e) => {
+        const raw = e.target.value;
+
+        if (raw === "") {
+          setQty(1);
+          return;
+        }
+
+        const num = Number(raw);
+
+        if (!Number.isFinite(num)) {
+          setQty(1);
+          return;
+        }
+
+        let next = Math.max(1, Math.floor(num));
+
+        if (stockLimit != null && next > stockLimit) {
+          next = stockLimit;
+          setQtyHint(
+            `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
+          );
+        } else {
+          setQtyHint(null);
+        }
+
+        setQty(next);
+      }}
+      onBlur={() => {
+        if (qty < 1) setQty(1);
+
+        if (stockLimit != null && qty > stockLimit) {
+          setQty(stockLimit);
+        }
+      }}
+    />
+
+    {article.sale_type !== "gesamt" && (
+      <span className={styles.shopQtyUnit}>
+        {unitLabel(unit, article.category)}
+      </span>
     )}
   </div>
 
-  <div className={styles.qtyControl}>
-    <button
-      type="button"
-      className={styles.stepBtn}
-      onClick={() =>
-        setQty((q) => {
-          const next = Math.max(1, (Number.isFinite(q) ? q : 1) - 1);
-          return next;
-        })
-      }
-      disabled={article.sale_type === "gesamt" || qty <= 1}
-      aria-label="Menge verringern"
-    >
-      –
-    </button>
-
-    <div className={styles.qtyDisplay}>
-      <input
-        className={styles.qtyInput}
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={article.sale_type === "gesamt" ? 1 : qty}
-        disabled={article.sale_type === "gesamt"}
-        onChange={(e) => {
-          const raw = String(e.target.value).replace(/\D/g, "");
-          const num = raw ? parseInt(raw, 10) : 1;
-
-          let next = Math.max(1, num);
-
-          if (stockLimit != null && next > stockLimit) {
-            next = stockLimit;
-            setQtyHint(
-              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
-            );
-          } else {
-            setQtyHint(null);
-          }
-
-          setQty(next);
-        }}
-        aria-label="Menge"
-      />
-
-      {article.sale_type !== "gesamt" && (
-        <span>{unitLabel(unit, article.category)}</span>
-      )}
-    </div>
-
-    <button
-      type="button"
-      className={styles.stepBtn}
-      onClick={() =>
-        setQty((q) => {
-          let next = (Number.isFinite(q) ? q : 1) + 1;
-
-          if (stockLimit != null && next > stockLimit) {
-            next = stockLimit;
-            setQtyHint(
-              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
-            );
-          } else {
-            setQtyHint(null);
-          }
-
-          return next;
-        })
-      }
-      disabled={
-        article.sale_type === "gesamt" ||
-        (stockLimit != null && qty >= stockLimit)
-      }
-      aria-label="Menge erhöhen"
-    >
-      +
-    </button>
-  </div>
+  {article.sale_type !== "gesamt" && stockLimit != null && (
+    <span className={styles.shopQtyAvailable}>
+      Verfügbar: {stockLimit} {unitLabel(unit, article.category)}
+    </span>
+  )}
 </div>
 
 
