@@ -57,8 +57,11 @@ function statusLabel(status?: string | null) {
   return "Unbekannt";
 }
 
-function unitLabel(unit?: string | null) {
-  return unit === "stueck" ? "Stück" : "kg";
+function unitLabel(unit?: string | null, category?: string | null) {
+  if (unit === "stueck") return "Stück";
+
+  const kat = (category ?? "").trim().toLowerCase();
+  return kat === "nasslack" ? "Liter" : "kg";
 }
 
 function normalizeStringArray(v: any): string[] {
@@ -263,7 +266,7 @@ export default function ShopOrderDetailPage() {
                 <div className={styles.metaItem}>
                   <span className={styles.label}>Menge:</span>
                   <span className={styles.value}>
-                    {order.qty ?? "—"} {unitLabel(order.unit)}
+                    {order.qty ?? "—"} {unitLabel(order.unit, snapshot?.category)}
                   </span>
                 </div>
 
