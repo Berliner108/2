@@ -941,7 +941,7 @@ if (!article) {
 
 
                 {stockLimit != null && (
-                  <div style={{ marginTop: 8, opacity: 0.85 }}>
+                  <div className={styles.stockInfo}>
                     Max verfügbar: {stockLimit} {unitLabel(unit, article.category)}
                   </div>
                 )}

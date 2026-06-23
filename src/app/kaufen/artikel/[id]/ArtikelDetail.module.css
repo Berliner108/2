@@ -1063,31 +1063,76 @@
 /* =========================
    Offerbox: nur hier skalieren
    ========================= */
-.offerBox .inputGroup{
-  font-size: 1.15rem;   /* +15% */
-  font-weight: 600;
+/* =========================
+   Kaufbereich: Schriftgrößen wie Auftrag-Detailseite
+   ========================= */
+
+.offerBox {
+  font-size: 1rem;
+}
+
+.offerBox .inputGroup {
+  font-size: 1rem;
+  font-weight: 500;
   margin-top: 0;
-  gap: .6rem;
+  gap: 0.5rem;
 }
 
-.offerBox .inputRow1 label{
-  font-size: 1.09rem;   /* 0.95 * 1.15 */
+.offerBox .inputRow1 label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #555;
+}
+
+.offerBox .inputRow1 span,
+.offerBox .unitSuffix {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.offerBox .qtyStepper {
+  font-size: 1rem;
+}
+
+.offerBox .qtyInput {
+  font-size: 0.9rem;
   font-weight: 600;
 }
 
-.offerBox .priceField{
-  font-size: 1.15rem;   /* +15% */
-  padding: .45rem .55rem;
-}
-
-.offerBox .inputRow1 span{
-  font-size: 1.09rem;
-}
-
-/* Gesamt bleibt prominent */
-.offerBox .buyTotal{
-  font-size: 1.265rem;  /* 1.1 * 1.15 */
+.offerBox .stepBtn {
+  font-size: 1rem;
   font-weight: 800;
+}
+
+.offerBox .buyTotal {
+  margin-top: 0.75rem;
+  margin-bottom: -8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.offerBox .submitOfferButton {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.offerBox .offerNote {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #333;
+}
+
+.offerBox .qtyHint {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stockInfo {
+  margin-top: 0.5rem;
+  opacity: 0.85;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 .impressumBox {
   flex: 1 1 100%;
