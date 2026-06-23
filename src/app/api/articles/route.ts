@@ -55,7 +55,26 @@ function getTimeValue(value: unknown): number {
   const time = new Date(String(value)).getTime();
   return Number.isFinite(time) ? time : 0;
 }
+function sortImageUrls(urls: unknown): string[] {
+  if (!Array.isArray(urls)) return [];
 
+  return urls
+    .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+    .sort((a, b) => {
+      const getName = (url: string) => {
+        try {
+          return decodeURIComponent(url.split("/").pop() ?? url);
+        } catch {
+          return url;
+        }
+      };
+
+      return getName(a).localeCompare(getName(b), "de", {
+        numeric: true,
+        sensitivity: "base",
+      });
+    });
+}
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -197,17 +216,18 @@ export async function GET(req: Request) {
       const priceInfo = minPriceByArticle[a.id] ?? null;
 
       return {
-        ...a,
-        price_from: priceInfo?.price_from ?? null,
-        price_unit: priceInfo?.unit ?? null,
-        price_is_from:
-          (a.sale_type ?? "gesamt") !== "gesamt" &&
-          (priceInfo?.tier_count ?? 0) > 1,
-        seller_account_type: a.owner_id
-          ? sellerById[a.owner_id]?.account_type ?? null
-          : null,
-        delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
-      };
+  ...a,
+  image_urls: sortImageUrls(a.image_urls),
+  price_from: priceInfo?.price_from ?? null,
+  price_unit: priceInfo?.unit ?? null,
+  price_is_from:
+    (a.sale_type ?? "gesamt") !== "gesamt" &&
+    (priceInfo?.tier_count ?? 0) > 1,
+  seller_account_type: a.owner_id
+    ? sellerById[a.owner_id]?.account_type ?? null
+    : null,
+  delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
+};
     });
 
     const sponsored = list

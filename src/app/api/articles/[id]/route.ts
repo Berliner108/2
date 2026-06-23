@@ -89,7 +89,26 @@ function normalizeApplication(v: unknown): string | null {
 
   return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
 }
+function sortImageUrls(urls: unknown): string[] {
+  if (!Array.isArray(urls)) return [];
 
+  return urls
+    .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+    .sort((a, b) => {
+      const getName = (url: string) => {
+        try {
+          return decodeURIComponent(url.split("/").pop() ?? url);
+        } catch {
+          return url;
+        }
+      };
+
+      return getName(a).localeCompare(getName(b), "de", {
+        numeric: true,
+        sensitivity: "base",
+      });
+    });
+}
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -234,17 +253,18 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       article: {
-        ...article,
-        category: normalizeCategory((article as any).category),
+  ...article,
+  image_urls: sortImageUrls((article as any).image_urls),
+  category: normalizeCategory((article as any).category),
 
-        // ✅ HIER: Oberfläche/Anwendung normalisieren
-        surface: normalizeSurface((article as any).surface),
-        application: normalizeApplication((article as any).application),
+  // ✅ HIER: Oberfläche/Anwendung normalisieren
+  surface: normalizeSurface((article as any).surface),
+  application: normalizeApplication((article as any).application),
 
-        delivery_date_iso,
-        price_from,
-        price_unit,
-      },
+  delivery_date_iso,
+  price_from,
+  price_unit,
+},
       tiers: tiers ?? [],
       seller,
     });
