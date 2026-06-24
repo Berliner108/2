@@ -88,21 +88,57 @@ export async function GET(req: Request) {
     const isAsc = orderParam === 'asc'
 
     // Basis-Query
-    let q = supabase
-      .from('lack_requests')
-      .select(
-        'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score',
-        { count: 'exact' }
-      )
-
-    if (!includeUnpublished) q = q.or('published.eq.true,published.is.null')
-    if (kategorie) q = q.eq('data->>kategorie', kategorie)
-    if (id) q = q.eq('id', id)
-
     const ids = idsRaw.split(',').map(s => s.trim()).filter(Boolean)
-    if (ids.length) q = q.in('id', ids)
 
-    if (search) q = q.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
+const columns =
+  'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score'
+
+const applyFilters = (query: any) => {
+  let next = query
+
+  if (!includeUnpublished) {
+    next = next.or('published.eq.true,published.is.null')
+  }
+
+  if (kategorie) {
+    next = next.eq('data->>kategorie', kategorie)
+  }
+
+  if (id) {
+    next = next.eq('id', id)
+  }
+
+  if (ids.length) {
+    next = next.in('id', ids)
+  }
+
+  if (search) {
+    next = next.or(`id.ilike.%${search}%,title.ilike.%${search}%`)
+  }
+
+  return next
+}
+
+// separate Count-Abfrage
+const countQuery = applyFilters(
+  supabase
+    .from('lack_requests')
+    .select('id', { count: 'exact', head: true })
+)
+
+const { count: total, error: countError } = await countQuery
+
+if (countError) {
+  console.error('[lackanfragen] count failed:', countError)
+  return NextResponse.json({ error: countError.message }, { status: 500 })
+}
+
+// Daten-Abfrage
+let q = applyFilters(
+  supabase
+    .from('lack_requests')
+    .select(columns)
+)
 
     // Fenster berechnen
     let from = 0, to = limit - 1
@@ -122,10 +158,11 @@ export async function GET(req: Request) {
     }
 
     const { data, error } = await q
-    if (error) {
-      console.error('[lackanfragen] query failed:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+
+if (error) {
+  console.error('[lackanfragen] query failed:', error)
+  return NextResponse.json({ error: error.message }, { status: 500 })
+}
 
     const rows = data ?? []
     const ownerIds = Array.from(new Set(rows.map((r: any) => r.owner_id).filter(Boolean)))
@@ -211,7 +248,12 @@ export async function GET(req: Request) {
       }
     })
 
-    return NextResponse.json({ items })
+    return NextResponse.json({
+  items,
+  total: total ?? 0,
+  page: page ?? 1,
+  limit,
+})
   } catch (e: any) {
     console.error('[lackanfragen] GET crashed:', e)
     return NextResponse.json({ error: e?.message ?? 'Server error' }, { status: 500 })

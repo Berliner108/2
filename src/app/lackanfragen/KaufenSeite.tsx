@@ -327,6 +327,11 @@ export default function KaufenSeite() {
         if (active) setTotalCount(Number(json?.total || 0));
         const rawItems: ApiItem[] = json?.items || [];
 
+          if (active) {
+            const nextTotal = Number(json?.total ?? 0);
+            setTotalCount(nextTotal);
+}
+
         // Drafts/Unpublished ausblenden
         const items = rawItems.filter(
           (it) => it.published !== false && it.status !== 'draft' && it.status !== 'deleted'
