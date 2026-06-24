@@ -629,8 +629,8 @@ if ((auftrag as any).ndaLocked) {
 
       {loading && <TopLoader />}
 
-      <div className={styles.container}>
-        <div className={styles.ndaGate}>
+    <div className={`${styles.container} ${styles.ndaPageContainer}`}>
+    <div className={styles.ndaGate}>
           <h1 className={styles.title}>Geheimhaltungsvereinbarung erforderlich</h1>
 
           <p className={styles.preserveNewlines}>
