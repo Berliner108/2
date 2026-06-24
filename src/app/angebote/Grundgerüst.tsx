@@ -348,14 +348,15 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
 
   const [agbAccepted, setAgbAccepted] = useState(false)
   const [agbError, setAgbError] = useState(false)
+  const [ndaRequired, setNdaRequired] = useState(false)
   const agbRef = useRef<HTMLDivElement>(null)
   const bilderRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<HTMLDivElement>(null)
-const materialGueteRef = useRef<HTMLDivElement>(null)
+  const materialGueteRef = useRef<HTMLDivElement>(null)
   const logistikRef = useRef<HTMLDivElement>(null) // 🔁 vorher FieldSet
   const step1Ref = useRef<HTMLDivElement>(null)
-const step2Ref = useRef<HTMLDivElement>(null)
-const step3Ref = useRef<HTMLDivElement>(null)
+  const step2Ref = useRef<HTMLDivElement>(null)
+  const step3Ref = useRef<HTMLDivElement>(null)
 
 
   const [materialGuete, setMaterialGuete] = useState('')
@@ -542,9 +543,10 @@ const prepareRes = await fetch('/api/auftrag-vorbereiten', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    agbAccepted,
+  agbAccepted,
+  ndaRequired,
 
-    beschreibung: beschreibung.trim(),
+  beschreibung: beschreibung.trim(),
 
     materialguete: materialGuete,
     andereMaterialguete: customMaterial,
@@ -1459,6 +1461,25 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               Gesamtwert haben, erscheinen deren Anzeigen zuerst.
             </small>
           </div>
+        </div>
+        <div className={styles.ndaOptionBox}>
+          <label className={styles.ndaOptionLabel}>
+            <input
+              type="checkbox"
+              checked={ndaRequired}
+              onChange={(e) => setNdaRequired(e.target.checked)}
+            />
+            <span>
+              Geheimhaltung für diesen Auftrag aktivieren
+            </span>
+          </label>
+
+          {ndaRequired && (
+            <p className={styles.ndaOptionHint}>
+              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben
+              sind erst sichtbar, nachdem ein Nutzer die Geheimhaltungsvereinbarung akzeptiert hat.
+            </p>
+          )}
         </div>
 
         <div className={styles.agbContainer} ref={agbRef}>

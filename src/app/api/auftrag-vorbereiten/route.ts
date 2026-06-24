@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     const agbAccepted = body.agbAccepted === true
+    const ndaRequired = body.ndaRequired === true
 
     if (!agbAccepted) {
       return NextResponse.json(
@@ -83,6 +84,9 @@ export async function POST(req: NextRequest) {
         verfahren_2: body.verfahren2 || null,
 
         agb_accepted: true,
+        nda_required: ndaRequired,
+        nda_type: 'standard',
+        nda_version: 'v1',
 
         published: false,
         status: 'open',
