@@ -1462,22 +1462,21 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             </small>
           </div>
         </div>
-        <div className={styles.ndaOptionBox}>
-          <label className={styles.ndaOptionLabel}>
+        <div className={styles.agbContainer}>
+          <motion.label className={styles.agbLabel}>
             <input
               type="checkbox"
               checked={ndaRequired}
               onChange={(e) => setNdaRequired(e.target.checked)}
             />
             <span>
-              Geheimhaltung für diesen Auftrag aktivieren
+              Geheimhaltung für diesen Auftrag aktivieren.
             </span>
-          </label>
+          </motion.label>
 
           {ndaRequired && (
-            <p className={styles.ndaOptionHint}>
-              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben
-              sind erst sichtbar, nachdem ein Nutzer die Geheimhaltungsvereinbarung akzeptiert hat.
+            <p className={styles.feldFehlerText}>
+              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
             </p>
           )}
         </div>

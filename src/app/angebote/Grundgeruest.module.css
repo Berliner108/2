@@ -953,32 +953,10 @@
 .standardHinweisLink:hover {
   color: #111;
 }
-.ndaOptionBox {
-  margin: 1.5rem 0;
-  padding: 1rem 1.2rem;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 180, 216, 0.35);
-  background: #f8fafc;
-}
-
-.ndaOptionLabel {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  font-weight: 700;
-  cursor: pointer;
-}
 
 .ndaOptionLabel input {
   margin-top: 0.25rem;
   width: 18px;
   height: 18px;
   accent-color: #00b4d8;
-}
-
-.ndaOptionHint {
-  margin: 0.75rem 0 0;
-  font-size: 0.95rem;
-  color: #475569;
-  line-height: 1.5;
 }
