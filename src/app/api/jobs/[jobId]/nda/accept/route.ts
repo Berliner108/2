@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ jobId: string }>
 }
 
 export async function POST(req: Request, { params }: Props) {
-  const { id } = await params
+  const { jobId } = await params
   const supabase = await supabaseServer()
 
   const {
@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: Props) {
   const { data: job, error: jobError } = await supabase
     .from('jobs')
     .select('id, user_id, nda_required, nda_type, nda_version')
-    .eq('id', id)
+    .eq('id', jobId)
     .maybeSingle()
 
   if (jobError) {
