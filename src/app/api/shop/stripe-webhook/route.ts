@@ -42,10 +42,14 @@ export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature");
   if (!sig) return NextResponse.json({ error: "Missing stripe-signature" }, { status: 400 });
 
-  const webhookSecret = process.env.STRIPE_SHOP_WEBHOOK_SECRET!;
-  if (!webhookSecret) {
-    return NextResponse.json({ error: "Missing STRIPE_SHOP_WEBHOOK_SECRET" }, { status: 500 });
-  }
+  const webhookSecret = process.env.STRIPE_SHOPPING_WEBHOOK_SECRET;
+
+if (!webhookSecret) {
+  return NextResponse.json(
+    { error: "Missing STRIPE_SHOPPING_WEBHOOK_SECRET" },
+    { status: 500 }
+  );
+}
 
   let event: Stripe.Event;
   const rawBody = Buffer.from(await req.arrayBuffer());
