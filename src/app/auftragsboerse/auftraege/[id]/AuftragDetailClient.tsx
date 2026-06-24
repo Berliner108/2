@@ -223,6 +223,7 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [offerSent, setOfferSent] = useState(false);
+  const [ndaChecked, setNdaChecked] = useState(false);
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
@@ -590,6 +591,10 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   : [];
 
   const handleAcceptNda = async () => {
+    if (!ndaChecked) {
+  toastError('Bitte bestätige zuerst, dass du die Geheimhaltungsvereinbarung gelesen und akzeptiert hast.');
+  return;
+}
   try {
     setLoading(true);
 
@@ -629,17 +634,58 @@ if ((auftrag as any).ndaLocked) {
           <h1 className={styles.title}>Geheimhaltungsvereinbarung erforderlich</h1>
 
           <p className={styles.preserveNewlines}>
-            Dieser Auftrag enthält vertrauliche Informationen.
-            Um die vollständige Detailansicht, Bilder, Dateien und technischen Angaben zu sehen,
-            musst du zuerst die Geheimhaltungsvereinbarung akzeptieren.
+            Dieser Auftrag enthält vertrauliche Informationen. Um die vollständige Detailansicht,
+            Bilder, Dateien und technischen Angaben zu sehen, musst du zuerst die
+            Geheimhaltungsvereinbarung lesen und akzeptieren.
           </p>
+
+          <div className={styles.ndaTextBox}>
+            <h2>Geheimhaltungsvereinbarung</h2>
+
+            <p>
+              Der Nutzer verpflichtet sich, alle im Rahmen dieses Auftrags zugänglich gemachten
+              Informationen vertraulich zu behandeln. Dazu gehören insbesondere technische Angaben,
+              Zeichnungen, Bilder, Dateien, CAD-Daten, Projektdaten, Maße, Mengen, Kundendaten,
+              Preise, Angebotsinformationen sowie sonstige geschäftliche oder technische Inhalte.
+            </p>
+
+            <p>
+              Die vertraulichen Informationen dürfen ausschließlich zur Prüfung des konkreten
+              Auftrags und zur Erstellung eines Angebots auf BeschichterScout verwendet werden.
+              Eine Weitergabe an Dritte, Veröffentlichung, Vervielfältigung oder Nutzung für andere
+              Zwecke ist ohne vorherige ausdrückliche Zustimmung des Auftraggebers untersagt.
+            </p>
+
+            <p>
+              Der Nutzer hat geeignete Maßnahmen zu treffen, um die vertraulichen Informationen vor
+              unbefugtem Zugriff zu schützen. Die Verpflichtung zur Vertraulichkeit gilt auch nach
+              Abschluss, Ablehnung oder Abbruch des Auftrags fort.
+            </p>
+
+            <p>
+              Gesetzliche Offenlegungspflichten bleiben unberührt. In einem solchen Fall ist der
+              Auftraggeber, soweit rechtlich zulässig, vorab zu informieren.
+            </p>
+          </div>
+
+          <label className={styles.ndaCheckboxRow}>
+            <input
+              type="checkbox"
+              checked={ndaChecked}
+              onChange={(e) => setNdaChecked(e.target.checked)}
+              disabled={loading}
+            />
+            <span>
+              Ich habe die Geheimhaltungsvereinbarung gelesen und akzeptiere sie.
+            </span>
+          </label>
 
           <div className={styles.ndaActions}>
             <button
               type="button"
               className={styles.primaryButton}
               onClick={handleAcceptNda}
-              disabled={loading}
+              disabled={loading || !ndaChecked}
             >
               Geheimhaltungsvereinbarung akzeptieren
             </button>
@@ -658,8 +704,6 @@ if ((auftrag as any).ndaLocked) {
     </>
   );
 }
-
-
 
   return (
     <>

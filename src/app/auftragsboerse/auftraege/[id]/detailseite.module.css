@@ -902,3 +902,42 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.ndaTextBox {
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 1.5rem auto 1rem;
+  padding: 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.ndaTextBox h2 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: 1.35rem;
+}
+
+.ndaTextBox p {
+  margin: 0 0 0.9rem;
+}
+
+.ndaCheckboxRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1rem auto 0;
+  max-width: 720px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ndaCheckboxRow input {
+  margin-top: 0.25rem;
+  width: 18px;
+  height: 18px;
+  accent-color: #00b4d8;
+}
