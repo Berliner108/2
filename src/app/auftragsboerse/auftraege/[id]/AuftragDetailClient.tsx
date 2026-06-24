@@ -12,6 +12,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import type { Auftrag } from '@/lib/types/auftrag';
 
@@ -219,6 +220,7 @@ function labelSerienRhythmus(value: unknown): string {
 }
 function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // später: beim echten Backend auf true setzen
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [offerSent, setOfferSent] = useState(false);
 
@@ -587,6 +589,77 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   ? (auftrag as any).serien_termine
   : [];
 
+  const handleAcceptNda = async () => {
+  try {
+    setLoading(true);
+
+    const res = await fetch(`/api/jobs/${encodeURIComponent(String(auftrag.id))}/nda/accept`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    const payload = await res.json().catch(() => ({} as any));
+
+    if (!res.ok) {
+      if (payload?.error === 'not_authenticated') {
+        toastError('Bitte melde dich an, um die Geheimhaltungsvereinbarung zu akzeptieren.');
+        return;
+      }
+
+      toastError(payload?.error || 'Die Geheimhaltungsvereinbarung konnte nicht akzeptiert werden.');
+      return;
+    }
+
+    window.location.reload();
+  } catch (error: any) {
+    toastError(error?.message || 'Die Geheimhaltungsvereinbarung konnte nicht akzeptiert werden.');
+  } finally {
+    setLoading(false);
+  }
+};
+if ((auftrag as any).ndaLocked) {
+  return (
+    <>
+      <Navbar />
+
+      {loading && <TopLoader />}
+
+      <div className={styles.container}>
+        <div className={styles.ndaGate}>
+          <h1 className={styles.title}>Geheimhaltungsvereinbarung erforderlich</h1>
+
+          <p className={styles.preserveNewlines}>
+            Dieser Auftrag enthält vertrauliche Informationen.
+            Um die vollständige Detailansicht, Bilder, Dateien und technischen Angaben zu sehen,
+            musst du zuerst die Geheimhaltungsvereinbarung akzeptieren.
+          </p>
+
+          <div className={styles.ndaActions}>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={handleAcceptNda}
+              disabled={loading}
+            >
+              Geheimhaltungsvereinbarung akzeptieren
+            </button>
+
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => router.push('/auftragsboerse')}
+              disabled={loading}
+            >
+              Zurück zur Auftragsbörse
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
 
   return (
     <>
@@ -806,6 +879,7 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
               {auftrag.verfahren.map((v, idx) => {
                 const entries = Object.entries(v.felder ?? {});
                 if (!entries.length) return null;
+                
 
                 return (
                   <div key={idx} className={styles.verfahrenBlock}>
