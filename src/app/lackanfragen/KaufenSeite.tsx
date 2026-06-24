@@ -2,7 +2,7 @@
 // -----------------------------------------------------
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import styles from './auftragsboerse.module.css';
 import Navbar from '../components/navbar/Navbar';
@@ -253,7 +253,7 @@ export default function KaufenSeite() {
   const [gewerblich, setGewerblich] = useState(false);
   const [privat, setPrivat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
 
   // direkt mit true starten → Skeleton/TopLoader erscheint sofort
   const [loading, setLoading] = useState(true);
@@ -266,11 +266,7 @@ export default function KaufenSeite() {
 
   // Pagination-Parameter EINMAL definieren
   const seitenGroesse = 50;
-  const startIndex = (page - 1) * seitenGroesse;
-  const endIndex = page * seitenGroesse;
-
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  
 
   // Slider -> Zahl + Feld
   const updateFromSlider = (n: number) => {
@@ -320,11 +316,15 @@ export default function KaufenSeite() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=200', {
-          cache: 'no-store',
-        });
+        const res = await fetch(
+  `/api/lackanfragen?sort=promo&order=desc&page=${page}&limit=${seitenGroesse}`,
+  {
+    cache: 'no-store',
+  }
+);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
+        if (active) setTotalCount(Number(json?.total || 0));
         const rawItems: ApiItem[] = json?.items || [];
 
         // Drafts/Unpublished ausblenden
@@ -400,7 +400,7 @@ export default function KaufenSeite() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [page, seitenGroesse]);
 
   // Filter + Suche
   const gefiltert = useMemo(() => {
@@ -464,71 +464,60 @@ export default function KaufenSeite() {
     return arr;
   }, [liste, kategorie, zustand, gewerblich, privat, hersteller, maxMenge, suchbegriff, sortierung]);
 
-  // Wenn Daten/Filter wechseln und wir auf Seite 1 sind → Infinite-Scroll-Zähler zurücksetzen
-  useEffect(() => {
-    if (page === 1) setAnzahlAnzeigen(50);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liste, kategorie, zustand, hersteller, sortierung, gewerblich, privat, suchbegriff, maxMenge]);
+ 
 
-  // Infinite Scroll nur auf Seite 1
-  useEffect(() => {
-    if (page !== 1) return;
 
-    if (observerRef.current) observerRef.current.disconnect();
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setAnzahlAnzeigen((prev) => Math.min(prev + 10, gefiltert.length));
-        }
-      },
-      { rootMargin: '100px' }
-    );
-
-    if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current);
-
-    return () => {
-      if (observerRef.current) observerRef.current.disconnect();
-    };
-  }, [gefiltert, page]);
-
-  // Wenn Filter ändern und wir NICHT auf Seite 1 sind → 'page' aus URL entfernen
-  useEffect(() => {
-    if (page !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('page');
-      const query = params.toString();
-      const neueUrl = query ? `${pathname}?${query}` : pathname;
-      router.replace(neueUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suchbegriff, maxMenge, kategorie, zustand, hersteller, sortierung, gewerblich, privat]);
 
   /* === NEU: Filter/Sortierzustand immer in der URL spiegeln === */
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
-    if (kategorie) params.set('kategorie', kategorie);
-    if (zustand.length) params.set('zustand', zustand.join(','));
-    if (hersteller.length) params.set('hersteller', hersteller.join(','));
-    if (sortierung) params.set('sort', sortierung);
-    if (maxMenge !== MAX_MENGE) params.set('max', String(maxMenge));
-    if (gewerblich) params.set('g', '1');
-    if (privat) params.set('p', '1');
+  const params = new URLSearchParams(searchParams.toString());
 
-    // 'page' bewusst NICHT setzen → bei Filterwechsel bleibt man auf Seite 1
-    const next = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-    const current = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    if (next !== current) {
-      router.replace(next, { scroll: false });
-    }
-  }, [
-    suchbegriff, kategorie, zustand, hersteller, sortierung,
-    maxMenge, gewerblich, privat, pathname, router, searchParams
-  ]);
+  if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
+  else params.delete('q');
 
-  const totalPages = Math.max(1, Math.ceil(gefiltert.length / seitenGroesse));
-  const seitenArtikel = gefiltert.slice(startIndex, endIndex);
+  if (kategorie) params.set('kategorie', kategorie);
+  else params.delete('kategorie');
+
+  if (zustand.length) params.set('zustand', zustand.join(','));
+  else params.delete('zustand');
+
+  if (hersteller.length) params.set('hersteller', hersteller.join(','));
+  else params.delete('hersteller');
+
+  if (sortierung) params.set('sort', sortierung);
+  else params.delete('sort');
+
+  if (maxMenge !== MAX_MENGE) params.set('max', String(maxMenge));
+  else params.delete('max');
+
+  if (gewerblich) params.set('g', '1');
+  else params.delete('g');
+
+  if (privat) params.set('p', '1');
+  else params.delete('p');
+
+  const next = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+  const current = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+
+  if (next !== current) {
+    router.replace(next, { scroll: false });
+  }
+}, [
+  suchbegriff,
+  kategorie,
+  zustand,
+  hersteller,
+  sortierung,
+  maxMenge,
+  gewerblich,
+  privat,
+  pathname,
+  router,
+  searchParams,
+]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
 
   // Nur während des ersten Loads → Skeleton + TopLoader
   const bootLoading = loading && liste.length === 0;
@@ -685,15 +674,16 @@ export default function KaufenSeite() {
           
 
           <h3 className={styles.anfrageUeberschrift}>
-            {loading ? 'Lade...' : `${gefiltert.length} ${gefiltert.length === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}`}
+            {loading
+  ? 'Lade...'
+  : `${totalCount} ${totalCount === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}`}
           </h3>
 
           <div className={styles.grid}>
-            {(page === 1 ? gefiltert.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => (
-              <ArtikelCard key={a.id} artikel={a} />
-            ))}
-            {page === 1 && <div ref={loadMoreRef} />}
-          </div>
+  {gefiltert.map((a) => (
+    <ArtikelCard key={a.id} artikel={a} />
+  ))}
+</div>
 
           <div className={styles.seitenInfo}>
             Seite {page} von {totalPages}
