@@ -74,6 +74,7 @@ type ApiItem = {
   promoScore?: number;
   promo_score?: number;
   gesponsert?: boolean;
+  menge_numeric?: number | null;
 };
 
 /* ===================== Helfer ===================== */
@@ -438,7 +439,7 @@ export default function KaufenSeite() {
           return {
             id: it.id,
             titel: d.titel || it.title || 'Unbenannt',
-            menge: resolveMenge(d),
+            menge: Number(it.menge_numeric ?? resolveMenge(d)),
             lieferdatum: ld,
             hersteller: (d.hersteller || '').toString(),
             zustand: normZustand(d.zustand),

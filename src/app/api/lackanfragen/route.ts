@@ -126,6 +126,9 @@ const normalizeZustandForDb = (value: string) => {
       .filter(Boolean)
 
     const zustandList = zustandRaw
+  .split(',')
+  .map((s) => normalizeZustandForDb(s.trim()))
+  .filter(Boolean)
 
     const herstellerList = herstellerRaw
       .split(',')
@@ -135,7 +138,7 @@ const normalizeZustandForDb = (value: string) => {
     const maxMenge = maxRaw ? Number(maxRaw) : null
 
     const columns =
-      'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score'
+  'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score,menge_numeric'
 
     const applyFilters = (query: any) => {
       let next = query
@@ -167,8 +170,8 @@ const normalizeZustandForDb = (value: string) => {
        * Das ist für den Start okay, langfristig besser als echte numeric-Spalte.
        */
       if (maxMenge !== null && !Number.isNaN(maxMenge)) {
-        next = next.lte('data->>menge', String(maxMenge))
-      }
+  next = next.lte('menge_numeric', maxMenge)
+}
 
       /**
        * Verkaufstyp:
@@ -364,6 +367,7 @@ const normalizeZustandForDb = (value: string) => {
         created_at: row.created_at,
         published: row.published,
         owner_id: row.owner_id,
+        menge_numeric: row.menge_numeric,
 
         data: dataOut,
         ort: computeOrtShort(d),
