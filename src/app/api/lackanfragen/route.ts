@@ -95,6 +95,16 @@ export async function GET(req: Request) {
     const zustandRaw = url.searchParams.get('zustand') ?? ''
     const herstellerRaw = url.searchParams.get('hersteller') ?? ''
     const maxRaw = url.searchParams.get('max') ?? ''
+    const kategorieDb = kategorie.trim().toLowerCase();
+
+const normalizeZustandForDb = (value: string) => {
+  const v = value.toLowerCase();
+
+  if (v.includes('neu')) return 'neu';
+  if (v.includes('geöffnet') || v.includes('geoeffnet')) return 'geöffnet';
+
+  return v;
+};
     const g = url.searchParams.get('g') ?? ''
     const p = url.searchParams.get('p') ?? ''
 
@@ -116,9 +126,6 @@ export async function GET(req: Request) {
       .filter(Boolean)
 
     const zustandList = zustandRaw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
 
     const herstellerList = herstellerRaw
       .split(',')
@@ -142,9 +149,9 @@ export async function GET(req: Request) {
         next = next.eq('published', true)
       }
 
-      if (kategorie) {
-        next = next.eq('data->>kategorie', kategorie)
-      }
+      if (kategorieDb) {
+  next = next.eq('data->>kategorie', kategorieDb)
+}
 
       if (zustandList.length) {
         next = next.in('data->>zustand', zustandList)
