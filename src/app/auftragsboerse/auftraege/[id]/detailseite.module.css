@@ -949,3 +949,46 @@
   height: 18px;
   accent-color: #00b4d8;
 }
+/* ===== Große Bildschirme: Detailseite begrenzen, bestehendes Layout bleibt erhalten ===== */
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1450px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .grid {
+    gap: 3rem;
+  }
+
+  .leftColumn {
+    flex: 0 0 410px;
+    max-width: 410px;
+  }
+
+  .rightColumn {
+    flex: 1 1 auto;
+    max-width: 980px;
+  }
+
+  .imageWrapper {
+    max-width: 410px;
+  }
+
+  .image {
+    max-width: 410px;
+    max-height: 500px;
+  }
+
+  .metaGrid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .beschreibung,
+  .verfahrenBlock,
+  .priceSection {
+    max-width: 100%;
+  }
+}
