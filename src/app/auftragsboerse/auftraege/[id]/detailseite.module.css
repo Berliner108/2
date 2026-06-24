@@ -885,6 +885,7 @@
 
 .primaryButton,
 .secondaryButton {
+  font-family: var(--font-oswald), 'Oswald', sans-serif;
   border: none;
   border-radius: 999px;
   padding: 0.85rem 1.4rem;

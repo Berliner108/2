@@ -960,3 +960,10 @@
   height: 18px;
   accent-color: #00b4d8;
 }
+.ndaHinweisText {
+  margin: 0.75rem 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+}

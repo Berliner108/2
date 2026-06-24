@@ -1475,8 +1475,8 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </motion.label>
 
           {ndaRequired && (
-            <p className={styles.feldFehlerText}>
-              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
+            <p className={styles.ndaHinweisText}>
+              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
             </p>
           )}
         </div>
