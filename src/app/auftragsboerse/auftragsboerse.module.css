@@ -568,3 +568,47 @@
     gap: 34px;
   }
 }
+@media (min-width: 2400px) {
+  .skeletonPage {
+    max-width: 1900px;
+    width: 100%;
+    margin: 0 auto;
+    gap: 28px;
+    padding: 48px 0 80px;
+  }
+
+  .skelLine {
+    height: 26px;
+  }
+
+  .skelLineWide {
+    height: 34px;
+    width: 70%;
+  }
+
+  .skelBlock {
+    height: 90px;
+  }
+
+  .skelBlockSmall {
+    height: 64px;
+    width: 60%;
+  }
+
+  .skelInput {
+    height: 70px;
+  }
+
+  .skelDrop {
+    height: 420px;
+  }
+
+  .skelDropSmall {
+    height: 240px;
+  }
+
+  .skelTwoCols,
+  .skelGrid {
+    gap: 22px;
+  }
+}
