@@ -168,7 +168,7 @@
 /* ===== Große Bildschirme / 4K mit Browser-Skalierung ===== */
 @media (min-width: 1600px) {
   .navList {
-    gap: 34px;
+    gap: 68px;
   }
 
   .navItem {
