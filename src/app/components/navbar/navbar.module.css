@@ -191,42 +191,34 @@
 }
 
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .navbar {
-    padding: 16px 0;
+    padding: 24px 0 !important;
   }
 
   .navButton {
-    font-size: 22px;
-    padding: 14px 24px;
+    font-size: 30px !important;
+    padding: 18px 32px !important;
   }
 
   .navItem {
-    margin: 10px 34px;
+    margin: 12px 42px !important;
   }
 
   .dropdown {
-    min-width: 230px;
+    min-width: 300px !important;
   }
 
   .dropdownLink {
-    font-size: 20px;
-    padding: 15px 22px;
+    font-size: 26px !important;
+    padding: 18px 28px !important;
   }
 
   .counter,
   .edgeBadge {
-    width: 26px;
-    height: 26px;
-    font-size: 14px;
-  }
-}
-@media (min-width: 2400px) {
-  .navbar {
-    background: red !important;
-  }
-
-  .navButton {
-    font-size: 40px !important;
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 18px !important;
   }
 }
