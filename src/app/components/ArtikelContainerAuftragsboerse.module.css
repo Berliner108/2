@@ -248,8 +248,17 @@
   border: 1px solid #f5c6cb;
 }
 /* ===== Große Bildschirme ab 1600px ===== */
+/* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
+  .cardLink {
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+
   .card {
+    width: 100%;
+    max-width: none;
     padding: 22px 24px;
     min-height: 250px;
   }

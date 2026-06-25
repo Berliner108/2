@@ -487,6 +487,7 @@
   }
 }
 /* ===== Große Bildschirme ab 1600px ===== */
+/* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
   .wrapper {
     max-width: 1500px;
@@ -502,13 +503,19 @@
   }
 
   .content {
-    flex: 1;
+    flex: 0 1 1050px;
+    width: 1050px;
     max-width: 1050px;
     margin: 0;
   }
 
   .grid {
     width: 100%;
-    max-width: 1050px;
+    max-width: none;
+  }
+
+  .grid > * {
+    width: 100%;
+    max-width: none;
   }
 }
