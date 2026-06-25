@@ -520,20 +520,20 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .wrapper {
-    max-width: 1850px;
+    max-width: 2050px;
     margin: 0 auto;
     padding: 36px 56px 72px;
-    gap: 56px;
+    gap: 64px;
   }
 
   .sidebar {
-    flex: 0 0 300px;
-    max-width: 300px;
+    flex: 0 0 320px;
+    max-width: 320px;
   }
 
   .content {
-    flex: 0 1 1350px;
-    max-width: 1350px;
+    flex: 0 1 1550px;
+    max-width: 1550px;
     margin: 0;
   }
 

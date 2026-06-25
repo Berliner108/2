@@ -280,21 +280,21 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .card {
-    min-height: 280px;
-    padding: 26px 30px;
+    min-height: 300px;
+    padding: 28px 32px;
   }
 
   .cardBildWrapper {
-    width: 280px;
-    height: 280px;
+    width: 300px;
+    height: 300px;
   }
 
   .cardTextBlock {
-    padding-left: 30px;
+    padding-left: 32px;
   }
 
   .cardText1 {
-    font-size: 24px;
+    font-size: 25px;
   }
 
   .cardText2,
@@ -303,6 +303,6 @@
   .cardText5,
   .cardText6,
   .cardOrt {
-    font-size: 17px;
+    font-size: 18px;
   }
 }
