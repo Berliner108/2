@@ -490,10 +490,10 @@
 /* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
   .wrapper {
-    max-width: 1700px;
+    max-width: 1450px;
     margin: 0 auto;
     padding: 28px 40px 56px;
-    gap: 42px;
+    gap: 40px;
     align-items: flex-start;
   }
 
@@ -503,16 +503,14 @@
   }
 
   .content {
-    flex: 1;
-    max-width: none;
+    flex: 0 1 1050px;
+    max-width: 1050px;
     margin: 0;
   }
 
   .grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 22px;
     width: 100%;
+    max-width: none;
   }
 
   .anfrageUeberschrift {
