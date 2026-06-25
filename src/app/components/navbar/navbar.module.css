@@ -165,60 +165,17 @@
   100% { transform: scale(1);   opacity: 1; }
 }
 .edgeBadge { animation: edgePulse 2.4s ease-in-out infinite; }
-/* ===== Große Bildschirme ab 1600px ===== */
+/* ===== Große Bildschirme / 4K mit Browser-Skalierung ===== */
 @media (min-width: 1600px) {
-  .navbar {
-    padding: 12px 0;
-  }
-
-  .navButton {
-    font-size: 18px;
-    padding: 11px 18px;
+  .navList {
+    gap: 34px;
   }
 
   .navItem {
-    margin: 8px 26px;
-  }
-
-  .dropdown {
-    min-width: 190px;
-  }
-
-  .dropdownLink {
-    font-size: 17px;
-    padding: 12px 18px;
-  }
-}
-
-/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
-/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
-@media (min-width: 2400px) {
-  .navbar {
-    padding: 24px 0 !important;
+    margin: 8px 0;
   }
 
   .navButton {
-    font-size: 30px !important;
-    padding: 18px 32px !important;
-  }
-
-  .navItem {
-    margin: 12px 42px !important;
-  }
-
-  .dropdown {
-    min-width: 300px !important;
-  }
-
-  .dropdownLink {
-    font-size: 26px !important;
-    padding: 18px 28px !important;
-  }
-
-  .counter,
-  .edgeBadge {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 18px !important;
+    padding: 10px 18px;
   }
 }
