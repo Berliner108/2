@@ -221,3 +221,12 @@
     font-size: 14px;
   }
 }
+@media (min-width: 2400px) {
+  .navbar {
+    background: red !important;
+  }
+
+  .navButton {
+    font-size: 40px !important;
+  }
+}
