@@ -277,3 +277,32 @@
     font-size: 16px;
   }
 }
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .card {
+    min-height: 280px;
+    padding: 26px 30px;
+  }
+
+  .cardBildWrapper {
+    width: 280px;
+    height: 280px;
+  }
+
+  .cardTextBlock {
+    padding-left: 30px;
+  }
+
+  .cardText1 {
+    font-size: 24px;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardOrt {
+    font-size: 17px;
+  }
+}

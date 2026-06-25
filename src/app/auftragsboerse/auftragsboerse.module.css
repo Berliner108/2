@@ -517,3 +517,28 @@
     margin-top: 0;
   }
 }
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .wrapper {
+    max-width: 1850px;
+    margin: 0 auto;
+    padding: 36px 56px 72px;
+    gap: 56px;
+  }
+
+  .sidebar {
+    flex: 0 0 300px;
+    max-width: 300px;
+  }
+
+  .content {
+    flex: 0 1 1350px;
+    max-width: 1350px;
+    margin: 0;
+  }
+
+  .grid {
+    width: 100%;
+    max-width: none;
+  }
+}
