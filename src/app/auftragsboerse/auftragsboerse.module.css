@@ -522,13 +522,33 @@
   .wrapper {
     max-width: 2300px;
     margin: 0 auto;
-    padding: 36px 64px 72px;
-    gap: 72px;
+    padding: 44px 72px 80px;
+    gap: 80px;
+    font-size: 22px;
   }
 
   .sidebar {
-    flex: 0 0 320px;
-    max-width: 320px;
+    flex: 0 0 340px;
+    max-width: 340px;
+    padding: 22px;
+  }
+
+  .sortSelect,
+  .input {
+    font-size: 18px;
+    padding: 11px 14px;
+  }
+
+  .sliderLabel {
+    font-size: 19px !important;
+  }
+
+  .checkboxGroup {
+    font-size: 19px;
+  }
+
+  .checkboxLabel {
+    font-size: 18px;
   }
 
   .content {
@@ -537,8 +557,14 @@
     margin: 0;
   }
 
+  .anfrageUeberschrift {
+    font-size: 26px;
+    margin-top: 0;
+    margin-bottom: 22px;
+  }
+
   .grid {
     width: 100%;
-    max-width: none;
+    gap: 28px;
   }
 }
