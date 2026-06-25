@@ -490,9 +490,9 @@
 /* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
   .wrapper {
-    max-width: 1500px;
+    max-width: 1700px;
     margin: 0 auto;
-    padding: 28px 32px 48px;
+    padding: 28px 40px 56px;
     gap: 42px;
     align-items: flex-start;
   }
@@ -503,19 +503,19 @@
   }
 
   .content {
-    flex: 0 1 1050px;
-    width: 1050px;
-    max-width: 1050px;
+    flex: 1;
+    max-width: none;
     margin: 0;
   }
 
   .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
     width: 100%;
-    max-width: none;
   }
 
-  .grid > * {
-    width: 100%;
-    max-width: none;
+  .anfrageUeberschrift {
+    margin-top: 0;
   }
 }

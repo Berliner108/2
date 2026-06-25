@@ -250,30 +250,23 @@
 /* ===== Große Bildschirme ab 1600px ===== */
 /* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
-  .cardLink {
-    display: block;
-    width: 100%;
-    max-width: none;
-  }
-
   .card {
-    width: 100%;
-    max-width: none;
-    padding: 22px 24px;
-    min-height: 250px;
+    height: 100%;
+    min-height: 230px;
+    padding: 18px;
   }
 
   .cardBildWrapper {
-    width: 250px;
-    height: 250px;
+    width: 210px;
+    height: 210px;
   }
 
   .cardTextBlock {
-    padding-left: 24px;
+    padding-left: 18px;
   }
 
   .cardText1 {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .cardText2,
@@ -282,6 +275,6 @@
   .cardText5,
   .cardText6,
   .cardOrt {
-    font-size: 16px;
+    font-size: 15px;
   }
 }
