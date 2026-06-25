@@ -247,3 +247,32 @@
   color: #b00020;
   border: 1px solid #f5c6cb;
 }
+/* ===== Große Bildschirme ab 1600px ===== */
+@media (min-width: 1600px) {
+  .card {
+    padding: 22px 24px;
+    min-height: 250px;
+  }
+
+  .cardBildWrapper {
+    width: 250px;
+    height: 250px;
+  }
+
+  .cardTextBlock {
+    padding-left: 24px;
+  }
+
+  .cardText1 {
+    font-size: 22px;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardOrt {
+    font-size: 16px;
+  }
+}

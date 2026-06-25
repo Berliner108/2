@@ -492,7 +492,7 @@
     max-width: 1500px;
     margin: 0 auto;
     padding: 28px 32px 48px;
-    gap: 48px;
+    gap: 42px;
     align-items: flex-start;
   }
 
@@ -503,10 +503,12 @@
 
   .content {
     flex: 1;
-    max-width: 1040px;
+    max-width: 1050px;
     margin: 0;
   }
+
   .grid {
-    max-width: 1040px;
+    width: 100%;
+    max-width: 1050px;
   }
 }
