@@ -520,51 +520,51 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .wrapper {
-    max-width: 2300px;
+    max-width: 2600px;
     margin: 0 auto;
-    padding: 44px 72px 80px;
-    gap: 80px;
-    font-size: 22px;
+    padding: 48px 80px 90px;
+    gap: 90px;
+    font-size: 24px;
   }
 
   .sidebar {
-    flex: 0 0 340px;
-    max-width: 340px;
-    padding: 22px;
+    flex: 0 0 380px;
+    max-width: 380px;
+    padding: 26px;
   }
 
   .sortSelect,
   .input {
-    font-size: 18px;
-    padding: 11px 14px;
+    font-size: 20px;
+    padding: 13px 16px;
   }
 
   .sliderLabel {
-    font-size: 19px !important;
+    font-size: 21px !important;
   }
 
   .checkboxGroup {
-    font-size: 19px;
+    font-size: 21px;
   }
 
   .checkboxLabel {
-    font-size: 18px;
+    font-size: 20px;
   }
 
   .content {
-    flex: 0 1 1700px;
-    max-width: 1700px;
+    flex: 0 1 1900px;
+    max-width: 1900px;
     margin: 0;
   }
 
   .anfrageUeberschrift {
-    font-size: 26px;
+    font-size: 30px;
     margin-top: 0;
-    margin-bottom: 22px;
+    margin-bottom: 28px;
   }
 
   .grid {
     width: 100%;
-    gap: 28px;
+    gap: 34px;
   }
 }

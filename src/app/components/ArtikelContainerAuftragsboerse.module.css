@@ -280,23 +280,23 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .card {
-    min-height: 340px;
-    padding: 34px 38px;
-    border-radius: 14px;
+    min-height: 380px;
+    padding: 38px 44px;
+    border-radius: 16px;
   }
 
   .cardBildWrapper {
-    width: 340px;
-    height: 340px;
+    width: 380px;
+    height: 380px;
   }
 
   .cardTextBlock {
-    padding-left: 38px;
+    padding-left: 44px;
   }
 
   .cardText1 {
-    font-size: 30px;
-    margin-bottom: 8px;
+    font-size: 34px;
+    margin-bottom: 12px;
   }
 
   .cardText2,
@@ -305,17 +305,17 @@
   .cardText5,
   .cardText6,
   .cardOrt {
-    font-size: 21px;
-    line-height: 1.55;
+    font-size: 23px;
+    line-height: 1.6;
   }
 
   .deadlineBadge {
-    font-size: 0.85rem;
-    padding: 0.22rem 0.65rem;
+    font-size: 1rem;
+    padding: 0.28rem 0.75rem;
   }
 
   .verkaufsTypLabel {
-    font-size: 15px;
-    padding: 6px 14px;
+    font-size: 17px;
+    padding: 7px 16px;
   }
 }
