@@ -166,9 +166,13 @@
 }
 .edgeBadge { animation: edgePulse 2.4s ease-in-out infinite; }
 /* ===== Große Bildschirme / 4K mit Browser-Skalierung ===== */
+/* ===== Große Bildschirme ===== */
+/* ===== Große Bildschirme ===== */
 @media (min-width: 1600px) {
   .navList {
-    gap: 68px;
+    width: min(100% - 420px, 1350px);
+    justify-content: space-between;
+    gap: 0;
   }
 
   .navItem {
@@ -176,6 +180,21 @@
   }
 
   .navButton {
-    padding: 10px 18px;
+    font-size: 17px;
+    padding: 10px 12px;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ===== */
+@media (min-width: 2400px) {
+  .navList {
+    width: min(100% - 720px, 1900px);
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .navButton {
+    font-size: 18px;
+    padding: 12px 14px;
   }
 }
