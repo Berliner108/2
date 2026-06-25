@@ -165,3 +165,59 @@
   100% { transform: scale(1);   opacity: 1; }
 }
 .edgeBadge { animation: edgePulse 2.4s ease-in-out infinite; }
+/* ===== Große Bildschirme ab 1600px ===== */
+@media (min-width: 1600px) {
+  .navbar {
+    padding: 12px 0;
+  }
+
+  .navButton {
+    font-size: 18px;
+    padding: 11px 18px;
+  }
+
+  .navItem {
+    margin: 8px 26px;
+  }
+
+  .dropdown {
+    min-width: 190px;
+  }
+
+  .dropdownLink {
+    font-size: 17px;
+    padding: 12px 18px;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .navbar {
+    padding: 16px 0;
+  }
+
+  .navButton {
+    font-size: 22px;
+    padding: 14px 24px;
+  }
+
+  .navItem {
+    margin: 10px 34px;
+  }
+
+  .dropdown {
+    min-width: 230px;
+  }
+
+  .dropdownLink {
+    font-size: 20px;
+    padding: 15px 22px;
+  }
+
+  .counter,
+  .edgeBadge {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+}
