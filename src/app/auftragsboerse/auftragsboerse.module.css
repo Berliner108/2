@@ -612,3 +612,113 @@
     gap: 22px;
   }
 }
+/* ===== Loading: Standard unsichtbar, damit kleine Bildschirme unverändert bleiben ===== */
+.loadingSidebar {
+  display: none;
+}
+/* ===== Loading große Bildschirme ab 1600px ===== */
+@media (min-width: 1600px) {
+  .loadingWrapper {
+    min-height: calc(100vh - 90px);
+  }
+
+  .loadingSidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 0 0 280px;
+    max-width: 280px;
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    height: fit-content;
+  }
+
+  .loadingSidebar .skelInput {
+    height: 44px;
+  }
+
+  .loadingSidebar .skelBlockSmall {
+    width: 100%;
+    height: 40px;
+  }
+
+  .skeletonPage {
+    min-height: calc(100vh - 150px);
+    width: 100%;
+  }
+
+  .skelDrop {
+    height: 360px;
+  }
+
+  .skelDropSmall {
+    height: 220px;
+  }
+
+  .skelInput {
+    height: 90px;
+  }
+}
+/* ===== Loading 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .loadingWrapper {
+    min-height: calc(100vh - 120px);
+  }
+
+  .loadingSidebar {
+    flex: 0 0 380px;
+    max-width: 380px;
+    padding: 26px;
+    gap: 22px;
+  }
+
+  .loadingSidebar .skelInput {
+    height: 64px;
+  }
+
+  .loadingSidebar .skelBlockSmall {
+    height: 56px;
+  }
+
+  .skeletonPage {
+    min-height: calc(100vh - 180px);
+    width: 100%;
+    padding: 0;
+  }
+
+  .skelLine {
+    height: 28px;
+  }
+
+  .skelLineWide {
+    height: 38px;
+    width: 70%;
+  }
+
+  .skelBlock {
+    height: 120px;
+  }
+
+  .skelBlockSmall {
+    height: 80px;
+  }
+
+  .skelInput {
+    height: 130px;
+  }
+
+  .skelDrop {
+    height: 520px;
+  }
+
+  .skelDropSmall {
+    height: 300px;
+  }
+
+  .skelTwoCols,
+  .skelGrid {
+    gap: 34px;
+  }
+}

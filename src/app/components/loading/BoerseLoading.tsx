@@ -50,14 +50,25 @@ type BoerseLoadingProps = {
 export default function BoerseLoading({ showNavbar = true }: BoerseLoadingProps) {
   return (
     <>
-      {showNavbar && <Navbar />}
-      <TopLoader />
+      
+    {showNavbar && <Navbar />}
+    <TopLoader />
 
-      <div className={styles.wrapper}>
-        <div className={styles.content}>
-          <PageSkeleton />
-        </div>
+    <div className={`${styles.wrapper} ${styles.loadingWrapper}`}>
+      <aside className={styles.loadingSidebar} aria-hidden>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelBlockSmall} />
+        <div className={styles.skelBlockSmall} />
+        <div className={styles.skelBlockSmall} />
+      </aside>
+
+      <div className={styles.content}>
+        <PageSkeleton />
       </div>
-    </>
-  )
+    </div>
+  </>
+)
 }
