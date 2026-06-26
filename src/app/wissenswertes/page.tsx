@@ -311,13 +311,7 @@ useEffect(() => {
 
         <section className={styles.processSection} id="standardablauf">
           <div className={styles.sectionHeaderLeft}>
-            <p className={styles.sectionKicker}>Ablauf & Vorbereitung</p>
-            <h2>Standardablauf eines Beschichtungsauftrags</h2>
-            <p>
-              Je genauer Anforderungen, Bauteildaten und Logistik beschrieben
-              werden, desto besser lassen sich Aufwand, Machbarkeit und Ergebnis
-              einschätzen.
-            </p>
+            <p className={styles.sectionKicker}>Ablauf & Vorbereitung</p> <h2>Angaben für eine saubere Auftragsabwicklung</h2> <p> Vollständige und klare Angaben helfen dem Beschichter, Aufwand, Machbarkeit, Termine und Ergebnis realistisch einzuschätzen. So lassen sich Rückfragen, Verzögerungen, Nachträge und mögliche Mehrkosten deutlich reduzieren. </p>
           </div>
 
           <div className={styles.processTimeline}>
