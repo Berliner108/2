@@ -409,10 +409,9 @@
   }
 }
 
-/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .pageContainer {
-    max-width: 2600px;
+    max-width: 1700px;
     margin: 0 auto;
   }
 
@@ -430,7 +429,7 @@
   }
 
   .aboutUsContent {
-    font-size: 1.45rem;
+    font-size: 1.35rem;
     max-width: 1500px;
   }
 
@@ -445,7 +444,7 @@
   .standardCompactIntro,
   .standardCompactList li,
   .standardCompactNotice {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
   }
 
   .header {
@@ -453,7 +452,7 @@
   }
 
   .headerText {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .arrow {
@@ -465,7 +464,7 @@
   }
 
   .content p {
-    font-size: 24px;
+    font-size: 23px;
     line-height: 1.8;
   }
 }

@@ -88,24 +88,24 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .container {
-    max-width: 2600px;
+    max-width: 1700px;
     margin: 0 auto;
   }
 
   .container-left,
   .container-right {
-    max-height: 620px;
+    max-height: 520px;
   }
 
   .text-container {
-    padding: 90px;
-    font-size: 1.55rem;
-    line-height: 2.15;
+    padding: 70px;
+    font-size: 1.35rem;
+    line-height: 2.05;
   }
 
   .h2-vision,
   .h2-mission {
-    font-size: 3.2rem;
-    margin-bottom: 28px;
+    font-size: 2.8rem;
+    margin-bottom: 24px;
   }
 }

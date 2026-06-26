@@ -94,15 +94,15 @@
 /* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .container {
-    max-width: 1900px;
+    max-width: 1700px;
     margin: 4rem auto 0;
     gap: 3rem;
     padding: 2rem;
   }
 
   .card {
-    max-width: 430px;
-    padding: 2.5rem;
+    max-width: 390px;
+    padding: 2.4rem;
     border-radius: 1.4rem;
   }
 
@@ -112,12 +112,12 @@
   }
 
   .card h3 {
-    font-size: 1.75rem;
+    font-size: 1.65rem;
     margin-bottom: 0.9rem;
   }
 
   .card p {
-    font-size: 1.28rem;
+    font-size: 1.2rem;
     line-height: 1.7;
   }
 }
