@@ -321,7 +321,15 @@ useEffect(() => {
           </div>
 
           <div className={styles.processTimeline}>
-            <div className={styles.processStep}> <span>01</span> <h3>Anforderungen und Auftragsdaten vollständig angeben</h3> <p>Verfahren, Ziel, Einsatzbereich, gewünschtes Ergebnis, Material, Maße, Gewicht, Stückzahl, Zustand, Fotos, Sichtflächen, Normen, Zertifikate, Prüfanforderungen sowie Abholung, Lieferung, Verpackung, Ladezeiten und Hebehilfen klar übermitteln.</p> </div> <div className={styles.processStep}> <span>02</span> <h3>Angebote vergleichen und Beschichter beauftragen</h3> <p>Preis, Leistungsumfang, Bearbeitungszeit, Vorbehandlung, Beschichtungssystem, Logistik, mögliche Zusatzkosten und enthaltene Prüf- oder Dokumentationsleistungen prüfen, bevor der Auftrag vergeben wird.</p> </div> <div className={styles.processStep}> <span>03</span> <h3>Beschichtungsergebnis prüfen und Auftrag abschließen</h3> <p>Oberfläche, Farbton, Sichtflächen, Schichtqualität, vereinbarte Anforderungen, Dokumente und eventuelle Abweichungen kontrollieren, Rückfragen klären und den Auftrag sauber abschließen.</p> </div>
+            <div className={styles.processStep}> <span>01</span> 
+            <h3>Anforderungen und Auftragsdaten vollständig angeben</h3> 
+            <p>Verfahren, Ziel, Einsatzbereich, gewünschtes Ergebnis, Material, Maße, Gewicht, Stückzahl, Zustand, Fotos, Sichtflächen, Normen, Zertifikate, 
+              Prüfanforderungen sowie Abholung, Lieferung, Verpackung, Ladezeiten und Hebehilfen klar übermitteln.</p> </div> 
+              <div className={styles.processStep}> <span>02</span> <h3>Angebote vergleichen und Beschichter beauftragen</h3> 
+              <p>Preis, Leistungsumfang, Bearbeitungszeit, Vorbehandlung, Beschichtungssystem, Logistik, mögliche Zusatzkosten und enthaltene Prüf- oder 
+                Dokumentationsleistungen prüfen, bevor der Auftrag vergeben wird.</p> </div> <div className={styles.processStep}> <span>03</span> 
+                <h3>Beschichtungsergebnis prüfen und Auftrag abschließen</h3> <p>Oberfläche, Farbton, Sichtflächen, Schichtqualität, vereinbarte 
+                  Anforderungen, Dokumente und eventuelle Abweichungen kontrollieren, Rückfragen klären und den Auftrag sauber abschließen.</p> </div>
               
           </div>
 
@@ -358,7 +366,10 @@ useEffect(() => {
                 Material, Zustand, Fotos, Zeichnungen, Farbton und Besonderheiten
                 vollständig angeben. Die gewünschte Erwartung an das
                 Beschichtungsergebnis kann ebenfalls beschrieben werden.
-              </li>
+              </li><li>
+              <strong>Farbton und Lackhersteller:</strong> Wenn bei Lackierverfahren ein bestehender Farbton möglichst 
+              genau getroffen werden soll, sollte angegeben werden, ob Lack vom gleichen Hersteller verwendet werden muss. 
+              Jedoch können auch unterschiedliche Chargen desselben Herstellers minimale Farbabweichungen aufweisen und stellen keinen Mangel dar. </li>
               <li>
                 <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten,
                 Hauptansichtsflächen oder optisch besonders wichtige Bereiche
