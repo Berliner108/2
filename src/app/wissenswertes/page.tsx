@@ -334,7 +334,7 @@ useEffect(() => {
             transition={{ duration: 0.45 }}
             viewport={{ once: true }}
           >
-            <h3>Was vor der Auftragsvergabe wichtig ist</h3>
+            <h3>Hier im Detail - Was vor der Auftragsvergabe wichtig ist</h3>
 
             <p className={styles.standardCompactIntro}>
               Vor der Auftragsvergabe sollten alle Angaben vollständig,
