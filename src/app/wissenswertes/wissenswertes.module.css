@@ -387,7 +387,7 @@
   .standardCompactNotice {
     font-size: 0.92rem;
   }
-}/* ===== Große Bildschirme ab 1600px ===== */
+}/* ===== Wissenswertes: große Screens einheitlich ===== */
 @media (min-width: 1600px) {
   .pageContainer,
   .aboutUsContainer,
@@ -400,20 +400,31 @@
   }
 
   .aboutUsContainer {
-    margin-top: 0;
-    margin-bottom: 4rem;
-    padding: 4rem 2rem;
+    margin-top: 3.5rem;
+    margin-bottom: 3.5rem;
+    padding: 3.5rem 3rem;
   }
 
   .standardCompactSection {
-    margin-top: 4rem;
-    margin-bottom: 4.5rem;
+    margin-top: 0;
+    margin-bottom: 3.5rem;
     padding: 0;
   }
 
   .standardCompactBox {
     width: 100%;
     box-sizing: border-box;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+  }
+
+  .container {
+    margin-bottom: 3.5rem;
+  }
+
+  .header {
+    min-height: 64px;
+    border-radius: 12px;
   }
 
   .headerText {
@@ -425,7 +436,6 @@
   }
 }
 
-/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .pageContainer,
   .aboutUsContainer,
@@ -438,21 +448,26 @@
   }
 
   .aboutUsContainer {
-    margin-top: 0;
-    margin-bottom: 6rem;
+    margin-top: 5rem;
+    margin-bottom: 5rem;
     padding: 5rem 4rem;
   }
 
   .standardCompactSection {
-    margin-top: 6rem;
-    margin-bottom: 6.5rem;
+    margin-top: 0;
+    margin-bottom: 5rem;
     padding: 0;
   }
 
   .standardCompactBox {
     width: 100%;
     box-sizing: border-box;
-    padding: 2.4rem 2.8rem;
+    padding: 2.6rem 3rem;
+    border-radius: 22px;
+  }
+
+  .container {
+    margin-bottom: 5rem;
   }
 
   .standardCompactBox h2 {
@@ -466,7 +481,8 @@
   }
 
   .header {
-    min-height: 78px;
+    min-height: 82px;
+    border-radius: 16px;
   }
 
   .headerText {
