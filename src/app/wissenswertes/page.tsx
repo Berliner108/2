@@ -403,7 +403,7 @@ useEffect(() => {
 
             <p className={styles.standardCompactNotice}>
               Fehlende, falsche oder nachträglich geänderte Angaben können zu
-              Verzögerungen oder Mehrkosten führen.
+              begründeten Verzögerungen oder Mehrkosten führen.
             </p>
           </motion.div>
         </section>
