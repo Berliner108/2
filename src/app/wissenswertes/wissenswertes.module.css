@@ -415,25 +415,17 @@
     margin: 0 auto;
   }
 
-  .aboutUsContainer,
   .standardCompactSection {
+    width: 100%;
     max-width: 1700px;
-  }
-
-  .aboutUsContainer {
-    padding: 5rem 4rem;
-  }
-
-  .aboutUsTitle {
-    font-size: 2.8rem;
-  }
-
-  .aboutUsContent {
-    font-size: 1.35rem;
-    max-width: 1500px;
+    margin: 4rem auto;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   .standardCompactBox {
+    width: 100%;
+    box-sizing: border-box;
     padding: 2.4rem 2.8rem;
   }
 
@@ -445,26 +437,5 @@
   .standardCompactList li,
   .standardCompactNotice {
     font-size: 1.25rem;
-  }
-
-  .header {
-    min-height: 78px;
-  }
-
-  .headerText {
-    font-size: 30px;
-  }
-
-  .arrow {
-    font-size: 30px;
-  }
-
-  .content {
-    padding: 0 44px;
-  }
-
-  .content p {
-    font-size: 23px;
-    line-height: 1.8;
   }
 }
