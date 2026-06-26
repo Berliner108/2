@@ -334,13 +334,9 @@ useEffect(() => {
             transition={{ duration: 0.45 }}
             viewport={{ once: true }}
           >
-            <h3>Hier im Detail - Was vor der Auftragsvergabe wichtig ist</h3>
+            <h3>Im Detail - Was vor der Auftragsvergabe wichtig ist</h3>
 
-            <p className={styles.standardCompactIntro}>
-              Vor der Auftragsvergabe sollten alle Angaben vollständig,
-              verständlich und korrekt gemacht werden, um ein sauberes
-              Beschichtungsergebnis erzielen zu können.
-            </p>
+            <p className={styles.standardCompactIntro}> Je vollständiger diese Angaben vor der Auftragsvergabe gemacht werden, desto besser kann der Beschichter Aufwand, Machbarkeit, Termine und Ergebnis einschätzen. Das reduziert Rückfragen, Verzögerungen, Nachträge und mögliche Mehrkosten. </p>
 
             <ul className={styles.standardCompactList}>
               <li>
@@ -360,12 +356,11 @@ useEffect(() => {
                 Material, Zustand, Fotos, Zeichnungen, Farbton und Besonderheiten
                 vollständig angeben. Die gewünschte Erwartung an das
                 Beschichtungsergebnis kann ebenfalls beschrieben werden.
-              </li><li>
-              <strong>Farbton und Lackhersteller:</strong> Wenn bei Lackierverfahren ein bestehender Farbton möglichst 
-              genau getroffen werden soll, sollte angegeben werden, ob Lack vom gleichen Hersteller verwendet werden muss. 
-              Jedoch können auch unterschiedliche Chargen desselben Herstellers minimale Farbabweichungen aufweisen und stellen keinen Mangel dar. </li>
-              <li>
-                <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten,
+              </li>
+              <li> <strong>Farbton und Lackhersteller:</strong> Wenn bei Lackierverfahren ein bestehender Farbton möglichst genau 
+              getroffen werden soll, sollte angegeben werden, ob Lack vom gleichen Hersteller verwendet werden muss. Wichtig: Auch unterschiedliche Chargen 
+              desselben Herstellers können technisch bedingt minimale Farbabweichungen aufweisen. </li>
+               <li> <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten,
                 Hauptansichtsflächen oder optisch besonders wichtige Bereiche
                 sollten eindeutig angegeben werden.
               </li>
