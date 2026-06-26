@@ -494,3 +494,164 @@
     line-height: 1.8;
   }
 }
+/* ===== Wissenswertes: neue professionelle Verpackung ===== */
+.knowledgeHero,
+.accordionIntro,
+.visionSection {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  font-family: 'Oswald', sans-serif;
+}
+
+.knowledgeHero {
+  margin-top: 3rem;
+  margin-bottom: 3.5rem;
+  padding: 4rem 3rem;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff, #f3fbfd);
+  border-radius: 1.5rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5eef2;
+}
+
+.heroEyebrow {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #00b4d8;
+}
+
+.knowledgeHero h1 {
+  margin: 0 0 1rem;
+  font-size: 3rem;
+  line-height: 1.1;
+  color: #111827;
+}
+
+.knowledgeHero p {
+  max-width: 850px;
+  margin: 0 auto;
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #374151;
+}
+
+.heroFacts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.heroFacts span {
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #cfeef5;
+  color: #111827;
+  font-weight: 700;
+}
+
+.accordionIntro {
+  margin-top: 4rem;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+  text-align: left;
+}
+
+.accordionIntro h2 {
+  margin: 0 0 0.6rem;
+  font-size: 2.3rem;
+  color: #111827;
+}
+
+.accordionIntro p {
+  max-width: 900px;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.visionSection {
+  margin-top: 5rem;
+  margin-bottom: 4rem;
+}
+
+/* große Screens */
+@media (min-width: 1600px) {
+  .knowledgeHero,
+  .accordionIntro,
+  .visionSection {
+    max-width: 1450px;
+  }
+
+  .knowledgeHero {
+    padding: 4.5rem 4rem;
+  }
+
+  .knowledgeHero h1 {
+    font-size: 3.6rem;
+  }
+
+  .knowledgeHero p {
+    font-size: 1.3rem;
+  }
+}
+
+/* 4K */
+@media (min-width: 2400px) {
+  .knowledgeHero,
+  .accordionIntro,
+  .visionSection {
+    max-width: 1700px;
+  }
+
+  .knowledgeHero {
+    margin-top: 5rem;
+    margin-bottom: 5rem;
+    padding: 6rem 5rem;
+  }
+
+  .knowledgeHero h1 {
+    font-size: 4.6rem;
+  }
+
+  .knowledgeHero p {
+    font-size: 1.55rem;
+    max-width: 1100px;
+  }
+
+  .heroEyebrow {
+    font-size: 1.15rem;
+  }
+
+  .heroFacts span {
+    font-size: 1.25rem;
+    padding: 0.85rem 1.3rem;
+  }
+
+  .accordionIntro {
+    margin-top: 6rem;
+    margin-bottom: 2rem;
+  }
+
+  .accordionIntro h2 {
+    font-size: 3.2rem;
+  }
+
+  .accordionIntro p {
+    font-size: 1.35rem;
+  }
+
+  .visionSection {
+    margin-top: 7rem;
+    margin-bottom: 6rem;
+  }
+}

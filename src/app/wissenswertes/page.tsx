@@ -229,8 +229,22 @@ useEffect(() => {
   return (
     <>
       <Navbar />
-      <Vision />
-      <ScrollProgress />
+<ScrollProgress />
+
+<section className={styles.knowledgeHero}>
+  <p className={styles.heroEyebrow}>Wissenswertes</p>
+  <h1>Oberflächentechnik verständlich erklärt</h1>
+  <p>
+    Grundlagen, Verfahren, Qualitätsanforderungen und praktische Orientierung
+    für Auftraggeber, Beschichter und Einkäufer.
+  </p>
+
+  <div className={styles.heroFacts}>
+    <span>Beschichtungsverfahren</span>
+    <span>Normen & Anforderungen</span>
+    <span>Vorbereitung & Ablauf</span>
+  </div>
+</section>
       
   <section className={styles.aboutUsContainer} id="Sofunktioniert’s">
   <motion.h2
@@ -350,6 +364,14 @@ useEffect(() => {
   </motion.div>
 
 </section>
+<section className={styles.accordionIntro}>
+  <p className={styles.heroEyebrow}>Verfahren & Grundlagen</p>
+  <h2>Beschichtungsverfahren im Überblick</h2>
+  <p>
+    Öffne ein Verfahren, um Grundlagen, typische Anwendungen, Anforderungen
+    und Besonderheiten besser einzuordnen.
+  </p>
+</section>
       <div className={styles.pageContainer}>
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
           <div key={index} className={styles.container} id={`container-${index}`}>
@@ -396,6 +418,9 @@ useEffect(() => {
         ))}
         
       </div>
+      <section className={styles.visionSection}>
+  <Vision />
+</section>
     </>
   );
 };
