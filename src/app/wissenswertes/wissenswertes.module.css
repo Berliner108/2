@@ -439,23 +439,49 @@
     font-size: 1.25rem;
   }
 }
-@media (min-width: 2400px) {
-  .aboutUsContainer {
+/* ===== Wissenswertes: gleiche Breite für Hauptabschnitte auf großen Screens ===== */
+@media (min-width: 1600px) {
+  .pageContainer,
+  .aboutUsContainer,
+  .standardCompactSection {
     width: 100%;
-    max-width: 1700px;
-    margin: 4rem auto;
-    padding-left: 0;
-    padding-right: 0;
+    max-width: 1450px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     box-sizing: border-box;
   }
 
+  .aboutUsContainer {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
   .standardCompactSection {
-    width: 100%;
-    max-width: 1700px;
-    margin: 4rem auto;
     padding-left: 0;
     padding-right: 0;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ===== */
+@media (min-width: 2400px) {
+  .pageContainer,
+  .aboutUsContainer,
+  .standardCompactSection {
+    width: 100%;
+    max-width: 1700px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
     box-sizing: border-box;
+  }
+
+  .aboutUsContainer {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  .standardCompactSection {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .standardCompactBox {
