@@ -5,7 +5,6 @@ import styles from "./wissenswertes.module.css";
 import Navbar from '../components/navbar/Navbar'
 import { motion } from "framer-motion";
 import Vision from "./Vision";  // Importiere die Komponente
-import USPHighlights from './USPHighlights'; // ← Pfad anpassen!
 
 
 const Wissenswertes = () => {
@@ -229,173 +228,276 @@ useEffect(() => {
   return (
     <>
       <Navbar />
-      <Vision />
       <ScrollProgress />
-      
-  <section className={styles.aboutUsContainer} id="Sofunktioniert’s">
-  <motion.h2
-  className={styles.aboutUsTitle}
-  initial={{ opacity: 0, y: 30 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.7 }}
-  viewport={{ once: true }}
->
-  Deine Vorteile
-</motion.h2>
 
-
-
-    <USPHighlights />
-  </section>
-
-  <section className={styles.standardCompactSection} id="standardablauf">
-  <motion.div
-    className={styles.standardCompactBox}
-    initial={{ opacity: 0, y: 24 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    viewport={{ once: true }}
-  >
-    <h2>Standardablauf & Vorbereitung</h2>
-
-    <p className={styles.standardCompactIntro}>
-      Vor der Auftragsvergabe sollten alle Angaben vollständig, verständlich und korrekt gemacht werden, um ein sauberes Beschichtungsergebnis erzielen zu können.
-    </p>
-
-    <ul className={styles.standardCompactList}>
-  <li>
-    <strong>Standardablauf:</strong> Abholung, Zustellung, Verpackung, Be- und Entladung,
-    Bearbeitung und Termine angeben.
-  </li>
-
-  <li>
-    <strong>Zeiten:</strong> Mo–Do 08:00–12:00 und 13:00–16:00 Uhr, Fr 08:00–12:00 Uhr.
-    Abweichungen vorher vereinbaren.
-  </li>
-
-  <li>
-    <strong>Logistik:</strong> Ladezeiten, Zufahrt, Stapler, Hebehilfen, Rampen oder zusätzliches
-    Personal vorab mitteilen.
-  </li>
-
-  <li>
-    <strong>Teilezustand:</strong> Stückzahlen, Maße, Gewicht, Material, Zustand, Fotos, Zeichnungen,
-    Farbton und Besonderheiten vollständig angeben. Die gewünschte Erwartung an das
-    Beschichtungsergebnis kann ebenfalls beschrieben werden.
-  </li>
-  <li>
-  <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten, Hauptansichtsflächen
-  oder optisch besonders wichtige Bereiche sollten eindeutig angegeben werden.
-  Auftraggeber:innen sollten beschreiben, welche Flächen später sichtbar sind und
-  bei welchen Bereichen kleine technisch bedingte Spuren, Kontaktstellen oder
-  optische Abweichungen eher zulässig sind.
-</li>
-
-<li>
-  <strong>Funktionsflächen, Passungen und Bohrungen:</strong> Funktionsrelevante
-  Flächen wie Passungen, Dichtflächen, Lagerstellen, Bolzenbohrungen,
-  Führungen, Auflageflächen oder Montageflächen sollten klar gekennzeichnet werden.
-  Je nach Verfahren kann eine Beschichtung an diesen Stellen Maßhaltigkeit,
-  Beweglichkeit, Montage oder Funktion beeinflussen.
-</li>
-
-<li>
-  <strong>Gewinde und Abdeckbereiche:</strong> Innen- und Außengewinde,
-  Sacklöcher, Durchgangsbohrungen oder empfindliche Bereiche sollten vorab
-  angegeben werden. Auftraggeber:innen sollten klar mitteilen, ob diese Bereiche
-  mitbeschichtet werden dürfen oder ob sie abgedeckt, verschlossen, maskiert,
-  freigelassen oder nachbearbeitet werden müssen.
-</li>
-  <li>
-  <strong>Zertifizierungen:</strong> Auftraggeber:innen können vor der Auftragsvergabe
-  benötigte Zertifizierungen, Normen oder Qualitätsanforderungen angeben.
-  Informationen zu möglichen Zertifizierungen sind unten bei den jeweiligen Verfahren zu finden.
-</li>
-
-<li>
-  <strong>Bewegliche Teile:</strong> Bewegliche, mehrteilige oder montierte Werkstücke
-  sollten unbedingt vorab beschrieben werden. Dazu gehören insbesondere Gelenke,
-  Scharniere, drehbare oder verschiebbare Bereiche, Hohlräume, verdeckte Flächen,
-  Lagerstellen oder Bauteile, die nicht beschichtet, verklebt, blockiert oder in ihrer
-  Funktion beeinträchtigt werden dürfen.
-</li>
-
-<li>
-  <strong>Kontaktier- und Aufhängestellen:</strong> Bei galvanischen, elektrolytischen
-  oder hängend ausgeführten Beschichtungsverfahren müssen Werkstücke kontaktiert
-  bzw. aufgehängt werden. Auftraggeber:innen sollten daher angeben, an welchen
-  Stellen Klammern, Haken, Aufhängungen oder Kontaktierungen zulässig sind.
-  An diesen Stellen können technisch bedingt sichtbare Spuren, unbeschichtete,
-  schwächer beschichtete oder optisch abweichende Bereiche entstehen.
-</li>
-  <li>
-    <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz aufweisen. Späne, starke
-    Öl- oder Fettrückstände, Klebereste, Silikon, Anhaftungen oder andere Fremdstoffe wie z. B.
-    Rost sind so gering zu halten, dass keine manuelle Sonderreinigung nötig ist.
-  </li>
-
-  
-
-  <li>
-    <strong>Thermische Verfahren:</strong> Bei thermischen Verfahren wie Pulverbeschichten oder
-    Feuerverzinken ist darauf zu achten, dass die zu beschichtenden Teile der Hitzeeinwirkung
-    standhalten. Schweißnähte, Fügeflächen und kritische Stellen sollten sauber verarbeitet sein,
-    damit ein entsprechendes Beschichtungsergebnis erreicht werden kann.
-  </li>
-</ul>
-
-    <p className={styles.standardCompactNotice}>
-      Fehlende, falsche oder nachträglich geänderte Angaben können zu Verzögerungen oder Mehrkosten führen.
-    </p>
-  </motion.div>
-
-</section>
-      <div className={styles.pageContainer}>
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
-          <div key={index} className={styles.container} id={`container-${index}`}>
-            {/* Header mit Klickfunktion zum Öffnen/Schließen */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-              className={styles.header}
-              onClick={() => toggleContainer(index)} // Klick zum toggeln des Containers
-              id={`header-${index}`} // Jede Überschrift bekommt eine eigene ID
-            >
-              <div className={styles.headerTextContainer}>
-                <p className={styles.headerText}>
-                  {containerHeadings[index]} {/* Individuelle Überschrift je Container */}
-                </p>
-                <span className={styles.arrow}>
-                  {openContainers[index] ? "▲" : "▼"}
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Der ausfahrbare Container direkt unter der Überschrift */}
-            <motion.div
-              initial={{ opacity: 0, maxHeight: 0 }}
-              animate={{
-                opacity: openContainers[index] ? 1 : 0,
-                maxHeight: openContainers[index] ? "10000px" : 0, // Dynamische Höhe für flüssiges Ausklappen
-              }}
-              transition={{
-                duration: 0.8,
-                type: "spring",
-                stiffness: 100,
-                damping: 25,
-              }}
-              className={`${styles.content} ${openContainers[index] ? styles.open : ""}`}
-              id={`content-${index}`} // Jeder Inhalt bekommt eine eigene ID
-            >
-              <p dangerouslySetInnerHTML={{ __html: containerTexts[index] }}></p> {/* Text mit <br> als Zeilenumbruch */}
-            </motion.div>
-            
+      <main className={styles.pageShell}>
+        <section className={styles.guideHero}>
+          <div className={styles.guideHeroInner}>
+            <p className={styles.sectionKicker}>Wissenswertes</p>
+            <h1>Oberflächentechnik verständlich erklärt</h1>
+            <p className={styles.heroLead}>
+              Ein kompakter Fachguide zu Beschichtungsverfahren, Vorbereitung,
+              Qualitätsanforderungen und typischen Einsatzbereichen.
+            </p>
+            <div className={styles.heroMeta}>
+              <span>Für Auftraggeber</span>
+              <span>Einkäufer</span>
+              <span>Beschichter</span>
+              <span>technische Planung</span>
+            </div>
           </div>
-          
-        ))}
-        
-      </div>
+        </section>
+
+        <section className={styles.orientationSection} aria-label="Orientierung">
+          <div className={styles.orientationText}>
+            <p className={styles.sectionKicker}>Orientierung</p>
+            <h2>Von der Anforderung zum passenden Beschichtungsverfahren</h2>
+            <p>
+              Diese Seite hilft dabei, technische Angaben besser einzuordnen,
+              typische Arbeitsschritte zu verstehen und Beschichtungsaufträge
+              sauber vorzubereiten. Der Fokus liegt auf Praxisnähe: Welche
+              Informationen werden benötigt, welche Verfahren kommen infrage
+              und welche Anforderungen sollten vorab geklärt werden?
+            </p>
+          </div>
+
+          <aside className={styles.quickNav} aria-label="Direkt zu">
+            <p>Direkt zu</p>
+            <a href="#standardablauf">Standardablauf & Vorbereitung</a>
+            <a href="#verfahren">Verfahren & Grundlagen</a>
+            <a href="#container-2">Nasslackieren</a>
+            <a href="#container-3">Pulverbeschichten</a>
+            <a href="#container-5">Verzinken & Entzinken</a>
+          </aside>
+        </section>
+
+        <section className={styles.platformSection} id="Sofunktioniert’s">
+          <div className={styles.sectionHeader}>
+            <p className={styles.sectionKicker}>Plattform</p>
+            <h2>Warum BeschichterScout?</h2>
+            <p>
+              BeschichterScout verbindet Fachwissen, Auftragsvermittlung und
+              Materialbörse in einem spezialisierten Umfeld für die
+              Oberflächentechnik.
+            </p>
+          </div>
+
+          <div className={styles.platformGrid}>
+            <div className={styles.platformItem}>
+              <span>01</span>
+              <h3>Aufträge besser vorbereiten</h3>
+              <p>
+                Anforderungen, Bauteildaten, Lieferdetails und technische
+                Besonderheiten können klarer beschrieben werden.
+              </p>
+            </div>
+            <div className={styles.platformItem}>
+              <span>02</span>
+              <h3>Beschichter gezielt finden</h3>
+              <p>
+                Auftraggeber können passende Dienstleister anhand von Verfahren,
+                Region und Anforderungen besser vergleichen.
+              </p>
+            </div>
+            <div className={styles.platformItem}>
+              <span>03</span>
+              <h3>Materialien und Leistungen bündeln</h3>
+              <p>
+                Lacke, Restmengen, Zubehör, Dienstleistungen und Anfragen werden
+                in einem spezialisierten Marktplatz zusammengeführt.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.processSection} id="standardablauf">
+          <div className={styles.sectionHeaderLeft}>
+            <p className={styles.sectionKicker}>Ablauf & Vorbereitung</p>
+            <h2>Standardablauf eines Beschichtungsauftrags</h2>
+            <p>
+              Je genauer Anforderungen, Bauteildaten und Logistik beschrieben
+              werden, desto besser lassen sich Aufwand, Machbarkeit und Ergebnis
+              einschätzen.
+            </p>
+          </div>
+
+          <div className={styles.processTimeline}>
+            <div className={styles.processStep}>
+              <span>01</span>
+              <h3>Anforderungen klären</h3>
+              <p>Verfahren, Ziel, Einsatzbereich und gewünschtes Ergebnis definieren.</p>
+            </div>
+            <div className={styles.processStep}>
+              <span>02</span>
+              <h3>Bauteildaten sammeln</h3>
+              <p>Material, Maße, Gewicht, Stückzahl, Zustand und Fotos bereitstellen.</p>
+            </div>
+            <div className={styles.processStep}>
+              <span>03</span>
+              <h3>Qualität festlegen</h3>
+              <p>Sichtflächen, Normen, Zertifikate und Prüfanforderungen angeben.</p>
+            </div>
+            <div className={styles.processStep}>
+              <span>04</span>
+              <h3>Logistik abstimmen</h3>
+              <p>Abholung, Lieferung, Verpackung, Ladezeiten und Hebehilfen klären.</p>
+            </div>
+            <div className={styles.processStep}>
+              <span>05</span>
+              <h3>Angebote vergleichen</h3>
+              <p>Preis, Leistung, Bearbeitungszeit und Anforderungen sauber gegenüberstellen.</p>
+            </div>
+            <div className={styles.processStep}>
+              <span>06</span>
+              <h3>Ergebnis prüfen</h3>
+              <p>Beschichtung kontrollieren, Rückfragen klären und Auftrag abschließen.</p>
+            </div>
+          </div>
+
+          <motion.div
+            className={styles.standardCompactBox}
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            viewport={{ once: true }}
+          >
+            <h3>Was vor der Auftragsvergabe wichtig ist</h3>
+
+            <p className={styles.standardCompactIntro}>
+              Vor der Auftragsvergabe sollten alle Angaben vollständig,
+              verständlich und korrekt gemacht werden, um ein sauberes
+              Beschichtungsergebnis erzielen zu können.
+            </p>
+
+            <ul className={styles.standardCompactList}>
+              <li>
+                <strong>Standardablauf:</strong> Abholung, Zustellung,
+                Verpackung, Be- und Entladung, Bearbeitung und Termine angeben.
+              </li>
+              <li>
+                <strong>Zeiten:</strong> Mo–Do 08:00–12:00 und 13:00–16:00 Uhr,
+                Fr 08:00–12:00 Uhr. Abweichungen vorher vereinbaren.
+              </li>
+              <li>
+                <strong>Logistik:</strong> Ladezeiten, Zufahrt, Stapler,
+                Hebehilfen, Rampen oder zusätzliches Personal vorab mitteilen.
+              </li>
+              <li>
+                <strong>Teilezustand:</strong> Stückzahlen, Maße, Gewicht,
+                Material, Zustand, Fotos, Zeichnungen, Farbton und Besonderheiten
+                vollständig angeben. Die gewünschte Erwartung an das
+                Beschichtungsergebnis kann ebenfalls beschrieben werden.
+              </li>
+              <li>
+                <strong>Sichtseiten und Qualitätsflächen:</strong> Sichtseiten,
+                Hauptansichtsflächen oder optisch besonders wichtige Bereiche
+                sollten eindeutig angegeben werden.
+              </li>
+              <li>
+                <strong>Funktionsflächen, Passungen und Bohrungen:</strong>
+                Funktionsrelevante Flächen wie Passungen, Dichtflächen,
+                Lagerstellen, Bolzenbohrungen, Führungen, Auflageflächen oder
+                Montageflächen sollten klar gekennzeichnet werden.
+              </li>
+              <li>
+                <strong>Gewinde und Abdeckbereiche:</strong> Innen- und
+                Außengewinde, Sacklöcher, Durchgangsbohrungen oder empfindliche
+                Bereiche sollten vorab angegeben werden.
+              </li>
+              <li>
+                <strong>Zertifizierungen:</strong> Auftraggeber:innen können vor der
+                Auftragsvergabe benötigte Zertifizierungen, Normen oder
+                Qualitätsanforderungen angeben.
+              </li>
+              <li>
+                <strong>Bewegliche Teile:</strong> Bewegliche, mehrteilige oder
+                montierte Werkstücke sollten unbedingt vorab beschrieben werden.
+              </li>
+              <li>
+                <strong>Kontaktier- und Aufhängestellen:</strong> Bei galvanischen,
+                elektrolytischen oder hängend ausgeführten Beschichtungsverfahren
+                müssen Werkstücke kontaktiert bzw. aufgehängt werden.
+              </li>
+              <li>
+                <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz
+                aufweisen. Späne, starke Öl- oder Fettrückstände, Klebereste,
+                Silikon, Anhaftungen oder Rost sind so gering wie möglich zu halten.
+              </li>
+              <li>
+                <strong>Thermische Verfahren:</strong> Bei thermischen Verfahren wie
+                Pulverbeschichten oder Feuerverzinken ist darauf zu achten, dass
+                die Teile der Hitzeeinwirkung standhalten.
+              </li>
+            </ul>
+
+            <p className={styles.standardCompactNotice}>
+              Fehlende, falsche oder nachträglich geänderte Angaben können zu
+              Verzögerungen oder Mehrkosten führen.
+            </p>
+          </motion.div>
+        </section>
+
+        <section className={styles.libraryIntro} id="verfahren">
+          <p className={styles.sectionKicker}>Verfahren & Grundlagen</p>
+          <h2>Fachbibliothek Oberflächentechnik</h2>
+          <p>
+            Die folgenden Inhalte geben einen Überblick über wichtige Verfahren,
+            typische Anwendungen, relevante Anforderungen und technische
+            Besonderheiten.
+          </p>
+        </section>
+
+        <div className={styles.pageContainer}>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
+            <div key={index} className={styles.container} id={`container-${index}`}>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className={styles.header}
+                onClick={() => toggleContainer(index)}
+                id={`header-${index}`}
+              >
+                <div className={styles.headerTextContainer}>
+                  <p className={styles.headerText}>{containerHeadings[index]}</p>
+                  <span className={styles.arrow}>{openContainers[index] ? "▲" : "▼"}</span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, maxHeight: 0 }}
+                animate={{
+                  opacity: openContainers[index] ? 1 : 0,
+                  maxHeight: openContainers[index] ? "10000px" : 0,
+                }}
+                transition={{
+                  duration: 0.45,
+                  type: "spring",
+                  stiffness: 110,
+                  damping: 26,
+                }}
+                className={`${styles.content} ${openContainers[index] ? styles.open : ""}`}
+                id={`content-${index}`}
+              >
+                <p dangerouslySetInnerHTML={{ __html: containerTexts[index] }}></p>
+              </motion.div>
+            </div>
+          ))}
+        </div>
+
+        <section className={styles.visionWrap}>
+          <div className={styles.sectionHeaderLeft}>
+            <p className={styles.sectionKicker}>Unsere Haltung</p>
+            <h2>Oberflächentechnik transparenter machen</h2>
+            <p>
+              BeschichterScout soll Wissen, Anbieter, Aufträge und Materialien
+              zusammenführen und dadurch Entscheidungen in der
+              Oberflächentechnik einfacher machen.
+            </p>
+          </div>
+          <Vision />
+        </section>
+      </main>
     </>
   );
 };
