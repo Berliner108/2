@@ -884,234 +884,296 @@
     margin-top: 92px;
   }
 }
-/* ===== Large Screen Feinschliff Wissenswertes ===== */
+/* ===== Large Screen Feinschliff Wissenswertes passend zur Industrial-Datei ===== */
 @media (min-width: 1600px) {
-  .knowledgeShell {
-    max-width: 1450px;
+  .pageShell {
+    padding-top: 54px;
+    padding-bottom: 120px;
   }
 
   .guideHero,
-  .guideBlock,
-  .processBlock {
-    padding: 3.8rem 4.2rem;
+  .orientationSection,
+  .platformSection,
+  .processSection,
+  .libraryIntro,
+  .pageContainer,
+  .visionWrap {
+    max-width: 1500px;
+  }
+
+  .guideHero {
+    padding: 82px 92px 78px;
+    margin-bottom: 56px;
   }
 
   .guideHero h1 {
-    font-size: 4.2rem;
-    line-height: 0.98;
-    max-width: 760px;
+    max-width: 980px;
+    font-size: 5.1rem;
+    line-height: 0.94;
   }
 
-  .guideHeroText {
+  .heroLead {
+    max-width: 900px;
+    font-size: 1.38rem;
+    line-height: 1.72;
+  }
+
+  .heroMeta span {
+    font-size: 1.05rem;
+  }
+
+  .orientationSection {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 72px;
+    margin-bottom: 72px;
+  }
+
+  .orientationText h2,
+  .sectionHeader h2,
+  .sectionHeaderLeft h2,
+  .libraryIntro h2 {
+    font-size: 2.75rem;
+  }
+
+  .orientationText p:not(.sectionKicker),
+  .sectionHeader p,
+  .sectionHeaderLeft p,
+  .libraryIntro p {
     font-size: 1.22rem;
-    max-width: 760px;
-  }
-
-  .guideMeta {
-    font-size: 1rem;
-    gap: 1rem;
-  }
-
-  .guideBlockHeader h2,
-  .processBlockHeader h2,
-  .libraryHeader h2 {
-    font-size: 3rem;
-  }
-
-  .guideBlockHeader p,
-  .processBlockHeader p,
-  .libraryHeader p {
-    font-size: 1.18rem;
-    line-height: 1.65;
-  }
-
-  .orientationGrid {
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 4rem;
+    line-height: 1.72;
   }
 
   .quickNav {
-    padding: 1.5rem;
+    padding: 28px 30px;
   }
 
-  .quickNavTitle {
-    font-size: 1.05rem;
-  }
-
+  .quickNav p,
   .quickNav a {
-    font-size: 1.05rem;
-    padding: 0.65rem 0;
+    font-size: 1.08rem;
   }
 
-  .platformColumns,
-  .processGrid {
-    gap: 2rem;
+  .platformSection {
+    padding: 64px 72px 68px;
+    margin-bottom: 78px;
   }
 
-  .platformColumn,
-  .processStep {
-    padding: 1.7rem 1.5rem;
+  .processSection {
+    padding: 72px;
+    margin-bottom: 78px;
   }
 
-  .platformColumn h3,
+  .platformItem h3,
   .processStep h3 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 
-  .platformColumn p,
+  .platformItem p,
   .processStep p {
-    font-size: 1.02rem;
-    line-height: 1.6;
-  }
-
-  .standardTextBox {
-    padding: 2rem 2.2rem;
-  }
-
-  .standardTextBox h3 {
-    font-size: 1.55rem;
-  }
-
-  .standardTextBox p,
-  .standardTextBox li {
-    font-size: 1.04rem;
+    font-size: 1.12rem;
     line-height: 1.65;
   }
 
-  .container {
-    min-height: 72px;
+  .processStep {
+    min-height: 175px;
+    padding: 32px 30px;
+  }
+
+  .standardCompactBox {
+    margin-top: 42px;
+    padding: 48px 52px;
+  }
+
+  .standardCompactBox h3 {
+    font-size: 1.9rem;
+  }
+
+  .standardCompactIntro,
+  .standardCompactNotice {
+    font-size: 1.13rem;
+  }
+
+  .standardCompactList li {
+    font-size: 1.08rem;
+    line-height: 1.65;
   }
 
   .header {
-    min-height: 72px;
+    min-height: 78px;
+    padding: 0 32px;
   }
 
   .headerText {
-    font-size: 1.22rem;
+    font-size: 1.25rem;
+  }
+
+  .content p {
+    max-width: 1180px;
+    font-size: 1.12rem;
+    line-height: 1.8;
   }
 }
 
 @media (min-width: 2400px) {
-  .knowledgeShell {
-    max-width: 1800px;
+  .pageShell {
+    padding-top: 78px;
+    padding-bottom: 150px;
   }
 
   .guideHero,
-  .guideBlock,
-  .processBlock {
-    padding: 5.5rem 6rem;
+  .orientationSection,
+  .platformSection,
+  .processSection,
+  .libraryIntro,
+  .pageContainer,
+  .visionWrap {
+    max-width: 1850px;
+  }
+
+  .guideHero {
+    padding: 120px 130px 112px;
+    margin-bottom: 86px;
   }
 
   .guideHero h1 {
-    font-size: 5.8rem;
-    max-width: 1050px;
+    max-width: 1220px;
+    font-size: 7rem;
+    line-height: 0.93;
   }
 
-  .guideHeroText {
+  .sectionKicker {
+    font-size: 1.18rem;
+  }
+
+  .heroLead {
+    max-width: 1120px;
+    font-size: 1.75rem;
+  }
+
+  .heroMeta {
+    margin-top: 3rem;
+    padding-top: 2rem;
+  }
+
+  .heroMeta span {
+    font-size: 1.32rem;
+  }
+
+  .orientationSection {
+    grid-template-columns: minmax(0, 1fr) 520px;
+    gap: 100px;
+    margin-bottom: 100px;
+  }
+
+  .orientationText h2,
+  .sectionHeader h2,
+  .sectionHeaderLeft h2,
+  .libraryIntro h2 {
+    font-size: 3.7rem;
+  }
+
+  .orientationText p:not(.sectionKicker),
+  .sectionHeader p,
+  .sectionHeaderLeft p,
+  .libraryIntro p {
+    max-width: 1150px;
     font-size: 1.55rem;
-    max-width: 1050px;
-  }
-
-  .guideMeta {
-    font-size: 1.25rem;
-    margin-top: 2.5rem;
-  }
-
-  .guideBlock,
-  .processBlock {
-    margin-top: 4rem;
-  }
-
-  .guideBlockHeader h2,
-  .processBlockHeader h2,
-  .libraryHeader h2 {
-    font-size: 4rem;
-  }
-
-  .guideBlockHeader p,
-  .processBlockHeader p,
-  .libraryHeader p {
-    font-size: 1.45rem;
-    line-height: 1.7;
-    max-width: 980px;
-  }
-
-  .orientationGrid {
-    grid-template-columns: minmax(0, 1fr) 430px;
-    gap: 5.5rem;
   }
 
   .quickNav {
-    padding: 2rem;
+    padding: 40px 44px;
   }
 
-  .quickNavTitle {
-    font-size: 1.3rem;
-  }
-
+  .quickNav p,
   .quickNav a {
-    font-size: 1.3rem;
-    padding: 0.85rem 0;
+    font-size: 1.38rem;
   }
 
-  .platformColumns,
-  .processGrid {
-    gap: 2.8rem;
+  .platformSection {
+    padding: 92px 104px 98px;
+    margin-bottom: 110px;
   }
 
-  .platformColumn,
-  .processStep {
-    padding: 2.4rem 2rem;
+  .processSection {
+    padding: 104px;
+    margin-bottom: 110px;
   }
 
-  .platformNumber,
-  .processNumber {
-    font-size: 1.25rem;
+  .platformItem {
+    padding: 46px 46px 50px 0;
   }
 
-  .platformColumn h3,
+  .platformItem + .platformItem {
+    padding-left: 46px;
+  }
+
+  .platformItem span,
+  .processStep span {
+    font-size: 1.16rem;
+  }
+
+  .platformItem h3,
   .processStep h3 {
-    font-size: 1.6rem;
+    font-size: 1.95rem;
   }
 
-  .platformColumn p,
+  .platformItem p,
   .processStep p {
-    font-size: 1.28rem;
-    line-height: 1.65;
-  }
-
-  .standardTextBox {
-    margin-top: 3rem;
-    padding: 3rem 3.4rem;
-  }
-
-  .standardTextBox h3 {
-    font-size: 2rem;
-  }
-
-  .standardTextBox p,
-  .standardTextBox li {
-    font-size: 1.28rem;
+    font-size: 1.4rem;
     line-height: 1.7;
   }
 
-  .librarySection {
-    margin-top: 5rem;
+  .processStep {
+    min-height: 235px;
+    padding: 46px 42px;
   }
 
-  .container {
-    min-height: 92px;
+  .standardCompactBox {
+    margin-top: 64px;
+    padding: 70px 76px;
+  }
+
+  .standardCompactBox h3 {
+    font-size: 2.6rem;
+  }
+
+  .standardCompactIntro,
+  .standardCompactNotice {
+    font-size: 1.45rem;
+  }
+
+  .standardCompactList li {
+    font-size: 1.38rem;
+    line-height: 1.75;
+  }
+
+  .libraryIntro {
+    margin-bottom: 38px;
   }
 
   .header {
-    min-height: 92px;
+    min-height: 104px;
+    padding: 0 48px;
   }
 
   .headerText {
-    font-size: 1.55rem;
+    font-size: 1.7rem;
   }
 
   .arrow {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+  }
+
+  .content {
+    padding: 0 64px;
+  }
+
+  .content p {
+    max-width: 1450px;
+    font-size: 1.42rem;
+    line-height: 1.86;
+  }
+
+  .visionWrap {
+    margin-top: 110px;
   }
 }

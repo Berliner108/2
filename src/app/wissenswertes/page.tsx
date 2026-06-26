@@ -234,7 +234,7 @@ useEffect(() => {
         <section className={styles.guideHero}>
           <div className={styles.guideHeroInner}>
             <p className={styles.sectionKicker}>Wissenswertes</p>
-            <h1>Oberflächentechnik verständlich erklärt</h1>
+            <h1>Beschichtungstechnik verständlich erklärt</h1>
             <p className={styles.heroLead}>
               Ein kompakter Fachguide zu Beschichtungsverfahren, Vorbereitung,
               Qualitätsanforderungen und typischen Einsatzbereichen.
@@ -276,9 +276,8 @@ useEffect(() => {
             <p className={styles.sectionKicker}>Plattform</p>
             <h2>Warum Beschichter Scout?</h2>
             <p>
-              Beschichter Scout verbindet Fachwissen, Auftragsvermittlung und
-              Materialbörse in einem spezialisierten Umfeld für die
-              Oberflächentechnik.
+              Beschichter Scout verbindet Auftraggeber & -nehmer, Fachwissen sowie Einkäufer mit Lieferanten in einem spezialisierten Umfeld für die
+              Beschichtungstechnik.
             </p>
           </div>
 
