@@ -884,3 +884,234 @@
     margin-top: 92px;
   }
 }
+/* ===== Large Screen Feinschliff Wissenswertes ===== */
+@media (min-width: 1600px) {
+  .knowledgeShell {
+    max-width: 1450px;
+  }
+
+  .guideHero,
+  .guideBlock,
+  .processBlock {
+    padding: 3.8rem 4.2rem;
+  }
+
+  .guideHero h1 {
+    font-size: 4.2rem;
+    line-height: 0.98;
+    max-width: 760px;
+  }
+
+  .guideHeroText {
+    font-size: 1.22rem;
+    max-width: 760px;
+  }
+
+  .guideMeta {
+    font-size: 1rem;
+    gap: 1rem;
+  }
+
+  .guideBlockHeader h2,
+  .processBlockHeader h2,
+  .libraryHeader h2 {
+    font-size: 3rem;
+  }
+
+  .guideBlockHeader p,
+  .processBlockHeader p,
+  .libraryHeader p {
+    font-size: 1.18rem;
+    line-height: 1.65;
+  }
+
+  .orientationGrid {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 4rem;
+  }
+
+  .quickNav {
+    padding: 1.5rem;
+  }
+
+  .quickNavTitle {
+    font-size: 1.05rem;
+  }
+
+  .quickNav a {
+    font-size: 1.05rem;
+    padding: 0.65rem 0;
+  }
+
+  .platformColumns,
+  .processGrid {
+    gap: 2rem;
+  }
+
+  .platformColumn,
+  .processStep {
+    padding: 1.7rem 1.5rem;
+  }
+
+  .platformColumn h3,
+  .processStep h3 {
+    font-size: 1.25rem;
+  }
+
+  .platformColumn p,
+  .processStep p {
+    font-size: 1.02rem;
+    line-height: 1.6;
+  }
+
+  .standardTextBox {
+    padding: 2rem 2.2rem;
+  }
+
+  .standardTextBox h3 {
+    font-size: 1.55rem;
+  }
+
+  .standardTextBox p,
+  .standardTextBox li {
+    font-size: 1.04rem;
+    line-height: 1.65;
+  }
+
+  .container {
+    min-height: 72px;
+  }
+
+  .header {
+    min-height: 72px;
+  }
+
+  .headerText {
+    font-size: 1.22rem;
+  }
+}
+
+@media (min-width: 2400px) {
+  .knowledgeShell {
+    max-width: 1800px;
+  }
+
+  .guideHero,
+  .guideBlock,
+  .processBlock {
+    padding: 5.5rem 6rem;
+  }
+
+  .guideHero h1 {
+    font-size: 5.8rem;
+    max-width: 1050px;
+  }
+
+  .guideHeroText {
+    font-size: 1.55rem;
+    max-width: 1050px;
+  }
+
+  .guideMeta {
+    font-size: 1.25rem;
+    margin-top: 2.5rem;
+  }
+
+  .guideBlock,
+  .processBlock {
+    margin-top: 4rem;
+  }
+
+  .guideBlockHeader h2,
+  .processBlockHeader h2,
+  .libraryHeader h2 {
+    font-size: 4rem;
+  }
+
+  .guideBlockHeader p,
+  .processBlockHeader p,
+  .libraryHeader p {
+    font-size: 1.45rem;
+    line-height: 1.7;
+    max-width: 980px;
+  }
+
+  .orientationGrid {
+    grid-template-columns: minmax(0, 1fr) 430px;
+    gap: 5.5rem;
+  }
+
+  .quickNav {
+    padding: 2rem;
+  }
+
+  .quickNavTitle {
+    font-size: 1.3rem;
+  }
+
+  .quickNav a {
+    font-size: 1.3rem;
+    padding: 0.85rem 0;
+  }
+
+  .platformColumns,
+  .processGrid {
+    gap: 2.8rem;
+  }
+
+  .platformColumn,
+  .processStep {
+    padding: 2.4rem 2rem;
+  }
+
+  .platformNumber,
+  .processNumber {
+    font-size: 1.25rem;
+  }
+
+  .platformColumn h3,
+  .processStep h3 {
+    font-size: 1.6rem;
+  }
+
+  .platformColumn p,
+  .processStep p {
+    font-size: 1.28rem;
+    line-height: 1.65;
+  }
+
+  .standardTextBox {
+    margin-top: 3rem;
+    padding: 3rem 3.4rem;
+  }
+
+  .standardTextBox h3 {
+    font-size: 2rem;
+  }
+
+  .standardTextBox p,
+  .standardTextBox li {
+    font-size: 1.28rem;
+    line-height: 1.7;
+  }
+
+  .librarySection {
+    margin-top: 5rem;
+  }
+
+  .container {
+    min-height: 92px;
+  }
+
+  .header {
+    min-height: 92px;
+  }
+
+  .headerText {
+    font-size: 1.55rem;
+  }
+
+  .arrow {
+    font-size: 1.4rem;
+  }
+}

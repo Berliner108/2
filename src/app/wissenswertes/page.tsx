@@ -274,9 +274,9 @@ useEffect(() => {
         <section className={styles.platformSection} id="Sofunktioniert’s">
           <div className={styles.sectionHeader}>
             <p className={styles.sectionKicker}>Plattform</p>
-            <h2>Warum BeschichterScout?</h2>
+            <h2>Warum Beschichter Scout?</h2>
             <p>
-              BeschichterScout verbindet Fachwissen, Auftragsvermittlung und
+              Beschichter Scout verbindet Fachwissen, Auftragsvermittlung und
               Materialbörse in einem spezialisierten Umfeld für die
               Oberflächentechnik.
             </p>
@@ -490,9 +490,9 @@ useEffect(() => {
             <p className={styles.sectionKicker}>Unsere Haltung</p>
             <h2>Oberflächentechnik transparenter machen</h2>
             <p>
-              BeschichterScout soll Wissen, Anbieter, Aufträge und Materialien
+              Beschichter Scout soll Wissen, Anbieter, Aufträge und Materialien
               zusammenführen und dadurch Entscheidungen in der
-              Oberflächentechnik einfacher machen.
+              Beschichtungstechnik einfacher machen.
             </p>
           </div>
           <Vision />
