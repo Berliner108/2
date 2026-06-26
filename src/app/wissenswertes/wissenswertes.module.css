@@ -1,123 +1,398 @@
+.knowledgePage {
+  width: 100%;
+  min-height: 100vh;
+  background: #f4f7f9;
+  padding: 3rem 1rem 5rem;
+  box-sizing: border-box;
+  font-family: 'Oswald', sans-serif;
+  color: #111827;
+}
 
+.guideHero,
+.aboutUsContainer,
+.standardCompactSection,
+.accordionIntro,
+.pageContainer,
+.visionSection {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.guideHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+  gap: 2.5rem;
+  align-items: stretch;
+  margin-bottom: 3.5rem;
+  padding: 3.5rem;
+  background: #ffffff;
+  border: 1px solid #e5edf1;
+  border-radius: 28px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sectionEyebrow {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #00a6c8;
+}
+
+.guideHero h1 {
+  margin: 0;
+  max-width: 760px;
+  font-size: 3.2rem;
+  line-height: 1.08;
+  color: #0f172a;
+}
+
+.heroLead {
+  max-width: 760px;
+  margin: 1.25rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.heroCards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.heroCard {
+  position: relative;
+  padding: 1.4rem 1.5rem 1.4rem 1.65rem;
+  background: #f8fbfc;
+  border: 1px solid #dcecf1;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.heroCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: #00b4d8;
+}
+
+.heroCard span {
+  display: inline-flex;
+  margin-bottom: 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #00a6c8;
+}
+
+.heroCard h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.35rem;
+  color: #111827;
+}
+
+.heroCard p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.aboutUsContainer {
+  margin-bottom: 3.5rem;
+  padding: 3.4rem 2.8rem;
+  text-align: center;
+  background: #ffffff;
+  border: 1px solid #e5edf1;
+  border-radius: 28px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+.aboutUsContainer:hover {
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+.sectionIntro,
+.sectionIntroLeft {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+}
+
+.sectionIntroLeft {
+  max-width: 960px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.sectionIntro h2,
+.sectionIntroLeft h2,
+.aboutUsTitle,
+.accordionIntro h2,
+.visionSection h2 {
+  margin: 0 0 0.75rem;
+  font-size: 2.25rem;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.sectionIntro p,
+.sectionIntroLeft p,
+.accordionIntro p,
+.visionSection p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #475569;
+}
+
+.standardCompactSection {
+  margin-bottom: 3.5rem;
+  padding: 0;
+}
+
+.standardCompactBox {
+  background: #ffffff;
+  border: 1px solid #e5edf1;
+  border-radius: 28px;
+  padding: 3.4rem 2.8rem;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+
+.processGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.processStep {
+  min-height: 150px;
+  padding: 1.35rem;
+  background: #f8fbfc;
+  border: 1px solid #dcecf1;
+  border-radius: 18px;
+}
+
+.processStep span {
+  display: inline-flex;
+  margin-bottom: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #00a6c8;
+}
+
+.processStep strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1.12rem;
+  color: #111827;
+}
+
+.processStep p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.detailBox {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5edf1;
+}
+
+.standardCompactIntro {
+  margin: 0 0 1rem;
+  font-size: 1.04rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.standardCompactList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.4rem;
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.standardCompactList li {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.standardCompactList strong {
+  color: #0f172a;
+}
+
+.standardCompactNotice {
+  margin: 1.4rem 0 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid #cfeef5;
+  border-radius: 14px;
+  background: #f3fbfd;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.accordionIntro {
+  margin-bottom: 1.3rem;
+  padding: 0 0.3rem;
+}
 
 .pageContainer {
-  
   display: flex;
-  flex-direction: column; /* Container übereinander anordnen */
-  max-width: 100%;
-  perspective: 1000px; /* 3D-Tiefe */
+  flex-direction: column;
+  margin-bottom: 4.5rem;
+  perspective: 1000px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #e5edf1;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
 }
 
 .container {
-  margin: 0; /* Keine zusätzliche Lücke zwischen den Containern */
   width: 100%;
+  margin: 0;
+  border-bottom: 1px solid #e5edf1;
 }
 
-/* Header Design */
+.container:last-child {
+  border-bottom: 0;
+}
+
 .header {
-  
-  background-color: #f8f9fa; /* Sanftes Grau für den Hintergrund */
-  border-radius: 8px; /* Abgerundete Ecken für ein modernes Aussehen */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sanfter Schatten, der wie eine Border wirkt */
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; /* Hinzufügen eines Transformationsübergangs */
+  min-height: 64px;
+  padding: 0 1.4rem;
+  background: #ffffff;
+  border-left: 5px solid #00b4d8;
+  box-shadow: none;
+  transition: background-color 0.2s ease;
   display: flex;
-  justify-content: space-between; /* Verhindert, dass der Pfeil zusammen mit dem Text erscheint */
+  justify-content: space-between;
   align-items: center;
-}
-.header {
-  border-left-style: solid;
-  border-left-color: #00b4d8;
+  cursor: pointer;
 }
 
-/* Progressiver Einzug */
-.header:nth-of-type(1) {
-  border-left-width: 14px;
-}
-.header:nth-of-type(2) {
-  border-left-width: 8px;
-}
-.header:nth-of-type(3) {
-  border-left-width: 12px;
-}
-.header:nth-of-type(4) {
-  border-left-width: 16px;
-}
-.header:nth-of-type(5) {
-  border-left-width: 20px;
-}
-.header:nth-of-type(6) {
-  border-left-width: 24px;
-}
-/* usw. */
-.container:nth-of-type(1) .header  { border-left: 14px solid #00b4d8; }
-.container:nth-of-type(2) .header  { border-left: 14px solid #00a5c3; }
-.container:nth-of-type(3) .header  { border-left: 14px solid #0097af; }
-.container:nth-of-type(4) .header  { border-left: 14px solid #00889a; }
-.container:nth-of-type(5) .header  { border-left: 14px solid #007a86; }
-.container:nth-of-type(6) .header  { border-left: 14px solid #006b71; }
-.container:nth-of-type(7) .header  { border-left: 14px solid #005d5d; }
-.container:nth-of-type(8) .header  { border-left: 14px solid #004e48; }
-.container:nth-of-type(9) .header  { border-left: 14px solid #004034; }
-.container:nth-of-type(10) .header { border-left: 14px solid #00311f; }
-.container:nth-of-type(11) .header { border-left: 14px solid #00230b; }
-.container:nth-of-type(12) .header { border-left: 14px solid #001400; }
-.container:nth-of-type(13) .header { border-left: 14px solid #000800; }
-
-
-
-
-
-
-
-/* Header Hover-Effekt */
 .header:hover {
-  background-color: #e9ecef; /* Helleres Grau bei Hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Intensivierter Schatten beim Hover */
-  transform: translateY(-5px); /* Ein leichter Schwebeneffekt */
+  background-color: #f8fbfc;
+  box-shadow: none;
+  transform: none;
 }
 
-/* Hover Pfeil-Effekt */
 .header:hover .arrow {
-  color: #00b4d8; /* Dunkleres Blau beim Hover */
-  transform: rotate(180deg); /* Pfeil dreht sich beim Hover */
+  color: #00a6c8;
+  transform: none;
 }
 
 .headerTextContainer {
   display: flex;
-  justify-content: space-between; /* Text links, Pfeil rechts */
+  justify-content: space-between;
   align-items: center;
-  width: 100%; /* Überschrift über die gesamte Breite */
+  width: 100%;
+  gap: 1.5rem;
 }
 
 .headerText {
-  font-size: 22px; /*Überschriften Beschichtugnstechnik, Verfahren etc. */
-  text-align: center; /* Text mittig */
-  flex-grow: 1; /* Sorgt dafür, dass der Text den Platz einnimmt */
-  font-weight: bold;
+  flex-grow: 1;
+  margin: 0;
+  font-size: 1.28rem;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: left;
+  color: #0f172a;
 }
-/* Pfeil */
+
 .arrow {
-  font-size: 20px;
-  margin-left: 10px; /* Abstand zwischen Text und Pfeil */
-  color: #00b4d8; /* Setzt den Pfeil in Blau */
-  transition: transform 0.3s ease, color 0.3s ease;
+  flex: 0 0 auto;
+  font-size: 1rem;
+  color: #00a6c8;
+  transition: color 0.2s ease;
 }
+
 .content {
   overflow: hidden;
-  max-height: 0; /* Keine Höhe im zugeklappten Zustand */
-  opacity: 0; /* Unsichtbar im zugeklappten Zustand */
-  transition: max-height 0.8s ease-out, opacity 0.8s ease-out; /* Sanfte Übergänge für max-height und opacity */
-  padding: 0 20px; /* Kein zusätzlicher Platz für Text im zugeklappten Zustand */
-  background-color: #f9f9f9;
-  border-left: 1px solid #ccc;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 2rem;
+  background-color: #fbfdfe;
+  border-left: 5px solid #00b4d8;
 }
 
 .content.open {
-  opacity: 1; /* Sichtbar im geöffneten Zustand */
+  opacity: 1;
+  padding-top: 1.5rem;
+  padding-bottom: 1.7rem;
+  border-top: 1px solid #e5edf1;
 }
 
-.content p {
-  margin-bottom: 10px;
+.content p,
+.content div {
+  margin: 0;
+  line-height: 1.75;
+  font-size: 1.02rem;
+  color: #334155;
+  white-space: normal;
+}
+
+.content h4 {
+  margin: 1.2rem 0 0.5rem;
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
+.content ul {
+  margin: 0.7rem 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.content li {
+  margin-bottom: 0.45rem;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.content strong {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.content em {
+  font-style: italic;
+  color: #475569;
+}
+
+.content :global(.highlight) {
+  background-color: #e8f8fb;
+  padding: 0.08em 0.3em;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.visionSection {
+  margin-bottom: 0;
+  padding: 3.4rem 0 0;
+}
+
+.visionSection > .sectionIntro {
+  padding: 0 2rem;
+  text-align: center;
 }
 
 .scrollProgressContainer {
@@ -125,14 +400,14 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 10px;
-  background-color: #f0f0f0;
+  height: 8px;
+  background-color: #e5edf1;
   z-index: 1000;
 }
 
 .scrollProgressBar {
   height: 100%;
-  background-color: #00b4d8; /* Farbe des Fortschrittbalkens */
+  background-color: #00b4d8;
   transition: width 0.2s ease;
 }
 
@@ -141,71 +416,6 @@
   background-color: #e6f0ff;
 }
 
-/* Über Uns Container */
-.aboutUsContainer {
-  background-color: #f7f7f7;  /* Sanftes Beige für einen eleganten Look */
-  padding: 4rem 2rem;
-  text-align: center;
-  border-radius: 1.5rem;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1); /* Subtiler Schatten */
-  max-width: 1200px;
-  margin: 3rem auto;
-  color: #333; /* Dunkelgrauer Text für elegante Lesbarkeit */
-  font-family: 'Oswald', sans-serif;
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Hinzufügen von Übergängen */
-}
-
-/* Hover-Effekt für den Container */
-.aboutUsContainer:hover {
-  
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.2); /* Intensivierter Schatten beim Hover */
-}
-
-.aboutUsTitle {
-  font-size: 2rem;
-  text-align: center;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-
-.aboutUsContent {
-  font-size: 1.125rem;
-  line-height: 1.8;
-  max-width: 1100px;
-  margin: 0 auto;
-  font-weight: 600;
-  text-align: center;
-  
-}
-
-.aboutUsContent p {
-  margin-bottom: 1.5rem;
-}
-
-.aboutUsContent strong {
-  color: #2c3e50; /* Dunkelgraue Akzentfarbe für wichtige Begriffe */
-}
-
-.contactLink {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #3498db; /* Sanftes Blau für den CTA-Button */
-  text-decoration: none;
-  border: 2px solid #3498db;
-  padding: 10px 20px;
-  border-radius: 30px;
-  margin-top: 2rem;
-  display: inline-block;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.contactLink:hover {
-  background-color: #3498db;
-  color: white;
-}
 .uspList {
   list-style: none;
   padding-left: 0;
@@ -226,271 +436,330 @@
   margin-top: 4px;
 }
 
-.content p {
-  line-height: 1.6;
-  font-size: 18px;
-  color: #333;
-  white-space: normal;
+.contactLink {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #0ea5c6;
+  text-decoration: none;
+  border: 2px solid #0ea5c6;
+  padding: 10px 20px;
+  border-radius: 30px;
+  margin-top: 2rem;
+  display: inline-block;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.content p br {
-  display: block;
-  content: "";
-  margin-bottom: 0.7em;
-}
-.content strong {
-  font-weight: bold;
-  color: #1a1a1a;
+.contactLink:hover {
+  background-color: #0ea5c6;
+  color: white;
 }
 
-.content em {
-  font-style: italic;
-  color: #555;
+@media (max-width: 1024px) {
+  .guideHero {
+    grid-template-columns: 1fr;
+    padding: 2.5rem 2rem;
+  }
+
+  .guideHero h1 {
+    font-size: 2.6rem;
+  }
+
+  .processGrid,
+  .standardCompactList {
+    grid-template-columns: 1fr;
+  }
 }
 
-.content .highlight {
-  background-color: #e8f8f1;
-  padding: 0.1em 0.3em;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-/* Mobile Ansicht */
 @media (max-width: 768px) {
-  .aboutUsContainer {
-    padding: 2.5rem 1.5rem;
+  .knowledgePage {
+    padding: 1.5rem 0.75rem 4rem;
   }
 
-  .aboutUsTitle {
-    font-size: 2rem;
-    margin-top: -10px;
+  .guideHero,
+  .aboutUsContainer,
+  .standardCompactBox {
+    border-radius: 20px;
   }
 
-  .aboutUsContent {
+  .guideHero {
+    margin-bottom: 2rem;
+    padding: 2rem 1.25rem;
+  }
+
+  .guideHero h1 {
+    font-size: 2.1rem;
+  }
+
+  .heroLead,
+  .sectionIntro p,
+  .sectionIntroLeft p,
+  .accordionIntro p,
+  .visionSection p {
     font-size: 1rem;
   }
-  .pageContainer {
-    min-width: 100%; /* Container nimmt 100% der Breite ein */
-    max-width: 100%;
-    
-  }
 
-  .container {
-    width: 99.6%; /* Container nimmt 100% der Breite ein */
-  }
-
-  .header {
-    padding: 0px; /* Kleinere Abstände für mobile Geräte */
-  }
-
-  .content {
-    padding: 0 0px; /* Kleinere Innenabstände */
-  }
-  .header:hover {
-    transform: none; /* Keine Transformation beim Hover auf mobilen Geräten */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Schatten bleibt beim Hover gleich */
-  }
-
-  .headerText {
-    font-size: 18px; /* Kleinere Schrift auf mobilen Geräten */
-  }
-
-  .arrow {
-    font-size: 18px; /* Etwas kleinere Pfeile */
-  }
-  .content {
-  overflow: hidden;
-  max-height: 0; /* Keine Höhe im zugeklappten Zustand */
-  opacity: 0; /* Unsichtbar im zugeklappten Zustand */
-  transition: max-height 0.8s ease-out, opacity 0.8s ease-out; /* Sanfte Übergänge für max-height und opacity */
-  padding: 0 20px; /* Kein zusätzlicher Platz für Text im zugeklappten Zustand */
-  background-color: #f9f9f9;
-  border-left: 1px solid #ccc;
-}
-.content p {
-  font-size: 16px; /* z. B. kleiner für Smartphones */
-}
-
-
-
-}
-.standardCompactSection {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 2rem;
-  font-family: 'Oswald', sans-serif;
-}
-
-.standardCompactBox {
-  background: #ffffff;
-  border-left: 7px solid #00b4d8;
-  border-radius: 14px;
-  padding: 1.4rem 1.6rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-}
-
-.standardCompactBox h2 {
-  font-size: 2rem;
-  margin: 0 0 0.6rem;
-  color: #111;
-  text-align: left;
-}
-
-.standardCompactIntro {
-  margin: 0 0 0.8rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #333;
-}
-
-.standardCompactList {
-  margin: 0;
-  padding-left: 1.1rem;
-}
-
-.standardCompactList li {
-  margin-bottom: 0.45rem;
-  font-size: 0.98rem;
-  line-height: 1.45;
-  color: #333;
-}
-
-.standardCompactList li:last-child {
-  margin-bottom: 0;
-}
-
-.standardCompactNotice {
-  margin: 0.9rem 0 0;
-  padding-top: 0.8rem;
-  border-top: 1px solid #e5e7eb;
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #111;
-}
-
-@media (max-width: 768px) {
-  .standardCompactSection {
-    padding: 0 1rem;
-    margin: 1.5rem auto;
-  }
-
-  .standardCompactBox {
-    padding: 1.1rem;
-  }
-
-  .standardCompactBox h2 {
-    font-size: 1.6rem;
-  }
-
-  .standardCompactList li,
-  .standardCompactIntro,
-  .standardCompactNotice {
-    font-size: 0.92rem;
-  }
-}/* ===== Wissenswertes: große Screens einheitlich ===== */
-@media (min-width: 1600px) {
-  .pageContainer,
   .aboutUsContainer,
   .standardCompactSection {
-    width: 100%;
-    max-width: 1450px;
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
+    margin-bottom: 2rem;
   }
 
-  .aboutUsContainer {
-    margin-top: 3.5rem;
-    margin-bottom: 0;
-    padding: 3.5rem 3rem;
-  }
-
-  .standardCompactSection {
-    margin-top: 3.5rem;
-    margin-bottom: 3.5rem;
-    padding: 0;
-  }
-
+  .aboutUsContainer,
   .standardCompactBox {
-    width: 100%;
-    box-sizing: border-box;
+    padding: 2rem 1.25rem;
+  }
+
+  .sectionIntro h2,
+  .sectionIntroLeft h2,
+  .aboutUsTitle,
+  .accordionIntro h2,
+  .visionSection h2 {
+    font-size: 1.8rem;
+  }
+
+  .processStep {
+    min-height: auto;
+  }
+
+  .pageContainer {
+    margin-bottom: 3rem;
     border-radius: 18px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
   }
 
   .header {
-    min-height: 64px;
-    border-radius: 12px;
+    min-height: 58px;
+    padding: 0 1rem;
   }
 
   .headerText {
-    font-size: 24px;
+    font-size: 1.05rem;
   }
 
-  .content p {
-    font-size: 19px;
+  .content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .content.open {
+    padding-top: 1.1rem;
+    padding-bottom: 1.3rem;
+  }
+
+  .content p,
+  .content div {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .visionSection {
+    padding-top: 2rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .guideHero,
+  .aboutUsContainer,
+  .standardCompactSection,
+  .accordionIntro,
+  .pageContainer,
+  .visionSection {
+    max-width: 1450px;
+  }
+
+  .knowledgePage {
+    padding-top: 4rem;
+    padding-bottom: 7rem;
+  }
+
+  .guideHero {
+    padding: 4.5rem;
+    margin-bottom: 4rem;
+  }
+
+  .guideHero h1 {
+    font-size: 3.8rem;
+  }
+
+  .heroLead {
+    font-size: 1.3rem;
+  }
+
+  .aboutUsContainer,
+  .standardCompactSection {
+    margin-bottom: 4rem;
+  }
+
+  .aboutUsContainer,
+  .standardCompactBox {
+    padding: 4rem 3.5rem;
+  }
+
+  .sectionIntro h2,
+  .sectionIntroLeft h2,
+  .aboutUsTitle,
+  .accordionIntro h2,
+  .visionSection h2 {
+    font-size: 2.55rem;
+  }
+
+  .header {
+    min-height: 72px;
+  }
+
+  .headerText {
+    font-size: 1.42rem;
+  }
+
+  .content p,
+  .content div {
+    font-size: 1.08rem;
   }
 }
 
 @media (min-width: 2400px) {
-  .pageContainer,
+  .guideHero,
   .aboutUsContainer,
-  .standardCompactSection {
-    width: 100%;
+  .standardCompactSection,
+  .accordionIntro,
+  .pageContainer,
+  .visionSection {
     max-width: 1700px;
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
   }
 
-  .aboutUsContainer {
-    margin-top: 5rem;
-    margin-bottom: 0;
-    padding: 5rem 4rem;
+  .knowledgePage {
+    padding-top: 5rem;
+    padding-bottom: 9rem;
   }
 
-  .standardCompactSection {
-    margin-top: 5rem;
+  .guideHero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(520px, 0.9fr);
+    gap: 4rem;
+    padding: 6rem 5.5rem;
     margin-bottom: 5rem;
-    padding: 0;
+    border-radius: 34px;
   }
 
-  .standardCompactBox {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 2.6rem 3rem;
+  .guideHero h1 {
+    font-size: 4.8rem;
+  }
+
+  .heroLead {
+    font-size: 1.55rem;
+    max-width: 1100px;
+  }
+
+  .sectionEyebrow {
+    font-size: 1.15rem;
+  }
+
+  .heroCard {
+    padding: 2rem 2.1rem;
     border-radius: 22px;
   }
 
-  .standardCompactBox h2 {
-    font-size: 2.6rem;
+  .heroCard h3 {
+    font-size: 1.75rem;
   }
 
-  .standardCompactIntro,
-  .standardCompactList li,
-  .standardCompactNotice {
+  .heroCard p {
     font-size: 1.25rem;
   }
 
+  .aboutUsContainer,
+  .standardCompactSection {
+    margin-bottom: 5rem;
+  }
+
+  .aboutUsContainer,
+  .standardCompactBox {
+    padding: 5rem 4.5rem;
+    border-radius: 34px;
+  }
+
+  .sectionIntro,
+  .sectionIntroLeft {
+    max-width: 1150px;
+    margin-bottom: 3rem;
+  }
+
+  .sectionIntro h2,
+  .sectionIntroLeft h2,
+  .aboutUsTitle,
+  .accordionIntro h2,
+  .visionSection h2 {
+    font-size: 3.3rem;
+  }
+
+  .sectionIntro p,
+  .sectionIntroLeft p,
+  .accordionIntro p,
+  .visionSection p {
+    font-size: 1.35rem;
+  }
+
+  .processGrid {
+    gap: 1.4rem;
+  }
+
+  .processStep {
+    min-height: 190px;
+    padding: 1.8rem;
+    border-radius: 22px;
+  }
+
+  .processStep strong {
+    font-size: 1.45rem;
+  }
+
+  .processStep p,
+  .standardCompactIntro,
+  .standardCompactList li,
+  .standardCompactNotice {
+    font-size: 1.22rem;
+  }
+
+  .accordionIntro {
+    margin-bottom: 2rem;
+  }
+
+  .pageContainer {
+    border-radius: 30px;
+    margin-bottom: 6rem;
+  }
+
   .header {
-    min-height: 82px;
-    border-radius: 16px;
+    min-height: 88px;
+    padding: 0 2rem;
   }
 
   .headerText {
-    font-size: 30px;
+    font-size: 1.85rem;
   }
 
   .arrow {
-    font-size: 30px;
+    font-size: 1.35rem;
   }
 
   .content {
-    padding: 0 44px;
+    padding-left: 3rem;
+    padding-right: 3rem;
   }
 
-  .content p {
-    font-size: 23px;
-    line-height: 1.8;
+  .content.open {
+    padding-top: 2rem;
+    padding-bottom: 2.4rem;
+  }
+
+  .content p,
+  .content div {
+    font-size: 1.32rem;
+    line-height: 1.85;
+  }
+
+  .content h4 {
+    font-size: 1.55rem;
+  }
+
+  .visionSection {
+    padding-top: 4rem;
   }
 }
