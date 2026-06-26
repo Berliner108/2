@@ -1177,106 +1177,59 @@
     margin-top: 110px;
   }
 }
-.audienceTabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.audienceOverview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
   margin-top: 30px;
 }
 
-.audienceTab {
-  border: 1px solid rgba(15, 40, 60, 0.16);
-  background: rgba(255, 255, 255, 0.78);
-  color: #254456;
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.98rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.audienceTab:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 168, 199, 0.45);
-  color: #07111f;
-}
-
-.audienceTabActive {
-  background: #07111f;
-  border-color: #07111f;
-  color: #ffffff;
-}
-
-.audiencePanel {
-  margin-top: 18px;
-  max-width: 920px;
+.audienceGroup {
   background: #f8fafc;
   border: 1px solid #e1e8ef;
   border-left: 4px solid #00a8c7;
   border-radius: 4px;
-  padding: 26px 30px;
+  padding: 22px 22px 24px;
 }
 
-.audiencePanel h3 {
-  margin: 0 0 16px;
+.audienceGroup h3 {
+  margin: 0 0 14px;
   color: #07111f;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.15;
 }
 
-.audiencePanel ul {
+.audienceGroup ul {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 26px;
+  gap: 9px;
 }
 
-.audiencePanel li {
+.audienceGroup li {
   position: relative;
-  padding-left: 18px;
+  padding-left: 17px;
   color: #374151;
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   font-weight: 500;
-  line-height: 1.55;
+  line-height: 1.48;
 }
 
-.audiencePanel li::before {
+.audienceGroup li::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.68em;
-  width: 6px;
-  height: 6px;
+  top: 0.65em;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: #00a8c7;
 }
 
-@media (max-width: 768px) {
-  .audienceTabs {
-    gap: 8px;
-    margin-top: 24px;
-  }
-
-  .audienceTab {
-    padding: 9px 14px;
-    font-size: 0.92rem;
-  }
-
-  .audiencePanel {
-    padding: 22px 20px;
-  }
-
-  .audiencePanel ul {
+@media (max-width: 980px) {
+  .audienceOverview {
     grid-template-columns: 1fr;
   }
 }

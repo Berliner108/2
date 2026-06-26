@@ -25,8 +25,6 @@ const Wissenswertes = () => {
   });
 
   const [isClient, setIsClient] = useState(false); // Um sicherzustellen, dass es nur im Client läuft
-  const [activeAudience, setActiveAudience] = useState<"auftraggeber" | "beschichter" | "lieferanten">("auftraggeber");
-
   // Container-Logik für das Öffnen
   const toggleContainer = (index: number) => {
     setOpenContainers((prevState) => ({
@@ -281,76 +279,38 @@ useEffect(() => {
               Beschichtungstechnik.
             </p>
           </div>
-          <div className={styles.audienceTabs}>
-  <button
-    type="button"
-    className={`${styles.audienceTab} ${
-      activeAudience === "auftraggeber" ? styles.audienceTabActive : ""
-    }`}
-    onClick={() => setActiveAudience("auftraggeber")}
-  >
-    Auftraggeber
-  </button>
+          <div className={styles.audienceOverview}>
+  <div className={styles.audienceGroup}>
+    <h3>Auftraggeber</h3>
+    <ul>
+      <li>Aufträge einmal strukturiert erfassen</li>
+      <li>Viele passende Beschichter gleichzeitig für die Angebotsabgabe erreichen</li>
+      <li>Rückfragen, Verzögerungen und mögliche Mehrkosten reduzieren</li>
+      <li>Angebote besser vergleichen und gezielter vergeben</li>
+      <li>Passende Beschichter schneller finden</li>
+    </ul>
+  </div>
 
-  <button
-    type="button"
-    className={`${styles.audienceTab} ${
-      activeAudience === "beschichter" ? styles.audienceTabActive : ""
-    }`}
-    onClick={() => setActiveAudience("beschichter")}
-  >
-    Beschichter
-  </button>
+  <div className={styles.audienceGroup}>
+    <h3>Beschichter</h3>
+    <ul>
+      <li>Neue Aufträge ohne klassische Akquise gewinnen</li>
+      <li>Auftragsschwankungen besser ausgleichen</li>
+      <li>Freie Kapazitäten effizienter nutzen</li>
+      <li>Restmengen, Sonderfarben und überschüssige Materialien verkaufen</li>
+      <li>Zahlungssicherheit durch bezahlte Aufträge erhöhen</li>
+      <li>Strukturiertere Anfragen mit weniger Klärungsaufwand erhalten</li>
+    </ul>
+  </div>
 
-  <button
-    type="button"
-    className={`${styles.audienceTab} ${
-      activeAudience === "lieferanten" ? styles.audienceTabActive : ""
-    }`}
-    onClick={() => setActiveAudience("lieferanten")}
-  >
-    Lieferanten
-  </button>
-</div>
-
-<div className={styles.audiencePanel}>
-  {activeAudience === "auftraggeber" && (
-    <>
-      <h3>Für Auftraggeber</h3>
-      <ul>
-        <li>Aufträge einmal strukturiert erfassen</li>
-        <li>Rückfragen, Verzögerungen und mögliche Mehrkosten reduzieren</li>
-        <li>Angebote besser vergleichen und gezielter vergeben</li>
-        <li>Passende Beschichter schneller finden</li>        
-        <li>Viele passende Beschichter gleichzeitig für die Angebotsabgabe erreichen</li>
-      </ul>
-    </>
-  )}
-
-  {activeAudience === "beschichter" && (
-    <>
-      <h3>Für Beschichter</h3>
-      <ul>
-        <li>Neue Aufträge ohne klassische Akquise gewinnen</li>
-        <li>Auftragsschwankungen besser ausgleichen</li>
-        <li>Freie Kapazitäten effizienter nutzen</li>
-        <li>Restmengen, Sonderfarben und überschüssige Materialien verkaufen</li>
-        <li>Zahlungssicherheit durch bezahlte Aufträge erhöhen</li>
-        <li>Strukturiertere Anfragen mit weniger Klärungsaufwand erhalten</li>
-      </ul>
-    </>
-  )}
-
-  {activeAudience === "lieferanten" && (
-    <>
-      <h3>Für Lieferanten</h3>
-      <ul>
-        <li>Produkte in einem fachlich passenden Umfeld präsentieren</li>
-        <li>Potenzielle Kunden mit konkretem Bedarf erreichen</li>
-        <li>Zubehör, Materialien und Lösungen sichtbarer machen</li>
-      </ul>
-    </>
-  )}
+  <div className={styles.audienceGroup}>
+    <h3>Lieferanten</h3>
+    <ul>
+      <li>Produkte in einem fachlich passenden Umfeld präsentieren</li>
+      <li>Potenzielle Kunden mit konkretem Bedarf erreichen</li>
+      <li>Zubehör, Materialien und Lösungen sichtbarer machen</li>
+    </ul>
+  </div>
 </div>
 
         </section>
