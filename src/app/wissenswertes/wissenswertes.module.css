@@ -388,3 +388,84 @@
     font-size: 0.92rem;
   }
 }
+/* ===== Große Bildschirme ab 1600px ===== */
+@media (min-width: 1600px) {
+  .pageContainer {
+    max-width: 1450px;
+    margin: 0 auto;
+  }
+
+  .aboutUsContainer,
+  .standardCompactSection {
+    max-width: 1180px;
+  }
+
+  .headerText {
+    font-size: 24px;
+  }
+
+  .content p {
+    font-size: 19px;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .pageContainer {
+    max-width: 2600px;
+    margin: 0 auto;
+  }
+
+  .aboutUsContainer,
+  .standardCompactSection {
+    max-width: 1700px;
+  }
+
+  .aboutUsContainer {
+    padding: 5rem 4rem;
+  }
+
+  .aboutUsTitle {
+    font-size: 2.8rem;
+  }
+
+  .aboutUsContent {
+    font-size: 1.45rem;
+    max-width: 1500px;
+  }
+
+  .standardCompactBox {
+    padding: 2.4rem 2.8rem;
+  }
+
+  .standardCompactBox h2 {
+    font-size: 2.6rem;
+  }
+
+  .standardCompactIntro,
+  .standardCompactList li,
+  .standardCompactNotice {
+    font-size: 1.3rem;
+  }
+
+  .header {
+    min-height: 78px;
+  }
+
+  .headerText {
+    font-size: 32px;
+  }
+
+  .arrow {
+    font-size: 30px;
+  }
+
+  .content {
+    padding: 0 44px;
+  }
+
+  .content p {
+    font-size: 24px;
+    line-height: 1.8;
+  }
+}
