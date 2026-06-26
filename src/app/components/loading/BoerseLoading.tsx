@@ -43,6 +43,37 @@ function PageSkeleton() {
   )
 }
 
+function LargePageSkeleton() {
+  return (
+    <div
+      className={`${styles.largeSkeletonPage} ${styles.delayed}`}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className={styles.largeSkeletonTitle}>
+        <div className={`${styles.skelLine} ${styles.largeTitleLine}`} />
+      </div>
+
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className={styles.largeSkeletonCard}>
+          <div className={styles.largeSkeletonImage} />
+
+          <div className={styles.largeSkeletonText}>
+            <div className={`${styles.skelLine} ${styles.largeLineShort}`} />
+            <div className={`${styles.skelLine} ${styles.largeLineMedium}`} />
+            <div className={`${styles.skelLine} ${styles.largeLineMedium}`} />
+            <div className={`${styles.skelLine} ${styles.largeLineSmall}`} />
+            <div className={`${styles.skelLine} ${styles.largeLineSmall}`} />
+          </div>
+
+          <div className={styles.largeSkeletonBadge} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 type BoerseLoadingProps = {
   showNavbar?: boolean
 }
@@ -50,25 +81,31 @@ type BoerseLoadingProps = {
 export default function BoerseLoading({ showNavbar = true }: BoerseLoadingProps) {
   return (
     <>
-      
-    {showNavbar && <Navbar />}
-    <TopLoader />
+      {showNavbar && <Navbar />}
+      <TopLoader />
 
-    <div className={`${styles.wrapper} ${styles.loadingWrapper}`}>
-      <aside className={styles.loadingSidebar} aria-hidden>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelBlockSmall} />
-        <div className={styles.skelBlockSmall} />
-        <div className={styles.skelBlockSmall} />
-      </aside>
+      <div className={`${styles.wrapper} ${styles.loadingWrapper}`}>
+        <aside className={styles.loadingSidebar} aria-hidden>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelBlockSmall} />
+          <div className={styles.skelBlockSmall} />
+          <div className={styles.skelBlockSmall} />
+          <div className={styles.skelBlockSmall} />
+        </aside>
 
-      <div className={styles.content}>
-        <PageSkeleton />
+        <div className={styles.content}>
+          <div className={styles.loadingDefaultOnly}>
+            <PageSkeleton />
+          </div>
+
+          <div className={styles.loadingLargeOnly}>
+            <LargePageSkeleton />
+          </div>
+        </div>
       </div>
-    </div>
-  </>
-)
+    </>
+  )
 }

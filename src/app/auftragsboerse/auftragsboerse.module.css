@@ -612,14 +612,33 @@
     gap: 22px;
   }
 }
-/* ===== Loading: Standard unsichtbar, damit kleine Bildschirme unverändert bleiben ===== */
+/* ===== Loading: Standard ===== */
 .loadingSidebar {
   display: none;
 }
+
+.loadingLargeOnly {
+  display: none;
+}
+
+.loadingDefaultOnly {
+  display: block;
+}
+
 /* ===== Loading große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
+  .loadingDefaultOnly {
+    display: none;
+  }
+
+  .loadingLargeOnly {
+    display: block;
+    width: 100%;
+  }
+
   .loadingWrapper {
     min-height: calc(100vh - 90px);
+    align-items: flex-start;
   }
 
   .loadingSidebar {
@@ -644,24 +663,92 @@
     height: 40px;
   }
 
-  .skeletonPage {
-    min-height: calc(100vh - 150px);
+  .largeSkeletonPage {
     width: 100%;
+    min-height: calc(100vh - 150px);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
 
-  .skelDrop {
-    height: 360px;
+  .largeSkeletonTitle {
+    width: 100%;
+    margin-bottom: 4px;
   }
 
-  .skelDropSmall {
-    height: 220px;
+  .largeTitleLine {
+    width: 260px;
+    height: 28px;
   }
 
-  .skelInput {
-    height: 90px;
+  .largeSkeletonCard {
+    width: 100%;
+    min-height: 250px;
+    padding: 22px 24px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .largeSkeletonImage {
+    width: 250px;
+    height: 250px;
+    flex: 0 0 250px;
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+      linear-gradient(0deg, #e0f2fe, #fae8ff);
+    background-size: 200% 100%, 100% 100%;
+    animation: shimmer 1.2s linear infinite;
+  }
+
+  .largeSkeletonText {
+    flex: 1;
+    padding-left: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 4px;
+  }
+
+  .largeLineShort {
+    width: 260px;
+    height: 28px;
+  }
+
+  .largeLineMedium {
+    width: 520px;
+    max-width: 70%;
+    height: 22px;
+  }
+
+  .largeLineSmall {
+    width: 420px;
+    max-width: 55%;
+    height: 20px;
+  }
+
+  .largeSkeletonBadge {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    width: 92px;
+    height: 28px;
+    border-radius: 999px;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+      linear-gradient(0deg, #e0f2fe, #fae8ff);
+    background-size: 200% 100%, 100% 100%;
+    animation: shimmer 1.2s linear infinite;
   }
 }
-/* ===== Loading 4K / sehr große Bildschirme ab 2400px ===== */
+
+/* ===== Loading 4K ab 2400px ===== */
 @media (min-width: 2400px) {
   .loadingWrapper {
     min-height: calc(100vh - 120px);
@@ -682,43 +769,54 @@
     height: 56px;
   }
 
-  .skeletonPage {
+  .largeSkeletonPage {
     min-height: calc(100vh - 180px);
-    width: 100%;
-    padding: 0;
+    gap: 34px;
   }
 
-  .skelLine {
+  .largeTitleLine {
+    width: 360px;
+    height: 38px;
+  }
+
+  .largeSkeletonCard {
+    min-height: 380px;
+    padding: 38px 44px;
+    border-radius: 16px;
+  }
+
+  .largeSkeletonImage {
+    width: 380px;
+    height: 380px;
+    flex-basis: 380px;
+  }
+
+  .largeSkeletonText {
+    padding-left: 44px;
+    gap: 28px;
+  }
+
+  .largeLineShort {
+    width: 360px;
+    height: 38px;
+  }
+
+  .largeLineMedium {
+    width: 760px;
+    max-width: 70%;
+    height: 30px;
+  }
+
+  .largeLineSmall {
+    width: 620px;
+    max-width: 55%;
     height: 28px;
   }
 
-  .skelLineWide {
+  .largeSkeletonBadge {
+    top: 38px;
+    right: 44px;
+    width: 130px;
     height: 38px;
-    width: 70%;
-  }
-
-  .skelBlock {
-    height: 120px;
-  }
-
-  .skelBlockSmall {
-    height: 80px;
-  }
-
-  .skelInput {
-    height: 130px;
-  }
-
-  .skelDrop {
-    height: 520px;
-  }
-
-  .skelDropSmall {
-    height: 300px;
-  }
-
-  .skelTwoCols,
-  .skelGrid {
-    gap: 34px;
   }
 }
