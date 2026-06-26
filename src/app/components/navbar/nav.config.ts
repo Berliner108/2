@@ -75,9 +75,9 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/wissenswertes',
     links: [
       { href: '/wissenswertes', text: 'Überblick' },
-      { href: '/wissenswertes#Sofunktioniert’s', text: 'Warum BeschichterScout?' },
-      { href: '/wissenswertes#standardablauf', text: 'Ablauf & Vorbereitung' },
-      { href: '/wissenswertes#verfahren', text: 'Verfahren & Grundlagen' },
+      { href: '/wissenswertes#Sofunktioniert’s', text: 'Vorteile' },
+      { href: '/wissenswertes#standardablauf', text: 'Ablauf' },
+      { href: '/wissenswertes#verfahren', text: 'Verfahren' },
       { href: '/wissenswertes#vision-mission', text: 'Vision und Mission' }
   ]
   },
