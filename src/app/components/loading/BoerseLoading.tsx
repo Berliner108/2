@@ -55,7 +55,7 @@ function LargePageSkeleton() {
         <div className={`${styles.skelLine} ${styles.largeTitleLine}`} />
       </div>
 
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className={styles.largeSkeletonCard}>
           <div className={styles.largeSkeletonImage} />
 
