@@ -392,7 +392,7 @@ useEffect(() => {
               <li>
                 <strong>Reinigung:</strong> Teile dürfen nur oberflächlichen Schmutz
                 aufweisen. Späne, starke Öl- oder Fettrückstände, Klebereste,
-                Silikon, Anhaftungen oder Rost sind so gering wie möglich zu halten.
+                Silikon, Anhaftungen oder Rost sind so gering wie möglich zu halten, damit keine manuelle Sonderreinigung notwendig wird.
               </li>
               <li>
                 <strong>Thermische Verfahren:</strong> Bei thermischen Verfahren wie
