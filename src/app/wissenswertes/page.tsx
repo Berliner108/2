@@ -241,9 +241,9 @@ useEffect(() => {
             </p>
             <div className={styles.heroMeta}>
               <span>Für Auftraggeber</span>
-              <span>Einkäufer</span>
               <span>Beschichter</span>
-              <span>technische Planung</span>
+              <span>Einkäufer</span>
+              <span>Lieferanten</span>
             </div>
           </div>
         </section>
@@ -438,7 +438,7 @@ useEffect(() => {
 
         <section className={styles.libraryIntro} id="verfahren">
           <p className={styles.sectionKicker}>Verfahren & Grundlagen</p>
-          <h2>Fachbibliothek Oberflächentechnik</h2>
+          <h2>Fachbibliothek Beschichtungstechnik</h2>
           <p>
             Die folgenden Inhalte geben einen Überblick über wichtige Verfahren,
             typische Anwendungen, relevante Anforderungen und technische
@@ -484,7 +484,7 @@ useEffect(() => {
           ))}
         </div>
 
-        <section className={styles.visionWrap}>
+        <section className={styles.visionWrap} id="vision-mission">
           <div className={styles.sectionHeaderLeft}>
             <p className={styles.sectionKicker}>Unsere Haltung</p>
             <h2>Oberflächentechnik transparenter machen</h2>

@@ -74,23 +74,14 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Wissenswertes',
     href: '/wissenswertes',
     links: [
-      { href: '/wissenswertes', text: 'Vision und Mission' },
-      { href: '/wissenswertes#Sofunktioniert’s', text: 'So funktioniert’s' },
-      { href: '/wissenswertes#Beschichtungstechnik', text: 'Beschichtungstechnik' },
-      { href: '/wissenswertes#Verfahren', text: 'Verfahren' },
-      { href: '/wissenswertes#Nasslackieren', text: 'Nasslackieren' },
-      { href: '/wissenswertes#Pulverbeschichten', text: 'Pulverbeschichten' },
-      { href: '/wissenswertes#Eloxieren', text: 'Eloxieren/Anodisieren' },
-      { href: '/wissenswertes#Verzinken', text: 'Verzinken' },
-      { href: '/wissenswertes#Verzinnen', text: 'Verzinnen' },
-      { href: '/wissenswertes#Aluminieren', text: 'Aluminieren' },
-      { href: '/wissenswertes#Vernickeln', text: 'Vernickeln' },
-      { href: '/wissenswertes#Entlacken', text: 'Entlacken' },
-      { href: '/wissenswertes#Strahlen', text: 'Strahlen' },
-      { href: '/wissenswertes#Folieren', text: 'Folieren' },
-      { href: '/wissenswertes#Isolierstegverpressen', text: 'Isolierstegverpressen' }
-    ]
+      { href: '/wissenswertes', text: 'Überblick' },
+      { href: '/wissenswertes#Sofunktioniert’s', text: 'Warum BeschichterScout?' },
+      { href: '/wissenswertes#standardablauf', text: 'Ablauf & Vorbereitung' },
+      { href: '/wissenswertes#verfahren', text: 'Verfahren & Grundlagen' },
+      { href: '/wissenswertes#vision-mission', text: 'Vision und Mission' }
+  ]
   },
+  
   {
     title: 'Mein Konto',
     href: '/konto',
