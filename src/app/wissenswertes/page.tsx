@@ -319,10 +319,10 @@ useEffect(() => {
       <h3>Für Auftraggeber</h3>
       <ul>
         <li>Aufträge einmal strukturiert erfassen</li>
-        <li>Viele passende Beschichter gleichzeitig für die Angebotsabgabe erreichen</li>
         <li>Rückfragen, Verzögerungen und mögliche Mehrkosten reduzieren</li>
         <li>Angebote besser vergleichen und gezielter vergeben</li>
-        <li>Passende Beschichter schneller finden</li>
+        <li>Passende Beschichter schneller finden</li>        
+        <li>Viele passende Beschichter gleichzeitig für die Angebotsabgabe erreichen</li>
       </ul>
     </>
   )}
