@@ -321,36 +321,8 @@ useEffect(() => {
           </div>
 
           <div className={styles.processTimeline}>
-            <div className={styles.processStep}>
-              <span>01</span>
-              <h3>Anforderungen klären</h3>
-              <p>Verfahren, Ziel, Einsatzbereich und gewünschtes Ergebnis definieren.</p>
-            </div>
-            <div className={styles.processStep}>
-              <span>02</span>
-              <h3>Bauteildaten sammeln</h3>
-              <p>Material, Maße, Gewicht, Stückzahl, Zustand und Fotos bereitstellen.</p>
-            </div>
-            <div className={styles.processStep}>
-              <span>03</span>
-              <h3>Qualität festlegen</h3>
-              <p>Sichtflächen, Normen, Zertifikate und Prüfanforderungen angeben.</p>
-            </div>
-            <div className={styles.processStep}>
-              <span>04</span>
-              <h3>Logistik abstimmen</h3>
-              <p>Abholung, Lieferung, Verpackung, Ladezeiten und Hebehilfen klären.</p>
-            </div>
-            <div className={styles.processStep}>
-              <span>05</span>
-              <h3>Angebote vergleichen</h3>
-              <p>Preis, Leistung, Bearbeitungszeit und Anforderungen sauber gegenüberstellen.</p>
-            </div>
-            <div className={styles.processStep}>
-              <span>06</span>
-              <h3>Ergebnis prüfen</h3>
-              <p>Beschichtung kontrollieren, Rückfragen klären und Auftrag abschließen.</p>
-            </div>
+            <div className={styles.processStep}> <span>01</span> <h3>Anforderungen und Auftragsdaten vollständig angeben</h3> <p>Verfahren, Ziel, Einsatzbereich, gewünschtes Ergebnis, Material, Maße, Gewicht, Stückzahl, Zustand, Fotos, Sichtflächen, Normen, Zertifikate, Prüfanforderungen sowie Abholung, Lieferung, Verpackung, Ladezeiten und Hebehilfen klar übermitteln.</p> </div> <div className={styles.processStep}> <span>02</span> <h3>Angebote vergleichen und Beschichter beauftragen</h3> <p>Preis, Leistungsumfang, Bearbeitungszeit, Vorbehandlung, Beschichtungssystem, Logistik, mögliche Zusatzkosten und enthaltene Prüf- oder Dokumentationsleistungen prüfen, bevor der Auftrag vergeben wird.</p> </div> <div className={styles.processStep}> <span>03</span> <h3>Beschichtungsergebnis prüfen und Auftrag abschließen</h3> <p>Oberfläche, Farbton, Sichtflächen, Schichtqualität, vereinbarte Anforderungen, Dokumente und eventuelle Abweichungen kontrollieren, Rückfragen klären und den Auftrag sauber abschließen.</p> </div>
+              
           </div>
 
           <motion.div
