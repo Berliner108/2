@@ -387,17 +387,33 @@
   .standardCompactNotice {
     font-size: 0.92rem;
   }
-}
-/* ===== Große Bildschirme ab 1600px ===== */
+}/* ===== Große Bildschirme ab 1600px ===== */
 @media (min-width: 1600px) {
-  .pageContainer {
-    max-width: 1450px;
-    margin: 0 auto;
-  }
-
+  .pageContainer,
   .aboutUsContainer,
   .standardCompactSection {
-    max-width: 1180px;
+    width: 100%;
+    max-width: 1450px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .aboutUsContainer {
+    margin-top: 0;
+    margin-bottom: 4rem;
+    padding: 4rem 2rem;
+  }
+
+  .standardCompactSection {
+    margin-top: 4rem;
+    margin-bottom: 4.5rem;
+    padding: 0;
+  }
+
+  .standardCompactBox {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .headerText {
@@ -409,18 +425,28 @@
   }
 }
 
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
-  .pageContainer {
-    max-width: 1700px;
-    margin: 0 auto;
-  }
-
+  .pageContainer,
+  .aboutUsContainer,
   .standardCompactSection {
     width: 100%;
     max-width: 1700px;
-    margin: 4rem auto;
-    padding: 0;
+    margin-left: auto;
+    margin-right: auto;
     box-sizing: border-box;
+  }
+
+  .aboutUsContainer {
+    margin-top: 0;
+    margin-bottom: 6rem;
+    padding: 5rem 4rem;
+  }
+
+  .standardCompactSection {
+    margin-top: 6rem;
+    margin-bottom: 6.5rem;
+    padding: 0;
   }
 
   .standardCompactBox {
@@ -438,54 +464,25 @@
   .standardCompactNotice {
     font-size: 1.25rem;
   }
-}
-/* ===== Wissenswertes: gleiche Breite für Hauptabschnitte auf großen Screens ===== */
-@media (min-width: 1600px) {
-  .pageContainer,
-  .aboutUsContainer,
-  .standardCompactSection {
-    width: 100%;
-    max-width: 1450px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box;
+
+  .header {
+    min-height: 78px;
   }
 
-  .aboutUsContainer {
-    padding-left: 2rem;
-    padding-right: 2rem;
+  .headerText {
+    font-size: 30px;
   }
 
-  .standardCompactSection {
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
-
-/* ===== 4K / sehr große Bildschirme ===== */
-@media (min-width: 2400px) {
-  .pageContainer,
-  .aboutUsContainer,
-  .standardCompactSection {
-    width: 100%;
-    max-width: 1700px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box;
+  .arrow {
+    font-size: 30px;
   }
 
-  .aboutUsContainer {
-    padding-left: 4rem;
-    padding-right: 4rem;
+  .content {
+    padding: 0 44px;
   }
 
-  .standardCompactSection {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .standardCompactBox {
-    width: 100%;
-    box-sizing: border-box;
+  .content p {
+    font-size: 23px;
+    line-height: 1.8;
   }
 }
