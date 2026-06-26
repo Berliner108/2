@@ -2,32 +2,48 @@
 .wrapper {
   width: 100%;
   max-width: 100%;
+  min-height: calc(100vh - 265px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 40px;
-  margin-bottom: 40px;
+  padding: 32px 20px 56px;
+  box-sizing: border-box;
 }
+
 .headline {
   font-size: 24px;
   color: #333;
-  margin-bottom: 2rem;
+  margin: 0 0 2rem;
   font-weight: bold;
 }
+
+.kontoContainer {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  justify-content: center;
+}
+
 .kontoList {
+  width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
+  grid-template-columns: repeat(3, minmax(0, 300px));
+  justify-content: center;
+  gap: 24px;
 }
 
 .kontoItem {
   display: block;
-  text-decoration: none; /* Entfernt die Standard-Unterstreichung */
+  height: 100%;
+  text-decoration: none;
 }
 
 .kontoBox {
   position: relative;
-  padding: 30px;
+  width: 100%;
+  min-height: 150px;
+  padding: 28px 24px;
+  box-sizing: border-box;
   background-color: #f0f0f0;
   border-radius: 12px;
   text-align: center;
@@ -37,95 +53,50 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 150px;
-  width: 300px;
-  color: #333; /* Hier wird die Textfarbe in den Boxen festgelegt */
+  color: #333;
 }
 
 .kontoBox:hover {
-  transform: translateY(-5px); /* Leichter Hover-Effekt */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* Verstärkter Hover-Schlagschatten */
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .kontoIcon {
   width: 38px;
   height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   stroke: currentColor;
   fill: currentColor;
+  margin-bottom: 12px;
+}
+
+.kontoIcon > svg {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0;
 }
 
 .kontoBox:hover .kontoIcon {
-  color: #00b4d8; /* Farbe beim Hover */
+  color: #00b4d8;
 }
+
 .kontoTitle {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #1f2937; /* dunkelgrau */
+  color: #1f2937;
 }
 
 .kontoSub {
   font-size: 0.85rem;
-  color: #6b7280; /* helleres Grau */
-  margin-top: 1.35rem;
+  color: #6b7280;
+  margin-top: 1rem;
+  line-height: 1.35;
 }
 
-
-/* Mobile Ansicht */
-@media (max-width: 1024px) {
-  .kontoContainer {
-    width: 100%;
-  }
-
-  .kontoList {
-    width: 100%;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .kontoBox:hover {
-    transform: none; /* Deaktiviert den Hover-Effekt */
-    box-shadow: none; /* Entfernt den Hover-Schlagschatten */
-  }
-
-  .kontoBox a:hover {
-    color: #00b4d8; /* Deaktiviert den Hover-Link-Farbwechsel */
-  }
-
-  /* Weitere Hover-Änderungen auf mobilen Geräten */
-  .kontoIcon:hover {
-    color: inherit; /* Entfernt die Hover-Farbe für Icons */
-  }
-}
-
-@media (max-width: 768px) {
-  .kontoList {
-    grid-template-columns: 1fr;
-    justify-items: center; /* Zentriert die Grid-Elemente horizontal */
-  }
-
-  .kontoContainer {
-    width: 100%;
-  }
-
-  .kontoBox:hover {
-    transform: none; /* Deaktiviert den Hover-Effekt */
-    box-shadow: none; /* Entfernt den Hover-Schlagschatten */
-  }
-
-  .kontoBox a:hover {
-    color: #00b4d8; /* Deaktiviert den Hover-Link-Farbwechsel */
-  }
-
-  /* Weitere Hover-Änderungen auf mobilen Geräten */
-  .kontoIcon:hover {
-    color: inherit; /* Entfernt die Hover-Farbe für Icons */
-  }
-}
-/* Die Kachel braucht einen Positioning-Context */
-.kontoBox {
-  position: relative;
-}
-
-/* 🔴 Runder Counter oben rechts auf der Kachel */
+/* Runder Counter oben rechts auf der Kachel */
 .kontoCardBadge {
   position: absolute;
   top: 8px;
@@ -142,77 +113,59 @@
   font-size: 11px;
   line-height: 1;
   text-align: center;
-  box-shadow: 0 0 0 2px #fff; /* optionaler weißer Ring */
+  box-shadow: 0 0 0 2px #fff;
 }
-/* Fix: Icons in 844–1024 px wirklich zentrieren */
-@media (min-width: 810px) and (max-width: 1100px){
-  .kontoBox{
-    display:flex;
-    flex-direction:column;
-    align-items:center;      /* horizontal mittig */
-    justify-content:center;  /* vertikal mittig */
-    text-align:center;
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .wrapper {
+    min-height: calc(100vh - 245px);
+    padding: 28px 18px 48px;
   }
 
-  .kontoIcon{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:38px;
-    height:38px;
-    margin-bottom:12px;      /* optional */
+  .kontoContainer {
+    width: 100%;
   }
 
-  .kontoIcon > svg{
-    display:block;           /* kein inline/baseline drift */
-    width:100% !important;   /* überschreibt w-6/h-6 */
-    height:100% !important;
-    margin:0;                /* Sicherheit */
+  .kontoList {
+    grid-template-columns: repeat(2, minmax(0, 300px));
+    justify-items: center;
+    gap: 22px;
+  }
+
+  .kontoBox {
+    min-height: 165px;
+  }
+
+  .kontoBox:hover {
+    transform: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .kontoIcon:hover {
+    color: inherit;
   }
 }
-/* 844–1024 px: Karten & Icons wirklich mittig, kein Links-Kleben */
-@media (min-width: 810px) and (max-width: 1100px){
-  /* 2 Spalten und Inhalte der Zellen zentrieren */
-  .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;    /* <– Kachel in der Zelle mittig */
+
+/* Mobile */
+@media (max-width: 768px) {
+  .wrapper {
+    min-height: auto;
+    padding: 24px 16px 44px;
   }
 
-  /* Kachel selbst nie breiter als die Zelle, aber max 300px */
-  .kontoBox{
-    width: min(300px, 100%);
-    margin: 0 auto;           /* Sicherheitsnetz */
+  .headline {
+    font-size: 22px;
+    text-align: center;
+    margin-bottom: 1.5rem;
   }
 
-  /* Icons wirklich zentrieren (überschreibt w-6/h-6 von Heroicons) */
-  .kontoIcon{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:38px;
-    height:38px;
-    margin-bottom:12px;
-  }
-  .kontoIcon > svg{
-    display:block;
-    width:100% !important;
-    height:100% !important;
-  }
-  
-  .kontoList{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    justify-items: center;      /* Karten mittig in der Zelle */
-    align-items: stretch;        /* beide Spalten gleich hoch je Zeile */
+  .kontoList {
+    grid-template-columns: minmax(0, 320px);
+    gap: 18px;
   }
 
-  /* Karten alle gleich hoch lassen */
-  .kontoItem{ height: 100%; display: block; }
-  .kontoBox{
-    width: min(300px, 100%);
-    min-height: 170px;          /* statt fester Höhe */
-    height: auto;               /* Inhalt darf wachsen */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;    /* Inhalt innen wieder mittig */
+  .kontoBox {
+    min-height: 150px;
   }
 }
