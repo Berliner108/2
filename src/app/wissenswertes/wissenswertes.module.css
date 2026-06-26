@@ -439,3 +439,27 @@
     font-size: 1.25rem;
   }
 }
+@media (min-width: 2400px) {
+  .aboutUsContainer {
+    width: 100%;
+    max-width: 1700px;
+    margin: 4rem auto;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .standardCompactSection {
+    width: 100%;
+    max-width: 1700px;
+    margin: 4rem auto;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .standardCompactBox {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
