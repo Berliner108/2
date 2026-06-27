@@ -1,33 +1,47 @@
+.container,
+.container * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .container {
-  max-width: 800px;
+  width: 100%;
+  max-width: 1080px;
   margin: 0 auto;
   margin-bottom: -20px;
-  padding: 20px;
+  padding: 36px 48px;
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .heading {
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+  margin: 0 0 32px;
+  color: #111827;
+  font-size: 2.4rem;
+  line-height: 1.15;
 }
 
 .section {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .sectionTitle {
-  color: #555;
+  color: #374151;
   border-bottom: 2px solid #555;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
+  padding-bottom: 8px;
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  line-height: 1.3;
 }
 
 .text {
   color: #555;
-  line-height: 1.6;
+  line-height: 1.75;
+  font-size: 1.05rem;
+  margin: 0 0 12px;
 }
 
 .buttonWrapper {
@@ -35,11 +49,12 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  margin-top: 34px;
 }
 
 .backButton {
-  min-width: 400px; /* feste Mindestbreite */
-  max-width: 100%;  /* nicht überlaufen */
+  min-width: 400px;
+  max-width: 100%;
   padding: 12px;
   background-color: #00b5d8;
   color: white;
@@ -59,4 +74,101 @@
 
 .backButton:hover {
   background-color: #00e5ff;
+}
+
+/* Große Bildschirme */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1280px;
+    padding: 58px 88px;
+  }
+
+  .heading {
+    font-size: 2.8rem;
+    margin-bottom: 42px;
+  }
+
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .sectionTitle {
+    font-size: 1.55rem;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+
+  .text {
+    font-size: 1.13rem;
+    line-height: 1.85;
+  }
+
+  .buttonWrapper {
+    margin-top: 46px;
+  }
+
+  .backButton {
+    min-width: 440px;
+    padding: 15px 24px;
+    font-size: 17px;
+  }
+}
+
+/* Sehr große Bildschirme */
+@media (min-width: 1700px) {
+  .container {
+    max-width: 1380px;
+    padding: 66px 104px;
+  }
+
+  .heading {
+    font-size: 3rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.65rem;
+  }
+
+  .text {
+    font-size: 1.18rem;
+  }
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 600px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    margin-bottom: -20px;
+    padding: 24px 16px;
+    border-radius: 8px;
+  }
+
+  .heading {
+    font-size: 1.6rem;
+    line-height: 1.25;
+    margin-bottom: 26px;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  .sectionTitle {
+    font-size: 1.05rem;
+    line-height: 1.35;
+  }
+
+  .text {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
+  .backButton {
+    min-width: 0;
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 10px;
+  }
 }
