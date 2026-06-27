@@ -1,62 +1,104 @@
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap");
 
+.container,
+.container * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .container {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 32px 24px;
+  width: 100%;
+  max-width: 1180px;
+  margin: -40px auto 64px;
+  padding: 56px 72px;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   font-family: "Oswald", sans-serif;
   color: #1f2937;
+  overflow: hidden;
 }
 
 .title {
-  font-size: 32px;
+  max-width: 920px;
+  font-size: 38px;
+  line-height: 1.15;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin: 0 0 20px;
   color: #111827;
 }
 
-.subtitle {
-  font-size: 24px;
-  font-weight: 500;
-  margin-top: 32px;
-  margin-bottom: 12px;
-  color: #1f2937;
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 34px;
+}
+
+.metaItem {
+  padding: 8px 14px;
+  background: #f7fbfd;
+  border: 1px solid rgba(0, 181, 216, 0.18);
+  border-radius: 999px;
+  font-size: 15px;
+  color: #374151;
 }
 
 .section {
-  margin-top: 32px;
+  margin-top: 38px;
+}
+
+.subtitle {
+  font-size: 25px;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: #111827;
+}
+
+.section p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.8;
+  color: #374151;
+  white-space: pre-line;
 }
 
 .list {
   list-style-type: disc;
   padding-left: 24px;
-  line-height: 1.6;
+  margin: 0;
+  line-height: 1.75;
 }
+
+.list li {
+  font-size: 16.5px;
+  color: #374151;
+  margin-bottom: 7px;
+}
+
 .buttonContainer {
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-top: 2rem; /* optional */
+  margin-top: 44px;
   text-align: center;
 }
+
 .applyButton {
-  width: 40%;
-  padding: 12px;
+  width: 360px;
+  max-width: 100%;
+  padding: 14px 22px;
   background-color: #00b5d8;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  font-family: 'Oswald';
+  font-family: "Oswald", sans-serif;
+  font-size: 17px;
   text-decoration: none;
-
 }
 
 .applyButton:hover {
@@ -75,18 +117,69 @@
   text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 640px) {
+/* Große Bildschirme */
+@media (min-width: 1200px) {
   .container {
-    padding: 24px 16px;
+    max-width: 1280px;
+    margin: -40px auto 72px;
+    padding: 70px 96px;
   }
 
   .title {
-    font-size: 26px;
+    font-size: 44px;
   }
 
   .subtitle {
-    font-size: 20px;
+    font-size: 28px;
+  }
+
+  .section p {
+    font-size: 18px;
+  }
+
+  .list li {
+    font-size: 17.5px;
+  }
+}
+
+/* Kleine Bildschirme */
+@media (max-width: 640px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 20px auto 32px;
+    padding: 28px 18px;
+    border-radius: 8px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .meta {
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .metaItem {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .subtitle {
+    font-size: 22px;
+  }
+
+  .section {
+    margin-top: 30px;
+  }
+
+  .section p {
+    font-size: 16px;
+  }
+
+  .list li {
+    font-size: 15.5px;
   }
 
   .applyButton {
