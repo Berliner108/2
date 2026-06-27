@@ -1,79 +1,163 @@
+.container,
+.container * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .container {
-  max-width: 90%;
-  background-color: white;
-  margin: 0 auto;
-  margin-top: 00px;
-  padding: 20px;
+  width: 100%;
+  max-width: 1180px;
+  margin: -40px auto 64px;
+  padding: 44px 56px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .heading {
-  font-size: 2rem;
+  max-width: 980px;
+  margin: 0 0 28px;
+  font-size: 2.4rem;
+  line-height: 1.15;
   text-align: left;
+  color: #111827;
 }
 
 .subheading {
-  font-size: 1.5rem;
+  margin-top: 34px;
+  margin-bottom: 12px;
+  font-size: 1.55rem;
+  line-height: 1.25;
   text-align: left;
-  margin-top: 20px;
+  color: #111827;
 }
 
 .section {
-  font-size: 1rem;
-  text-align: left;
-  line-height: 1.6;
+  max-width: 1000px;
   margin-top: 10px;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  text-align: left;
+  color: #374151;
 }
+
+.section p {
+  margin: 0 0 14px;
+}
+
 .buttonWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
+  margin-top: 42px;
 }
+
 .backButton {
   display: block;
-  width: 80%;
-  max-width: 400px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  padding: 12px;
+  width: 360px;
+  max-width: 100%;
+  padding: 13px 22px;
   font-weight: bold;
+  font-size: 1rem;
   text-align: center;
   color: white;
   background-color: #00b5d8;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s;
   text-decoration: none;
   font-family: 'Oswald';
-
 }
-
 
 .backButton:hover {
   background-color: #00e5ff;
 }
 
-/* Mobile Anpassungen */
-@media (max-width: 600px) {
+/* Große Bildschirme */
+@media (min-width: 1200px) {
   .container {
-    padding: 15px;
+    max-width: 1280px;
+    margin: -40px auto 72px;
+    padding: 64px 88px;
   }
 
   .heading {
-    font-size: 1.25rem;
+    font-size: 2.8rem;
+    margin-bottom: 34px;
   }
 
   .subheading {
-    font-size: 1.0rem;
+    font-size: 1.8rem;
+    margin-top: 42px;
+    margin-bottom: 14px;
   }
 
   .section {
-    font-size: 0.9rem;
+    max-width: 1080px;
+    font-size: 1.13rem;
+    line-height: 1.85;
+  }
+
+  .section p {
+    margin-bottom: 16px;
+  }
+
+  .buttonWrapper {
+    margin-top: 52px;
   }
 
   .backButton {
+    width: 420px;
+    padding: 15px 24px;
+    font-size: 1.08rem;
+  }
+}
+
+/* Sehr große Bildschirme */
+@media (min-width: 1700px) {
+  .container {
+    max-width: 1380px;
+    padding: 72px 104px;
+  }
+
+  .section {
+    max-width: 1160px;
+  }
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 600px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 24px auto 32px;
+    padding: 24px 16px;
+    border-radius: 8px;
+  }
+
+  .heading {
+    font-size: 1.45rem;
+    line-height: 1.25;
+    margin-bottom: 22px;
+  }
+
+  .subheading {
+    font-size: 1.1rem;
+    line-height: 1.35;
+    margin-top: 28px;
+  }
+
+  .section {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
+  .backButton {
+    width: 100%;
     font-size: 0.9rem;
-    padding: 8px;
+    padding: 10px;
   }
 }
