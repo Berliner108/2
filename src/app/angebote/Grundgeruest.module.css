@@ -993,9 +993,38 @@
   }
 }
 
-/* Hohe große Bildschirme: dezente Luft vor dem Footer, aber kein künstliches Strecken */
+/* ===== Auftragsformular: große Bildschirme, passend zur Verkaufsseite ===== */
+@media (min-width: 1200px) {
+  .wrapper {
+    width: min(1240px, calc(100% - 96px));
+    max-width: none;
+    margin: 1.5rem auto 0;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  .infoBox {
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  .stepsAnimation {
+    margin: 1.5rem 0 2rem;
+  }
+
+  .stepsBoxContainer {
+    max-width: 100%;
+    justify-content: space-between;
+  }
+
+  .stepBox {
+    width: 280px;
+    min-height: 160px;
+  }
+}
+
+/* Hohe große Bildschirme: etwas Luft vor dem Footer */
 @media (min-width: 1200px) and (min-height: 800px) {
   .wrapper {
-    padding-bottom: clamp(5rem, 12vh, 10rem);
+    padding-bottom: clamp(5rem, 10vh, 8rem);
   }
 }
