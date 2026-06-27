@@ -1,5 +1,5 @@
 .container {
-  max-width: 80%;
+  width: min(92%, 1500px);
   margin: 0 auto;
   padding: 40px;
   background-color: #ffffff;
@@ -110,17 +110,17 @@
   width: 250px;
   padding: 10px 15px;
   font-size: 1.1rem;
-  color: #1E90FF;
+  color: #1e90ff;
   text-decoration: none;
-  border: 2px solid #1E90FF;
+  border: 2px solid #1e90ff;
   border-radius: 5px;
   transition: all 0.3s ease-in-out;
 }
 
 .jobLink:hover {
-  background: linear-gradient(to right, #40E0D0, #1E90FF);
+  background: linear-gradient(to right, #40e0d0, #1e90ff);
   color: white;
-  border-color: #1E90FF;
+  border-color: #1e90ff;
 }
 
 .applicationBox {
@@ -189,41 +189,78 @@
 /* Große Bildschirme */
 @media (min-width: 1200px) {
   .container {
-    max-width: 1200px;
-    min-height: calc(100vh - 310px);
-    padding: 58px 72px;
+    max-width: 1500px;
+    min-height: calc(100vh - 260px);
+    padding: 72px 96px;
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
 
   .hero {
-    margin-bottom: 42px;
+    margin-bottom: 52px;
+  }
+
+  .eyebrow {
+    font-size: 1.05rem;
+    margin-bottom: 14px;
   }
 
   .hero h1 {
-    font-size: 2.9rem;
+    max-width: 1050px;
+    font-size: 3.4rem;
+    line-height: 1.12;
+    margin-bottom: 24px;
   }
 
   .hero p {
-    font-size: 1.18rem;
+    max-width: 1120px;
+    font-size: 1.28rem;
+    line-height: 1.85;
   }
 
   .infoGrid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
-    margin: 42px 0;
+    gap: 28px;
+    margin: 54px 0 48px;
   }
 
   .infoCard {
-    min-height: 190px;
-    padding: 28px;
+    min-height: 230px;
+    padding: 34px;
+  }
+
+  .infoCard h2 {
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+  }
+
+  .infoCard p {
+    font-size: 1.12rem;
+    line-height: 1.75;
+  }
+
+  .highlight {
+    max-width: 1150px;
+    font-size: 1.28rem;
+    line-height: 1.7;
+    margin-top: 28px;
+  }
+
+  .ceo {
+    font-size: 1.05rem;
+    margin-bottom: 42px;
+  }
+
+  .jobs h2 {
+    font-size: 2.15rem;
+    margin-bottom: 26px;
   }
 
   .jobs ul {
     display: flex;
     justify-content: center;
-    gap: 18px;
+    gap: 24px;
     flex-wrap: wrap;
   }
 
@@ -232,18 +269,40 @@
   }
 
   .jobLink {
-    width: 280px;
-    padding: 13px 18px;
-    font-size: 1.12rem;
+    width: 340px;
+    padding: 16px 22px;
+    font-size: 1.18rem;
   }
 
   .applicationBox {
-    margin-top: 46px;
+    max-width: 1050px;
+    margin-top: 54px;
+    padding: 36px 48px;
+  }
+
+  .applicationBox h2 {
+    font-size: 2rem;
+  }
+
+  .applicationBox p {
+    max-width: 860px;
+    font-size: 1.16rem;
+    line-height: 1.75;
+  }
+
+  .mailLink {
+    font-size: 1.28rem;
+  }
+
+  .buttonContainer {
+    margin-top: 2.4rem;
   }
 
   .backButton {
-    max-width: 420px;
-    width: 40%;
+    max-width: 460px;
+    width: 36%;
+    padding: 14px;
+    font-size: 17px;
   }
 }
 
