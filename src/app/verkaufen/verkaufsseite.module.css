@@ -1457,11 +1457,44 @@
     margin-bottom: 1rem;
   }
 }
-
-/* Nur wenn der Bildschirm sehr hoch ist: etwas Luft VOR dem Footer,
-   aber ohne den Formularbereich künstlich zu strecken */
-@media (min-width: 1200px) and (min-height: 800px) {
+/* ===== Verkaufsseite: große Bildschirme, nur diese Seite ===== */
+@media (min-width: 1200px) {
   .container {
-    padding-bottom: clamp(4rem, 10vh, 8rem);
+    width: min(1040px, calc(100% - 96px));
+    max-width: none;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  .heading {
+    margin-top: 0.5rem;
+  }
+
+  .description {
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .dropzone {
+    padding: 2rem;
+  }
+
+  .buttonRechts {
+    margin-bottom: 1rem;
   }
 }
+
+/* Große + hohe Bildschirme: wenn noch keine Kategorie gewählt ist */
+@media (min-width: 1200px) and (min-height: 800px) {
+  .container:not(:has(.dynamicFields)) {
+    padding-bottom: clamp(16rem, 34vh, 28rem);
+  }
+
+  .container:has(.dynamicFields) {
+    padding-bottom: clamp(5rem, 12vh, 10rem);
+  }
+}
+/* Nur wenn der Bildschirm sehr hoch ist: etwas Luft VOR dem Footer,
+   aber ohne den Formularbereich künstlich zu strecken */
