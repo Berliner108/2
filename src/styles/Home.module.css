@@ -595,3 +595,17 @@
     max-width: 240px;
   }
 }
+@media (min-width: 2001px) {
+  .articleBox,
+  .articleBox2,
+  .articleBox3 {
+    flex: 0 0 280px;
+    min-width: 280px;
+  }
+
+  .skelCard {
+    flex: 0 0 280px;
+    min-width: 280px;
+    max-width: 280px;
+  }
+}
