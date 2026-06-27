@@ -159,7 +159,6 @@ function TopLoader() {
     </div>
   );
 }
-
 function FormSkeleton() {
   return (
     <div
@@ -168,35 +167,22 @@ function FormSkeleton() {
       aria-live="polite"
       aria-busy="true"
     >
-      {/* Kopfbereich / Hinweis */}
+      {/* Basis-Loader: mittlere Bildschirme */}
       <div className={styles.skelHeader}>
         <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
         <div className={styles.skelLine} />
       </div>
 
-      {/* InfoBox */}
       <div className={styles.skelBlock} />
 
-      {/* 3-Schritte-Bereich */}
-      <div className={styles.skelGrid}>
-        <div className={styles.skelBlockSmall} />
-        <div className={styles.skelBlockSmall} />
-        <div className={styles.skelBlockSmall} />
-        <div className={styles.skelBlockSmall} />
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
       </div>
 
-      {/* Upload-Bereich */}
       <div className={styles.skelDrop} />
       <div className={styles.skelDropSmall} />
 
-      {/* Verfahren */}
-      <div className={styles.skelBlock} />
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      {/* Spezifikationen / Material */}
       <div className={styles.skelGrid}>
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
@@ -204,33 +190,32 @@ function FormSkeleton() {
         <div className={styles.skelInput} />
       </div>
 
-      {/* Maße */}
-      <div className={styles.skelGrid}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      {/* Beschreibung */}
-      <div className={styles.skelDrop} />
-
-      {/* Logistik */}
       <div className={styles.skelBlock} />
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
 
-      {/* Bewerbung / NDA / AGB / Button */}
-      <div className={styles.skelBlock} />
-      <div className={styles.skelBlockSmall} />
-      <div className={styles.skelBlock} />
-      <div className={styles.skelBlockSmall} />
+      {/* Zusatz-Loader: nur auf sehr breiten Bildschirmen */}
+      <div className={styles.skelLargeOnly}>
+        <div className={styles.skelGrid}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+
+        <div className={styles.skelDrop} />
+
+        <div className={styles.skelTwoCols}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+
+        <div className={styles.skelTwoCols}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+
+        <div className={styles.skelBlock} />
+        <div className={styles.skelBlockSmall} />
+      </div>
     </div>
   )
 }
