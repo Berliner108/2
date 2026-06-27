@@ -44,29 +44,64 @@ function iconForPackage(code?: string | null) {
 
 function FormSkeleton() {
   return (
-    <div className={styles.skeletonPage} role="status" aria-live="polite" aria-busy="true">
+    <div
+      className={styles.skeletonPage}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      {/* Kopfbereich / Hinweis */}
       <div className={styles.skelHeader}>
         <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
         <div className={styles.skelLine} />
       </div>
 
-      <div className={styles.skelBlock} />
+      {/* Titel + kurze Beschreibung */}
       <div className={styles.skelBlockSmall} />
+      <div className={styles.skelLine} />
 
+      {/* Upload-Bereiche */}
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      {/* Kategorie-Auswahl */}
+      <div className={styles.skelBlockSmall} />
       <div className={styles.skelTwoCols}>
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
       </div>
 
-      <div className={styles.skelDrop} />
-      <div className={styles.skelDropSmall} />
-
+      {/* Lieferdetails */}
+      <div className={styles.skelBlock} />
       <div className={styles.skelGrid}>
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
       </div>
+
+      {/* Adresse / Profildaten */}
+      <div className={styles.skelBlock} />
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* Bewerbung */}
+      <div className={styles.skelBlock} />
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* AGB + Vorschau + Button */}
+      <div className={styles.skelBlockSmall} />
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
     </div>
   );
 }
