@@ -571,8 +571,13 @@
     min-width: 200px;
   }
 }
-@media (min-width: 1600px) {
+@media (min-width: 1600px) and (max-width: 2000px) {
   .articleImage {
     height: 560px;
+  }
+}
+@media (min-width: 2001px) {
+  .articleImage {
+    height: 660px;
   }
 }
