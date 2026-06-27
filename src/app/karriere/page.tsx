@@ -14,17 +14,19 @@ const KarrierePage = () => {
       <section className={styles.hero}>
         <p className={styles.eyebrow}>Karriere bei Beschichter Scout</p>
 
-        <h1>Baue mit uns die Plattform für Beschichtungstechnik.</h1>
+        <h1>Gestalte mit uns die digitale Plattform für Beschichtungstechnik.</h1>
 
         <p>
-          Beschichter Scout ist eine digitale Plattform für die Beschichtungstechnik.
-          Wir bringen Beschichter, Kunden, Aufträge und Restmengen an einen zentralen Ort —
-          einfach, transparent und praxisnah.
+          Beschichter Scout bringt Beschichter, Auftraggeber, Lackhersteller,
+          Lieferanten und verfügbare Restmengen an einen zentralen digitalen Ort.
+          Unser Ziel: Abläufe in der Beschichtungstechnik einfacher, schneller und
+          transparenter machen.
         </p>
 
         <p>
-          Wir stehen noch am Anfang und genau das macht es spannend: Du kannst mitgestalten,
-          Verantwortung übernehmen und daran mitarbeiten, eine echte Branche digitaler zu machen.
+          Wir bauen keine Plattform für irgendeinen Markt, sondern für eine spezialisierte
+          Branche mit echten Anforderungen. Genau deshalb suchen wir Menschen, die mitdenken,
+          Verantwortung übernehmen und etwas mit aufbauen wollen.
         </p>
       </section>
 
@@ -32,37 +34,40 @@ const KarrierePage = () => {
         <article className={styles.infoCard}>
           <h2>Was wir bauen</h2>
           <p>
-            Eine Plattform, die Prozesse rund um Beschichtung, Lackanfragen, Angebote und Restmengen
-            einfacher macht. Weg von verstreuten E-Mails und Telefonaten — hin zu klaren digitalen Abläufen.
+            Eine Plattform für Lackanfragen, Beschichtungsaufträge, Angebote und Restmengen.
+            Statt verstreuter E-Mails, Telefonate und manueller Abstimmung entstehen klare
+            digitale Prozesse für die tägliche Praxis.
           </p>
         </article>
 
         <article className={styles.infoCard}>
           <h2>Wen wir suchen</h2>
           <p>
-            Menschen, die mitdenken, anpacken und Verantwortung übernehmen. Besonders Entwickler,
-            IT-Leute und Personen im Kundenservice, die Lust auf Aufbauarbeit haben.
+            Entwickler, IT-Leute und Menschen im Kundenservice, die gerne Verantwortung
+            übernehmen. Du musst nicht alles können — wichtiger ist, dass du mitdenkst,
+            sauber arbeitest und Lust auf Aufbauarbeit hast.
           </p>
         </article>
 
         <article className={styles.infoCard}>
           <h2>Was dich erwartet</h2>
           <p>
-            Ein kleines Team, kurze Wege, viel Eigenverantwortung und technische Herausforderungen.
-            Du arbeitest nicht an irgendeinem Produkt, sondern an einer Plattform mit echtem Nutzen.
+            Ein kleines Team, kurze Wege und viel Gestaltungsspielraum. Du arbeitest nah am
+            Produkt, nah an echten Nutzern und an technischen Herausforderungen, die direkt
+            aus der Praxis kommen.
           </p>
         </article>
       </section>
 
       <div className={styles.highlight}>
-        Engagierte Menschen, die mit uns Beschichter Scout weiterentwickeln und eine spezialisierte
-        Branche digital voranbringen möchten, finden bei uns den passenden Platz.
+        Wir suchen keine Mitläufer. Wir suchen Menschen, die Beschichter Scout mit uns
+        weiterentwickeln und eine traditionelle Branche digital voranbringen möchten.
       </div>
 
       <p className={styles.ceo}>Martin Zajac, Inhaber</p>
 
       <section className={styles.jobs}>
-        <h2>Unsere offenen Stellen</h2>
+        <h2>Offene Stellen</h2>
 
         <ul>
           {jobs.map((job) => (
@@ -76,11 +81,12 @@ const KarrierePage = () => {
       </section>
 
       <section className={styles.applicationBox}>
-        <h2>Keine passende Stelle gefunden?</h2>
+        <h2>Keine passende Stelle dabei?</h2>
 
         <p>
-          Kein Problem. Wenn du glaubst, dass du zu Beschichter Scout passt und uns beim Aufbau der
-          Plattform unterstützen kannst, freuen wir uns über deine Initiativbewerbung.
+          Dann bewirb dich trotzdem. Wenn du glaubst, dass du zu Beschichter Scout passt
+          und uns beim Aufbau der Plattform weiterbringen kannst, freuen wir uns über
+          deine Initiativbewerbung.
         </p>
 
         <a href="mailto:bewerbung@beschichterscout.com" className={styles.mailLink}>
