@@ -151,7 +151,7 @@ async function uploadPreparedFilesToSupabase(params: {
   return finishedUploads
 }
 
-function FormSkeleton() {
+function FormSkeleton({ large = false }: { large?: boolean }) {
   return (
     <div
       className={styles.skeletonPage}
@@ -185,7 +185,8 @@ function FormSkeleton() {
       <div className={styles.skelBlock} />
 
       {/* Zusatz-Loader: nur auf sehr breiten Bildschirmen */}
-      <div className={styles.skelLargeOnly}>
+      {large && (
+        <div className={styles.skelLargeOnly}>
         <div className={styles.skelGrid}>
           <div className={styles.skelInput} />
           <div className={styles.skelInput} />
@@ -207,10 +208,13 @@ function FormSkeleton() {
 
         <div className={styles.skelBlock} />
         <div className={styles.skelBlockSmall} />
-      </div>
+            </div>
+)}
     </div>
   )
 }
+ 
+
 // ✅ 1 Frame warten, damit Overlay sicher gerendert wird (keine echte Verzögerung)
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
@@ -279,6 +283,7 @@ export default function Formular() {
   const router = useRouter()
 // Boot-Loading wie bei Sonderlacke
 const [bootLoading, setBootLoading] = useState(true)
+const [isWideScreen, setIsWideScreen] = useState(false)
 
 useEffect(() => {
   const doneTimer = window.setTimeout(() => {
@@ -286,6 +291,21 @@ useEffect(() => {
   }, 950)
 
   return () => window.clearTimeout(doneTimer)
+}, [])
+useEffect(() => {
+  const mediaQuery = window.matchMedia('(min-width: 1600px)')
+
+  const update = () => {
+    setIsWideScreen(mediaQuery.matches)
+  }
+
+  update()
+
+  mediaQuery.addEventListener('change', update)
+
+  return () => {
+    mediaQuery.removeEventListener('change', update)
+  }
 }, [])
 
   // ✅ standardmäßig sichtbar
@@ -1079,7 +1099,7 @@ if (bootLoading) {
   return (
     <div className={oswald.className}>
       <Navbar />
-      <FormSkeleton />
+      <FormSkeleton large={isWideScreen} />
     </div>
   )
 }
