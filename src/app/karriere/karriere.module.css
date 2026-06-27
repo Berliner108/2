@@ -1,17 +1,30 @@
-.container,
-.container * {
+:global(html),
+:global(body) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+:global(*) {
   box-sizing: border-box;
 }
 
-.container {
-  width: min(92vw, 1500px);
+.container,
+.container * {
+  box-sizing: border-box;
   max-width: 100%;
-  margin: 0 auto;
+}
+
+.container {
+  width: 100%;
+  max-width: 1500px;
+  margin-left: auto;
+  margin-right: auto;
   padding: 40px;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .hero {
@@ -49,13 +62,17 @@
   grid-template-columns: 1fr;
   gap: 18px;
   margin: 34px 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .infoCard {
+  min-width: 0;
   padding: 24px;
   background: #f7fbfd;
   border: 1px solid rgba(0, 181, 216, 0.18);
   border-radius: 12px;
+  overflow-wrap: anywhere;
 }
 
 .infoCard h2 {
@@ -81,6 +98,7 @@
   font-weight: bold;
   color: #333;
   border-bottom: 2px solid #333;
+  overflow-wrap: anywhere;
 }
 
 .ceo {
@@ -94,6 +112,8 @@
 .jobs {
   text-align: center;
   margin-top: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .jobs h2 {
@@ -106,10 +126,13 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .jobs li {
   margin: 10px 0;
+  min-width: 0;
 }
 
 .jobLink {
@@ -123,6 +146,7 @@
   border: 2px solid #1e90ff;
   border-radius: 5px;
   transition: all 0.3s ease-in-out;
+  overflow-wrap: anywhere;
 }
 
 .jobLink:hover {
@@ -132,6 +156,7 @@
 }
 
 .applicationBox {
+  width: 100%;
   max-width: 900px;
   margin: 42px auto 0;
   padding: 28px;
@@ -139,6 +164,7 @@
   background: #111;
   color: white;
   border-radius: 14px;
+  overflow: hidden;
 }
 
 .applicationBox h2 {
@@ -163,6 +189,7 @@
   font-weight: 700;
   text-decoration: none;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .mailLink:hover {
@@ -174,6 +201,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  min-width: 0;
   margin-top: 2rem;
 }
 
@@ -200,13 +228,14 @@
 /* Große Bildschirme */
 @media (min-width: 1200px) {
   .container {
-    width: min(92vw, 1500px);
-    max-width: 100%;
+    width: 100%;
+    max-width: 1500px;
     min-height: calc(100vh - 260px);
     padding: 72px 96px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
   }
 
   .hero {
@@ -320,11 +349,13 @@
   }
 }
 
+/* Kleine Bildschirme */
 @media (max-width: 768px) {
   .container {
-    width: min(92vw, 100%);
+    width: 100%;
     max-width: 100%;
     padding: 28px 18px;
+    border-radius: 8px;
   }
 
   .hero h1 {
