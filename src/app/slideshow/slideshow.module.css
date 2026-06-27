@@ -389,20 +389,20 @@
 }}
 @media (min-width: 1440px) {
   .slideshowContainer {
-    min-height: 430px;
+    min-height: 530px;
   }
 
   .imageContainer {
-    min-height: 430px;
+    min-height: 530px;
   }
 
   .imageContainer img {
-    max-height: 430px;
-    min-height: 430px;
+    max-height: 530px;
+    min-height: 530px;
   }
 
   .fullImageSlide .imageContainer img {
-    max-height: 430px;
-    min-height: 430px;
+    max-height: 530px;
+    min-height: 530px;
   }
 }
