@@ -431,21 +431,21 @@
 
 @media (min-width: 1550px) and (max-width: 1899px) {
   .slideshowContainer {
-    min-height: 390px;
+    min-height: 440px;
   }
 
   .imageContainer {
-    min-height: 390px;
+    min-height: 440px;
   }
 
   .imageContainer img {
-    max-height: 390px;
-    min-height: 390px;
+    max-height: 440px;
+    min-height: 440px;
   }
 
   .fullImageSlide .imageContainer img {
-    max-height: 390px;
-    min-height: 390px;
+    max-height: 440px;
+    min-height: 440px;
   }
 
   .text1 {
