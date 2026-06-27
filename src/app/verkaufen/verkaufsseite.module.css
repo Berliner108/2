@@ -1429,11 +1429,10 @@
   color: #9b1c1c;
   white-space: nowrap;
 }
-
-/* ===== Große Bildschirme: Verkaufsseite kompakt und zentriert ===== */
+/* ===== Verkaufsseite: große Bildschirme, nur diese Seite ===== */
 @media (min-width: 1200px) {
   .container {
-    width: min(1040px, calc(100% - 96px));
+    width: min(1240px, calc(100% - 96px));
     max-width: none;
     margin: 0 auto;
     padding: 1.5rem 2rem 3rem;
@@ -1453,11 +1452,16 @@
   .dropzone {
     padding: 2rem;
   }
-  .bewerbungPanel {
-    margin-top: 2.5rem;
-  }
 
   .buttonRechts {
     margin-bottom: 1rem;
+  }
+}
+
+/* Nur wenn der Bildschirm sehr hoch ist: etwas Luft VOR dem Footer,
+   aber ohne den Formularbereich künstlich zu strecken */
+@media (min-width: 1200px) and (min-height: 800px) {
+  .container {
+    padding-bottom: clamp(4rem, 10vh, 8rem);
   }
 }
