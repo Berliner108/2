@@ -405,15 +405,15 @@
     max-height: 630px;
     min-height: 630px;
   }.text1 {
-    font-size: 35px;
+    font-size: 40px;
   }
 
   .text2 {
-    font-size: 25px;
+    font-size: 30px;
   }
 
   .textLink {
-    font-size: 25px;
+    font-size: 30px;
   }
 
   .overlayText1 {
@@ -421,14 +421,13 @@
   }
 
   .overlayText2 {
-    font-size: 27px;
+    font-size: 32px;
   }
 
   .overlayLink {
-    font-size: 25px;
+    font-size: 32px;
   }
 }
-
 @media (min-width: 1550px) and (max-width: 1899px) {
   .slideshowContainer {
     min-height: 440px;
