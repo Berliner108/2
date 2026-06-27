@@ -40,14 +40,16 @@ const KarrierePage = () => {
           </p>
         </article>
 
+        
         <article className={styles.infoCard}>
-          <h2>Wen wir suchen</h2>
-          <p>
-            Entwickler, IT-Leute und Menschen im Kundenservice, die gerne Verantwortung
-            übernehmen. Du musst nicht alles können — wichtiger ist, dass du mitdenkst,
-            sauber arbeitest und Lust auf Aufbauarbeit hast.
-          </p>
-        </article>
+  <h2>Wen wir suchen</h2>
+  <p>
+    Wir suchen Leute, die anpacken, mitdenken und Dinge besser machen wollen.
+    Ob in der Entwicklung, in der IT oder im Kundenservice: Wichtig ist, dass du
+    zuverlässig arbeitest, Verantwortung übernimmst und Lust hast, etwas Neues
+    mit aufzubauen.
+  </p>
+</article>
 
         <article className={styles.infoCard}>
           <h2>Was dich erwartet</h2>
