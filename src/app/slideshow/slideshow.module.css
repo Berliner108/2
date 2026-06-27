@@ -387,3 +387,166 @@
   background: #fff;
   gap: 20px;  
 }}
+/* =========================================================
+   Große Bildschirme – Slideshow / Hero
+   Mobile bleibt unberührt
+========================================================= */
+
+@media (min-width: 1400px) {
+  .slideshowContainer {
+    width: 100%;
+    max-width: 100%;
+    min-height: 390px;
+    background: #f5f5f5;
+  }
+
+  .slidesWrapper {
+    width: 100%;
+  }
+
+  .slide {
+    min-height: 390px;
+    gap: 34px;
+  }
+
+  .textContainer {
+    flex: 0 0 36%;
+    padding: 54px 64px;
+  }
+
+  .text1 {
+    max-width: 620px;
+    margin-left: 0;
+    margin-bottom: 12px;
+    font-size: 34px;
+    line-height: 1.18;
+  }
+
+  .text2 {
+    max-width: 620px;
+    margin-left: 0;
+    font-size: 21px;
+    line-height: 1.45;
+  }
+
+  .textLink {
+    margin-left: 0;
+    margin-top: 18px;
+    font-size: 19px;
+  }
+
+  .imageContainer {
+    flex: 1;
+    min-height: 390px;
+  }
+
+  .imageContainer img {
+    width: 100%;
+    min-height: 390px;
+    max-height: 390px;
+    object-fit: cover;
+  }
+
+  .fullImageSlide .imageContainer {
+    min-height: 430px;
+  }
+
+  .fullImageSlide .imageContainer img {
+    min-height: 430px;
+    max-height: 430px;
+  }
+
+  .overlayTextContainer {
+    width: min(520px, 38%);
+    padding: 28px 38px;
+  }
+
+  .overlayText1 {
+    font-size: 34px;
+    line-height: 1.2;
+  }
+
+  .overlayText2 {
+    font-size: 22px;
+    line-height: 1.4;
+  }
+
+  .overlayLink {
+    font-size: 19px;
+  }
+
+  .prev,
+  .next {
+    font-size: 38px;
+  }
+
+  .prev {
+    left: 26px;
+  }
+
+  .next {
+    right: 26px;
+  }
+}
+
+@media (min-width: 1700px) {
+  .slideshowContainer {
+    min-height: 440px;
+  }
+
+  .slide {
+    min-height: 440px;
+    gap: 46px;
+  }
+
+  .textContainer {
+    flex-basis: 34%;
+    padding: 68px 86px;
+  }
+
+  .text1 {
+    font-size: 40px;
+    line-height: 1.14;
+  }
+
+  .text2 {
+    font-size: 24px;
+    line-height: 1.45;
+  }
+
+  .textLink {
+    font-size: 21px;
+    margin-top: 22px;
+  }
+
+  .imageContainer {
+    min-height: 440px;
+  }
+
+  .imageContainer img {
+    min-height: 440px;
+    max-height: 440px;
+  }
+
+  .fullImageSlide .imageContainer {
+    min-height: 480px;
+  }
+
+  .fullImageSlide .imageContainer img {
+    min-height: 480px;
+    max-height: 480px;
+  }
+
+  .overlayTextContainer {
+    width: min(600px, 36%);
+    padding: 34px 46px;
+  }
+
+  .overlayText1 {
+    font-size: 40px;
+  }
+
+  .overlayText2 {
+    font-size: 24px;
+  }
+}
