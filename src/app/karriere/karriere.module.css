@@ -2,13 +2,12 @@
 .container * {
   box-sizing: border-box;
   max-width: 100%;
-  margin-top: -80px;
 }
 
 .container {
   width: 100%;
   max-width: 1500px;
-  margin: 0px auto 56px;
+  margin: -40px auto 56px;
   padding: 40px;
   background-color: #ffffff;
   border-radius: 10px;
@@ -220,7 +219,7 @@
     width: 100%;
     max-width: 1500px;
     min-height: calc(100vh - 340px);
-    margin: 48px auto 64px;
+    margin: -40px auto 56px;
     padding: 72px 96px;
     display: flex;
     flex-direction: column;
