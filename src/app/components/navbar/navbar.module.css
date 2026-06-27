@@ -78,7 +78,7 @@
 .navItem:hover .dropdown { display: flex; }
 
 /* Mobile */
-@media (max-width: 1024px) {
+@media (max-width: 1125px) {
   .navbar {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
