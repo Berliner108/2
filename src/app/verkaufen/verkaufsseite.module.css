@@ -1429,3 +1429,35 @@
   color: #9b1c1c;
   white-space: nowrap;
 }
+/* ===== Große Bildschirme: Verkaufsseite sauber strecken ===== */
+@media (min-width: 1200px) and (min-height: 800px) {
+  .container {
+    width: min(1180px, calc(100% - 96px));
+    max-width: none;
+    min-height: calc(100dvh - 285px);
+    padding: 2rem 2.5rem 4.5rem;
+  }
+
+  .heading {
+    margin-top: 0.75rem;
+  }
+
+  .description {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .dropzone {
+    padding: 2.4rem;
+  }
+
+  .bewerbungPanel {
+    margin-top: 2.5rem;
+  }
+
+  .buttonRechts {
+    margin-bottom: 1.5rem;
+  }
+}
