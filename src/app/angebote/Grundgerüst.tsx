@@ -150,15 +150,7 @@ async function uploadPreparedFilesToSupabase(params: {
 
   return finishedUploads
 }
-/* ---------------- Fancy Loader Components ---------------- */
 
-function TopLoader() {
-  return (
-    <div className={styles.topLoader} aria-hidden={true}>
-      <div className={styles.topLoaderInner} />
-    </div>
-  );
-}
 function FormSkeleton() {
   return (
     <div
@@ -1087,7 +1079,6 @@ if (bootLoading) {
   return (
     <div className={oswald.className}>
       <Navbar />
-      <TopLoader />
       <FormSkeleton />
     </div>
   )
