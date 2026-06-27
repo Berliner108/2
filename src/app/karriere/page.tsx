@@ -12,12 +12,12 @@ const KarrierePage = () => {
   return (
     <main className={styles.container}>
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>Karriere bei BeschichterScout</p>
+        <p className={styles.eyebrow}>Karriere bei Beschichter Scout</p>
 
         <h1>Baue mit uns die Plattform für die Beschichtungstechnik.</h1>
 
         <p>
-          BeschichterScout ist eine digitale Plattform für die Beschichtungstechnik.
+          Beschichter Scout ist eine digitale Plattform für die Beschichtungstechnik.
           Wir bringen Beschichter, Kunden, Aufträge und Restmengen an einen zentralen Ort —
           einfach, transparent und praxisnah.
         </p>
@@ -55,7 +55,7 @@ const KarrierePage = () => {
       </section>
 
       <div className={styles.highlight}>
-        Engagierte Menschen, die mit uns BeschichterScout weiterentwickeln und eine spezialisierte
+        Engagierte Menschen, die mit uns Beschichter Scout weiterentwickeln und eine spezialisierte
         Branche digital voranbringen möchten, finden bei uns den passenden Platz.
       </div>
 
@@ -79,7 +79,7 @@ const KarrierePage = () => {
         <h2>Keine passende Stelle gefunden?</h2>
 
         <p>
-          Kein Problem. Wenn du glaubst, dass du zu BeschichterScout passt und uns beim Aufbau der
+          Kein Problem. Wenn du glaubst, dass du zu Beschichter Scout passt und uns beim Aufbau der
           Plattform unterstützen kannst, freuen wir uns über deine Initiativbewerbung.
         </p>
 
