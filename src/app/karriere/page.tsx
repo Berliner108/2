@@ -17,7 +17,7 @@ const KarrierePage = () => {
         <h1>Gestalte mit uns die digitale Plattform für Beschichtungstechnik.</h1>
 
         <p>
-          Beschichter Scout bringt Beschichter, Auftraggeber, Lackhersteller,
+          Beschichter Scout bringt Auftraggeber, Beschichter, Lackhersteller,
           Lieferanten und verfügbare Restmengen an einen zentralen digitalen Ort.
           Unser Ziel: Abläufe in der Beschichtungstechnik einfacher, schneller und
           transparenter machen.
@@ -34,7 +34,7 @@ const KarrierePage = () => {
         <article className={styles.infoCard}>
           <h2>Was wir bauen</h2>
           <p>
-            Eine Plattform für Lackanfragen, Beschichtungsaufträge, Angebote und Restmengen.
+            Eine Plattform für Beschichtungsaufträge, Lackanfragen, Angebote und Restmengen.
             Statt verstreuter E-Mails, Telefonate und manueller Abstimmung entstehen klare
             digitale Prozesse für die tägliche Praxis.
           </p>
