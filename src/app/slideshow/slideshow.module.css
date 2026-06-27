@@ -387,23 +387,23 @@
   background: #fff;
   gap: 20px;  
 }}
-@media (min-width: 1440px) {
+@media (min-width: 1900px) {
   .slideshowContainer {
-    min-height: 530px;
+    min-height: 630px;
   }
 
   .imageContainer {
-    min-height: 530px;
+    min-height: 630px;
   }
 
   .imageContainer img {
-    max-height: 530px;
-    min-height: 530px;
+    max-height: 630px;
+    min-height: 630px;
   }
 
   .fullImageSlide .imageContainer img {
-    max-height: 530px;
-    min-height: 530px;
+    max-height: 630px;
+    min-height: 630px;
   }.text1 {
     font-size: 35px;
   }
