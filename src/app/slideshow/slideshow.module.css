@@ -405,4 +405,47 @@
     max-height: 530px;
     min-height: 530px;
   }
+  @media (min-width: 1440px) {
+  .slideshowContainer {
+    min-height: 430px;
+  }
+
+  .imageContainer {
+    min-height: 430px;
+  }
+
+  .imageContainer img {
+    max-height: 430px;
+    min-height: 430px;
+  }
+
+  .fullImageSlide .imageContainer img {
+    max-height: 430px;
+    min-height: 430px;
+  }
+
+  .text1 {
+    font-size: 44px;
+  }
+
+  .text2 {
+    font-size: 31px;
+  }
+
+  .textLink {
+    font-size: 31px;
+  }
+
+  .overlayText1 {
+    font-size: 48px;
+  }
+
+  .overlayText2 {
+    font-size: 34px;
+  }
+
+  .overlayLink {
+    font-size: 31px;
+  }
+}
 }
