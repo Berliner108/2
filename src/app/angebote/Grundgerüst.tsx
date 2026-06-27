@@ -282,16 +282,12 @@ const formatFileSize = (bytes: number) => {
 export default function Formular() {
   const router = useRouter()
 // Boot-Loading wie bei Sonderlacke
-const [bootLoading, setBootLoading] = useState(true)
 const [isWideScreen, setIsWideScreen] = useState(false)
+// Boot-Loading wie bei Sonderlacke
+const [bootLoading, setBootLoading] = useState(true)
 
-useEffect(() => {
-  const doneTimer = window.setTimeout(() => {
-    setBootLoading(false)
-  }, 950)
 
-  return () => window.clearTimeout(doneTimer)
-}, [])
+
 useEffect(() => {
   const mediaQuery = window.matchMedia('(min-width: 1600px)')
 
@@ -1095,15 +1091,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     // Nach oben scrollen
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-if (bootLoading) {
-  return (
-    <div className={oswald.className}>
-      <Navbar />
-      <FormSkeleton large={isWideScreen} />
-    </div>
-  )
-}
-  return (
+   return (
     <div className={oswald.className}>
       <Navbar />
       <motion.div {...fadeIn} className={styles.progressContainer}>
