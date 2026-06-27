@@ -1113,23 +1113,20 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     // Nach oben scrollen
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+if (bootLoading) {
+  return (
+    <div className={oswald.className}>
+      <Navbar />
 
-     if (bootLoading) {
-    return (
-      <div className={oswald.className}>
-        <Navbar />
-
-        {showBootLoader && (
-          <>
-            <TopLoader />
-            <div className={styles.wrapper}>
-              <FormSkeleton />
-            </div>
-          </>
-        )}
-      </div>
-    )
-  }
+      {showBootLoader && (
+        <>
+          <TopLoader />
+          <FormSkeleton />
+        </>
+      )}
+    </div>
+  )
+}
   return (
     <div className={oswald.className}>
       <Navbar />
