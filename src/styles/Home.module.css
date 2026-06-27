@@ -649,3 +649,30 @@
     height: 580px;
   }
 }
+@media (min-width: 1700px) {
+  .skelCardAuftrag {
+    height: 560px;
+  }
+
+  .skelCardShop {
+    height: 500px;
+  }
+
+  .skelCardLack {
+    height: 530px;
+  }
+}
+
+@media (min-width: 2001px) {
+  .skelCardAuftrag {
+    height: 590px;
+  }
+
+  .skelCardShop {
+    height: 530px;
+  }
+
+  .skelCardLack {
+    height: 560px;
+  }
+}
