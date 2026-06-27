@@ -583,3 +583,48 @@
 }
 
 
+@media (min-width: 1700px) {
+  .articleBox,
+  .articleBox2,
+  .articleBox3 {
+    flex: 0 0 240px;
+    min-width: 240px;
+  }
+
+  .articleImg {
+    height: 270px;
+  }
+
+  .skelCard {
+    flex: 0 0 240px;
+    min-width: 240px;
+    max-width: 240px;
+  }
+
+  .skelImg {
+    height: 270px;
+  }
+}
+
+@media (min-width: 2001px) {
+  .articleBox,
+  .articleBox2,
+  .articleBox3 {
+    flex: 0 0 270px;
+    min-width: 270px;
+  }
+
+  .articleImg {
+    height: 300px;
+  }
+
+  .skelCard {
+    flex: 0 0 270px;
+    min-width: 270px;
+    max-width: 270px;
+  }
+
+  .skelImg {
+    height: 300px;
+  }
+}
