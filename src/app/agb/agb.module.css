@@ -7,9 +7,10 @@
 .container {
   width: 100%;
   max-width: 1180px;
-  margin: -40px auto 64px;
-  padding: 44px 56px;
   background-color: #ffffff;
+  margin: 0 auto;
+  margin-top: 00px;
+  padding: 44px 56px;
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -80,7 +81,6 @@
 @media (min-width: 1200px) {
   .container {
     max-width: 1280px;
-    margin: -40px auto 72px;
     padding: 64px 88px;
   }
 
@@ -133,7 +133,8 @@
   .container {
     width: 100%;
     max-width: 100%;
-    margin: 24px auto 32px;
+    margin: 0 auto;
+    margin-top: 00px;
     padding: 24px 16px;
     border-radius: 8px;
   }
