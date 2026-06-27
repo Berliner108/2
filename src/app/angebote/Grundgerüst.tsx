@@ -159,6 +159,7 @@ function TopLoader() {
     </div>
   );
 }
+
 function FormSkeleton() {
   return (
     <div
@@ -299,9 +300,35 @@ const formatFileSize = (bytes: number) => {
 }
 export default function Formular() {
   const router = useRouter()
+
+  // Boot-Loading wie bei Sonderlacke
+  const [bootLoading, setBootLoading] = useState(true)
+  const [showBootLoader, setShowBootLoader] = useState(false)
+
+  useEffect(() => {
+    if (!bootLoading) {
+      setShowBootLoader(false)
+      return
+    }
+
+    const showTimer = window.setTimeout(() => {
+      setShowBootLoader(true)
+    }, 250)
+
+    return () => window.clearTimeout(showTimer)
+  }, [bootLoading])
+
+  useEffect(() => {
+    const doneTimer = window.setTimeout(() => {
+      setBootLoading(false)
+    }, 950)
+
+    return () => window.clearTimeout(doneTimer)
+  }, [])
   
   // ✅ standardmäßig sichtbar
   const [showSteps, setShowSteps] = useState(true)
+  
   const [activeStep, setActiveStep] = useState(0)
 
   // Bilder
@@ -1087,7 +1114,22 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
- 
+     if (bootLoading) {
+    return (
+      <div className={oswald.className}>
+        <Navbar />
+
+        {showBootLoader && (
+          <>
+            <TopLoader />
+            <div className={styles.wrapper}>
+              <FormSkeleton />
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
   return (
     <div className={oswald.className}>
       <Navbar />
