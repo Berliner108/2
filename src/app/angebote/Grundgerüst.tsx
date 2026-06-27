@@ -151,70 +151,6 @@ async function uploadPreparedFilesToSupabase(params: {
   return finishedUploads
 }
 
-function FormSkeleton({ large = false }: { large?: boolean }) {
-  return (
-    <div
-      className={styles.skeletonPage}
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      {/* Basis-Loader: mittlere Bildschirme */}
-      <div className={styles.skelHeader}>
-        <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
-        <div className={styles.skelLine} />
-      </div>
-
-      <div className={styles.skelBlock} />
-
-      <div className={styles.skelTwoCols}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      <div className={styles.skelDrop} />
-      <div className={styles.skelDropSmall} />
-
-      <div className={styles.skelGrid}>
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-        <div className={styles.skelInput} />
-      </div>
-
-      <div className={styles.skelBlock} />
-
-      {/* Zusatz-Loader: nur auf sehr breiten Bildschirmen */}
-      {large && (
-        <div className={styles.skelLargeOnly}>
-        <div className={styles.skelGrid}>
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-        </div>
-
-        <div className={styles.skelDrop} />
-
-        <div className={styles.skelTwoCols}>
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-        </div>
-
-        <div className={styles.skelTwoCols}>
-          <div className={styles.skelInput} />
-          <div className={styles.skelInput} />
-        </div>
-
-        <div className={styles.skelBlock} />
-        <div className={styles.skelBlockSmall} />
-            </div>
-)}
-    </div>
-  )
-}
- 
-
 // ✅ 1 Frame warten, damit Overlay sicher gerendert wird (keine echte Verzögerung)
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
 
@@ -281,29 +217,6 @@ const formatFileSize = (bytes: number) => {
 }
 export default function Formular() {
   const router = useRouter()
-// Boot-Loading wie bei Sonderlacke
-const [isWideScreen, setIsWideScreen] = useState(false)
-// Boot-Loading wie bei Sonderlacke
-const [bootLoading, setBootLoading] = useState(true)
-
-
-
-useEffect(() => {
-  const mediaQuery = window.matchMedia('(min-width: 1600px)')
-
-  const update = () => {
-    setIsWideScreen(mediaQuery.matches)
-  }
-
-  update()
-
-  mediaQuery.addEventListener('change', update)
-
-  return () => {
-    mediaQuery.removeEventListener('change', update)
-  }
-}, [])
-
   // ✅ standardmäßig sichtbar
   const [showSteps, setShowSteps] = useState(true)
   
