@@ -949,3 +949,43 @@
     transform: rotate(360deg);
   }
 }
+/* ===== Sonderlacke-Formular: große Bildschirme, passend zu den anderen Formularen ===== */
+@media (min-width: 1200px) {
+  .container {
+    width: min(1240px, calc(100% - 96px));
+    max-width: none;
+    margin: 1.5rem auto 0;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  .heading {
+    margin-top: 0.5rem;
+  }
+
+  .description {
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .infoBox {
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+
+  .dropzone {
+    padding: 2rem;
+  }
+
+  .buttonRechts {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Hohe große Bildschirme: etwas Luft vor dem Footer, ohne künstliches Strecken */
+@media (min-width: 1200px) and (min-height: 800px) {
+  .container {
+    padding-bottom: clamp(5rem, 10vh, 8rem);
+  }
+}
