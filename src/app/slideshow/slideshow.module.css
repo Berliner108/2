@@ -404,27 +404,7 @@
   .fullImageSlide .imageContainer img {
     max-height: 530px;
     min-height: 530px;
-  }
-  @media (min-width: 1440px) {
-  .slideshowContainer {
-    min-height: 430px;
-  }
-
-  .imageContainer {
-    min-height: 430px;
-  }
-
-  .imageContainer img {
-    max-height: 430px;
-    min-height: 430px;
-  }
-
-  .fullImageSlide .imageContainer img {
-    max-height: 430px;
-    min-height: 430px;
-  }
-
-  .text1 {
+  }.text1 {
     font-size: 35px;
   }
 
@@ -448,4 +428,4 @@
     font-size: 25px;
   }
 }
-}
+
