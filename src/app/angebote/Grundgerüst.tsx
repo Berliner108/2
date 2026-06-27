@@ -300,32 +300,17 @@ const formatFileSize = (bytes: number) => {
 }
 export default function Formular() {
   const router = useRouter()
+// Boot-Loading wie bei Sonderlacke
+const [bootLoading, setBootLoading] = useState(true)
 
-  // Boot-Loading wie bei Sonderlacke
-  const [bootLoading, setBootLoading] = useState(true)
-  const [showBootLoader, setShowBootLoader] = useState(false)
+useEffect(() => {
+  const doneTimer = window.setTimeout(() => {
+    setBootLoading(false)
+  }, 950)
 
-  useEffect(() => {
-    if (!bootLoading) {
-      setShowBootLoader(false)
-      return
-    }
+  return () => window.clearTimeout(doneTimer)
+}, [])
 
-    const showTimer = window.setTimeout(() => {
-      setShowBootLoader(true)
-    }, 250)
-
-    return () => window.clearTimeout(showTimer)
-  }, [bootLoading])
-
-  useEffect(() => {
-    const doneTimer = window.setTimeout(() => {
-      setBootLoading(false)
-    }, 950)
-
-    return () => window.clearTimeout(doneTimer)
-  }, [])
-  
   // ✅ standardmäßig sichtbar
   const [showSteps, setShowSteps] = useState(true)
   
@@ -1117,13 +1102,8 @@ if (bootLoading) {
   return (
     <div className={oswald.className}>
       <Navbar />
-
-      {showBootLoader && (
-        <>
-          <TopLoader />
-          <FormSkeleton />
-        </>
-      )}
+      <TopLoader />
+      <FormSkeleton />
     </div>
   )
 }
