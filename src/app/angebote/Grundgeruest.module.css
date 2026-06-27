@@ -1033,3 +1033,9 @@
     width: 50%;
   }
 }
+/* Auf großen Bildschirmen nur Skeleton anzeigen, keinen oberen Balken */
+@media (min-width: 1200px) {
+  .topLoader {
+    display: none;
+  }
+}
