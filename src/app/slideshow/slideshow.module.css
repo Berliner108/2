@@ -387,7 +387,7 @@
   background: #fff;
   gap: 20px;  
 }}
-@media (min-width: 1600px) {
+@media (min-width: 1550px) {
   .slideshowContainer {
     min-height: 630px;
   }
