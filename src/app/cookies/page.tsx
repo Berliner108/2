@@ -12,12 +12,14 @@ const CookiePage = () => {
       <section className={styles.section}>
         <h2 className={styles.subheading}>Informationen über unsere Verwendung von Cookies</h2>
         <p>
-          Unsere Website und Apps (unsere „Seite“) werden von Beschichter Scout,
-          betrieben durch Martin Zajac, Einzelunternehmer, Riedergasse 2,
-          A-6900 Bregenz, Österreich („Beschichter Scout“, „wir“, „uns“ oder
-          „unser“), betrieben. Die Seite verwendet Cookies und ähnliche
-          Technologien, um bestimmte Funktionen bereitzustellen, die Nutzung der
-          Seite zu ermöglichen und die Benutzerfreundlichkeit zu verbessern.
+          
+            Diese Website und die dazugehörigen Anwendungen (unsere „Seite“) werden unter
+            der Bezeichnung Beschichter Scout angeboten. Betreiber ist Martin Zajac,
+            Einzelunternehmer, Riedergasse 2, A-6900 Bregenz, Österreich
+            („Beschichter Scout“, „wir“, „uns“ oder „unser“). Die Seite verwendet Cookies
+            und ähnliche Technologien, um bestimmte Funktionen bereitzustellen, die Nutzung
+            der Seite zu ermöglichen und die Benutzerfreundlichkeit zu verbessern.
+          
         </p>
         <p>
           Cookies helfen uns beispielsweise dabei, Nutzer wiederzuerkennen,
