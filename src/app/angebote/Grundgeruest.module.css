@@ -1002,12 +1002,7 @@
     padding-bottom: clamp(5rem, 10vh, 8rem);
   }
 }
-/* ===== Skeleton Loader: mittlere und sehr breite Bildschirme getrennt ===== */
 
-/* Zusatzteile standardmäßig ausblenden */
-.skelLargeOnly {
-  display: none;
-}
 
 /* Mittlere große Bildschirme: kompakter Loader */
 @media (min-width: 1200px) and (max-width: 1599px) {
@@ -1084,8 +1079,4 @@
   .topLoader {
     display: none;
   }
-}
-.skelLargeOnly {
-  display: grid;
-  gap: 16px;
 }
