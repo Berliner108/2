@@ -1,37 +1,90 @@
 /* kontakt.module.css */
 
-/* Stil für das Haupt-Element */
+.main,
+.main * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .main {
   padding: 20px;
   min-height: 100vh;
   background-color: #f5f5f5;
   margin-top: 0px;
+  overflow-x: hidden;
 }
 
-/* Stil für den Container */
 .contactInfoContainer {
   width: 90%;
+  max-width: 1080px;
   margin: 0 auto;
 }
 
-/* Stil für das Kontaktformular */
 .contactInfo {
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 36px 48px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Titel */
 .title {
-  font-size: 1.9rem;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 2.4rem;
+  line-height: 1.15;
+  color: #111827;
+  margin: 0 0 10px;
 }
 
 .title2 {
   font-size: 1.2rem;
   color: #333;
+}
+
+.requiredHint {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 24px;
+}
+
+.required {
+  color: #c53030;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.description {
+  font-size: 1rem;
+  color: #555;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.label {
+  font-size: 1rem;
+  color: #333;
+}
+
+.inputField {
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: 'Oswald', sans-serif;
+}
+
+.textareaField {
+  width: 100%;
+  min-height: 300px;
+  padding: 11px 12px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: none;
+  font-family: 'Oswald', sans-serif;
 }
 
 .inputFieldError {
@@ -40,20 +93,32 @@
   transition: border 0.3s ease;
 }
 
-/* Shake-Animation */
 @keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+
+  75% {
+    transform: translateX(-5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .shake {
   animation: shake 0.3s ease;
 }
 
-/* DSGVO-Checkbox-Container */
 .checkboxContainer {
   display: flex;
   align-items: flex-start;
@@ -62,24 +127,20 @@
   line-height: 1.4;
 }
 
-/* eigentliche Checkbox */
 .checkbox {
   margin-right: 8px;
   margin-top: 3px;
 }
 
-/* Farbe der Checkbox */
 .checkboxContainer input[type='checkbox'] {
   accent-color: #00b5d8;
 }
 
-/* Link in der DSGVO-Zeile */
 .checkboxContainer a {
   color: #00b5d8;
   text-decoration: underline;
 }
 
-/* Fehlermeldung */
 .error {
   color: #c53030;
   font-size: 0.875rem;
@@ -87,7 +148,6 @@
   margin-bottom: 10px;
 }
 
-/* Erfolgsmeldung */
 .success {
   color: #2f855a;
   font-size: 0.9rem;
@@ -95,50 +155,6 @@
   margin-bottom: 10px;
 }
 
-/* Beschreibungstext */
-.description {
-  font-size: 1rem;
-  color: #555;
-}
-
-/* Formular */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-/* Label */
-.label {
-  font-size: 1rem;
-  color: #333;
-}
-
-/* Eingabefelder */
-.inputField {
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-  box-sizing: border-box;
-  font-family: 'Oswald', sans-serif;
-}
-
-/* Textarea */
-.textareaField {
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-  box-sizing: border-box;
-  resize: none;        /* nicht mehr verstellbar */
-  min-height: 300px;
-  font-family: 'Oswald', sans-serif;
-}
-
-/* Button-Container */
 .buttonContainer {
   display: flex;
   justify-content: center;
@@ -146,9 +162,9 @@
   width: 100%;
 }
 
-/* Button */
 .button {
   width: 60%;
+  max-width: 420px;
   padding: 12px;
   background-color: #00b5d8;
   color: white;
@@ -178,10 +194,83 @@
   cursor: not-allowed;
 }
 
-/* kleine Helper: Zähler unter Textarea */
 .form small {
   font-size: 0.8rem;
   color: #666;
+}
+
+/* Große Bildschirme */
+@media (min-width: 1200px) {
+  .main {
+    padding: 32px 20px;
+  }
+
+  .contactInfoContainer {
+    max-width: 1280px;
+  }
+
+  .contactInfo {
+    padding: 58px 88px;
+  }
+
+  .title {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+  }
+
+  .requiredHint {
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+  }
+
+  .form {
+    gap: 18px;
+  }
+
+  .label {
+    font-size: 1.08rem;
+  }
+
+  .inputField {
+    padding: 13px 14px;
+    font-size: 1.08rem;
+  }
+
+  .textareaField {
+    min-height: 360px;
+    padding: 13px 14px;
+    font-size: 1.08rem;
+  }
+
+  .checkboxContainer {
+    font-size: 1rem;
+    margin-top: 24px;
+  }
+
+  .button {
+    max-width: 440px;
+    padding: 15px 24px;
+    font-size: 17px;
+  }
+}
+
+/* Sehr große Bildschirme */
+@media (min-width: 1700px) {
+  .contactInfoContainer {
+    max-width: 1380px;
+  }
+
+  .contactInfo {
+    padding: 66px 104px;
+  }
+
+  .title {
+    font-size: 3rem;
+  }
+
+  .textareaField {
+    min-height: 400px;
+  }
 }
 
 /* Mobile */
@@ -191,6 +280,7 @@
     justify-content: center;
     align-items: flex-start;
     max-width: 100%;
+    padding: 20px;
   }
 
   .contactInfoContainer {
@@ -214,10 +304,19 @@
     font-size: 0.9rem;
   }
 
+  .requiredHint {
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+
   .inputField,
   .textareaField,
   .button {
     font-size: 0.9rem;
+  }
+
+  .textareaField {
+    min-height: 260px;
   }
 
   .form {
@@ -231,16 +330,6 @@
 
   .button {
     width: 100%;
+    max-width: 100%;
   }
-}
-.required {
-  color: #c53030;
-  margin-left: 4px;
-  font-weight: bold;
-}
-
-.requiredHint {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 10px;
 }
