@@ -18,8 +18,7 @@
 .container {
   width: 100%;
   max-width: 1500px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 32px auto 40px;
   padding: 40px;
   background-color: #ffffff;
   border-radius: 10px;
@@ -230,7 +229,9 @@
   .container {
     width: 100%;
     max-width: 1500px;
-    min-height: calc(100vh - 260px);
+    min-height: calc(100vh - 320px);
+    margin-top: 44px;
+    margin-bottom: 56px;
     padding: 72px 96px;
     display: flex;
     flex-direction: column;
@@ -354,6 +355,8 @@
   .container {
     width: 100%;
     max-width: 100%;
+    margin-top: 20px;
+    margin-bottom: 28px;
     padding: 28px 18px;
     border-radius: 8px;
   }
