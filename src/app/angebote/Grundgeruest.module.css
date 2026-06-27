@@ -966,32 +966,6 @@
   font-weight: 500;
   line-height: 1.5;
 }
-/* ===== Auftragsformular: große Bildschirme, passend zur Verkaufsseite ===== */
-@media (min-width: 1200px) {
-  .wrapper {
-    width: min(1040px, calc(100% - 96px));
-    max-width: none;
-    margin: 1.5rem auto 0;
-    padding: 1.5rem 2rem 3rem;
-  }
-
-  .infoBox {
-    margin-bottom: 1.5rem;
-  }
-
-  .stepsAnimation {
-    margin: 1.5rem 0 2rem;
-  }
-
-  .stepsBoxContainer {
-    max-width: 100%;
-  }
-
-  .stepBox {
-    width: 230px;
-    min-height: 145px;
-  }
-}
 
 /* ===== Auftragsformular: große Bildschirme, passend zur Verkaufsseite ===== */
 @media (min-width: 1200px) {
