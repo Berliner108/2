@@ -550,3 +550,76 @@
     font-size: 24px;
   }
 }
+/* Desktop-Fix: Slider-Text sauber zentrieren */
+@media (min-width: 1200px) {
+  .slide {
+    align-items: stretch;
+  }
+
+  .textContainer {
+    flex: 0 0 38%;
+    padding: 0 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 390px;
+  }
+
+  .text1 {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 0 16px 0;
+    font-size: 34px;
+    line-height: 1.15;
+  }
+
+  .text2 {
+    width: 100%;
+    max-width: 560px;
+    margin: 0;
+    font-size: 21px;
+    line-height: 1.45;
+  }
+
+  .textLink {
+    margin-left: 0;
+    margin-top: 22px;
+  }
+
+  .imageContainer {
+    min-height: 390px;
+  }
+
+  .imageContainer img {
+    min-height: 390px;
+    max-height: 390px;
+  }
+}
+
+@media (min-width: 1700px) {
+  .textContainer {
+    flex-basis: 36%;
+    padding: 0 96px;
+    min-height: 440px;
+  }
+
+  .text1 {
+    max-width: 620px;
+    font-size: 40px;
+  }
+
+  .text2 {
+    max-width: 620px;
+    font-size: 24px;
+  }
+
+  .imageContainer {
+    min-height: 440px;
+  }
+
+  .imageContainer img {
+    min-height: 440px;
+    max-height: 440px;
+  }
+}
