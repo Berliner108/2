@@ -642,13 +642,23 @@
   }
 }
 @media (min-width: 1700px) {
+  .articleBox2 {
+    max-height: none;
+    min-height: 540px;
+  }
+
   .skelCardShop {
-    height: 600px;
+    height: 540px;
   }
 }
 
 @media (min-width: 2001px) {
+  .articleBox2 {
+    max-height: none;
+    min-height: 580px;
+  }
+
   .skelCardShop {
-    height: 660px;
+    height: 580px;
   }
 }
