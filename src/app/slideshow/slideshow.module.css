@@ -425,27 +425,27 @@
   }
 
   .text1 {
-    font-size: 44px;
+    font-size: 35px;
   }
 
   .text2 {
-    font-size: 31px;
+    font-size: 25px;
   }
 
   .textLink {
-    font-size: 31px;
+    font-size: 25px;
   }
 
   .overlayText1 {
-    font-size: 48px;
+    font-size: 38px;
   }
 
   .overlayText2 {
-    font-size: 34px;
+    font-size: 27px;
   }
 
   .overlayLink {
-    font-size: 31px;
+    font-size: 25px;
   }
 }
 }
