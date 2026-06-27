@@ -989,3 +989,36 @@
     padding-bottom: clamp(5rem, 10vh, 8rem);
   }
 }
+/* ===== Skeleton Loader: große Bildschirme – Breite und Seitenhöhe passend ===== */
+@media (min-width: 1200px) {
+  .skeletonPage {
+    width: min(1240px, calc(100% - 96px));
+    max-width: none;
+    margin: 1.5rem auto 3rem;
+    padding: 1.5rem 2rem 3rem;
+    min-height: calc(100dvh - 330px);
+  }
+
+  .skelHeader {
+    width: 100%;
+  }
+
+  .skelLine,
+  .skelLineWide,
+  .skelBlock,
+  .skelBlockSmall,
+  .skelDrop,
+  .skelDropSmall {
+    width: 100%;
+  }
+
+  .skelTwoCols,
+  .skelGrid {
+    width: 100%;
+  }
+}
+@media (min-width: 1200px) and (min-height: 900px) {
+  .skeletonPage {
+    min-height: calc(100dvh - 300px);
+  }
+}
