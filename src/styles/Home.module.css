@@ -734,3 +734,14 @@
     height: 550px;
   }
 }
+@media (min-width: 1700px) {
+  .articleLink {
+    font-size: 30px;
+  }
+}
+
+@media (min-width: 2001px) {
+  .articleLink {
+    font-size: 34px;
+  }
+}
