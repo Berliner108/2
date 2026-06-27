@@ -1,49 +1,92 @@
 .container {
   max-width: 80%;
-  margin: 0px auto;
-  margin-bottom: -20px;
+  margin: 0 auto;
   padding: 40px;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.intro {
+.hero {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 36px;
 }
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #00b5d8;
+}
+
+.hero h1 {
+  max-width: 900px;
+  margin: 0 auto 18px;
+  font-size: 2.25rem;
+  line-height: 1.18;
+  color: #222;
+}
+
+.hero p {
+  max-width: 980px;
+  margin: 0 auto 14px;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #555;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin: 34px 0;
+}
+
+.infoCard {
+  padding: 24px;
+  background: #f7fbfd;
+  border: 1px solid rgba(0, 181, 216, 0.18);
+  border-radius: 12px;
+}
+
+.infoCard h2 {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  color: #222;
+}
+
+.infoCard p {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.65;
+  color: #555;
+}
+
 .highlight {
+  max-width: 980px;
+  margin: 38px auto 0;
+  padding-bottom: 12px;
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
+  line-height: 1.65;
   font-weight: bold;
   color: #333;
-  margin-top: 40px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #333; /* Unterstrich */
-  display: inline-block;
+  border-bottom: 2px solid #333;
 }
 
 .ceo {
   text-align: center;
   font-size: 1rem;
   color: #555;
-  margin-top: 5px;
-}
-
-.intro h1 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.intro p {
-  font-size: 1.1rem;
-  line-height: 1.6;
-  color: #555;
+  margin-top: 8px;
+  margin-bottom: 34px;
 }
 
 .jobs {
   text-align: center;
+  margin-top: 10px;
 }
 
 .jobs h2 {
@@ -55,6 +98,7 @@
 .jobs ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .jobs li {
@@ -79,15 +123,52 @@
   border-color: #1E90FF;
 }
 
+.applicationBox {
+  max-width: 900px;
+  margin: 42px auto 0;
+  padding: 28px;
+  text-align: center;
+  background: #111;
+  color: white;
+  border-radius: 14px;
+}
+
+.applicationBox h2 {
+  margin: 0 0 12px;
+  font-size: 1.7rem;
+  color: white;
+}
+
+.applicationBox p {
+  margin: 0 auto 16px;
+  max-width: 760px;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #e7e7e7;
+}
+
+.mailLink {
+  display: inline-block;
+  color: #00e5ff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mailLink:hover {
+  text-decoration: underline;
+}
+
 .buttonContainer {
   display: flex;
   justify-content: center;
-  align-items: center; /* optional, falls vertikal auch nötig */
+  align-items: center;
   width: 100%;
-  margin-top: 2rem; /* optionaler Abstand */
+  margin-top: 2rem;
 }
+
 .backButton {
-   width: 40%;
+  width: 40%;
   padding: 12px;
   background-color: #00b5d8;
   color: white;
@@ -99,37 +180,122 @@
   margin-top: 20px;
   margin-bottom: 20px;
   font-family: 'Oswald';
-  
 }
 
 .backButton:hover {
   background-color: #00e5ff;
 }
+
+/* Große Bildschirme */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1200px;
+    min-height: calc(100vh - 310px);
+    padding: 58px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hero {
+    margin-bottom: 42px;
+  }
+
+  .hero h1 {
+    font-size: 2.9rem;
+  }
+
+  .hero p {
+    font-size: 1.18rem;
+  }
+
+  .infoGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin: 42px 0;
+  }
+
+  .infoCard {
+    min-height: 190px;
+    padding: 28px;
+  }
+
+  .jobs ul {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .jobs li {
+    margin: 0;
+  }
+
+  .jobLink {
+    width: 280px;
+    padding: 13px 18px;
+    font-size: 1.12rem;
+  }
+
+  .applicationBox {
+    margin-top: 46px;
+  }
+
+  .backButton {
+    max-width: 420px;
+    width: 40%;
+  }
+}
+
 @media (max-width: 768px) {
+  .container {
+    max-width: 92%;
+    padding: 28px 18px;
+  }
 
-.buttonContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center; /* optional, falls vertikal auch nötig */
-  width: 100%;
-  margin-top: 2rem; /* optionaler Abstand */
-}
-.backButton {
-   width: 60%;
-  padding: 12px;
-  background-color: #00b5d8;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  font-family: 'Oswald';
-  
-}
+  .hero h1 {
+    font-size: 1.85rem;
+  }
 
-.backButton:hover {
-  background-color: #00e5ff;
-}}
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .infoCard {
+    padding: 20px;
+  }
+
+  .highlight {
+    font-size: 1.05rem;
+  }
+
+  .applicationBox {
+    padding: 24px 18px;
+  }
+
+  .buttonContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .backButton {
+    width: 60%;
+    padding: 12px;
+    background-color: #00b5d8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-family: 'Oswald';
+  }
+
+  .backButton:hover {
+    background-color: #00e5ff;
+  }
+}
