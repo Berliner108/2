@@ -7,7 +7,7 @@
 .container {
   width: 100%;
   max-width: 1500px;
-  margin: -40px auto 56px;
+  margin: -20px auto 56px;
   padding: 40px;
   background-color: #ffffff;
   border-radius: 10px;
@@ -219,7 +219,7 @@
     width: 100%;
     max-width: 1500px;
     min-height: calc(100vh - 340px);
-    margin: -40px auto 56px;
+    margin: -20px auto 56px;
     padding: 72px 96px;
     display: flex;
     flex-direction: column;
