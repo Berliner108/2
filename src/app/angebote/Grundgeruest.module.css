@@ -1002,3 +1002,34 @@
     padding-bottom: clamp(5rem, 10vh, 8rem);
   }
 }
+/* ===== Skeleton Loader: große Bildschirme passend zum Auftragsformular ===== */
+@media (min-width: 1200px) {
+  .skeletonPage {
+    width: min(1240px, calc(100% - 96px));
+    max-width: none;
+    margin: 1.5rem auto 3rem;
+    padding: 1.5rem 2rem 3rem;
+  }
+
+  .skelHeader,
+  .skelTwoCols,
+  .skelGrid {
+    width: 100%;
+  }
+
+  .skelLine,
+  .skelBlock,
+  .skelDrop,
+  .skelDropSmall,
+  .skelInput {
+    width: 100%;
+  }
+
+  .skelLineWide {
+    width: 60%;
+  }
+
+  .skelBlockSmall {
+    width: 50%;
+  }
+}

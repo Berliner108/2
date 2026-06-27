@@ -159,7 +159,6 @@ function TopLoader() {
     </div>
   );
 }
-
 function FormSkeleton() {
   return (
     <div
@@ -168,30 +167,71 @@ function FormSkeleton() {
       aria-live="polite"
       aria-busy="true"
     >
+      {/* Kopfbereich / Hinweis */}
       <div className={styles.skelHeader}>
         <div className={`${styles.skelLine} ${styles.skelLineWide}`} />
         <div className={styles.skelLine} />
       </div>
 
+      {/* InfoBox */}
       <div className={styles.skelBlock} />
-      <div className={styles.skelBlockSmall} />
 
+      {/* 3-Schritte-Bereich */}
+      <div className={styles.skelGrid}>
+        <div className={styles.skelBlockSmall} />
+        <div className={styles.skelBlockSmall} />
+        <div className={styles.skelBlockSmall} />
+        <div className={styles.skelBlockSmall} />
+      </div>
+
+      {/* Upload-Bereich */}
+      <div className={styles.skelDrop} />
+      <div className={styles.skelDropSmall} />
+
+      {/* Verfahren */}
+      <div className={styles.skelBlock} />
       <div className={styles.skelTwoCols}>
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
       </div>
 
-      <div className={styles.skelDrop} />
-      <div className={styles.skelDropSmall} />
-
+      {/* Spezifikationen / Material */}
       <div className={styles.skelGrid}>
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
         <div className={styles.skelInput} />
       </div>
+
+      {/* Maße */}
+      <div className={styles.skelGrid}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* Beschreibung */}
+      <div className={styles.skelDrop} />
+
+      {/* Logistik */}
+      <div className={styles.skelBlock} />
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+      <div className={styles.skelTwoCols}>
+        <div className={styles.skelInput} />
+        <div className={styles.skelInput} />
+      </div>
+
+      {/* Bewerbung / NDA / AGB / Button */}
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
+      <div className={styles.skelBlock} />
+      <div className={styles.skelBlockSmall} />
     </div>
-  );
+  )
 }
 // ✅ 1 Frame warten, damit Overlay sicher gerendert wird (keine echte Verzögerung)
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
