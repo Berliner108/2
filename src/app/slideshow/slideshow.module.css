@@ -387,3 +387,22 @@
   background: #fff;
   gap: 20px;  
 }}
+@media (min-width: 1440px) {
+  .slideshowContainer {
+    min-height: 430px;
+  }
+
+  .imageContainer {
+    min-height: 430px;
+  }
+
+  .imageContainer img {
+    max-height: 430px;
+    min-height: 430px;
+  }
+
+  .fullImageSlide .imageContainer img {
+    max-height: 430px;
+    min-height: 430px;
+  }
+}
