@@ -14,7 +14,7 @@ const KarrierePage = () => {
       <section className={styles.hero}>
         <p className={styles.eyebrow}>Karriere bei Beschichter Scout</p>
 
-        <h1>Baue mit uns die Plattform für die Beschichtungstechnik.</h1>
+        <h1>Baue mit uns die Plattform für Beschichtungstechnik.</h1>
 
         <p>
           Beschichter Scout ist eine digitale Plattform für die Beschichtungstechnik.
