@@ -2,12 +2,13 @@
 
 .container {
   width: 100%;
+  max-width: 1600px;
   margin: 0.5rem auto;
   padding: 1rem;
   background: #fff;
   font-family: 'Oswald', sans-serif;
   box-sizing: border-box;
-  overflow-x: hidden; /* schützt etwas vor horizontalem Scroll */
+  overflow-x: hidden;
 }
 
 .grid {
