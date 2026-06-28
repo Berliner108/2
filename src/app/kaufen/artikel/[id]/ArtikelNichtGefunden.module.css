@@ -1,5 +1,5 @@
 .page {
-  min-height: calc(100vh - 230px);
+  min-height: 100dvh;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -149,10 +149,9 @@
     transform: translateY(-18px) scale(1.04);
   }
 }
-
 @media (max-width: 560px) {
   .page {
-    min-height: calc(100vh - 210px);
+    min-height: 100dvh;
     padding: 46px 18px 70px;
   }
 
