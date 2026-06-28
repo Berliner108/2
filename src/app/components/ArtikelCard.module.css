@@ -2,14 +2,16 @@
 
 .cardOrt {
   display: flex;
-  align-items: center;  
+  align-items: center;
   margin-top: 4px;
   color: #444;
   font-size: 15px;
 }
+
 .ortIcon {
   color: #888;
 }
+
 .sortSelect,
 .input {
   width: 100%;
@@ -21,6 +23,7 @@
   font-family: 'Oswald';
   box-sizing: border-box;
 }
+
 .card {
   display: flex;
   flex-direction: row;
@@ -29,14 +32,23 @@
   border-radius: 10px;
   background: white;
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
+  width: 100%;
   box-sizing: border-box;
   transition: box-shadow 0.3s ease;
-  position: relative; /* wichtig für Label-Position */
+  position: relative;
 }
+
 .card:hover {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
+
+.cardBildContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .cardBildWrapper {
   width: 220px;
   height: 220px;
@@ -45,23 +57,30 @@
   overflow: hidden;
   position: relative;
 }
+
 .cardBild {
   object-fit: cover;
   width: 100%;
   height: 100%;
   border-radius: 8px;
 }
+
 .cardTextBlock {
   display: flex;
   flex-direction: column;
   padding-left: 20px;
   flex: 1;
+  min-width: 0;
 }
+
 .cardText1 {
   font-weight: 700;
   font-size: 20px;
   margin-bottom: 15px;
+  line-height: 1.2;
 }
+
+.cardText2,
 .cardText3,
 .cardText4,
 .cardText5,
@@ -69,18 +88,12 @@
   font-size: 15px;
   margin-bottom: 4px;
   color: #555;
+  line-height: 1.25;
 }
-.cardText2 {
-  font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 4px;
-  color: #555;
-}
+
+.cardText2,
 .cardText3 {
   font-weight: 700;
-  font-size: 15px;
-  margin-bottom: 4px;
-  color: #555;
 }
 
 .cardLink {
@@ -88,8 +101,6 @@
   color: inherit;
   display: block;
 }
-
-
 
 .gesponsertLabel {
   position: absolute;
@@ -105,7 +116,7 @@
   box-shadow: none;
   pointer-events: none;
 }
-/* Label für gewerblich / privat */
+
 .verkaufsTypLabel {
   position: absolute;
   top: 12px;
@@ -120,135 +131,21 @@
 }
 
 .gewerblichLabel {
-  background-color: rgba(209, 231, 221, 0.75); /* #d1e7dd bei 75% Deckkraft */
+  background-color: rgba(209, 231, 221, 0.75);
   color: #0f5132;
 }
 
 .privatLabel {
-  background-color: rgba(226, 227, 229, 0.75); /* #e2e3e5 bei 75% Deckkraft */
+  background-color: rgba(226, 227, 229, 0.75);
   color: #41464b;
 }
 
-.cardBildContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-/* Sichtbarkeit steuern */
 .desktopOnly {
   display: block;
 }
+
 .mobileOnly {
   display: none;
-}
-
-
-@media (max-width: 599px) {
-  .desktopOnly {
-    display: none;
-  }
-  .mobileOnly {
-    display: block;
-    position: static;
-    margin-top: 8px;
-    text-align: left;
-  }
-  .gewerblichLabel {
-    background-color: #d1e7dd;
-    color: #0f5132;
-  }
-  .privatLabel {
-    background-color: #e2e3e5;
-    color: #41464b;
-  }
-  .card {
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 15px 0; /* oben/unten 15px, seitlich 0 */
-  width: 100vw;
-  border-radius: 0; /* optional für randloses Design */
-}
-
-  
-
-
-.card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-  .cardBildWrapper {
-    max-width: 155px;
-    min-width: 155px;
-    min-height: 155px;
-    max-height: 155px;
-    margin: 0 auto;   
-    margin-left: 2px; 
-  }
-
-  .cardTextBlock {
-    padding-left: 0;
-    
-    
-    
-  }
-  .cardTextBlock {
-  display: flex;
-  flex-direction: column;
-  padding-left: 10px;
-  flex: 1;
-}
-
-.cardText1 {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-
-.cardText2,
-.cardText3,
-.cardText4,
-.cardText5,
-.cardText6 {
-  font-size: 14px;
-  margin-bottom: 4px;
-  color: black;
-}  
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.3);
-    width: 100%;
-    height: 100%;
-    z-index: 999;
-  }
-  .cardButton {
-   min-width: 90%;
-   font-size: 15px;
-   font-weight: 500;
-   padding: 10px;
-   display: none;
-  }  
-}
-/* Für alle kleineren und mittleren Geräte */
-@media (min-width: 665px) and (max-width: 1023px){  
-    .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: rgba(0, 0, 0, 0.3);
-    width: 100%;
-    height: 100%;
-    z-index: 999;
-  }
-   .card {
-  flex-direction: row;
-  align-items: flex-start;
-  padding: 15px 0; /* oben/unten 15px, seitlich 0 */
-  width: 100vw;
-  border-radius: 0; /* optional für randloses Design */
-  margin-left: -10px;
-}
 }
 
 /* Badge für Lieferdatum */
@@ -265,40 +162,357 @@
 }
 
 .deadlineOk {
-  background: #e6f6ea;   /* sanftes Grün */
+  background: #e6f6ea;
   color: green;
 }
 
 .deadlineWarn {
-  background: #fff3cd;   /* Gelb */
+  background: #fff3cd;
   color: #664d03;
 }
 
 .deadlineDanger {
-  background: #f8d7da;   /* Rot */
+  background: #f8d7da;
   color: #842029;
-}  
+}
 
+/* ===== Mobile bis 599px ===== */
+@media (max-width: 599px) {
+  .desktopOnly {
+    display: none;
+  }
 
-@media (max-width: 376px){  
-/* Badge für Lieferdatum */
-.deadlineBadge {
-  display: inline-block;
-  margin-top: 4px;
-  line-height: 20px;
-  font-weight: 600;
-  
+  .mobileOnly {
+    display: block;
+    position: static;
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .gewerblichLabel {
+    background-color: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .privatLabel {
+    background-color: #e2e3e5;
+    color: #41464b;
+  }
+
+  .card {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 15px 0;
+    width: 100vw;
+    border-radius: 0;
+  }
+
+  .cardBildWrapper {
+    width: 155px;
+    height: 155px;
+    min-width: 155px;
+    min-height: 155px;
+    max-width: 155px;
+    max-height: 155px;
+    margin-left: 2px;
+  }
+
+  .cardTextBlock {
+    padding-left: 10px;
+    padding-right: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cardText1 {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+    line-height: 1.18;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6 {
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: black;
+    line-height: 1.22;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .gesponsertLabel {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .deadlineBadge {
+    display: inline-block;
+    margin-top: 4px;
+    margin-left: 0;
+    line-height: 20px;
+    font-weight: 600;
     font-size: 0.75rem;
     padding: 0.25rem 0.6rem;
     border-radius: 999px;
-}}
-@media (max-width: 601px){
-.cardText1 {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 10px;
-  white-space: normal;          /* kein nowrap */
-  overflow-wrap: anywhere;      /* moderne Lösung */
-  word-break: break-word;       /* Fallback */
-  hyphens: auto;                /* schöne Trennstriche (mit lang="de") */
-}}
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.3);
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+
+  .cardButton {
+    min-width: 90%;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px;
+    display: none;
+  }
+}
+
+/* ===== Tablet / schmale Bildschirme 600px bis 1150px ===== */
+@media (min-width: 600px) and (max-width: 1150px) {
+  .desktopOnly {
+    display: block;
+  }
+
+  .mobileOnly {
+    display: none;
+  }
+
+  .card {
+    padding: 16px 18px;
+    border-radius: 10px;
+    width: 100%;
+    min-height: 190px;
+  }
+
+  .cardBildWrapper {
+    width: 180px;
+    height: 180px;
+  }
+
+  .cardTextBlock {
+    padding-left: 18px;
+    padding-right: 70px;
+    min-width: 0;
+  }
+
+  .cardText1 {
+    font-size: 22px;
+    line-height: 1.18;
+    margin-bottom: 10px;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6 {
+    font-size: 15px;
+    line-height: 1.25;
+    margin-bottom: 3px;
+    color: #444;
+  }
+
+  .verkaufsTypLabel {
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .gesponsertLabel {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .deadlineBadge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    margin-left: 6px;
+    margin-top: -3px;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.3);
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+  }
+}
+
+/* ===== Desktop Zwischenbereich 1151px bis 1599px ===== */
+@media (min-width: 1151px) and (max-width: 1599px) {
+  .card {
+    min-height: 220px;
+    padding: 18px 22px;
+  }
+
+  .cardBildWrapper {
+    width: 210px;
+    height: 210px;
+  }
+
+  .cardTextBlock {
+    padding-left: 24px;
+    padding-top: 2px;
+    padding-right: 80px;
+  }
+
+  .cardText1 {
+    font-size: 24px;
+    margin-bottom: 12px;
+    line-height: 1.18;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardOrt {
+    font-size: 16px;
+    line-height: 1.32;
+    margin-bottom: 3px;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  .gesponsertLabel {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .deadlineBadge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+    margin-left: 8px;
+    margin-top: -4px;
+  }
+}
+
+/* ===== Große Bildschirme ab 1600px ===== */
+@media (min-width: 1600px) {
+  .card {
+    min-height: 250px;
+    padding: 22px 24px;
+  }
+
+  .cardBildWrapper {
+    width: 250px;
+    height: 250px;
+  }
+
+  .cardTextBlock {
+    padding-left: 28px;
+    padding-top: 4px;
+    padding-right: 90px;
+  }
+
+  .cardText1 {
+    font-size: 31px;
+    margin-bottom: 16.8px;
+    line-height: 1.18;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardOrt {
+    font-size: 20px;
+    line-height: 1.35;
+    margin-bottom: 3.15px;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 13px;
+    padding: 5px 11px;
+  }
+
+  .deadlineBadge {
+    font-size: 0.95rem;
+    padding: 0.35rem 0.8rem;
+    margin-left: 10px;
+    margin-top: -5px;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+@media (min-width: 2400px) {
+  .card {
+    min-height: 380px;
+    padding: 38px 44px;
+    border-radius: 16px;
+  }
+
+  .cardBildWrapper {
+    width: 380px;
+    height: 380px;
+  }
+
+  .cardTextBlock {
+    padding-left: 48px;
+    padding-top: 8px;
+    padding-right: 130px;
+  }
+
+  .cardText1 {
+    font-size: 44px;
+    margin-bottom: 25.2px;
+    line-height: 1.18;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardOrt {
+    font-size: 28px;
+    line-height: 1.38;
+    margin-bottom: 5.25px;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 17px;
+    padding: 7px 16px;
+  }
+
+  .deadlineBadge {
+    font-size: 1.1rem;
+    padding: 0.4rem 0.9rem;
+    margin-left: 12px;
+    margin-top: -6px;
+  }
+}
