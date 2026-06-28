@@ -68,7 +68,7 @@
 .cardText1 {
   font-weight: 700;
   font-size: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 15.75px;
   line-height: 1.2;
 }
 
@@ -76,15 +76,18 @@
 .cardText3,
 .cardText4,
 .cardText5,
-.cardText6,
-.cardText7 {
+.cardText6 {
   font-size: 15px;
-  margin-bottom: 4px;
+  margin-bottom: 4.2px;
   color: #555;
   line-height: 1.25;
 }
 
 .cardText7 {
+  font-size: 15px;
+  margin-bottom: 0;
+  color: #555;
+  line-height: 1.25;
   font-weight: 700;
   margin-top: 2px;
 }
@@ -203,7 +206,7 @@
   .cardText1 {
     font-weight: 700;
     font-size: 16px;
-    margin-bottom: 10px;
+    margin-bottom: 10.5px;
     line-height: 1.2;
   }
 
@@ -211,15 +214,18 @@
   .cardText3,
   .cardText4,
   .cardText5,
-  .cardText6,
-  .cardText7 {
+  .cardText6 {
     font-size: 14px;
-    margin-bottom: 4px;
+    margin-bottom: 4.2px;
     color: black;
     line-height: 1.25;
   }
 
   .cardText7 {
+    font-size: 14px;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.25;
     font-weight: 700;
     margin-top: 2px;
   }
@@ -275,7 +281,7 @@
 
   .cardText1 {
     font-size: 31px;
-    margin-bottom: 16px;
+    margin-bottom: 16.8px;
     line-height: 1.18;
   }
 
@@ -284,16 +290,18 @@
   .cardText4,
   .cardText5,
   .cardText6,
-  .cardText7,
   .cardOrt {
     font-size: 20px;
     line-height: 1.35;
-    margin-bottom: 3px;
+    margin-bottom: 3.15px;
   }
 
   .cardText7 {
+    font-size: 20px;
+    line-height: 1.35;
     font-weight: 700;
     margin-top: 5px;
+    margin-bottom: 0;
   }
 
   .verkaufsTypLabel {
@@ -322,7 +330,7 @@
 
   .cardText1 {
     font-size: 44px;
-    margin-bottom: 24px;
+    margin-bottom: 25.2px;
     line-height: 1.18;
   }
 
@@ -331,16 +339,18 @@
   .cardText4,
   .cardText5,
   .cardText6,
-  .cardText7,
   .cardOrt {
     font-size: 28px;
     line-height: 1.38;
-    margin-bottom: 5px;
+    margin-bottom: 5.25px;
   }
 
   .cardText7 {
+    font-size: 28px;
+    line-height: 1.38;
     font-weight: 700;
     margin-top: 10px;
+    margin-bottom: 0;
   }
 
   .verkaufsTypLabel {
