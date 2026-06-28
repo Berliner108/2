@@ -242,7 +242,7 @@
 
   
 
-/* ===== Große Bildschirme ab 1600px – identisch zur Auftragsbörse ===== */
+/* ===== Große Bildschirme ab 1600px – Shop wie Auftragsbörse, aber Text besser verteilt ===== */
 @media (min-width: 1600px) {
   .card {
     min-height: 250px;
@@ -256,10 +256,13 @@
 
   .cardTextBlock {
     padding-left: 24px;
+    padding-top: 4px;
   }
 
   .cardText1 {
     font-size: 22px;
+    margin-bottom: 18px;
+    line-height: 1.25;
   }
 
   .cardText2,
@@ -270,10 +273,17 @@
   .cardText7,
   .cardOrt {
     font-size: 16px;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+
+  .cardText7 {
+    font-weight: 700;
+    margin-top: 4px;
   }
 }
 
-/* ===== 4K / sehr große Bildschirme ab 2400px – identisch zur Auftragsbörse ===== */
+/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
 @media (min-width: 2400px) {
   .card {
     min-height: 380px;
@@ -288,11 +298,13 @@
 
   .cardTextBlock {
     padding-left: 44px;
+    padding-top: 8px;
   }
 
   .cardText1 {
     font-size: 34px;
-    margin-bottom: 12px;
+    margin-bottom: 28px;
+    line-height: 1.25;
   }
 
   .cardText2,
@@ -303,7 +315,13 @@
   .cardText7,
   .cardOrt {
     font-size: 23px;
-    line-height: 1.6;
+    line-height: 1.65;
+    margin-bottom: 12px;
+  }
+
+  .cardText7 {
+    font-weight: 700;
+    margin-top: 8px;
   }
 
   .verkaufsTypLabel {
