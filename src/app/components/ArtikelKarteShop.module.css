@@ -248,7 +248,7 @@
 
 /* ===== Tablet / schmale Bildschirme 600px bis 1023px ===== */
 /* Wichtig für deinen 700px-Screenshot */
-@media (min-width: 600px) and (max-width: 1023px) {
+@media (min-width: 600px) and (max-width: 1150px) {
   .desktopOnly {
     display: block;
   }
