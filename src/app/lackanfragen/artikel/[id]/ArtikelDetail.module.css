@@ -1,13 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
 
 .container {
-  width: 100%;  
+  width: 100%;
+  max-width: 1600px;
   margin: 2rem auto;
   padding: 1rem;
   background: #fff;
   font-family: 'Oswald', sans-serif;
   box-sizing: border-box;
-  overflow-x: hidden; /* schützt etwas vor horizontalem Scroll */
+  overflow-x: hidden;
 }
 .grid {
   display: flex;
