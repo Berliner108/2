@@ -242,3 +242,72 @@
 
   
 
+/* ===== Große Bildschirme ab 1600px – identisch zur Auftragsbörse ===== */
+@media (min-width: 1600px) {
+  .card {
+    min-height: 250px;
+    padding: 22px 24px;
+  }
+
+  .cardBildWrapper {
+    width: 250px;
+    height: 250px;
+  }
+
+  .cardTextBlock {
+    padding-left: 24px;
+  }
+
+  .cardText1 {
+    font-size: 22px;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardText7,
+  .cardOrt {
+    font-size: 16px;
+  }
+}
+
+/* ===== 4K / sehr große Bildschirme ab 2400px – identisch zur Auftragsbörse ===== */
+@media (min-width: 2400px) {
+  .card {
+    min-height: 380px;
+    padding: 38px 44px;
+    border-radius: 16px;
+  }
+
+  .cardBildWrapper {
+    width: 380px;
+    height: 380px;
+  }
+
+  .cardTextBlock {
+    padding-left: 44px;
+  }
+
+  .cardText1 {
+    font-size: 34px;
+    margin-bottom: 12px;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6,
+  .cardText7,
+  .cardOrt {
+    font-size: 23px;
+    line-height: 1.6;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 17px;
+    padding: 7px 16px;
+  }
+}

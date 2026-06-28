@@ -57,11 +57,13 @@ const strOrEmpty = (...vals: any[]): string => {
   }
   return '';
 };
-
 const normKategorie = (k?: string) => {
   const v = (k ?? '').trim().toLowerCase();
+
   if (v === 'pulverlack') return 'Pulverlack';
   if (v === 'nasslack') return 'Nasslack';
+  if (v === 'arbeitsmittel') return 'Arbeitsmittel';
+
   return k ?? '';
 };
 const einheitFuerKategorie = (kategorie?: string | null) => {
@@ -363,7 +365,7 @@ const mapped: ShopArtikel[] = top12.map((a) => ({
 
         hersteller: a.manufacturer ?? "—",
         zustand: a.condition ?? "—",
-        kategorie: a.category ?? "—",
+        kategorie: normKategorie(a.category ?? "—"),
 
         stock_status: a.stock_status ?? null,
         qty_kg: a.qty_kg ?? null,
