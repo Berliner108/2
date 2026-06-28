@@ -264,13 +264,13 @@
 
   .cardTextBlock {
     padding-left: 28px;
-    padding-top: 6px;
+    padding-top: 2px;
   }
 
   .cardText1 {
-    font-size: 27px;
-    margin-bottom: 20px;
-    line-height: 1.25;
+    font-size: 31px;
+    margin-bottom: 14px;
+    line-height: 1.15;
   }
 
   .cardText2,
@@ -280,9 +280,9 @@
   .cardText6,
   .cardText7,
   .cardOrt {
-    font-size: 19px;
-    line-height: 1.55;
-    margin-bottom: 9px;
+    font-size: 21px;
+    line-height: 1.18;
+    margin-bottom: 1px;
   }
 
   .cardText7 {
@@ -311,13 +311,13 @@
 
   .cardTextBlock {
     padding-left: 48px;
-    padding-top: 10px;
+    padding-top: 4px;
   }
 
   .cardText1 {
-    font-size: 39px;
-    margin-bottom: 30px;
-    line-height: 1.25;
+    font-size: 44px;
+    margin-bottom: 22px;
+    line-height: 1.15;
   }
 
   .cardText2,
@@ -327,9 +327,9 @@
   .cardText6,
   .cardText7,
   .cardOrt {
-    font-size: 27px;
-    line-height: 1.65;
-    margin-bottom: 13px;
+    font-size: 30px;
+    line-height: 1.2;
+    margin-bottom: 2px;
   }
 
   .cardText7 {
