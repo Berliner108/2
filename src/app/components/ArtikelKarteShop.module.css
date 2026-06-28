@@ -42,6 +42,13 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
+.cardBildContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .cardBildWrapper {
   width: 220px;
   height: 220px;
@@ -63,12 +70,13 @@
   flex-direction: column;
   padding-left: 20px;
   flex: 1;
+  min-width: 0;
 }
 
 .cardText1 {
   font-weight: 700;
   font-size: 20px;
-  margin-bottom: 15.75px;
+  margin-bottom: 15px;
   line-height: 1.2;
 }
 
@@ -78,7 +86,7 @@
 .cardText5,
 .cardText6 {
   font-size: 15px;
-  margin-bottom: 4.2px;
+  margin-bottom: 4px;
   color: #555;
   line-height: 1.25;
 }
@@ -113,7 +121,6 @@
   pointer-events: none;
 }
 
-/* Label für gewerblich / privat */
 .verkaufsTypLabel {
   position: absolute;
   top: 12px;
@@ -137,13 +144,6 @@
   color: #41464b;
 }
 
-.cardBildContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Sichtbarkeit steuern */
 .desktopOnly {
   display: block;
 }
@@ -152,7 +152,7 @@
   display: none;
 }
 
-/* ===== Mobile ===== */
+/* ===== Mobile bis 599px ===== */
 @media (max-width: 599px) {
   .desktopOnly {
     display: none;
@@ -165,16 +165,6 @@
     text-align: left;
   }
 
-  .gewerblichLabel {
-    background-color: #d1e7dd;
-    color: #0f5132;
-  }
-
-  .privatLabel {
-    background-color: #e2e3e5;
-    color: #41464b;
-  }
-
   .card {
     flex-direction: row;
     align-items: flex-start;
@@ -183,31 +173,28 @@
     border-radius: 0;
   }
 
-  .card:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  }
-
   .cardBildWrapper {
-    max-width: 155px;
+    width: 155px;
+    height: 155px;
     min-width: 155px;
     min-height: 155px;
+    max-width: 155px;
     max-height: 155px;
-    margin: 0 auto;
     margin-left: 2px;
   }
 
   .cardTextBlock {
-    display: flex;
-    flex-direction: column;
     padding-left: 10px;
+    padding-right: 8px;
     flex: 1;
+    min-width: 0;
   }
 
   .cardText1 {
     font-weight: 700;
     font-size: 16px;
-    margin-bottom: 10.5px;
-    line-height: 1.2;
+    margin-bottom: 10px;
+    line-height: 1.18;
   }
 
   .cardText2,
@@ -216,18 +203,28 @@
   .cardText5,
   .cardText6 {
     font-size: 14px;
-    margin-bottom: 4.2px;
+    margin-bottom: 4px;
     color: black;
-    line-height: 1.25;
+    line-height: 1.22;
   }
 
   .cardText7 {
     font-size: 14px;
     margin-bottom: 0;
     color: black;
-    line-height: 1.25;
+    line-height: 1.22;
     font-weight: 700;
     margin-top: 2px;
+  }
+
+  .verkaufsTypLabel {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .gesponsertLabel {
+    font-size: 10px;
+    padding: 2px 5px;
   }
 
   .overlay {
@@ -249,8 +246,74 @@
   }
 }
 
-/* Für alle kleineren und mittleren Geräte */
-@media (min-width: 665px) and (max-width: 1023px) {
+/* ===== Tablet / schmale Bildschirme 600px bis 1023px ===== */
+/* Wichtig für deinen 700px-Screenshot */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .desktopOnly {
+    display: block;
+  }
+
+  .mobileOnly {
+    display: none;
+  }
+
+  .card {
+    padding: 16px 18px;
+    border-radius: 10px;
+    width: 100%;
+    min-height: 190px;
+  }
+
+  .cardBildWrapper {
+    width: 180px;
+    height: 180px;
+  }
+
+  .cardTextBlock {
+    padding-left: 18px;
+    padding-right: 70px;
+    min-width: 0;
+  }
+
+  .cardText1 {
+    font-size: 22px;
+    line-height: 1.18;
+    margin-bottom: 10px;
+    max-width: 100%;
+  }
+
+  .cardText2,
+  .cardText3,
+  .cardText4,
+  .cardText5,
+  .cardText6 {
+    font-size: 15px;
+    line-height: 1.25;
+    margin-bottom: 3px;
+    color: #444;
+  }
+
+  .cardText7 {
+    font-size: 15px;
+    line-height: 1.25;
+    margin-top: 3px;
+    margin-bottom: 0;
+    color: #444;
+    font-weight: 700;
+  }
+
+  .verkaufsTypLabel {
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .gesponsertLabel {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
   .overlay {
     position: fixed;
     top: 0;
@@ -277,6 +340,7 @@
   .cardTextBlock {
     padding-left: 28px;
     padding-top: 4px;
+    padding-right: 90px;
   }
 
   .cardText1 {
@@ -326,6 +390,7 @@
   .cardTextBlock {
     padding-left: 48px;
     padding-top: 8px;
+    padding-right: 130px;
   }
 
   .cardText1 {
