@@ -260,7 +260,7 @@
   }
 
   .cardText1 {
-    font-size: 22px;
+    font-size: 25px;
     margin-bottom: 18px;
     line-height: 1.25;
   }
@@ -272,8 +272,8 @@
   .cardText6,
   .cardText7,
   .cardOrt {
-    font-size: 16px;
-    line-height: 1.45;
+    font-size: 18px;
+    line-height: 1.5;
     margin-bottom: 8px;
   }
 
@@ -281,9 +281,12 @@
     font-weight: 700;
     margin-top: 4px;
   }
-}
 
-/* ===== 4K / sehr große Bildschirme ab 2400px ===== */
+  .verkaufsTypLabel {
+    font-size: 13px;
+    padding: 5px 11px;
+  }
+}
 @media (min-width: 2400px) {
   .card {
     min-height: 380px;
@@ -302,7 +305,7 @@
   }
 
   .cardText1 {
-    font-size: 34px;
+    font-size: 36px;
     margin-bottom: 28px;
     line-height: 1.25;
   }
@@ -314,7 +317,7 @@
   .cardText6,
   .cardText7,
   .cardOrt {
-    font-size: 23px;
+    font-size: 25px;
     line-height: 1.65;
     margin-bottom: 12px;
   }
