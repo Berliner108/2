@@ -516,3 +516,10 @@
     font-size: 0.85rem;
   }
 }
+@media (min-width: 1400px) {
+  .inputContainer select,
+  .select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
