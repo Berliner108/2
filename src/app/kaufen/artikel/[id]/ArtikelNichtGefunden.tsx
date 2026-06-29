@@ -6,7 +6,7 @@ import styles from "./ArtikelNichtGefunden.module.css";
 
 export default function ArtikelNichtGefunden() {
   return (
-    <>
+    <div className={styles.notFoundLayout}>
       <Navbar />
 
       <main className={styles.page}>
@@ -32,6 +32,6 @@ export default function ArtikelNichtGefunden() {
           </div>
         </section>
       </main>
-    </>
+    </div>
   );
 }

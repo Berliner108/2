@@ -1,5 +1,10 @@
+.notFoundLayout {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
 .page {
-  min-height: calc(100dvh - 340px);
+  flex: 1;
   position: relative;
   overflow: hidden;
   display: flex;
