@@ -327,7 +327,7 @@ const Register = () => {
         }
       }
 
-      setConfirmationLink('Bitte bestätige deine E-Mail, dann kannst du dich einloggen.');
+      setConfirmationLink('Bitte bestätige deine E-Mail innerhalb von 30 Minuten, dann kannst du dich einloggen.');
       setResendDone(false);
     } finally {
       setIsLoading(false);

@@ -3,6 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './error.module.css';
+import { useEffect } from 'react';
+import { supabaseBrowser } from '@/lib/supabase-browser';
 
 function safeInternal(path?: string | null) {
   if (!path) return '/';
@@ -21,6 +23,24 @@ export default function AuthErrorPage() {
   const code = sp.get('code') || 'unknown';
   const type = sp.get('type') || '';
   const redirect = safeInternal(sp.get('redirect'));
+  useEffect(() => {
+  let alive = true;
+
+  async function redirectIfSessionExists() {
+    const supabase = supabaseBrowser();
+    const { data } = await supabase.auth.getSession();
+
+    if (!alive || !data.session) return;
+
+    window.location.replace(redirect);
+  }
+
+  redirectIfSessionExists();
+
+  return () => {
+    alive = false;
+  };
+}, [redirect]);
 
   let title = 'Anmeldung nicht möglich';
   let hint  = 'Der Bestätigungslink ist ungültig oder abgelaufen.';
