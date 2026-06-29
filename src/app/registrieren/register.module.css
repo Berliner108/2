@@ -519,7 +519,7 @@
 @media (min-width: 1400px) {
   .inputContainer select,
   .select {
-    width: 100%;
+    width: 103%;
     box-sizing: border-box;
   }
 }
