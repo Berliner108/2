@@ -1262,6 +1262,10 @@
   display: none;
 }
 
+.skelTallOnly {
+  display: none;
+}
+
 @media (min-height: 810px) and (min-width: 769px) {
   .skelTallOnly {
     display: grid;
