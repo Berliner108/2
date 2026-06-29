@@ -4,7 +4,7 @@ import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 import styles from './angebote.module.css'
 import CheckoutModal from '../../components/checkout/CheckoutModal'
 
@@ -625,8 +625,8 @@ const pruneExpiredOffers = () => {
   useEffect(() => { if (sub.safePage !== pageSub) setPageSub(sub.safePage) }, [sub.safePage, pageSub])
 
     if (loadingJobs && jobs.length === 0) {
-    return <BoerseLoading />
-    }
+  return <AuftraegeLoading />
+}
 
   function openConfirm(jobId: string | number, offerId: string, amountCents: number) {
   setConfirmOffer({ jobId, offerId, amountCents })
