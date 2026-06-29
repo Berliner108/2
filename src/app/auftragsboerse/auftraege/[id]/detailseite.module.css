@@ -960,3 +960,11 @@
     gap: 16px;
   }
 }
+.ndaLegalText {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.65;
+  color: inherit;
+}
