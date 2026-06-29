@@ -19,7 +19,8 @@
 }
 @media (min-height: 1100px) {
   .page {
-    min-height: 1100px;
+    min-height: 5000px;
+    background-color: green;
   }
 }
 .card {
