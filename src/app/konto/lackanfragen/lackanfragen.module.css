@@ -1,8 +1,11 @@
 /* — Basis — */
 .wrapper {
   padding: 2rem;
-  max-width: 100%;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
   font-family: 'Oswald';
+  box-sizing: border-box;
 }
 
 .heading {

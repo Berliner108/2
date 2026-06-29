@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 import styles from './lackanfragen.module.css'
 import CheckoutModal from '../../components/checkout/CheckoutModal'
 
@@ -807,8 +807,8 @@ return {
     }
 
     if (isLoading) {
-      return <BoerseLoading />
-    }
+  return <AuftraegeLoading />
+}
 
     return (
     <>
