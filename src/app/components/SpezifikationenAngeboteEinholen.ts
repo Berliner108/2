@@ -389,6 +389,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'GSB',
         'ISO 9001',
         'ISO 14001',
+        'ISO 12944',
         'RoHS / REACH'
       ]
     }
