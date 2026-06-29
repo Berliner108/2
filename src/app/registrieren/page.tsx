@@ -698,16 +698,12 @@ const Register = () => {
     <p className={styles.error}>{errors.termsAccepted}</p>
   )}
 </div>
-
-          <button type="submit" disabled={isLoading}>
-            {isLoading ? <span className={styles.spinner}></span> : 'Registrieren'}
-          </button>
-        </form>
-
-        {confirmationLink && (
+{confirmationLink && (
           <div className={styles.successBanner} role="status" aria-live="polite">
             <span className={styles.successIcon}><Check size={18} /></span>
-            <span>{confirmationLink}</span>
+            <span>
+              {confirmationLink} Bitte prüfe auch deinen Spam-Ordner und gegebenenfalls den Quarantäne-Ordner.
+            </span>
             <button
               type="button"
               onClick={handleResend}
@@ -719,6 +715,13 @@ const Register = () => {
             </button>
           </div>
         )}
+
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? <span className={styles.spinner}></span> : 'Registrieren'}
+          </button>
+        </form>
+
+        
 
       </div>
     </div>
