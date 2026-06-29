@@ -23,7 +23,7 @@ export const specificationsMap: Record<string, Specification[]> = {
   {
     type: 'radio',
     name: 'verfahren',
-    label: 'Brünierungsverfahren',
+    label: 'Verfahren',
     options: ['Heißbrünieren', 'Kaltbrünieren', 'Schwarzoxidieren']
   },
   {
@@ -388,8 +388,8 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'GSB',
         'ISO 9001',
-        'ISO 14001',
         'ISO 12944',
+        'ISO 14001',        
         'RoHS / REACH'
       ]
     }
