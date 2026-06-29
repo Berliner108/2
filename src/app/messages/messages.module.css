@@ -14,8 +14,10 @@
 
 .container {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 80px);
   width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
   font-family: 'Oswald', sans-serif;
   background: white;
   overflow-x: hidden;
