@@ -866,7 +866,7 @@
   padding-bottom: 1.5rem;
 }
 .ndaGate {
-  max-width: 760px;
+  max-width: 900px;
   margin: 1.5rem auto;
   padding: 1.25rem 1.5rem;
   border-radius: 18px;
@@ -911,7 +911,7 @@
 }
 .ndaTextBox {
   overflow-y: auto;
-  max-height: 260px;
+  max-height: min(62vh, 620px);
   margin: 1rem auto 0.75rem;
   padding: 1rem;
   border-radius: 14px;
