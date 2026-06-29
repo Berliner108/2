@@ -19,7 +19,7 @@
 }
 @media (min-height: 1100px) {
   .page {
-    min-height: calc(100dvh - 80px);
+    min-height: 1100px;
   }
 }
 .card {
