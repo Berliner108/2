@@ -736,10 +736,7 @@ if ((auftrag as any).ndaLocked) {
       {loading && <TopLoader />}
 
       <div className={styles.container}>
-        {loading ? (
-          <DetailSkeleton />
-        ) : (
-          <div className={styles.grid}>
+      <div className={styles.grid}>
             {/* Bilder */}
             <div className={styles.leftColumn}>
               <div className={styles.imageWrapper}>
@@ -1105,7 +1102,7 @@ if ((auftrag as any).ndaLocked) {
 
             </div>
           </div>
-        )}
+        
       </div>
       {/* Lightbox */}
       {lightboxOpen && (
