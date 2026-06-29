@@ -67,6 +67,30 @@ function DetailSkeleton() {
       </div>
       <div className={styles.skelBlock} />
       <div className={styles.skelBlockSmall} />
+            <div className={styles.skelTallOnly}>
+        <div className={styles.skelGrid}>
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+          <div className={styles.skelInput} />
+        </div>
+
+        <div className={styles.skelBlock} />
+
+        <div className={styles.skelTwoCols}>
+          <div className={styles.skelDropSmall} />
+          <div className={styles.skelGrid}>
+            <div className={styles.skelInput} />
+            <div className={styles.skelInput} />
+            <div className={styles.skelInput} />
+            <div className={styles.skelInput} />
+          </div>
+        </div>
+
+        <div className={styles.skelBlock} />
+        <div className={styles.skelBlockSmall} />
+      </div>
+      
     </div>
   );
 }

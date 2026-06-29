@@ -950,3 +950,13 @@
   height: 18px;
   accent-color: #00b4d8;
 }
+.skelTallOnly {
+  display: none;
+}
+
+@media (min-height: 810px) and (min-width: 769px) {
+  .skelTallOnly {
+    display: grid;
+    gap: 16px;
+  }
+}
