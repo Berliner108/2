@@ -17,7 +17,7 @@ export default function AuftraegeLoading() {
         </div>
 
         <ul className={styles.list} aria-hidden>
-          {Array.from({ length: 2 }).map((_, index) => (
+          {Array.from({ length: 4 }).map((_, index) => (
             <li key={index} className={`${styles.card} ${styles.skelCard}`}>
               <div className={styles.cardHeader}>
                 <div className={styles.skelTitle} />
