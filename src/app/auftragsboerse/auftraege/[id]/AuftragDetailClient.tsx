@@ -20,8 +20,7 @@ type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | '
 const NDA_VERSION_LABEL = 'v1';
 const NDA_STAND_LABEL = '29.06.2026';
 
-const NDA_TEXT = `GEHEIMHALTUNGSVEREINBARUNG
-für NDA-pflichtige Aufträge auf der Plattform Beschichter Scout
+const NDA_TEXT = `GEHEIMHALTUNGSVEREINBARUNG für NDA-pflichtige Aufträge auf der Plattform Beschichter Scout
 
 Version: ${NDA_VERSION_LABEL}
 Stand: ${NDA_STAND_LABEL}
@@ -151,7 +150,9 @@ Der Nutzer haftet für sämtliche Schäden, Nachteile, Kosten und Aufwendungen, 
 
 Für jeden schuldhaften Verstoß gegen diese Geheimhaltungsvereinbarung verpflichtet sich der Nutzer zur Zahlung einer Vertragsstrafe in Höhe von EUR 10.000,00.
 
-Die Geltendmachung eines darüberhinausgehenden Schadens bleibt ausdrücklich vorbehalten. Eine bezahlte Vertragsstrafe wird auf einen darüberhinausgehenden Schadenersatzanspruch angerechnet, soweit gesetzlich erforderlich. Die Vertragsstrafe unterliegt, soweit gesetzlich zwingend vorgesehen, einer allfälligen richterlichen Mäßigung.
+Die Vertragsstrafe stellt keine Begrenzung der Haftung dar. Beschichter Scout, der betroffene Auftraggeber und sonstige betroffene Rechteinhaber bleiben berechtigt, einen darüberhinausgehenden Schadenersatz geltend zu machen, insbesondere wenn durch die Verletzung Geschäftsgeheimnisse, technische Unterlagen, Kundendaten, Fertigungsinformationen oder sonstige Informationen von erheblichem wirtschaftlichem Wert offengelegt, verwertet oder entwertet werden.
+
+Eine bezahlte Vertragsstrafe wird auf einen darüberhinausgehenden Schadenersatzanspruch angerechnet, soweit gesetzlich erforderlich. Die Vertragsstrafe unterliegt, soweit gesetzlich zwingend vorgesehen, einer allfälligen richterlichen Mäßigung.
 
 
 14. Sperre und Maßnahmen durch Beschichter Scout
