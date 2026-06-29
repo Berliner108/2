@@ -2,9 +2,14 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background:
+    radial-gradient(circle at top left, rgba(0, 180, 216, 0.12), transparent 34%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4f8 100%);
 }
+
 .page {
   flex: 1;
+  min-height: calc(100dvh - 80px);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -17,12 +22,13 @@
   font-family: "Oswald", Arial, sans-serif;
   box-sizing: border-box;
 }
+
 @media (min-height: 1100px) {
   .page {
-    min-height: 5000px;
-    background-color: green;
+    min-height: calc(100dvh - 80px);
   }
 }
+
 .card {
   position: relative;
   z-index: 2;
@@ -162,7 +168,7 @@
 
 @media (max-width: 560px) {
   .page {
-    min-height: calc(100dvh - 320px);
+    min-height: calc(100dvh - 70px);
     padding: 46px 18px 70px;
   }
 
