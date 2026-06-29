@@ -39,6 +39,7 @@ const allOptions = [
   'Anodisieren',  
   'Strahlen',
   'Entlacken',
+  'Brünieren',
   'Verzinnen',  
   'Aluminieren',
   'Vernickeln',
@@ -94,6 +95,10 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Enteloxieren',
     'Entzinnen',
   ],
+  Brünieren: [
+  'Folieren',
+  'Einlagern',
+],
   Strahlen: [
     'Nasslackieren',
     'Pulverbeschichten',

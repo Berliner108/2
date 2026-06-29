@@ -19,6 +19,25 @@ export const specificationsMap: Record<string, Specification[]> = {
     },
     
   ],
+  Brünieren: [
+  {
+    type: 'radio',
+    name: 'verfahren',
+    label: 'Brünierungsverfahren',
+    options: ['Heißbrünieren', 'Kaltbrünieren', 'Schwarzoxidieren']
+  },
+  {
+    type: 'group',
+    name: 'zertifizierungen',
+    label: 'Zertifizierungen:',
+    tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
+    options: [
+      'ISO 9001',
+      'ISO 14001',
+      'RoHS / REACH'
+    ]
+  }
+],
   Strahlen: [
     
     {

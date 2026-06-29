@@ -776,7 +776,11 @@ const materialienAluminieren = [
   'Nickel',
   'Andere',
 ]
-
+const materialienBruenieren = [
+  'Stahl',
+  'Edelstahl',
+  'Andere',
+]
 const materialienVernickeln = [
   'Aluminium',
   'Aluguss',
@@ -839,7 +843,8 @@ const istAluminieren =
 
 const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
-
+const istBruenieren =
+  selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
 
@@ -852,6 +857,13 @@ const strahlVerfahren =
 
 let materialienAktiv = materialienAlle
 
+if (istBruenieren) {
+  materialienAktiv = materialienBruenieren
+} else if (istEloxieren) {
+  materialienAktiv = materialienEloxieren
+} else if (istAnodisieren) {
+  materialienAktiv = materialienAnodisieren
+}
 if (istEloxieren) {
   materialienAktiv = materialienEloxieren
 } else if (istAnodisieren) {
