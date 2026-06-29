@@ -895,3 +895,13 @@
   from { opacity: 0; transform: translateY(-2px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+.skelTallOnly {
+  display: none;
+}
+
+@media (min-height: 810px) and (min-width: 769px) {
+  .skelTallOnly {
+    display: grid;
+    gap: 16px;
+  }
+}
