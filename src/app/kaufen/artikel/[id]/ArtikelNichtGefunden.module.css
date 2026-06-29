@@ -17,7 +17,11 @@
   font-family: "Oswald", Arial, sans-serif;
   box-sizing: border-box;
 }
-
+@media (min-height: 1100px) {
+  .page {
+    min-height: calc(100dvh - 80px);
+  }
+}
 .card {
   position: relative;
   z-index: 2;
