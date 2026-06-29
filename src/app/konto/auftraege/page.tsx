@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './auftraege.module.css'
 import Navbar from '../../components/navbar/Navbar'
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 
 type Verfahren = { name: string; felder: Record<string, any> }
 type Job = {
@@ -684,7 +684,7 @@ const AuftraegePage: FC = () => {
   }, [sliceA.safePage, pageA])
 
   if (loading && orders.length === 0 && jobs.length === 0) {
-      return <BoerseLoading />
+      return <AuftraegeLoading />
   }    
 
   /* ---------- Actions (Server) ---------- */
