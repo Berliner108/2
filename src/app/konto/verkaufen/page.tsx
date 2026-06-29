@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import styles from './kaufen.module.css'
 import Navbar from '../../components/navbar/Navbar'
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -640,7 +640,7 @@ const filteredSales = useMemo(() => {
     }
 
     if ((mineLoading || salesLoading) && articles.length === 0 && sales.length === 0) {
-      return <BoerseLoading />
+      return <AuftraegeLoading />
     }
 
     return (

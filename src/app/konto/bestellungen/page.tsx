@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
 import styles from './bestellungen.module.css'
 import { useSearchParams, useRouter } from "next/navigation"
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 
 /* ================= Helpers ================= */
 function formatEUR(cents?: number) {
@@ -531,7 +531,7 @@ function ratingTxt(r?: number | null, c?: number | null) {
 }
 
 if (loading && orders.length === 0) {
-  return <BoerseLoading />
+  return <AuftraegeLoading />
 }
 
 return (

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
 import Link from 'next/link'
 import Navbar from '../../components/navbar/Navbar'
-import BoerseLoading from '../../components/loading/BoerseLoading'
+import AuftraegeLoading from '../../components/loading/AuftraegeLoading'
 import styles from './lackangebote.module.css'
 
 
@@ -969,8 +969,8 @@ function readableDisputeReason(reason?: string | null): string {
   )
 
   /* ---------- Ladezustände ---------- */
-  if (isLoading && orders.length === 0) {
-  return <BoerseLoading />
+if (isLoading && orders.length === 0) {
+  return <AuftraegeLoading />
 }
 
   if (error) {
