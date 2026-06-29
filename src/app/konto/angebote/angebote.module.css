@@ -590,12 +590,6 @@
 .segmentedDesktop { display: block; }
 .segmentedMobile  { display: none; margin-top: .75rem; }
 
-/* — Basis — */
-.wrapper {
-  padding: 2rem;
-  max-width: 100%;
-  font-family: 'Oswald';
-}
 
 .heading {
   font-size: 1.5rem;
