@@ -1083,3 +1083,14 @@
     display: none;
   }
 }
+.ndaInlineLink {
+  color: #0369a1;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ndaInlineLink:hover {
+  color: #0c4a6e;
+  text-decoration: none;
+}

@@ -1509,7 +1509,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           href="/rechtliches/geheimhaltungsvereinbarung"
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.infoLink}
+          className={styles.ndaInlineLink}
         >
           ansehen
         </a>
@@ -1534,7 +1534,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     {!customNda && (
       <p>
         Du hast noch keine eigene NDA hinterlegt. Du kannst sie in den{' '}
-        <a href="/konto/einstellungen#nda" className={styles.infoLink}>
+        <a href="/konto/einstellungen#nda" className={styles.ndaInlineLink}>
           Kontoeinstellungen
         </a>{' '}
         hochladen.
