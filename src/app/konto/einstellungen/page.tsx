@@ -772,7 +772,32 @@ useEffect(() => {
 
   return () => obs.disconnect();
 }, [sections, profileLoaded]);
+useEffect(() => {
+  if (!profileLoaded) return;
+  if (typeof window === 'undefined') return;
+  if (window.location.hash !== '#nda') return;
 
+  const scrollToNda = () => {
+    const el = document.getElementById('nda');
+    if (!el) return false;
+
+    setActiveId('nda');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return true;
+  };
+
+  if (scrollToNda()) return;
+
+  const t1 = window.setTimeout(scrollToNda, 100);
+  const t2 = window.setTimeout(scrollToNda, 350);
+  const t3 = window.setTimeout(scrollToNda, 700);
+
+  return () => {
+    window.clearTimeout(t1);
+    window.clearTimeout(t2);
+    window.clearTimeout(t3);
+  };
+}, [profileLoaded, sections]);
 // in page.tsx, oben im Component-Body:
 const scrollToId = (id: string) => {
   const el = document.getElementById(id);
