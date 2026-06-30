@@ -25,6 +25,13 @@ type PreparedUpload = {
   mimeType: string | null
   sizeBytes: number | null
 }
+type CustomNda = {
+  filePath: string
+  fileName: string | null
+  fileSize: number | null
+  uploadedAt: string | null
+  version: string | null
+}
 async function compressImageFile(file: File): Promise<File> {
   // Nur echte Bilder komprimieren
   if (!file.type.startsWith('image/')) {
@@ -307,6 +314,8 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
   const [agbAccepted, setAgbAccepted] = useState(false)
   const [agbError, setAgbError] = useState(false)
   const [ndaRequired, setNdaRequired] = useState(false)
+  const [ndaType, setNdaType] = useState<'standard' | 'custom'>('standard')
+  const [customNda, setCustomNda] = useState<CustomNda | null>(null)
   const agbRef = useRef<HTMLDivElement>(null)
   const bilderRef = useRef<HTMLDivElement>(null)
   const materialRef = useRef<HTMLDivElement>(null)
@@ -349,6 +358,32 @@ const toggleBewerbung = (option: string) => {
     setPhotoPreviews(urls)
     return () => urls.forEach((url) => URL.revokeObjectURL(url))
   }, [photoFiles])
+  useEffect(() => {
+  let alive = true
+
+  async function loadCustomNda() {
+    try {
+      const res = await fetch('/api/profile/nda', { cache: 'no-store' })
+      const json = await res.json().catch(() => ({} as any))
+
+      if (!alive) return
+
+      if (res.ok) {
+        setCustomNda(json.nda ?? null)
+      } else {
+        setCustomNda(null)
+      }
+    } catch {
+      if (alive) setCustomNda(null)
+    }
+  }
+
+  loadCustomNda()
+
+  return () => {
+    alive = false
+  }
+}, [])
 
 // 🔄 Wenn Verfahren 1 wechselt → alle v1__-Spezifikationen löschen
 useEffect(() => {
@@ -480,6 +515,10 @@ if (
   } else {
     setAgbError(false)
   }
+  if (ndaRequired && ndaType === 'custom' && !customNda) {
+  alert('Du hast noch keine eigene NDA in den Kontoeinstellungen hinterlegt.')
+  hasError = true
+}
 
   if (hasError) {
     if (firstErrorRef) {
@@ -503,6 +542,7 @@ const prepareRes = await fetch('/api/auftrag-vorbereiten', {
   body: JSON.stringify({
   agbAccepted,
   ndaRequired,
+  ndaType: ndaRequired ? ndaType : 'standard',
 
   beschreibung: beschreibung.trim(),
 
@@ -1435,7 +1475,14 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             <input
               type="checkbox"
               checked={ndaRequired}
-              onChange={(e) => setNdaRequired(e.target.checked)}
+              onChange={(e) => {
+              const checked = e.target.checked
+              setNdaRequired(checked)
+
+              if (!checked) {
+                setNdaType('standard')
+              }
+            }}
             />
             <span>
               Geheimhaltung für diesen Auftrag aktivieren.
@@ -1443,20 +1490,58 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </motion.label>
 
           {ndaRequired && (
-            <p className={styles.ndaHinweisText}>
-              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.{' '}
-              Bei Verwendung der Plattform-NDA müssen Bieter die{' '}
-              <a
-                href="/rechtliches/geheimhaltungsvereinbarung"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.infoLink}
-              >
-                Beschichter Scout Standard-NDA
-              </a>{' '}
-              akzeptieren.
-            </p>
-          )}
+  <div className={styles.ndaHinweisText}>
+    <p>
+      Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
+    </p>
+
+    <label className={styles.agbLabel}>
+      <input
+        type="radio"
+        name="ndaType"
+        value="standard"
+        checked={ndaType === 'standard'}
+        onChange={() => setNdaType('standard')}
+      />
+      <span>
+        Beschichter-Scout-Standard-NDA verwenden{' '}
+        <a
+          href="/rechtliches/geheimhaltungsvereinbarung"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.infoLink}
+        >
+          ansehen
+        </a>
+      </span>
+    </label>
+
+    <label className={styles.agbLabel}>
+      <input
+        type="radio"
+        name="ndaType"
+        value="custom"
+        checked={ndaType === 'custom'}
+        disabled={!customNda}
+        onChange={() => setNdaType('custom')}
+      />
+      <span>
+        Meine hinterlegte NDA verwenden
+        {customNda?.fileName ? ` (${customNda.fileName})` : ''}
+      </span>
+    </label>
+
+    {!customNda && (
+      <p>
+        Du hast noch keine eigene NDA hinterlegt. Du kannst sie in den{' '}
+        <a href="/konto/einstellungen#nda" className={styles.infoLink}>
+          Kontoeinstellungen
+        </a>{' '}
+        hochladen.
+      </p>
+    )}
+  </div>
+)}
         </div>
 
         <div className={styles.agbContainer} ref={agbRef}>
