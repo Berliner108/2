@@ -447,7 +447,8 @@ const sortierteAuftraege = useMemo(() => {
         {/* CONTENT */}
         <div ref={contentRef} className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {sortierteAuftraege.length} offene Aufträge
+            {sortierteAuftraege.length}{' '}
+            {sortierteAuftraege.length === 1 ? 'offener Auftrag' : 'offene Aufträge'}   
           </h3>
 
 
