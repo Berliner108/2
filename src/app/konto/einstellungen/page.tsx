@@ -84,7 +84,13 @@ type DeleteRequest = {
   created_at: string
   updated_at: string
 }
-
+type CustomNda = {
+  filePath: string
+  fileName: string | null
+  fileSize: number | null
+  uploadedAt: string | null
+  version: string | null
+}
 /* ---------- (NEU) Reviews-Helpers ---------- */
 const HANDLE_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]{1,30}[A-Za-z0-9])?$/
 const looksLikeHandle = (s?: string | null) => !!(s && HANDLE_RE.test(s.trim()))
@@ -98,7 +104,15 @@ function mapPwError(msg?: string) {
   if (/invalid/.test(m)) return 'Ungültiges Passwort.'
   return msg || 'Passwort konnte nicht geändert werden.'
 }
+function formatFileSize(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB'
 
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
 /* ---------- Toast ---------- */
 const Toast: FC<{ toast: ToastState; onClose: () => void }> = ({ toast, onClose }) => {
   const palette = useMemo(() => {
@@ -185,6 +199,10 @@ const [imprintRegisterCourt, setImprintRegisterCourt] = useState('')
 const [imprintChamber, setImprintChamber] = useState('')
 const [imprintSupervisoryAuthority, setImprintSupervisoryAuthority] = useState('')
 
+const [customNda, setCustomNda] = useState<CustomNda | null>(null)
+const [ndaUploading, setNdaUploading] = useState(false)
+const ndaFileRef = useRef<HTMLInputElement | null>(null)
+
   // Passwort ändern
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -203,7 +221,21 @@ const [imprintSupervisoryAuthority, setImprintSupervisoryAuthority] = useState('
 const [invPage, setInvPage] = useState<number>(1)
 const [invHasMore, setInvHasMore] = useState<boolean>(false)
 const [invTotal, setInvTotal] = useState<number | null>(null)
+const loadCustomNda = async () => {
+  try {
+    const res = await fetch('/api/profile/nda', { cache: 'no-store' })
+    const json = await res.json().catch(() => ({} as any))
 
+    if (!res.ok) {
+      setCustomNda(null)
+      return
+    }
+
+    setCustomNda(json.nda ?? null)
+  } catch {
+    setCustomNda(null)
+  }
+}
   // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
     ;(async () => {
@@ -254,7 +286,8 @@ const [invTotal, setInvTotal] = useState<number | null>(null)
         setInviteLink(`${origin}/registrieren?invited_by=${j.id}`)
 
         loadInvites(1)
-        await loadDeleteRequest()   // 👈 HIER NEU
+                await loadDeleteRequest()
+        await loadCustomNda()
         setProfileLoaded(true)
       } catch {
         setToast({ type: 'error', message: 'Fehler beim Laden des Profils.' })
@@ -456,6 +489,58 @@ const handleSaveKonto = async () => {
   }
 }
 
+    const handleUploadCustomNda = async (file: File | null) => {
+  if (!file) return
+
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    setToast({ type: 'error', message: 'Bitte lade deine NDA als PDF hoch.' })
+    return
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    setToast({ type: 'error', message: 'Die NDA-Datei darf maximal 10 MB groß sein.' })
+    return
+  }
+
+  setNdaUploading(true)
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await fetch('/api/profile/nda', {
+      method: 'POST',
+      body: formData,
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (!res.ok) {
+      const msg =
+        json?.error === 'only_business_users_can_upload_nda'
+          ? 'Nur gewerbliche Nutzer können eine eigene NDA hinterlegen.'
+          : json?.error === 'invalid_file_type'
+            ? 'Bitte lade deine NDA als PDF hoch.'
+            : json?.error === 'file_too_large'
+              ? 'Die NDA-Datei darf maximal 10 MB groß sein.'
+              : 'NDA konnte nicht hochgeladen werden.'
+
+      setToast({ type: 'error', message: msg })
+      return
+    }
+
+    setCustomNda(json.nda ?? null)
+    setToast({ type: 'success', message: 'Eigene NDA wurde gespeichert.' })
+
+    if (ndaFileRef.current) {
+      ndaFileRef.current.value = ''
+    }
+  } catch {
+    setToast({ type: 'error', message: 'Fehler beim Hochladen der NDA.' })
+  } finally {
+    setNdaUploading(false)
+  }
+}
 const handleSaveImpressum = async () => {
   try {
     if (isPrivatePerson) {
@@ -646,7 +731,10 @@ const sections = useMemo(() => [
   { id: 'profil', label: 'Profil' },
   { id: 'konto', label: 'Kontoart & Anschrift' },
   ...(!isPrivatePerson
-    ? [{ id: 'impressum', label: 'Verkäufer-Impressum' }]
+    ? [
+        { id: 'impressum', label: 'Verkäufer-Impressum' },
+        { id: 'nda', label: 'Eigene NDA' },
+      ]
     : []),
   { id: 'passwort', label: 'Passwort' },
   { id: 'bewertungen', label: 'Bewertungen' },
@@ -1141,6 +1229,65 @@ const canSaveImpressum = useMemo(() => {
   </small>
 )}
       </div>
+    </form>
+  </div>
+)}
+{!isPrivatePerson && (
+  <div id="nda" className={styles.kontoContainer}>
+    <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
+      <h3 className={styles.subSectionTitle}>Eigene Geheimhaltungsvereinbarung</h3>
+
+      <p className={styles.description} style={{ marginTop: 0 }}>
+        Hier kannst du deine aktuelle eigene NDA als PDF hinterlegen. Beim Erstellen
+        eines neuen NDA-pflichtigen Auftrags kannst du diese Vorlage verwenden.
+        Bereits veröffentlichte Aufträge bleiben später unverändert.
+      </p>
+
+      {customNda ? (
+        <div className={styles.inputGroup}>
+          <label>Aktuell hinterlegte NDA</label>
+          <div className={styles.inputReadonly}>
+            {customNda.fileName || 'current.pdf'}
+            {typeof customNda.fileSize === 'number' && (
+              <> · {formatFileSize(customNda.fileSize)}</>
+            )}
+            {customNda.uploadedAt && (
+              <> · hochgeladen am {new Date(customNda.uploadedAt).toLocaleDateString('de-DE')}</>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className={styles.description}>
+          Es ist noch keine eigene NDA hinterlegt.
+        </p>
+      )}
+
+      <div className={styles.inputGroup}>
+        <label htmlFor="customNdaUpload">
+          {customNda ? 'Eigene NDA ersetzen' : 'Eigene NDA hochladen'}
+        </label>
+
+        <input
+          ref={ndaFileRef}
+          id="customNdaUpload"
+          type="file"
+          accept="application/pdf,.pdf"
+          className={styles.input}
+          disabled={ndaUploading}
+          onChange={(e) => handleUploadCustomNda(e.target.files?.[0] ?? null)}
+        />
+
+        <small style={{ color: '#6b7280' }}>
+          Erlaubt ist nur PDF bis maximal 10 MB. Ein neuer Upload ersetzt deine
+          aktuell hinterlegte NDA-Vorlage.
+        </small>
+      </div>
+
+      {ndaUploading && (
+        <p className={styles.description}>
+          NDA wird hochgeladen …
+        </p>
+      )}
     </form>
   </div>
 )}

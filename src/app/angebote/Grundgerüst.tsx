@@ -1444,7 +1444,17 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 
           {ndaRequired && (
             <p className={styles.ndaHinweisText}>
-              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
+              Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.{' '}
+              Bei Verwendung der Plattform-NDA müssen Bieter die{' '}
+              <a
+                href="/rechtliches/geheimhaltungsvereinbarung"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.infoLink}
+              >
+                Beschichter Scout Standard-NDA
+              </a>{' '}
+              akzeptieren.
             </p>
           )}
         </div>

@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap');
+
+.page {
+  min-height: calc(100vh - 80px);
+  padding: 48px 20px 80px;
+  background:
+    radial-gradient(circle at top left, rgba(0, 180, 216, 0.12), transparent 34%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4f8 100%);
+  font-family: var(--font-oswald), 'Oswald', Arial, sans-serif;
+  color: #0f172a;
+}
+
+.card {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 30px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 180, 216, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #00a0c3;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+  color: #111827;
+}
+
+.header p:not(.eyebrow) {
+  max-width: 760px;
+  margin: 14px auto 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.textBox {
+  max-height: none;
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #f8fafc;
+  text-align: left;
+}
+
+.legalText {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 28px 14px 56px;
+  }
+
+  .card {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .textBox {
+    padding: 16px;
+  }
+
+  .legalText {
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+}
