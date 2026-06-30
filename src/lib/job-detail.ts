@@ -29,9 +29,13 @@ type JobRow = {
   serien_rhythmus: string | null
   serien_termine: any[] | null
 
-  nda_required: boolean | null
+    nda_required: boolean | null
   nda_type: string | null
   nda_version: string | null
+  nda_file_bucket: string | null
+  nda_file_path: string | null
+  nda_file_name: string | null
+  nda_file_size: number | null
 }
 
 type ProfileRow = {
@@ -85,7 +89,11 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
       serien_termine,
       nda_required,
       nda_type,
-      nda_version
+      nda_version,
+      nda_file_bucket,
+      nda_file_path,
+      nda_file_name,
+      nda_file_size
     `)
     .eq('id', jobId)
     .single()
@@ -271,5 +279,9 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
     ndaLocked,
     ndaType: j.nda_type ?? 'standard',
     ndaVersion: j.nda_version ?? 'v1',
+    ndaFileBucket: j.nda_file_bucket ?? null,
+    ndaFilePath: j.nda_file_path ?? null,
+    ndaFileName: j.nda_file_name ?? null,
+    ndaFileSize: j.nda_file_size ?? null,
   } as Auftrag
 }

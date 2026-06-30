@@ -799,7 +799,16 @@ const serienTermine = Array.isArray((auftrag as any).serien_termine)
   ? (auftrag as any).serien_termine
   : [];
 
-  const handleAcceptNda = async () => {
+const ndaType = String((auftrag as any).ndaType ?? (auftrag as any).nda_type ?? 'standard');
+const isCustomNda = ndaType === 'custom';
+
+const customNdaName =
+  String((auftrag as any).ndaFileName ?? (auftrag as any).nda_file_name ?? '').trim() ||
+  'Geheimhaltungsvereinbarung des Auftraggebers.pdf';
+
+const customNdaHref = `/api/jobs/${encodeURIComponent(String(auftrag.id))}/nda/document`;
+
+const handleAcceptNda = async () => {
     if (!ndaChecked) {
   toastError('Bitte bestätige zuerst, dass du die Geheimhaltungsvereinbarung gelesen und akzeptiert hast.');
   return;
@@ -845,14 +854,40 @@ if ((auftrag as any).ndaLocked) {
           <p className={styles.preserveNewlines}>
             Dieser Auftrag enthält vertrauliche Informationen. Um die vollständige Detailansicht,
             Bilder, Dateien und technischen Angaben zu sehen, musst du zuerst die
-            Geheimhaltungsvereinbarung lesen und akzeptieren.
+            {isCustomNda
+              ? ' vom Auftraggeber bereitgestellte Geheimhaltungsvereinbarung'
+              : ' Geheimhaltungsvereinbarung'}
+            {' '}lesen und akzeptieren.
           </p>
 
-          <div className={styles.ndaTextBox}>
-            <pre className={styles.ndaLegalText}>{NDA_TEXT}</pre>
-          </div>
+          {isCustomNda ? (
+  <div className={styles.ndaTextBox}>
+    <h2>Geheimhaltungsvereinbarung des Auftraggebers</h2>
 
-          <label className={styles.ndaCheckboxRow}>
+    <p>
+      Für diesen Auftrag gilt eine vom Auftraggeber bereitgestellte
+      Geheimhaltungsvereinbarung. Bitte öffne und lies das Dokument, bevor du
+      die Vereinbarung akzeptierst.
+    </p>
+
+    <p>
+      <a
+        href={customNdaHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.downloadLink}
+      >
+        <FaFilePdf className={styles.fileIcon} />
+        {customNdaName}
+      </a>
+    </p>
+  </div>
+) : (
+  <div className={styles.ndaTextBox}>
+    <pre className={styles.ndaLegalText}>{NDA_TEXT}</pre>
+  </div>
+)}
+<label className={styles.ndaCheckboxRow}>
             <input
               type="checkbox"
               checked={ndaChecked}
@@ -860,7 +895,9 @@ if ((auftrag as any).ndaLocked) {
               disabled={loading}
             />
             <span>
-              Ich habe die Geheimhaltungsvereinbarung gelesen und akzeptiere sie verbindlich.
+              {isCustomNda
+                ? 'Ich habe die vom Auftraggeber bereitgestellte Geheimhaltungsvereinbarung gelesen und akzeptiere sie verbindlich.'
+                : 'Ich habe die Geheimhaltungsvereinbarung gelesen und akzeptiere sie verbindlich.'}
             </span>
           </label>
 
