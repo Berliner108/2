@@ -307,12 +307,21 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                 className={styles.inputField2}
                 value={value}
                 maxLength={maxLen} // 👈 Begrenzung greift hier
-                onChange={(e) =>
-                  setSpecSelections((prev) => ({
-                    ...prev,
-                    [selectionKey]: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+
+                  setSpecSelections((prev) => {
+                    const next = { ...prev };
+
+                    if (nextValue.trim()) {
+                      next[selectionKey] = nextValue;
+                    } else {
+                      delete next[selectionKey];
+                    }
+
+                    return next;
+                  });
+                }}
               />
 
               {spec.showCounter && (
@@ -334,12 +343,21 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               <select
                 className={styles.inputField2}
                 value={currentValue}
-                onChange={(e) =>
-                  setSpecSelections((prev) => ({
-                    ...prev,
-                    [selectionKey]: e.target.value,
-                  }))
-                }
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+
+                  setSpecSelections((prev) => {
+                    const next = { ...prev };
+
+                    if (nextValue.trim()) {
+                      next[selectionKey] = nextValue;
+                    } else {
+                      delete next[selectionKey];
+                    }
+
+                    return next;
+                  });
+                }}
               >
                 <option value="">Bitte wählen</option>
                 {spec.options?.map((opt) => (
@@ -378,10 +396,17 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                         value={opt}
                         checked={specSelections[selectionKey] === opt}
                         onChange={() =>
-                          setSpecSelections((prev) => ({
-                            ...prev,
-                            [selectionKey]: opt,
-                          }))
+                          setSpecSelections((prev) => {
+                            const next = { ...prev };
+
+                            if (String(opt ?? '').trim()) {
+                              next[selectionKey] = opt;
+                            } else {
+                              delete next[selectionKey];
+                            }
+
+                            return next;
+                          })
                         }
                       />
                       {opt}
@@ -432,10 +457,17 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                             : selectedValues.filter(
                                 (val: string) => val !== opt,
                               );
-                          setSpecSelections((prev) => ({
-                            ...prev,
-                            [selectionKey]: updated,
-                          }));
+                          setSpecSelections((prev) => {
+                            const next = { ...prev };
+
+                            if (updated.length > 0) {
+                              next[selectionKey] = updated;
+                            } else {
+                              delete next[selectionKey];
+                            }
+
+                            return next;
+                          });
                         }}
                       />
                       {opt}
