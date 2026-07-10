@@ -209,7 +209,7 @@ export default function Page() {
       try {
         setLoadingAuftraege(true);
         // ✅ neuer, schneller Endpoint (Route: /api/auftraege/top)
-        const res = await fetch('/api/auftraege/top', { cache: 'no-store' });
+        const res = await fetch('/api/auftraege/top')
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = (await res.json()) as Auftrag[];
         if (!active) return;
@@ -237,9 +237,9 @@ export default function Page() {
     const fetchLack = async () => {
       try {
         setLoadingLack(true);
-        const res = await fetch('/api/lackanfragen?sort=promo&order=desc&page=1&limit=12', {
-          cache: 'no-store',
-        });
+        const res = await fetch(
+        '/api/lackanfragen?sort=promo&order=desc&page=1&limit=12'
+        );
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const json = await res.json();
@@ -344,9 +344,7 @@ useEffect(() => {
       // ✅ IMMER Top 12 – unabhängig von gesponsert
       // ✅ gleiche API wie die Shopseite
 // ✅ Sortierung kommt aus /api/articles/route.ts
-const res = await fetch(`/api/articles?limit=200&offset=0`, {
-  cache: "no-store",
-});
+const res = await fetch('/api/articles?limit=200&offset=0');
 
 if (!res.ok) throw new Error("HTTP " + res.status);
 
@@ -398,9 +396,9 @@ const mapped: ShopArtikel[] = top12.map((a) => ({
   };
 
   // ✅ Skeleton nur, wenn Laden wirklich dauert (kein Flash)
-  const showSkeletonAuftraege = useMinimumSkeleton(loadingAuftraege, 220);
-const showSkeletonShop = useMinimumSkeleton(loadingShop, 220);
-const showSkeletonLack = useMinimumSkeleton(loadingLack, 220);
+const showSkeletonAuftraege = loadingAuftraege
+const showSkeletonShop = loadingShop
+const showSkeletonLack = loadingLack
 
   return (
     <>

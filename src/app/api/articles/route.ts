@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -253,9 +253,14 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(
-      { articles: [...sponsored, ...rest], limit, offset },
-      { status: 200 }
-    );
+  { articles: [...sponsored, ...rest], limit, offset },
+  {
+    status: 200,
+    headers: {
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    },
+  }
+);
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message ?? "Unknown error" },

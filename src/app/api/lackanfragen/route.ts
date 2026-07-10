@@ -384,12 +384,23 @@ const normalizeZustandForDb = (value: string) => {
       }
     })
 
-    return NextResponse.json({
-      items,
-      total: total ?? 0,
-      page,
-      limit,
-    })
+    const response = NextResponse.json({
+  items,
+  total: total ?? 0,
+  page,
+  limit,
+})
+
+if (!includeUnpublished) {
+  response.headers.set(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=600'
+  )
+} else {
+  response.headers.set('Cache-Control', 'private, no-store')
+}
+
+return response
   } catch (e: any) {
     console.error('[lackanfragen] GET crashed:', e)
     return NextResponse.json(
