@@ -94,7 +94,7 @@ i) jeden unbefugten Zugriff, Verlust oder Verdacht auf Missbrauch unverzüglich 
 
 6. Verbot der Plattformumgehung
 
-Der Nutzer darf vertrauliche Informationen nicht dazu verwenden, den Auftraggeber außerhalb von Beschichter Scout direkt zu kontaktieren, den Auftrag außerhalb von Beschichter Scout abzuwickeln oder eine sonstige Umgehung der Plattform herbeizuführen.
+Der Nutzer darf vertrauliche, auf der Plattform bereitgestellte Informationen nicht dazu verwenden, den Auftraggeber außerhalb von Beschichter Scout direkt zu kontaktieren, den Auftrag außerhalb von Beschichter Scout abzuwickeln oder eine sonstige Umgehung der Plattform herbeizuführen.
 
 Dies gilt insbesondere, wenn der Kontakt, das Projekt, die technischen Unterlagen oder die geschäftliche Möglichkeit erst durch die Einsicht in den NDA-pflichtigen Auftrag über Beschichter Scout bekannt geworden sind.
 
@@ -171,7 +171,7 @@ Die Geheimhaltungspflichten gelten für einen Zeitraum von fünf Jahren ab der l
 Soweit die vertraulichen Informationen Geschäftsgeheimnisse, technische Zeichnungen, Rezepturen, Fertigungsparameter, Konstruktionsdaten, Kundendaten, Lieferantendaten, Preis- oder Kalkulationsgrundlagen oder sonstige nicht öffentlich bekannte Informationen von wirtschaftlichem Wert enthalten, bestehen die Geheimhaltungspflichten darüber hinaus so lange fort, wie diese Informationen nicht allgemein bekannt oder rechtmäßig öffentlich zugänglich geworden sind.
 
 
-13. Folgen einer Verletzung
+13. Konventionalstrafe
 
 Verstößt der Nutzer schuldhaft gegen diese Geheimhaltungsvereinbarung, insbesondere durch unbefugte Weitergabe, Veröffentlichung, Nutzung außerhalb des vorgesehenen Zwecks, Speicherung, Vervielfältigung, Weiterleitung oder Plattformumgehung, ist er verpflichtet, die Verletzung unverzüglich einzustellen.
 
