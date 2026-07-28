@@ -1782,34 +1782,34 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </AnimatePresence>
         </div>
                 <div className={styles.standardHinweisZeile}>
-          <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
-            Hinweise zur Auftragsvergabe findest du hier.
-          </a>
-        </div>
+  <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
+    Hinweise zur Auftragsvergabe findest du hier.
+  </a>
+</div>
 
-        <p className={styles.prioritaetHinweis}>
-          Bei abweichenden Angaben gelten für Lieferung, Abholung und Termine die Angaben
-          im Logistikbereich. Für technische Angaben zählt zuerst die Beschreibung,
-          danach die Verfahrensangaben, danach Dateien und zuletzt Fotos.
-        </p>
+<div style={{ textAlign: 'center' }}>
+  <button
+    type="submit"
+    className={styles.absendenButton}
+    disabled={isLoading || bilderWerdenOptimiert}
+  >
+    {bilderWerdenOptimiert
+      ? 'Bilder werden optimiert…'
+      : isLoading
+        ? 'Bitte warten…'
+        : 'Jetzt Angebote einholen'}
+  </button>
 
-        <div style={{ textAlign: 'center' }}>
-          <button
-            type="submit"
-  className={styles.absendenButton}
-  disabled={isLoading || bilderWerdenOptimiert}
->
-  {bilderWerdenOptimiert
-  ? 'Bilder werden optimiert…'
-  : isLoading
-    ? 'Bitte warten…'
-    : 'Jetzt Angebote einholen'}
-</button>
+  <p className={styles.prioritaetHinweis}>
+    Bei abweichenden Angaben gelten für Lieferung, Abholung und Termine die Angaben
+    im Logistikbereich. Für technische Angaben zählt zuerst die Beschreibung,
+    danach die Verfahrensangaben, danach Dateien und zuletzt Fotos.
+  </p>
 
-          {successMessage && (
-            <p className={styles.erfolg}>{successMessage}</p>
-          )}
-        </div>
+  {successMessage && (
+    <p className={styles.erfolg}>{successMessage}</p>
+  )}
+</div>
 
         {/* 🔹 NEU: Alle Eingaben zurücksetzen */}
         <div className={styles.resetRow}>
