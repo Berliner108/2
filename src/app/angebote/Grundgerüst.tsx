@@ -363,25 +363,38 @@ const toggleBewerbung = (option: string) => {
 
   async function loadCustomNda() {
     try {
-      const res = await fetch('/api/profile/nda', { cache: 'no-store' })
-      const json = await res.json().catch(() => ({} as any))
+      const res = await fetch('/api/profile/nda', {
+        cache: 'no-store',
+      })
+
+      const json = await res.json().catch(() => ({}))
 
       if (!alive) return
 
-      if (res.ok) {
-        setCustomNda(json.nda ?? null)
-      } else {
-        setCustomNda(null)
-      }
+      setCustomNda(res.ok ? json.nda ?? null : null)
     } catch {
       if (alive) setCustomNda(null)
     }
   }
 
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      loadCustomNda()
+    }
+  }
+
   loadCustomNda()
+
+  window.addEventListener('focus', loadCustomNda)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   return () => {
     alive = false
+    window.removeEventListener('focus', loadCustomNda)
+    document.removeEventListener(
+      'visibilitychange',
+      handleVisibilityChange,
+    )
   }
 }, [])
 
@@ -1542,7 +1555,12 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     {!customNda && (
       <p>
         Du hast noch keine eigene NDA hinterlegt. Du kannst sie in den{' '}
-        <a href="/konto/einstellungen#nda" className={styles.ndaInlineLink}>
+        <a
+          href="/konto/einstellungen#nda"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.ndaInlineLink}
+        >
           Kontoeinstellungen
         </a>{' '}
         hochladen.
