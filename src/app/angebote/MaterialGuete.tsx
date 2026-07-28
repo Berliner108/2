@@ -183,15 +183,20 @@ export default function MaterialGuete({
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={5}
-                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]{0,1}"
+                maxLength={7}
+                onKeyDown={handleDecimalKeyDown}
                 value={laenge}
-                onChange={(e) => setLaenge(sanitizePositiveInt(e.target.value, 5))}
+                onChange={(e) => setLaenge(sanitizePositiveDecimal(e.target.value, 5, 1))}
+                onBlur={() => {
+                  if (!isPositiveDecimal(laenge)) {
+                    setLaenge("")
+                  }
+                }}
                 onPaste={(e) => {
                   e.preventDefault()
-                  setLaenge(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                  setLaenge(sanitizePositiveDecimal(e.clipboardData.getData("text"), 5, 1))
                 }}
                 className={`${styles.inputField} ${
                   abmessungError && !laenge ? styles.inputError : ""
@@ -210,15 +215,20 @@ export default function MaterialGuete({
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={5}
-                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]{0,1}"
+                maxLength={7}
+                onKeyDown={handleDecimalKeyDown}
                 value={breite}
-                onChange={(e) => setBreite(sanitizePositiveInt(e.target.value, 5))}
+                onChange={(e) => setBreite(sanitizePositiveDecimal(e.target.value, 5, 1))}
+                onBlur={() => {
+                  if (!isPositiveDecimal(breite)) {
+                    setBreite("")
+                  }
+                }}
                 onPaste={(e) => {
                   e.preventDefault()
-                  setBreite(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                  setBreite(sanitizePositiveDecimal(e.clipboardData.getData("text"), 5, 1))
                 }}
                 className={`${styles.inputField} ${
                   abmessungError && !breite ? styles.inputError : ""
@@ -237,15 +247,20 @@ export default function MaterialGuete({
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={5}
-                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]{0,1}"
+                maxLength={7}
+                onKeyDown={handleDecimalKeyDown}
                 value={hoehe}
-                onChange={(e) => setHoehe(sanitizePositiveInt(e.target.value, 5))}
+                onChange={(e) => setHoehe(sanitizePositiveDecimal(e.target.value, 5, 1))}
+                onBlur={() => {
+                  if (!isPositiveDecimal(hoehe)) {
+                    setHoehe("")
+                  }
+                }}
                 onPaste={(e) => {
                   e.preventDefault()
-                  setHoehe(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                  setHoehe(sanitizePositiveDecimal(e.clipboardData.getData("text"), 5, 1))
                 }}
                 className={`${styles.inputField} ${
                   abmessungError && !hoehe ? styles.inputError : ""
