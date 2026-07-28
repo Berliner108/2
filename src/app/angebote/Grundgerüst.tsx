@@ -1801,10 +1801,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   </button>
 
   <p className={styles.prioritaetHinweis}>
-    Bei abweichenden Angaben gelten für Lieferung, Abholung und Termine die Angaben
-    im Logistikbereich. Für technische Angaben zählt zuerst die Beschreibung,
-    danach die Verfahrensangaben, danach Dateien und zuletzt Fotos.
-  </p>
+  Falls Angaben voneinander abweichen, zählt bei logistischen Themen zuerst die
+  Beschreibung, danach der Logistikbereich und danach die hochgeladenen
+  Unterlagen. Bei technischen Themen zählt zuerst die Beschreibung, danach die
+  Verfahrensangaben, danach Dateien und zuletzt Fotos.
+</p>
 
   {successMessage && (
     <p className={styles.erfolg}>{successMessage}</p>
