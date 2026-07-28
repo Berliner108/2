@@ -1324,7 +1324,10 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 </div>
 
 <div className={styles.dividerLine} />
-
+<p className={styles.formularPrioritaetHinweis}>
+  Wichtig: Wenn Angaben voneinander abweichen, gilt zuerst deine Beschreibung,
+  danach die Verfahrensangaben, danach hochgeladene Dateien und zuletzt Fotos.
+</p>
 <div ref={beschreibungRef}>
 <BeschreibungsBox
   text={beschreibung}

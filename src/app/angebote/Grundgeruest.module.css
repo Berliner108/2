@@ -33,6 +33,18 @@
   line-height: 1.5;
   text-align: center;
 }
+.formularPrioritaetHinweis {
+  max-width: 760px;
+  margin: 0 auto 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  background: #f0f9ff;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
 .oswaldTextarea {
   width: 98%;
   font-family: 'Oswald', sans-serif;
