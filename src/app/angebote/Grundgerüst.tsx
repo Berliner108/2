@@ -1324,10 +1324,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 </div>
 
 <div className={styles.dividerLine} />
-<p className={styles.formularPrioritaetHinweis}>
-  Wichtig: Wenn Angaben voneinander abweichen, gilt zuerst deine Beschreibung,
-  danach die Verfahrensangaben, danach hochgeladene Dateien und zuletzt Fotos.
-</p>
+
 <div ref={beschreibungRef}>
 <BeschreibungsBox
   text={beschreibung}
@@ -1784,15 +1781,21 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             )}
           </AnimatePresence>
         </div>
-        <div className={styles.standardHinweisZeile}>
-  <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
-  Hinweise zur Auftragsvergabe findest du hier.
-</a>
-</div>
+                <div className={styles.standardHinweisZeile}>
+          <a href="/wissenswertes#standardablauf" className={styles.standardHinweisLink}>
+            Hinweise zur Auftragsvergabe findest du hier.
+          </a>
+        </div>
 
-                <div style={{ textAlign: 'center' }}>
+        <p className={styles.prioritaetHinweis}>
+          Bei abweichenden Angaben gelten für Lieferung, Abholung und Termine die Angaben
+          im Logistikbereich. Für technische Angaben zählt zuerst die Beschreibung,
+          danach die Verfahrensangaben, danach Dateien und zuletzt Fotos.
+        </p>
+
+        <div style={{ textAlign: 'center' }}>
           <button
-  type="submit"
+            type="submit"
   className={styles.absendenButton}
   disabled={isLoading || bilderWerdenOptimiert}
 >
