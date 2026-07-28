@@ -32,12 +32,51 @@ const sanitizePositiveInt = (raw: string, maxDigits: number) => {
 
   return noLeadingZeros
 }
+const sanitizePositiveDecimal = (
+  raw: string,
+  maxIntegerDigits: number,
+  maxDecimalDigits = 2,
+) => {
+  const separator = raw.includes(",") ? "," : "."
+  const normalized = raw.replace(/[^0-9.,]/g, "")
+  const firstSeparatorIndex = normalized.search(/[.,]/)
 
+  const value =
+    firstSeparatorIndex === -1
+      ? normalized
+      : normalized.slice(0, firstSeparatorIndex + 1) +
+        normalized.slice(firstSeparatorIndex + 1).replace(/[.,]/g, "")
+
+  const [integerRaw = "", decimalRaw = ""] = value.split(/[.,]/)
+  const integerPart = integerRaw
+    .replace(/^0+(?=\d)/, "")
+    .slice(0, maxIntegerDigits)
+  const decimalPart = decimalRaw.slice(0, maxDecimalDigits)
+
+  if (!integerPart && !decimalPart) return ""
+
+  if (Number(integerPart || "0") === 0 && Number(decimalPart || "0") === 0) {
+    return firstSeparatorIndex !== -1 ? `0${separator}` : ""
+  }
+
+  if (firstSeparatorIndex !== -1) {
+    return `${integerPart || "0"}${separator}${decimalPart}`
+  }
+
+  return integerPart
+}
 const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
   if (['e', 'E', '+', '-', '.'].includes(e.key)) {
     e.preventDefault()
   }
 }
+const handleDecimalKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+  if (['e', 'E', '+', '-'].includes(e.key)) {
+    e.preventDefault()
+  }
+}
+
+const isPositiveDecimal = (value: string) => Number(value.replace(",", ".")) > 0
 
 export default function MaterialGuete({
   materialGuete,
@@ -225,15 +264,20 @@ export default function MaterialGuete({
             <div className={styles.inputWithUnit}>
               <input
                 type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={5}
-                onKeyDown={handleKeyDown}
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]{0,2}"
+                maxLength={8}
+                onKeyDown={handleDecimalKeyDown}
                 value={masse}
-                onChange={(e) => setMasse(sanitizePositiveInt(e.target.value, 5))}
+                onChange={(e) => setMasse(sanitizePositiveDecimal(e.target.value, 5, 2))}
+                onBlur={() => {
+                  if (!isPositiveDecimal(masse)) {
+                    setMasse("")
+                  }
+                }}
                 onPaste={(e) => {
                   e.preventDefault()
-                  setMasse(sanitizePositiveInt(e.clipboardData.getData("text"), 5))
+                  setMasse(sanitizePositiveDecimal(e.clipboardData.getData("text"), 5, 2))
                 }}
                 className={`${styles.inputField} ${
                   abmessungError && !masse ? styles.inputError : ""
