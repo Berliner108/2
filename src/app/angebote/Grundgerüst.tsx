@@ -441,7 +441,7 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
 
   // 1️⃣ BILDER
   if (photoFiles.length === 0) {
-    setWarnungBilder('Bitte lade mindestens ein Foto des Werkstücks hoch, damit Anbieter Form, Zustand und Aufwand einschätzen können.')
+    setWarnungBilder('Bitte lade mindestens ein Bild des Werkstücks hoch. Falls du kein Foto hast, reicht auch ein Screenshot der Zeichnung oder eine einfache Skizze.')
     if (!firstErrorRef) firstErrorRef = bilderRef
     hasError = true
   } else {
@@ -1193,16 +1193,16 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </div>
 
           <p className={styles.uploadHinweis}>
-            Mindestens ein Foto ist erforderlich, damit Anbieter Form, Zustand und Aufwand
-            besser einschätzen können. Zeichnungen oder PDFs kannst du zusätzlich unten
-            hochladen.
+            Mindestens ein Bild ist erforderlich, damit Anbieter Form, Zustand und Aufwand
+            besser einschätzen können. Falls du kein Foto hast, reicht auch ein
+            Screenshot der Zeichnung oder eine einfache Skizze.
           </p>
 
           <div ref={bilderRef}>
             
             {/* Dropzone für Bilder */}
             <Dropzone
-              label="Bilder hierher ziehen oder klicken"
+              label="Bild, Screenshot oder Skizze hierher ziehen oder klicken"
               accept="image/*"
               maxFiles={8}
               files={photoFiles}
