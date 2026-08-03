@@ -94,10 +94,7 @@ i) jeden unbefugten Zugriff, Verlust oder Verdacht auf Missbrauch unverzüglich 
 
 6. Verbot der Plattformumgehung
 
-Der Nutzer darf vertrauliche, auf der Plattform bereitgestellte Informationen nicht dazu verwenden, den Auftraggeber außerhalb von Beschichter Scout direkt zu kontaktieren, den Auftrag außerhalb von Beschichter Scout abzuwickeln oder eine sonstige Umgehung der Plattform herbeizuführen.
-
-Dies gilt insbesondere, wenn der Kontakt, das Projekt, die technischen Unterlagen oder die geschäftliche Möglichkeit erst durch die Einsicht in den NDA-pflichtigen Auftrag über Beschichter Scout bekannt geworden sind.
-
+Der Nutzer darf vertrauliche Informationen, die ihm durch einen NDA-pflichtigen Auftrag zugänglich werden, nicht dazu verwenden, den Auftraggeber ohne dessen ausdrückliche Zustimmung außerhalb von Beschichter Scout zu kontaktieren, den konkreten Auftrag unter Umgehung von Beschichter Scout anzubahnen oder abzuwickeln oder eine sonstige Umgehung der Plattform herbeizuführen.
 
 7. Begrenzung des Empfängerkreises
 

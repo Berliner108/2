@@ -91,6 +91,31 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     }
   ],
+  Zinkphosphatieren: [
+  {
+    type: 'text',
+    name: 'schichtgewicht',
+    label: 'Schichtgewicht (g/m²)',
+    maxLength: 20
+  },
+  {
+    type: 'radio',
+    name: 'nachbehandlung',
+    label: 'Nachbehandlung:',
+    options: ['Keine', 'Geölt', 'Versiegelt']
+  },
+  {
+    type: 'group',
+    name: 'zertifizierungen',
+    label: 'Zertifizierungen:',
+    tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
+    options: [
+      'ISO 9001',
+      'ISO 14001',
+      'RoHS / REACH'
+    ]
+  }
+],
   Vernickeln: [
     {
       type: 'radio',

@@ -768,6 +768,11 @@ const materialienVerzinken = [
   'Stahl',
   'Andere',
 ]
+const materialienZinkphosphatieren = [
+  'Stahl',
+  'Zink',
+  'Andere',
+]
 const materialienEloxieren = [
   'Aluminium',
   'Aluguss',
@@ -900,6 +905,9 @@ const istBruenieren =
   selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
+const istZinkphosphatieren =
+  selectedOption1 === 'Zinkphosphatieren' ||
+  selectedOption2 === 'Zinkphosphatieren'
 
 const strahlVerfahrenRaw =
   specSelections['v1__Strahlen__verfahren'] ||
@@ -917,7 +925,9 @@ if (istBruenieren) {
 } else if (istAnodisieren) {
   materialienAktiv = materialienAnodisieren
 }
-if (istEloxieren) {
+if (istZinkphosphatieren) {
+  materialienAktiv = materialienZinkphosphatieren
+} else if (istEloxieren) {
   materialienAktiv = materialienEloxieren
 } else if (istAnodisieren) {
   materialienAktiv = materialienAnodisieren
