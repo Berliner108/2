@@ -216,7 +216,20 @@ const labelWarenrueckgabeArt = (v?: string | null) => {
   if (s === 'selbst') return 'Selbstabholung';
   return '—';
 };
+const specificationLabels: Record<string, string> = {
+  schichtgewicht: 'Schichtgewicht (g/m²)',
+  nachbehandlung: 'Nachbehandlung',
+  zertifizierungen: 'Zertifizierungen',
+}
 
+function formatSpecificationLabel(key: string): string {
+  return (
+    specificationLabels[key] ??
+    key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^\w/, (c) => c.toUpperCase())
+  )
+}
 /* ===== Fancy Top Loader ===== */
 function TopLoader() {
   return (
@@ -1153,9 +1166,11 @@ if ((auftrag as any).ndaLocked) {
                       {entries.map(([key, val]) => (
                         <div key={key} className={styles.metaItem}>
                           <span className={styles.label}>
-                            {key
-                              .replace(/([A-Z])/g, ' $1')
-                              .replace(/^\w/, (c) => c.toUpperCase())}
+                            {key === 'schichtgewicht'
+                              ? 'Schichtgewicht (g/m²)'
+                              : key
+                                  .replace(/([A-Z])/g, ' $1')
+                                  .replace(/^\w/, (c) => c.toUpperCase())}
                             :
                           </span>
                           <span className={styles.value}>

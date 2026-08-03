@@ -17,6 +17,7 @@ const VERFAHREN = [
   'Eloxieren',
   'Strahlen',
   'Entlacken',
+  'Zinkphosphatieren',
   'Brünieren',
   'Einlagern',
   'Isolierstegverpressung',
