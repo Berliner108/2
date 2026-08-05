@@ -1168,9 +1168,11 @@ if ((auftrag as any).ndaLocked) {
                           <span className={styles.label}>
                             {key === 'schichtgewicht'
                               ? 'Schichtgewicht (g/m²)'
-                              : key
-                                  .replace(/([A-Z])/g, ' $1')
-                                  .replace(/^\w/, (c) => c.toUpperCase())}
+                              : key === 'schichtdicke'
+                                ? 'Schichtdicke (µm)'
+                                : key
+                                    .replace(/([A-Z])/g, ' $1')
+                                    .replace(/^\w/, (c) => c.toUpperCase())}
                             :
                           </span>
                           <span className={styles.value}>

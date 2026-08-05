@@ -16,6 +16,7 @@ const VERFAHREN = [
   'Verzinken',
   'Eloxieren',
   'Strahlen',
+  'KTL-Beschichten',
   'Entlacken',
   'Zinkphosphatieren',
   'Brünieren',

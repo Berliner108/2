@@ -773,6 +773,13 @@ const materialienZinkphosphatieren = [
   'Zink',
   'Andere',
 ]
+const materialienKTL = [
+  'Aluminium',
+  'Aluguss',
+  'Stahl',
+  'Zink',
+  'Andere',
+]
 const materialienEloxieren = [
   'Aluminium',
   'Aluguss',
@@ -908,7 +915,9 @@ const istVerzinken =
 const istZinkphosphatieren =
   selectedOption1 === 'Zinkphosphatieren' ||
   selectedOption2 === 'Zinkphosphatieren'
-
+const istKTL =
+  selectedOption1 === 'KTL-Beschichten' ||
+  selectedOption2 === 'KTL-Beschichten'
 const strahlVerfahrenRaw =
   specSelections['v1__Strahlen__verfahren'] ||
   specSelections['v2__Strahlen__verfahren']
@@ -927,6 +936,8 @@ if (istBruenieren) {
 }
 if (istZinkphosphatieren) {
   materialienAktiv = materialienZinkphosphatieren
+} else if (istKTL) {
+  materialienAktiv = materialienKTL
 } else if (istEloxieren) {
   materialienAktiv = materialienEloxieren
 } else if (istAnodisieren) {

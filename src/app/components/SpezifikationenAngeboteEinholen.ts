@@ -114,8 +114,40 @@ export const specificationsMap: Record<string, Specification[]> = {
       'ISO 14001',
       'RoHS / REACH'
     ]
-  }
+   }
 ],
+
+  'KTL-Beschichten': [
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Schichtdicke (µm)',
+      maxLength: 20
+    },
+    {
+      type: 'dropdown',
+      name: 'farbton',
+      label: 'Farbton:',
+      options: [
+        'Schwarz',
+        'Grau',
+        'Andere / Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Zertifizierungen:',
+      tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
+      options: [
+        'ISO 9001',
+        'ISO 14001',
+        'IATF 16949',
+        'RoHS / REACH'
+      ]
+    }
+  ],
+
   Vernickeln: [
     {
       type: 'radio',
