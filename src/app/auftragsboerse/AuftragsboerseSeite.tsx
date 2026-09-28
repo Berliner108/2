@@ -33,6 +33,12 @@ const VERFAHREN = [
   'Entanodisieren',
   'Entaluminieren',
   'Enteloxieren',
+  'Aluminium-Passivieren',
+  'Elektropolieren',
+  'Verchromen',
+  'Vermessingen',
+  'Verkupfern',
+  'Vergolden',
 ] as const
 
 

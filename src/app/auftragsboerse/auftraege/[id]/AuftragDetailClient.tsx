@@ -218,8 +218,24 @@ const labelWarenrueckgabeArt = (v?: string | null) => {
 };
 const specificationLabels: Record<string, string> = {
   schichtgewicht: 'Schichtgewicht (g/m²)',
+  schichtdicke: 'Schichtdicke (µm)',
   nachbehandlung: 'Nachbehandlung',
   zertifizierungen: 'Zertifizierungen',
+
+  // Verzinken / Galvanik
+  galvaniksystem: 'Galvanisches Zinksystem',
+  zinksystem: 'Galvanisches Zinksystem',
+  ausfuehrung: 'Ausführung',
+  galvanikausfuehrung: 'Ausführung',
+  optionale_nachbehandlung: 'Optionale Nachbehandlung',
+  optionalenachbehandlung: 'Optionale Nachbehandlung',
+
+  // Elektropolieren
+  einsatzbereich: 'Einsatzbereich',
+  branche: 'Einsatzbereich',
+
+  // Verchromen
+  verchromungsart: 'Verchromungsart',
 }
 
 function formatSpecificationLabel(key: string): string {
@@ -1166,13 +1182,7 @@ if ((auftrag as any).ndaLocked) {
                       {entries.map(([key, val]) => (
                         <div key={key} className={styles.metaItem}>
                           <span className={styles.label}>
-                            {key === 'schichtgewicht'
-                              ? 'Schichtgewicht (g/m²)'
-                              : key === 'schichtdicke'
-                                ? 'Schichtdicke (µm)'
-                                : key
-                                    .replace(/([A-Z])/g, ' $1')
-                                    .replace(/^\w/, (c) => c.toUpperCase())}
+                            {formatSpecificationLabel(key)}
                             :
                           </span>
                           <span className={styles.value}>
