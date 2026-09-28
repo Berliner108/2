@@ -15,6 +15,11 @@ export interface Specification {
   tooltip?: string;
   maxLength?: number;     // 👈 NEU
   showCounter?: boolean;  // 👈 NEU
+  required?: boolean;
+  dependsOn?: {
+    name: string;
+    value: string;
+  };
 }
 
 interface VerfahrenUndLogistikProps {
@@ -45,6 +50,12 @@ const allOptions = [
   'Verzinnen',  
   'Aluminieren',
   'Vernickeln',
+  'Aluminium-Passivieren',
+  'Elektropolieren',
+  'Verchromen',
+  'Vermessingen',
+  'Verkupfern',
+  'Vergolden',
   'Folieren',
   'Isolierstegverpressen',
   'Einlagern',
@@ -58,12 +69,14 @@ const allOptions = [
 
 const validSecondOptions: { [key: string]: string[] } = {
   Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
+
   Pulverbeschichten: [
     'Nasslackieren',
     'Folieren',
     'Isolierstegverpressen',
     'Einlagern',
   ],
+
   Verzinken: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -72,6 +85,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
   Eloxieren: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -80,17 +94,20 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
   'KTL-Beschichten': [
     'Nasslackieren',
     'Pulverbeschichten',
     'Einlagern',
   ],
+
   Zinkphosphatieren: [
     'KTL-Beschichten',
     'Nasslackieren',
     'Pulverbeschichten',
     'Einlagern',
   ],
+
   Entlacken: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -98,6 +115,13 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Zinkphosphatieren',
     'KTL-Beschichten',
     'Eloxieren',
+    'Aluminium-Passivieren',
+    'Elektropolieren',
+    'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
     'Strahlen',
     'Folieren',
     'Einlagern',
@@ -110,10 +134,12 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Enteloxieren',
     'Entzinnen',
   ],
+
   Brünieren: [
-  'Folieren',
-  'Einlagern',
-],
+    'Folieren',
+    'Einlagern',
+  ],
+
   Strahlen: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -121,7 +147,12 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Zinkphosphatieren',
     'KTL-Beschichten',
     'Eloxieren',
+    'Aluminium-Passivieren',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
     'Entnickeln',
     'Entlacken',
     'Folieren',
@@ -135,18 +166,26 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Enteloxieren',
     'Entzinnen',
   ],
+
   Folieren: ['Isolierstegverpressen', 'Einlagern'],
+
   Isolierstegverpressen: ['Einlagern'],
+
   Einlagern: [
     'Nasslackieren',
     'Pulverbeschichten',
     'Verzinken',
     'Eloxieren',
+    'Aluminium-Passivieren',
+    'Elektropolieren',
     'Strahlen',
     'Entlacken',
     'Folieren',
-    'Einlagern',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
     'Entnickeln',
     'Isolierstegverpressen',
     'Entzinken',
@@ -157,42 +196,58 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Enteloxieren',
     'Entzinnen',
   ],
+
   Entzinken: [
     'Nasslackieren',
     'Pulverbeschichten',
     'Verzinken',
     'Strahlen',
-    'Folieren',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
+    'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
     'Verzinnen',
     'Aluminieren',
   ],
+
   Entzinnen: [
     'Nasslackieren',
     'Pulverbeschichten',
     'Verzinken',
     'Strahlen',
-    'Folieren',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
+    'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
     'Verzinnen',
     'Aluminieren',
   ],
+
   Entnickeln: [
     'Nasslackieren',
     'Pulverbeschichten',
     'Verzinken',
     'Strahlen',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
     'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
     'Verzinnen',
     'Aluminieren',
   ],
+
   Anodisieren: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -201,6 +256,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
   Verzinnen: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -209,7 +265,10 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
   Vernickeln: [
+    'Verchromen',
+    'Vergolden',
     'Nasslackieren',
     'Pulverbeschichten',
     'Strahlen',
@@ -217,6 +276,42 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
+  Verchromen: [
+    'Folieren',
+    'Einlagern',
+  ],
+
+  Vermessingen: [
+    'Folieren',
+    'Einlagern',
+  ],
+
+  Verkupfern: [
+    'Vernickeln',
+    'Verchromen',
+    'Vergolden',
+    'Folieren',
+    'Einlagern',
+  ],
+
+  Vergolden: [
+    'Folieren',
+    'Einlagern',
+  ],
+
+  'Aluminium-Passivieren': [
+    'Nasslackieren',
+    'Pulverbeschichten',
+    'Folieren',
+    'Einlagern',
+  ],
+
+  Elektropolieren: [
+    'Folieren',
+    'Einlagern',
+  ],
+
   Aluminieren: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -225,6 +320,7 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
+
   Entanodisieren: [
     'Nasslackieren',
     'Pulverbeschichten',
@@ -234,26 +330,33 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Isolierstegverpressen',
     'Anodisieren',
   ],
+
   Entaluminieren: [
     'Nasslackieren',
     'Pulverbeschichten',
     'Verzinken',
     'Strahlen',
     'Vernickeln',
+    'Verchromen',
+    'Vermessingen',
+    'Verkupfern',
+    'Vergolden',
     'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
     'Verzinnen',
     'Aluminieren',
   ],
+
   Enteloxieren: [
     'Nasslackieren',
     'Pulverbeschichten',
+    'Eloxieren',
+    'Aluminium-Passivieren',
     'Strahlen',
     'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
-    'Eloxieren',
   ],
 };
 
@@ -294,6 +397,17 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   ) =>
     specs
       .filter((spec) => spec.type !== 'checkbox')
+      .filter((spec) => {
+        if (!spec.dependsOn) return true;
+
+        const dependencyKey = makeSelectionKey(
+          blockPrefix,
+          verfahrenName,
+          spec.dependsOn.name,
+        );
+
+        return specSelections[dependencyKey] === spec.dependsOn.value;
+      })
       .map((spec, index) => {
         const selectionKey = makeSelectionKey(
           blockPrefix,
@@ -356,10 +470,14 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
 
           return (
             <div key={selectionKey} className={styles.inputRow}>
-              <label>{spec.label}</label>
+              <label>
+                {spec.label}
+                {spec.required && <span className={styles.requiredStar}>*</span>}
+              </label>
               <select
                 className={styles.inputField2}
                 value={currentValue}
+                required={spec.required}
                 onChange={(e) => {
                   const nextValue = e.target.value;
 
@@ -392,6 +510,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             <div key={selectionKey} className={styles.radioGroup}>
               <div className={styles.radioLabel}>
                 {spec.label}
+                {spec.required && <span className={styles.requiredStar}>*</span>}
                 {spec.tooltip && (
                   <span className={styles.iconTooltip}>
                     <HelpCircle size={18} />
@@ -412,6 +531,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                         name={selectionKey} // 🔹 wichtig: Name = selectionKey → pro Verfahren getrennt
                         value={opt}
                         checked={specSelections[selectionKey] === opt}
+                        required={spec.required}
                         onChange={() =>
                           setSpecSelections((prev) => {
                             const next = { ...prev };
@@ -421,6 +541,23 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                             } else {
                               delete next[selectionKey];
                             }
+
+                            // Abhängige Felder löschen, sobald ihre Bedingung
+                            // durch die neue Auswahl nicht mehr erfüllt ist.
+                            specs.forEach((dependentSpec) => {
+                              if (
+                                dependentSpec.dependsOn?.name === spec.name &&
+                                dependentSpec.dependsOn.value !== opt
+                              ) {
+                                delete next[
+                                  makeSelectionKey(
+                                    blockPrefix,
+                                    verfahrenName,
+                                    dependentSpec.name,
+                                  )
+                                ];
+                              }
+                            });
 
                             return next;
                           })
@@ -566,7 +703,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
       </div>
 
       {/* VERFAHREN 2 (optional) */}
-      {selectedOption1 && (
+      {selectedOption1 && secondOptions.length > 0 && (
         <div className={styles.dropdownContainer}>
           <div className={styles.inputGroup}>
             <label>Verfahren 2:</label>

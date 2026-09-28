@@ -75,9 +75,31 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'radio',
       name: 'verfahren',
       label: 'Verfahren:',
-      options: ['Feuerverzinken', 'Diffusionsverzinken', 'Galvanisches Verzinken', 'Lamellenverzinken', 'Mechanisches Verzinken']
+      options: ['Feuerverzinken', 'Galvanisches Verzinken', 'Zinklamellenbeschichtung', 'Mechanisches Verzinken']
     },
-    
+    {
+      type: 'radio',
+      name: 'galvanikSystem',
+      label: 'Galvanisches Zinksystem:',
+      options: ['Zink-Standard', 'Zink-Nickel', 'Zink-Eisen'],
+      required: true,
+      dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
+    },
+    {
+      type: 'radio',
+      name: 'galvanikApplikation',
+      label: 'Ausführung:',
+      options: ['Trommelverfahren', 'Gestellverfahren'],
+      required: true,
+      dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
+    },
+    {
+      type: 'group',
+      name: 'galvanikNachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: ['Versiegelung', 'Gleitmittelbeschichtung', 'Tempern'],
+      dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
+    },
     {
       type: 'group',
       name: 'zertifizierungen',
