@@ -19,7 +19,7 @@ type InviteRow = {
 }
 
 
-async function safeCall<T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+async function safeCall<T>(label: string, fn: () => PromiseLike<T>, fallback: T): Promise<T> {
   try {
     return await fn()
   } catch (error) {
