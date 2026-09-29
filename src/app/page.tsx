@@ -440,7 +440,7 @@ const showSkeletonLack = loadingLack
                       className={styles.articleBox}
                     >
                       <img
-                        src={a.bilder?.[0] ?? '/images/platzhalter.jpg'}
+                        src={a.bilder?.[0] ?? '/images/autrag-platzhalter.png'}
                         alt={a.verfahren?.map((v: any) => v.name).join(' & ') || 'Auftrag'}
                         className={styles.articleImg}
                       />

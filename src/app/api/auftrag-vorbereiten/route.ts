@@ -40,6 +40,15 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
+    const eingereichteDateien = Array.isArray(body.dateien) ? body.dateien : []
+
+    if (eingereichteDateien.length === 0) {
+      return NextResponse.json(
+        { error: 'job_document_required' },
+        { status: 400 },
+      )
+    }
+
     const agbAccepted = body.agbAccepted === true
     const ndaRequired = body.ndaRequired === true
 
@@ -241,7 +250,7 @@ export async function POST(req: NextRequest) {
     }
 
     const bilder = Array.isArray(body.bilder) ? body.bilder : []
-    const dateien = Array.isArray(body.dateien) ? body.dateien : []
+    const dateien = eingereichteDateien
 
     const uploadItems = [
       ...bilder.map((file: any) => ({

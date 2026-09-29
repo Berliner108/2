@@ -84,7 +84,7 @@ export default function ArtikelContainerAuftragsboerse({
   } = artikel;
 
   const verfahrenName = verfahren.map((v) => v.name).join(' & ');
-  const imgSrc = bilder.length > 0 ? bilder[0] : '/images/platzhalter.jpg';
+  const imgSrc = bilder.length > 0 ? bilder[0] : '/images/autrag-platzhalter.png';
 
   const waDate =
     warenausgabeDatum instanceof Date ? warenausgabeDatum : new Date(warenausgabeDatum as any);

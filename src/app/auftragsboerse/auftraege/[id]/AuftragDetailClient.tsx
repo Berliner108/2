@@ -967,7 +967,7 @@ if ((auftrag as any).ndaLocked) {
             <div className={styles.leftColumn}>
               <div className={styles.imageWrapper}>
                 <Image
-                  src={auftrag.bilder?.[photoIndex] || '/images/platzhalter.jpg'}
+                  src={auftrag.bilder?.[photoIndex] || '/images/autrag-platzhalter.png'}
                   alt={verfahrenName}
                   width={500}
                   height={500}
