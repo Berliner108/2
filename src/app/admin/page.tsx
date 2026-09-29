@@ -18,6 +18,20 @@ type InviteRow = {
   accepted_at: string | null
 }
 
+
+async function safeCall<T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn()
+  } catch (error) {
+    console.error(`[admin] ${label} threw:`, error)
+    return fallback
+  }
+}
+
+function logSupabaseError(label: string, error: unknown) {
+  if (error) console.error(`[admin] ${label} failed:`, error)
+}
+
 export default async function AdminDashboardPage() {
   // 1) Session + Whitelist prüfen
   const sb = await supabaseServer()
@@ -39,66 +53,129 @@ export default async function AdminDashboardPage() {
   // 3) Daten laden
   const admin = supabaseAdmin()
 
-  // Gesamtzahl (Auth)
-  const { data: page1, error: totalErr } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 })
-  const totalUsers = totalErr ? 0 : (page1?.total ?? 0)
-
-  // Rollen zählen (profiles)
-  const [{ count: adminCount }, { count: userCount }] = await Promise.all([
-    admin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
-    admin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user'),
-  ])
-
-  // Neueste Nutzer
-  const { data: recentList } = await admin.auth.admin.listUsers({ page: 1, perPage: 8 })
-  const recent = recentList?.users ?? []
-
-  // ===== Pageview-Stats =====
   const nowIso = new Date().toISOString()
   const since24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const since7  = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000).toISOString()
+  const since7  = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const [{ data: pv24 }, { data: pv7 }] = await Promise.all([
-    admin.rpc('pv_stats', { p_from: since24, p_to: nowIso }),
-    admin.rpc('pv_stats', { p_from: since7,  p_to: nowIso }),
+  // WICHTIG: Unabhängige Dashboard-Abfragen parallel starten.
+  // Ein Fehler bei Analytics oder Einladungen darf /admin nicht mehr komplett blockieren.
+  const [
+    usersTotalResult,
+    adminCountResult,
+    userCountResult,
+    recentUsersResult,
+    pv24Result,
+    pv7Result,
+    topPathsResult,
+    invTotalResult,
+    invAcceptedResult,
+    recentInvResult,
+    acceptedRowsResult,
+  ] = await Promise.all([
+    safeCall(
+      'auth.admin.listUsers(total)',
+      () => admin.auth.admin.listUsers({ page: 1, perPage: 1 }),
+      { data: { users: [], total: 0 }, error: new Error('listUsers(total) failed') } as any,
+    ),
+    safeCall(
+      'profiles admin count',
+      () => admin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
+      { count: 0, error: new Error('profiles admin count failed') } as any,
+    ),
+    safeCall(
+      'profiles user count',
+      () => admin.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user'),
+      { count: 0, error: new Error('profiles user count failed') } as any,
+    ),
+    safeCall(
+      'auth.admin.listUsers(recent)',
+      () => admin.auth.admin.listUsers({ page: 1, perPage: 8 }),
+      { data: { users: [] }, error: new Error('listUsers(recent) failed') } as any,
+    ),
+    safeCall(
+      'pv_stats 24h',
+      () => admin.rpc('pv_stats', { p_from: since24, p_to: nowIso }),
+      { data: [], error: new Error('pv_stats 24h failed') } as any,
+    ),
+    safeCall(
+      'pv_stats 7d',
+      () => admin.rpc('pv_stats', { p_from: since7, p_to: nowIso }),
+      { data: [], error: new Error('pv_stats 7d failed') } as any,
+    ),
+    safeCall(
+      'pv_top_paths',
+      () => admin.rpc('pv_top_paths', { p_from: since7, p_to: nowIso, p_limit: 10 }),
+      { data: [], error: new Error('pv_top_paths failed') } as any,
+    ),
+    safeCall(
+      'invitations total',
+      () => admin.from('invitations').select('*', { count: 'exact', head: true }),
+      { count: 0, error: new Error('invitations total failed') } as any,
+    ),
+    safeCall(
+      'invitations accepted',
+      () => admin.from('invitations').select('*', { count: 'exact', head: true }).eq('status', 'accepted'),
+      { count: 0, error: new Error('invitations accepted failed') } as any,
+    ),
+    safeCall(
+      'invitations recent',
+      () =>
+        admin
+          .from('invitations')
+          .select('id, inviter_id, invitee_email, status, created_at, accepted_at')
+          .order('created_at', { ascending: false })
+          .limit(10),
+      { data: [], error: new Error('invitations recent failed') } as any,
+    ),
+    safeCall(
+      'invitations accepted last 7d',
+      () =>
+        admin
+          .from('invitations')
+          .select('inviter_id')
+          .eq('status', 'accepted')
+          .gte('accepted_at', since7),
+      { data: [], error: new Error('invitations accepted last 7d failed') } as any,
+    ),
   ])
 
-  const stats24 = (pv24 && pv24[0]) ? pv24[0] as { total: number; uniques: number } : { total: 0, uniques: 0 }
-  const stats7  = (pv7  && pv7[0])  ? pv7[0]  as { total: number; uniques: number } : { total: 0, uniques: 0 }
+  logSupabaseError('auth.admin.listUsers(total)', usersTotalResult.error)
+  logSupabaseError('profiles admin count', adminCountResult.error)
+  logSupabaseError('profiles user count', userCountResult.error)
+  logSupabaseError('auth.admin.listUsers(recent)', recentUsersResult.error)
+  logSupabaseError('pv_stats 24h', pv24Result.error)
+  logSupabaseError('pv_stats 7d', pv7Result.error)
+  logSupabaseError('pv_top_paths', topPathsResult.error)
+  logSupabaseError('invitations total', invTotalResult.error)
+  logSupabaseError('invitations accepted', invAcceptedResult.error)
+  logSupabaseError('invitations recent', recentInvResult.error)
+  logSupabaseError('invitations accepted last 7d', acceptedRowsResult.error)
 
-  const { data: topPathsRaw } = await admin.rpc('pv_top_paths', { p_from: since7, p_to: nowIso, p_limit: 10 })
-  const topPaths = (topPathsRaw || []) as { path: string; hits: number }[]
+  const totalUsers = usersTotalResult.error ? 0 : (usersTotalResult.data?.total ?? 0)
+  const adminCount = adminCountResult.error ? 0 : (adminCountResult.count ?? 0)
+  const userCount = userCountResult.error ? 0 : (userCountResult.count ?? 0)
+  const recent = recentUsersResult.error ? [] : (recentUsersResult.data?.users ?? [])
 
-  // ==== Einladungen (KPIs + Liste) ====
-  const [{ count: invTotal }, { count: invAccepted }] = await Promise.all([
-    admin.from('invitations').select('*', { count: 'exact', head: true }),
-    admin.from('invitations').select('*', { count: 'exact', head: true }).eq('status', 'accepted'),
-  ])
+  const pv24 = pv24Result.error ? [] : (pv24Result.data ?? [])
+  const pv7 = pv7Result.error ? [] : (pv7Result.data ?? [])
+  const stats24 =
+    pv24 && pv24[0]
+      ? (pv24[0] as { total: number; uniques: number })
+      : { total: 0, uniques: 0 }
+  const stats7 =
+    pv7 && pv7[0]
+      ? (pv7[0] as { total: number; uniques: number })
+      : { total: 0, uniques: 0 }
 
-  const { data: recentInvRaw } = await admin
-    .from('invitations')
-    .select('id, inviter_id, invitee_email, status, created_at, accepted_at')
-    .order('created_at', { ascending: false })
-    .limit(10)
+  const topPaths = (topPathsResult.error ? [] : (topPathsResult.data ?? [])) as {
+    path: string
+    hits: number
+  }[]
 
-  const recentInv = (recentInvRaw || []) as InviteRow[]
-
-  // Einlader-Namen auflösen
-  const inviterIds = Array.from(new Set(recentInv.map(r => r.inviter_id))).filter(Boolean)
-  const { data: inviterProfiles } = inviterIds.length
-    ? await admin.from('profiles').select('id, username').in('id', inviterIds)
-    : { data: [] as any[] }
-
-  const inviterNameById = new Map<string, string>(
-    (inviterProfiles || []).map((p: any) => [p.id, p.username || '—'])
-  )
-
-  // Top-Einlader (7 Tage) – Aggregation in JS
-  const { data: acceptedRows } = await admin
-    .from('invitations')
-    .select('inviter_id')
-    .eq('status', 'accepted')
-    .gte('accepted_at', since7)
+  const invTotal = invTotalResult.error ? 0 : (invTotalResult.count ?? 0)
+  const invAccepted = invAcceptedResult.error ? 0 : (invAcceptedResult.count ?? 0)
+  const recentInv = (recentInvResult.error ? [] : (recentInvResult.data ?? [])) as InviteRow[]
+  const acceptedRows = acceptedRowsResult.error ? [] : (acceptedRowsResult.data ?? [])
 
   const counts = new Map<string, number>()
   for (const r of acceptedRows || []) {
@@ -111,21 +188,36 @@ export default async function AdminDashboardPage() {
     .slice(0, 5)
     .map(([id]) => id)
 
-  const missing = topInv7Ids.filter(id => !inviterNameById.has(id))
-  if (missing.length) {
-    const { data: moreProfiles } = await admin.from('profiles').select('id, username').in('id', missing)
-    for (const p of moreProfiles || []) {
-      inviterNameById.set(p.id, p.username || '—')
-    }
-  }
+  const inviterIds = Array.from(
+    new Set([
+      ...recentInv.map((r) => r.inviter_id),
+      ...topInv7Ids,
+    ].filter(Boolean)),
+  )
 
-  const topInv7 = topInv7Ids.map(id => ({
+  const inviterProfilesResult = inviterIds.length
+    ? await safeCall(
+        'profiles inviter names',
+        () => admin.from('profiles').select('id, username').in('id', inviterIds),
+        { data: [], error: new Error('profiles inviter names failed') } as any,
+      )
+    : ({ data: [], error: null } as any)
+
+  logSupabaseError('profiles inviter names', inviterProfilesResult.error)
+
+  const inviterNameById = new Map<string, string>(
+    (inviterProfilesResult.error ? [] : (inviterProfilesResult.data ?? [])).map(
+      (p: any) => [p.id, p.username || '—'],
+    ),
+  )
+
+  const topInv7 = topInv7Ids.map((id) => ({
     inviter_id: id,
     count: counts.get(id) || 0,
     name: inviterNameById.get(id) || '—',
   }))
 
-  const conversion = invTotal ? Math.round(((invAccepted || 0) / invTotal) * 100) : 0
+  const conversion = invTotal ? Math.round((invAccepted / invTotal) * 100) : 0
 
   return (
     <div className={styles.wrapper}>
