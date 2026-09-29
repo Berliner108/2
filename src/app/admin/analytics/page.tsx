@@ -71,50 +71,55 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länder für Dropdown
-  const { data: countriesRaw } = await db
+  // Länder für Dropdown – darf die Seite bei DB-Problemen nicht blockieren
+  const countriesResult = await db
     .from('visits')
     .select('country')
     .not('country', 'is', null)
-    .order('country', { ascending: true })
-    .limit(5000)
+    .limit(1000)
 
   const countries = Array.from(
-    new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
-  )
+    new Set(
+      (countriesResult.error ? [] : (countriesResult.data || []))
+        .map(r => (r.country || '').toUpperCase())
+        .filter(Boolean)
+    )
+  ).sort()
 
-  // ---- Query-Builder (für Data & Count identisch anwenden)
+  // ---- Query-Builder
+  // Absichtlich KEINE Bot-NOT-ILIKE-Kaskade mehr in PostgreSQL:
+  // "%...%"-Suchen auf UA sind teuer und haben zuletzt den Statement-Timeout ausgelöst.
   const baseFilters = (q: any) => {
     if (from) q = q.gte('ts', new Date(from).toISOString())
-    if (to)   q = q.lte('ts', new Date(new Date(to).getTime() + 24*60*60*1000).toISOString())
+    if (to) q = q.lt('ts', new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000).toISOString())
     if (country) q = q.eq('country', country)
-    if (ip) q = q.ilike('ip_hash', `${ip}%`) // Prefix-Suche (hex)
-    if (!includeBots) {
-      for (const p of BOT_PATTERNS) q = q.not('ua', 'ilike', `%${p}%`)
-    }
+    if (ip) q = q.ilike('ip_hash', `${ip}%`)
     return q
   }
 
-  // Daten (paged)
+  // Wir holen etwas mehr als eine Seite und filtern Bots anschließend in JS.
+  // Dadurch entfällt auch das teure count:'exact'.
+  const fetchSize = includeBots ? pageSize + 1 : pageSize * 4 + 1
+  const rawOffset = includeBots ? offset : offset * 4
+
   let dataQ = db
     .from('visits')
-    .select('ts, path, ref, ip_hash, country, city, ua', { count: 'exact' })
+    .select('ts, path, ref, ip_hash, country, city, ua')
     .order('ts', { ascending: false })
-    .range(offset, toIndex)
+    .range(rawOffset, rawOffset + fetchSize - 1)
 
   dataQ = baseFilters(dataQ)
-  const { data, count: countMeta, error } = await dataQ
-  if (error) return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
+  const dataResult = await dataQ
 
-  // Fallback-Count (wenn countMeta fehlt)
-  let total = typeof countMeta === 'number' ? countMeta : 0
-  if (!total) {
-    let countQ = db.from('visits').select('*', { count: 'exact', head: true })
-    countQ = baseFilters(countQ)
-    const { count } = await countQ
-    total = count || 0
-  }
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const queryError = dataResult.error?.message || ''
+  const rawData = dataResult.error ? [] : (dataResult.data || [])
+
+  const filteredData = includeBots
+    ? rawData
+    : rawData.filter((r: any) => !botLike(r.ua))
+
+  const data = filteredData.slice(0, pageSize)
+  const hasNextPage = filteredData.length > pageSize || rawData.length === fetchSize
 
   // --- Chart via RPC (alle passenden Zeilen, nicht nur aktuelle Page)
   const end = to ? new Date(to) : new Date()
@@ -127,10 +132,10 @@ export default async function AdminAnalytics({
     ip_prefix: ip || null,
     include_bots: includeBots,
   })
-  if (aggErr) return <pre style={{ padding: 16, color: 'crimson' }}>{aggErr.message}</pre>
 
+  // Auch ein langsames Chart darf die Analytics-Seite nicht mehr abschießen.
   const bucketMap = new Map<string, number>(
-    (agg || []).map((r: any) => [String(r.day).slice(0, 10), Number(r.cnt)])
+    (aggErr ? [] : (agg || [])).map((r: any) => [String(r.day).slice(0, 10), Number(r.cnt)])
   )
 
   const chartData: { date: string; count: number }[] = []
@@ -158,6 +163,18 @@ export default async function AdminAnalytics({
   return (
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
+
+      {queryError && (
+        <div style={{ marginBottom: 12, padding: 12, border: '1px solid #fca5a5', borderRadius: 8, color: '#b91c1c', background: '#fef2f2' }}>
+          Besuchsliste konnte nicht geladen werden: {queryError}
+        </div>
+      )}
+
+      {aggErr && (
+        <div style={{ marginBottom: 12, padding: 12, border: '1px solid #fde68a', borderRadius: 8, color: '#92400e', background: '#fffbeb' }}>
+          Diagramm konnte momentan nicht geladen werden. Die Besuchsliste ist davon unabhängig.
+        </div>
+      )}
 
       {/* Chart */}
       <div style={{ marginBottom: 12 }}>
@@ -279,7 +296,7 @@ export default async function AdminAnalytics({
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination – bewusst ohne teuren Exact-Count */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
         <a
           href={makeUrl(Math.max(1, page - 1))}
@@ -287,21 +304,27 @@ export default async function AdminAnalytics({
           style={{
             pointerEvents: page <= 1 ? 'none' : 'auto',
             opacity: page <= 1 ? 0.5 : 1,
-            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
+            padding: '6px 10px',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8
           }}
         >
           ← Zurück
         </a>
+
         <span style={{ fontSize: 12, color: '#6b7280' }}>
-          Seite {page} von {totalPages} (gesamt {total})
+          Seite {page}
         </span>
+
         <a
-          href={makeUrl(Math.min(totalPages, page + 1))}
-          aria-disabled={page >= totalPages}
+          href={makeUrl(page + 1)}
+          aria-disabled={!hasNextPage}
           style={{
-            pointerEvents: page >= totalPages ? 'none' : 'auto',
-            opacity: page >= totalPages ? 0.5 : 1,
-            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
+            pointerEvents: !hasNextPage ? 'none' : 'auto',
+            opacity: !hasNextPage ? 0.5 : 1,
+            padding: '6px 10px',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8
           }}
         >
           Weiter →
