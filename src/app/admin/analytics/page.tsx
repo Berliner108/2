@@ -97,16 +97,16 @@ export default async function AdminAnalytics({
     return q
   }
 
-  // Wir holen etwas mehr als eine Seite und filtern Bots anschließend in JS.
-  // Dadurch entfällt auch das teure count:'exact'.
-  const fetchSize = includeBots ? pageSize + 1 : pageSize * 4 + 1
-  const rawOffset = includeBots ? offset : offset * 4
+  // Für den Adminbereich laden wir die letzten passenden Besuche ohne teuren Exact-Count
+  // und filtern Bots anschließend in JavaScript. So entstehen keine "2 Treffer",
+  // nur weil der erste kleine DB-Block fast nur Bots enthielt.
+  const maxRows = 5000
 
   let dataQ = db
     .from('visits')
     .select('ts, path, ref, ip_hash, country, city, ua')
     .order('ts', { ascending: false })
-    .range(rawOffset, rawOffset + fetchSize - 1)
+    .limit(maxRows)
 
   dataQ = baseFilters(dataQ)
   const dataResult = await dataQ
@@ -118,25 +118,39 @@ export default async function AdminAnalytics({
     ? rawData
     : rawData.filter((r: any) => !botLike(r.ua))
 
-  const data = filteredData.slice(0, pageSize)
-  const hasNextPage = filteredData.length > pageSize || rawData.length === fetchSize
+  const total = filteredData.length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const pageOffset = (safePage - 1) * pageSize
+  const data = filteredData.slice(pageOffset, pageOffset + pageSize)
+  const hasNextPage = safePage < totalPages
 
-  // --- Chart via RPC (alle passenden Zeilen, nicht nur aktuelle Page)
+  // --- Chart ohne RPC: schnelle Rohabfrage + Aggregation in JavaScript
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
-  const { data: agg, error: aggErr } = await db.rpc('visits_daily_agg', {
-    from_ts: start.toISOString(),
-    to_ts: end.toISOString(),
-    p_country: country || null,
-    ip_prefix: ip || null,
-    include_bots: includeBots,
-  })
+  let chartQ = db
+    .from('visits')
+    .select('ts, ua')
+    .gte('ts', start.toISOString())
+    .lt('ts', new Date(end.getTime() + 24 * 60 * 60 * 1000).toISOString())
+    .order('ts', { ascending: true })
+    .limit(10000)
 
-  // Auch ein langsames Chart darf die Analytics-Seite nicht mehr abschießen.
-  const bucketMap = new Map<string, number>(
-    (aggErr ? [] : (agg || [])).map((r: any) => [String(r.day).slice(0, 10), Number(r.cnt)])
-  )
+  if (country) chartQ = chartQ.eq('country', country)
+  if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
+
+  const chartResult = await chartQ
+  const chartError = chartResult.error?.message || ''
+
+  const chartRows = (chartResult.error ? [] : (chartResult.data || []))
+    .filter((r: any) => includeBots || !botLike(r.ua))
+
+  const bucketMap = new Map<string, number>()
+  for (const r of chartRows) {
+    const key = new Date(r.ts).toISOString().slice(0, 10)
+    bucketMap.set(key, (bucketMap.get(key) || 0) + 1)
+  }
 
   const chartData: { date: string; count: number }[] = []
   for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
@@ -170,9 +184,9 @@ export default async function AdminAnalytics({
         </div>
       )}
 
-      {aggErr && (
+      {chartError && (
         <div style={{ marginBottom: 12, padding: 12, border: '1px solid #fde68a', borderRadius: 8, color: '#92400e', background: '#fffbeb' }}>
-          Diagramm konnte momentan nicht geladen werden. Die Besuchsliste ist davon unabhängig.
+          Diagramm konnte momentan nicht geladen werden: {chartError}
         </div>
       )}
 
@@ -296,14 +310,14 @@ export default async function AdminAnalytics({
         </table>
       </div>
 
-      {/* Pagination – bewusst ohne teuren Exact-Count */}
+      {/* Pagination */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
         <a
-          href={makeUrl(Math.max(1, page - 1))}
-          aria-disabled={page <= 1}
+          href={makeUrl(Math.max(1, safePage - 1))}
+          aria-disabled={safePage <= 1}
           style={{
-            pointerEvents: page <= 1 ? 'none' : 'auto',
-            opacity: page <= 1 ? 0.5 : 1,
+            pointerEvents: safePage <= 1 ? 'none' : 'auto',
+            opacity: safePage <= 1 ? 0.5 : 1,
             padding: '6px 10px',
             border: '1px solid #e5e7eb',
             borderRadius: 8
@@ -313,11 +327,11 @@ export default async function AdminAnalytics({
         </a>
 
         <span style={{ fontSize: 12, color: '#6b7280' }}>
-          Seite {page}
+          Seite {safePage} von {totalPages} (gesamt {total})
         </span>
 
         <a
-          href={makeUrl(page + 1)}
+          href={makeUrl(safePage + 1)}
           aria-disabled={!hasNextPage}
           style={{
             pointerEvents: !hasNextPage ? 'none' : 'auto',
