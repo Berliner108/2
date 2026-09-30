@@ -39,14 +39,97 @@ function prettyRef(ref?: string | null) {
 
 /** Bot-Heuristik – gleiche Muster wie im /api/track */
 const BOT_PATTERNS = [
-  'bot', 'crawler', 'spider', 'crawl', 'curl', 'httpx', 'node-fetch',
-  'axios', 'headless', 'preview', 'uptime',
-  'vercel-screenshot', 'vercel edge functions',
+  // Allgemein
+  'bot',
+  'crawler',
+  'spider',
+  'crawl',
+  'slurp',
+
+  // Suchmaschinen / SEO
+  'googlebot',
+  'bingbot',
+  'duckduckbot',
+  'baiduspider',
+  'yandexbot',
+  'petalbot',
+  'semrushbot',
+  'ahrefsbot',
+  'mj12bot',
+  'dotbot',
+
+  // KI / Datensammler
+  'gptbot',
+  'chatgpt-user',
+  'oai-searchbot',
+  'claudebot',
+  'claude-web',
+  'perplexitybot',
+  'ccbot',
+  'bytespider',
+  'amazonbot',
+
+  // Social / Link Preview
+  'facebookexternalhit',
+  'facebot',
+  'linkedinbot',
+  'twitterbot',
+  'slackbot',
+  'discordbot',
+  'telegrambot',
+  'whatsapp',
+
+  // Monitoring / automatisierte Browser
+  'headless',
+  'headlesschrome',
+  'lighthouse',
+  'pagespeed',
+  'playwright',
+  'puppeteer',
+  'selenium',
+  'phantomjs',
+  'uptime',
+  'pingdom',
+  'statuscake',
+  'vercel-screenshot',
+  'vercel edge functions',
+
+  // Skripte / HTTP-Clients
+  'curl',
+  'wget',
+  'httpx',
+  'python-requests',
+  'python-urllib',
+  'aiohttp',
+  'axios',
+  'node-fetch',
+  'undici',
+  'okhttp',
+  'go-http-client',
+  'postmanruntime',
+  'insomnia',
 ]
+
 function botLike(ua?: string | null) {
-  if (!ua) return false
+  if (!ua || !ua.trim()) return true
+
   const s = ua.toLowerCase()
-  return BOT_PATTERNS.some(p => s.includes(p))
+
+  if (BOT_PATTERNS.some((p) => s.includes(p))) {
+    return true
+  }
+
+  // Reine Scanner/HTTP-Clients ohne typische Browserkennung ebenfalls als Bot werten.
+  const looksLikeBrowser =
+    s.includes('mozilla/') ||
+    s.includes('chrome/') ||
+    s.includes('chromium/') ||
+    s.includes('firefox/') ||
+    s.includes('safari/') ||
+    s.includes('edg/') ||
+    s.includes('opr/')
+
+  return !looksLikeBrowser
 }
 
 export default async function AdminAnalytics({
