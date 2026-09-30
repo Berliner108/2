@@ -12,7 +12,7 @@ type SearchParams = {
   country?: string
   page?: string
   ip?: string
-  bots?: string // "1" = Bots einschließen
+  bots?: string // "1" = Bots ausblenden
 }
 
 function safeDecode(s?: string | null) {
@@ -58,7 +58,7 @@ export default async function AdminAnalytics({
   const from = sp?.from || ''
   const to = sp?.to || ''
   const ip = (sp?.ip || '').trim().toLowerCase()
-  const includeBots = sp?.bots === '1'
+  const hideBots = sp?.bots === '1'
   const country = (sp?.country || '').toUpperCase()
 
   const pageSize = 50
@@ -71,24 +71,18 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länder für Dropdown – darf die Seite bei DB-Problemen nicht blockieren
-  const countriesResult = await db
+  // Länder für Dropdown
+  const { data: countriesRaw } = await db
     .from('visits')
     .select('country')
     .not('country', 'is', null)
     .limit(1000)
 
   const countries = Array.from(
-    new Set(
-      (countriesResult.error ? [] : (countriesResult.data || []))
-        .map(r => (r.country || '').toUpperCase())
-        .filter(Boolean)
-    )
+    new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
   ).sort()
 
   // ---- Query-Builder
-  // Absichtlich KEINE Bot-NOT-ILIKE-Kaskade mehr in PostgreSQL:
-  // "%...%"-Suchen auf UA sind teuer und haben zuletzt den Statement-Timeout ausgelöst.
   const baseFilters = (q: any) => {
     if (from) q = q.gte('ts', new Date(from).toISOString())
     if (to) q = q.lt('ts', new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000).toISOString())
@@ -97,35 +91,29 @@ export default async function AdminAnalytics({
     return q
   }
 
-  // Für den Adminbereich laden wir die letzten passenden Besuche ohne teuren Exact-Count
-  // und filtern Bots anschließend in JavaScript. So entstehen keine "2 Treffer",
-  // nur weil der erste kleine DB-Block fast nur Bots enthielt.
-  const maxRows = 5000
-
+  // Admin-Ansicht: standardmäßig ALLE Visits anzeigen.
+  // Bots werden nur ausgeblendet, wenn die Checkbox aktiviert ist.
   let dataQ = db
     .from('visits')
     .select('ts, path, ref, ip_hash, country, city, ua')
     .order('ts', { ascending: false })
-    .limit(maxRows)
+    .limit(5000)
 
   dataQ = baseFilters(dataQ)
-  const dataResult = await dataQ
+  const { data: rawData, error } = await dataQ
 
-  const queryError = dataResult.error?.message || ''
-  const rawData = dataResult.error ? [] : (dataResult.data || [])
+  const allRows = error ? [] : (rawData || [])
+  const filteredRows = hideBots
+    ? allRows.filter((r: any) => !botLike(r.ua))
+    : allRows
 
-  const filteredData = includeBots
-    ? rawData
-    : rawData.filter((r: any) => !botLike(r.ua))
-
-  const total = filteredData.length
+  const total = filteredRows.length
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const safePage = Math.min(page, totalPages)
   const pageOffset = (safePage - 1) * pageSize
-  const data = filteredData.slice(pageOffset, pageOffset + pageSize)
-  const hasNextPage = safePage < totalPages
+  const data = filteredRows.slice(pageOffset, pageOffset + pageSize)
 
-  // --- Chart ohne RPC: schnelle Rohabfrage + Aggregation in JavaScript
+  // --- Chart direkt aus visits, ohne RPC
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
@@ -140,11 +128,10 @@ export default async function AdminAnalytics({
   if (country) chartQ = chartQ.eq('country', country)
   if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
 
-  const chartResult = await chartQ
-  const chartError = chartResult.error?.message || ''
+  const { data: chartRaw, error: chartError } = await chartQ
 
-  const chartRows = (chartResult.error ? [] : (chartResult.data || []))
-    .filter((r: any) => includeBots || !botLike(r.ua))
+  const chartRows = (chartError ? [] : (chartRaw || []))
+    .filter((r: any) => !hideBots || !botLike(r.ua))
 
   const bucketMap = new Map<string, number>()
   for (const r of chartRows) {
@@ -168,7 +155,7 @@ export default async function AdminAnalytics({
     if (to) params.set('to', to)
     if (country) params.set('country', country)
     if (ip) params.set('ip', ip)
-    if (includeBots) params.set('bots', '1')
+    if (hideBots) params.set('bots', '1')
     if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     return `/admin/analytics${qs ? `?${qs}` : ''}`
@@ -178,15 +165,15 @@ export default async function AdminAnalytics({
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
 
-      {queryError && (
-        <div style={{ marginBottom: 12, padding: 12, border: '1px solid #fca5a5', borderRadius: 8, color: '#b91c1c', background: '#fef2f2' }}>
-          Besuchsliste konnte nicht geladen werden: {queryError}
+      {error && (
+        <div style={{ marginBottom: 12, padding: 12, color: 'crimson' }}>
+          Besuchsliste konnte nicht geladen werden: {error.message}
         </div>
       )}
 
       {chartError && (
-        <div style={{ marginBottom: 12, padding: 12, border: '1px solid #fde68a', borderRadius: 8, color: '#92400e', background: '#fffbeb' }}>
-          Diagramm konnte momentan nicht geladen werden: {chartError}
+        <div style={{ marginBottom: 12, padding: 12, color: '#92400e' }}>
+          Diagramm konnte nicht geladen werden: {chartError.message}
         </div>
       )}
 
@@ -225,8 +212,8 @@ export default async function AdminAnalytics({
           />
         </div>
         <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center', marginLeft: 6 }}>
-          <input type="checkbox" name="bots" value="1" defaultChecked={includeBots} />
-          Bots zeigen
+          <input type="checkbox" name="bots" value="1" defaultChecked={hideBots} />
+          Bots ausblenden
         </label>
 
         <button type="submit" style={{ padding: '6px 10px', borderRadius: 8 }}>Filtern</button>
@@ -318,27 +305,21 @@ export default async function AdminAnalytics({
           style={{
             pointerEvents: safePage <= 1 ? 'none' : 'auto',
             opacity: safePage <= 1 ? 0.5 : 1,
-            padding: '6px 10px',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8
+            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
           ← Zurück
         </a>
-
         <span style={{ fontSize: 12, color: '#6b7280' }}>
           Seite {safePage} von {totalPages} (gesamt {total})
         </span>
-
         <a
-          href={makeUrl(safePage + 1)}
-          aria-disabled={!hasNextPage}
+          href={makeUrl(Math.min(totalPages, safePage + 1))}
+          aria-disabled={safePage >= totalPages}
           style={{
-            pointerEvents: !hasNextPage ? 'none' : 'auto',
-            opacity: !hasNextPage ? 0.5 : 1,
-            padding: '6px 10px',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8
+            pointerEvents: safePage >= totalPages ? 'none' : 'auto',
+            opacity: safePage >= totalPages ? 0.5 : 1,
+            padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
           Weiter →
