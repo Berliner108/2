@@ -12,7 +12,7 @@ type SearchParams = {
   country?: string
   page?: string
   ip?: string
-  bots?: string // "1" = Bots ausblenden
+  bots?: string // "1" = Bots einschließen
 }
 
 function safeDecode(s?: string | null) {
@@ -39,97 +39,14 @@ function prettyRef(ref?: string | null) {
 
 /** Bot-Heuristik – gleiche Muster wie im /api/track */
 const BOT_PATTERNS = [
-  // Allgemein
-  'bot',
-  'crawler',
-  'spider',
-  'crawl',
-  'slurp',
-
-  // Suchmaschinen / SEO
-  'googlebot',
-  'bingbot',
-  'duckduckbot',
-  'baiduspider',
-  'yandexbot',
-  'petalbot',
-  'semrushbot',
-  'ahrefsbot',
-  'mj12bot',
-  'dotbot',
-
-  // KI / Datensammler
-  'gptbot',
-  'chatgpt-user',
-  'oai-searchbot',
-  'claudebot',
-  'claude-web',
-  'perplexitybot',
-  'ccbot',
-  'bytespider',
-  'amazonbot',
-
-  // Social / Link Preview
-  'facebookexternalhit',
-  'facebot',
-  'linkedinbot',
-  'twitterbot',
-  'slackbot',
-  'discordbot',
-  'telegrambot',
-  'whatsapp',
-
-  // Monitoring / automatisierte Browser
-  'headless',
-  'headlesschrome',
-  'lighthouse',
-  'pagespeed',
-  'playwright',
-  'puppeteer',
-  'selenium',
-  'phantomjs',
-  'uptime',
-  'pingdom',
-  'statuscake',
-  'vercel-screenshot',
-  'vercel edge functions',
-
-  // Skripte / HTTP-Clients
-  'curl',
-  'wget',
-  'httpx',
-  'python-requests',
-  'python-urllib',
-  'aiohttp',
-  'axios',
-  'node-fetch',
-  'undici',
-  'okhttp',
-  'go-http-client',
-  'postmanruntime',
-  'insomnia',
+  'bot', 'crawler', 'spider', 'crawl', 'curl', 'httpx', 'node-fetch',
+  'axios', 'headless', 'preview', 'uptime',
+  'vercel-screenshot', 'vercel edge functions',
 ]
-
 function botLike(ua?: string | null) {
-  if (!ua || !ua.trim()) return true
-
+  if (!ua) return false
   const s = ua.toLowerCase()
-
-  if (BOT_PATTERNS.some((p) => s.includes(p))) {
-    return true
-  }
-
-  // Reine Scanner/HTTP-Clients ohne typische Browserkennung ebenfalls als Bot werten.
-  const looksLikeBrowser =
-    s.includes('mozilla/') ||
-    s.includes('chrome/') ||
-    s.includes('chromium/') ||
-    s.includes('firefox/') ||
-    s.includes('safari/') ||
-    s.includes('edg/') ||
-    s.includes('opr/')
-
-  return !looksLikeBrowser
+  return BOT_PATTERNS.some(p => s.includes(p))
 }
 
 export default async function AdminAnalytics({
@@ -141,7 +58,7 @@ export default async function AdminAnalytics({
   const from = sp?.from || ''
   const to = sp?.to || ''
   const ip = (sp?.ip || '').trim().toLowerCase()
-  const hideBots = sp?.bots === '1'
+  const includeBots = sp?.bots === '1'
   const country = (sp?.country || '').toUpperCase()
 
   const pageSize = 50
@@ -159,13 +76,16 @@ export default async function AdminAnalytics({
     .from('visits')
     .select('country')
     .not('country', 'is', null)
-    .limit(1000)
+    .order('country', { ascending: true })
+    .limit(5000)
 
   const countries = Array.from(
     new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
-  ).sort()
+  )
 
-  // ---- Query-Builder
+  // ---- Filter
+  // Gleiche Bot-Erkennung wie in deiner ersten funktionierenden Version,
+  // aber ohne die teuren NOT ILIKE-Abfragen in PostgreSQL.
   const baseFilters = (q: any) => {
     if (from) q = q.gte('ts', new Date(from).toISOString())
     if (to) q = q.lt('ts', new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000).toISOString())
@@ -174,8 +94,7 @@ export default async function AdminAnalytics({
     return q
   }
 
-  // Admin-Ansicht: standardmäßig ALLE Visits anzeigen.
-  // Bots werden nur ausgeblendet, wenn die Checkbox aktiviert ist.
+  // Bis zu 5000 passende Visits laden, danach mit DER ALTEN Botlogik filtern.
   let dataQ = db
     .from('visits')
     .select('ts, path, ref, ip_hash, country, city, ua')
@@ -185,10 +104,13 @@ export default async function AdminAnalytics({
   dataQ = baseFilters(dataQ)
   const { data: rawData, error } = await dataQ
 
-  const allRows = error ? [] : (rawData || [])
-  const filteredRows = hideBots
-    ? allRows.filter((r: any) => !botLike(r.ua))
-    : allRows
+  if (error) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
+  }
+
+  const filteredRows = includeBots
+    ? (rawData || [])
+    : (rawData || []).filter((r: any) => !botLike(r.ua))
 
   const total = filteredRows.length
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
@@ -196,7 +118,7 @@ export default async function AdminAnalytics({
   const pageOffset = (safePage - 1) * pageSize
   const data = filteredRows.slice(pageOffset, pageOffset + pageSize)
 
-  // --- Chart direkt aus visits, ohne RPC
+  // --- Chart ohne RPC, aber mit exakt derselben alten Botlogik
   const end = to ? new Date(to) : new Date()
   const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
@@ -211,10 +133,11 @@ export default async function AdminAnalytics({
   if (country) chartQ = chartQ.eq('country', country)
   if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
 
-  const { data: chartRaw, error: chartError } = await chartQ
+  const { data: chartRaw, error: chartErr } = await chartQ
 
-  const chartRows = (chartError ? [] : (chartRaw || []))
-    .filter((r: any) => !hideBots || !botLike(r.ua))
+  const chartRows = (chartErr ? [] : (chartRaw || [])).filter(
+    (r: any) => includeBots || !botLike(r.ua)
+  )
 
   const bucketMap = new Map<string, number>()
   for (const r of chartRows) {
@@ -238,7 +161,7 @@ export default async function AdminAnalytics({
     if (to) params.set('to', to)
     if (country) params.set('country', country)
     if (ip) params.set('ip', ip)
-    if (hideBots) params.set('bots', '1')
+    if (includeBots) params.set('bots', '1')
     if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     return `/admin/analytics${qs ? `?${qs}` : ''}`
@@ -248,15 +171,9 @@ export default async function AdminAnalytics({
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
 
-      {error && (
-        <div style={{ marginBottom: 12, padding: 12, color: 'crimson' }}>
-          Besuchsliste konnte nicht geladen werden: {error.message}
-        </div>
-      )}
-
-      {chartError && (
-        <div style={{ marginBottom: 12, padding: 12, color: '#92400e' }}>
-          Diagramm konnte nicht geladen werden: {chartError.message}
+      {chartErr && (
+        <div style={{ marginBottom: 12, padding: 10, color: '#92400e' }}>
+          Diagramm konnte momentan nicht vollständig geladen werden: {chartErr.message}
         </div>
       )}
 
@@ -295,8 +212,8 @@ export default async function AdminAnalytics({
           />
         </div>
         <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center', marginLeft: 6 }}>
-          <input type="checkbox" name="bots" value="1" defaultChecked={hideBots} />
-          Bots ausblenden
+          <input type="checkbox" name="bots" value="1" defaultChecked={includeBots} />
+          Bots zeigen
         </label>
 
         <button type="submit" style={{ padding: '6px 10px', borderRadius: 8 }}>Filtern</button>
