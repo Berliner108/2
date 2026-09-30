@@ -1257,7 +1257,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               )}
 
             {photoFiles.length === 0 && (
-              <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+              <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem', textAlign: 'center' }}>
                 <img
                   src="/images/autrag-platzhalter.png"
                   alt="Platzhalterbild für Auftrag ohne Foto"
