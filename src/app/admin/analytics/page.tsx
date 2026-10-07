@@ -71,66 +71,96 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länderfilter bewusst statisch halten, damit die Seite beim Laden
-  // keine teure DISTINCT-Abfrage über die komplette visits-Tabelle ausführt.
+  // Länderfilter statisch halten, damit hierfür kein Full-Table-Scan nötig ist.
   const countries: string[] = ['AT', 'DE', 'CH']
 
-  // ---- Daten serverseitig filtern und leichtgewichtig paginieren.
-  // Kein COUNT(*) mehr über die komplette Tabelle.
-  // Wir laden 51 Zeilen: 50 anzeigen + 1 als "gibt es eine nächste Seite?".
-  const rpcArgs = {
-    p_from: from || null,
-    p_to: to || null,
-    p_country: country || null,
-    p_ip_prefix: ip || null,
-    p_include_bots: includeBots,
+  // ---- Filter
+  const baseFilters = (q: any) => {
+    if (from) {
+      q = q.gte('ts', new Date(`${from}T00:00:00+02:00`).toISOString())
+    }
+    if (to) {
+      const nextDay = new Date(`${to}T00:00:00+02:00`)
+      nextDay.setDate(nextDay.getDate() + 1)
+      q = q.lt('ts', nextDay.toISOString())
+    }
+    if (country) q = q.eq('country', country)
+    if (ip) q = q.ilike('ip_hash', `${ip}%`)
+    return q
   }
 
-  const pageOffset = (page - 1) * pageSize
+  // Standardansicht: nur echte Visits aus SQL-View.
+  // Mit "Bots zeigen": direkt aus visits.
+  const source = includeBots ? 'visits' : 'admin_visits_clean'
 
-  let pageRows: any[] = []
-  let pageError: string | null = null
+  // Erst zählen, bereits serverseitig gefiltert.
+  let countQ = db
+    .from(source)
+    .select('*', { count: 'exact', head: true })
 
-  try {
-    const { data: rows, error } = await db.rpc('admin_visits_page', {
-      ...rpcArgs,
-      p_limit: pageSize + 1,
-      p_offset: pageOffset,
+  countQ = baseFilters(countQ)
+  const { count, error: countErr } = await countQ
+
+  if (countErr) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>
+      {`Besuche konnten nicht gezählt werden: ${countErr.message}`}
+    </pre>
+  }
+
+  const total = count ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const pageOffset = (safePage - 1) * pageSize
+  const pageTo = pageOffset + pageSize - 1
+
+  let dataQ = db
+    .from(source)
+    .select('ts, path, ref, ip_hash, country, city, ua')
+    .order('ts', { ascending: false })
+    .range(pageOffset, pageTo)
+
+  dataQ = baseFilters(dataQ)
+  const { data, error } = await dataQ
+
+  if (error) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>
+      {`Besuche konnten nicht geladen werden: ${error.message}`}
+    </pre>
+  }
+
+  // Chart: für die letzten 30 Tage bzw. gewählten Zeitraum.
+  // Auch hier wird bei normaler Ansicht die bereinigte View benutzt.
+  const end = to ? new Date(`${to}T12:00:00`) : new Date()
+  const start = from
+    ? new Date(`${from}T12:00:00`)
+    : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
+
+  let chartQ = db
+    .from(source)
+    .select('ts')
+    .gte('ts', start.toISOString())
+    .lt('ts', new Date(end.getTime() + 24 * 60 * 60 * 1000).toISOString())
+    .order('ts', { ascending: true })
+    .limit(10000)
+
+  if (country) chartQ = chartQ.eq('country', country)
+  if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
+
+  const { data: chartRows, error: chartErr } = await chartQ
+
+  const bucketMap = new Map<string, number>()
+  for (const r of chartRows || []) {
+    const key = new Date(r.ts).toISOString().slice(0, 10)
+    bucketMap.set(key, (bucketMap.get(key) || 0) + 1)
+  }
+
+  const chartData: { date: string; count: number }[] = []
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
+    const key = d.toISOString().slice(0, 10)
+    chartData.push({
+      date: d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' }),
+      count: bucketMap.get(key) ?? 0,
     })
-
-    if (error) {
-      pageError = error.message
-    } else {
-      pageRows = rows || []
-    }
-  } catch (e: any) {
-    pageError = e?.message || 'Verbindung zur Datenbank wurde unterbrochen.'
-  }
-
-  const hasNextPage = pageRows.length > pageSize
-  const data = pageRows.slice(0, pageSize)
-  const safePage = page
-
-  // Chart separat laden. Wenn diese Abfrage scheitert, bleibt die Tabelle nutzbar.
-  let chartErr: { message: string } | null = null
-  let chartData: { date: string; count: number }[] = []
-
-  try {
-    const { data: chartRows, error } = await db.rpc('admin_visits_daily', rpcArgs)
-
-    if (error) {
-      chartErr = { message: error.message }
-    } else {
-      chartData = (chartRows || []).map((r: any) => ({
-        date: new Date(`${r.day}T12:00:00`).toLocaleDateString('de-AT', {
-          day: '2-digit',
-          month: '2-digit',
-        }),
-        count: Number(r.cnt ?? 0),
-      }))
-    }
-  } catch (e: any) {
-    chartErr = { message: e?.message || 'Verbindung zur Datenbank wurde unterbrochen.' }
   }
 
   // Helper: URL mit aktualisierten Params
@@ -149,12 +179,6 @@ export default async function AdminAnalytics({
   return (
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
-
-      {pageError && (
-        <div style={{ marginBottom: 12, padding: 10, color: 'crimson' }}>
-          Besuche konnten nicht geladen werden: {pageError}
-        </div>
-      )}
 
       {chartErr && (
         <div style={{ marginBottom: 12, padding: 10, color: '#92400e' }}>
@@ -296,14 +320,14 @@ export default async function AdminAnalytics({
           ← Zurück
         </a>
         <span style={{ fontSize: 12, color: '#6b7280' }}>
-          Seite {safePage}
+          Seite {safePage} von {totalPages} (gesamt {total})
         </span>
         <a
-          href={makeUrl(safePage + 1)}
-          aria-disabled={!hasNextPage}
+          href={makeUrl(Math.min(totalPages, safePage + 1))}
+          aria-disabled={safePage >= totalPages}
           style={{
-            pointerEvents: !hasNextPage ? 'none' : 'auto',
-            opacity: !hasNextPage ? 0.5 : 1,
+            pointerEvents: safePage >= totalPages ? 'none' : 'auto',
+            opacity: safePage >= totalPages ? 0.5 : 1,
             padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
