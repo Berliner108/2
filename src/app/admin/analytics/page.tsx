@@ -71,88 +71,68 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länder für Dropdown
-  const { data: countriesRaw } = await db
-    .from('visits')
-    .select('country')
-    .not('country', 'is', null)
-    .order('country', { ascending: true })
-    .limit(5000)
+  // Länder für Dropdown – ebenfalls aus der bereinigten serverseitigen Auswertung.
+  const { data: countriesRaw, error: countriesErr } = await db.rpc('admin_visit_countries')
 
-  const countries = Array.from(
-    new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
-  )
-
-  // ---- Filter
-  // Gleiche Bot-Erkennung wie in deiner ersten funktionierenden Version,
-  // aber ohne die teuren NOT ILIKE-Abfragen in PostgreSQL.
-  const baseFilters = (q: any) => {
-    if (from) q = q.gte('ts', new Date(from).toISOString())
-    if (to) q = q.lt('ts', new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000).toISOString())
-    if (country) q = q.eq('country', country)
-    if (ip) q = q.ilike('ip_hash', `${ip}%`)
-    return q
+  if (countriesErr) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>
+      {`Länderliste konnte nicht geladen werden: ${countriesErr.message}`}
+    </pre>
   }
 
-  // Bis zu 5000 passende Visits laden, danach mit DER ALTEN Botlogik filtern.
-  let dataQ = db
-    .from('visits')
-    .select('ts, path, ref, ip_hash, country, city, ua')
-    .order('ts', { ascending: false })
-    .limit(5000)
+  const countries = (countriesRaw || [])
+    .map((r: any) => String(r.country || '').toUpperCase())
+    .filter(Boolean)
 
-  dataQ = baseFilters(dataQ)
-  const { data: rawData, error } = await dataQ
-
-  if (error) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
+  // ---- Daten komplett serverseitig filtern/paginieren.
+  // WICHTIG: Die SQL-Funktionen dazu stehen in admin_visits_sql.sql.
+  const rpcArgs = {
+    p_from: from || null,
+    p_to: to || null,
+    p_country: country || null,
+    p_ip_prefix: ip || null,
+    p_include_bots: includeBots,
   }
 
-  const filteredRows = includeBots
-    ? (rawData || [])
-    : (rawData || []).filter((r: any) => !botLike(r.ua))
+  // Gesamtzahl zuerst holen, damit auch ungültige/zu hohe Seiten sauber behandelt werden.
+  const { data: countData, error: countErr } = await db.rpc('admin_visits_count', rpcArgs)
 
-  const total = filteredRows.length
+  if (countErr) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>
+      {`Besuche konnten nicht gezählt werden: ${countErr.message}`}
+    </pre>
+  }
+
+  const total = Number(countData ?? 0)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const safePage = Math.min(page, totalPages)
   const pageOffset = (safePage - 1) * pageSize
-  const data = filteredRows.slice(pageOffset, pageOffset + pageSize)
 
-  // --- Chart ohne RPC, aber mit exakt derselben alten Botlogik
-  const end = to ? new Date(to) : new Date()
-  const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
+  const { data: pageRows, error } = await db.rpc('admin_visits_page', {
+    ...rpcArgs,
+    p_limit: pageSize,
+    p_offset: pageOffset,
+  })
 
-  let chartQ = db
-    .from('visits')
-    .select('ts, ua')
-    .gte('ts', start.toISOString())
-    .lt('ts', new Date(end.getTime() + 24 * 60 * 60 * 1000).toISOString())
-    .order('ts', { ascending: true })
-    .limit(10000)
-
-  if (country) chartQ = chartQ.eq('country', country)
-  if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
-
-  const { data: chartRaw, error: chartErr } = await chartQ
-
-  const chartRows = (chartErr ? [] : (chartRaw || [])).filter(
-    (r: any) => includeBots || !botLike(r.ua)
-  )
-
-  const bucketMap = new Map<string, number>()
-  for (const r of chartRows) {
-    const key = new Date(r.ts).toISOString().slice(0, 10)
-    bucketMap.set(key, (bucketMap.get(key) || 0) + 1)
+  if (error) {
+    return <pre style={{ padding: 16, color: 'crimson' }}>
+      {`Besuche konnten nicht geladen werden: ${error.message}`}
+    </pre>
   }
 
-  const chartData: { date: string; count: number }[] = []
-  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
-    const key = d.toISOString().slice(0, 10)
-    chartData.push({
-      date: d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' }),
-      count: bucketMap.get(key) ?? 0,
-    })
-  }
+  const data = pageRows || []
+
+  // Chart ebenfalls in PostgreSQL aggregieren – keine 10.000-Rohzeilen-Grenze mehr.
+  // Ohne Datumsfilter zeigt der Chart weiterhin die letzten 30 Kalendertage.
+  const { data: chartRows, error: chartErr } = await db.rpc('admin_visits_daily', rpcArgs)
+
+  const chartData = (chartErr ? [] : (chartRows || [])).map((r: any) => ({
+    date: new Date(`${r.day}T12:00:00`).toLocaleDateString('de-AT', {
+      day: '2-digit',
+      month: '2-digit',
+    }),
+    count: Number(r.cnt ?? 0),
+  }))
 
   // Helper: URL mit aktualisierten Params
   const makeUrl = (p: number) => {
