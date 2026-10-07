@@ -71,73 +71,57 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länderfilter statisch halten, damit hierfür kein Full-Table-Scan nötig ist.
-  const countries: string[] = ['AT', 'DE', 'CH']
+  // Länder für Dropdown
+  const { data: countriesRaw } = await db
+    .from('visits')
+    .select('country')
+    .not('country', 'is', null)
+    .order('country', { ascending: true })
+    .limit(5000)
+
+  const countries = Array.from(
+    new Set((countriesRaw || []).map(r => (r.country || '').toUpperCase()).filter(Boolean))
+  )
 
   // ---- Filter
   const baseFilters = (q: any) => {
-    if (from) {
-      q = q.gte('ts', new Date(`${from}T00:00:00+02:00`).toISOString())
-    }
-    if (to) {
-      const nextDay = new Date(`${to}T00:00:00+02:00`)
-      nextDay.setDate(nextDay.getDate() + 1)
-      q = q.lt('ts', nextDay.toISOString())
-    }
+    if (from) q = q.gte('ts', new Date(from).toISOString())
+    if (to) q = q.lt('ts', new Date(new Date(to).getTime() + 24 * 60 * 60 * 1000).toISOString())
     if (country) q = q.eq('country', country)
     if (ip) q = q.ilike('ip_hash', `${ip}%`)
     return q
   }
 
-  // Standardansicht: nur echte Visits aus SQL-View.
-  // Mit "Bots zeigen": direkt aus visits.
-  const source = includeBots ? 'visits' : 'admin_visits_clean'
+  // Tabelle: Bots bereits in PostgreSQL herausfiltern und erst DANACH paginieren.
+  // Keine View nötig. Verwendet die bereits vorhandene RPC admin_visits_page.
+  const pageOffset = (page - 1) * pageSize
 
-  // Erst zählen, bereits serverseitig gefiltert.
-  let countQ = db
-    .from(source)
-    .select('*', { count: 'exact', head: true })
-
-  countQ = baseFilters(countQ)
-  const { count, error: countErr } = await countQ
-
-  if (countErr) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>
-      {`Besuche konnten nicht gezählt werden: ${countErr.message}`}
-    </pre>
-  }
-
-  const total = count ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const safePage = Math.min(page, totalPages)
-  const pageOffset = (safePage - 1) * pageSize
-  const pageTo = pageOffset + pageSize - 1
-
-  let dataQ = db
-    .from(source)
-    .select('ts, path, ref, ip_hash, country, city, ua')
-    .order('ts', { ascending: false })
-    .range(pageOffset, pageTo)
-
-  dataQ = baseFilters(dataQ)
-  const { data, error } = await dataQ
+  const { data: pageRows, error } = await db.rpc('admin_visits_page', {
+    p_from: from || null,
+    p_to: to || null,
+    p_country: country || null,
+    p_ip_prefix: ip || null,
+    p_include_bots: includeBots,
+    p_limit: pageSize + 1,
+    p_offset: pageOffset,
+  })
 
   if (error) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>
-      {`Besuche konnten nicht geladen werden: ${error.message}`}
-    </pre>
+    return <pre style={{ padding: 16, color: 'crimson' }}>{error.message}</pre>
   }
 
-  // Chart: für die letzten 30 Tage bzw. gewählten Zeitraum.
-  // Auch hier wird bei normaler Ansicht die bereinigte View benutzt.
-  const end = to ? new Date(`${to}T12:00:00`) : new Date()
-  const start = from
-    ? new Date(`${from}T12:00:00`)
-    : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
+  const rows = pageRows || []
+  const hasNextPage = rows.length > pageSize
+  const data = rows.slice(0, pageSize)
+  const safePage = page
+
+  // --- Chart ohne RPC, aber mit exakt derselben alten Botlogik
+  const end = to ? new Date(to) : new Date()
+  const start = from ? new Date(from) : new Date(end.getTime() - 29 * 24 * 60 * 60 * 1000)
 
   let chartQ = db
-    .from(source)
-    .select('ts')
+    .from('visits')
+    .select('ts, ua')
     .gte('ts', start.toISOString())
     .lt('ts', new Date(end.getTime() + 24 * 60 * 60 * 1000).toISOString())
     .order('ts', { ascending: true })
@@ -146,10 +130,14 @@ export default async function AdminAnalytics({
   if (country) chartQ = chartQ.eq('country', country)
   if (ip) chartQ = chartQ.ilike('ip_hash', `${ip}%`)
 
-  const { data: chartRows, error: chartErr } = await chartQ
+  const { data: chartRaw, error: chartErr } = await chartQ
+
+  const chartRows = (chartErr ? [] : (chartRaw || [])).filter(
+    (r: any) => includeBots || !botLike(r.ua)
+  )
 
   const bucketMap = new Map<string, number>()
-  for (const r of chartRows || []) {
+  for (const r of chartRows) {
     const key = new Date(r.ts).toISOString().slice(0, 10)
     bucketMap.set(key, (bucketMap.get(key) || 0) + 1)
   }
@@ -320,14 +308,14 @@ export default async function AdminAnalytics({
           ← Zurück
         </a>
         <span style={{ fontSize: 12, color: '#6b7280' }}>
-          Seite {safePage} von {totalPages} (gesamt {total})
+          Seite {safePage}
         </span>
         <a
-          href={makeUrl(Math.min(totalPages, safePage + 1))}
-          aria-disabled={safePage >= totalPages}
+          href={makeUrl(safePage + 1)}
+          aria-disabled={!hasNextPage}
           style={{
-            pointerEvents: safePage >= totalPages ? 'none' : 'auto',
-            opacity: safePage >= totalPages ? 0.5 : 1,
+            pointerEvents: !hasNextPage ? 'none' : 'auto',
+            opacity: !hasNextPage ? 0.5 : 1,
             padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
