@@ -38,7 +38,23 @@ export async function POST(req: NextRequest) {
   let city: string | null = rawCity
   try { city = rawCity ? decodeURIComponent(rawCity) : null } catch {}
 
-  const isBot = /bot|crawler|spider|crawl|curl|httpx|node-fetch|axios|headless|preview|uptime/i.test(ua)
+  const isBot = /bot|crawler|spider|crawl|curl|httpx|node-fetch|axios|headless|preview|uptime|vercel-screenshot|vercel edge functions|meta-externalagent/i.test(ua)
+
+  // Bots/Systemaufrufe gar nicht erst speichern.
+  if (isBot) {
+    return NextResponse.json({ ok: true, skipped: 'bot' })
+  }
+
+  // Kaputte/technische Pfade ebenfalls nicht speichern.
+  if (
+    !path ||
+    path === '/null' ||
+    path.includes('/null') ||
+    path === '/undefined' ||
+    path.includes('/undefined')
+  ) {
+    return NextResponse.json({ ok: true, skipped: 'invalid-path' })
+  }
 
   // ➜ dein Salt-Name bleibt gültig
   const salt = process.env.IP_HASH_SALT || process.env.TRACK_SALT || 'change-me'
