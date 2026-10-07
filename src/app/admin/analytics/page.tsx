@@ -71,18 +71,13 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länder für Dropdown.
-  // Ein Fehler/Timeout hier darf NICHT die komplette Analytics-Seite blockieren.
-  const { data: countriesRaw, error: countriesErr } = await db.rpc('admin_visit_countries')
+  // Länderfilter bewusst statisch halten, damit die Seite beim Laden
+  // keine teure DISTINCT-Abfrage über die komplette visits-Tabelle ausführt.
+  const countries: string[] = ['AT', 'DE', 'CH']
 
-  const countries: string[] = countriesErr
-    ? []
-    : (countriesRaw || [])
-        .map((r: any) => String(r.country || '').toUpperCase())
-        .filter((c: string) => Boolean(c))
-
-  // ---- Daten komplett serverseitig filtern/paginieren.
-  // WICHTIG: Die SQL-Funktionen dazu stehen in admin_visits_sql.sql.
+  // ---- Daten serverseitig filtern und leichtgewichtig paginieren.
+  // Kein COUNT(*) mehr über die komplette Tabelle.
+  // Wir laden 51 Zeilen: 50 anzeigen + 1 als "gibt es eine nächste Seite?".
   const rpcArgs = {
     p_from: from || null,
     p_to: to || null,
@@ -91,45 +86,52 @@ export default async function AdminAnalytics({
     p_include_bots: includeBots,
   }
 
-  // Gesamtzahl zuerst holen, damit auch ungültige/zu hohe Seiten sauber behandelt werden.
-  const { data: countData, error: countErr } = await db.rpc('admin_visits_count', rpcArgs)
+  const pageOffset = (page - 1) * pageSize
 
-  if (countErr) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>
-      {`Besuche konnten nicht gezählt werden: ${countErr.message}`}
-    </pre>
+  let pageRows: any[] = []
+  let pageError: string | null = null
+
+  try {
+    const { data: rows, error } = await db.rpc('admin_visits_page', {
+      ...rpcArgs,
+      p_limit: pageSize + 1,
+      p_offset: pageOffset,
+    })
+
+    if (error) {
+      pageError = error.message
+    } else {
+      pageRows = rows || []
+    }
+  } catch (e: any) {
+    pageError = e?.message || 'Verbindung zur Datenbank wurde unterbrochen.'
   }
 
-  const total = Number(countData ?? 0)
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const safePage = Math.min(page, totalPages)
-  const pageOffset = (safePage - 1) * pageSize
+  const hasNextPage = pageRows.length > pageSize
+  const data = pageRows.slice(0, pageSize)
+  const safePage = page
 
-  const { data: pageRows, error } = await db.rpc('admin_visits_page', {
-    ...rpcArgs,
-    p_limit: pageSize,
-    p_offset: pageOffset,
-  })
+  // Chart separat laden. Wenn diese Abfrage scheitert, bleibt die Tabelle nutzbar.
+  let chartErr: { message: string } | null = null
+  let chartData: { date: string; count: number }[] = []
 
-  if (error) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>
-      {`Besuche konnten nicht geladen werden: ${error.message}`}
-    </pre>
+  try {
+    const { data: chartRows, error } = await db.rpc('admin_visits_daily', rpcArgs)
+
+    if (error) {
+      chartErr = { message: error.message }
+    } else {
+      chartData = (chartRows || []).map((r: any) => ({
+        date: new Date(`${r.day}T12:00:00`).toLocaleDateString('de-AT', {
+          day: '2-digit',
+          month: '2-digit',
+        }),
+        count: Number(r.cnt ?? 0),
+      }))
+    }
+  } catch (e: any) {
+    chartErr = { message: e?.message || 'Verbindung zur Datenbank wurde unterbrochen.' }
   }
-
-  const data = pageRows || []
-
-  // Chart ebenfalls in PostgreSQL aggregieren – keine 10.000-Rohzeilen-Grenze mehr.
-  // Ohne Datumsfilter zeigt der Chart weiterhin die letzten 30 Kalendertage.
-  const { data: chartRows, error: chartErr } = await db.rpc('admin_visits_daily', rpcArgs)
-
-  const chartData = (chartErr ? [] : (chartRows || [])).map((r: any) => ({
-    date: new Date(`${r.day}T12:00:00`).toLocaleDateString('de-AT', {
-      day: '2-digit',
-      month: '2-digit',
-    }),
-    count: Number(r.cnt ?? 0),
-  }))
 
   // Helper: URL mit aktualisierten Params
   const makeUrl = (p: number) => {
@@ -148,9 +150,9 @@ export default async function AdminAnalytics({
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
 
-      {countriesErr && (
-        <div style={{ marginBottom: 12, padding: 10, color: '#92400e' }}>
-          Länderliste konnte momentan nicht geladen werden. Die Besuchsdaten funktionieren trotzdem.
+      {pageError && (
+        <div style={{ marginBottom: 12, padding: 10, color: 'crimson' }}>
+          Besuche konnten nicht geladen werden: {pageError}
         </div>
       )}
 
@@ -294,14 +296,14 @@ export default async function AdminAnalytics({
           ← Zurück
         </a>
         <span style={{ fontSize: 12, color: '#6b7280' }}>
-          Seite {safePage} von {totalPages} (gesamt {total})
+          Seite {safePage}
         </span>
         <a
-          href={makeUrl(Math.min(totalPages, safePage + 1))}
-          aria-disabled={safePage >= totalPages}
+          href={makeUrl(safePage + 1)}
+          aria-disabled={!hasNextPage}
           style={{
-            pointerEvents: safePage >= totalPages ? 'none' : 'auto',
-            opacity: safePage >= totalPages ? 0.5 : 1,
+            pointerEvents: !hasNextPage ? 'none' : 'auto',
+            opacity: !hasNextPage ? 0.5 : 1,
             padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8
           }}
         >
