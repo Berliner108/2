@@ -80,9 +80,9 @@ export default async function AdminAnalytics({
     </pre>
   }
 
-  const countries = (countriesRaw || [])
+  const countries: string[] = (countriesRaw || [])
     .map((r: any) => String(r.country || '').toUpperCase())
-    .filter(Boolean)
+    .filter((c: string) => Boolean(c))
 
   // ---- Daten komplett serverseitig filtern/paginieren.
   // WICHTIG: Die SQL-Funktionen dazu stehen in admin_visits_sql.sql.
