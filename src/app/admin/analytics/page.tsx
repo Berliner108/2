@@ -71,18 +71,15 @@ export default async function AdminAnalytics({
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Länder für Dropdown – ebenfalls aus der bereinigten serverseitigen Auswertung.
+  // Länder für Dropdown.
+  // Ein Fehler/Timeout hier darf NICHT die komplette Analytics-Seite blockieren.
   const { data: countriesRaw, error: countriesErr } = await db.rpc('admin_visit_countries')
 
-  if (countriesErr) {
-    return <pre style={{ padding: 16, color: 'crimson' }}>
-      {`Länderliste konnte nicht geladen werden: ${countriesErr.message}`}
-    </pre>
-  }
-
-  const countries: string[] = (countriesRaw || [])
-    .map((r: any) => String(r.country || '').toUpperCase())
-    .filter((c: string) => Boolean(c))
+  const countries: string[] = countriesErr
+    ? []
+    : (countriesRaw || [])
+        .map((r: any) => String(r.country || '').toUpperCase())
+        .filter((c: string) => Boolean(c))
 
   // ---- Daten komplett serverseitig filtern/paginieren.
   // WICHTIG: Die SQL-Funktionen dazu stehen in admin_visits_sql.sql.
@@ -150,6 +147,12 @@ export default async function AdminAnalytics({
   return (
     <div style={{ padding: 16, width: '100%', maxWidth: '100%' }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Besuche (visits)</h1>
+
+      {countriesErr && (
+        <div style={{ marginBottom: 12, padding: 10, color: '#92400e' }}>
+          Länderliste konnte momentan nicht geladen werden. Die Besuchsdaten funktionieren trotzdem.
+        </div>
+      )}
 
       {chartErr && (
         <div style={{ marginBottom: 12, padding: 10, color: '#92400e' }}>
