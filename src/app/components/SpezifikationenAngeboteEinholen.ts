@@ -415,6 +415,19 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     }
   ],
+  Verchromen: [
+  {
+    type: 'radio',
+    name: 'verfahren',
+    label: 'Verfahren:',
+    options: [
+      'Glanzverchromen',
+      'Mattverchromen',
+      'Hartverchromen'
+    ],
+    required: true
+  }
+],
   Nasslackieren: [
     {
       type: 'dropdown',
