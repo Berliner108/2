@@ -12,6 +12,88 @@ type CustomNdaSnapshot = {
   version: string
 }
 
+
+function validateRequiredSpecs(body: any) {
+  const specs =
+    body?.specSelections && typeof body.specSelections === 'object'
+      ? body.specSelections
+      : {}
+
+  const rules: Record<
+    string,
+    { field: string; allowed: string[] }[]
+  > = {
+    'Aluminium-Passivieren': [
+      {
+        field: 'passivierungsart',
+        allowed: ['Chrom(III)-Passivierung', 'Chromfreie Passivierung'],
+      },
+    ],
+    Elektropolieren: [
+      {
+        field: 'anwendungsbereich',
+        allowed: ['Lebensmittel', 'Pharma', 'Medizintechnik', 'Industrie allgemein'],
+      },
+    ],
+    Verchromen: [
+      {
+        field: 'verfahren',
+        allowed: ['Glanzverchromen', 'Mattverchromen', 'Hartverchromen'],
+      },
+    ],
+    Vermessingen: [
+      {
+        field: 'ausfuehrung',
+        allowed: ['Glänzend', 'Matt', 'Antik / Patiniert'],
+      },
+    ],
+    Verkupfern: [
+      {
+        field: 'verfahren',
+        allowed: ['Galvanisch', 'Chemisch'],
+      },
+    ],
+    Vergolden: [
+      {
+        field: 'goldart',
+        allowed: ['Reingold', 'Hartgold'],
+      },
+      {
+        field: 'anwendung',
+        allowed: ['Dekorativ', 'Technisch'],
+      },
+    ],
+  }
+
+  const selected = [
+    { prefix: 'v1', verfahren: String(body?.verfahren1 ?? '') },
+    { prefix: 'v2', verfahren: String(body?.verfahren2 ?? '') },
+  ]
+
+  for (const { prefix, verfahren } of selected) {
+    if (!verfahren || !rules[verfahren]) continue
+
+    for (const rule of rules[verfahren]) {
+      const key = `${prefix}__${verfahren}__${rule.field}`
+      const value = specs[key]
+
+      if (
+        typeof value !== 'string' ||
+        !rule.allowed.includes(value)
+      ) {
+        return {
+          ok: false as const,
+          verfahren,
+          field: rule.field,
+          key,
+        }
+      }
+    }
+  }
+
+  return { ok: true as const }
+}
+
 function safeExtFromName(name: string) {
   const ext = name.includes('.') ? name.split('.').pop() : 'bin'
 
@@ -41,6 +123,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     const eingereichteDateien = Array.isArray(body.dateien) ? body.dateien : []
+
+
+    const specValidation = validateRequiredSpecs(body)
+
+    if (!specValidation.ok) {
+      return NextResponse.json(
+        {
+          error: 'required_spec_missing_or_invalid',
+          verfahren: specValidation.verfahren,
+          field: specValidation.field,
+          key: specValidation.key,
+        },
+        { status: 400 },
+      )
+    }
+
 
     if (eingereichteDateien.length === 0) {
       return NextResponse.json(
