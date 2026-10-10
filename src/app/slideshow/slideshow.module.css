@@ -389,54 +389,43 @@
 }}
 @media (min-width: 1900px) {
   .slideshowContainer {
-    min-height: 460px;
-    border-radius: 8px;
+    min-height: 630px;
   }
 
   .imageContainer {
-    min-height: 460px;
-    border-radius: 8px;
+    min-height: 630px;
   }
 
   .imageContainer img {
-    max-height: 460px;
-    min-height: 460px;
-    border-radius: 8px;
+    max-height: 630px;
+    min-height: 630px;
   }
 
   .fullImageSlide .imageContainer img {
-    max-height: 460px;
-    min-height: 460px;
-    border-radius: 8px;
-  }
-
-  .slide,
-  .fullImageSlide {
-    border-radius: 8px;
-  }
-
-  .text1 {
-    font-size: 32px;
+    max-height: 630px;
+    min-height: 630px;
+  }.text1 {
+    font-size: 40px;
   }
 
   .text2 {
-    font-size: 22px;
+    font-size: 30px;
   }
 
   .textLink {
-    font-size: 22px;
+    font-size: 30px;
   }
 
   .overlayText1 {
-    font-size: 32px;
+    font-size: 38px;
   }
 
   .overlayText2 {
-    font-size: 24px;
+    font-size: 32px;
   }
 
   .overlayLink {
-    font-size: 22px;
+    font-size: 32px;
   }
 }
 @media (min-width: 1550px) and (max-width: 1899px) {
@@ -480,5 +469,56 @@
 
   .overlayLink {
     font-size: 25px;
+  }
+}
+@media (min-width: 769px) {
+  .slideshowContainer {
+    border-radius: 8px;
+  }
+
+  .slide,
+  .fullImageSlide,
+  .imageContainer,
+  .imageContainer img,
+  .fullImageSlide .imageContainer img {
+    border-radius: 8px;
+  }
+}
+@media (min-width: 1900px) {
+  .slideshowContainer {
+    min-height: 460px;
+  }
+
+  .imageContainer {
+    min-height: 460px;
+  }
+
+  .imageContainer img,
+  .fullImageSlide .imageContainer img {
+    min-height: 460px;
+    max-height: 460px;
+  }
+
+  .text1 {
+    font-size: 32px;
+  }
+
+  .text2 {
+    font-size: 22px;
+  }
+
+  .textLink {
+    font-size: 22px;
+  }
+}
+@media (min-width: 769px) {
+  .slideshowContainer {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .slide {
+    border-radius: 8px;
+    overflow: hidden;
   }
 }
