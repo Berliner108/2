@@ -471,3 +471,16 @@
     font-size: 25px;
   }
 }
+@media (min-width: 769px) {
+  .slideshowContainer {
+    border-radius: 8px;
+  }
+
+  .slide,
+  .fullImageSlide,
+  .imageContainer,
+  .imageContainer img,
+  .fullImageSlide .imageContainer img {
+    border-radius: 8px;
+  }
+}
