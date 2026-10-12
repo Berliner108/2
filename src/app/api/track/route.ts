@@ -8,19 +8,16 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   const admin = supabaseAdmin()
 
+  // Body lesen (sendBeacon => oft text/plain)
   let body: any = {}
-  try {
-    body = await req.json()
-  } catch {
-    try {
-      body = JSON.parse(await req.text())
-    } catch {}
+  try { body = await req.json() } catch {
+    try { body = JSON.parse(await req.text()) } catch {}
   }
 
+  // ---- Secret prüfen: Header ODER Body ----
   const serverSecret = process.env.TRACK_SECRET || ''
   const headerSecret = req.headers.get('x-track-secret') || ''
   const bodySecret = (body?.secret || '').toString()
-
   if (!serverSecret || (headerSecret !== serverSecret && bodySecret !== serverSecret)) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
   }
@@ -30,48 +27,25 @@ export async function POST(req: NextRequest) {
   const ref = (body?.referrer || req.headers.get('referer') || null) as string | null
 
   const ipHdr = req.headers.get('x-forwarded-for') || ''
-  const ip =
-    ipHdr.split(',')[0].trim() ||
-    req.headers.get('x-real-ip') ||
-    '0.0.0.0'
-
+  const ip = ipHdr.split(',')[0].trim() || req.headers.get('x-real-ip') || '0.0.0.0'
   const ua = req.headers.get('user-agent') || ''
-  const acceptLanguage = req.headers.get('accept-language') || ''
-  const secFetchSite = req.headers.get('sec-fetch-site') || ''
-  const secChUa = req.headers.get('sec-ch-ua') || ''
-
-  const country =
-    req.headers.get('x-vercel-ip-country') ||
-    req.headers.get('cf-ipcountry') ||
-    req.headers.get('x-geo-country') ||
-    null
+  const country = req.headers.get('x-vercel-ip-country')
+    || req.headers.get('cf-ipcountry')
+    || req.headers.get('x-geo-country')
+    || null
 
   const rawCity = req.headers.get('x-vercel-ip-city') || null
   let city: string | null = rawCity
-  try {
-    city = rawCity ? decodeURIComponent(rawCity) : null
-  } catch {}
+  try { city = rawCity ? decodeURIComponent(rawCity) : null } catch {}
 
-  const isBot =
-    /bot|crawler|spider|crawl|curl|wget|httpx|node-fetch|axios|python-requests|python|java|go-http-client|headless|phantomjs|selenium|playwright|puppeteer|preview|uptime|monitor|healthcheck|vercel-screenshot|vercel edge functions|meta-externalagent|facebookexternalhit|facebookcatalog|twitterbot|linkedinbot|slackbot|discordbot|whatsapp|telegrambot|applebot|bingbot|googlebot|yandex|baiduspider|duckduckbot|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|chatgpt-user|claudebot|anthropic-ai|perplexitybot/i.test(ua)
+  const isBot = /bot|crawler|spider|crawl|curl|httpx|node-fetch|axios|headless|preview|uptime|vercel-screenshot|vercel edge functions|meta-externalagent/i.test(ua)
 
-  const looksLikeBrowser =
-    /mozilla\/5\.0|chrome\/|chromium\/|firefox\/|safari\/|edg\//i.test(ua) &&
-    Boolean(acceptLanguage || secFetchSite || secChUa)
-
-  const isPrefetch =
-    req.headers.get('purpose') === 'prefetch' ||
-    req.headers.get('sec-purpose')?.includes('prefetch') ||
-    req.headers.get('x-moz') === 'prefetch' ||
-    req.headers.get('next-router-prefetch') === '1'
-
-  if (isBot || !looksLikeBrowser || isPrefetch) {
-    return NextResponse.json({
-      ok: true,
-      skipped: isBot ? 'bot' : isPrefetch ? 'prefetch' : 'non-browser',
-    })
+  // Bots/Systemaufrufe gar nicht erst speichern.
+  if (isBot) {
+    return NextResponse.json({ ok: true, skipped: 'bot' })
   }
 
+  // Kaputte/technische Pfade ebenfalls nicht speichern.
   if (
     !path ||
     path === '/null' ||
@@ -82,90 +56,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: 'invalid-path' })
   }
 
-  const salt =
-    process.env.IP_HASH_SALT ||
-    process.env.TRACK_SALT ||
-    'change-me'
-
+  // ➜ dein Salt-Name bleibt gültig
+  const salt = process.env.IP_HASH_SALT || process.env.TRACK_SALT || 'change-me'
   const ip_hash = crypto.createHmac('sha256', salt).update(ip).digest('hex')
   const ua_hash = crypto.createHash('sha256').update(ua).digest('hex')
 
+  // anonyme Session-ID
   const cookieName = 'sid'
   const existing = req.cookies.get(cookieName)?.value
   const sid = existing || crypto.randomUUID()
 
-  // Nur echte Doppel-Requests derselben Seite innerhalb von 3 Sekunden abfangen.
-  // Ein späterer erneuter Aufruf derselben Seite wird wieder als Page View gespeichert.
-  const duplicateCutoff = new Date(Date.now() - 3_000).toISOString()
+  await Promise.all([
+    admin.from('page_views').insert({
+      path, referrer: ref, session_id: sid,
+      ip_hash, ua_hash, country, is_bot: isBot
+    }),
+    admin.from('visits').insert({
+      path, ref: ref, ip_hash, country, city, ua: ua.slice(0, 500)
+    })
+  ])
 
-  const { data: recentPageView, error: pageViewCheckError } = await admin
-    .from('page_views')
-    .select('session_id')
-    .eq('session_id', sid)
-    .eq('path', path)
-    .gte('ts', duplicateCutoff)
-    .limit(1)
-    .maybeSingle()
-
-  if (pageViewCheckError) {
-    console.error('page_view dedupe check failed:', pageViewCheckError)
-  }
-
-  const writes: any[] = []
-
-  if (!recentPageView) {
-    writes.push(
-      admin.from('page_views').insert({
-        path,
-        referrer: ref,
-        session_id: sid,
-        ip_hash,
-        ua_hash,
-        country,
-        is_bot: false,
-      })
-    )
-  }
-
-  // visits = eine Besuchssession. Die sid-Cookie läuft nach 30 Minuten
-  // Inaktivität ab. Beim nächsten Besuch entsteht eine neue sid und damit
-  // wieder ein neuer visits-Eintrag.
+  const res = NextResponse.json({ ok: true })
   if (!existing) {
-    writes.push(
-      admin.from('visits').insert({
-        path,
-        ref: ref,
-        ip_hash,
-        country,
-        city,
-        ua: ua.slice(0, 500),
-      })
-    )
+    res.cookies.set(cookieName, sid, {
+      httpOnly: true, sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 365, path: '/',
+    })
   }
-
-  if (writes.length > 0) {
-    const results = await Promise.all(writes)
-    for (const result of results) {
-      if (result?.error) {
-        console.error('tracking insert failed:', result.error)
-      }
-    }
-  }
-
-  const res = NextResponse.json({
-    ok: true,
-    skipped: writes.length === 0 ? 'duplicate' : undefined,
-  })
-
-  // Sliding 30-minute session: every real page view refreshes the cookie.
-  // After 30 minutes without activity, the browser drops it automatically.
-  res.cookies.set(cookieName, sid, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 30,
-    path: '/',
-  })
-
   return res
 }
