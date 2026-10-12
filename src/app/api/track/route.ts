@@ -94,11 +94,16 @@ export async function POST(req: NextRequest) {
   const existing = req.cookies.get(cookieName)?.value
   const sid = existing || crypto.randomUUID()
 
-  const { data: existingPageView, error: pageViewCheckError } = await admin
+  // Nur echte Doppel-Requests derselben Seite innerhalb von 3 Sekunden abfangen.
+  // Ein späterer erneuter Aufruf derselben Seite wird wieder als Page View gespeichert.
+  const duplicateCutoff = new Date(Date.now() - 3_000).toISOString()
+
+  const { data: recentPageView, error: pageViewCheckError } = await admin
     .from('page_views')
     .select('session_id')
     .eq('session_id', sid)
     .eq('path', path)
+    .gte('ts', duplicateCutoff)
     .limit(1)
     .maybeSingle()
 
@@ -108,7 +113,7 @@ export async function POST(req: NextRequest) {
 
   const writes: any[] = []
 
-  if (!existingPageView) {
+  if (!recentPageView) {
     writes.push(
       admin.from('page_views').insert({
         path,
@@ -122,6 +127,9 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // visits = eine Besuchssession. Die sid-Cookie läuft nach 30 Minuten
+  // Inaktivität ab. Beim nächsten Besuch entsteht eine neue sid und damit
+  // wieder ein neuer visits-Eintrag.
   if (!existing) {
     writes.push(
       admin.from('visits').insert({
@@ -149,15 +157,15 @@ export async function POST(req: NextRequest) {
     skipped: writes.length === 0 ? 'duplicate' : undefined,
   })
 
-  if (!existing) {
-    res.cookies.set(cookieName, sid, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 365,
-      path: '/',
-    })
-  }
+  // Sliding 30-minute session: every real page view refreshes the cookie.
+  // After 30 minutes without activity, the browser drops it automatically.
+  res.cookies.set(cookieName, sid, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 30,
+    path: '/',
+  })
 
   return res
 }
