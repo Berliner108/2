@@ -472,7 +472,7 @@ const showSkeletonLack = loadingLack
             </div>
 
             <div className={styles.imageContainer}>
-              <img src="/images/werbung.jpg" alt="Artikelbild" className={styles.articleImage} />
+              <img src="/images/werbung.png" alt="Artikelbild" className={styles.articleImage} />
             </div>
           </section>
 
