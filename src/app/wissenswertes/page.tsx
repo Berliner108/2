@@ -34,20 +34,32 @@ const Wissenswertes = () => {
       "#Verfahren": 1,
       "#Nasslackieren": 2,
       "#Pulverbeschichten": 3,
-      "#Eloxieren": 4,
-      "#Anodisieren": 4,
-      "#Verzinken": 5,
-      "#Vernickeln": 6,
-      "#Entnickeln": 6,
-      "#Entlacken": 7,
-      "#Strahlen": 8,
-      "#KTL-Beschichten": 9,
-      "#Verchromen": 10,
+      "#Verzinken": 4,
+      "#Eloxieren": 5,
+      "#Anodisieren": 6,
+      "#KTL-Beschichten": 7,
+      "#Zinkphosphatieren": 8,
+      "#Strahlen": 9,
+      "#Entlacken": 10,
       "#Brünieren": 11,
       "#Verzinnen": 12,
       "#Aluminieren": 13,
-      "#Folieren": 14,
-      "#Isolierstegverpressen": 15,
+      "#Vernickeln": 14,
+      "#Aluminium-Passivieren": 15,
+      "#Elektropolieren": 16,
+      "#Verchromen": 17,
+      "#Vermessingen": 18,
+      "#Verkupfern": 19,
+      "#Vergolden": 20,
+      "#Folieren": 21,
+      "#Isolierstegverpressen": 22,
+      "#Einlagern": 23,
+      "#Entzinken": 24,
+      "#Enteloxieren": 25,
+      "#Entanodisieren": 26,
+      "#Entzinnen": 27,
+      "#Entaluminieren": 28,
+      "#Entnickeln": 29,
     };
 
     const index = hashTargets[window.location.hash];
@@ -110,47 +122,47 @@ useEffect(() => {
       items: [
         { name: "Nasslackieren", description: "Flüssiglacke für dekorative, funktionelle und korrosionsschützende Oberflächen.", target: "container-2" },
         { name: "Pulverbeschichten", description: "Pulverlack wird elektrostatisch aufgebracht und anschließend eingebrannt.", target: "container-3" },
-        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-9" },
+        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-7" },
       ],
     },
     {
       title: "Galvanische & chemische Oberflächen",
       items: [
-        { name: "Verzinken", description: "Zinkschichten zum Korrosionsschutz – unter anderem feuerverzinkt, galvanisch oder als Zinklamelle.", target: "container-5" },
-        { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-4" },
-        { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-4" },
-        { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-1" },
+        { name: "Verzinken", description: "Zinkschichten zum Korrosionsschutz – unter anderem feuerverzinkt, galvanisch oder als Zinklamelle.", target: "container-4" },
+        { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-5" },
+        { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-6" },
+        { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-8" },
         { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-11" },
         { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-12" },
         { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-13" },
-        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-6" },
-        { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-1" },
-        { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-1" },
-        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-10" },
-        { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-1" },
-        { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-1" },
-        { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-1" },
+        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-14" },
+        { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-15" },
+        { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-16" },
+        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-17" },
+        { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-18" },
+        { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-19" },
+        { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-20" },
       ],
     },
     {
       title: "Vorbehandlung & Entschichtung",
       items: [
-        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-8" },
-        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-7" },
-        { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-5" },
-        { name: "Enteloxieren", description: "Entfernen bestehender Eloxalschichten von Aluminiumoberflächen.", target: "container-4" },
-        { name: "Entanodisieren", description: "Entfernen anodisch erzeugter Oxidschichten als Vorbereitung für eine neue Oberflächenbehandlung.", target: "container-4" },
-        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-12" },
-        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-13" },
-        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-6" },
+        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-9" },
+        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-10" },
+        { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-24" },
+        { name: "Enteloxieren", description: "Entfernen bestehender Eloxalschichten von Aluminiumoberflächen.", target: "container-25" },
+        { name: "Entanodisieren", description: "Entfernen anodisch erzeugter Oxidschichten als Vorbereitung für eine neue Oberflächenbehandlung.", target: "container-26" },
+        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-27" },
+        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-28" },
+        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-29" },
       ],
     },
     {
       title: "Weitere Leistungen",
       items: [
-        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-14" },
-        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-15" },
-        { name: "Einlagern", description: "Zwischen- oder Fertigwarenlagerung als ergänzende Leistung innerhalb der Auftragsabwicklung.", target: "container-1" },
+        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-21" },
+        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-22" },
+        { name: "Einlagern", description: "Zwischen- oder Fertigwarenlagerung als ergänzende Leistung innerhalb der Auftragsabwicklung.", target: "container-23" },
       ],
     },
   ];
@@ -221,18 +233,32 @@ useEffect(() => {
     legacyContainerHeadings[1],
     "Nasslackieren",
     "Pulverbeschichten",
-    "Eloxieren / Anodisieren & Enteloxieren / Entanodisieren",
-    "Verzinken & Entzinken",
-    "Vernickeln & Entnickeln",
-    "Entlacken",
-    "Strahlen",
+    "Verzinken",
+    "Eloxieren",
+    "Anodisieren",
     "KTL-Beschichten",
-    "Verchromen",
+    "Zinkphosphatieren",
+    "Strahlen",
+    "Entlacken",
     "Brünieren",
-    "Verzinnen & Entzinnen",
-    "Aluminieren & Entaluminieren",
+    "Verzinnen",
+    "Aluminieren",
+    "Vernickeln",
+    "Aluminium-Passivieren",
+    "Elektropolieren",
+    "Verchromen",
+    "Vermessingen",
+    "Verkupfern",
+    "Vergolden",
     "Folieren",
     "Isolierstegverpressen",
+    "Einlagern",
+    "Entzinken",
+    "Enteloxieren",
+    "Entanodisieren",
+    "Entzinnen",
+    "Entaluminieren",
+    "Entnickeln",
   ];
 
   const ktlText = `
@@ -394,23 +420,202 @@ useEffect(() => {
     </ul>
   `;
 
+
+  const zinkphosphatierenText = `
+    <strong>Zinkphosphatieren</strong> ist eine chemische Vorbehandlung, bei der auf Stahl- oder verzinkten Oberflächen eine feinkristalline Phosphatschicht erzeugt wird. Sie dient häufig als Haftgrund für eine nachfolgende Lackierung oder Pulverbeschichtung und kann zugleich den Korrosionsschutz des Gesamtsystems verbessern.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Vorbehandlung vor Nasslackierung oder Pulverbeschichtung</li><li>Automobil- und Maschinenbauteile</li><li>Serienteile mit definierten Anforderungen an Lackhaftung und Korrosionsschutz</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Oberflächenzustand</li><li>gewünschtes <strong>Schichtgewicht in g/m²</strong></li><li>Nachbehandlung: <strong>keine, geölt oder versiegelt</strong></li><li>geplante Folgebehandlung oder Endbeschichtung</li><li>Stückzahl, Abmessungen und Gewicht</li></ul>
+    In Scouti können außerdem Anforderungen wie <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.<br><br>
+    <strong>Praxis-Hinweis:</strong> Entscheidend ist, ob die Phosphatierung als eigenständige temporäre Schutzschicht oder als Vorbehandlung für ein späteres Beschichtungssystem vorgesehen ist.
+  `;
+
+  const verzinnenText = `
+    <strong>Verzinnen</strong> bezeichnet das Aufbringen einer Zinnschicht auf ein Werkstück. Zinnschichten werden unter anderem eingesetzt, wenn Korrosionsschutz, gute Lötbarkeit oder definierte elektrische und funktionelle Eigenschaften gefragt sind.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Galvanisch:</strong> Zinn wird elektrolytisch auf der Oberfläche abgeschieden.</li><li><strong>Chemisch:</strong> Zinn wird durch eine chemische Abscheidung ohne externen Strom aufgebracht.</li></ul>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>elektrische und elektronische Bauteile</li><li>Steck- und Kontaktteile</li><li>Bauteile mit Anforderungen an Lötbarkeit</li><li>funktionelle Oberflächen auf Kupfer, Messing oder geeigneten Stählen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff</li><li>chemisches oder galvanisches Verzinnen</li><li>gewünschte Funktion und gegebenenfalls Schichtdicke</li><li>Kontakt-, Löt- und Sichtflächen</li><li>Stückzahl, Abmessungen und Prüfanforderungen</li></ul>
+    Scouti führt hierfür unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als auswählbare Anforderungen.
+  `;
+
+  const aluminierenText = `
+    <strong>Aluminieren</strong> erzeugt eine aluminiumhaltige Schutzschicht auf einem Werkstück. Je nach Verfahren wird Aluminium metallurgisch, thermisch oder durch Spritzen aufgebracht. Solche Schichten werden insbesondere eingesetzt, wenn Korrosions- oder Temperaturbeständigkeit gefordert ist.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Schmelztauchaluminieren</strong></li><li><strong>Spritzaluminieren</strong></li><li><strong>Feueraluminieren</strong></li></ul>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Stahlbauteile in korrosiver Umgebung</li><li>Bauteile mit erhöhter Temperaturbelastung</li><li>große oder geometrisch anspruchsvolle Werkstücke beim Spritzaluminieren</li><li>Industrie- und Anlagenbau</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und gewünschtes Verfahren</li><li>Einsatztemperatur und Umgebungsbedingungen</li><li>gewünschte Schichtdicke und Schutzwirkung</li><li>Abmessungen, Gewicht und Stückzahl</li><li>Bereiche, die nicht beschichtet werden dürfen</li></ul>
+    Als Anforderungen können in Scouti unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
+  `;
+
+  const aluminiumPassivierenText = `
+    Beim <strong>Aluminium-Passivieren</strong> wird die Aluminiumoberfläche chemisch behandelt, um ihre Korrosionsbeständigkeit zu verbessern oder eine geeignete Grundlage für nachfolgende Beschichtungen zu schaffen. Je nach System kann zugleich die elektrische Leitfähigkeit der Oberfläche eine Rolle spielen.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chrom(III)-Passivierung</strong></li><li><strong>Chromfreie Passivierung</strong></li></ul>
+    <h4>Mögliche Anforderungen</h4>
+    <ul><li>Korrosionsschutz</li><li>Lackhaftung</li><li>elektrische Leitfähigkeit</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Aluminiumlegierung</li><li>gewünschte Passivierungsart</li><li>Hauptanforderung an die Oberfläche</li><li>geplante Folgebehandlung</li><li>Stückzahl, Maße und Funktionsflächen</li></ul>
+    <strong>Praxis-Hinweis:</strong> Besonders wichtig ist, ob die passivierte Oberfläche später lackiert wird oder als funktionelle Endoberfläche eingesetzt wird.
+  `;
+
+  const elektropolierenText = `
+    <strong>Elektropolieren</strong> ist ein elektrochemisches Abtragsverfahren. Dabei werden mikroskopische Rauheitsspitzen bevorzugt abgetragen, wodurch die Oberfläche geglättet, gereinigt und optisch verfeinert wird. Das Verfahren wird besonders häufig bei Edelstahl eingesetzt.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>Reduzierung der Oberflächenrauheit</li><li>bessere Reinigbarkeit und hygienische Eigenschaften</li><li>Entfernung von Bearbeitungsspuren und Oberflächenverunreinigungen</li><li>gleichmäßigeres, technisch sauberes Erscheinungsbild</li></ul>
+    <h4>Anwendungsbereiche in Scouti</h4>
+    <ul><li><strong>Lebensmittel</strong></li><li><strong>Pharma</strong></li><li><strong>Medizintechnik</strong></li><li><strong>Industrie allgemein</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Werkstoffgüte</li><li>Anwendungsbereich</li><li>Ausgangsrauheit und gewünschtes Ergebnis</li><li>Sicht- und Funktionsflächen</li><li>Bauteilgröße, Stückzahl und gegebenenfalls Dokumentationsanforderungen</li></ul>
+  `;
+
+  const vermessingenText = `
+    Beim <strong>Vermessingen</strong> wird eine messingfarbene Kupfer-Zink-Schicht auf ein Werkstück aufgebracht. Das Verfahren wird vor allem für dekorative Oberflächen verwendet, kann aber auch Bestandteil eines technischen Schichtaufbaus sein.<br><br>
+    <h4>Ausführungen in Scouti</h4>
+    <ul><li><strong>Glänzend</strong></li><li><strong>Matt</strong></li><li><strong>Antik / patiniert</strong></li></ul>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Beschläge und dekorative Metallteile</li><li>Möbel- und Innenausbauteile</li><li>Leuchten, Sichtteile und Designkomponenten</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff</li><li>gewünschte optische Ausführung</li><li>Sichtflächen und zulässige Farbabweichungen</li><li>Stückzahl und Abmessungen</li><li>gegebenenfalls gewünschte Schutz- oder Deckschicht</li></ul>
+  `;
+
+  const verkupfernText = `
+    <strong>Verkupfern</strong> bedeutet, eine Kupferschicht auf einem Werkstück abzuscheiden. Kupfer kann als dekorative Oberfläche, als funktionelle Schicht oder als Zwischen- und Haftschicht für weitere galvanische Beschichtungen eingesetzt werden.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Galvanisch</strong></li><li><strong>Chemisch</strong></li></ul>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Zwischenschichten vor Vernickeln oder Verchromen</li><li>elektrisch leitfähige Oberflächen</li><li>dekorative Metallteile</li><li>Aufbau oder Ausgleich definierter Oberflächen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff</li><li>galvanische oder chemische Ausführung</li><li>Funktion der Kupferschicht</li><li>gewünschte Folgebeschichtung</li><li>Schichtdicke, Stückzahl und Funktionsflächen</li></ul>
+  `;
+
+  const vergoldenText = `
+    Beim <strong>Vergolden</strong> wird eine dünne Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
+    <h4>Auswahlmöglichkeiten in Scouti</h4>
+    <ul><li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li><li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li></ul>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>elektrische Kontakte und Steckverbinder</li><li>Elektronik- und Präzisionsbauteile</li><li>Schmuck- und Designteile</li><li>hochwertige Sichtflächen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und vorhandene Zwischenschichten</li><li>Reingold oder Hartgold</li><li>dekorative oder technische Anwendung</li><li>Kontakt- und Funktionsflächen</li><li>gewünschte Schichtdicke sowie Stückzahl</li></ul>
+  `;
+
+  const folierenText = legacyContainerTexts[11] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Einsatz <strong>innen oder außen</strong></li><li>Grundmaterial und vorhandene Oberfläche</li><li>gewünschte Folienart, Optik und Funktion</li><li>Bauteilabmessungen und Stückzahl</li><li>Anforderungen an Kanten, Radien, Ausschnitte und Sichtflächen</li></ul>
+    Scouti führt für Folieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> und <strong>RAL-GZ 716</strong> als mögliche Anforderungen.
+  `;
+
+  const isolierstegText = legacyContainerTexts[12] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Profiltyp, Zeichnung und Abmessungen</li><li>Werkstoff und Oberflächenzustand der Profile</li><li>Art und Abmessung des Isolierstegs</li><li>Stückzahl bzw. laufende Meter</li><li>Anforderungen an Prüfung, Verbundfestigkeit und Dokumentation</li></ul>
+    Scouti führt hierfür unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> sowie <strong>RAL-GZ 607/3</strong> als mögliche Anforderungen.
+  `;
+
+  const einlagernText = `
+    <strong>Einlagern</strong> ist bei Scouti als ergänzende Leistung vorgesehen, wenn Bauteile zwischen Fertigung, Beschichtung, Abruf oder Auslieferung zwischengelagert werden sollen. Dadurch kann ein Beschichtungs- oder Logistikauftrag auch dann abgewickelt werden, wenn die Teile nicht unmittelbar weitertransportiert werden.<br><br>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Menge, Abmessungen und Gewicht der einzulagernden Teile</li><li>gewünschte Lagerdauer</li><li>Verpackungszustand und Stapelbarkeit</li><li>Abruf- und Ausliefermodalitäten</li><li>besondere Lagerbedingungen</li></ul>
+    In Scouti kann ausdrücklich die Anforderung <strong>„trocken lagern“</strong> angegeben werden.<br><br>
+    <strong>Praxis-Hinweis:</strong> Bei beschichteten Sichtteilen sollte zusätzlich festgelegt werden, wie Verpackung, Zwischenlagen und Handhabung erfolgen müssen, damit keine Kratzer oder Druckstellen entstehen.
+  `;
+
+  const entzinkenText = `
+    <strong>Entzinken</strong> bezeichnet das gezielte Entfernen einer vorhandenen Zinkschicht. Das ist beispielsweise erforderlich, wenn ein Bauteil repariert, erneut verzinkt, anders beschichtet oder auf seinen Grundwerkstoff zurückgeführt werden soll.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und vorhandenes Zinksystem</li><li>Bauteilabmessungen und Stückzahl</li><li>gewünschter Zustand nach dem Entzinken</li><li>anschließende Weiterbehandlung</li><li>empfindliche Flächen und Maßanforderungen</li></ul>
+  `;
+
+  const enteloxierenText = `
+    <strong>Enteloxieren</strong> entfernt eine vorhandene Eloxalschicht von Aluminium. Das Verfahren wird eingesetzt, wenn eine Oberfläche neu eloxiert, repariert oder für eine andere Behandlung vorbereitet werden soll.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Aluminiumlegierung</li><li>vorhandene Eloxalschicht und Farbton</li><li>gewünschter Zustand nach dem Enteloxieren</li><li>Maß- und Sichtflächen</li><li>geplante Neubeschichtung oder erneute Eloxierung</li></ul>
+    Als mögliche Anforderungen führt Scouti unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+  `;
+
+  const entanodisierenText = `
+    <strong>Entanodisieren</strong> ist das Entfernen einer anodisch erzeugten Oxidschicht, um das Grundmaterial für eine Reparatur, Nacharbeit oder neue Oberflächenbehandlung freizulegen.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Galvanisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und vorhandene anodische Schicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag und Maßtoleranzen</li><li>Sicht- und Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
+    Scouti führt unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+  `;
+
+  const entzinnenText = `
+    <strong>Entzinnen</strong> entfernt vorhandene Zinnschichten, beispielsweise vor Reparatur, Recycling oder einer erneuten Oberflächenbehandlung.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff</li><li>Art und Zustand der vorhandenen Zinnschicht</li><li>gewünschter Zustand nach dem Entzinnen</li><li>Bauteilabmessungen, Stückzahl und empfindliche Bereiche</li><li>geplante Weiterbearbeitung oder Neubeschichtung</li></ul>
+    Scouti führt unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+  `;
+
+  const entaluminierenText = `
+    <strong>Entaluminieren</strong> bezeichnet das Entfernen einer vorhandenen Aluminiumschicht. Das Verfahren kann notwendig sein, wenn eine Beschichtung beschädigt ist, ein Bauteil repariert oder für ein neues Schichtsystem vorbereitet werden soll.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li><li><strong>Mechanisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und vorhandene Aluminiumschicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag</li><li>Geometrie, Abmessungen und Stückzahl</li><li>geplante Folgebeschichtung</li></ul>
+    Scouti führt unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+  `;
+
+  const entnickelnText = `
+    <strong>Entnickeln</strong> entfernt eine vorhandene Nickelschicht von einem Werkstück. Das ist beispielsweise bei fehlerhaften Schichten, Reparaturen oder vor einer erneuten galvanischen Behandlung erforderlich.<br><br>
+    <h4>Varianten in Scouti</h4>
+    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und vorhandene Nickelschicht</li><li>chemisches oder elektrochemisches Entnickeln</li><li>zulässiger Angriff auf den Grundwerkstoff</li><li>Maß-, Sicht- und Funktionsflächen</li><li>geplante Folgebeschichtung</li></ul>
+    Als mögliche Anforderungen führt Scouti unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong>.
+  `;
+
+  const anodisierenText = `
+    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. Bei Aluminium entspricht dies im allgemeinen Sprachgebrauch dem Eloxieren. Scouti führt beide Begriffe als eigene Auswahl, damit Aufträge so erfasst werden können, wie sie vom Auftraggeber bezeichnet werden.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>Korrosionsschutz</li><li>definierte elektrische oder tribologische Eigenschaften</li><li>dekorative Oberflächen</li><li>Vorbereitung für bestimmte technische Anwendungen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Legierung</li><li>gewünschte Schichteigenschaften</li><li>Farb- und Sichtanforderungen, sofern relevant</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Abmessungen</li></ul>
+    Als mögliche Anforderungen führt Scouti beim Anodisieren unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+  `;
   const containerTexts = [
     legacyContainerTexts[0],
     legacyContainerTexts[1],
     nasslackierenText,
     pulverbeschichtenText,
-    eloxierenText,
     verzinkenText,
-    vernickelnText,
-    entlackenText,
-    strahlenText,
+    eloxierenText,
+    anodisierenText,
     ktlText,
-    verchromenText,
+    zinkphosphatierenText,
+    strahlenText,
+    entlackenText,
     bruenierenText,
-    legacyContainerTexts[6],
-    legacyContainerTexts[7],
-    legacyContainerTexts[11],
-    legacyContainerTexts[12],
+    verzinnenText,
+    aluminierenText,
+    vernickelnText,
+    aluminiumPassivierenText,
+    elektropolierenText,
+    verchromenText,
+    vermessingenText,
+    verkupfernText,
+    vergoldenText,
+    folierenText,
+    isolierstegText,
+    einlagernText,
+    entzinkenText,
+    enteloxierenText,
+    entanodisierenText,
+    entzinnenText,
+    entaluminierenText,
+    entnickelnText,
   ];
 
   return (
