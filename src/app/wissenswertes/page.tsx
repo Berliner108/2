@@ -139,7 +139,7 @@ useEffect(() => {
     {
       title: "Galvanische & chemische Oberflächen",
       items: [
-        { name: "Verzinken", description: "Zinkschichten zum Korrosionsschutz – unter anderem feuerverzinkt, galvanisch oder als Zinklamelle.", target: "container-4" },
+        { name: "Verzinken", description: "Korrosionsschutz durch Feuerverzinken, galvanisches Verzinken, Zinklamellenbeschichtung oder mechanisches Verzinken.", target: "container-4" },
         { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-5" },
         { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-6" },
         { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-8" },
@@ -390,16 +390,18 @@ useEffect(() => {
   `;
 
   const verzinkenText = legacyContainerTexts[5] + `
-    <br><br><h4>Varianten in der Auftragserfassung</h4>
+    <br><br><h4>Unterverfahren</h4>
+    <p>Bei <strong>Verzinken</strong> stehen in der Auftragserfassung genau diese vier Unterverfahren zur Auswahl:</p>
     <ul>
       <li><strong>Feuerverzinken</strong></li>
-      <li><strong>Galvanisches Verzinken</strong> mit Zink-Standard, Zink-Nickel oder Zink-Eisen</li>
+      <li><strong>Galvanisches Verzinken</strong></li>
       <li><strong>Zinklamellenbeschichtung</strong></li>
       <li><strong>Mechanisches Verzinken</strong></li>
     </ul>
-    Beim galvanischen Verzinken kann zusätzlich zwischen <strong>Trommel- und Gestellverfahren</strong> unterschieden sowie eine Nachbehandlung wie Versiegelung, Gleitmittelbeschichtung oder Tempern angegeben werden.<br><br>
+    <h4>Zusätzliche Angaben bei galvanischem Verzinken</h4>
+    Erst wenn <strong>Galvanisches Verzinken</strong> gewählt wird, können weitere Angaben gemacht werden. Dazu gehören das galvanische Zinksystem <strong>Zink-Standard, Zink-Nickel oder Zink-Eisen</strong>, die Ausführung als <strong>Trommel- oder Gestellverfahren</strong> sowie optionale Nachbehandlungen wie <strong>Versiegelung, Gleitmittelbeschichtung oder Tempern</strong>. Diese Angaben sind keine weiteren Unterverfahren von Verzinken, sondern Spezifikationen des galvanischen Verzinkens.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
-    Werkstoff, Maße, Gewicht, Stückzahl, gewünschtes Zinksystem, Ausführung, Nachbehandlung, Funktionsflächen, Gewinde, Hohlräume sowie die spätere Nutzung des Bauteils sollten möglichst vollständig angegeben werden.
+    Werkstoff, Maße, Gewicht, Stückzahl und das gewünschte Unterverfahren sollten möglichst vollständig angegeben werden. Beim galvanischen Verzinken kommen gegebenenfalls Zinksystem, Trommel- oder Gestellausführung und Nachbehandlung hinzu. Außerdem sind Funktionsflächen, Gewinde, Hohlräume und die spätere Nutzung des Bauteils wichtig.
   `;
 
   const vernickelnText = legacyContainerTexts[8] + `
