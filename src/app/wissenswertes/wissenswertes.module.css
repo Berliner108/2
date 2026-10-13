@@ -51,7 +51,7 @@
   max-width: 760px;
   margin: 0;
   color: #07111f;
-  font-size: clamp(2.55rem, 4.4vw, 5.15rem);
+  font-size: clamp(2.17rem, 3.74vw, 4.38rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 0.96;
@@ -531,7 +531,7 @@
   }
 
   .guideHero h1 {
-    font-size: 2.65rem;
+    font-size: 1.91rem;
   }
 
   .orientationSection {
@@ -590,7 +590,7 @@
   }
 
   .guideHero h1 {
-    font-size: 2.25rem;
+    font-size: 1.91rem;
   }
 
   .heroLead,
@@ -751,7 +751,7 @@
 
   .guideHero h1 {
     max-width: 1120px;
-    font-size: 6.2rem;
+    font-size: 5.27rem;
   }
 
   .sectionKicker {
@@ -845,7 +845,7 @@
   }
 
   .standardCompactBox h3 {
-    font-size: 2.25rem;
+    font-size: 1.91rem;
   }
 
   .standardCompactIntro,
@@ -908,7 +908,7 @@
 
   .guideHero h1 {
     max-width: 980px;
-    font-size: 5.1rem;
+    font-size: 4.34rem;
     line-height: 0.94;
   }
 
@@ -1036,7 +1036,7 @@
 
   .guideHero h1 {
     max-width: 1220px;
-    font-size: 7rem;
+    font-size: 5.95rem;
     line-height: 0.93;
   }
 

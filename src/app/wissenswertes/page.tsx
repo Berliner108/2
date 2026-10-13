@@ -352,14 +352,31 @@ useEffect(() => {
     <strong>Praxis-Hinweis:</strong> Die genaue Stahlgüte sollte möglichst angegeben werden, weil Werkstoffzusammensetzung und Wärmebehandlungszustand das optische Ergebnis beeinflussen können.
   `;
 
-  const nasslackierenText = legacyContainerTexts[2] + `
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+  const nasslackierenText = `
+    <strong>Nasslackieren</strong> ist ein Beschichtungsverfahren, bei dem flüssiger Lack auf ein Werkstück aufgetragen und anschließend getrocknet oder ausgehärtet wird. Das Verfahren eignet sich für dekorative, funktionelle und korrosionsschützende Beschichtungen und kann auf unterschiedlichen Werkstoffen eingesetzt werden.<br><br>
+    <h4>Auswahlmöglichkeiten in der Auftragserfassung</h4>
     <ul>
+      <li><strong>Farbpalette:</strong> unter anderem RAL, NCS, DB, Pantone, Sonderfarbe / nach Vorlage oder Klarlack</li>
+      <li><strong>Farbton:</strong> genaue Farbtonbezeichnung oder Artikelnummer</li>
+      <li><strong>Glanzgrad:</strong> Hochglanz, Seidenglanz, Glanz, Matt, Seidenmatt oder Stumpfmatt</li>
+      <li><strong>Oberfläche:</strong> glatt, Feinstruktur oder Grobstruktur</li>
+      <li><strong>Effekte:</strong> Metallic oder fluoreszierend</li>
+      <li><strong>Extras:</strong> zweifärbig, Duplexbeschichtung oder beigestellter Lack</li>
+    </ul>
+    <h4>Typische Anwendungen</h4>
+    <ul>
+      <li>Maschinen- und Anlagenbauteile</li>
+      <li>Stahl- und Metallkonstruktionen</li>
+      <li>Fahrzeug- und Gerätebauteile</li>
+      <li>Bauteile mit speziellen Farb-, Optik- oder Korrosionsschutzanforderungen</li>
+    </ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Werkstoff, Maße, Gewicht und Stückzahl</li>
       <li>Farbpalette und exakte Farbtonbezeichnung bzw. Artikelnummer</li>
       <li>gewünschter Glanzgrad und Oberflächenstruktur</li>
-      <li>besondere Effekte wie Metallic oder fluoreszierende Ausführung</li>
-      <li>Hinweis auf zweifärbige Ausführung, Duplexbeschichtung oder beigestellten Lack</li>
-      <li>Werkstoff, Maße, Gewicht, Stückzahl, Sichtflächen und gewünschter Schichtaufbau</li>
+      <li>besondere Effekte oder Extras</li>
+      <li>gewünschter Schichtaufbau, Korrosionsschutz und zu maskierende Bereiche</li>
     </ul>
     Bei einer Anfrage können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
   `;
@@ -377,61 +394,110 @@ useEffect(() => {
     Als mögliche Anforderungen kommen unter anderem <strong>GSB</strong>, <strong>Qualicoat</strong>, <strong>Qualisteelcoat</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
   `;
 
-  const eloxierenText = legacyContainerTexts[4] + `
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+  const eloxierenText = `
+    <strong>Eloxieren</strong> ist die elektrochemische Oxidation von Aluminium. Dabei wird die Oberfläche des Werkstücks gezielt in eine schützende Oxidschicht umgewandelt. Diese kann den Korrosionsschutz, die Härte, die Verschleißbeständigkeit und die Optik verbessern.<br><br>
+    <h4>Farbvarianten in der Auftragserfassung</h4>
+    <ul>
+      <li>C-0 (Natureloxal)</li>
+      <li>C-31 bis C-34 (Bronzetöne)</li>
+      <li>C-35 (Schwarz)</li>
+      <li>C-36 bis C-38 (Grautöne)</li>
+    </ul>
+    <h4>Typische Anwendungen</h4>
+    <ul>
+      <li>Aluminiumprofile und Fassadenbauteile</li>
+      <li>Maschinen- und Präzisionsteile</li>
+      <li>Sicht- und Designteile</li>
+      <li>Bauteile mit Anforderungen an Korrosions- oder Verschleißschutz</li>
+    </ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
       <li>Aluminiumlegierung bzw. genaue Werkstoffangabe</li>
-      <li>gewünschter Eloxalfarbton, beispielsweise C-0 Natureloxal bis zu Bronze-, Grau- oder Schwarztönen</li>
+      <li>gewünschter Eloxalfarbton</li>
       <li>Maße, Gewicht, Stückzahl und Sichtflächen</li>
       <li>Funktionsflächen, Passungen, Gewinde und Bereiche, die frei bleiben müssen</li>
       <li>Anforderungen an Optik, Korrosionsschutz und Dokumentation</li>
     </ul>
-    Bei Eloxieraufträgen können unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> ausgewählt werden.
+    Als Anforderungen können unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
   `;
 
-  const verzinkenText = legacyContainerTexts[5] + `
-    <br><br><h4>Unterverfahren</h4>
-    <p>Bei <strong>Verzinken</strong> stehen in der Auftragserfassung genau diese vier Unterverfahren zur Auswahl:</p>
+  const verzinkenText = `
+    <strong>Verzinken</strong> bezeichnet das Aufbringen einer Zinkschicht auf Stahl oder andere geeignete Eisenwerkstoffe, um insbesondere den Korrosionsschutz zu verbessern. Je nach Bauteil, Einsatzbereich und gewünschter Schichteigenschaft stehen unterschiedliche Verfahren zur Verfügung.<br><br>
+    <h4>Unterverfahren</h4>
     <ul>
-      <li><strong>Feuerverzinken</strong></li>
-      <li><strong>Galvanisches Verzinken</strong></li>
-      <li><strong>Zinklamellenbeschichtung</strong></li>
-      <li><strong>Mechanisches Verzinken</strong></li>
+      <li><strong>Feuerverzinken:</strong> Das Werkstück wird in ein Bad aus geschmolzenem Zink getaucht. Dabei entsteht eine metallurgisch gebundene Zinkschicht mit robustem Korrosionsschutz.</li>
+      <li><strong>Galvanisches Verzinken:</strong> Zink wird elektrochemisch abgeschieden. Das Verfahren eignet sich besonders für dünnere, gleichmäßige Schichten und maßhaltige Bauteile.</li>
+      <li><strong>Zinklamellenbeschichtung:</strong> Zinkhaltige Lamellensysteme erzeugen dünne Korrosionsschutzschichten und werden häufig bei Verbindungselementen und geometrisch anspruchsvollen Teilen eingesetzt.</li>
+      <li><strong>Mechanisches Verzinken:</strong> Zink wird mechanisch auf die Oberfläche aufgebracht. Das Verfahren wird vor allem bei kleineren Bauteilen eingesetzt.</li>
     </ul>
     <h4>Zusätzliche Angaben bei galvanischem Verzinken</h4>
-    Erst wenn <strong>Galvanisches Verzinken</strong> gewählt wird, können weitere Angaben gemacht werden. Dazu gehören das galvanische Zinksystem <strong>Zink-Standard, Zink-Nickel oder Zink-Eisen</strong>, die Ausführung als <strong>Trommel- oder Gestellverfahren</strong> sowie optionale Nachbehandlungen wie <strong>Versiegelung, Gleitmittelbeschichtung oder Tempern</strong>. Diese Angaben sind keine weiteren Unterverfahren von Verzinken, sondern Spezifikationen des galvanischen Verzinkens.<br><br>
+    Wird <strong>Galvanisches Verzinken</strong> gewählt, können zusätzlich das Zinksystem <strong>Zink-Standard, Zink-Nickel oder Zink-Eisen</strong>, die Ausführung als <strong>Trommel- oder Gestellverfahren</strong> sowie optionale Nachbehandlungen wie <strong>Versiegelung, Gleitmittelbeschichtung oder Tempern</strong> angegeben werden. Diese Angaben sind Spezifikationen des galvanischen Verzinkens und keine zusätzlichen Unterverfahren.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
-    Werkstoff, Maße, Gewicht, Stückzahl und das gewünschte Unterverfahren sollten möglichst vollständig angegeben werden. Beim galvanischen Verzinken kommen gegebenenfalls Zinksystem, Trommel- oder Gestellausführung und Nachbehandlung hinzu. Außerdem sind Funktionsflächen, Gewinde, Hohlräume und die spätere Nutzung des Bauteils wichtig.
+    <ul>
+      <li>Werkstoff, Maße, Gewicht und Stückzahl</li>
+      <li>gewünschtes Unterverfahren</li>
+      <li>beim galvanischen Verzinken gegebenenfalls Zinksystem, Trommel-/Gestellverfahren und Nachbehandlung</li>
+      <li>Funktionsflächen, Gewinde, Hohlräume und Bereiche, die frei bleiben müssen</li>
+      <li>Einsatzbedingungen und gewünschter Korrosionsschutz</li>
+    </ul>
+    Als Anforderungen können unter anderem <strong>RAL-GZ</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
   `;
 
-  const vernickelnText = legacyContainerTexts[8] + `
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+  const vernickelnText = `
+    <strong>Vernickeln</strong> bezeichnet das Aufbringen einer Nickelschicht auf ein Werkstück. Nickelschichten können dem Korrosions- und Verschleißschutz dienen, technische Oberflächeneigenschaften verbessern oder für dekorative Zwecke eingesetzt werden.<br><br>
+    <h4>Unterverfahren</h4>
     <ul>
-      <li>gewünschtes Verfahren: <strong>chemisch oder galvanisch</strong></li>
+      <li><strong>Chemisch:</strong> Nickel wird durch eine chemische Reaktion ohne externen elektrischen Strom abgeschieden. Dadurch lassen sich auch komplexe Geometrien vergleichsweise gleichmäßig beschichten.</li>
+      <li><strong>Galvanisch:</strong> Nickel wird elektrolytisch auf der Werkstückoberfläche abgeschieden. Das Verfahren ermöglicht definierte Schichtaufbauten und wird für technische wie dekorative Anwendungen eingesetzt.</li>
+    </ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>gewünschtes Verfahren: chemisch oder galvanisch</li>
       <li>Werkstoff, Ausgangszustand und Geometrie</li>
       <li>Maße, Gewicht und Stückzahl</li>
       <li>optische bzw. technische Funktion der Nickelschicht</li>
       <li>Funktions-, Pass- und Sichtflächen sowie gegebenenfalls nachfolgende Beschichtungen</li>
     </ul>
+    Als Anforderungen können unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
   `;
 
-  const entlackenText = legacyContainerTexts[9] + `
-    <br><br><h4>Varianten / Ausführungen</h4>
-    Für Entlackungsaufträge kann zwischen <strong>chemischer, elektrochemischer, thermischer und mechanischer Entlackung</strong> unterschieden werden.<br><br>
+  const entlackenText = `
+    <strong>Entlacken</strong> dient dazu, vorhandene Lack- oder Beschichtungsschichten kontrolliert zu entfernen. Welches Verfahren geeignet ist, hängt insbesondere vom Grundwerkstoff, der vorhandenen Beschichtung, der Bauteilgeometrie und der geplanten Weiterbearbeitung ab.<br><br>
+    <h4>Unterverfahren</h4>
+    <ul>
+      <li><strong>Chemisch:</strong> Die Beschichtung wird mit geeigneten chemischen Medien angelöst oder entfernt.</li>
+      <li><strong>Elektrochemisch:</strong> Die Entschichtung wird durch einen elektrochemischen Prozess unterstützt.</li>
+      <li><strong>Thermisch:</strong> Die Beschichtung wird durch Wärmeeinwirkung zersetzt oder abgelöst.</li>
+      <li><strong>Mechanisch:</strong> Die Beschichtung wird beispielsweise durch Schleifen, Bürsten oder Strahlen abgetragen.</li>
+    </ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
-    Entscheidend sind Grundwerkstoff, Art und Zustand der vorhandenen Beschichtung, Bauteilabmessungen, Gewicht, Stückzahl, empfindliche Funktionsflächen sowie die geplante Weiterbehandlung nach dem Entlacken.
+    <ul>
+      <li>Grundwerkstoff</li>
+      <li>Art und Zustand der vorhandenen Beschichtung</li>
+      <li>gewünschtes Entlackungsverfahren</li>
+      <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
+      <li>empfindliche Funktionsflächen und gewünschter Zustand nach dem Entlacken</li>
+      <li>geplante Weiterbehandlung</li>
+    </ul>
+    Als Qualitätsanforderung kann insbesondere <strong>Qualistrip</strong> relevant sein.
   `;
 
-  const strahlenText = legacyContainerTexts[10] + `
-    <br><br><h4>Varianten / Ausführungen</h4>
-    In der Auftragserfassung stehen derzeit <strong>Sandstrahlen, Staubstrahlen und Glasperlenstrahlen</strong> zur Auswahl.<br><br>
+  const strahlenText = `
+    <strong>Strahlen</strong> ist eine mechanische Oberflächenbehandlung, bei der ein Strahlmittel mit hoher Geschwindigkeit auf ein Werkstück trifft. Dadurch können Oberflächen gereinigt, aufgeraut, mattiert oder für eine nachfolgende Beschichtung vorbereitet werden.<br><br>
+    <h4>Unterverfahren</h4>
+    <ul>
+      <li><strong>Sandstrahlen:</strong> abrasive Oberflächenbehandlung zum Reinigen, Entrosten oder Aufrauen geeigneter Werkstücke.</li>
+      <li><strong>Staubstrahlen:</strong> in der Auftragserfassung als eigene Strahlvariante auswählbar.</li>
+      <li><strong>Glasperlen:</strong> Behandlung mit Glasperlen, häufig zur Reinigung, Mattierung oder Erzeugung einer gleichmäßigen Oberfläche.</li>
+    </ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
       <li>Grundwerkstoff und Ausgangszustand</li>
+      <li>gewünschtes Unterverfahren</li>
       <li>Ziel der Behandlung: Reinigen, Entrosten, Aufrauen, Mattieren oder Vorbereitung für eine Folgebeschichtung</li>
       <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
       <li>empfindliche Flächen, Passungen, Gewinde und Bereiche mit Maßanforderungen</li>
-      <li>gewünschtes Strahlmittel bzw. gewünschtes Ergebnis, sofern vorgegeben</li>
+      <li>gewünschtes Ergebnis bzw. gewünschte Rauheit, sofern vorgegeben</li>
     </ul>
   `;
 
