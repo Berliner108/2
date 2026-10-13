@@ -62,18 +62,24 @@ const Wissenswertes = () => {
       "#Entnickeln": 29,
     };
 
-    const index = hashTargets[window.location.hash];
-    if (index === undefined) return;
+    const openHashTarget = () => {
+      const index = hashTargets[window.location.hash];
+      if (index === undefined) return;
 
-    setOpenContainers({ [index]: true });
-    requestAnimationFrame(() => {
+      setOpenContainers({ [index]: true });
       requestAnimationFrame(() => {
-        document.getElementById(`container-${index}`)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
+        requestAnimationFrame(() => {
+          document.getElementById(`container-${index}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         });
       });
-    });
+    };
+
+    openHashTarget();
+    window.addEventListener("hashchange", openHashTarget);
+    return () => window.removeEventListener("hashchange", openHashTarget);
   }, [isClient]);
 
 useEffect(() => {
@@ -287,7 +293,7 @@ useEffect(() => {
       <li>Anforderungen an Prüfungen, Dokumentation oder Zertifizierungen</li>
     </ul>
     <h4>Relevante Qualitätsanforderungen</h4>
-    Je nach Auftrag können Qualitäts- und Umweltmanagement sowie branchenspezifische Anforderungen eine Rolle spielen. In der Scouti-Auftragserfassung können für KTL unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>IATF 16949</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.<br><br>
+    Je nach Auftrag können Qualitäts- und Umweltmanagement sowie branchenspezifische Anforderungen eine Rolle spielen. Bei einer Anfrage können für KTL unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>IATF 16949</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.<br><br>
     <strong>Praxis-Hinweis:</strong> Für ein belastbares Angebot sollte der Beschichter wissen, ob KTL als Endoberfläche oder als Grundierung für ein weiteres Beschichtungssystem vorgesehen ist.
   `;
 
@@ -342,7 +348,7 @@ useEffect(() => {
       <li>gewünschte Nachbehandlung oder Konservierung</li>
       <li>notwendige Zertifizierungen oder Dokumentationsanforderungen</li>
     </ul>
-    In der Scouti-Auftragserfassung können beim Brünieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen ausgewählt werden.<br><br>
+    Bei einer Anfrage können beim Brünieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen ausgewählt werden.<br><br>
     <strong>Praxis-Hinweis:</strong> Die genaue Stahlgüte sollte möglichst angegeben werden, weil Werkstoffzusammensetzung und Wärmebehandlungszustand das optische Ergebnis beeinflussen können.
   `;
 
@@ -355,7 +361,7 @@ useEffect(() => {
       <li>Hinweis auf zweifärbige Ausführung, Duplexbeschichtung oder beigestellten Lack</li>
       <li>Werkstoff, Maße, Gewicht, Stückzahl, Sichtflächen und gewünschter Schichtaufbau</li>
     </ul>
-    In der Scouti-Auftragserfassung können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
+    Bei einer Anfrage können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
   `;
 
   const pulverbeschichtenText = legacyContainerTexts[3] + `
@@ -368,7 +374,7 @@ useEffect(() => {
       <li>besondere Effekte, zweifärbige Ausführung oder Duplexbeschichtung</li>
       <li>Werkstoff, Bauteilabmessungen, Gewicht, Stückzahl und zu maskierende Bereiche</li>
     </ul>
-    Als mögliche Anforderungen führt Scouti unter anderem <strong>GSB</strong>, <strong>Qualicoat</strong>, <strong>Qualisteelcoat</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+    Als mögliche Anforderungen kommen unter anderem <strong>GSB</strong>, <strong>Qualicoat</strong>, <strong>Qualisteelcoat</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
   `;
 
   const eloxierenText = legacyContainerTexts[4] + `
@@ -380,7 +386,7 @@ useEffect(() => {
       <li>Funktionsflächen, Passungen, Gewinde und Bereiche, die frei bleiben müssen</li>
       <li>Anforderungen an Optik, Korrosionsschutz und Dokumentation</li>
     </ul>
-    In Scouti können für Eloxieraufträge unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> ausgewählt werden.
+    Bei Eloxieraufträgen können unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> ausgewählt werden.
   `;
 
   const verzinkenText = legacyContainerTexts[5] + `
@@ -408,14 +414,14 @@ useEffect(() => {
   `;
 
   const entlackenText = legacyContainerTexts[9] + `
-    <br><br><h4>Varianten in Scouti</h4>
+    <br><br><h4>Varianten / Ausführungen</h4>
     Für Entlackungsaufträge kann zwischen <strong>chemischer, elektrochemischer, thermischer und mechanischer Entlackung</strong> unterschieden werden.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     Entscheidend sind Grundwerkstoff, Art und Zustand der vorhandenen Beschichtung, Bauteilabmessungen, Gewicht, Stückzahl, empfindliche Funktionsflächen sowie die geplante Weiterbehandlung nach dem Entlacken.
   `;
 
   const strahlenText = legacyContainerTexts[10] + `
-    <br><br><h4>Varianten in Scouti</h4>
+    <br><br><h4>Varianten / Ausführungen</h4>
     In der Auftragserfassung stehen derzeit <strong>Sandstrahlen, Staubstrahlen und Glasperlenstrahlen</strong> zur Auswahl.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
@@ -434,35 +440,35 @@ useEffect(() => {
     <ul><li>Vorbehandlung vor Nasslackierung oder Pulverbeschichtung</li><li>Automobil- und Maschinenbauteile</li><li>Serienteile mit definierten Anforderungen an Lackhaftung und Korrosionsschutz</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Werkstoff und Oberflächenzustand</li><li>gewünschtes <strong>Schichtgewicht in g/m²</strong></li><li>Nachbehandlung: <strong>keine, geölt oder versiegelt</strong></li><li>geplante Folgebehandlung oder Endbeschichtung</li><li>Stückzahl, Abmessungen und Gewicht</li></ul>
-    In Scouti können außerdem Anforderungen wie <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.<br><br>
+    Als zusätzliche Anforderungen können <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.<br><br>
     <strong>Praxis-Hinweis:</strong> Entscheidend ist, ob die Phosphatierung als eigenständige temporäre Schutzschicht oder als Vorbehandlung für ein späteres Beschichtungssystem vorgesehen ist.
   `;
 
   const verzinnenText = `
     <strong>Verzinnen</strong> bezeichnet das Aufbringen einer Zinnschicht auf ein Werkstück. Zinnschichten werden unter anderem eingesetzt, wenn Korrosionsschutz, gute Lötbarkeit oder definierte elektrische und funktionelle Eigenschaften gefragt sind.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Galvanisch:</strong> Zinn wird elektrolytisch auf der Oberfläche abgeschieden.</li><li><strong>Chemisch:</strong> Zinn wird durch eine chemische Abscheidung ohne externen Strom aufgebracht.</li></ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>elektrische und elektronische Bauteile</li><li>Steck- und Kontaktteile</li><li>Bauteile mit Anforderungen an Lötbarkeit</li><li>funktionelle Oberflächen auf Kupfer, Messing oder geeigneten Stählen</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff</li><li>chemisches oder galvanisches Verzinnen</li><li>gewünschte Funktion und gegebenenfalls Schichtdicke</li><li>Kontakt-, Löt- und Sichtflächen</li><li>Stückzahl, Abmessungen und Prüfanforderungen</li></ul>
-    Scouti führt hierfür unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als auswählbare Anforderungen.
+    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als auswählbare Anforderungen.
   `;
 
   const aluminierenText = `
     <strong>Aluminieren</strong> erzeugt eine aluminiumhaltige Schutzschicht auf einem Werkstück. Je nach Verfahren wird Aluminium metallurgisch, thermisch oder durch Spritzen aufgebracht. Solche Schichten werden insbesondere eingesetzt, wenn Korrosions- oder Temperaturbeständigkeit gefordert ist.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Schmelztauchaluminieren</strong></li><li><strong>Spritzaluminieren</strong></li><li><strong>Feueraluminieren</strong></li></ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>Stahlbauteile in korrosiver Umgebung</li><li>Bauteile mit erhöhter Temperaturbelastung</li><li>große oder geometrisch anspruchsvolle Werkstücke beim Spritzaluminieren</li><li>Industrie- und Anlagenbau</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff und gewünschtes Verfahren</li><li>Einsatztemperatur und Umgebungsbedingungen</li><li>gewünschte Schichtdicke und Schutzwirkung</li><li>Abmessungen, Gewicht und Stückzahl</li><li>Bereiche, die nicht beschichtet werden dürfen</li></ul>
-    Als Anforderungen können in Scouti unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
+    Als Anforderungen können unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
   `;
 
   const aluminiumPassivierenText = `
     Beim <strong>Aluminium-Passivieren</strong> wird die Aluminiumoberfläche chemisch behandelt, um ihre Korrosionsbeständigkeit zu verbessern oder eine geeignete Grundlage für nachfolgende Beschichtungen zu schaffen. Je nach System kann zugleich die elektrische Leitfähigkeit der Oberfläche eine Rolle spielen.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chrom(III)-Passivierung</strong></li><li><strong>Chromfreie Passivierung</strong></li></ul>
     <h4>Mögliche Anforderungen</h4>
     <ul><li>Korrosionsschutz</li><li>Lackhaftung</li><li>elektrische Leitfähigkeit</li></ul>
@@ -475,7 +481,7 @@ useEffect(() => {
     <strong>Elektropolieren</strong> ist ein elektrochemisches Abtragsverfahren. Dabei werden mikroskopische Rauheitsspitzen bevorzugt abgetragen, wodurch die Oberfläche geglättet, gereinigt und optisch verfeinert wird. Das Verfahren wird besonders häufig bei Edelstahl eingesetzt.<br><br>
     <h4>Typische Ziele</h4>
     <ul><li>Reduzierung der Oberflächenrauheit</li><li>bessere Reinigbarkeit und hygienische Eigenschaften</li><li>Entfernung von Bearbeitungsspuren und Oberflächenverunreinigungen</li><li>gleichmäßigeres, technisch sauberes Erscheinungsbild</li></ul>
-    <h4>Anwendungsbereiche in Scouti</h4>
+    <h4>Anwendungsbereiche</h4>
     <ul><li><strong>Lebensmittel</strong></li><li><strong>Pharma</strong></li><li><strong>Medizintechnik</strong></li><li><strong>Industrie allgemein</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Werkstoff und Werkstoffgüte</li><li>Anwendungsbereich</li><li>Ausgangsrauheit und gewünschtes Ergebnis</li><li>Sicht- und Funktionsflächen</li><li>Bauteilgröße, Stückzahl und gegebenenfalls Dokumentationsanforderungen</li></ul>
@@ -483,7 +489,7 @@ useEffect(() => {
 
   const vermessingenText = `
     Beim <strong>Vermessingen</strong> wird eine messingfarbene Kupfer-Zink-Schicht auf ein Werkstück aufgebracht. Das Verfahren wird vor allem für dekorative Oberflächen verwendet, kann aber auch Bestandteil eines technischen Schichtaufbaus sein.<br><br>
-    <h4>Ausführungen in Scouti</h4>
+    <h4>Ausführungen</h4>
     <ul><li><strong>Glänzend</strong></li><li><strong>Matt</strong></li><li><strong>Antik / patiniert</strong></li></ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>Beschläge und dekorative Metallteile</li><li>Möbel- und Innenausbauteile</li><li>Leuchten, Sichtteile und Designkomponenten</li></ul>
@@ -493,7 +499,7 @@ useEffect(() => {
 
   const verkupfernText = `
     <strong>Verkupfern</strong> bedeutet, eine Kupferschicht auf einem Werkstück abzuscheiden. Kupfer kann als dekorative Oberfläche, als funktionelle Schicht oder als Zwischen- und Haftschicht für weitere galvanische Beschichtungen eingesetzt werden.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Galvanisch</strong></li><li><strong>Chemisch</strong></li></ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>Zwischenschichten vor Vernickeln oder Verchromen</li><li>elektrisch leitfähige Oberflächen</li><li>dekorative Metallteile</li><li>Aufbau oder Ausgleich definierter Oberflächen</li></ul>
@@ -503,7 +509,7 @@ useEffect(() => {
 
   const vergoldenText = `
     Beim <strong>Vergolden</strong> wird eine dünne Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
-    <h4>Auswahlmöglichkeiten in Scouti</h4>
+    <h4>Auswahlmöglichkeiten</h4>
     <ul><li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li><li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li></ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>elektrische Kontakte und Steckverbinder</li><li>Elektronik- und Präzisionsbauteile</li><li>Schmuck- und Designteile</li><li>hochwertige Sichtflächen</li></ul>
@@ -514,26 +520,26 @@ useEffect(() => {
   const folierenText = legacyContainerTexts[11] + `
     <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Einsatz <strong>innen oder außen</strong></li><li>Grundmaterial und vorhandene Oberfläche</li><li>gewünschte Folienart, Optik und Funktion</li><li>Bauteilabmessungen und Stückzahl</li><li>Anforderungen an Kanten, Radien, Ausschnitte und Sichtflächen</li></ul>
-    Scouti führt für Folieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> und <strong>RAL-GZ 716</strong> als mögliche Anforderungen.
+    Für Folieraufträge kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> und <strong>RAL-GZ 716</strong> als mögliche Anforderungen.
   `;
 
   const isolierstegText = legacyContainerTexts[12] + `
     <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Profiltyp, Zeichnung und Abmessungen</li><li>Werkstoff und Oberflächenzustand der Profile</li><li>Art und Abmessung des Isolierstegs</li><li>Stückzahl bzw. laufende Meter</li><li>Anforderungen an Prüfung, Verbundfestigkeit und Dokumentation</li></ul>
-    Scouti führt hierfür unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> sowie <strong>RAL-GZ 607/3</strong> als mögliche Anforderungen.
+    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> sowie <strong>RAL-GZ 607/3</strong> als mögliche Anforderungen.
   `;
 
   const einlagernText = `
-    <strong>Einlagern</strong> ist bei Scouti als ergänzende Leistung vorgesehen, wenn Bauteile zwischen Fertigung, Beschichtung, Abruf oder Auslieferung zwischengelagert werden sollen. Dadurch kann ein Beschichtungs- oder Logistikauftrag auch dann abgewickelt werden, wenn die Teile nicht unmittelbar weitertransportiert werden.<br><br>
+    <strong>Einlagern</strong> ist als ergänzende Leistung vorgesehen, wenn Bauteile zwischen Fertigung, Beschichtung, Abruf oder Auslieferung zwischengelagert werden sollen. Dadurch kann ein Beschichtungs- oder Logistikauftrag auch dann abgewickelt werden, wenn die Teile nicht unmittelbar weitertransportiert werden.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Menge, Abmessungen und Gewicht der einzulagernden Teile</li><li>gewünschte Lagerdauer</li><li>Verpackungszustand und Stapelbarkeit</li><li>Abruf- und Ausliefermodalitäten</li><li>besondere Lagerbedingungen</li></ul>
-    In Scouti kann ausdrücklich die Anforderung <strong>„trocken lagern“</strong> angegeben werden.<br><br>
+    Als besondere Lageranforderung kann ausdrücklich <strong>„trocken lagern“</strong> angegeben werden.<br><br>
     <strong>Praxis-Hinweis:</strong> Bei beschichteten Sichtteilen sollte zusätzlich festgelegt werden, wie Verpackung, Zwischenlagen und Handhabung erfolgen müssen, damit keine Kratzer oder Druckstellen entstehen.
   `;
 
   const entzinkenText = `
     <strong>Entzinken</strong> bezeichnet das gezielte Entfernen einer vorhandenen Zinkschicht. Das ist beispielsweise erforderlich, wenn ein Bauteil repariert, erneut verzinkt, anders beschichtet oder auf seinen Grundwerkstoff zurückgeführt werden soll.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff und vorhandenes Zinksystem</li><li>Bauteilabmessungen und Stückzahl</li><li>gewünschter Zustand nach dem Entzinken</li><li>anschließende Weiterbehandlung</li><li>empfindliche Flächen und Maßanforderungen</li></ul>
@@ -541,58 +547,58 @@ useEffect(() => {
 
   const enteloxierenText = `
     <strong>Enteloxieren</strong> entfernt eine vorhandene Eloxalschicht von Aluminium. Das Verfahren wird eingesetzt, wenn eine Oberfläche neu eloxiert, repariert oder für eine andere Behandlung vorbereitet werden soll.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Aluminiumlegierung</li><li>vorhandene Eloxalschicht und Farbton</li><li>gewünschter Zustand nach dem Enteloxieren</li><li>Maß- und Sichtflächen</li><li>geplante Neubeschichtung oder erneute Eloxierung</li></ul>
-    Als mögliche Anforderungen führt Scouti unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+    Als mögliche Anforderungen kommen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
   `;
 
   const entanodisierenText = `
     <strong>Entanodisieren</strong> ist das Entfernen einer anodisch erzeugten Oxidschicht, um das Grundmaterial für eine Reparatur, Nacharbeit oder neue Oberflächenbehandlung freizulegen.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Galvanisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Werkstoff und vorhandene anodische Schicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag und Maßtoleranzen</li><li>Sicht- und Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
-    Scouti führt unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+    Als mögliche Anforderungen kommen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
   `;
 
   const entzinnenText = `
     <strong>Entzinnen</strong> entfernt vorhandene Zinnschichten, beispielsweise vor Reparatur, Recycling oder einer erneuten Oberflächenbehandlung.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff</li><li>Art und Zustand der vorhandenen Zinnschicht</li><li>gewünschter Zustand nach dem Entzinnen</li><li>Bauteilabmessungen, Stückzahl und empfindliche Bereiche</li><li>geplante Weiterbearbeitung oder Neubeschichtung</li></ul>
-    Scouti führt unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
   `;
 
   const entaluminierenText = `
     <strong>Entaluminieren</strong> bezeichnet das Entfernen einer vorhandenen Aluminiumschicht. Das Verfahren kann notwendig sein, wenn eine Beschichtung beschädigt ist, ein Bauteil repariert oder für ein neues Schichtsystem vorbereitet werden soll.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li><li><strong>Mechanisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff und vorhandene Aluminiumschicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag</li><li>Geometrie, Abmessungen und Stückzahl</li><li>geplante Folgebeschichtung</li></ul>
-    Scouti führt unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
+    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
   `;
 
   const entnickelnText = `
     <strong>Entnickeln</strong> entfernt eine vorhandene Nickelschicht von einem Werkstück. Das ist beispielsweise bei fehlerhaften Schichten, Reparaturen oder vor einer erneuten galvanischen Behandlung erforderlich.<br><br>
-    <h4>Varianten in Scouti</h4>
+    <h4>Varianten / Ausführungen</h4>
     <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Grundwerkstoff und vorhandene Nickelschicht</li><li>chemisches oder elektrochemisches Entnickeln</li><li>zulässiger Angriff auf den Grundwerkstoff</li><li>Maß-, Sicht- und Funktionsflächen</li><li>geplante Folgebeschichtung</li></ul>
-    Als mögliche Anforderungen führt Scouti unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong>.
+    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong>.
   `;
 
   const anodisierenText = `
-    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. Bei Aluminium entspricht dies im allgemeinen Sprachgebrauch dem Eloxieren. Scouti führt beide Begriffe als eigene Auswahl, damit Aufträge so erfasst werden können, wie sie vom Auftraggeber bezeichnet werden.<br><br>
+    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. Bei Aluminium entspricht dies im allgemeinen Sprachgebrauch dem Eloxieren. Beschichter Scout führt beide Begriffe als eigene Auswahl, damit Aufträge so erfasst werden können, wie sie vom Auftraggeber bezeichnet werden.<br><br>
     <h4>Typische Ziele</h4>
     <ul><li>Korrosionsschutz</li><li>definierte elektrische oder tribologische Eigenschaften</li><li>dekorative Oberflächen</li><li>Vorbereitung für bestimmte technische Anwendungen</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Werkstoff und Legierung</li><li>gewünschte Schichteigenschaften</li><li>Farb- und Sichtanforderungen, sofern relevant</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Abmessungen</li></ul>
-    Als mögliche Anforderungen führt Scouti beim Anodisieren unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+    Beim Anodisieren kommen als mögliche Anforderungen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
   `;
-  const containerTexts = [
+  const baseContainerTexts = [
     legacyContainerTexts[0],
     legacyContainerTexts[1],
     nasslackierenText,
@@ -624,6 +630,63 @@ useEffect(() => {
     entaluminierenText,
     entnickelnText,
   ];
+
+
+  const relatedVerfahren: Record<number, { name: string; hash: string }[]> = {
+    2: [{ name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "KTL-Beschichten", hash: "#KTL-Beschichten" }, { name: "Strahlen", hash: "#Strahlen" }],
+    3: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }],
+    4: [{ name: "Entzinken", hash: "#Entzinken" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Strahlen", hash: "#Strahlen" }],
+    5: [{ name: "Enteloxieren", hash: "#Enteloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }, { name: "Strahlen", hash: "#Strahlen" }],
+    6: [{ name: "Entanodisieren", hash: "#Entanodisieren" }, { name: "Eloxieren", hash: "#Eloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
+    7: [{ name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }, { name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
+    8: [{ name: "KTL-Beschichten", hash: "#KTL-Beschichten" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
+    9: [{ name: "Entlacken", hash: "#Entlacken" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
+    10: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
+    11: [{ name: "Entlacken", hash: "#Entlacken" }, { name: "Folieren", hash: "#Folieren" }, { name: "Einlagern", hash: "#Einlagern" }],
+    12: [{ name: "Entzinnen", hash: "#Entzinnen" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verkupfern", hash: "#Verkupfern" }],
+    13: [{ name: "Entaluminieren", hash: "#Entaluminieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
+    14: [{ name: "Entnickeln", hash: "#Entnickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Vergolden", hash: "#Vergolden" }],
+    15: [{ name: "Eloxieren", hash: "#Eloxieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
+    16: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Strahlen", hash: "#Strahlen" }],
+    17: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Entnickeln", hash: "#Entnickeln" }, { name: "Verkupfern", hash: "#Verkupfern" }],
+    18: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
+    19: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Vergolden", hash: "#Vergolden" }],
+    20: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Elektropolieren", hash: "#Elektropolieren" }],
+    21: [{ name: "Isolierstegverpressen", hash: "#Isolierstegverpressen" }, { name: "Einlagern", hash: "#Einlagern" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
+    22: [{ name: "Folieren", hash: "#Folieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Einlagern", hash: "#Einlagern" }],
+    23: [{ name: "Folieren", hash: "#Folieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
+    24: [{ name: "Verzinken", hash: "#Verzinken" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Entlacken", hash: "#Entlacken" }],
+    25: [{ name: "Eloxieren", hash: "#Eloxieren" }, { name: "Entanodisieren", hash: "#Entanodisieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
+    26: [{ name: "Anodisieren", hash: "#Anodisieren" }, { name: "Enteloxieren", hash: "#Enteloxieren" }, { name: "Eloxieren", hash: "#Eloxieren" }],
+    27: [{ name: "Verzinnen", hash: "#Verzinnen" }, { name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }],
+    28: [{ name: "Aluminieren", hash: "#Aluminieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Entlacken", hash: "#Entlacken" }],
+    29: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Verkupfern", hash: "#Verkupfern" }],
+  };
+
+  const genericInquiryBlock = `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Werkstoff, Materialgüte und Ausgangszustand</li>
+      <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
+      <li>gewünschtes Ergebnis und relevante Funktions- oder Sichtflächen</li>
+      <li>erforderliche Normen, Prüfungen oder Dokumentationen</li>
+      <li>geplante Folgebehandlung sowie Termin- und Logistikanforderungen</li>
+    </ul>
+  `;
+
+  const containerTexts = baseContainerTexts.map((text, index) => {
+    if (index < 2) return text;
+
+    const inquiry = text.includes("Wichtige Angaben für eine Anfrage") ? "" : genericInquiryBlock;
+    const links = relatedVerfahren[index] ?? [];
+    const related = links.length
+      ? `<br><br><h4>Verwandte Verfahren</h4><ul>${links
+          .map((item) => `<li><a href="${item.hash}">${item.name}</a></li>`)
+          .join("")}</ul>`
+      : "";
+
+    return `${text}${inquiry}${related}`;
+  });
 
   return (
     <>
