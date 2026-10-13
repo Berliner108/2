@@ -65,9 +65,14 @@ const Wissenswertes = () => {
     const index = hashTargets[window.location.hash];
     if (index === undefined) return;
 
-    setOpenContainers((prevState) => ({ ...prevState, [index]: true }));
+    setOpenContainers({ [index]: true });
     requestAnimationFrame(() => {
-      document.getElementById(`container-${index}`)?.scrollIntoView({ behavior: "smooth" });
+      requestAnimationFrame(() => {
+        document.getElementById(`container-${index}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
     });
   }, [isClient]);
 
@@ -171,13 +176,15 @@ useEffect(() => {
     const match = target.match(/container-(\d+)/);
     if (match) {
       const index = Number(match[1]);
-      setOpenContainers((prev) => ({ ...prev, [index]: true }));
+      setOpenContainers({ [index]: true });
     }
 
     requestAnimationFrame(() => {
-      document.getElementById(target)?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+      requestAnimationFrame(() => {
+        document.getElementById(target)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       });
     });
   };

@@ -1425,3 +1425,93 @@
     font-size: 1.2rem;
   }
 }
+
+
+/* ===== Fachbibliothek: kompakteres Akkordeon ===== */
+.header {
+  min-height: 52px;
+  padding: 0 18px;
+}
+
+.headerTextContainer {
+  gap: 14px;
+}
+
+.headerText {
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+
+.arrow {
+  font-size: 0.82rem;
+}
+
+.content {
+  padding: 0 22px;
+}
+
+.content p {
+  padding: 22px 0 26px;
+  line-height: 1.68;
+}
+
+@media (max-width: 768px) {
+  .header {
+    min-height: 50px;
+    padding: 0 14px;
+  }
+
+  .headerText {
+    font-size: 0.92rem;
+  }
+
+  .content {
+    padding: 0 15px;
+  }
+
+  .content p {
+    padding: 18px 0 22px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .header {
+    min-height: 58px;
+    padding: 0 24px;
+  }
+
+  .headerText {
+    font-size: 1.08rem;
+  }
+
+  .content {
+    padding: 0 30px;
+  }
+
+  .content p {
+    padding: 26px 0 30px;
+  }
+}
+
+@media (min-width: 2400px) {
+  .header {
+    min-height: 68px;
+    padding: 0 34px;
+  }
+
+  .headerText {
+    font-size: 1.28rem;
+  }
+
+  .arrow {
+    font-size: 1rem;
+  }
+
+  .content {
+    padding: 0 42px;
+  }
+
+  .content p {
+    padding: 32px 0 38px;
+  }
+}
