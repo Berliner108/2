@@ -879,6 +879,29 @@ useEffect(() => {
 
             <p className={styles.standardCompactIntro}> Je vollständiger diese Angaben vor der Auftragsvergabe gemacht werden, desto besser kann der Beschichter Aufwand, Machbarkeit, Termine und Ergebnis einschätzen. Das reduziert Rückfragen, Verzögerungen, Nachträge und mögliche Mehrkosten. </p>
 
+            <div className={styles.preparationInfoBlock}>
+              <h4>Reinigen &amp; Entfetten</h4>
+              <p>
+                Vor vielen Beschichtungs- und Oberflächenverfahren müssen Werkstücke
+                gründlich gereinigt und entfettet werden. Öl, Fett, Staub,
+                Bearbeitungsrückstände und andere Verunreinigungen können die Haftung
+                einer nachfolgenden Beschichtung deutlich verschlechtern.
+              </p>
+              <p>
+                Je nach Werkstoff und späterem Verfahren kommen unterschiedliche
+                Reinigungs- und Entfettungsverfahren zum Einsatz. Entscheidend ist,
+                dass die Oberfläche anschließend sauber, gleichmäßig und für die
+                weitere Behandlung geeignet ist. Besonders relevant ist die
+                Entfettung beispielsweise vor Pulverbeschichten, Nasslackieren,
+                Eloxieren, Passivieren oder galvanischen Verfahren.
+              </p>
+              <p>
+                <strong>Für eine Anfrage wichtig:</strong> Grundwerkstoff,
+                Ausgangszustand, Art der Verschmutzung und die geplante
+                Folgebehandlung sollten möglichst klar angegeben werden.
+              </p>
+            </div>
+
             <ul className={styles.standardCompactList}>
               <li>
                 <strong>Standardablauf:</strong> Abholung, Zustellung,

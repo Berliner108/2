@@ -1528,3 +1528,54 @@
   color: #006f87;
   text-decoration: underline;
 }
+
+
+/* ===== Reinigen & Entfetten ===== */
+.preparationInfoBlock {
+  margin: 24px 0 28px;
+  padding: 24px 26px;
+  background: #ffffff;
+  border: 1px solid #e1e8ef;
+  border-left: 4px solid #00a8c7;
+  border-radius: 4px;
+}
+
+.preparationInfoBlock h4 {
+  margin: 0 0 12px;
+  color: #07111f;
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.preparationInfoBlock p {
+  margin: 0 0 12px;
+  color: #425066;
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.preparationInfoBlock p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .preparationInfoBlock {
+    padding: 20px 18px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .preparationInfoBlock {
+    padding: 30px 32px;
+  }
+
+  .preparationInfoBlock h4 {
+    font-size: 1.35rem;
+  }
+
+  .preparationInfoBlock p {
+    font-size: 1.06rem;
+  }
+}
