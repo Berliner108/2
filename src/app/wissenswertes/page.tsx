@@ -179,6 +179,72 @@ useEffect(() => {
     );
   };
 
+  const verfahrensGruppen = [
+    {
+      title: "Beschichten & Lackieren",
+      items: [
+        { name: "Nasslackieren", description: "Flüssiglacke für dekorative, funktionelle und korrosionsschützende Oberflächen.", target: "container-2" },
+        { name: "Pulverbeschichten", description: "Pulverlack wird elektrostatisch aufgebracht und anschließend eingebrannt.", target: "container-3" },
+        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-1" },
+      ],
+    },
+    {
+      title: "Galvanische & chemische Oberflächen",
+      items: [
+        { name: "Verzinken", description: "Zinkschichten zum Korrosionsschutz – unter anderem feuerverzinkt, galvanisch oder als Zinklamelle.", target: "container-5" },
+        { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-4" },
+        { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-4" },
+        { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-1" },
+        { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-1" },
+        { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-6" },
+        { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-7" },
+        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-8" },
+        { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-1" },
+        { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-1" },
+        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-1" },
+        { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-1" },
+        { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-1" },
+        { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-1" },
+      ],
+    },
+    {
+      title: "Vorbehandlung & Entschichtung",
+      items: [
+        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-10" },
+        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-9" },
+        { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-5" },
+        { name: "Enteloxieren", description: "Entfernen bestehender Eloxalschichten von Aluminiumoberflächen.", target: "container-4" },
+        { name: "Entanodisieren", description: "Entfernen anodisch erzeugter Oxidschichten als Vorbereitung für eine neue Oberflächenbehandlung.", target: "container-4" },
+        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-6" },
+        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-7" },
+        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-8" },
+      ],
+    },
+    {
+      title: "Weitere Leistungen",
+      items: [
+        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-11" },
+        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-12" },
+        { name: "Einlagern", description: "Zwischen- oder Fertigwarenlagerung als ergänzende Leistung innerhalb der Auftragsabwicklung.", target: "container-1" },
+      ],
+    },
+  ];
+
+  const scrollToVerfahren = (target: string) => {
+    const match = target.match(/container-(\d+)/);
+    if (match) {
+      const index = Number(match[1]);
+      setOpenContainers((prev) => ({ ...prev, [index]: true }));
+    }
+
+    requestAnimationFrame(() => {
+      document.getElementById(target)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
+
   const containerHeadings = [
     "Beschichtungstechnik",
     "Verfahren",
@@ -423,6 +489,29 @@ useEffect(() => {
             Besonderheiten.
           </p>
         </section>
+
+        <div className={styles.verfahrenGroups}>
+          {verfahrensGruppen.map((group) => (
+            <section key={group.title} className={styles.verfahrenGroup}>
+              <h3 className={styles.verfahrenGroupTitle}>{group.title}</h3>
+
+              <div className={styles.verfahrenGrid}>
+                {group.items.map((item) => (
+                  <button
+                    type="button"
+                    key={item.name}
+                    className={styles.verfahrenCard}
+                    onClick={() => scrollToVerfahren(item.target)}
+                  >
+                    <span className={styles.verfahrenCardTitle}>{item.name}</span>
+                    <span className={styles.verfahrenCardText}>{item.description}</span>
+                    <span className={styles.verfahrenCardLink}>Mehr erfahren →</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
 
         <div className={styles.pageContainer}>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (

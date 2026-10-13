@@ -1233,3 +1233,195 @@
     grid-template-columns: 1fr;
   }
 }
+/* ===== Verfahrensbibliothek / Kartenraster ===== */
+.verfahrenGroups {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 58px;
+  box-sizing: border-box;
+}
+
+.verfahrenGroup {
+  margin-top: 34px;
+}
+
+.verfahrenGroup:first-child {
+  margin-top: 0;
+}
+
+.verfahrenGroupTitle {
+  margin: 0 0 16px;
+  color: #07111f;
+  font-size: 1.38rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.verfahrenGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.verfahrenCard {
+  width: 100%;
+  min-height: 184px;
+  padding: 22px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #e3e8ee;
+  border-left: 4px solid #00a8c7;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.045);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.verfahrenCard:hover {
+  background: #f7fbfd;
+  border-color: #d7e3e9;
+  border-left-color: #008faf;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
+  transform: translateY(-2px);
+}
+
+.verfahrenCard:focus-visible {
+  outline: 3px solid rgba(0, 168, 199, 0.28);
+  outline-offset: 3px;
+}
+
+.verfahrenCardTitle {
+  display: block;
+  margin: 0 0 9px;
+  color: #07111f;
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.verfahrenCardText {
+  display: block;
+  margin: 0;
+  color: #526071;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.verfahrenCardLink {
+  display: block;
+  margin-top: auto;
+  padding-top: 18px;
+  color: #008faf;
+  font-size: 0.91rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.verfahrenCard:hover .verfahrenCardLink {
+  color: #007d99;
+}
+
+@media (max-width: 980px) {
+  .verfahrenGroups {
+    padding: 0 4px;
+  }
+
+  .verfahrenGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .verfahrenGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .verfahrenCard {
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1600px) {
+  .verfahrenGroups {
+    max-width: 1500px;
+    margin-bottom: 72px;
+  }
+
+  .verfahrenGroup {
+    margin-top: 42px;
+  }
+
+  .verfahrenGroupTitle {
+    margin-bottom: 20px;
+    font-size: 1.65rem;
+  }
+
+  .verfahrenGrid {
+    gap: 20px;
+  }
+
+  .verfahrenCard {
+    min-height: 205px;
+    padding: 28px 28px 24px;
+  }
+
+  .verfahrenCardTitle {
+    font-size: 1.24rem;
+  }
+
+  .verfahrenCardText {
+    font-size: 1.05rem;
+    line-height: 1.62;
+  }
+
+  .verfahrenCardLink {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 2400px) {
+  .verfahrenGroups {
+    max-width: 1850px;
+    margin-bottom: 94px;
+  }
+
+  .verfahrenGroup {
+    margin-top: 54px;
+  }
+
+  .verfahrenGroupTitle {
+    margin-bottom: 26px;
+    font-size: 2.1rem;
+  }
+
+  .verfahrenGrid {
+    gap: 26px;
+  }
+
+  .verfahrenCard {
+    min-height: 260px;
+    padding: 36px 36px 30px;
+  }
+
+  .verfahrenCardTitle {
+    font-size: 1.55rem;
+  }
+
+  .verfahrenCardText {
+    font-size: 1.28rem;
+    line-height: 1.65;
+  }
+
+  .verfahrenCardLink {
+    padding-top: 24px;
+    font-size: 1.2rem;
+  }
+}
