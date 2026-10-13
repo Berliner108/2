@@ -8,21 +8,7 @@ import Vision from "./Vision";  // Importiere die Komponente
 
 
 const Wissenswertes = () => {
-  const [openContainers, setOpenContainers] = useState<{ [key: number]: boolean }>({
-    0: false,
-    1: false,
-    2: false,
-    3: false,
-    4: false,
-    5: false,
-    6: false,
-    7: false,
-    8: false,
-    9: false,
-    10: false,
-    11: false,
-    12: false,
-  });
+  const [openContainers, setOpenContainers] = useState<{ [key: number]: boolean }>({});
 
   const [isClient, setIsClient] = useState(false); // Um sicherzustellen, dass es nur im Client läuft
   // Container-Logik für das Öffnen
@@ -41,98 +27,37 @@ const Wissenswertes = () => {
   }, []);
 
   useEffect(() => {
-  if (isClient) {
-    const hash = window.location.hash;
+    if (!isClient) return;
 
-    // Überprüfen des URL-Fragmentes (Hash-Wertes) und öffne den entsprechenden Container
-    if (hash === "#Beschichtungstechnik") {
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        0: true,
-      }));
-      document.getElementById("container-0")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#Verfahren") {
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        1: true,
-      }));
-      document.getElementById("container-1")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#Nasslackieren") {
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        2: true,
-      }));
-      document.getElementById("container-2")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#Pulverbeschichten") {
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        3: true,
-      }));
-      document.getElementById("container-3")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#Eloxieren") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        4: true,
-      }));
-      document.getElementById("container-4")?.scrollIntoView({ behavior: "smooth" });
-    } else if (hash === "#Verzinken") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        5: true,
-      }));
-      document.getElementById("container-5")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Verzinnen") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        6: true,
-      }));
-      document.getElementById("container-6")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Aluminieren") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        7: true,
-      }));
-      document.getElementById("container-7")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Vernickeln") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        8: true,
-      }));
-      document.getElementById("container-8")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Entlacken") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        9: true,
-      }));
-      document.getElementById("container-9")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Strahlen") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        10: true,
-      }));
-      document.getElementById("container-10")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Folieren") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        11: true,
-      }));
-      document.getElementById("container-11")?.scrollIntoView({ behavior: "smooth" });
-    }
-    else if (hash === "#Isolierstegverpressen") {  // Dieser Block jetzt korrekt eingefügt
-      setOpenContainers((prevState) => ({
-        ...prevState,
-        12: true,
-      }));
-      document.getElementById("container-12")?.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-}, [isClient]);
+    const hashTargets: Record<string, number> = {
+      "#Beschichtungstechnik": 0,
+      "#Verfahren": 1,
+      "#Nasslackieren": 2,
+      "#Pulverbeschichten": 3,
+      "#Eloxieren": 4,
+      "#Anodisieren": 4,
+      "#Verzinken": 5,
+      "#Vernickeln": 6,
+      "#Entnickeln": 6,
+      "#Entlacken": 7,
+      "#Strahlen": 8,
+      "#KTL-Beschichten": 9,
+      "#Verchromen": 10,
+      "#Brünieren": 11,
+      "#Verzinnen": 12,
+      "#Aluminieren": 13,
+      "#Folieren": 14,
+      "#Isolierstegverpressen": 15,
+    };
+
+    const index = hashTargets[window.location.hash];
+    if (index === undefined) return;
+
+    setOpenContainers((prevState) => ({ ...prevState, [index]: true }));
+    requestAnimationFrame(() => {
+      document.getElementById(`container-${index}`)?.scrollIntoView({ behavior: "smooth" });
+    });
+  }, [isClient]);
 
 useEffect(() => {
   if (isClient) {
@@ -185,7 +110,7 @@ useEffect(() => {
       items: [
         { name: "Nasslackieren", description: "Flüssiglacke für dekorative, funktionelle und korrosionsschützende Oberflächen.", target: "container-2" },
         { name: "Pulverbeschichten", description: "Pulverlack wird elektrostatisch aufgebracht und anschließend eingebrannt.", target: "container-3" },
-        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-1" },
+        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-9" },
       ],
     },
     {
@@ -195,13 +120,13 @@ useEffect(() => {
         { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-4" },
         { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-4" },
         { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-1" },
-        { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-1" },
-        { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-6" },
-        { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-7" },
-        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-8" },
+        { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-11" },
+        { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-12" },
+        { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-13" },
+        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-6" },
         { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-1" },
         { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-1" },
-        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-1" },
+        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-10" },
         { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-1" },
         { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-1" },
         { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-1" },
@@ -210,21 +135,21 @@ useEffect(() => {
     {
       title: "Vorbehandlung & Entschichtung",
       items: [
-        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-10" },
-        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-9" },
+        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-8" },
+        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-7" },
         { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-5" },
         { name: "Enteloxieren", description: "Entfernen bestehender Eloxalschichten von Aluminiumoberflächen.", target: "container-4" },
         { name: "Entanodisieren", description: "Entfernen anodisch erzeugter Oxidschichten als Vorbereitung für eine neue Oberflächenbehandlung.", target: "container-4" },
-        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-6" },
-        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-7" },
-        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-8" },
+        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-12" },
+        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-13" },
+        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-6" },
       ],
     },
     {
       title: "Weitere Leistungen",
       items: [
-        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-11" },
-        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-12" },
+        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-14" },
+        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-15" },
         { name: "Einlagern", description: "Zwischen- oder Fertigwarenlagerung als ergänzende Leistung innerhalb der Auftragsabwicklung.", target: "container-1" },
       ],
     },
@@ -245,7 +170,7 @@ useEffect(() => {
     });
   };
 
-  const containerHeadings = [
+  const legacyContainerHeadings = [
     "Beschichtungstechnik",
     "Verfahren",
     "Nasslackieren",
@@ -261,7 +186,7 @@ useEffect(() => {
     "Isolierstegverpressen",
   ];
 
-  const containerTexts = [
+  const legacyContainerTexts = [
     "Die <strong>Beschichtungstechnik</strong> (bzw. Oberflächentechnik) ist ein Teilbereich der Materialwissenschaften, der sich mit der <span class='highlight'>gezielten Modifikation von Oberflächen</span> beschäftigt, um deren Eigenschaften zu verbessern. Ziel ist es, Materialien oder Bauteile <strong>funktionaler</strong>, <strong>langlebiger</strong> und <strong>ästhetisch ansprechender</strong> zu gestalten. Die Beschichtungstechnik leistet somit einen wesentlichen Beitrag zur Langlebigkeit und Umweltfreundlichkeit metallischer Produkte. Die Anwendungen reichen von <strong>Korrosions-</strong> und <strong>Verschleißschutz</strong> bis hin zur Optimierung <span class='highlight'>chemischer</span>, <span class='highlight'>elektrischer</span> und <span class='highlight'>mechanischer</span> Eigenschaften sowie der visuellen Gestaltung. Dabei wird ausschließlich die Oberfläche behandelt, während das Grundmaterial unverändert bleibt. Diese Technologie spielt eine essenzielle Rolle in zahlreichen Industrien, darunter die <strong>Automobilbranche</strong>, <strong>Luft- und Raumfahrt</strong>, <strong>Maschinenbau</strong>, <strong>Medizintechnik</strong> und <strong>Elektronik</strong>.<br><br><h4>Ziele der Beschichtung:</h4><ul><li><strong>Dekoration:</strong> Lackieren oder Pulverbeschichten mit verschiedenen Lacken verändern Farbe, Glanz und Textur der Oberfläche.</li><li><strong>Schutz:</strong> Reduktion von Korrosion, Abrieb, Kratzer und UV-Strahlung.</li><li><strong>Funktionalität:</strong> Die Oberfläche wird mit spezifischen Eigenschaften ausgestattet, etwa durch Verbesserung der Haftung, Gleitfähigkeit, elektrischen Leitfähigkeit oder Wärmeleitfähigkeit</span>.</li><li><strong>Hygiene:</strong> Spezielle Beschichtungen können Schmutzanhaftungen reduzieren und die Reinigung erleichtern. Dies ist besonders in der Lebensmittelindustrie und der Medizintechnik von großem Nutzen.</li></ul>",
 
     
@@ -288,6 +213,204 @@ useEffect(() => {
     "<strong>Industrielles Folieren</strong> ist ein automatisierter Prozess bei dem Folien auf verschiedene Materialien wie Metall, Kunststoff, Holz oder Glas aufgebracht werden. Ziel ist es, diese zu schützen, zu dekorieren oder ihre funktionalen Eigenschaften zu verbessern. Dieser Prozess wird großflächig in Fertigungsanlagen durchgeführt und kommt in vielen Branchen zum Einsatz, darunter Bauwesen, Automobilindustrie, Verpackungsbranche und Möbelproduktion.<br><br>Zum Schutz empfindlicher Oberflächen wie Glas, Edelstahl oder lackierter Metalle werden spezielle Schutzfolien verwendet. Diese verhindern Kratzer, Schmutzablagerungen und Korrosion. Dekorative Folien finden Anwendung bei Möbeln, Türen oder Paneelen, um optische Effekte wie Holzimitationen oder Metalloberflächen zu erzielen.<br><br>In funktionalen Bereichen können die Folien Eigenschaften wie Hitzebeständigkeit, elektrische Isolierung oder Chemikalienbeständigkeit bieten, was besonders in der Elektroindustrie von Bedeutung ist. Verpackungsfolien wiederum schützen Produkte während des Transports oder verlängern deren Haltbarkeit, wie es beispielsweise bei Lebensmitteln der Fall ist. In der Automobilindustrie wird Folieren genutzt, um Fahrzeugteile zu schützen oder zu gestalten, etwa durch Carbon-Look-Folien.<br><br>Vor dem Aufbringen der Folie wird die Oberfläche gründlich gereinigt und vorbereitet. Anschließend wird die Folie durch Maschinen mit Hilfe von Wärme, Druck oder speziellen Klebstoffen dauerhaft fixiert. Industriegerechte Anlagen, wie Kaschieranlagen oder Vakuumpressen, sorgen dabei für eine gleichmäßige und präzise Anwendung.<br><br>Das industrielle Folieren ist ein effizientes, flexibles und kostengünstiges Verfahren, das nicht nur die Oberfläche schützt, sondern auch vielfältige Gestaltungsmöglichkeiten bietet. Es ermöglicht die Veredelung verschiedenster Materialien und wird in zahlreichen Bereichen erfolgreich eingesetzt.",
 
     "<strong>Die Isoliersteg-Verpressung</strong>, auch bekannt als Isolierverbund oder thermische Trennung, ist ein Verfahren, bei dem zwei Aluminiumprofile über einen Kunststoffsteg miteinander verbunden und unter Druck verpresst werden. Dieser Prozess findet vor allem Anwendung im Fenster-, Türen- und Fassadenbau, um Aluminiumprofile thermisch zu trennen. Ziel ist es, die Wärmedämmung zu verbessern und den Wärmefluss zwischen der Innen- und Außenseite des Profils zu verringern.<br><br>In diesem Verfahren wird ein speziell geformter Isoliersteg aus einem wärmedämmenden Kunststoff, meist Polyamid, in die vorgesehenen Kammern der beiden Aluminiumprofile eingelegt. Anschließend werden die Profile und der Isoliersteg in einer Verpressmaschine unter hohem Druck zusammengepresst. Dabei verformt sich das Aluminium leicht und umschließt den Kunststoffsteg, was eine stabile mechanische Verbindung erzeugt.<br><br>Nach dem Verpressen bleibt die Verbindung stabil, und die Profile bleiben thermisch voneinander getrennt, ohne die mechanische Stabilität zu beeinträchtigen. Zu den Vorteilen dieses Verfahrens zählen eine verbesserte Wärmedämmung, die Aufrechterhaltung der Stabilität und die Vielseitigkeit des Verfahrens, da unterschiedliche Profildesigns und Farben realisiert werden können."
+  ];
+
+
+  const containerHeadings = [
+    legacyContainerHeadings[0],
+    legacyContainerHeadings[1],
+    "Nasslackieren",
+    "Pulverbeschichten",
+    "Eloxieren / Anodisieren & Enteloxieren / Entanodisieren",
+    "Verzinken & Entzinken",
+    "Vernickeln & Entnickeln",
+    "Entlacken",
+    "Strahlen",
+    "KTL-Beschichten",
+    "Verchromen",
+    "Brünieren",
+    "Verzinnen & Entzinnen",
+    "Aluminieren & Entaluminieren",
+    "Folieren",
+    "Isolierstegverpressen",
+  ];
+
+  const ktlText = `
+    <strong>KTL-Beschichten</strong> steht für kathodische Tauchlackierung. Dabei wird ein elektrisch leitfähiges Werkstück vollständig in ein wasserbasiertes Lackbad eingetaucht und als Kathode geschaltet. Durch das elektrische Feld lagern sich die Lackbestandteile gleichmäßig auf der Oberfläche ab. Nach dem Spülen wird die Beschichtung eingebrannt und ausgehärtet.<br><br>
+    <h4>Wann wird KTL eingesetzt?</h4>
+    <ul>
+      <li><strong>Korrosionsschutz:</strong> KTL wird häufig als Grundbeschichtung eingesetzt, besonders bei Stahlbauteilen und komplexen Geometrien.</li>
+      <li><strong>Serienteile:</strong> Das Verfahren eignet sich besonders für wiederkehrende Stückzahlen und industrielle Serienprozesse.</li>
+      <li><strong>Hohlräume und schwer zugängliche Bereiche:</strong> Durch das Tauchverfahren werden auch Bereiche erreicht, die beim reinen Spritzauftrag schwierig zu beschichten wären.</li>
+      <li><strong>Mehrschichtsysteme:</strong> KTL kann als Grundierung für anschließendes Pulverbeschichten oder Nasslackieren dienen.</li>
+    </ul>
+    <h4>Typische Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Werkstoff, Abmessungen, Gewicht und Stückzahl</li>
+      <li>gewünschte <strong>Schichtdicke in µm</strong></li>
+      <li>gewünschter Farbton: <strong>Schwarz, Grau oder andere Vorgabe</strong></li>
+      <li>spätere Weiterbeschichtung und gewünschter Korrosionsschutz</li>
+      <li>Bereiche, die frei von Beschichtung bleiben müssen</li>
+      <li>Anforderungen an Prüfungen, Dokumentation oder Zertifizierungen</li>
+    </ul>
+    <h4>Relevante Qualitätsanforderungen</h4>
+    Je nach Auftrag können Qualitäts- und Umweltmanagement sowie branchenspezifische Anforderungen eine Rolle spielen. In der Scouti-Auftragserfassung können für KTL unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>IATF 16949</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.<br><br>
+    <strong>Praxis-Hinweis:</strong> Für ein belastbares Angebot sollte der Beschichter wissen, ob KTL als Endoberfläche oder als Grundierung für ein weiteres Beschichtungssystem vorgesehen ist.
+  `;
+
+  const verchromenText = `
+    Beim <strong>Verchromen</strong> wird eine Chromschicht auf ein metallisches Werkstück aufgebracht. Je nach Ziel kann die Schicht vor allem dekorative Eigenschaften liefern oder gezielt technische Funktionen wie Verschleißschutz, Härte oder verbesserte Gleiteigenschaften erfüllen.<br><br>
+    <h4>Varianten</h4>
+    <ul>
+      <li><strong>Glanzverchromen:</strong> dekorative, glänzende Oberfläche; häufig Teil eines mehrschichtigen galvanischen Aufbaus.</li>
+      <li><strong>Mattverchromen:</strong> matte bis satinierte Optik für dekorative oder funktionelle Anwendungen.</li>
+      <li><strong>Hartverchromen:</strong> technische Chromschicht für stark beanspruchte Bauteile, beispielsweise zur Erhöhung von Verschleißfestigkeit oder zur Wiederherstellung von Funktionsmaßen.</li>
+    </ul>
+    <h4>Typische Anwendungen</h4>
+    <ul>
+      <li>Maschinen- und Anlagenbau</li>
+      <li>Wellen, Kolbenstangen, Walzen und Führungen</li>
+      <li>Werkzeuge und verschleißbeanspruchte Funktionsflächen</li>
+      <li>dekorative Metallteile und sichtbare Bauteile</li>
+    </ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>gewünschte Ausführung: <strong>Glanz-, Matt- oder Hartverchromen</strong></li>
+      <li>Werkstoff und Ausgangszustand der Oberfläche</li>
+      <li>Maße, Gewicht, Stückzahl und zulässige Maßänderungen</li>
+      <li>Funktions-, Pass- und Sichtflächen</li>
+      <li>gewünschte Schichtdicke bzw. technische Funktion</li>
+      <li>Nachbearbeitung wie Schleifen oder Polieren, falls erforderlich</li>
+    </ul>
+    <strong>Praxis-Hinweis:</strong> Gerade bei Hartchrom sind Maßhaltigkeit, Ausgangsmaß, spätere Bearbeitung und die tatsächlich zu beschichtenden Funktionsflächen vor Angebotsabgabe eindeutig festzulegen.
+  `;
+
+  const bruenierenText = `
+    <strong>Brünieren</strong> ist eine chemische Oberflächenbehandlung für Eisenwerkstoffe, bei der eine sehr dünne dunkle Konversionsschicht erzeugt wird. Das charakteristische schwarze bis schwarzblaue Erscheinungsbild entsteht nicht durch eine dick aufgetragene Lack- oder Metallschicht, sondern durch eine gezielte Umwandlung der Werkstückoberfläche.<br><br>
+    <h4>Varianten</h4>
+    <ul>
+      <li><strong>Heißbrünieren:</strong> industriell häufig eingesetztes Verfahren mit beheizten Prozessbädern.</li>
+      <li><strong>Kaltbrünieren:</strong> Behandlung bei niedrigerer Temperatur, häufig für kleinere Bauteile, Reparaturen oder besondere Anwendungen.</li>
+      <li><strong>Schwarzoxidieren:</strong> Bezeichnung für Verfahren zur Erzeugung einer schwarzen Oxidschicht auf geeigneten Eisenwerkstoffen.</li>
+    </ul>
+    <h4>Eigenschaften und Anwendungen</h4>
+    <ul>
+      <li>dunkle, technisch-dekorative Oberfläche</li>
+      <li>nur geringe Veränderung der Bauteilmaße</li>
+      <li>geeignet für Werkzeuge, Vorrichtungen, Verbindungselemente, Maschinenbauteile und sichtbare Metallteile</li>
+      <li>Korrosionsschutz wird üblicherweise durch eine anschließende Konservierung, beispielsweise Ölen, verbessert</li>
+    </ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Werkstoff bzw. genaue Stahlgüte</li>
+      <li>gewünschtes Verfahren: <strong>Heißbrünieren, Kaltbrünieren oder Schwarzoxidieren</strong></li>
+      <li>Stückzahl, Maße und Gewicht</li>
+      <li>optische Anforderungen und Sichtflächen</li>
+      <li>gewünschte Nachbehandlung oder Konservierung</li>
+      <li>notwendige Zertifizierungen oder Dokumentationsanforderungen</li>
+    </ul>
+    In der Scouti-Auftragserfassung können beim Brünieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen ausgewählt werden.<br><br>
+    <strong>Praxis-Hinweis:</strong> Die genaue Stahlgüte sollte möglichst angegeben werden, weil Werkstoffzusammensetzung und Wärmebehandlungszustand das optische Ergebnis beeinflussen können.
+  `;
+
+  const nasslackierenText = legacyContainerTexts[2] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Farbpalette und exakte Farbtonbezeichnung bzw. Artikelnummer</li>
+      <li>gewünschter Glanzgrad und Oberflächenstruktur</li>
+      <li>besondere Effekte wie Metallic oder fluoreszierende Ausführung</li>
+      <li>Hinweis auf zweifärbige Ausführung, Duplexbeschichtung oder beigestellten Lack</li>
+      <li>Werkstoff, Maße, Gewicht, Stückzahl, Sichtflächen und gewünschter Schichtaufbau</li>
+    </ul>
+    In der Scouti-Auftragserfassung können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
+  `;
+
+  const pulverbeschichtenText = legacyContainerTexts[3] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Farbpalette, Farbtonbezeichnung bzw. Artikelnummer</li>
+      <li>Glanzgrad: von Hochglanz bis Stumpfmatt</li>
+      <li>Oberfläche: glatt, Feinstruktur oder Grobstruktur</li>
+      <li>gewünschte Pulverlack-Qualität, z. B. Polyester, Epoxy-Polyester, Polyurethan, Thermoplast oder Qualität für Feuerverzinkung</li>
+      <li>besondere Effekte, zweifärbige Ausführung oder Duplexbeschichtung</li>
+      <li>Werkstoff, Bauteilabmessungen, Gewicht, Stückzahl und zu maskierende Bereiche</li>
+    </ul>
+    Als mögliche Anforderungen führt Scouti unter anderem <strong>GSB</strong>, <strong>Qualicoat</strong>, <strong>Qualisteelcoat</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+  `;
+
+  const eloxierenText = legacyContainerTexts[4] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Aluminiumlegierung bzw. genaue Werkstoffangabe</li>
+      <li>gewünschter Eloxalfarbton, beispielsweise C-0 Natureloxal bis zu Bronze-, Grau- oder Schwarztönen</li>
+      <li>Maße, Gewicht, Stückzahl und Sichtflächen</li>
+      <li>Funktionsflächen, Passungen, Gewinde und Bereiche, die frei bleiben müssen</li>
+      <li>Anforderungen an Optik, Korrosionsschutz und Dokumentation</li>
+    </ul>
+    In Scouti können für Eloxieraufträge unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> ausgewählt werden.
+  `;
+
+  const verzinkenText = legacyContainerTexts[5] + `
+    <br><br><h4>Varianten in der Auftragserfassung</h4>
+    <ul>
+      <li><strong>Feuerverzinken</strong></li>
+      <li><strong>Galvanisches Verzinken</strong> mit Zink-Standard, Zink-Nickel oder Zink-Eisen</li>
+      <li><strong>Zinklamellenbeschichtung</strong></li>
+      <li><strong>Mechanisches Verzinken</strong></li>
+    </ul>
+    Beim galvanischen Verzinken kann zusätzlich zwischen <strong>Trommel- und Gestellverfahren</strong> unterschieden sowie eine Nachbehandlung wie Versiegelung, Gleitmittelbeschichtung oder Tempern angegeben werden.<br><br>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    Werkstoff, Maße, Gewicht, Stückzahl, gewünschtes Zinksystem, Ausführung, Nachbehandlung, Funktionsflächen, Gewinde, Hohlräume sowie die spätere Nutzung des Bauteils sollten möglichst vollständig angegeben werden.
+  `;
+
+  const vernickelnText = legacyContainerTexts[8] + `
+    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>gewünschtes Verfahren: <strong>chemisch oder galvanisch</strong></li>
+      <li>Werkstoff, Ausgangszustand und Geometrie</li>
+      <li>Maße, Gewicht und Stückzahl</li>
+      <li>optische bzw. technische Funktion der Nickelschicht</li>
+      <li>Funktions-, Pass- und Sichtflächen sowie gegebenenfalls nachfolgende Beschichtungen</li>
+    </ul>
+  `;
+
+  const entlackenText = legacyContainerTexts[9] + `
+    <br><br><h4>Varianten in Scouti</h4>
+    Für Entlackungsaufträge kann zwischen <strong>chemischer, elektrochemischer, thermischer und mechanischer Entlackung</strong> unterschieden werden.<br><br>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    Entscheidend sind Grundwerkstoff, Art und Zustand der vorhandenen Beschichtung, Bauteilabmessungen, Gewicht, Stückzahl, empfindliche Funktionsflächen sowie die geplante Weiterbehandlung nach dem Entlacken.
+  `;
+
+  const strahlenText = legacyContainerTexts[10] + `
+    <br><br><h4>Varianten in Scouti</h4>
+    In der Auftragserfassung stehen derzeit <strong>Sandstrahlen, Staubstrahlen und Glasperlenstrahlen</strong> zur Auswahl.<br><br>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Grundwerkstoff und Ausgangszustand</li>
+      <li>Ziel der Behandlung: Reinigen, Entrosten, Aufrauen, Mattieren oder Vorbereitung für eine Folgebeschichtung</li>
+      <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
+      <li>empfindliche Flächen, Passungen, Gewinde und Bereiche mit Maßanforderungen</li>
+      <li>gewünschtes Strahlmittel bzw. gewünschtes Ergebnis, sofern vorgegeben</li>
+    </ul>
+  `;
+
+  const containerTexts = [
+    legacyContainerTexts[0],
+    legacyContainerTexts[1],
+    nasslackierenText,
+    pulverbeschichtenText,
+    eloxierenText,
+    verzinkenText,
+    vernickelnText,
+    entlackenText,
+    strahlenText,
+    ktlText,
+    verchromenText,
+    bruenierenText,
+    legacyContainerTexts[6],
+    legacyContainerTexts[7],
+    legacyContainerTexts[11],
+    legacyContainerTexts[12],
   ];
 
   return (
@@ -333,6 +456,9 @@ useEffect(() => {
             <a href="#container-2">Nasslackieren</a>
             <a href="#container-3">Pulverbeschichten</a>
             <a href="#container-5">Verzinken & Entzinken</a>
+            <a href="#container-9">KTL-Beschichten</a>
+            <a href="#container-10">Verchromen</a>
+            <a href="#container-11">Brünieren</a>
           </aside>
         </section>
 
@@ -514,7 +640,7 @@ useEffect(() => {
         </div>
 
         <div className={styles.pageContainer}>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((index) => (
+          {containerHeadings.map((_, index) => (
             <div key={index} className={styles.container} id={`container-${index}`}>
               <motion.div
                 initial={{ opacity: 0 }}
