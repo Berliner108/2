@@ -129,7 +129,7 @@ useEffect(() => {
 
   const verfahrensGruppen = [
     {
-      title: "Beschichten & Lackieren",
+      title: "Lackieren",
       items: [
         { name: "Nasslackieren", description: "Flüssiglacke für dekorative, funktionelle und korrosionsschützende Oberflächen.", target: "container-2" },
         { name: "Pulverbeschichten", description: "Pulverlack wird elektrostatisch aufgebracht und anschließend eingebrannt.", target: "container-3" },
