@@ -699,7 +699,7 @@ useEffect(() => {
         <section className={styles.guideHero}>
           <div className={styles.guideHeroInner}>
             <p className={styles.sectionKicker}>Wissenswertes</p>
-            <h1>Beschichtungstechnik verständlich erklärt</h1>
+            <h2>Beschichtungstechnik verständlich erklärt</h2>
             <p className={styles.heroLead}>
               Ein kompakter Fachguide zu Beschichtungsverfahren, Vorbereitung,
               Qualitätsanforderungen und typischen Einsatzbereichen.
