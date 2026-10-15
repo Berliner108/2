@@ -14,7 +14,7 @@ function toHref(link: string): string | { pathname: string; hash: string } {
 
 const images = [
   { 
-    src: "/images/besch.jpg", 
+    src: "/images/skelleftea-kommun-Qqb7MJuGp0k-unsplash.jpg", 
     text1: "Beschichtungsaufträge unkompliziert vergeben", 
     text2: "Nasslackieren, Pulverbeschichten, Verzinken, Eloxieren, Strahlen, Entlacken, uvm.", 
     link: "/angebote" 
