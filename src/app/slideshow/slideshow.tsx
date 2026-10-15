@@ -14,7 +14,7 @@ function toHref(link: string): string | { pathname: string; hash: string } {
 
 const images = [
   { 
-    src: "/images/besch.webp", 
+    src: "/images/besch.jpeg", 
     text1: "Beschichtungsaufträge unkompliziert vergeben", 
     text2: "Nasslackieren, Pulverbeschichten, Verzinken, Eloxieren, Strahlen, Entlacken, uvm.", 
     link: "/angebote" 
