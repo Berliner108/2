@@ -34,7 +34,7 @@ const images = [
   { 
     src: "/images/slide4.webp", 
     text1: "Galvanische Beschichtungen für höchste Ansprüche", 
-    text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",, 
+    text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",
     link: "/angebote"
   },
   { 
