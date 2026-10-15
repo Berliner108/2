@@ -33,9 +33,9 @@ const images = [
   },
   { 
     src: "/images/slide4.webp", 
-    text1: "Alle Arbeitsmittel für Beschichter aus einer Hand", 
-    text2: "Nasslacke, Pulverlacke, Arbeitskleidung & Arbeitsutensilien, uvm.", 
-    link: "/kaufen?kategorie=Arbeitsmittel"
+    text1: "Galvanische Beschichtungen für höchste Ansprüche", 
+    text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",, 
+    link: "/angebote"
   },
   { 
     src: "/images/slide5.webp", 
