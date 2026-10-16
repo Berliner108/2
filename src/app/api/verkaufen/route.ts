@@ -43,7 +43,7 @@ function jsonStringArray(fd: FormData, key: string): string[] {
 
 
 function isPieceCategory(category: string): boolean {
-  return isPieceCategory(category) || category === "galvano_zubehoer";
+  return category === "arbeitsmittel" || category === "galvano_zubehoer";
 }
 
 function extFromName(name: string) {
