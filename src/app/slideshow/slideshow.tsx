@@ -45,7 +45,7 @@ const images = [
     isFullScreen: true
   },
   { 
-    src: "/images/slide6.webp", 
+    src: "/images/5b245415-e4d2-423b-914f-b90574fbd232.jpg", 
     text1: "Über 4.000.000 Farbtöne und Variationen verfügbar", 
     text2: "Finden Sie das passendste Angebot!", 
     link: "/kaufen" 
