@@ -557,7 +557,18 @@ const unitSuffix =
           </section>
 
           <div className={styles.imageContainer}>
-            <img src="/images/sonderlacke.jpg" alt="Artikelbild" className={styles.articleImage} />
+            <picture>
+              <source
+                media="(max-width: 768px)"
+                srcSet="/images/slideshow2.jpg"
+              />
+
+              <img
+                src="/images/sonderlacke.jpg"
+                alt="Industrielle Lackierung"
+                className={styles.articleImage}
+              />
+            </picture>
           </div>
 
           {/* Lackanfragen */}
