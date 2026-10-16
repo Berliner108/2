@@ -222,7 +222,9 @@ const {
 } = useArticleEditPrefill();
 
 const didPrefillRef = useRef(false);
-  const [kategorie, setKategorie] = useState<'nasslack' | 'pulverlack' | 'arbeitsmittel' | null>(null);
+  const [kategorie, setKategorie] = useState<
+  'nasslack' | 'pulverlack' | 'arbeitsmittel' | 'galvano_zubehoer' | null
+    >(null);
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
   const herstellerRef = useRef<HTMLDivElement>(null);
@@ -807,9 +809,14 @@ const goToStripeOnboarding = useCallback(async () => {
 useEffect(() => {
   if (isEditMode) return; // ✅ Edit schlägt alles
   const vorausgewaehlt = searchParams.get('kategorie');
-  if (vorausgewaehlt === 'nasslack' || vorausgewaehlt === 'pulverlack' || vorausgewaehlt === 'arbeitsmittel') {
-    setKategorie(vorausgewaehlt);
-  }
+  if (
+  vorausgewaehlt === 'nasslack' ||
+  vorausgewaehlt === 'pulverlack' ||
+  vorausgewaehlt === 'arbeitsmittel' ||
+  vorausgewaehlt === 'galvano_zubehoer'
+) {
+  setKategorie(vorausgewaehlt);
+}
 }, [searchParams, isEditMode]);
 
   const [bilder, setBilder] = useState<File[]>([]);
