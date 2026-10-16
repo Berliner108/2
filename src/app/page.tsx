@@ -560,7 +560,7 @@ const unitSuffix =
             <picture>
               <source
                 media="(max-width: 768px)"
-                srcSet="/images/slideshow2.jpg"
+                srcSet="/images/sonderlacke2.jpg"
               />
 
               <img
