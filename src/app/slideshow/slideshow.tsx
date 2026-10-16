@@ -32,7 +32,7 @@ const images = [
     link: "/wissenswertes#Sofunktioniert’s" // funktioniert jetzt zuverlässig
   },
   { 
-    src: "/images/miguelphoto-7IIczOkj4iw-unsplash.jpg", 
+    src: "/images/miguelphoto-7IIczOkj4iw-unsplash.png", 
     text1: "Galvanische Beschichtungen für höchste Ansprüche", 
     text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",
     link: "/angebote"
