@@ -100,7 +100,7 @@ export function useArticleEditPrefill() {
       articleId: id,
 
       kategorie:
-        cat === 'nasslack' || cat === 'pulverlack' || cat === 'arbeitsmittel'
+        cat === 'nasslack' || cat === 'pulverlack' || cat === 'arbeitsmittel' || cat === 'galvano_zubehoer'
           ? (cat as any)
           : null,
 
@@ -126,7 +126,7 @@ export function useArticleEditPrefill() {
       ]),
       bewerbung: pick(article, ['bewerbung'], []) as string[],
 
-      // Arbeitsmittel extras (wenn du sie gespeichert hast)asdf
+      // Arbeitsmittel-/Galvano-Extras
       stueckProEinheit: String(pick(article, ['stueckProEinheit'], '')),
       groesse: pick(article, ['groesse'], ''),
 
