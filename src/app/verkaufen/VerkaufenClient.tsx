@@ -2107,7 +2107,19 @@ return (
                 >
                   <FaTools size={32} />
                   <span>Arbeitsmittel</span>
-                </div>                    
+                </div>    
+                <div
+                  className={`${styles.iconBox} ${kategorie === 'galvano_zubehoer' ? styles.activeIcon : ''} ${isEditMode ? styles.disabledIcon : ''}`}
+                  onClick={() => {
+                    if (isEditMode) return;
+                    resetFieldsExceptCategory();
+                    setKategorie('galvano_zubehoer');
+                    setWarnungKategorie('');
+                  }}
+                >
+                  <FaTools size={32} />
+                  <span>Galvano-Zubehör</span>
+                </div>                
             </div>                        
             </div>
             {!kategorie && warnungKategorie && (
