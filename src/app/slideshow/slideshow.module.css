@@ -28,7 +28,10 @@
   
   gap: 20px;  
 }
-
+.slideImageWide {
+  object-fit: contain;
+  background: #111;
+}
 
 /* 🔹 Linke Hälfte (Text) */
 .textContainer {
