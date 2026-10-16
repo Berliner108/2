@@ -12,17 +12,22 @@ import BoerseLoading from '../components/loading/BoerseLoading';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
-const CAT_MAP: Record<string, 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'> = {
+const CAT_MAP: Record<string, 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'> = {
   nasslack: 'Nasslack',
   nasslacke: 'Nasslack',
   pulverlack: 'Pulverlack',
   pulverlacke: 'Pulverlack',
   arbeitsmittel: 'Arbeitsmittel',
   'arbeitsmittel & zubehör': 'Arbeitsmittel',
+  galvano_zubehoer: 'Galvano-Zubehör',
+  'galvano-zubehoer': 'Galvano-Zubehör',
+  'galvano-zubehör': 'Galvano-Zubehör',
+  galvanozubehoer: 'Galvano-Zubehör',
+  galvanozubehör: 'Galvano-Zubehör',
 };
 const normalizeKategorie = (s?: string | null) => CAT_MAP[norm(s)] ?? '';
 
-const kategorien: Array<'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'> = ['Nasslack', 'Pulverlack', 'Arbeitsmittel'];
+const kategorien: Array<'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'> = ['Nasslack', 'Pulverlack', 'Arbeitsmittel', 'Galvano-Zubehör'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
 const herstellerFilter = [
@@ -172,7 +177,7 @@ export default function Shopseite() {
   }, [searchParams]);
 
   // Filter-States
-  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel'>('');
+  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
@@ -281,7 +286,7 @@ export default function Shopseite() {
               ? 'stueck'
               : a.price_unit === 'kg'
               ? 'kg'
-              : norm(a.category) === 'arbeitsmittel'
+              : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
               ? 'stueck'
               : 'kg';
 
