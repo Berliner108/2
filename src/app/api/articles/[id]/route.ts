@@ -47,7 +47,7 @@ function addBusinessDaysISO(
   return formatUTCToISODate(cur);
 }
 
-// ✅ Kategorie-Mapper: exakt 3 Kategorien sauber ausgeben
+// ✅ Kategorie-Mapper: Kategorien sauber ausgeben
 function normalizeCategory(cat: unknown): string | null {
   if (cat == null) return null;
 
@@ -57,6 +57,7 @@ function normalizeCategory(cat: unknown): string | null {
     nasslack: "Nasslack",
     pulverlack: "Pulverlack",
     arbeitsmittel: "Arbeitsmittel",
+    galvano_zubehoer: "Galvano-Zubehör",
   };
 
   return map[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1) : null);
