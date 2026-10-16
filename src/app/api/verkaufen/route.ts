@@ -41,6 +41,11 @@ function jsonStringArray(fd: FormData, key: string): string[] {
   return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
 }
 
+
+function isPieceCategory(category: string): boolean {
+  return isPieceCategory(category) || category === "galvano_zubehoer";
+}
+
 function extFromName(name: string) {
   const m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
   return m?.[1] ?? "bin";
@@ -221,13 +226,13 @@ const charge          = jsonStringArray(fd, "aufladung"); // Pulverlack
     const description = toStr(fd.get("beschreibung")).trim();
     // Arbeitsmittel-spezifisch
 const size =
-  category === "arbeitsmittel" ? toStr(fd.get("groesse")).trim() : "";
+  isPieceCategory(category) ? toStr(fd.get("groesse")).trim() : "";
 
 const piecesPerUnit =
-  category === "arbeitsmittel" ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
+  isPieceCategory(category) ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
 
 // optional, aber sinnvoll: nur bei Arbeitsmittel hart validieren
-if (category === "arbeitsmittel") {
+if (isPieceCategory(category)) {
   if (!size) {
     return NextResponse.json({ error: "MISSING_SIZE" }, { status: 400 });
   }
@@ -280,12 +285,12 @@ if (category === "arbeitsmittel") {
 
     // Mengen
     const qtyKg =
-      stockStatus === "begrenzt" && category !== "arbeitsmittel"
+      stockStatus === "begrenzt" && !isPieceCategory(category)
         ? toNum(toStr(fd.get("mengeKg")), 0)
         : null;
 
     const qtyPiece =
-      stockStatus === "begrenzt" && category === "arbeitsmittel"
+      stockStatus === "begrenzt" && isPieceCategory(category)
         ? toInt(toStr(fd.get("mengeStueck")), 0)
         : null;
 
@@ -301,17 +306,17 @@ if (category === "arbeitsmittel") {
       condition,
       sale_type: verkaufsArt,
       // ✅ nur für Lacke (arbeitsmittel bekommt automatisch null/[])
-color_palette: category === "arbeitsmittel" ? null : color_palette,
-gloss_level:   category === "arbeitsmittel" ? null : gloss_level,
-surface:       category === "arbeitsmittel" ? null : surface,
-application:   category === "arbeitsmittel" ? null : application,
-color_tone:    category === "arbeitsmittel" ? null : color_tone,
-color_code:    category === "arbeitsmittel" ? null : color_code,
-quality:       category === "arbeitsmittel" ? null : quality,
+color_palette: isPieceCategory(category) ? null : color_palette,
+gloss_level:   isPieceCategory(category) ? null : gloss_level,
+surface:       isPieceCategory(category) ? null : surface,
+application:   isPieceCategory(category) ? null : application,
+color_tone:    isPieceCategory(category) ? null : color_tone,
+color_code:    isPieceCategory(category) ? null : color_code,
+quality:       isPieceCategory(category) ? null : quality,
 
-effect:          category === "arbeitsmittel" ? [] : effect,
-special_effects: category === "arbeitsmittel" ? [] : special_effects,
-certifications:  category === "arbeitsmittel" ? [] : certifications,
+effect:          isPieceCategory(category) ? [] : effect,
+special_effects: isPieceCategory(category) ? [] : special_effects,
+certifications:  isPieceCategory(category) ? [] : certifications,
 charge:          category === "pulverlack" ? charge : [],
 
       promo_score: promoScore,
@@ -327,8 +332,8 @@ charge:          category === "pulverlack" ? charge : [],
       published: true,
       sold_out: false,
       archived: false,
-      size: category === "arbeitsmittel" ? (size || null) : null,
-      pieces_per_unit: category === "arbeitsmittel" ? (piecesPerUnit || null) : null,
+      size: isPieceCategory(category) ? (size || null) : null,
+      pieces_per_unit: isPieceCategory(category) ? (piecesPerUnit || null) : null,
 
       owner_id: user.id,
     };
@@ -400,7 +405,7 @@ charge:          category === "pulverlack" ? charge : [],
 
     // 4) Preise / Staffeln
     const unit: "kg" | "stueck" =
-      verkaufsArt === "pro_stueck" || category === "arbeitsmittel" ? "stueck" : "kg";
+      verkaufsArt === "pro_stueck" || isPieceCategory(category) ? "stueck" : "kg";
 
     if (verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck") {
       const staffelnRaw = toStr(fd.get("preisStaffeln"));
@@ -512,9 +517,9 @@ if (!imprintCheck.ok) {
     const charge          = jsonStringArray(fd, "aufladung");
 
     // Arbeitsmittel-Felder
-    const size = category === "arbeitsmittel" ? toStr(fd.get("groesse")).trim() : "";
+    const size = isPieceCategory(category) ? toStr(fd.get("groesse")).trim() : "";
     const piecesPerUnit =
-      category === "arbeitsmittel" ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
+      isPieceCategory(category) ? toInt(toStr(fd.get("stueckProEinheit")), 0) : 0;
 
     const conditionRaw = toStr(fd.get("zustand")).trim();
     const condition =
@@ -550,12 +555,12 @@ if (!imprintCheck.ok) {
 
     // Mengen
     const qtyKg =
-      stockStatus === "begrenzt" && category !== "arbeitsmittel"
+      stockStatus === "begrenzt" && !isPieceCategory(category)
         ? toNum(toStr(fd.get("mengeKg")), 0)
         : null;
 
     const qtyPiece =
-      stockStatus === "begrenzt" && category === "arbeitsmittel"
+      stockStatus === "begrenzt" && isPieceCategory(category)
         ? toInt(toStr(fd.get("mengeStueck")), 0)
         : null;
 
@@ -598,17 +603,17 @@ if (!imprintCheck.ok) {
       condition,
       sale_type: verkaufsArt,
 
-      color_palette: category === "arbeitsmittel" ? null : color_palette,
-      gloss_level:   category === "arbeitsmittel" ? null : gloss_level,
-      surface:       category === "arbeitsmittel" ? null : surface,
-      application:   category === "arbeitsmittel" ? null : application,
-      color_tone:    category === "arbeitsmittel" ? null : color_tone,
-      color_code:    category === "arbeitsmittel" ? null : color_code,
-      quality:       category === "arbeitsmittel" ? null : quality,
+      color_palette: isPieceCategory(category) ? null : color_palette,
+      gloss_level:   isPieceCategory(category) ? null : gloss_level,
+      surface:       isPieceCategory(category) ? null : surface,
+      application:   isPieceCategory(category) ? null : application,
+      color_tone:    isPieceCategory(category) ? null : color_tone,
+      color_code:    isPieceCategory(category) ? null : color_code,
+      quality:       isPieceCategory(category) ? null : quality,
 
-      effect:          category === "arbeitsmittel" ? [] : effect,
-      special_effects: category === "arbeitsmittel" ? [] : special_effects,
-      certifications:  category === "arbeitsmittel" ? [] : certifications,
+      effect:          isPieceCategory(category) ? [] : effect,
+      special_effects: isPieceCategory(category) ? [] : special_effects,
+      certifications:  isPieceCategory(category) ? [] : certifications,
       charge:          category === "pulverlack" ? charge : [],
 
       delivery_days: deliveryDays,
@@ -619,8 +624,8 @@ if (!imprintCheck.ok) {
       image_urls: imageUrls,
       file_urls: fileUrls,
 
-      size: category === "arbeitsmittel" ? (size || null) : null,
-      pieces_per_unit: category === "arbeitsmittel" ? (piecesPerUnit || null) : null,
+      size: isPieceCategory(category) ? (size || null) : null,
+      pieces_per_unit: isPieceCategory(category) ? (piecesPerUnit || null) : null,
 
       updated_at: new Date().toISOString(),
     };
@@ -632,7 +637,7 @@ if (!imprintCheck.ok) {
     await supabase.from("article_price_tiers").delete().eq("article_id", id);
 
     const unit: "kg" | "stueck" =
-      verkaufsArt === "pro_stueck" || category === "arbeitsmittel" ? "stueck" : "kg";
+      verkaufsArt === "pro_stueck" || isPieceCategory(category) ? "stueck" : "kg";
 
     if (verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck") {
       const staffelnRaw = toStr(fd.get("preisStaffeln"));

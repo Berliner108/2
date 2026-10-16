@@ -3,7 +3,7 @@
 import type React from 'react';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import styles from './verkaufsseite.module.css';
-import { FaSprayCan, FaCloud, FaTools } from 'react-icons/fa';
+import { FaSprayCan, FaCloud, FaTools, FaBolt } from 'react-icons/fa';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Dropzone from './Dropzone';
@@ -2119,7 +2119,7 @@ return (
                     setWarnungKategorie('');
                   }}
                 >
-                  <FaTools size={32} />
+                  <FaBolt size={32} />
                   <span>Galvano-Zubehör</span>
                 </div>                
             </div>                        
