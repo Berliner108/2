@@ -26,7 +26,7 @@ const images = [
     link: "/verkaufen" 
   },
   { 
-    src: "/images/slide3.webp", 
+    src: "/images/69608804-d92b-408b-a478-c73da482b467.png", 
     text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
     text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
     link: "/wissenswertes#Sofunktioniert’s" // funktioniert jetzt zuverlässig
