@@ -225,6 +225,8 @@ const didPrefillRef = useRef(false);
   const [kategorie, setKategorie] = useState<
   'nasslack' | 'pulverlack' | 'arbeitsmittel' | 'galvano_zubehoer' | null
     >(null);
+  const istStueckKategorie =
+    kategorie === 'arbeitsmittel' || kategorie === 'galvano_zubehoer';
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
   const herstellerRef = useRef<HTMLDivElement>(null);
@@ -329,7 +331,7 @@ const [warnungHersteller, setWarnungHersteller] = useState('');
 const berechneFortschritt = () => {
   let total = 0, filled = 0;
 
-  if (kategorie === 'arbeitsmittel') {
+  if (istStueckKategorie) {
     // Arbeitsmittel-Pflichtfelder
     // 1. Kategorie
     total++;
@@ -611,7 +613,7 @@ useEffect(() => {
 }, [aufLager, verkaufsArt]);
 
 useEffect(() => {
-  if (kategorie !== 'arbeitsmittel') return;
+  if (!istStueckKategorie) return;
   if (aufLager) return;                 // "gesamt" ist bei dir eh disabled, aber sicher ist sicher
   if (verkaufsArt !== 'gesamt') return;
 
@@ -720,7 +722,7 @@ if (p.verkaufsArt === 'pro_kg' || p.verkaufsArt === 'pro_stueck') {
   setVersandKosten('');
 }
 
-if (p.kategorie === 'arbeitsmittel') {
+if (p.kategorie === 'arbeitsmittel' || p.kategorie === 'galvano_zubehoer') {
   setMengeStueck(Number(p.mengeStueck ?? 0));
   setGroesse(p.groesse ?? '');
   setStueckProEinheit(String(p.stueckProEinheit ?? ''));
@@ -1112,7 +1114,7 @@ if (!oberflaeche) {
     }
   }
 }
-if (kategorie === 'arbeitsmittel') {
+if (istStueckKategorie) {
   // Menge prüfen (nur wenn nicht "Auf Lager")
   if (!aufLager && mengeStueck < 1) {
     setWarnungMenge('Bitte gib mindestens 1 Stück an.');
@@ -1319,7 +1321,7 @@ if (!st.ready) {
 
 
 const zustandForSubmit =
-  kategorie === "arbeitsmittel" ? "Neu & Ungeöffnet" : zustand;
+  istStueckKategorie ? "Neu & Ungeöffnet" : zustand;
 
 const formData = new FormData();
 
@@ -1342,7 +1344,7 @@ formData.append('bewerbung', JSON.stringify(bewerbungOptionen));
 formData.append('mengeStatus', aufLager ? 'auf_lager' : 'begrenzt');
 
 if (!aufLager) {
-  if (kategorie === 'arbeitsmittel') {
+  if (istStueckKategorie) {
     formData.append('mengeStueck', String(mengeStueck)); // ✅
   } else {
     formData.append('mengeKg', String(menge)); // ✅ (kg)
@@ -1351,7 +1353,7 @@ if (!aufLager) {
 
 
 // kategorie-spezifisch
-if (kategorie === 'arbeitsmittel') {
+if (istStueckKategorie) {
   formData.append('stueckProEinheit', String(stueckProEinheit));
   formData.append('groesse', groesse);
 } else {
@@ -1626,7 +1628,7 @@ function toInt(v: string) {
 
 function getStaffelLimit() {
   if (aufLager) return null;
-  if (kategorie === 'arbeitsmittel') return Number(mengeStueck) || 0;
+  if (istStueckKategorie) return Number(mengeStueck) || 0;
   return Math.floor(Number(menge) || 0);
 }
 
@@ -3094,7 +3096,7 @@ onFocus={() => {
 
   </>
 ) }
-{kategorie === 'arbeitsmittel' && (
+{istStueckKategorie && (
   <>
     {/* Titel */}
 <label>
@@ -3160,7 +3162,7 @@ onFocus={() => {
 )}
 
    {/* Stückzahl */}
-    { kategorie === 'arbeitsmittel' && (
+    { istStueckKategorie && (
   <fieldset className={`${styles.mengeSection} ${warnungMenge ? styles.mengeSectionError : ''}`}>
     <legend className={styles.mengeLegend}>
       Menge (Stück): <span style={{ color: 'red' }}>*</span>
@@ -3216,7 +3218,7 @@ onFocus={() => {
     }
 
     // ✅ wenn "Nur als Gesamtmenge" aktiv ist -> Stück pro Verkauf MUSS = Menge sein
-    if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') {
+    if (istStueckKategorie && !aufLager && verkaufsArt === 'gesamt') {
       setStueckProEinheit(next >= 1 ? String(next) : '');
       setWarnungStueckProEinheit('');
     }
@@ -3248,10 +3250,10 @@ onFocus={() => {
   step={1}
   className={styles.input}
   value={stueckProEinheit}
-  disabled={kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt'}
+  disabled={istStueckKategorie && !aufLager && verkaufsArt === 'gesamt'}
   onChange={(e) => {
   // wenn gesamt aktiv -> nicht editierbar
-  if (kategorie === 'arbeitsmittel' && !aufLager && verkaufsArt === 'gesamt') return;
+  if (istStueckKategorie && !aufLager && verkaufsArt === 'gesamt') return;
 
   const value = e.target.value;
 
@@ -3392,7 +3394,7 @@ onFocus={() => {
         </label>
       )}
 
-      {kategorie === 'arbeitsmittel' && (
+      {istStueckKategorie && (
         <label className={styles.radioLabel}>
           <input
   type="radio"
@@ -3794,7 +3796,7 @@ onFocus={() => {
       )}
 
       {/* Arbeitsmittel-Vorschau */}
-      {kategorie === 'arbeitsmittel' && (
+      {istStueckKategorie && (
         <>
           <p><strong>Menge (Stück):</strong> {aufLager ? 'Auf Lager' : (mengeStueck || '–')}</p>
           <p><strong>Stück pro Verkaufseinheit:</strong> {stueckProEinheit || '–'}</p>
@@ -3826,7 +3828,7 @@ onFocus={() => {
 </p>
 )}
 
-{kategorie === 'arbeitsmittel' && (
+{istStueckKategorie && (
   <p><strong>Menge:</strong> {aufLager ? 'Auf Lager' : `${mengeStueck || '–'} Stück`}</p>
 )}
 
