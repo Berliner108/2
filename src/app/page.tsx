@@ -63,12 +63,15 @@ const normKategorie = (k?: string) => {
   if (v === 'pulverlack') return 'Pulverlack';
   if (v === 'nasslack') return 'Nasslack';
   if (v === 'arbeitsmittel') return 'Arbeitsmittel';
+  if (v === 'galvano_zubehoer') return 'Galvano-Zubehör';
 
   return k ?? '';
 };
 const einheitFuerKategorie = (kategorie?: string | null) => {
   const v = (kategorie ?? '').trim().toLowerCase();
-  return v === 'nasslack' ? 'Liter' : 'kg';
+  if (v === 'nasslack') return 'Liter';
+  if (v === 'arbeitsmittel' || v === 'galvano_zubehoer') return 'Stück';
+  return 'kg';
 };
 
 /** Zustand formatieren mit „und“ statt „&“ */
