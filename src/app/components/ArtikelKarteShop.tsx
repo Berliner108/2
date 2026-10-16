@@ -38,6 +38,7 @@ function formatKategorie(kategorie?: string | null) {
   if (k === 'pulverlack') return 'Pulverlack';
   if (k === 'nasslack') return 'Nasslack';
   if (k === 'arbeitsmittel') return 'Arbeitsmittel';
+  if (k === 'galvano_zubehoer') return 'Galvano-Zubehör';
   return (kategorie ?? '').trim();
 }
 
