@@ -32,12 +32,11 @@ const images = [
     link: "/wissenswertes#Sofunktioniert’s" // funktioniert jetzt zuverlässig
   },
   { 
-  src: "/images/miguelphoto-7IIczOkj4iw-unsplash.jpg", 
-  text1: "Galvanische Beschichtungen für höchste Ansprüche", 
-  text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",
-  link: "/angebote",
-  zoomOut: true
-},
+    src: "/images/miguelphoto-7IIczOkj4iw-unsplash.jpg", 
+    text1: "Galvanische Beschichtungen für höchste Ansprüche", 
+    text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",
+    link: "/angebote"
+  },
   { 
     src: "/images/slide5.webp", 
     text1: "Lassen Sie Ihr Material einlagern", 
@@ -124,19 +123,12 @@ const Slideshow = () => {
 
             <div className={styles.imageContainer}>
               <Image 
-  src={image.src} 
-  alt={`${image.text1} - ${image.text2}`} 
-  width={500}
-  height={300}
-  style={
-    image.zoomOut
-      ? {
-          objectFit: "contain",
-          objectPosition: "center",
-        }
-      : undefined
-  }
-/>
+                src={image.src} 
+                alt={`${image.text1} - ${image.text2}`} 
+                width={500}
+                height={300}
+                // layout ist in neueren Next-Versionen deprecated; width/height reicht
+              />
             </div>
 
             {image.isFullScreen && (
