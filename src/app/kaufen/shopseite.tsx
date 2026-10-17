@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Fuse from 'fuse.js';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -136,6 +135,9 @@ export default function Shopseite() {
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
 
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
+  const [maxPreis, setMaxPreis] = useState(0);
 
     // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
   const [promoToast, setPromoToast] = useState<{
@@ -189,9 +191,6 @@ export default function Shopseite() {
   // Pagination aus URL
   const page = parseInt(searchParams.get('page') || '1', 10);
   const seitenGroesse = 50;
-  const startIndex = (page - 1) * seitenGroesse;
-  const endIndex = page * seitenGroesse;
-
   // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
     const qKat = searchParams.get('kategorie');
@@ -252,7 +251,7 @@ export default function Shopseite() {
     };
   }, []);
 
-  // 2) Artikel aus DB laden (nach Viewer-Check, damit sell_to Filter korrekt ist)
+  // 2) Artikel serverseitig filtern/paginieren – gleiches Prinzip wie Lackanfragen
   useEffect(() => {
     if (!viewerChecked) return;
 
@@ -263,51 +262,59 @@ export default function Shopseite() {
         setLoading(true);
         setLoadError(null);
 
-        const res = await fetch(`/api/articles?limit=200&offset=0`, { cache: 'no-store' });
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        params.set('limit', String(seitenGroesse));
+        params.set('viewerBusiness', viewerIsBusiness ? '1' : '0');
+
+        if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
+        if (kategorie) params.set('kategorie', kategorie);
+        if (zustand.length) params.set('zustand', zustand.join(','));
+        if (hersteller.length) params.set('hersteller', hersteller.join(','));
+        if (gewerblich) params.set('g', '1');
+        if (privat) params.set('p', '1');
+        if (sortierung) params.set('sort', sortierung);
+
+        // Beim ersten Laden ist der Slider noch nicht initialisiert.
+        // Sobald maxAvailablePrice bekannt ist, ist auch max=0 ein echter Filterwert.
+        if (maxAvailablePrice > 0 || maxPreis > 0) {
+          params.set('max', String(maxPreis));
+        }
+
+        const res = await fetch(`/api/articles?${params.toString()}`, {
+          cache: 'no-store',
+        });
         const json = await res.json();
 
         if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
 
         const rows = (json.articles ?? []) as ApiArticle[];
 
-        // sell_to Filter (MVP):
-        const visible = rows.filter((a) => {
-          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
-          if (sellTo === 'gewerblich') return viewerIsBusiness;
-          return true;
-        });
-
-        const mapped: ShopArtikel[] = visible.map((a) => {
+        const mapped: ShopArtikel[] = rows.map((a) => {
           const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
 
-          // Einheit aus DB, fallback: Arbeitsmittel => Stück, sonst kg
           const unit: 'kg' | 'stueck' =
             a.price_unit === 'stueck'
               ? 'stueck'
               : a.price_unit === 'kg'
-              ? 'kg'
-              : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
-              ? 'stueck'
-              : 'kg';
+                ? 'kg'
+                : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
+                  ? 'stueck'
+                  : 'kg';
 
-          // Menge passend zur Einheit (Fallback 0)
-          // Menge passend zur Einheit:
-// - begrenzt => Zahl anzeigen
-// - auf_lager => undefined, damit Karte "Auf Lager" zeigen kann
-            const qtyForUnit =
-              unit === "stueck" ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
+          const qtyForUnit =
+            unit === 'stueck' ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
 
-            const displayQty =
-              a.stock_status === "begrenzt"
-                ? (typeof qtyForUnit === "number" ? qtyForUnit : safeNumber(qtyForUnit, 0))
-                : undefined;
-
+          const displayQty =
+            a.stock_status === 'begrenzt'
+              ? (typeof qtyForUnit === 'number' ? qtyForUnit : safeNumber(qtyForUnit, 0))
+              : undefined;
 
           return {
             id: a.id,
             titel: a.title ?? '',
             hersteller: a.manufacturer ?? '—',
-            zustand: String(a.condition ?? a.zustand ?? "").trim() || "—",
+            zustand: String(a.condition ?? a.zustand ?? '').trim() || '—',
             kategorie: a.category ?? '—',
             preis: safeNumber(a.price_from, 0),
             menge: displayQty,
@@ -319,18 +326,28 @@ export default function Shopseite() {
             gesponsert: safeNumber(a.promo_score, 0) > 0,
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
-            sale_type: (a.sale_type ?? null),
+            sale_type: a.sale_type ?? null,
           };
         });
 
         if (!cancelled) {
           setArtikelDaten(mapped);
+          setTotalCount(safeNumber(json.total, 0));
+
+          const serverMax = safeNumber(json.max_price, 0);
+          setMaxAvailablePrice(serverMax);
+          setMaxPreis((prev) => {
+            if (prev === 0 && maxAvailablePrice === 0) return serverMax;
+            return Math.min(prev, serverMax);
+          });
+
           setAnzahlAnzeigen(50);
         }
       } catch (e: any) {
         if (!cancelled) {
           setLoadError(e?.message ?? 'Unbekannter Fehler');
           setArtikelDaten([]);
+          setTotalCount(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -338,80 +355,24 @@ export default function Shopseite() {
     }
 
     loadArticles();
+
     return () => {
       cancelled = true;
     };
-  }, [viewerChecked, viewerIsBusiness]);
-
-  // Dynamisch höchsten Preis (wenn keine Artikel -> 0)
-  const maxAvailablePrice = useMemo(() => {
-    if (!artikelDaten.length) return 0;
-    return Math.max(...artikelDaten.map((a) => safeNumber(a.preis, 0)));
-  }, [artikelDaten]);
-
-  const [maxPreis, setMaxPreis] = useState(0);
-  useEffect(() => {
-    setMaxPreis((prev) => (prev === 0 ? maxAvailablePrice : Math.min(prev, maxAvailablePrice)));
-  }, [maxAvailablePrice]);
-
-  // Artikel filtern – Kategorie robust vergleichen
-  const gefilterteArtikel = artikelDaten
-    .filter((a) => {
-      if (!kategorie) return true;
-      return normalizeKategorie(a.kategorie) === kategorie;
-    })
-    .filter((a) => zustand.length === 0 || zustand.includes(a.zustand))
-    .filter((a) => (!gewerblich && !privat) || (gewerblich && a.gewerblich) || (privat && a.privat))
-    .filter((a) => hersteller.length === 0 || hersteller.includes(a.hersteller))
-    .filter((a) => safeNumber(a.preis, 0) <= maxPreis);
-
-  // Suche
-  const fuse = useMemo(
-    () =>
-      new Fuse(gefilterteArtikel, {
-        keys: ['titel', 'hersteller', 'zustand', 'kategorie'],
-        threshold: 0.35,
-      }),
-    [gefilterteArtikel]
-  );
-
-  const suchErgebnis = suchbegriff ? fuse.search(suchbegriff).map((r) => r.item) : gefilterteArtikel;
-
-  // Default: sponsored first, rest in API order (stable partition)
-  const sponsoredFirst = useMemo(() => {
-  return [...suchErgebnis].sort((a, b) => {
-    const promoDiff = safeNumber(b.promo_score, 0) - safeNumber(a.promo_score, 0);
-    if (promoDiff !== 0) return promoDiff;
-
-    return b.lieferdatum.getTime() - a.lieferdatum.getTime();
-  });
-}, [suchErgebnis]);
-
-  // Sortierung (optional)
-  const sortierteArtikel = useMemo(() => {
-    if (!sortierung) return sponsoredFirst;
-
-    const arr = [...sponsoredFirst];
-    arr.sort((a, b) => {
-      switch (sortierung) {
-        case 'lieferdatum-auf':
-          return a.lieferdatum.getTime() - b.lieferdatum.getTime();
-        case 'lieferdatum-ab':
-          return b.lieferdatum.getTime() - a.lieferdatum.getTime();
-        case 'titel-az':
-          return a.titel.localeCompare(b.titel);
-        case 'titel-za':
-          return b.titel.localeCompare(a.titel);
-        case 'menge-auf':
-          return (a.menge ?? 0) - (b.menge ?? 0);
-        case 'menge-ab':
-          return (b.menge ?? 0) - (a.menge ?? 0);
-        default:
-          return 0;
-      }
-    });
-    return arr;
-  }, [sponsoredFirst, sortierung]);
+  }, [
+    viewerChecked,
+    viewerIsBusiness,
+    page,
+    suchbegriff,
+    kategorie,
+    zustand,
+    hersteller,
+    gewerblich,
+    privat,
+    sortierung,
+    maxPreis,
+    maxAvailablePrice,
+  ]);
 
   // Infinite-Scroll
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -422,14 +383,14 @@ export default function Shopseite() {
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setAnzahlAnzeigen((prev) => Math.min(prev + 10, sortierteArtikel.length));
+          setAnzahlAnzeigen((prev) => Math.min(prev + 10, artikelDaten.length));
         }
       },
       { rootMargin: '100px' }
     );
     loadMoreRef.current && observerRef.current.observe(loadMoreRef.current);
     return () => observerRef.current?.disconnect();
-  }, [sortierteArtikel, page]);
+  }, [artikelDaten, page]);
 
   // Seite zurücksetzen, wenn andere Filter ändern (außer page)
   useEffect(() => {
@@ -442,8 +403,16 @@ export default function Shopseite() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
 
-  // für Pagination
-    const seitenArtikel = sortierteArtikel.slice(startIndex, endIndex);
+  const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
+
+  const pageHref = (targetPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (targetPage <= 1) params.delete('page');
+    else params.set('page', String(targetPage));
+
+    const qs = params.toString();
+    return qs ? `?${qs}` : location.pathname;
+  };
 
     // Nur beim ersten Laden: einheitliches Börsen-Loading
     const bootLoading = loading && artikelDaten.length === 0;
@@ -594,7 +563,7 @@ export default function Shopseite() {
         {/* CONTENT */}
         <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {sortierteArtikel.length} Artikel im Shop
+            {totalCount} Artikel im Shop
           </h3>
 
           {loadError && (
@@ -603,18 +572,18 @@ export default function Shopseite() {
             </div>
           )}
 
-          {!loading && !loadError && sortierteArtikel.length === 0 && (
+          {!loading && !loadError && totalCount === 0 && (
             <div style={{ padding: '10px 0', opacity: 0.9 }}>
               <strong>
-                {artikelDaten.length === 0
-                  ? 'Keine Artikel im Shop.'
-                  : 'Keine passenden Artikel gefunden.'}
+                {suchbegriff || kategorie || zustand.length || hersteller.length || gewerblich || privat
+                  ? 'Keine passenden Artikel gefunden.'
+                  : 'Keine Artikel im Shop.'}
               </strong>
             </div>
           )}
 
           <div className={styles.grid}>
-            {(page === 1 ? sortierteArtikel.slice(0, anzahlAnzeigen) : seitenArtikel).map((a) => (
+            {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
               <ArtikelCard key={String(a.id)} artikel={a} />
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
@@ -622,25 +591,25 @@ export default function Shopseite() {
 
           {/* Pagination */}
           <div className={styles.seitenInfo}>
-            Seite {page} von {Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse))}
+            Seite {page} von {totalPages}
           </div>
           <div className={styles.pagination}>
             {page > 1 && (
-              <Link href={page - 1 === 1 ? location.pathname : `?page=${page - 1}`} className={styles.pageArrow}>
+              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
               </Link>
             )}
-            {Array.from({ length: Math.max(1, Math.ceil(sortierteArtikel.length / seitenGroesse)) }, (_, i) => {
+            {Array.from({ length: totalPages }, (_, i) => {
               const p = i + 1;
-              const href = p === 1 ? location.pathname : `?page=${p}`;
+              const href = pageHref(p);
               return (
                 <Link key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
                 </Link>
               );
             })}
-            {page < Math.ceil(sortierteArtikel.length / seitenGroesse) && (
-              <Link href={`?page=${page + 1}`} className={styles.pageArrow}>
+            {page < totalPages && (
+              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
                 →
               </Link>
             )}

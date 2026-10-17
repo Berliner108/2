@@ -11,6 +11,7 @@ function getBerlinTodayISO(): string {
     month: "2-digit",
     day: "2-digit",
   });
+
   return fmt.format(new Date());
 }
 
@@ -25,11 +26,7 @@ function formatUTCToISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function addBusinessDaysISO(
-  startISO: string,
-  businessDays: number,
-  holidays: Set<string>
-): string {
+function addBusinessDaysISO(startISO: string, businessDays: number, holidays: Set<string>): string {
   if (!businessDays || businessDays <= 0) return startISO;
 
   let remaining = businessDays;
@@ -42,19 +39,12 @@ function addBusinessDaysISO(
     const isWeekend = dow === 0 || dow === 6;
     const isHoliday = holidays.has(iso);
 
-    if (!isWeekend && !isHoliday) {
-      remaining--;
-    }
+    if (!isWeekend && !isHoliday) remaining--;
   }
 
   return formatUTCToISODate(cur);
 }
 
-function getTimeValue(value: unknown): number {
-  if (!value) return 0;
-  const time = new Date(String(value)).getTime();
-  return Number.isFinite(time) ? time : 0;
-}
 function sortImageUrls(urls: unknown): string[] {
   if (!Array.isArray(urls)) return [];
 
@@ -75,41 +65,275 @@ function sortImageUrls(urls: unknown): string[] {
       });
     });
 }
+
+function normalizeCategoryForDb(value: string): string {
+  const v = value.trim().toLowerCase();
+  const map: Record<string, string> = {
+    nasslack: "nasslack",
+    nasslacke: "nasslack",
+    pulverlack: "pulverlack",
+    pulverlacke: "pulverlack",
+    arbeitsmittel: "arbeitsmittel",
+    "arbeitsmittel & zubehör": "arbeitsmittel",
+    "galvano-zubehör": "galvano_zubehoer",
+    "galvano-zubehoer": "galvano_zubehoer",
+    galvano_zubehoer: "galvano_zubehoer",
+    galvanozubehör: "galvano_zubehoer",
+    galvanozubehoer: "galvano_zubehoer",
+  };
+
+  return map[v] ?? v;
+}
+
+function csv(value: string): string[] {
+  return value.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function safeSearchValue(value: string): string {
+  return value
+    .trim()
+    .replace(/,/g, " ")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const limit = Math.min(Number(searchParams.get("limit") ?? "50"), 200);
-    const offset = Math.max(Number(searchParams.get("offset") ?? "0"), 0);
-
     const admin = supabaseAdmin();
+    const url = new URL(req.url);
 
-    const { data: articles, error } = await admin
-      .from("articles")
-      .select(
-        "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, condition, created_at, updated_at"
-      )
-      .eq("published", true)
-      .eq("sold_out", false)
-      .eq("archived", false)
-      .order("promo_score", { ascending: false })
-      .order("updated_at", { ascending: false })
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + limit - 1);
+    const limitRaw = parseInt(url.searchParams.get("limit") ?? "50", 10);
+    const limit = Math.min(Number.isNaN(limitRaw) ? 50 : limitRaw, 200);
+
+    const pageRaw = parseInt(url.searchParams.get("page") ?? "1", 10);
+    const page = Math.max(Number.isNaN(pageRaw) ? 1 : pageRaw, 1);
+
+    const offsetParam =
+      url.searchParams.get("offset") ??
+      url.searchParams.get("skip") ??
+      url.searchParams.get("start");
+
+    const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null;
+
+    const search = url.searchParams.get("q") ?? url.searchParams.get("search") ?? "";
+    const kategorieRaw = url.searchParams.get("kategorie") ?? "";
+    const kategorieDb = kategorieRaw ? normalizeCategoryForDb(kategorieRaw) : "";
+    const zustandList = csv(url.searchParams.get("zustand") ?? "");
+    const herstellerList = csv(url.searchParams.get("hersteller") ?? "");
+    const g = url.searchParams.get("g") ?? "";
+    const p = url.searchParams.get("p") ?? "";
+    const viewerBusiness = (url.searchParams.get("viewerBusiness") ?? "") === "1";
+
+    const maxRaw = url.searchParams.get("max");
+    const maxPreis = maxRaw !== null && maxRaw !== "" ? Number(maxRaw) : null;
+    const sortParam = (url.searchParams.get("sort") ?? "").toLowerCase();
+
+    // Preis liegt in article_price_tiers. Passende Artikel-IDs zuerst auflösen,
+    // danach verwenden Count und Datenabfrage dieselbe applyFilters-Funktion.
+    let priceArticleIds: string[] | null = null;
+
+    if (maxPreis !== null && Number.isFinite(maxPreis)) {
+      const { data: priceRows, error: priceError } = await admin
+        .from("article_price_tiers")
+        .select("article_id")
+        .lte("price", maxPreis);
+
+      if (priceError) {
+        return NextResponse.json({ error: priceError.message }, { status: 500 });
+      }
+
+      priceArticleIds = Array.from(
+        new Set(
+          (priceRows ?? [])
+            .map((row: any) => String(row.article_id ?? ""))
+            .filter(Boolean)
+        )
+      );
+    }
+
+    // Slider-Obergrenze.
+    const { data: maxPriceRows, error: maxPriceError } = await admin
+      .from("article_price_tiers")
+      .select("price")
+      .not("price", "is", null)
+      .order("price", { ascending: false })
+      .limit(1);
+
+    if (maxPriceError) {
+      return NextResponse.json({ error: maxPriceError.message }, { status: 500 });
+    }
+
+    const maxPriceAvailable = Number(maxPriceRows?.[0]?.price ?? 0);
+
+    const columns =
+      "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, condition, created_at, updated_at";
+
+    const applyFilters = (query: any) => {
+      let next = query;
+
+      next = next.eq("published", true);
+      next = next.eq("sold_out", false);
+      next = next.eq("archived", false);
+
+      if (!viewerBusiness) {
+        next = next.eq("sell_to", "beide");
+      }
+
+      if (kategorieDb) {
+        next = next.eq("category", kategorieDb);
+      }
+
+      if (zustandList.length) {
+        next = next.in("condition", zustandList);
+      }
+
+      if (herstellerList.length) {
+        next = next.in("manufacturer", herstellerList);
+      }
+
+      if (g === "1" && p !== "1") {
+        next = next.in("sell_to", ["gewerblich", "beide"]);
+      }
+
+      if (p === "1" && g !== "1") {
+        next = next.eq("sell_to", "beide");
+      }
+
+      if (priceArticleIds !== null) {
+        if (priceArticleIds.length === 0) {
+          next = next.eq("id", "__no_matching_article__");
+        } else {
+          next = next.in("id", priceArticleIds);
+        }
+      }
+
+      if (search.trim()) {
+        const s = safeSearchValue(search);
+
+        if (s) {
+          next = next.or(
+            [
+              `title.ilike.%${s}%`,
+              `manufacturer.ilike.%${s}%`,
+              `condition.ilike.%${s}%`,
+              `category.ilike.%${s}%`,
+            ].join(",")
+          );
+        }
+      }
+
+      return next;
+    };
+
+    // Count-Abfrage: exakt wie bei Lackanfragen.
+    const countQuery = applyFilters(
+      admin.from("articles").select("id", { count: "exact", head: true })
+    );
+
+    const { count: total, error: countError } = await countQuery;
+
+    if (countError) {
+      console.error("[articles] count failed:", countError);
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+
+    // Daten-Abfrage: dieselben Filter, anschließend Sortierung + range.
+    let dataQuery = applyFilters(admin.from("articles").select(columns));
+
+    switch (sortParam) {
+      case "lieferdatum-auf":
+        dataQuery = dataQuery
+          .order("delivery_days", { ascending: true })
+          .order("promo_score", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+
+      case "lieferdatum-ab":
+        dataQuery = dataQuery
+          .order("delivery_days", { ascending: false })
+          .order("promo_score", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+
+      case "titel-az":
+        dataQuery = dataQuery
+          .order("title", { ascending: true })
+          .order("promo_score", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+
+      case "titel-za":
+        dataQuery = dataQuery
+          .order("title", { ascending: false })
+          .order("promo_score", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+
+      case "menge-auf": {
+        const pieceCategory =
+          kategorieDb === "arbeitsmittel" || kategorieDb === "galvano_zubehoer";
+
+        dataQuery = pieceCategory
+          ? dataQuery
+              .order("qty_piece", { ascending: true })
+              .order("created_at", { ascending: false })
+          : dataQuery
+              .order("qty_kg", { ascending: true })
+              .order("qty_piece", { ascending: true })
+              .order("created_at", { ascending: false });
+        break;
+      }
+
+      case "menge-ab": {
+        const pieceCategory =
+          kategorieDb === "arbeitsmittel" || kategorieDb === "galvano_zubehoer";
+
+        dataQuery = pieceCategory
+          ? dataQuery
+              .order("qty_piece", { ascending: false })
+              .order("created_at", { ascending: false })
+          : dataQuery
+              .order("qty_kg", { ascending: false })
+              .order("qty_piece", { ascending: false })
+              .order("created_at", { ascending: false });
+        break;
+      }
+
+      default:
+        dataQuery = dataQuery
+          .order("promo_score", { ascending: false })
+          .order("delivery_days", { ascending: false })
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false });
+        break;
+    }
+
+    let from = 0;
+    let to = limit - 1;
+
+    if (offset !== null) {
+      from = offset;
+      to = from + limit - 1;
+    } else {
+      from = (page - 1) * limit;
+      to = from + limit - 1;
+    }
+
+    dataQuery = dataQuery.range(from, to);
+
+    const { data: articles, error } = await dataQuery;
 
     if (error) {
+      console.error("[articles] query failed:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    const rows = articles ?? [];
     const todayISO = getBerlinTodayISO();
 
     const maxDeliveryDays =
-      (articles ?? []).reduce((max: number, a: any) => {
-        const d =
-          typeof a.delivery_days === "number"
-            ? a.delivery_days
-            : Number(a.delivery_days ?? 0);
-
+      rows.reduce((max: number, a: any) => {
+        const d = typeof a.delivery_days === "number" ? a.delivery_days : Number(a.delivery_days ?? 0);
         return d > max ? d : max;
       }, 0) || 0;
 
@@ -134,7 +358,7 @@ export async function GET(req: Request) {
     );
 
     const ownerIds = Array.from(
-      new Set((articles ?? []).map((a: any) => a.owner_id).filter(Boolean))
+      new Set(rows.map((a: any) => a.owner_id).filter(Boolean))
     ) as string[];
 
     const sellerById: Record<
@@ -152,20 +376,15 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: profErr.message }, { status: 500 });
       }
 
-      for (const p of profs ?? []) {
-        sellerById[p.id] = { account_type: p.account_type ?? null };
+      for (const profile of profs ?? []) {
+        sellerById[profile.id] = { account_type: profile.account_type ?? null };
       }
     }
 
-    const articleIds = (articles ?? []).map((a: any) => a.id);
-
+    const articleIds = rows.map((a: any) => a.id);
     const minPriceByArticle: Record<
       string,
-      {
-        price_from: number | null;
-        unit: "kg" | "stueck" | null;
-        tier_count: number;
-      }
+      { price_from: number | null; unit: "kg" | "stueck" | null; tier_count: number }
     > = {};
 
     if (articleIds.length) {
@@ -178,10 +397,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: tierError.message }, { status: 500 });
       }
 
-      for (const t of tiers ?? []) {
-        const key = String(t.article_id);
-        const price = typeof t.price === "number" ? t.price : Number(t.price);
-        const unit = t.unit as "kg" | "stueck";
+      for (const tier of tiers ?? []) {
+        const key = String(tier.article_id);
+        const price = typeof tier.price === "number" ? tier.price : Number(tier.price);
+        const unit = tier.unit as "kg" | "stueck";
 
         if (!key) continue;
         if (!Number.isFinite(price)) continue;
@@ -190,11 +409,7 @@ export async function GET(req: Request) {
         const current = minPriceByArticle[key];
 
         if (!current) {
-          minPriceByArticle[key] = {
-            price_from: price,
-            unit,
-            tier_count: 1,
-          };
+          minPriceByArticle[key] = { price_from: price, unit, tier_count: 1 };
           continue;
         }
 
@@ -207,61 +422,46 @@ export async function GET(req: Request) {
       }
     }
 
-    const list = (articles ?? []).map((a: any) => {
+    const list = rows.map((article: any) => {
       const dDays =
-        typeof a.delivery_days === "number"
-          ? a.delivery_days
-          : Number(a.delivery_days ?? 0);
+        typeof article.delivery_days === "number"
+          ? article.delivery_days
+          : Number(article.delivery_days ?? 0);
 
-      const priceInfo = minPriceByArticle[a.id] ?? null;
+      const priceInfo = minPriceByArticle[article.id] ?? null;
 
       return {
-  ...a,
-  image_urls: sortImageUrls(a.image_urls),
-  price_from: priceInfo?.price_from ?? null,
-  price_unit: priceInfo?.unit ?? null,
-  price_is_from:
-    (a.sale_type ?? "gesamt") !== "gesamt" &&
-    (priceInfo?.tier_count ?? 0) > 1,
-  seller_account_type: a.owner_id
-    ? sellerById[a.owner_id]?.account_type ?? null
-    : null,
-  delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
-};
+        ...article,
+        image_urls: sortImageUrls(article.image_urls),
+        price_from: priceInfo?.price_from ?? null,
+        price_unit: priceInfo?.unit ?? null,
+        price_is_from:
+          (article.sale_type ?? "gesamt") !== "gesamt" &&
+          (priceInfo?.tier_count ?? 0) > 1,
+        seller_account_type: article.owner_id
+          ? sellerById[article.owner_id]?.account_type ?? null
+          : null,
+        delivery_date_iso: addBusinessDaysISO(todayISO, dDays, holidaySet),
+      };
     });
 
-    const sponsored = list
-      .filter((a) => Number(a.promo_score ?? 0) > 0)
-      .sort((a, b) => {
-        const promoDiff = Number(b.promo_score ?? 0) - Number(a.promo_score ?? 0);
-        if (promoDiff !== 0) return promoDiff;
-
-        const updatedDiff = getTimeValue(b.updated_at) - getTimeValue(a.updated_at);
-        if (updatedDiff !== 0) return updatedDiff;
-
-        const createdDiff = getTimeValue(b.created_at) - getTimeValue(a.created_at);
-        if (createdDiff !== 0) return createdDiff;
-
-        return String(b.id).localeCompare(String(a.id));
-      });
-
-    const rest = list.filter((a) => Number(a.promo_score ?? 0) <= 0);
-
-    for (let i = rest.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [rest[i], rest[j]] = [rest[j], rest[i]];
-    }
-
     return NextResponse.json(
-  { articles: [...sponsored, ...rest], limit, offset },
-  {
-    status: 200,
-    headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-    },
-  }
-);
+      {
+        articles: list,
+        total: total ?? 0,
+        page,
+        limit,
+        max_price: Number.isFinite(maxPriceAvailable) ? maxPriceAvailable : 0,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      }
+    );
   } catch (e: any) {
+    console.error("[articles] GET crashed:", e);
     return NextResponse.json(
       { error: e?.message ?? "Unknown error" },
       { status: 500 }
