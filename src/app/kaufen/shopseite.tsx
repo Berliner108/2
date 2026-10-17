@@ -563,7 +563,7 @@ export default function Shopseite() {
         {/* CONTENT */}
         <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {totalCount} Artikel im Shop
+            {loading ? 'Lade...' : `${totalCount} Artikel im Shop`}
           </h3>
 
           {loadError && (
