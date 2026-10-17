@@ -98,6 +98,7 @@ export default function AuftragsboerseSeite() {
   )
 
   const [suchbegriff, setSuchbegriff] = useState(() => sp.get('q') ?? '')
+  const [suchEingabe, setSuchEingabe] = useState(() => sp.get('q') ?? '')
   const [verfahren, setVerfahren] = useState(() => sp.get('verfahren') ?? '')
   const [gewerblich, setGewerblich] = useState(() => boolFromQuery('g'))
   const [privat, setPrivat] = useState(() => boolFromQuery('p'))
@@ -157,7 +158,9 @@ export default function AuftragsboerseSeite() {
   useEffect(() => {
     fromUrlRef.current = true
 
-    setSuchbegriff(sp.get('q') ?? '')
+    const qFromUrl = sp.get('q') ?? ''
+    setSuchbegriff(qFromUrl)
+    setSuchEingabe(qFromUrl)
     setVerfahren(sp.get('verfahren') ?? '')
     setGewerblich(sp.get('g') === '1')
     setPrivat(sp.get('p') === '1')
@@ -452,13 +455,37 @@ export default function AuftragsboerseSeite() {
             <option value="warenannahme-ab">Warenrückgabe absteigend</option>
           </select>
 
-          <input
-            className={styles.input}
-            type="text"
-            placeholder="Aufträge durchsuchen…"
-            value={suchbegriff}
-            onChange={(e) => setSuchbegriff(e.target.value)}
-          />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              setSuchbegriff(suchEingabe.trim())
+            }}
+            style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}
+          >
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Aufträge durchsuchen…"
+              value={suchEingabe}
+              onChange={(e) => setSuchEingabe(e.target.value)}
+            />
+            <button
+              type="submit"
+              style={{
+                flex: '0 0 auto',
+                padding: '0 14px',
+                border: '1px solid #cbd5e1',
+                borderRadius: 8,
+                background: '#111827',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Suchen
+            </button>
+          </form>
 
           <label className={styles.sliderLabel}>
             Max. Länge: {maxLength} mm
