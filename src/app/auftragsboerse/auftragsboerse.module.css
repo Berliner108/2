@@ -42,10 +42,7 @@
   box-sizing: border-box;
 }
 
-.sortSelect {
-  height: 50px;
-}
-
+/* Suche: Feld und Button an die bestehende Dropdown-Höhe anpassen */
 .searchRow {
   display: flex;
   gap: 10px;
@@ -56,25 +53,24 @@
 .searchRow .input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 50px;
   margin-bottom: 0;
-  box-sizing: border-box;
+  height: auto;
 }
 
 .searchButton {
   flex: 0 0 auto;
-  height: 50px;
-  box-sizing: border-box;
-  padding: 0 16px;
+  align-self: stretch;
   margin: 0;
+  padding: 8px 16px;
   border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border-radius: 5px;
   background: #111827;
   color: #fff;
   font-family: 'Oswald', sans-serif;
   font-size: 15px;
   font-weight: 600;
-  line-height: 1;
+  line-height: normal;
+  box-sizing: border-box;
   cursor: pointer;
   white-space: nowrap;
 }
