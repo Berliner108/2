@@ -1,7 +1,8 @@
 // src/app/auftragsboerse/page.tsx
 import type { Metadata } from 'next'
+import React, { Suspense } from 'react'
 import AuftragsboerseSeite from './AuftragsboerseSeite'
-import { fetchBoersenJobs } from '@/lib/jobs-boerse'
+import BoerseLoading from '../components/loading/BoerseLoading'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -24,7 +25,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Page() {
-  const jobs = await fetchBoersenJobs()
-  return <AuftragsboerseSeite jobs={jobs} />
+export default function Page() {
+  return (
+    <Suspense fallback={<BoerseLoading />}>
+      <AuftragsboerseSeite />
+    </Suspense>
+  )
 }
