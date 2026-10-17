@@ -199,16 +199,21 @@ const normalizeZustandForDb = (value: string) => {
         next = next.in('id', ids)
       }
 
-      if (search) {
+      if (search.trim()) {
+        const safeSearch = search
+          .trim()
+          .replace(/,/g, ' ')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')
+
         next = next.or(
           [
-            `id.ilike.%${search}%`,
-            `title.ilike.%${search}%`,
-            `data->>titel.ilike.%${search}%`,
-            `data->>hersteller.ilike.%${search}%`,
-            `data->>farbton.ilike.%${search}%`,
-            `data->>farbtonbezeichnung.ilike.%${search}%`,
-            `data->>farbcode.ilike.%${search}%`,
+            `title.ilike.%${safeSearch}%`,
+            `data->>titel.ilike.%${safeSearch}%`,
+            `data->>hersteller.ilike.%${safeSearch}%`,
+            `data->>farbton.ilike.%${safeSearch}%`,
+            `data->>farbtonbezeichnung.ilike.%${safeSearch}%`,
+            `data->>farbcode.ilike.%${safeSearch}%`,
           ].join(',')
         )
       }
