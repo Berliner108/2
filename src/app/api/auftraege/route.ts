@@ -259,7 +259,6 @@ export async function GET(req: Request) {
 
         if (s) {
           const clauses = [
-            `description.ilike.%${s}%`,
             `material_guete.ilike.%${s}%`,
             `material_guete_custom.ilike.%${s}%`,
             `verfahren_1.ilike.%${s}%`,
