@@ -460,7 +460,7 @@ export default function AuftragsboerseSeite() {
               e.preventDefault()
               setSuchbegriff(suchEingabe.trim())
             }}
-            style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}
+            style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}
           >
             <input
               className={styles.input}
@@ -473,7 +473,8 @@ export default function AuftragsboerseSeite() {
               type="submit"
               style={{
                 flex: '0 0 auto',
-                padding: '0 14px',
+                height: 48,
+                padding: '0 16px',
                 border: '1px solid #cbd5e1',
                 borderRadius: 8,
                 background: '#111827',
