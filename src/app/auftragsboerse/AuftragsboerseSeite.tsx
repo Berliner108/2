@@ -460,7 +460,7 @@ export default function AuftragsboerseSeite() {
               e.preventDefault()
               setSuchbegriff(suchEingabe.trim())
             }}
-            style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}
+            className={styles.searchRow}
           >
             <input
               className={styles.input}
@@ -469,21 +469,7 @@ export default function AuftragsboerseSeite() {
               value={suchEingabe}
               onChange={(e) => setSuchEingabe(e.target.value)}
             />
-            <button
-              type="submit"
-              style={{
-                flex: '0 0 auto',
-                height: 48,
-                padding: '0 16px',
-                border: '1px solid #cbd5e1',
-                borderRadius: 8,
-                background: '#111827',
-                color: '#fff',
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
+            <button type="submit" className={styles.searchButton}>
               Suchen
             </button>
           </form>

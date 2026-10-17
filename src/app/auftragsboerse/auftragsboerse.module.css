@@ -42,6 +42,43 @@
   box-sizing: border-box;
 }
 
+.searchRow {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 15px;
+}
+
+.searchRow .input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 48px;
+  margin-bottom: 0;
+  box-sizing: border-box;
+}
+
+.searchButton {
+  flex: 0 0 auto;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  margin: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #111827;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  background: #1f2937;
+}
+
 .sliderLabel {
   font-size: 16px !important; /* erzwingt es */
   font-weight: 600;
