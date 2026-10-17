@@ -274,6 +274,7 @@ const toBool = (v: unknown): boolean =>
 
 export default function KaufenSeite() {
   const [suchbegriff, setSuchbegriff] = useState('');
+  const [suchEingabe, setSuchEingabe] = useState('');
   const [maxMenge, setMaxMenge] = useState<number>(MAX_MENGE);
   const [maxMengeInput, setMaxMengeInput] = useState<string>(String(MAX_MENGE));
   const [kategorie, setKategorie] = useState('');
@@ -301,7 +302,9 @@ export default function KaufenSeite() {
   useEffect(() => {
     const arr = (s: string | null) => (s ? s.split(',').filter(Boolean) : []);
 
-    setSuchbegriff(searchParams.get('q') || '');
+    const qFromUrl = searchParams.get('q') || '';
+    setSuchbegriff(qFromUrl);
+    setSuchEingabe(qFromUrl);
     setKategorie(searchParams.get('kategorie') || '');
     setZustand(arr(searchParams.get('zustand')));
     setHersteller(arr(searchParams.get('hersteller')));
@@ -588,13 +591,24 @@ export default function KaufenSeite() {
 
       <div className={styles.wrapper}>
         <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
-          <input
-            className={styles.input}
-            type="text"
-            placeholder="Lackanfrage finden (Titel, Farbtonbezeichnung)"
-            value={suchbegriff}
-            onChange={(e) => setSuchbegriff(e.target.value)}
-          />
+          <form
+            className={styles.searchRow}
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSuchbegriff(suchEingabe.trim());
+            }}
+          >
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Lackanfrage finden (Titel, Farbtonbezeichnung)"
+              value={suchEingabe}
+              onChange={(e) => setSuchEingabe(e.target.value)}
+            />
+            <button type="submit" className={styles.searchButton}>
+              Suchen
+            </button>
+          </form>
 
           <select
             className={styles.sortSelect}

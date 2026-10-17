@@ -55,6 +55,41 @@
   box-sizing: border-box;
 }
 
+.searchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 15px;
+}
+
+.searchRow .input {
+  min-width: 0;
+  margin-bottom: 0;
+  height: auto;
+}
+
+.searchButton {
+  align-self: stretch;
+  margin: 0;
+  padding: 8px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: #111827;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: normal;
+  box-sizing: border-box;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  background: #1f2937;
+}
+
 
 .range {
   -webkit-appearance: none;
@@ -688,7 +723,8 @@
   }
 
   .sortSelect,
-  .input {
+  .input,
+  .searchButton {
     font-size: 20px;
     padding: 13px 16px;
   }
