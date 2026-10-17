@@ -174,8 +174,11 @@ export default function Shopseite() {
 
   // Suchfeld aus URL (?search=...)
   const [suchbegriff, setSuchbegriff] = useState(() => searchParams.get('search') ?? '');
+  const [suchEingabe, setSuchEingabe] = useState(() => searchParams.get('search') ?? '');
   useEffect(() => {
-    setSuchbegriff(searchParams.get('search') ?? '');
+    const q = searchParams.get('search') ?? '';
+    setSuchbegriff(q);
+    setSuchEingabe(q);
   }, [searchParams]);
 
   // Filter-States
@@ -468,13 +471,37 @@ export default function Shopseite() {
       <div className={styles.wrapper}>
         {/* SIDEBAR */}
         <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
-          <input
-            className={styles.input}
-            type="text"
-            placeholder="Artikel finden..."
-            value={suchbegriff}
-            onChange={(e) => setSuchbegriff(e.target.value)}
-          />
+          <form
+            className={styles.searchRow}
+            onSubmit={(e) => {
+              e.preventDefault();
+
+              const q = suchEingabe.trim();
+              setSuchbegriff(q);
+
+              const params = new URLSearchParams(searchParams.toString());
+              if (q) params.set('search', q);
+              else params.delete('search');
+              params.delete('page');
+
+              const next = params.toString()
+                ? `${location.pathname}?${params.toString()}`
+                : location.pathname;
+
+              router.replace(next, { scroll: false });
+            }}
+          >
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Artikel finden..."
+              value={suchEingabe}
+              onChange={(e) => setSuchEingabe(e.target.value)}
+            />
+            <button type="submit" className={styles.searchButton}>
+              Suchen
+            </button>
+          </form>
 
           {/* Sortierung */}
           <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
