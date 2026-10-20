@@ -2119,7 +2119,7 @@ return (
                     setWarnungKategorie('');
                   }}
                 >
-                  <FaBolt size={32} />
+                  <FaBolt className={styles.mobileBolt} size={32} />
                   <span>Galvano-Zubehör</span>
                 </div>                
             </div>                        

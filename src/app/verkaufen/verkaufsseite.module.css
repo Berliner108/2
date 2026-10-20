@@ -1468,3 +1468,24 @@
     padding-bottom: clamp(5rem, 12vh, 10rem);
   }
 }
+@media (max-width: 580px) {
+  .iconBox svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .iconBox svg:last-of-type {
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 580px) {
+  .iconBox svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .mobileBolt {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
