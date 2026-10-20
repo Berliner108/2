@@ -18,6 +18,7 @@ const VERFAHREN = [
   'KTL-Beschichten',
   'Entlacken',
   'Zinkphosphatieren',
+  'Mn-Phosphatieren',
   'Brünieren',
   'Einlagern',
   'Isolierstegverpressung',
@@ -38,6 +39,7 @@ const VERFAHREN = [
   'Vermessingen',
   'Verkupfern',
   'Vergolden',
+  'Versilbern',
 ] as const
 
 const DEFAULT_LIMITS = {
