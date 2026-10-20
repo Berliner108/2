@@ -1,5 +1,5 @@
 import type { Specification } from '../angebote/VerfahrenUndLogistik'; // <--- Pfad ggf. anpassen!
-export const specificationsMap: Record\<string, Specification[]> = {
+export const specificationsMap: Record<string, Specification[]> = {
   Entlacken: [
     {
       type: 'radio',
@@ -101,7 +101,8 @@ export const specificationsMap: Record\<string, Specification[]> = {
       type: 'group',
       name: 'anforderung',
       label: 'Optionale Anforderung:',
-      options: ['CO₂-reduziertes / nachhaltiges Verfahren']
+      options: ['CO₂-reduziertes / nachhaltiges Verfahren'],
+      dependsOn: { name: 'verfahren', value: 'Harteloxal / Hartanodisieren' }
     },
   ],
   Verzinken: [
@@ -493,7 +494,7 @@ export const specificationsMap: Record\<string, Specification[]> = {
     type: 'radio',
     name: 'chromsystem',
     label: 'Chromsystem:',
-    options: ['Chrom(III)', 'Andere / Nach Vorgabe']
+    options: ['Chrom(III)', 'Chrom(VI)', 'Nach Vorgabe / unbekannt']
   }
 ],
   'Aluminium-Passivieren': [

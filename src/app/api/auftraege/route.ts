@@ -17,7 +17,7 @@ const VERFAHREN = [
   'Mn-Phosphatieren',
   'Brünieren',
   'Einlagern',
-  'Isolierstegverpressung',
+  'Isolierstegverpressen',
   'Folieren',
   'Anodisieren',
   'Verzinnen',
