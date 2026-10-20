@@ -1469,25 +1469,7 @@
   }
 }
 @media (max-width: 580px) {
-  .iconBox svg {
-    width: 30px;
-    height: 30px;
-  }
-
-  .iconBox svg:last-of-type {
-    flex-shrink: 0;
-  }
-}
-@media (max-width: 580px) {
   
-
-  .mobileBolt {
-    width: 34px !important;
-    height: 34px !important;
-  }
-}
-@media (max-width: 580px) {
-
   /* Nasslack */
   .iconRow .iconBox:nth-child(1) svg {
     width: 35px;
@@ -1510,5 +1492,9 @@
   .iconRow .iconBox:nth-child(4) svg {
     width: 34px;
     height: 34px;
+  }
+  .mobileBolt {
+    width: 34px !important;
+    height: 34px !important;
   }
 }
