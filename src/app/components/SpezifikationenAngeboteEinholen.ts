@@ -101,6 +101,14 @@ export const specificationsMap: Record<string, Specification[]> = {
   Eloxieren: [
 
     {
+      type: 'radio',
+      name: 'verfahren',
+      label: 'Verfahren:',
+      options: ['Normaleloxal', 'Harteloxal / Hartanodisieren', 'Chromsäureanodisieren'],
+      required: true
+    },
+
+    {
 
       type: 'group',
 
@@ -186,6 +194,14 @@ export const specificationsMap: Record<string, Specification[]> = {
 
       dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
 
+    },
+
+    {
+      type: 'radio',
+      name: 'galvanikPassivierung',
+      label: 'Passivierung / Ausführung:',
+      options: ['Blau', 'Gelb', 'Schwarz', 'Dickschichtpassivierung'],
+      dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
     },
 
     {
@@ -280,6 +296,28 @@ export const specificationsMap: Record<string, Specification[]> = {
 
 
 
+  'Mn-Phosphatieren': [
+    {
+      type: 'text',
+      name: 'schichtgewicht',
+      label: 'Schichtgewicht (g/m²)',
+      maxLength: 20
+    },
+    {
+      type: 'radio',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: ['Keine', 'Geölt', 'Versiegelt']
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Zertifizierungen:',
+      tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
+      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
+    }
+  ],
+
   'KTL-Beschichten': [
 
     {
@@ -352,11 +390,21 @@ export const specificationsMap: Record<string, Specification[]> = {
 
       label: 'Verfahren',
 
-      options: ['Chemisch', 'Galvanisch']
+      options: ['Chemisch', 'Galvanisch'],
+      required: true
 
     },
 
 
+
+    {
+      type: 'radio',
+      name: 'chemischNickelPhosphor',
+      label: 'Chemisch Nickel:',
+      options: ['Mid Phos', 'High Phos'],
+      required: true,
+      dependsOn: { name: 'verfahren', value: 'Chemisch' }
+    },
 
     {
 
@@ -615,6 +663,13 @@ export const specificationsMap: Record<string, Specification[]> = {
 
 
     {
+      type: 'radio',
+      name: 'ausfuehrung',
+      label: 'Ausführung:',
+      options: ['Glänzend', 'Matt']
+    },
+
+    {
 
       type: 'group',
 
@@ -854,6 +909,12 @@ export const specificationsMap: Record<string, Specification[]> = {
 
     required: true
 
+  },
+  {
+    type: 'radio',
+    name: 'chromsystem',
+    label: 'Chromsystem:',
+    options: ['Chrom(III)', 'Andere / Nach Vorgabe']
   }
 
 ],
@@ -863,7 +924,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'radio',
       name: 'passivierungsart',
       label: 'Passivierung:',
-      options: ['Chrom(III)-Passivierung', 'Chromfreie Passivierung'],
+      options: ['Chrom(III)-Passivierung', 'Chromfreie Passivierung', 'Chrom(VI) / Gelbchromatierung'],
       required: true
     },
     {
@@ -918,6 +979,23 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Anwendung:',
       options: ['Dekorativ', 'Technisch'],
       required: true
+    }
+  ],
+
+  Versilbern: [
+    {
+      type: 'radio',
+      name: 'ausfuehrung',
+      label: 'Ausführung:',
+      options: ['Technisch', 'Dekorativ', 'Hartversilbern'],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Zertifizierungen:',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
     }
   ],
 

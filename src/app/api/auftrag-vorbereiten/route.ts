@@ -21,12 +21,53 @@ function validateRequiredSpecs(body: any) {
 
   const rules: Record<
     string,
-    { field: string; allowed: string[] }[]
+    {
+      field: string
+      allowed: string[]
+      dependsOn?: { field: string; value: string }
+    }[]
   > = {
+    Eloxieren: [
+      {
+        field: 'verfahren',
+        allowed: [
+          'Normaleloxal',
+          'Harteloxal / Hartanodisieren',
+          'Chromsäureanodisieren',
+        ],
+      },
+    ],
+    Verzinken: [
+      {
+        field: 'galvanikSystem',
+        allowed: ['Zink-Standard', 'Zink-Nickel', 'Zink-Eisen'],
+        dependsOn: { field: 'verfahren', value: 'Galvanisches Verzinken' },
+      },
+      {
+        field: 'galvanikApplikation',
+        allowed: ['Trommelverfahren', 'Gestellverfahren'],
+        dependsOn: { field: 'verfahren', value: 'Galvanisches Verzinken' },
+      },
+    ],
+    Vernickeln: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Galvanisch'],
+      },
+      {
+        field: 'chemischNickelPhosphor',
+        allowed: ['Mid Phos', 'High Phos'],
+        dependsOn: { field: 'verfahren', value: 'Chemisch' },
+      },
+    ],
     'Aluminium-Passivieren': [
       {
         field: 'passivierungsart',
-        allowed: ['Chrom(III)-Passivierung', 'Chromfreie Passivierung'],
+        allowed: [
+          'Chrom(III)-Passivierung',
+          'Chromfreie Passivierung',
+          'Chrom(VI) / Gelbchromatierung',
+        ],
       },
     ],
     Elektropolieren: [
@@ -53,6 +94,12 @@ function validateRequiredSpecs(body: any) {
         allowed: ['Galvanisch', 'Chemisch'],
       },
     ],
+    Versilbern: [
+      {
+        field: 'ausfuehrung',
+        allowed: ['Technisch', 'Dekorativ', 'Hartversilbern'],
+      },
+    ],
     Vergolden: [
       {
         field: 'goldart',
@@ -74,6 +121,13 @@ function validateRequiredSpecs(body: any) {
     if (!verfahren || !rules[verfahren]) continue
 
     for (const rule of rules[verfahren]) {
+      if (rule.dependsOn) {
+        const dependencyKey = `${prefix}__${verfahren}__${rule.dependsOn.field}`
+        if (specs[dependencyKey] !== rule.dependsOn.value) {
+          continue
+        }
+      }
+
       const key = `${prefix}__${verfahren}__${rule.field}`
       const value = specs[key]
 

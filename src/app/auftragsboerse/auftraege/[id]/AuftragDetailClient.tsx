@@ -217,30 +217,52 @@ const labelWarenrueckgabeArt = (v?: string | null) => {
   return '—';
 };
 const specificationLabels: Record<string, string> = {
+  verfahren: 'Verfahren',
   schichtgewicht: 'Schichtgewicht (g/m²)',
   schichtdicke: 'Schichtdicke (µm)',
   nachbehandlung: 'Nachbehandlung',
   zertifizierungen: 'Zertifizierungen',
 
+  // Eloxieren
+  farbeeloxieren: 'Farbe',
+
   // Verzinken / Galvanik
   galvaniksystem: 'Galvanisches Zinksystem',
   zinksystem: 'Galvanisches Zinksystem',
-  ausfuehrung: 'Ausführung',
+  galvanikapplikation: 'Ausführung',
   galvanikausfuehrung: 'Ausführung',
+  galvanikpassivierung: 'Passivierung / Ausführung',
+  galvaniknachbehandlung: 'Optionale Nachbehandlung',
   optionale_nachbehandlung: 'Optionale Nachbehandlung',
   optionalenachbehandlung: 'Optionale Nachbehandlung',
 
-  // Elektropolieren
-  einsatzbereich: 'Einsatzbereich',
-  branche: 'Einsatzbereich',
+  // Vernickeln
+  chemischnickelphosphor: 'Chemisch Nickel',
 
   // Verchromen
   verchromungsart: 'Verchromungsart',
+  chromsystem: 'Chromsystem',
+
+  // Aluminium-Passivieren
+  passivierungsart: 'Passivierung',
+  anforderung: 'Anforderung',
+
+  // Elektropolieren
+  anwendungsbereich: 'Anwendungsbereich',
+  einsatzbereich: 'Einsatzbereich',
+  branche: 'Einsatzbereich',
+
+  // Vergolden / Versilbern / Verzinnen / Vermessingen
+  goldart: 'Goldart',
+  anwendung: 'Anwendung',
+  ausfuehrung: 'Ausführung',
 }
 
 function formatSpecificationLabel(key: string): string {
+  const normalizedKey = key.toLowerCase()
+
   return (
-    specificationLabels[key] ??
+    specificationLabels[normalizedKey] ??
     key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^\w/, (c) => c.toUpperCase())

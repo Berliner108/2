@@ -777,6 +777,11 @@ const materialienZinkphosphatieren = [
   'Zink',
   'Andere',
 ]
+
+const materialienMnPhosphatieren = [
+  'Stahl',
+  'Andere',
+]
 const materialienKTL = [
   'Aluminium',
   'Aluguss',
@@ -859,6 +864,16 @@ const materialienVernickeln = [
   'Zink',
   'Andere',
 ]
+
+const materialienVersilbern = [
+  'Aluminium',
+  'Aluguss',
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Nickel',
+  'Andere',
+]
 const materialienSandstrahlen = [
   'Stahl',
   'Edelstahl',
@@ -919,6 +934,15 @@ const istVerzinken =
 const istZinkphosphatieren =
   selectedOption1 === 'Zinkphosphatieren' ||
   selectedOption2 === 'Zinkphosphatieren'
+
+const istMnPhosphatieren =
+  selectedOption1 === 'Mn-Phosphatieren' ||
+  selectedOption2 === 'Mn-Phosphatieren'
+
+const istVersilbern =
+  selectedOption1 === 'Versilbern' ||
+  selectedOption2 === 'Versilbern'
+
 const istKTL =
   selectedOption1 === 'KTL-Beschichten' ||
   selectedOption2 === 'KTL-Beschichten'
@@ -940,6 +964,10 @@ if (istBruenieren) {
 }
 if (istZinkphosphatieren) {
   materialienAktiv = materialienZinkphosphatieren
+} else if (istMnPhosphatieren) {
+  materialienAktiv = materialienMnPhosphatieren
+} else if (istVersilbern) {
+  materialienAktiv = materialienVersilbern
 } else if (istKTL) {
   materialienAktiv = materialienKTL
 } else if (istEloxieren) {
