@@ -41,19 +41,26 @@
 
 .dropdown {
   width: 200px;
-  padding: 0.35rem 0.65rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   background: #fff;
   transition: border-color 0.2s ease;
   font-family: 'Oswald', sans-serif;
-  color: #111 !important;
-  -webkit-text-fill-color: #111 !important;
 }
+
+
 .dropdown option {
-  color: #111;
-  -webkit-text-fill-color: #111;
+  font-size: 1.05rem;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .dropdown,
+  .dropdown option {
+    color: #111 !important;
+    -webkit-text-fill-color: #111 !important;
+  }
 }
 .dropdown:focus {
   outline: none;

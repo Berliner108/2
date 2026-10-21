@@ -1026,25 +1026,27 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   font-size: 0.75rem;
   font-weight: 600;
 }
-.verfahrenSelect,
-.inputField2,
-.serienauftragSelect select {
-  color: #111 !important;
-  -webkit-text-fill-color: #111 !important;
-}
+@supports (-webkit-touch-callout: none) {
+  .verfahrenSelect,
+  .inputField2,
+  .serienauftragSelect select,
+  .logistikSelect,
+  .inputGroup input[readonly] {
+    color: #111 !important;
+    -webkit-text-fill-color: #111 !important;
+  }
 
-.verfahrenSelect option,
-.inputField2 option,
-.serienauftragSelect select option {
-  color: #111;
-  -webkit-text-fill-color: #111;
-}
-.logistikSelect {
-  color: #111 !important;
-  -webkit-text-fill-color: #111 !important;
-}
+  .verfahrenSelect option,
+  .inputField2 option,
+  .serienauftragSelect select option,
+  .logistikSelect option {
+    color: #111;
+    -webkit-text-fill-color: #111;
+  }
 
-.logistikSelect option {
-  color: #111;
-  -webkit-text-fill-color: #111;
+  /* Nur iPhone/iOS Safari: Lieferart & Abholart gleich hoch wie Verfahren */
+  .logistikSelect {
+    padding: 0.6rem 0.8rem;
+    font-size: 1.05rem;
+  }
 }
