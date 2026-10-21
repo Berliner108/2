@@ -2569,7 +2569,7 @@ return (
   </select>
   <div
     className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-    onClick={() => setQualitaetOffen(!qualitaetOffen)}
+    onClick={() => setQualitaetOffen(prev => !prev)}
     tabIndex={0}
     onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
   >
@@ -2589,7 +2589,8 @@ return (
           <div
             key={q}
             className={styles.optionItem}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setQualitaet(q);
               setQualitaetOffen(false);
             }}
@@ -2621,7 +2622,7 @@ return (
   </select>
   <div
     className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-    onClick={() => setQualitaetOffen(!qualitaetOffen)}
+    onClick={() => setQualitaetOffen(prev => !prev)}
     tabIndex={0}
     onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
   >
@@ -2638,7 +2639,8 @@ return (
           <div
             key={q}
             className={styles.optionItem}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setQualitaet(q);
               setQualitaetOffen(false);
             }}
