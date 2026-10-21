@@ -1567,9 +1567,27 @@ if (bootLoading) {
                   {/* Hersteller */}
                   <label className={styles.label1}>
                     Hersteller (optional):
+                    <select
+                      className={styles.platformNativeSelect}
+                      value={hersteller === ANDERER_HERSTELLER ? 'Anderer Hersteller' : (hersteller || 'Alle')}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === 'Anderer Hersteller') {
+                          setHersteller(ANDERER_HERSTELLER);
+                          return;
+                        }
+                        setHersteller(value);
+                        setHerstellerAndere('');
+                      }}
+                    >
+                      <option value="Alle">Alle</option>
+                      {aktuelleHerstellerListe.map((option: string) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
                     <div
                       ref={herstellerRef}
-                      className={styles.customSelect}
+                      className={`${styles.customSelect} ${styles.platformCustomSelect}`}
                       onClick={() => setHerstellerDropdownOffen(prev => !prev)}
                     >
                       <div className={styles.selectedValue}>
@@ -1660,11 +1678,12 @@ if (bootLoading) {
                     </span>
 
                     <select
+                      className={styles.platformNativeSelect}
                       value={farbpaletteWert}
-                      onChange={() => {}}
-                      aria-hidden
-                      tabIndex={-1}
-                      style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: -1 }}
+                      onChange={(e) => {
+                        setFarbpaletteWert(e.target.value);
+                        setWarnungPalette('');
+                      }}
                     >
                       <option value="">Bitte wählen</option>
                       {farbpalette.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
@@ -1672,8 +1691,8 @@ if (bootLoading) {
 
                     <div
                       ref={farbpaletteRef}
-                      className={styles.customSelect}
-                      onClick={() => setFarbpaletteDropdownOffen(!farbpaletteDropdownOffen)}
+                      className={`${styles.customSelect} ${styles.platformCustomSelect}`}
+                      onClick={() => setFarbpaletteDropdownOffen(prev => !prev)}
                     >
                       <div className={styles.selectedValue}>
                         {farbpalette.find(f => f.value === farbpaletteWert)?.name || 'Bitte wählen'}
@@ -1741,17 +1760,11 @@ if (bootLoading) {
   </span>
 
   <select
+    className={styles.platformNativeSelect}
     value={glanzgrad}
-    onChange={() => {}}
-    aria-hidden
-    tabIndex={-1}
-    style={{
-      position: 'absolute',
-      opacity: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      zIndex: -1,
+    onChange={(e) => {
+      setGlanzgrad(e.target.value);
+      setWarnungGlanzgrad('');
     }}
   >
     <option value="">Bitte wählen</option>
@@ -1764,8 +1777,8 @@ if (bootLoading) {
 
   <div
     ref={glanzgradRef}
-    className={styles.customSelect}
-    onClick={() => setGlanzgradDropdownOffen(!glanzgradDropdownOffen)}
+    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
+    onClick={() => setGlanzgradDropdownOffen(prev => !prev)}
   >
     <div className={styles.selectedValue}>
       {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
@@ -1802,9 +1815,19 @@ if (bootLoading) {
                   {kategorie === 'pulverlack' && (
                     <label className={styles.label}>
                       Qualität (optional)
+                      <select
+                        className={styles.platformNativeSelect}
+                        value={qualitaet}
+                        onChange={(e) => setQualitaet(e.target.value)}
+                      >
+                        <option value="">Bitte wählen</option>
+                        {['Standard','Polyester','Epoxy-Polyester','Polyurethan','Polyester für Feuerverzinkung','Thermoplast'].map((q) => (
+                          <option key={q} value={q}>{q}</option>
+                        ))}
+                      </select>
                       <div
-                        className={styles.customSelect}
-                        onClick={() => setQualitaetOffen(!qualitaetOffen)}
+                        className={`${styles.customSelect} ${styles.platformCustomSelect}`}
+                        onClick={() => setQualitaetOffen(prev => !prev)}
                         tabIndex={0}
                         onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
                       >
@@ -1812,7 +1835,17 @@ if (bootLoading) {
                         {qualitaetOffen && (
                           <div className={styles.optionList}>
                             {['Standard','Polyester','Epoxy-Polyester','Polyurethan','Polyester für Feuerverzinkung','Thermoplast'].map((q) => (
-                              <div key={q} className={styles.optionItem} onClick={() => { setQualitaet(q); setQualitaetOffen(false); }}>{q}</div>
+                              <div
+                                key={q}
+                                className={styles.optionItem}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setQualitaet(q);
+                                  setQualitaetOffen(false);
+                                }}
+                              >
+                                {q}
+                              </div>
                             ))}
                           </div>
                         )}
@@ -1822,9 +1855,19 @@ if (bootLoading) {
                   {kategorie === 'nasslack' && (
                     <label className={styles.label}>
                       Qualität (optional)
+                      <select
+                        className={styles.platformNativeSelect}
+                        value={qualitaet}
+                        onChange={(e) => setQualitaet(e.target.value)}
+                      >
+                        <option value="">Bitte wählen</option>
+                        {['1K-Lack','2K-Lack','UV-härtender Lack'].map((q) => (
+                          <option key={q} value={q}>{q}</option>
+                        ))}
+                      </select>
                       <div
-                        className={styles.customSelect}
-                        onClick={() => setQualitaetOffen(!qualitaetOffen)}
+                        className={`${styles.customSelect} ${styles.platformCustomSelect}`}
+                        onClick={() => setQualitaetOffen(prev => !prev)}
                         tabIndex={0}
                         onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
                       >
@@ -1832,7 +1875,17 @@ if (bootLoading) {
                         {qualitaetOffen && (
                           <div className={styles.optionList}>
                             {['1K-Lack','2K-Lack','UV-härtender Lack'].map((q) => (
-                              <div key={q} className={styles.optionItem} onClick={() => { setQualitaet(q); setQualitaetOffen(false); }}>{q}</div>
+                              <div
+                                key={q}
+                                className={styles.optionItem}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setQualitaet(q);
+                                  setQualitaetOffen(false);
+                                }}
+                              >
+                                {q}
+                              </div>
                             ))}
                           </div>
                         )}
@@ -2180,7 +2233,7 @@ if (bootLoading) {
       <div ref={dateFieldRef} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
                 <input
                   type="text"
-                  className={styles.input}
+                  className={`${styles.input} ${styles.safariTextControl}`}
                   readOnly
                   value={lieferDatum ? new Intl.DateTimeFormat('de-DE').format(lieferDatum) : ''}
                   placeholder="Datum wählen"
@@ -2342,7 +2395,7 @@ if (bootLoading) {
                 <label className={styles.inputLabel}>
                   Land
                   <select
-                    className={`${styles.select} ${formAbgesendet && !land ? styles.selectError : ''}`}
+                    className={`${styles.select} ${styles.safariTextControl} ${formAbgesendet && !land ? styles.selectError : ''}`}
                     value={land}
                     onChange={(e) => setLand(e.target.value)}
                   >
