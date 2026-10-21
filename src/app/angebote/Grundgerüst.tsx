@@ -74,7 +74,7 @@ async function compressImageFile(file: File): Promise<File> {
   if (blob.size >= file.size) {
     return file
   }
-  const originalNameWithoutExt = file.name.replace(/**\.**[^/.]+$/, '')
+  const originalNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
   return new File(
     [blob],
     `${originalNameWithoutExt}.jpg`,
