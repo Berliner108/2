@@ -598,8 +598,6 @@
 }
 .mengeOption input[type="radio"] {
   margin-right: 0.4rem;
-  width: 1rem;
-  height: 1rem;
 }
 
 /* Label + Input für die Zahl */
@@ -1146,9 +1144,50 @@
 /* verkaufsseite.module.css */
 
 /* Alle Checkboxen & Radios innerhalb der Verkaufsseite */
-.container input[type="checkbox"],
+.container input[type="checkbox"] {
+  accent-color: #06b6d4;
+}
+
+/* Radio-Buttons: gleiche Optik wie bei „Angebote einholen“ */
 .container input[type="radio"] {
-  accent-color: #06b6d4; /* das Türkis wie im Bewerbungspanel */
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  margin: 0 4px 0 0;
+  padding: 0;
+  cursor: pointer;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.container input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00b4d8;
+  transform: scale(0);
+  transition: transform .12s ease-out;
+}
+
+.container input[type="radio"]:checked {
+  border-color: #00e5ff;
+}
+
+.container input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+.container input[type="radio"]:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.35);
+  outline-offset: 2px;
 }
 .staffelHeaderRow{
   display:flex;
