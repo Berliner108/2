@@ -1441,3 +1441,17 @@
 }
 .chip { margin-left: 10px; }
 
+@supports (-webkit-touch-callout: none) {
+  .select,
+  .pageSize,
+  .pageBtn,
+  .segmentedBtn {
+    color: #111;
+    -webkit-text-fill-color: #111;
+  }
+
+  .segmentedActive {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+  }
+}
