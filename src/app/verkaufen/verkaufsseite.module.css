@@ -1474,3 +1474,36 @@
     height: 23px;
   }
 }
+/* Plattform-Dropdowns: Android/Desktop nativ wie „Angebote einholen“, iPhone/iOS Safari custom. */
+.platformNativeSelect {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  box-sizing: border-box;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.05rem;
+  color: #111;
+}
+
+.platformNativeSelect option {
+  font-size: 1.05rem;
+  color: #111;
+}
+
+.platformCustomSelect {
+  display: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .platformNativeSelect {
+    display: none !important;
+  }
+
+  .platformCustomSelect {
+    display: block;
+  }
+}
+

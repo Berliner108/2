@@ -2220,9 +2220,29 @@ return (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
     Hersteller: <span style={{ color: 'red' }}>*</span>
   </span>
+  <select
+    className={`${styles.platformNativeSelect} ${warnungHersteller ? styles.selectError : ''}`}
+    value={hersteller}
+    onChange={(e) => {
+      const value = e.target.value;
+      setHersteller(value);
+      if (value !== HERSTELLER_ANDERE_VALUE) setHerstellerAndere('');
+      setWarnungHersteller('');
+    }}
+  >
+    <option value="">Alle</option>
+    {aktuelleHerstellerListe.map((option) => (
+      <option
+        key={option}
+        value={option === 'Andere…' ? HERSTELLER_ANDERE_VALUE : option}
+      >
+        {option}
+      </option>
+    ))}
+  </select>
   <div
   ref={herstellerRef}
-  className={styles.customSelect}
+  className={`${styles.customSelect} ${styles.platformCustomSelect}`}
   onClick={() => {
     setHerstellerDropdownOffen(prev => !prev);
     if (warnungHersteller) setWarnungHersteller('');
@@ -2407,20 +2427,13 @@ return (
     Farbpalette: <span style={{ color: 'red' }}>*</span>
   </span>
 
-  {/* Unsichtbares echtes Select (optional, aber gut für Accessibility) */}
+  {/* Android/Desktop: natives Select wie bei „Angebote einholen“ */}
   <select
-  value={farbpaletteWert}
-  onChange={(e) => {
-    setFarbpaletteWert(e.target.value);
-    if (e.target.value) setWarnungPalette('');
-  }}
-    style={{
-      position: 'absolute',
-      opacity: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      zIndex: -1,
+    className={`${styles.platformNativeSelect} ${warnungPalette ? styles.selectError : ''}`}
+    value={farbpaletteWert}
+    onChange={(e) => {
+      setFarbpaletteWert(e.target.value);
+      if (e.target.value) setWarnungPalette('');
     }}
   >
     <option value="">Bitte wählen</option>
@@ -2433,7 +2446,7 @@ return (
 
   <div
     ref={farbpaletteRef}
-    className={`${styles.customSelect} ${warnungPalette ? styles.selectError : ''}`}
+    className={`${styles.customSelect} ${styles.platformCustomSelect} ${warnungPalette ? styles.selectError : ''}`}
     onClick={() => {
       setFarbpaletteDropdownOffen((prev) => !prev);
       if (warnungPalette) setWarnungPalette('');
@@ -2477,20 +2490,13 @@ return (
     Glanzgrad: <span style={{ color: 'red' }}>*</span>
   </span>
 
-  {/* Unsichtbares echtes Select für Pflicht/Keyboard/Screenreader */}
+  {/* Android/Desktop: natives Select wie bei „Angebote einholen“ */}
 <select
+  className={`${styles.platformNativeSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
   value={glanzgrad}
   onChange={(e) => {
     setGlanzgrad(e.target.value);
     if (e.target.value) setWarnungGlanzgrad('');
-  }}
-  style={{
-    position: 'absolute',
-    opacity: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    zIndex: -1,
   }}
 >
 
@@ -2505,7 +2511,7 @@ return (
   {/* EIN benutzerdefiniertes Dropdown */}
   <div
     ref={glanzgradRef}
-    className={`${styles.customSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
+    className={`${styles.customSelect} ${styles.platformCustomSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
     onClick={() => {
       setGlanzgradDropdownOffen(!glanzgradDropdownOffen);
       if (warnungGlanzgrad) setWarnungGlanzgrad('');
@@ -2544,8 +2550,25 @@ return (
 { kategorie === 'pulverlack' && (
 <label className={styles.label}>
   Qualität (optional)
+  <select
+    className={styles.platformNativeSelect}
+    value={qualitaet}
+    onChange={(e) => setQualitaet(e.target.value)}
+  >
+    <option value="">Bitte wählen</option>
+    {[
+      'Standard',
+      'Polyester',
+      'Polyurethan',
+      'Polyester für Feuerverzinkung',
+      'Epoxy-Polyester',
+      'Thermoplast',
+    ].map((q) => (
+      <option key={q} value={q}>{q}</option>
+    ))}
+  </select>
   <div
-    className={styles.customSelect}
+    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
     onClick={() => setQualitaetOffen(!qualitaetOffen)}
     tabIndex={0}
     onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
@@ -2582,8 +2605,22 @@ return (
 { kategorie === 'nasslack' && (
 <label className={styles.label}>
   Qualität (optional)
+  <select
+    className={styles.platformNativeSelect}
+    value={qualitaet}
+    onChange={(e) => setQualitaet(e.target.value)}
+  >
+    <option value="">Bitte wählen</option>
+    {[
+      '1K‑Lack',
+      '2K‑Lack',
+      'UV‑härtender Lack',
+    ].map((q) => (
+      <option key={q} value={q}>{q}</option>
+    ))}
+  </select>
   <div
-    className={styles.customSelect}
+    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
     onClick={() => setQualitaetOffen(!qualitaetOffen)}
     tabIndex={0}
     onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
