@@ -1,72 +1,39 @@
-// src/app/confirm-email/page.tsx  (oder wo deine Seite liegt)
+// src/app/confirm-email/EmailConfirmationPage.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 
 export default function EmailConfirmationPage() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Bitte warten…');
+  const [confirmationUrl, setConfirmationUrl] = useState('');
+  const [error, setError] = useState('');
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
-    // Token direkt aus der URL lesen – ohne useSearchParams()
-    let token: string | null = null;
     try {
-      token = new URLSearchParams(window.location.search).get('token');
-      // Debug:
-      // console.log('Token aus URL:', token);
+      const raw = new URLSearchParams(window.location.search).get('confirmation_url');
+
+      if (!raw) {
+        setError('Der Bestätigungslink ist unvollständig oder ungültig.');
+        return;
+      }
+
+      const url = new URL(raw);
+
+      if (url.protocol !== 'https:' || !url.hostname.endsWith('.supabase.co')) {
+        setError('Der Bestätigungslink ist ungültig.');
+        return;
+      }
+
+      setConfirmationUrl(url.toString());
     } catch {
-      /* ignore */
+      setError('Der Bestätigungslink ist ungültig.');
     }
-
-    if (!token) {
-      setStatus('error');
-      setMessage('Kein Token gefunden.');
-      return;
-    }
-
-    const usersJSON = localStorage.getItem('registeredUsers');
-    if (!usersJSON) {
-      setStatus('error');
-      setMessage('Keine Benutzer gefunden.');
-      return;
-    }
-
-    let users: any[] = [];
-    try {
-      users = JSON.parse(usersJSON) ?? [];
-      // console.log('Gefundene Nutzer:', users);
-    } catch {
-      setStatus('error');
-      setMessage('Gespeicherte Daten sind beschädigt.');
-      return;
-    }
-
-    const userIndex = users.findIndex((u) => u?.token === token);
-    // console.log('Benutzerindex:', userIndex);
-
-    if (userIndex === -1) {
-      setStatus('error');
-      setMessage('Ungültiger oder abgelaufener Token.');
-      return;
-    }
-
-    users[userIndex].verified = true;
-    localStorage.setItem('registeredUsers', JSON.stringify(users));
-
-    setStatus('success');
-    setMessage('E-Mail erfolgreich bestätigt! Du kannst dich jetzt einloggen.');
   }, []);
 
-  const icon: Record<typeof status, string> = {
-    loading: '⏳',
-    success: '✅',
-    error: '❌',
-  };
-
-  const color: Record<typeof status, string> = {
-    loading: '#888',
-    success: 'green',
-    error: 'crimson',
+  const handleConfirm = () => {
+    if (!confirmationUrl || isConfirming) return;
+    setIsConfirming(true);
+    window.location.assign(confirmationUrl);
   };
 
   return (
@@ -82,10 +49,50 @@ export default function EmailConfirmationPage() {
         fontFamily: 'Oswald, sans-serif',
       }}
     >
-      <div style={{ fontSize: '4rem', color: color[status], marginBottom: '1rem' }}>
-        {icon[status]}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '520px',
+          padding: '2rem',
+          borderRadius: '12px',
+          background: '#fff',
+          boxShadow: '0 6px 24px rgba(0,0,0,0.08)',
+        }}
+      >
+        <h1 style={{ margin: '0 0 1rem', fontSize: '1.7rem', color: '#111827' }}>
+          E-Mail-Adresse bestätigen
+        </h1>
+
+        {error ? (
+          <p style={{ margin: 0, color: 'crimson', fontSize: '1rem' }}>{error}</p>
+        ) : (
+          <>
+            <p style={{ margin: '0 0 1.5rem', color: '#4b5563', fontSize: '1rem' }}>
+              Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen und deinen Account zu aktivieren.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!confirmationUrl || isConfirming}
+              style={{
+                padding: '0.75rem 1.25rem',
+                border: 0,
+                borderRadius: '6px',
+                background: '#111827',
+                color: '#fff',
+                fontFamily: 'inherit',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: !confirmationUrl || isConfirming ? 'default' : 'pointer',
+                opacity: !confirmationUrl || isConfirming ? 0.65 : 1,
+              }}
+            >
+              {isConfirming ? 'Bestätigung wird geöffnet…' : 'E-Mail-Adresse bestätigen'}
+            </button>
+          </>
+        )}
       </div>
-      <h1 style={{ color: color[status], fontSize: '1.5rem' }}>{message}</h1>
     </div>
   );
 }
