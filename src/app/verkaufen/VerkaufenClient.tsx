@@ -2407,6 +2407,29 @@ return (
     Farbpalette: <span style={{ color: 'red' }}>*</span>
   </span>
 
+  {/* Unsichtbares echtes Select (optional, aber gut für Accessibility) */}
+  <select
+  value={farbpaletteWert}
+  onChange={(e) => {
+    setFarbpaletteWert(e.target.value);
+    if (e.target.value) setWarnungPalette('');
+  }}
+    style={{
+      position: 'absolute',
+      opacity: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: -1,
+    }}
+  >
+    <option value="">Bitte wählen</option>
+    {farbpalette.map((p) => (
+      <option key={p.value} value={p.value}>
+        {p.name}
+      </option>
+    ))}
+  </select>
 
   <div
     ref={farbpaletteRef}
@@ -2454,6 +2477,30 @@ return (
     Glanzgrad: <span style={{ color: 'red' }}>*</span>
   </span>
 
+  {/* Unsichtbares echtes Select für Pflicht/Keyboard/Screenreader */}
+<select
+  value={glanzgrad}
+  onChange={(e) => {
+    setGlanzgrad(e.target.value);
+    if (e.target.value) setWarnungGlanzgrad('');
+  }}
+  style={{
+    position: 'absolute',
+    opacity: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none',
+    zIndex: -1,
+  }}
+>
+
+    <option value="">Bitte wählen</option>
+    {glanzgradListe.map((g) => (
+      <option key={g.value} value={g.value}>
+        {g.name}
+      </option>
+    ))}
+  </select>
 
   {/* EIN benutzerdefiniertes Dropdown */}
   <div
