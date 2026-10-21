@@ -16,7 +16,6 @@ import { specificationsMap } from '../components/SpezifikationenAngeboteEinholen
 import LogistikSection from './LogistikSection'
 import beschreibungsStyles from './logistikbox.module.css'
 import { supabaseBrowser } from '@/lib/supabase-browser'
-
 type PreparedUpload = {
   kind: 'image' | 'document'
   path: string
@@ -37,39 +36,30 @@ async function compressImageFile(file: File): Promise<File> {
   if (!file.type.startsWith('image/')) {
     return file
   }
-
   // Kleine Bilder nicht anfassen
   const maxSizeBeforeCompression = 1.2 * 1024 * 1024
   if (file.size <= maxSizeBeforeCompression) {
     return file
   }
-
   const imageBitmap = await createImageBitmap(file)
-
   const maxWidth = 1000
   const maxHeight = 1000
-
   let { width, height } = imageBitmap
-
   if (width > maxWidth || height > maxHeight) {
     const ratio = Math.min(maxWidth / width, maxHeight / height)
     width = Math.round(width * ratio)
     height = Math.round(height * ratio)
   }
-
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
-
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     imageBitmap.close()
     return file
   }
-
   ctx.drawImage(imageBitmap, 0, 0, width, height)
   imageBitmap.close()
-
   const blob = await new Promise<Blob | null>((resolve) => {
     canvas.toBlob(
       resolve,
@@ -77,18 +67,14 @@ async function compressImageFile(file: File): Promise<File> {
       0.6,
     )
   })
-
   if (!blob) {
     return file
   }
-
   // Falls Komprimierung aus irgendeinem Grund größer wird, Original behalten
   if (blob.size >= file.size) {
     return file
   }
-
-  const originalNameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
-
+  const originalNameWithoutExt = file.name.replace(/**\.**[^/.]+$/, '')
   return new File(
     [blob],
     `${originalNameWithoutExt}.jpg`,
@@ -105,7 +91,6 @@ async function uploadPreparedFilesToSupabase(params: {
   fileFiles: File[]
 }) {
   const supabase = supabaseBrowser()
-
   const allFiles = [
     ...params.photoFiles.map((file) => ({
       kind: 'image' as const,
@@ -116,33 +101,26 @@ async function uploadPreparedFilesToSupabase(params: {
       file,
     })),
   ]
-
   if (params.uploads.length !== allFiles.length) {
     throw new Error('Dateizuordnung fehlgeschlagen.')
   }
-
   const concurrency = 4
   const finishedUploads: PreparedUpload[] = []
-
   for (let i = 0; i < params.uploads.length; i += concurrency) {
     const batch = params.uploads.slice(i, i + concurrency)
-
     const batchResults = await Promise.all(
       batch.map(async (upload, batchIndex) => {
         const realIndex = i + batchIndex
         const fileItem = allFiles[realIndex]
-
         const { error } = await supabase.storage
           .from(params.bucket)
           .uploadToSignedUrl(upload.path, upload.token, fileItem.file, {
             contentType: fileItem.file.type || undefined,
           })
-
         if (error) {
           console.error('Direkter Upload zu Supabase fehlgeschlagen:', error)
           throw new Error(error.message)
         }
-
         return {
           ...upload,
           mimeType: fileItem.file.type || upload.mimeType,
@@ -151,23 +129,17 @@ async function uploadPreparedFilesToSupabase(params: {
         }
       }),
     )
-
     finishedUploads.push(...batchResults)
   }
-
   return finishedUploads
 }
-
 // ✅ 1 Frame warten, damit Overlay sicher gerendert wird (keine echte Verzögerung)
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()))
-
-
 const stepIcons = [
   <Upload size={40} />,
   <Settings size={40} />,
   <Truck size={40} />,
 ]
-
 const oswald = Oswald({
   subsets: ['latin'],
   weight: ['400', '700'],
@@ -178,7 +150,6 @@ const rhythmusLabel: Record<string, string> = {
   zweiwoechentlich: 'alle zwei Wochen',
   monatlich: 'monatlich',
 };
-
 // Fiktive Promo-Pakete (nur Frontend)
 const promoPackages = [
   {
@@ -206,7 +177,6 @@ const promoPackages = [
     icon: <Crown size={18} className={styles.iconCrown} aria-hidden />,
   },
 ] as const
-
 // ✅ aktualisiertes fadeIn
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -214,45 +184,33 @@ const fadeIn = {
   transition: { duration: 0.3 },
 }
 const MAX_DOCUMENT_TOTAL_SIZE = 25 * 1024 * 1024 // 25 MB insgesamt
-
 const formatFileSize = (bytes: number) => {
   if (bytes >= 1024 * 1024) {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   }
-
   return `${Math.round(bytes / 1024)} KB`
 }
 export default function Formular() {
   const router = useRouter()
   // ✅ standardmäßig sichtbar
   const [showSteps, setShowSteps] = useState(true)
-  
   const [activeStep, setActiveStep] = useState(0)
-
   // Bilder
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
   const [warnungBilder, setWarnungBilder] = useState('')
   const [bilderWerdenOptimiert, setBilderWerdenOptimiert] = useState(false)
-
   // Dateien
   const [fileFiles, setFileFiles] = useState<File[]>([])
   const [warnungDateien, setWarnungDateien] = useState('')
-
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-
   const [vorschauOffen, setVorschauOffen] = useState(false)
-
   const [beschreibung, setBeschreibung] = useState('')
     const [beschreibungError, setBeschreibungError] = useState(false)
   const beschreibungRef = useRef<HTMLDivElement>(null)
-
   const [selectedOption1, setSelectedOption1] = useState('')
   const [selectedOption2, setSelectedOption2] = useState('')
-
-
-
   const [lieferDatum, setLieferDatum] = useState('')
   const [abholDatum, setAbholDatum] = useState('')
   const [lieferArt, setLieferArt] = useState('')
@@ -264,17 +222,13 @@ export default function Formular() {
   const [serienTermine, setSerienTermine] = useState<
     { nr: number; liefer: string; abhol: string }[]
   >([])
-
 const [overlayTitle, setOverlayTitle] = useState('Wir veröffentlichen deinen Auftrag …')
 const [overlayText, setOverlayText]   = useState('Wir leiten gleich weiter.')
-
   const [verfahrenError, setVerfahrenError] = useState(false)
   const verfahrenRef = useRef<HTMLDivElement>(null)
-
  const [specSelections, setSpecSelections] = useState<
   Record<string, string | string[]>
 >({})
-
 // 🔹 Hilfsfunktion: alle Keys mit bestimmtem Prefix löschen (v1__ / v2__)
 const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
   setSpecSelections((prev) => {
@@ -284,7 +238,6 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
     return Object.fromEntries(entries)
   })
 }
-
   const istGueltigDatei = (file: File) => {
     const erlaubteEndungen = ['.pdf', '.zip', '.dxf']
     const name = file.name.toLowerCase()
@@ -295,9 +248,7 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
 ) => {
   const rawFiles =
     typeof value === 'function' ? value(photoFiles) : value
-
   setBilderWerdenOptimiert(true)
-
   Promise.all(rawFiles.map((file) => compressImageFile(file)))
     .then((optimizedFiles) => {
       setPhotoFiles(optimizedFiles)
@@ -310,7 +261,6 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
       setBilderWerdenOptimiert(false)
     })
 }
-
   const [agbAccepted, setAgbAccepted] = useState(false)
   const [agbError, setAgbError] = useState(false)
   const [ndaRequired, setNdaRequired] = useState(false)
@@ -324,20 +274,15 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
   const step1Ref = useRef<HTMLDivElement>(null)
   const step2Ref = useRef<HTMLDivElement>(null)
   const step3Ref = useRef<HTMLDivElement>(null)
-
-
   const [materialGuete, setMaterialGuete] = useState('')
   const [customMaterial, setCustomMaterial] = useState('')
   const [materialGueteError, setMaterialGueteError] = useState(false)
-
   const [laenge, setLaenge] = useState('')
   const [breite, setBreite] = useState('')
   const [hoehe, setHoehe] = useState('')
   const [masse, setMasse] = useState('')
   const [abmessungError, setAbmessungError] = useState(false)
-
   const [selectedVerfahren, setSelectedVerfahren] = useState<string[]>([]) // oder später aus deinem Verfahren-Block
-
   const [bewerbungOptionen, setBewerbungOptionen] = useState<string[]>([])
 const toggleBewerbung = (option: string) => {
   setBewerbungOptionen(prev =>
@@ -352,7 +297,6 @@ const toggleBewerbung = (option: string) => {
     }, 5000)
     return () => clearInterval(interval)
   }, [])
-
   useEffect(() => {
     const urls = photoFiles.map((file) => URL.createObjectURL(file))
     setPhotoPreviews(urls)
@@ -360,34 +304,26 @@ const toggleBewerbung = (option: string) => {
   }, [photoFiles])
   useEffect(() => {
   let alive = true
-
   async function loadCustomNda() {
     try {
       const res = await fetch('/api/profile/nda', {
         cache: 'no-store',
       })
-
       const json = await res.json().catch(() => ({}))
-
       if (!alive) return
-
       setCustomNda(res.ok ? json.nda ?? null : null)
     } catch {
       if (alive) setCustomNda(null)
     }
   }
-
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
       loadCustomNda()
     }
   }
-
   loadCustomNda()
-
   window.addEventListener('focus', loadCustomNda)
   document.addEventListener('visibilitychange', handleVisibilityChange)
-
   return () => {
     alive = false
     window.removeEventListener('focus', loadCustomNda)
@@ -397,33 +333,25 @@ const toggleBewerbung = (option: string) => {
     )
   }
 }, [])
-
 // 🔄 Wenn Verfahren 1 wechselt → alle v1__-Spezifikationen löschen
 useEffect(() => {
   clearSpecsByPrefix('v1__')
 }, [selectedOption1])
-
 // 🔄 Wenn Verfahren 2 wechselt → alle v2__-Spezifikationen löschen
 useEffect(() => {
   clearSpecsByPrefix('v2__')
 }, [selectedOption2])
-
-
 const scrollToBlock = (ref: React.RefObject<HTMLElement>) => {
   if (!ref.current) return
-
   // Falls du eine feste Navbar hast, etwas Abstand nach oben lassen (z. B. 90px)
   const y = ref.current.getBoundingClientRect().top + window.scrollY - 90
-
   window.scrollTo({
     top: y,
     behavior: 'smooth',
   })
 }
-
 // weiter für Validierungs-Scroll benutzen
 const scrollToError = scrollToBlock
-
 // 🔹 DAS ist für die Klicks auf die Step-Boxen
 const scrollToSection = (step: number) => {
   if (step === 1) scrollToBlock(step1Ref)
@@ -441,7 +369,6 @@ const dokumenteGesamtGroesse = fileFiles.reduce(
   (sum, file) => sum + file.size,
   0,
 )
-
 if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   setWarnungDateien(
     `Die Dateien sind insgesamt zu groß. Maximal erlaubt sind ${formatFileSize(
@@ -451,10 +378,8 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   return
 }
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
-
   // 1️⃣ DATEI (Pflicht)
   setWarnungBilder('')
-
   if (fileFiles.length === 0) {
     setWarnungDateien(
       'Bitte lade mindestens eine Datei zu deinem Auftrag hoch (PDF, DXF oder ZIP).'
@@ -464,7 +389,6 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   } else {
     setWarnungDateien('')
   }
-
   // 2️⃣ VERFAHREN
   if (!selectedOption1) {
     setVerfahrenError(true)
@@ -473,7 +397,6 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   } else {
     setVerfahrenError(false)
   }
-
   // 3️⃣ MATERIALGÜTE
   if (!materialGuete || (materialGuete === 'Andere' && !customMaterial.trim())) {
   setMaterialGueteError(true)
@@ -482,7 +405,6 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
 } else {
     setMaterialGueteError(false)
   }
-
   // 4️⃣ ABMESSUNGEN
 if (!laenge || !breite || !hoehe || !masse) {
   setAbmessungError(true)
@@ -491,7 +413,6 @@ if (!laenge || !breite || !hoehe || !masse) {
 } else {
     setAbmessungError(false)
   }
-
   // 5️⃣ BESCHREIBUNG
   if (!beschreibung.trim()) {
     setBeschreibungError(true)
@@ -510,20 +431,17 @@ if (
 ) {
   setLogistikError(true)
   setRhythmusError(serienauftrag && !rhythmus)
-
   if (!firstErrorRef) firstErrorRef = logistikRef
   hasError = true
 } else if (new Date(lieferDatum) > new Date(abholDatum)) {
   setLogistikError(true)
   setRhythmusError(false)
-
   if (!firstErrorRef) firstErrorRef = logistikRef
   hasError = true
 } else {
   setLogistikError(false)
   setRhythmusError(false)
 }
-
   // 7️⃣ AGB
   if (!agbAccepted) {
     setAgbError(true)
@@ -536,22 +454,18 @@ if (
   alert('Du hast noch keine eigene NDA in den Kontoeinstellungen hinterlegt.')
   hasError = true
 }
-
   if (hasError) {
     if (firstErrorRef) {
       scrollToError(firstErrorRef)
     }
     return
   }
-
   setIsLoading(true)
-
   let willNavigate = false
   let userErrorMessage =
   'Fehler beim Absenden. Dein Auftrag wurde möglicherweise nicht korrekt gespeichert oder die Bewerbung ist fehlgeschlagen.'
 setOverlayTitle('Wir veröffentlichen deinen Auftrag …')
 setOverlayText('Wir leiten gleich weiter.')
-
 try {
 const prepareRes = await fetch('/api/auftrag-vorbereiten', {
   method: 'POST',
@@ -560,37 +474,28 @@ const prepareRes = await fetch('/api/auftrag-vorbereiten', {
   agbAccepted,
   ndaRequired,
   ndaType: ndaRequired ? ndaType : 'standard',
-
   beschreibung: beschreibung.trim(),
-
     materialguete: materialGuete,
     andereMaterialguete: customMaterial,
-
     laenge,
     breite,
     hoehe,
     masse,
-
     lieferDatum,
     abholDatum,
     lieferArt,
     abholArt,
-
     serienauftragAktiv: serienauftrag,
     serienRhythmus: rhythmus || '',
     serienTermine,
-
     specSelections,
-
     verfahren1: selectedOption1,
     verfahren2: selectedOption2,
-
     bilder: photoFiles.map((file) => ({
       name: file.name,
       type: file.type,
       size: file.size,
     })),
-
     dateien: fileFiles.map((file) => ({
       name: file.name,
       type: file.type,
@@ -598,50 +503,38 @@ const prepareRes = await fetch('/api/auftrag-vorbereiten', {
     })),
   }),
 })
-
 if (!prepareRes.ok) {
   let payload: any = null
-
   try {
     payload = await prepareRes.json()
   } catch {}
-
   console.error('Fehler /api/auftrag-vorbereiten:', prepareRes.status, payload)
-
   throw new Error(
     payload?.details ||
       payload?.error ||
       'Auftrag konnte nicht vorbereitet werden.',
   )
 }
-
 const prepareData = await prepareRes.json()
-
 const jobId = prepareData?.jobId as string | undefined
 const bucket = prepareData?.bucket as string
 const uploads = prepareData?.uploads as PreparedUpload[]
-
 if (!jobId) {
   console.error('Kein jobId im Response von /api/auftrag-vorbereiten', prepareData)
   throw new Error('Auftrag konnte nicht eindeutig gespeichert werden.')
 }
-
 setOverlayTitle('Dateien werden hochgeladen …')
 setOverlayText('Bitte Seite nicht schließen.')
-
 userErrorMessage =
   'Ein oder mehrere Bilder oder Dateien konnten nicht hochgeladen werden. Bitte prüfe deine Internetverbindung, entferne die betroffenen Dateien und versuche es erneut.'
-
 const finishedUploads = await uploadPreparedFilesToSupabase({
   bucket,
   uploads,
   photoFiles,
   fileFiles,
 })
-
 setOverlayTitle('Auftrag wird finalisiert …')
 setOverlayText('Wir veröffentlichen deinen Auftrag.')
-
 const finalizeRes = await fetch('/api/auftrag-finalisieren', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -650,16 +543,12 @@ const finalizeRes = await fetch('/api/auftrag-finalisieren', {
     uploads: finishedUploads,
   }),
 })
-
 if (!finalizeRes.ok) {
   let payload: any = null
-
   try {
     payload = await finalizeRes.json()
   } catch {}
-
   console.error('Fehler /api/auftrag-finalisieren:', finalizeRes.status, payload)
-
   if (
     payload?.error === 'uploaded_files_missing_in_storage' ||
     payload?.error === 'invalid_upload_paths'
@@ -673,14 +562,12 @@ if (!finalizeRes.ok) {
     userErrorMessage =
       'Der Auftrag konnte nicht veröffentlicht werden. Bitte versuche es erneut.'
   }
-
   throw new Error(
     payload?.details ||
       payload?.error ||
       'Auftrag konnte nicht finalisiert werden.',
   )
 }
-
     // 2️⃣ Kein Promo-Paket gewählt → fertig wie bisher
     if (bewerbungOptionen.length === 0) {
       willNavigate = true
@@ -702,24 +589,18 @@ if (!finalizeRes.ok) {
         packageCodes: packageCodes,
       }),
     })
-
     if (!promoRes.ok) {
       let payload: any = null
     try { payload = await promoRes.json() } catch {}
-
     console.error('Checkout Fehler:', promoRes.status, payload)
-
     alert(payload?.message || payload?.details || payload?.error || `Checkout Fehler (HTTP ${promoRes.status})`)
     willNavigate = true
     router.replace('/konto/angebote')
     return
-
     }
-
     const promoData = (await promoRes.json()) as {
       checkoutUrl?: string
     }
-
  if (promoData.checkoutUrl) {
   // ✅ Formular aus dem Browser-Verlauf ersetzen
   window.history.replaceState(
@@ -727,14 +608,12 @@ if (!finalizeRes.ok) {
     '',
     `/konto/angebote?job_published=1&job_promo=pending&job_id=${encodeURIComponent(String(jobId))}`
   )
-
   // ✅ weiter zu Stripe
   // ✅ direkt vor dem Redirect
 willNavigate = true
 await nextFrame()
 window.location.assign(promoData.checkoutUrl)
 return
-
 }
   } catch (err) {
   console.error('❌ Fehler beim Absenden / Promo:', err)
@@ -743,14 +622,11 @@ return
   if (!willNavigate) setIsLoading(false)
 }
 }
-    
   // 🔄 selectedVerfahren immer aus Verfahren 1 + 2 ableiten
 useEffect(() => {
   const auswahl: string[] = []
-
   if (selectedOption1) auswahl.push(selectedOption1)
   if (selectedOption2) auswahl.push(selectedOption2)
-
   setSelectedVerfahren(auswahl)
 }, [selectedOption1, selectedOption2])
 const materialienAlle = [
@@ -767,7 +643,6 @@ const materialienAlle = [
   'Chrom',
   'Andere',
 ]
-
 const materialienVerzinken = [
   'Stahl',
   'Andere',
@@ -777,7 +652,6 @@ const materialienZinkphosphatieren = [
   'Zink',
   'Andere',
 ]
-
 const materialienMnPhosphatieren = [
   'Stahl',
   'Andere',
@@ -813,33 +687,28 @@ const materialienEntnickeln = [
   'Zink',
   'Andere',
 ]
-
 const materialienEntzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
   'Andere',
 ]
-
 const materialienEntaluminieren = [
   'Stahl',
   'Edelstahl',
   'Nickel',
   'Andere',
 ]
-
 const materialienEntzinken = [
   'Stahl',
   'Edelstahl',
   'Andere',
 ]
-
 const materialienEntanodisieren = [
   'Zink',
   'Zinn',
   'Andere',
 ]
-
 const materialienEnteloxieren = [
   'Aluminium',
   'Aluguss',
@@ -864,7 +733,6 @@ const materialienVernickeln = [
   'Zink',
   'Andere',
 ]
-
 const materialienVersilbern = [
   'Aluminium',
   'Aluguss',
@@ -879,7 +747,6 @@ const materialienSandstrahlen = [
   'Edelstahl',
   'Andere',
 ]
-
 const materialienStaubstrahlen = [
   'Aluminium',
   'Aluguss',
@@ -887,7 +754,6 @@ const materialienStaubstrahlen = [
   'Edelstahl',
   'Andere',
 ]
-
 const materialienGlasperlen = [
   'Aluminium',
   'Aluguss',
@@ -897,34 +763,24 @@ const materialienGlasperlen = [
 ]
 const istEloxieren =
   selectedOption1 === 'Eloxieren' || selectedOption2 === 'Eloxieren'
-
 const istAnodisieren =
   selectedOption1 === 'Anodisieren' || selectedOption2 === 'Anodisieren'
-
 const istVerzinnen =
   selectedOption1 === 'Verzinnen' || selectedOption2 === 'Verzinnen'
-
 const istEntnickeln =
   selectedOption1 === 'Entnickeln' || selectedOption2 === 'Entnickeln'
-
 const istEntzinnen =
   selectedOption1 === 'Entzinnen' || selectedOption2 === 'Entzinnen'
-
 const istEntaluminieren =
   selectedOption1 === 'Entaluminieren' || selectedOption2 === 'Entaluminieren'
-
 const istEntzinken =
   selectedOption1 === 'Entzinken' || selectedOption2 === 'Entzinken'
-
 const istEntanodisieren =
   selectedOption1 === 'Entanodisieren' || selectedOption2 === 'Entanodisieren'
-
 const istEnteloxieren =
   selectedOption1 === 'Enteloxieren' || selectedOption2 === 'Enteloxieren'
-
 const istAluminieren =
   selectedOption1 === 'Aluminieren' || selectedOption2 === 'Aluminieren'
-
 const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
 const istBruenieren =
@@ -934,27 +790,21 @@ const istVerzinken =
 const istZinkphosphatieren =
   selectedOption1 === 'Zinkphosphatieren' ||
   selectedOption2 === 'Zinkphosphatieren'
-
 const istMnPhosphatieren =
   selectedOption1 === 'Mn-Phosphatieren' ||
   selectedOption2 === 'Mn-Phosphatieren'
-
 const istVersilbern =
   selectedOption1 === 'Versilbern' ||
   selectedOption2 === 'Versilbern'
-
 const istKTL =
   selectedOption1 === 'KTL-Beschichten' ||
   selectedOption2 === 'KTL-Beschichten'
 const strahlVerfahrenRaw =
   specSelections['v1__Strahlen__verfahren'] ||
   specSelections['v2__Strahlen__verfahren']
-
 const strahlVerfahren =
   typeof strahlVerfahrenRaw === 'string' ? strahlVerfahrenRaw : ''
-
 let materialienAktiv = materialienAlle
-
 if (istBruenieren) {
   materialienAktiv = materialienBruenieren
 } else if (istEloxieren) {
@@ -998,7 +848,10 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienSandstrahlen
 } else if (strahlVerfahren === 'Staubstrahlen') {
   materialienAktiv = materialienStaubstrahlen
-} else if (strahlVerfahren === 'Glasperlen') {
+} else if (
+    strahlVerfahren === 'Glasperlenstrahlen' ||
+    strahlVerfahren === 'Keramikperlenstrahlen'
+) {
   materialienAktiv = materialienGlasperlen
 }
 useEffect(() => {
@@ -1011,16 +864,12 @@ const lieferArtLabel: Record<string, string> = {
   selbst: 'Ich liefere selbst',
   abholung: 'Abholung an meinem Standort',
 };
-
 const abholArtLabel: Record<string, string> = {
   selbst: 'Ich hole selbst ab',
   anlieferung: 'Anlieferung an meinem Standort',
 };
-
 const formatLieferArt = (value: string) => lieferArtLabel[value] ?? value;
 const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
-
-
   const formatEUR = (cents: number) =>
     (cents / 100).toLocaleString('de-DE', {
       style: 'currency',
@@ -1035,29 +884,24 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   const selectedPromoScore = promoPackages
     .filter((p) => bewerbungOptionen.includes(p.id))
     .reduce((sum, p) => sum + p.score, 0)
-
   const selectedTotalCents = promoPackages
     .filter((p) => bewerbungOptionen.includes(p.id))
     .reduce((sum, p) => sum + p.priceCents, 0)
-
   const calculateProgress = () => {
     let steps = 0
     if (fileFiles.length > 0) steps += 1
     if (beschreibung.trim().length > 0) steps += 1
     if (agbAccepted) steps += 1
-
     // Materialgüte
     if (materialGuete && (materialGuete !== 'Andere' || customMaterial)) {
       steps += 1
     }
-
     // Maße
     if (laenge && breite && hoehe && masse) {
       steps += 1
     }
     if (selectedOption1) steps += 1
     if (lieferDatum && abholDatum && lieferArt && abholArt) steps += 1
-
     const totalSteps = 7
     return Math.round((steps / totalSteps) * 100)
   }
@@ -1068,18 +912,15 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     setWarnungBilder('');
     setFileFiles([]);
     setWarnungDateien('');
-
     // Beschreibung
     setBeschreibung('');
     setBeschreibungError(false);
-
     // Verfahren / Spezifikationen
     setSelectedOption1('');
     setSelectedOption2('');
     setSpecSelections({});
     setVerfahrenError(false);
     setSelectedVerfahren([]);
-
     // Logistik
         // Logistik
     setLieferDatum('');
@@ -1091,8 +932,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     setRhythmus('');
     setRhythmusError(false);
     setSerienTermine([]);
-
-
     // Materialgüte & Abmessungen
     setMaterialGuete('');
     setCustomMaterial('');
@@ -1102,23 +941,18 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     setHoehe('');
     setMasse('');
     setAbmessungError(false);
-
     // Bewerbung / Promo
     setBewerbungOptionen([]);
-
     // AGB
     setAgbAccepted(false);
     setAgbError(false);
-
     // Vorschau & Feedback
     setVorschauOffen(false);
     setSuccessMessage('');
     setIsLoading(false);
-
     // ggf. Warnungen nochmal sicher löschen
     setWarnungBilder('');
     setWarnungDateien('');
-
     // Nach oben scrollen
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1137,7 +971,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           </div>
         </div>
       </motion.div>
-
       <form onSubmit={handleSubmit} className={styles.wrapper}>
         {/* Hinweisbox */}
         <motion.div {...fadeIn} className={styles.infoBox}>
@@ -1146,7 +979,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             Mehr erfahren
           </a>
         </motion.div>
-
         {/* Schrittübersicht */}
         <motion.div {...fadeIn} className={styles.stepsAnimation}>
   <h3 className={styles.stepsTitle}>
@@ -1160,7 +992,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
       {showSteps ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
     </button>
   </h3>
-
           <AnimatePresence initial={false}>
             {showSteps && (
               <motion.div
@@ -1222,14 +1053,12 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             )}
           </AnimatePresence>
         </motion.div>
-
         {/* Dropzone für Bilder */}
         <motion.div {...fadeIn}>
           {/* Headline + Step-Nummer + Tooltip */}
           <div
           ref={step1Ref}  // 🔹 HIER
             style={{
-              
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1257,14 +1086,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               </span>
                         </h2>
           </div>
-
           <p className={styles.uploadHinweis}>
             Mindestens eine Datei zum Auftrag ist erforderlich. Fotos sind optional.
             Wenn du kein Foto hochlädst, wird automatisch ein Platzhalterbild verwendet.
           </p>
-
           <div ref={bilderRef}>
-            
             {/* Dropzone für Bilder */}
             <Dropzone
               label="Optional: Bild, Screenshot oder Skizze hierher ziehen oder klicken"
@@ -1279,11 +1105,9 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             {bilderWerdenOptimiert && (
                 <p className={styles.optimierungHinweis}>Bilder werden optimiert …</p>
               )}
-
               {warnungBilder && (
                 <p className={styles.feldFehlerText}>{warnungBilder}</p>
               )}
-
             {photoFiles.length === 0 && (
               <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem', textAlign: 'center' }}>
                 <img
@@ -1299,7 +1123,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
                 />
               </div>
             )}
-
             {/* Vorschau Bilder */}
             <DateiVorschau
               bilder
@@ -1312,7 +1135,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               }}
             />
           </div>
-
           {/* Dropzone für sonstige Dateien */}
           <Dropzone
             label="Pflicht: Datei (PDF, DXF, ZIP) hierher ziehen oder klicken"
@@ -1329,7 +1151,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           {warnungDateien && (
             <p className={styles.feldFehlerText}>{warnungDateien}</p>
           )}
-
           {/* Vorschau Dateien */}
           <DateiVorschau
             bilder={false}
@@ -1341,7 +1162,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             }}
           />
         </motion.div>
-
         <div className={styles.umrandung} ref={materialRef}>
           <div
           ref={step2Ref}   // 🔹 HIER
@@ -1380,9 +1200,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   verfahrenError={verfahrenError}
   verfahrenRef={verfahrenRef}
 />
-
 <div className={styles.dividerLine} />
-
 <div ref={materialGueteRef}>
   <MaterialGuete
     materialGuete={materialGuete}
@@ -1403,9 +1221,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     materialienAktiv={materialienAktiv}
   />
 </div>
-
 <div className={styles.dividerLine} />
-
 <div ref={beschreibungRef}>
 <BeschreibungsBox
   text={beschreibung}
@@ -1419,9 +1235,7 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   showError={beschreibungError}
 />
 </div>
-
         </div>
-
         <div
           className={beschreibungsStyles.borderedContainer}
           ref={logistikRef}
@@ -1430,7 +1244,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
             <div
             ref={step3Ref}   // 🔹 HIER
   style={{
-    
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1453,8 +1266,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     </span>
   </h2>
 </div>
-
-
              <LogistikSection
   lieferDatum={lieferDatum}
   setLieferDatum={(value) => {
@@ -1480,12 +1291,10 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   serienauftrag={serienauftrag}
   setSerienauftrag={(value) => {
     setSerienauftrag(value)
-
     if (!value) {
       setRhythmus('')
       setRhythmusError(false)
     }
-
     setLogistikError(false)
   }}
   rhythmus={rhythmus}
@@ -1497,10 +1306,8 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   rhythmusError={rhythmusError}
   onSerienTermineChange={setSerienTermine}
 />
-
           </div>
         </div>
-
         {/* Bewerbung – statisches Frontend-Panel */}
         <div
           className={styles.bewerbungPanel}
@@ -1513,7 +1320,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               Erhöhe deine Sichtbarkeit und erhalte bessere Angebote!
             </p>
           </div>
-
           <div className={styles.bewerbungGruppe}>
             {promoPackages.map((p) => (
               <label key={p.id} className={styles.bewerbungOption}>
@@ -1536,12 +1342,10 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
                 </span>
               </label>
             ))}
-
             <p className={styles.steuerHinweis}>
               Steuern werden im Checkout berechnet.
             </p>
           </div>
-
           <div className={styles.promoHinweis} role="note" aria-live="polite">
             <div className={styles.promoHinweisRow}>
               <span className={styles.promoScore}>
@@ -1567,7 +1371,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               onChange={(e) => {
               const checked = e.target.checked
               setNdaRequired(checked)
-
               if (!checked) {
                 setNdaType('standard')
               }
@@ -1577,13 +1380,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               Geheimhaltung für diesen Auftrag aktivieren.
             </span>
           </motion.label>
-
           {ndaRequired && (
   <div className={styles.ndaHinweisText}>
     <p>
       Die vollständige Detailansicht, Bilder, Dateien und technischen Angaben sind für Bieter erst nach Akzeptanz der Geheimhaltungsvereinbarung sichtbar.
     </p>
-
     <label className={styles.agbLabel}>
       <input
         type="radio"
@@ -1604,7 +1405,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
         </a>
       </span>
     </label>
-
     <label className={styles.agbLabel}>
       <input
         type="radio"
@@ -1619,7 +1419,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
         {customNda?.fileName ? ` (${customNda.fileName})` : ''}
       </span>
     </label>
-
     {!customNda && (
       <p>
         Du hast noch keine eigene NDA hinterlegt. Du kannst sie in den{' '}
@@ -1637,7 +1436,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
       </div>
     )}
         </div>
-
         <div className={styles.agbContainer} ref={agbRef}>
           <motion.label
             className={`${styles.agbLabel} ${
@@ -1668,14 +1466,12 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               .
             </span>
                     </motion.label>
-
           {agbError && (
             <p className={styles.feldFehlerText}>
               Bitte akzeptiere die Allgemeinen Geschäftsbedingungen
             </p>
           )}
         </div>
-
         <div className={styles.vorschauWrapper}>
           <button
             type="button"
@@ -1684,7 +1480,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           >
             {vorschauOffen ? 'Vorschau ausblenden ▲' : 'Vorschau anzeigen ▼'}
           </button>
-
           <AnimatePresence>
             {vorschauOffen && (
               <motion.div
@@ -1694,7 +1489,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
                 transition={{ duration: 0.4 }}
                 className={styles.vorschauContainer}
               ><h3>Deine Eingaben im Überblick</h3>
-
 {/* 1️⃣ Bilder / Dateien */}
 <p>
   <strong>Bilder:</strong> {photoFiles.length} Dateien hochgeladen
@@ -1702,7 +1496,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
 <p>
   <strong>Dateien:</strong> {fileFiles.length} Dateien hochgeladen
 </p>
-
 {/* 2️⃣ Verfahren & Spezifikationen */}
 <p>
   <strong>Verfahren:</strong>{' '}
@@ -1718,21 +1511,16 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     {(Object.entries(specSelections) as [string, string | string[]][])
       .map(([rawKey, value], i) => {
         const display = Array.isArray(value) ? value.join(', ') : value
-
         // "v1__Eloxieren__farbeeloxieren" → verfahrenNameRaw="Eloxieren", fieldKeyRaw="farbeeloxieren"
         const withoutPrefix = rawKey.replace(/^v\d+__/, '')
         const [verfahrenNameRaw, fieldKeyRaw] = withoutPrefix.split('__')
-
         if (!verfahrenNameRaw) return null
-
         const verfahrenName = verfahrenNameRaw.trim()
         const fieldKeyLower = (fieldKeyRaw || '').toLowerCase()
-
         // Feld "verfahren" nicht nochmal anzeigen
         if (!fieldKeyRaw || fieldKeyLower === 'verfahren') {
           return null
         }
-
         // 1) Spezielle Schreibweisen
         const specialLabels: Record<string, string> = {
           farbeeloxieren: 'Farbe',       // ✅ nur „Farbe“
@@ -1741,13 +1529,10 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
           glanzgrad: 'Glanzgrad',
           zertifizierungen: 'Zertifizierungen',
         }
-
         let fieldLabel = specialLabels[fieldKeyLower]
-
         // 2) Generische Heuristik für alles andere
         if (!fieldLabel) {
           let base = fieldKeyLower.replace(/_+/g, ' ').trim()
-
           const endings = ['eloxieren', 'lackieren', 'beschichten']
           for (const ending of endings) {
             if (base.endsWith(ending) && !base.includes(' ')) {
@@ -1756,12 +1541,9 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
               break
             }
           }
-
           fieldLabel = base.replace(/(^|\s)\w/g, (m) => m.toUpperCase())
         }
-
         const label = `${verfahrenName} ${fieldLabel}`
-
         return (
           <p key={i}>
             {label}: {display}
@@ -1770,11 +1552,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
       })}
   </div>
 )}
-
-
-
-
-
 {/* 3️⃣ Materialgüte */}
 <p>
   <strong>Materialgüte:</strong>{' '}
@@ -1782,7 +1559,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     ? `Andere (${customMaterial})`
     : materialGuete || 'Noch keine Angabe'}
 </p>
-
 {/* 4️⃣ Abmessungen & Masse */}
 <p>
   <strong>Abmessungen größtes Werkstück (L/B/H):</strong>{' '}
@@ -1794,13 +1570,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   <strong>Masse schwerstes Werkstück:</strong>{' '}
   {masse ? `${masse} kg` : 'Noch keine Angabe gemacht'}
 </p>
-
 {/* 5️⃣ Beschreibung */}
 <p>
   <strong>Beschreibung:</strong>{' '}
   {beschreibung || 'Noch keine Angaben gemacht'}
 </p>
-
 {/* 6️⃣ Logistik */}
 {/* 6️⃣ Logistik */}
 <p>
@@ -1815,7 +1589,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     ? formatDateDE(abholDatum)
     : 'Noch kein Datum gewählt'}
 </p>
-
 <p>
   <strong>Warenausgabe:</strong>{' '}
   {lieferArt ? formatLieferArt(lieferArt) : 'Nicht angegeben'}
@@ -1834,7 +1607,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
         : 'Ja (Rhythmus noch nicht gewählt)'}
     </p>
     {serienTermine.length > 0 && (
-
       <div>
         <strong>Serientermine:</strong>
         <ul>
@@ -1848,7 +1620,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     )}
   </>
 )}
-
 {/* 7️⃣ Werbeoptionen */}
 <p>
   <strong>Werbeoptionen:</strong>{' '}
@@ -1856,13 +1627,11 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     ? bewerbungOptionen.join(', ')
     : 'Keine ausgewählt'}
 </p>
-
 {/* 8️⃣ AGB */}
 <p>
   <strong>AGB:</strong>{' '}
   {agbAccepted ? '✓ akzeptiert' : '✗ nicht akzeptiert'}
 </p>
-
               </motion.div>
             )}
           </AnimatePresence>
@@ -1872,7 +1641,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     Hinweise zur Auftragsvergabe findest du hier.
   </a>
 </div>
-
 <div style={{ textAlign: 'center' }}>
   <button
     type="submit"
@@ -1885,19 +1653,16 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
         ? 'Bitte warten…'
         : 'Jetzt Angebote einholen'}
   </button>
-
   <p className={styles.prioritaetHinweis}>
   Falls Angaben voneinander abweichen, zählt bei logistischen Themen zuerst die
   Beschreibung, danach der Logistikbereich und danach die hochgeladenen
   Unterlagen. Bei technischen Themen zählt zuerst die Beschreibung, danach die
   Verfahrensangaben, danach Dateien und zuletzt Fotos.
 </p>
-
   {successMessage && (
     <p className={styles.erfolg}>{successMessage}</p>
   )}
 </div>
-
         {/* 🔹 NEU: Alle Eingaben zurücksetzen */}
         <div className={styles.resetRow}>
           <button
@@ -1933,8 +1698,6 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
     </motion.div>
   )}
 </AnimatePresence>
-
-
     </div>
   )
 }

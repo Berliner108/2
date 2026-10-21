@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useEffect, useRef, useState } from 'react'
 import styles from './auftragsboerse.module.css'
 import Navbar from '../components/navbar/Navbar'
@@ -8,7 +7,6 @@ import Link from 'next/link'
 import ArtikelContainerAuftragsboerse from '../components/ArtikelContainerAuftragsboerse'
 import BoerseLoading from '../components/loading/BoerseLoading'
 import type { Auftrag } from '@/lib/types/auftrag'
-
 const VERFAHREN = [
   'Nasslackieren',
   'Pulverbeschichten',
@@ -19,6 +17,16 @@ const VERFAHREN = [
   'Entlacken',
   'Zinkphosphatieren',
   'Mn-Phosphatieren',
+  'Beizen',
+  'Entgraten',
+  'Verrunden',
+  'Glätten',
+  'Mattieren',
+  'Schleifen',
+  'Polieren',
+  'Bürsten',
+  'Trowalisieren',
+  'Chemisches Glänzen',
   'Brünieren',
   'Einlagern',
   'Isolierstegverpressen',
@@ -41,16 +49,13 @@ const VERFAHREN = [
   'Vergolden',
   'Versilbern',
 ] as const
-
 const DEFAULT_LIMITS = {
   length: 20000,
   width: 6000,
   height: 3000,
   masse: 20000,
 }
-
 type Limits = typeof DEFAULT_LIMITS
-
 type ApiAuftrag = Omit<
   Auftrag,
   'warenausgabeDatum' | 'warenannahmeDatum'
@@ -58,7 +63,6 @@ type ApiAuftrag = Omit<
   warenausgabeDatum?: string | null
   warenannahmeDatum?: string | null
 }
-
 type ApiResponse = {
   items?: ApiAuftrag[]
   total?: number
@@ -68,49 +72,40 @@ type ApiResponse = {
   verfahren_counts?: Record<string, number>
   error?: string
 }
-
 function toFiniteNumber(value: unknown, fallback = 0) {
   const n = typeof value === 'number' ? value : Number(value)
   return Number.isFinite(n) ? n : fallback
 }
-
 function toDate(value: unknown): Date {
   if (value instanceof Date) return value
   const d = new Date(String(value ?? ''))
   return Number.isNaN(d.getTime()) ? new Date(0) : d
 }
-
 export default function AuftragsboerseSeite() {
   const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
-
   const numFromQuery = (key: string, fallback: number) =>
     sp.get(key) !== null ? Number(sp.get(key)) : fallback
   const boolFromQuery = (key: string) => sp.get(key) === '1'
-
   const [jobs, setJobs] = useState<Auftrag[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-
   const [limits, setLimits] = useState<Limits>(DEFAULT_LIMITS)
   const [verfahrenCounts, setVerfahrenCounts] = useState<Record<string, number>>(
     () => Object.fromEntries(VERFAHREN.map((v) => [v, 0]))
   )
-
   const [suchbegriff, setSuchbegriff] = useState(() => sp.get('q') ?? '')
   const [suchEingabe, setSuchEingabe] = useState(() => sp.get('q') ?? '')
   const [verfahren, setVerfahren] = useState(() => sp.get('verfahren') ?? '')
   const [gewerblich, setGewerblich] = useState(() => boolFromQuery('g'))
   const [privat, setPrivat] = useState(() => boolFromQuery('p'))
   const [sortierung, setSortierung] = useState(() => sp.get('sort') ?? '')
-
   const [waSelbst, setWaSelbst] = useState(() => boolFromQuery('wa_s'))
   const [waAbhol, setWaAbhol] = useState(() => boolFromQuery('wa_a'))
   const [wnZust, setWnZust] = useState(() => boolFromQuery('wn_z'))
   const [wnSelbst, setWnSelbst] = useState(() => boolFromQuery('wn_s'))
-
   const [maxLength, setMaxLength] = useState(() =>
     numFromQuery('l', DEFAULT_LIMITS.length)
   )
@@ -123,43 +118,33 @@ export default function AuftragsboerseSeite() {
   const [maxMasse, setMaxMasse] = useState(() =>
     numFromQuery('m', DEFAULT_LIMITS.masse)
   )
-
   const page = Math.max(1, parseInt(sp.get('page') || '1', 10) || 1)
   const seitenGroesse = 50
-
   const [anzeigenLimit, setAnzeigenLimit] = useState(50)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
   const contentRef = useRef<HTMLDivElement>(null)
   const sidebarRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
-
   const keepViewportStable = (e: React.SyntheticEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     if (!sidebarRef.current || !sidebarRef.current.contains(target)) return
-
     const beforeTop = target.getBoundingClientRect().top
-
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const afterTop = target.getBoundingClientRect().top
         const delta = afterTop - beforeTop
-
         if (delta !== 0) {
           window.scrollBy({ top: delta, left: 0, behavior: 'auto' })
         }
       })
     })
   }
-
   const fromUrlRef = useRef(false)
   const spKey = sp.toString()
-
   // URL -> State
   useEffect(() => {
     fromUrlRef.current = true
-
     const qFromUrl = sp.get('q') ?? ''
     setSuchbegriff(qFromUrl)
     setSuchEingabe(qFromUrl)
@@ -167,12 +152,10 @@ export default function AuftragsboerseSeite() {
     setGewerblich(sp.get('g') === '1')
     setPrivat(sp.get('p') === '1')
     setSortierung(sp.get('sort') ?? '')
-
     setWaSelbst(sp.get('wa_s') === '1')
     setWaAbhol(sp.get('wa_a') === '1')
     setWnZust(sp.get('wn_z') === '1')
     setWnSelbst(sp.get('wn_s') === '1')
-
     setMaxLength(
       sp.get('l')
         ? Math.min(Number(sp.get('l')), limits.length)
@@ -193,35 +176,28 @@ export default function AuftragsboerseSeite() {
         ? Math.min(Number(sp.get('m')), limits.masse)
         : limits.masse
     )
-
     setAnzeigenLimit(50)
   }, [spKey, limits.length, limits.width, limits.height, limits.masse])
-
   // State -> URL. Wie bisher wird bei Filteränderungen Seite 1 verwendet.
   useEffect(() => {
     if (fromUrlRef.current) {
       fromUrlRef.current = false
       return
     }
-
     const params = new URLSearchParams()
-
     if (suchbegriff) params.set('q', suchbegriff)
     if (verfahren) params.set('verfahren', verfahren)
     if (gewerblich) params.set('g', '1')
     if (privat) params.set('p', '1')
     if (sortierung) params.set('sort', sortierung)
-
     if (waSelbst) params.set('wa_s', '1')
     if (waAbhol) params.set('wa_a', '1')
     if (wnZust) params.set('wn_z', '1')
     if (wnSelbst) params.set('wn_s', '1')
-
     if (maxLength !== limits.length) params.set('l', String(maxLength))
     if (maxWidth !== limits.width) params.set('w', String(maxWidth))
     if (maxHeight !== limits.height) params.set('h', String(maxHeight))
     if (maxMasse !== limits.masse) params.set('m', String(maxMasse))
-
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
     setAnzeigenLimit(50)
@@ -241,58 +217,45 @@ export default function AuftragsboerseSeite() {
     maxHeight,
     maxMasse,
   ])
-
   // Backend-Abfrage: Filter, Suche, Sortierung, Count und Pagination laufen in der API.
   useEffect(() => {
     let cancelled = false
-
     async function loadJobs() {
       try {
         setLoading(true)
         setLoadError(null)
-
         const params = new URLSearchParams()
         params.set('page', String(page))
         params.set('limit', String(seitenGroesse))
-
         if (suchbegriff.trim()) params.set('q', suchbegriff.trim())
         if (verfahren) params.set('verfahren', verfahren)
         if (gewerblich) params.set('g', '1')
         if (privat) params.set('p', '1')
         if (sortierung) params.set('sort', sortierung)
-
         if (waSelbst) params.set('wa_s', '1')
         if (waAbhol) params.set('wa_a', '1')
         if (wnZust) params.set('wn_z', '1')
         if (wnSelbst) params.set('wn_s', '1')
-
         if (maxLength !== limits.length) params.set('l', String(maxLength))
         if (maxWidth !== limits.width) params.set('w', String(maxWidth))
         if (maxHeight !== limits.height) params.set('h', String(maxHeight))
         if (maxMasse !== limits.masse) params.set('m', String(maxMasse))
-
         const res = await fetch(`/api/auftraege?${params.toString()}`, {
           cache: 'no-store',
         })
-
         const json = (await res.json()) as ApiResponse
-
         if (!res.ok) {
           throw new Error(json?.error ?? 'Aufträge konnten nicht geladen werden.')
         }
-
         const mapped = (json.items ?? []).map((job): Auftrag => ({
           ...(job as unknown as Auftrag),
           warenausgabeDatum: toDate(job.warenausgabeDatum),
           warenannahmeDatum: toDate(job.warenannahmeDatum),
           dateien: (job as any).dateien ?? [],
         }))
-
         if (cancelled) return
-
         setJobs(mapped)
         setTotalCount(toFiniteNumber(json.total, 0))
-
         const nextLimits: Limits = {
           length: Math.max(
             DEFAULT_LIMITS.length,
@@ -311,25 +274,20 @@ export default function AuftragsboerseSeite() {
             toFiniteNumber(json.limits?.masse, DEFAULT_LIMITS.masse)
           ),
         }
-
         setLimits(nextLimits)
-
         // Wenn der Nutzer keinen Sliderwert in der URL gesetzt hat,
         // bleibt der Slider automatisch auf dem echten Maximum.
         if (!sp.get('l')) setMaxLength(nextLimits.length)
         if (!sp.get('w')) setMaxWidth(nextLimits.width)
         if (!sp.get('h')) setMaxHeight(nextLimits.height)
         if (!sp.get('m')) setMaxMasse(nextLimits.masse)
-
         setVerfahrenCounts({
           ...Object.fromEntries(VERFAHREN.map((v) => [v, 0])),
           ...(json.verfahren_counts ?? {}),
         })
-
         setAnzeigenLimit(50)
       } catch (error: any) {
         if (cancelled) return
-
         setLoadError(error?.message ?? 'Aufträge konnten nicht geladen werden.')
         setJobs([])
         setTotalCount(0)
@@ -337,9 +295,7 @@ export default function AuftragsboerseSeite() {
         if (!cancelled) setLoading(false)
       }
     }
-
     loadJobs()
-
     return () => {
       cancelled = true
     }
@@ -364,10 +320,8 @@ export default function AuftragsboerseSeite() {
     limits.masse,
     spKey,
   ])
-
   useEffect(() => {
     if (page !== 1) return
-
     observerRef.current?.disconnect()
     observerRef.current = new IntersectionObserver(
       ([entry]) => {
@@ -377,51 +331,37 @@ export default function AuftragsboerseSeite() {
       },
       { rootMargin: '100px' }
     )
-
     if (loadMoreRef.current) {
       observerRef.current.observe(loadMoreRef.current)
     }
-
     return () => observerRef.current?.disconnect()
   }, [jobs, page])
-
   const pageHref = (n: number) => {
     const params = new URLSearchParams(sp.toString())
-
     if (n <= 1) params.delete('page')
     else params.set('page', String(n))
-
     const qs = params.toString()
     return qs ? `${pathname}?${qs}` : pathname
   }
-
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse))
   const anzeigen = page === 1 ? jobs.slice(0, anzeigenLimit) : jobs
-
   const scrollTopBeforeDetailOpen = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     const link = target.closest('a')
-
     if (!link) return
-
     const href = link.getAttribute('href') || ''
     if (!href.includes('/auftragsboerse/auftraege/')) return
-
     window.scrollTo(0, 0)
     document.documentElement.scrollTop = 0
     document.body.scrollTop = 0
   }
-
   const bootLoading = loading && jobs.length === 0
-
   if (bootLoading) {
     return <BoerseLoading />
   }
-
   return (
     <>
       <Navbar />
-
       <button
         className={styles.hamburger}
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -431,11 +371,9 @@ export default function AuftragsboerseSeite() {
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
         <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
       </button>
-
       {sidebarOpen && (
         <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
       )}
-
       <div className={styles.wrapper}>
         <div
           ref={sidebarRef}
@@ -456,7 +394,6 @@ export default function AuftragsboerseSeite() {
             <option value="warenannahme-auf">Warenrückgabe aufsteigend</option>
             <option value="warenannahme-ab">Warenrückgabe absteigend</option>
           </select>
-
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -475,7 +412,6 @@ export default function AuftragsboerseSeite() {
               Suchen
             </button>
           </form>
-
           <label className={styles.sliderLabel}>
             Max. Länge: {maxLength} mm
           </label>
@@ -488,7 +424,6 @@ export default function AuftragsboerseSeite() {
             onChange={(e) => setMaxLength(+e.target.value)}
             className={styles.range}
           />
-
           <label className={styles.sliderLabel}>
             Max. Breite: {maxWidth} mm
           </label>
@@ -501,7 +436,6 @@ export default function AuftragsboerseSeite() {
             onChange={(e) => setMaxWidth(+e.target.value)}
             className={styles.range}
           />
-
           <label className={styles.sliderLabel}>
             Max. Höhe: {maxHeight} mm
           </label>
@@ -514,7 +448,6 @@ export default function AuftragsboerseSeite() {
             onChange={(e) => setMaxHeight(+e.target.value)}
             className={styles.range}
           />
-
           <label className={styles.sliderLabel}>
             Max. Masse: {maxMasse} kg
           </label>
@@ -527,7 +460,6 @@ export default function AuftragsboerseSeite() {
             onChange={(e) => setMaxMasse(+e.target.value)}
             className={styles.range}
           />
-
           <div className={styles.checkboxGroup}>
             <strong>Warenausgabe</strong>
             <label className={styles.checkboxLabel}>
@@ -547,7 +479,6 @@ export default function AuftragsboerseSeite() {
               Selbstanlieferung
             </label>
           </div>
-
           <div className={styles.checkboxGroup}>
             <strong>Warenrückgabe</strong>
             <label className={styles.checkboxLabel}>
@@ -567,7 +498,6 @@ export default function AuftragsboerseSeite() {
               Selbstabholung
             </label>
           </div>
-
           <div className={styles.checkboxGroup}>
             <strong>Verfahren</strong>
             {VERFAHREN.map((v) => (
@@ -591,7 +521,6 @@ export default function AuftragsboerseSeite() {
               Alle
             </label>
           </div>
-
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
@@ -612,7 +541,6 @@ export default function AuftragsboerseSeite() {
             </label>
           </div>
         </div>
-
         <div ref={contentRef} className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
             {loading
@@ -621,33 +549,28 @@ export default function AuftragsboerseSeite() {
                   totalCount === 1 ? 'offener Auftrag' : 'offene Aufträge'
                 }`}
           </h3>
-
           {loadError && (
             <div style={{ padding: '10px 0' }}>
               <strong>Fehler:</strong> {loadError}
             </div>
           )}
-
           {!loading && !loadError && totalCount === 0 && (
             <div style={{ padding: '10px 0', opacity: 0.9 }}>
               <strong>Keine passenden Aufträge gefunden.</strong>
             </div>
           )}
-
           <div className={styles.grid} onClickCapture={scrollTopBeforeDetailOpen}>
             {anzeigen.map((a) => (
               <ArtikelContainerAuftragsboerse key={a.id} artikel={a} />
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
           </div>
-
           <div className={styles.pagination}>
             {page > 1 && (
               <Link href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
               </Link>
             )}
-
             {Array.from({ length: totalPages }, (_, i) => (
               <Link
                 key={i + 1}
@@ -659,7 +582,6 @@ export default function AuftragsboerseSeite() {
                 {i + 1}
               </Link>
             ))}
-
             {page < totalPages && (
               <Link href={pageHref(page + 1)} className={styles.pageArrow}>
                 →
