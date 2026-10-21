@@ -817,3 +817,12 @@
 .reportSecondary{
   font-family:'Oswald', system-ui, sans-serif;
 }
+@supports (-webkit-touch-callout: none) {
+  .sortBtn,
+  .pageBtn,
+  .reportBtn,
+  .reportSecondary {
+    color: var(--text);
+    -webkit-text-fill-color: var(--text);
+  }
+}

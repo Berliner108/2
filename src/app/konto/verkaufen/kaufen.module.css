@@ -922,3 +922,18 @@
   opacity: 1;
   pointer-events: auto;
 }
+@supports (-webkit-touch-callout: none) {
+  .select,
+  .pageSize,
+  .segmentedBtn,
+  .pageBtn,
+  .starBtn {
+    color: #111;
+    -webkit-text-fill-color: #111;
+  }
+
+  .segmentedActive {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+  }
+}
