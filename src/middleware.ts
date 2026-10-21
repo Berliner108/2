@@ -5,7 +5,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 /* --- öffentlich: nur Login + Auth --- */
 function isAuthPath(path: string) { return path === '/auth' || path.startsWith('/auth/') }
 function isPublic(path: string) {
-  return path === '/login' || isAuthPath(path)
+  return path === '/login' || path === '/confirm-email' || isAuthPath(path)
 }
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
