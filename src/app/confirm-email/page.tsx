@@ -135,7 +135,6 @@ export default function ConfirmEmailPage() {
             <p style={{ margin: '0 0 1.5rem', color: '#4b5563' }}>
               Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen und deinen Account zu aktivieren.
             </p>
-
             <button
               type="button"
               onClick={handleConfirm}
