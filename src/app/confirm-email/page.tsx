@@ -157,6 +157,7 @@ export default function ConfirmEmailPage() {
           </>
         )}
       </div>
+      
     </div>
   )
   }
