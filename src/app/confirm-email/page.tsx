@@ -3,24 +3,52 @@
 import { useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase-browser'
 
-function safeFinalRedirect(nextRaw: string | null): string {
+type OtpType = 'email' | 'invite' | 'recovery'
+
+function safeInternal(input: string | null): string {
+  if (!input) return '/'
+
+  try {
+    const url = new URL(input, window.location.origin)
+    if (url.origin !== window.location.origin) return '/'
+    return url.pathname + url.search + url.hash || '/'
+  } catch {
+    return input.startsWith('/') ? input : '/'
+  }
+}
+
+function finalRedirect(nextRaw: string | null, otpType: OtpType): string {
+  if (otpType === 'recovery') {
+    try {
+      const nextUrl = new URL(nextRaw || '/', window.location.origin)
+
+      if (nextUrl.origin !== window.location.origin) {
+        return '/auth/new-password?redirect=%2F'
+      }
+
+      // resetPasswordForEmail übergibt:
+      // /auth/callback?flow=reset&redirect=...
+      if (nextUrl.pathname === '/auth/callback') {
+        const redirect = safeInternal(nextUrl.searchParams.get('redirect'))
+        return `/auth/new-password?redirect=${encodeURIComponent(redirect)}`
+      }
+
+      return `/auth/new-password?redirect=${encodeURIComponent(safeInternal(nextRaw))}`
+    } catch {
+      return '/auth/new-password?redirect=%2F'
+    }
+  }
+
   if (!nextRaw) return '/'
 
   try {
     const nextUrl = new URL(nextRaw, window.location.origin)
-
     if (nextUrl.origin !== window.location.origin) return '/'
 
-    // Der bisherige Signup übergibt /auth/callback?redirect=...
-    // Nach verifyOtp brauchen wir den Callback nicht mehr erneut aufzurufen.
+    // Sign-up/Invite können weiterhin einen bisherigen Callback als RedirectTo enthalten.
+    // Nach verifyOtp muss dieser Callback nicht noch einmal den Token verifizieren.
     if (nextUrl.pathname === '/auth/callback') {
-      const redirect = nextUrl.searchParams.get('redirect')
-      if (!redirect) return '/'
-
-      const finalUrl = new URL(redirect, window.location.origin)
-      if (finalUrl.origin !== window.location.origin) return '/'
-
-      return finalUrl.pathname + finalUrl.search + finalUrl.hash || '/'
+      return safeInternal(nextUrl.searchParams.get('redirect'))
     }
 
     return nextUrl.pathname + nextUrl.search + nextUrl.hash || '/'
@@ -32,6 +60,7 @@ function safeFinalRedirect(nextRaw: string | null): string {
 export default function ConfirmEmailPage() {
   const [tokenHash, setTokenHash] = useState('')
   const [nextRaw, setNextRaw] = useState<string | null>(null)
+  const [otpType, setOtpType] = useState<OtpType>('email')
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
 
@@ -39,16 +68,29 @@ export default function ConfirmEmailPage() {
     try {
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token_hash')
+      const type = params.get('type')
 
       if (!token) {
-        setError('Der Bestätigungslink ist unvollständig oder ungültig.')
+        setError('Der Link ist unvollständig oder ungültig.')
+        return
+      }
+
+      if (type && type !== 'email' && type !== 'invite' && type !== 'recovery') {
+        setError('Der Link ist ungültig.')
         return
       }
 
       setTokenHash(token)
+      setOtpType(
+        type === 'invite'
+          ? 'invite'
+          : type === 'recovery'
+            ? 'recovery'
+            : 'email'
+      )
       setNextRaw(params.get('next'))
     } catch {
-      setError('Der Bestätigungslink ist ungültig.')
+      setError('Der Link ist ungültig.')
     }
   }, [])
 
@@ -66,15 +108,32 @@ export default function ConfirmEmailPage() {
         error: verifyError,
       } = await supabase.auth.verifyOtp({
         token_hash: tokenHash,
-        type: 'email',
+        type: otpType,
       })
 
       if (verifyError || !data.session) {
-        setError(
-          verifyError?.message?.toLowerCase().includes('expired')
-            ? 'Der Bestätigungslink ist abgelaufen. Bitte fordere eine neue Bestätigungsmail an.'
-            : 'Die E-Mail-Adresse konnte nicht bestätigt werden. Bitte fordere eine neue Bestätigungsmail an.'
-        )
+        const expired = verifyError?.message?.toLowerCase().includes('expired')
+
+        if (otpType === 'invite') {
+          setError(
+            expired
+              ? 'Der Einladungslink ist abgelaufen. Bitte fordere eine neue Einladung an.'
+              : 'Die Einladung konnte nicht angenommen werden. Bitte fordere eine neue Einladung an.'
+          )
+        } else if (otpType === 'recovery') {
+          setError(
+            expired
+              ? 'Der Link zum Zurücksetzen des Passworts ist abgelaufen. Bitte fordere einen neuen Link an.'
+              : 'Der Link zum Zurücksetzen des Passworts ist ungültig. Bitte fordere einen neuen Link an.'
+          )
+        } else {
+          setError(
+            expired
+              ? 'Der Bestätigungslink ist abgelaufen. Bitte fordere eine neue Bestätigungsmail an.'
+              : 'Die E-Mail-Adresse konnte nicht bestätigt werden. Bitte fordere eine neue Bestätigungsmail an.'
+          )
+        }
+
         return
       }
 
@@ -90,17 +149,54 @@ export default function ConfirmEmailPage() {
       })
 
       if (!resp.ok) {
-        setError('Die E-Mail wurde bestätigt, die Anmeldung konnte aber nicht abgeschlossen werden.')
+        setError(
+          otpType === 'recovery'
+            ? 'Der Link wurde bestätigt, die Passwortänderung konnte aber nicht gestartet werden.'
+            : 'Die Bestätigung war erfolgreich, die Anmeldung konnte aber nicht abgeschlossen werden.'
+        )
         return
       }
 
-      window.location.href = safeFinalRedirect(nextRaw)
+      window.location.href = finalRedirect(nextRaw, otpType)
     } catch {
-      setError('Die E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuche es erneut.')
+      setError(
+        otpType === 'invite'
+          ? 'Die Einladung konnte nicht angenommen werden. Bitte versuche es erneut.'
+          : otpType === 'recovery'
+            ? 'Der Passwort-Reset konnte nicht gestartet werden. Bitte versuche es erneut.'
+            : 'Die E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuche es erneut.'
+      )
     } finally {
       setConfirming(false)
     }
   }
+
+  const title =
+    otpType === 'invite'
+      ? 'Einladung annehmen'
+      : otpType === 'recovery'
+        ? 'Passwort zurücksetzen'
+        : 'E-Mail-Adresse bestätigen'
+
+  const description =
+    otpType === 'invite'
+      ? 'Klicke auf den Button, um deine Einladung anzunehmen und deinen Account zu aktivieren.'
+      : otpType === 'recovery'
+        ? 'Klicke auf den Button, um mit dem Zurücksetzen deines Passworts fortzufahren.'
+        : 'Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen und deinen Account zu aktivieren.'
+
+  const buttonText =
+    confirming
+      ? otpType === 'invite'
+        ? 'Einladung wird angenommen…'
+        : otpType === 'recovery'
+          ? 'Wird geprüft…'
+          : 'Wird bestätigt…'
+      : otpType === 'invite'
+        ? 'Einladung annehmen'
+        : otpType === 'recovery'
+          ? 'Passwort zurücksetzen'
+          : 'E-Mail-Adresse bestätigen'
 
   return (
     <div
@@ -125,7 +221,7 @@ export default function ConfirmEmailPage() {
         }}
       >
         <h1 style={{ margin: '0 0 1rem', fontSize: '1.7rem', color: '#111827' }}>
-          E-Mail-Adresse bestätigen
+          {title}
         </h1>
 
         {error ? (
@@ -133,8 +229,9 @@ export default function ConfirmEmailPage() {
         ) : (
           <>
             <p style={{ margin: '0 0 1.5rem', color: '#4b5563' }}>
-              Klicke auf den Button, um deine E-Mail-Adresse zu bestätigen und deinen Account zu aktivieren.
+              {description}
             </p>
+
             <button
               type="button"
               onClick={handleConfirm}
@@ -152,12 +249,11 @@ export default function ConfirmEmailPage() {
                 opacity: !tokenHash || confirming ? 0.65 : 1,
               }}
             >
-              {confirming ? 'Wird bestätigt…' : 'E-Mail-Adresse bestätigen'}
+              {buttonText}
             </button>
           </>
         )}
       </div>
-      
     </div>
   )
-  }
+}
