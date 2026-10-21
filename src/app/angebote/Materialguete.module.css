@@ -41,19 +41,16 @@
 
 .dropdown {
   width: 200px;
-  padding: 0.6rem 0.8rem;
+  padding: 0.35rem 0.65rem;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   background: #fff;
   transition: border-color 0.2s ease;
   font-family: 'Oswald', sans-serif;
 }
 
 
-.dropdown option {
-  font-size: 1.05rem;
-}
 
 @supports (-webkit-touch-callout: none) {
   .dropdown,
