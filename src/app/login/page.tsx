@@ -71,6 +71,32 @@ function LoginInner() {
 
       if (raw.includes('@')) {
         emailToUse = raw.toLowerCase()
+
+        // Auch beim Login per E-Mail zwingend prüfen, ob die Adresse bestätigt ist.
+        try {
+          const res = await fetch('/api/check-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailToUse }),
+          })
+          const info = await res.json()
+
+          if (!res.ok) {
+            setError('Login derzeit nicht möglich. Bitte später erneut versuchen.')
+            setLoading(false)
+            return
+          }
+
+          if (info?.exists && info?.confirmed === false) {
+            setError('Bitte bestätige zuerst deine E-Mail.')
+            setLoading(false)
+            return
+          }
+        } catch {
+          setError('Login derzeit nicht möglich. Bitte später erneut versuchen.')
+          setLoading(false)
+          return
+        }
       } else {
         const name = raw.toLowerCase()
         const { data: rows, error: infoErr } = await supabase.rpc('email_for_username_info', { name })
