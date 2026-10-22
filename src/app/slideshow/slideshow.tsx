@@ -20,7 +20,7 @@ const images = [
     link: "/angebote" 
   },
   { 
-    src: "/images/slide2_zoomed_out.webp", 
+    src: "/images/recycling.jpg", 
     text1: "Revitalisiere deine Restlacke - statt sie ungenutzt einzulagern!",
     text2: "Recycle deine Altlacke, statt für die Entsorgung zu zahlen!", 
     link: "/verkaufen" 
