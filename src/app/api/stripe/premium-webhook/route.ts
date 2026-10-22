@@ -240,7 +240,6 @@ export async function POST(req: Request) {
       event.type,
       error?.message || error
     )
-
     /*
      * 500 ist hier ABSICHTLICH:
      * Stripe soll den Webhook erneut versuchen.
