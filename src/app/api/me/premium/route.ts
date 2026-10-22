@@ -1,3 +1,5 @@
+// src/app/api/me/premium/route.ts
+
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -30,6 +32,7 @@ export async function GET() {
         premium_trial_ends_at,
         premium_until,
         premium_exempt,
+        premium_payment_failed,
         stripe_subscription_id
       `)
       .eq('id', user.id)
@@ -59,7 +62,6 @@ export async function GET() {
 
     let cancelAtPeriodEnd = false
 
-    // Nur bei bestehendem bezahltem Abo Stripe abfragen
     if (profile.stripe_subscription_id) {
       try {
         const stripe = getStripe()
@@ -114,6 +116,8 @@ export async function GET() {
 
       hasSubscription: Boolean(profile.stripe_subscription_id),
       cancelAtPeriodEnd,
+
+      paymentFailed: profile.premium_payment_failed === true,
     })
   } catch (error: any) {
     console.error('[me/premium] Fehler:', error?.message || error)

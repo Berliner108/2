@@ -145,6 +145,7 @@ export async function POST(req: Request) {
             stripe_customer_id: customerId,
             stripe_subscription_id: subscription.id,
             premium_until: premiumUntil,
+            premium_payment_failed: false,
             updated_at: new Date().toISOString(),
           })
           .eq('id', userId)
@@ -179,6 +180,59 @@ export async function POST(req: Request) {
           '[premium-webhook] Premium-Zahlung fehlgeschlagen:',
           invoice.id
         )
+
+        // Subscription-ID – mit demselben Fallback wie oben
+        let subscriptionId: string | null = null
+
+        if (typeof invoice.subscription === 'string') {
+          subscriptionId = invoice.subscription
+        } else if (invoice.subscription?.id) {
+          subscriptionId = invoice.subscription.id
+        } else {
+          const parentSubscription =
+            invoice.parent?.subscription_details?.subscription
+
+          if (typeof parentSubscription === 'string') {
+            subscriptionId = parentSubscription
+          } else if (parentSubscription?.id) {
+            subscriptionId = parentSubscription.id
+          }
+        }
+
+        if (!subscriptionId) {
+          break
+        }
+
+        const subscription: any =
+          await stripe.subscriptions.retrieve(subscriptionId)
+
+        const purpose = subscription.metadata?.purpose
+        const userId = subscription.metadata?.scouti_user_id
+
+        if (
+          purpose !== 'scouti_premium' ||
+          !userId
+        ) {
+          break
+        }
+
+        const { error } = await admin
+          .from('profiles')
+          .update({
+            premium_payment_failed: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', userId)
+          .eq('stripe_subscription_id', subscription.id)
+
+        if (error) {
+          throw error
+        }
+
+        // WICHTIG:
+        // premium_until wird absichtlich NICHT verändert.
+        // Eine fehlgeschlagene Verlängerungszahlung darf
+        // keine neue Premium-Laufzeit freischalten.
 
         break
       }

@@ -21,6 +21,7 @@ type PremiumStatusResponse = {
   premiumUntil: string | null
   hasSubscription: boolean
   cancelAtPeriodEnd: boolean
+  paymentFailed: boolean
 }
 
 /* ---------- Password rules (Option A) ---------- */
@@ -1187,6 +1188,16 @@ const canSaveImpressum = useMemo(() => {
             </span>
           </div>
 
+          {premiumStatus.paymentFailed && (
+            <div className={styles.premiumPaymentWarning} role="alert">
+              <strong>Zahlung fehlgeschlagen</strong>
+              <span>
+                Die Verlängerungszahlung konnte nicht durchgeführt werden.
+                Bitte aktualisiere deine Zahlungsmethode.
+              </span>
+            </div>
+          )}
+
           <div className={styles.premiumGrid}>
             {premiumStatus.status === 'trial' && (
               <>
@@ -1257,7 +1268,9 @@ const canSaveImpressum = useMemo(() => {
                 onClick={handleManagePaymentMethod}
                 disabled={premiumActionLoading}
               >
-                Zahlungsmethode verwalten
+                {premiumStatus.paymentFailed
+                  ? 'Zahlungsmethode aktualisieren'
+                  : 'Zahlungsmethode verwalten'}
               </button>
             )}
 

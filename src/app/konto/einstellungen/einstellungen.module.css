@@ -809,3 +809,23 @@
   outline-offset: 2px;
 }
 
+.premiumPaymentWarning {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.premiumPaymentWarning strong {
+  font-size: 1rem;
+}
+
+.premiumPaymentWarning span {
+  line-height: 1.45;
+}
+
