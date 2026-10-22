@@ -360,6 +360,44 @@ const handleCancelPremium = async () => {
   }
 }
 
+
+const handleReactivatePremium = async () => {
+  if (premiumActionLoading) return
+
+  setPremiumActionLoading(true)
+
+  try {
+    const res = await fetch('/api/stripe/premium-reactivate', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (!res.ok) {
+      setToast({
+        type: 'error',
+        message: json?.error || 'Kündigung konnte nicht zurückgenommen werden.',
+      })
+      return
+    }
+
+    await loadPremiumStatus()
+
+    setToast({
+      type: 'success',
+      message: 'Deine Premium Mitgliedschaft verlängert sich wieder automatisch.',
+    })
+  } catch {
+    setToast({
+      type: 'error',
+      message: 'Kündigung konnte nicht zurückgenommen werden.',
+    })
+  } finally {
+    setPremiumActionLoading(false)
+  }
+}
+
   // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
     ;(async () => {
@@ -876,6 +914,13 @@ const sections = useMemo(() => [
 const [activeId, setActiveId] = useState<string>('profil');
 
 useEffect(() => {
+  if (!premiumStatus || premiumStatus.status === 'exempt') return
+  if (typeof window !== 'undefined' && window.location.hash) return
+
+  setActiveId('premium')
+}, [premiumStatus])
+
+useEffect(() => {
   if (!profileLoaded) return;
 
   const obs = new IntersectionObserver(
@@ -1195,6 +1240,20 @@ const canSaveImpressum = useMemo(() => {
                 {premiumActionLoading
                   ? 'Wird bearbeitet …'
                   : 'Zum Laufzeitende kündigen'}
+              </button>
+            )}
+
+
+            {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+              <button
+                type="button"
+                className={styles.saveButton}
+                onClick={handleReactivatePremium}
+                disabled={premiumActionLoading}
+              >
+                {premiumActionLoading
+                  ? 'Wird bearbeitet …'
+                  : 'Kündigung zurücknehmen'}
               </button>
             )}
           </div>
