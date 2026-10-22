@@ -20,18 +20,6 @@ const images = [
     link: "/angebote" 
   },
   { 
-    src: "/images/recycling.jpg", 
-    text1: "Revitalisiere deine Restlacke - statt sie ungenutzt einzulagern!",
-    text2: "Recycle deine Altlacke, statt für die Entsorgung zu zahlen!", 
-    link: "/verkaufen" 
-  },
-  { 
-    src: "/images/asdf.png", 
-    text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
-    text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
-    link: "/wissenswertes#Sofunktioniert’s" // funktioniert jetzt zuverlässig
-  },
-  { 
     src: "/images/miguelphoto-7IIczOkj4iw-unsplash.png", 
     text1: "Galvanische Beschichtungen für höchste Ansprüche", 
     text2: "Verzinken, Vernickeln, Verchromen & weitere galvanische Verfahren",
@@ -45,10 +33,22 @@ const images = [
     isFullScreen: true
   },
   { 
+    src: "/images/recycling.jpg", 
+    text1: "Revitalisiere deine Restlacke - statt sie ungenutzt einzulagern!",
+    text2: "Recycle deine Altlacke, statt für die Entsorgung zu zahlen!", 
+    link: "/verkaufen" 
+  },
+  { 
     src: "/images/avantrend-color-fan-496995.jpg", 
     text1: "Über 4.000.000 Farbtöne und Variationen verfügbar", 
     text2: "Finden Sie das passendste Angebot!", 
     link: "/kaufen" 
+  },
+  { 
+    src: "/images/asdf.png", 
+    text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
+    text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
+    link: "/wissenswertes#Sofunktioniert’s"
   },
 ];
 
