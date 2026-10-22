@@ -665,19 +665,19 @@ const Register = () => {
             <strong>14 Tage kostenlos testen</strong>
 
             <p>
-              Nach der Registrierung kannst du Scouti 14 Tage kostenlos nutzen.
-              Danach ist Scouti Premium für neue Geschäftsaktionen erforderlich.
+              Nach der Registrierung kannst du Beschichter Scout 14 Tage kostenlos nutzen.
+              Danach ist die Premium Mitgliedschaft für neue Geschäftsaktionen erforderlich.
             </p>
 
             <p>
               <strong>249 € pro Jahr.</strong> Während der Testphase erfolgt keine
-              automatische Abbuchung. Erst wenn du Scouti Premium aktiv buchst,
+              automatische Abbuchung. Erst wenn du die Premium Mitgliedschaft aktiv buchst,
               wird das Jahresabo kostenpflichtig.
             </p>
 
             <p>
-              Ein gebuchtes Jahresabo verlängert sich anschließend automatisch
-              um jeweils ein Jahr, sofern es nicht zum Laufzeitende gekündigt wird.
+              Die Premium Mitgliedschaft verlängert sich anschließend automatisch
+              um jeweils ein Jahr, sofern nicht zum Laufzeitende gekündigt wird. 
             </p>
           </div>
 
