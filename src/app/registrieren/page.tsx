@@ -214,7 +214,7 @@ const Register = () => {
     }
     if (!termsAccepted) {
   newErrors.termsAccepted =
-    'Bitte akzeptiere die AGB, Nutzungsbedingungen und Datenschutzerklärung.';
+    'Bitte akzeptiere die AGB und Nutzungsbedingungen.';
 }
 
     setErrors(newErrors);
@@ -661,6 +661,26 @@ const Register = () => {
               </div>
             </div>
           )}
+          <div className={styles.premiumNotice}>
+            <strong>14 Tage kostenlos testen</strong>
+
+            <p>
+              Nach der Registrierung kannst du Scouti 14 Tage kostenlos nutzen.
+              Danach ist Scouti Premium für neue Geschäftsaktionen erforderlich.
+            </p>
+
+            <p>
+              <strong>249 € pro Jahr.</strong> Während der Testphase erfolgt keine
+              automatische Abbuchung. Erst wenn du Scouti Premium aktiv buchst,
+              wird das Jahresabo kostenpflichtig.
+            </p>
+
+            <p>
+              Ein gebuchtes Jahresabo verlängert sich anschließend automatisch
+              um jeweils ein Jahr, sofern es nicht zum Laufzeitende gekündigt wird.
+            </p>
+          </div>
+
           <div className={styles.termsBox}>
   <label className={styles.termsLabel}>
     <input
@@ -678,20 +698,20 @@ const Register = () => {
       }}
     />
     <span>
-  Ich habe die{' '}
-  <Link href="/agb" target="_blank" rel="noopener noreferrer">
-    AGB
-  </Link>
-  , die{' '}
-  <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
-    Datenschutzerklärung
-  </Link>{' '}
-  und die{' '}
-  <Link href="/nutzungsbedingungen" target="_blank" rel="noopener noreferrer">
-    Nutzungsbedingungen
-  </Link>{' '}
-  gelesen und akzeptiere diese.
-</span>
+      Ich akzeptiere die{' '}
+      <Link href="/agb" target="_blank" rel="noopener noreferrer">
+        AGB
+      </Link>
+      {' '}und die{' '}
+      <Link href="/nutzungsbedingungen" target="_blank" rel="noopener noreferrer">
+        Nutzungsbedingungen
+      </Link>
+      . Die{' '}
+      <Link href="/datenschutz" target="_blank" rel="noopener noreferrer">
+        Datenschutzerklärung
+      </Link>
+      {' '}habe ich zur Kenntnis genommen.
+    </span>
   </label>
 
   {errors.termsAccepted && (
