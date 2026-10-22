@@ -398,6 +398,39 @@ const handleReactivatePremium = async () => {
   }
 }
 
+
+const handleManagePaymentMethod = async () => {
+  if (premiumActionLoading) return
+
+  setPremiumActionLoading(true)
+
+  try {
+    const res = await fetch('/api/stripe/premium-billing', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (!res.ok || !json?.url) {
+      setToast({
+        type: 'error',
+        message: json?.error || 'Zahlungsmethode konnte nicht geöffnet werden.',
+      })
+      return
+    }
+
+    window.location.href = json.url
+  } catch {
+    setToast({
+      type: 'error',
+      message: 'Zahlungsmethode konnte nicht geöffnet werden.',
+    })
+  } finally {
+    setPremiumActionLoading(false)
+  }
+}
+
   // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
     ;(async () => {
@@ -1217,6 +1250,17 @@ const canSaveImpressum = useMemo(() => {
           )}
 
           <div className={styles.premiumActions}>
+            {premiumStatus.status === 'active' && (
+              <button
+                type="button"
+                className={styles.premiumSecondaryButton}
+                onClick={handleManagePaymentMethod}
+                disabled={premiumActionLoading}
+              >
+                Zahlungsmethode verwalten
+              </button>
+            )}
+
             {(premiumStatus.status === 'trial' || premiumStatus.status === 'expired') && (
               <button
                 type="button"

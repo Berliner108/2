@@ -775,3 +775,37 @@
   }
 }
 
+.premiumActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.premiumSecondaryButton {
+  width: 100%;
+  padding: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.premiumSecondaryButton:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.premiumSecondaryButton:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.premiumSecondaryButton:focus-visible {
+  outline: 3px solid rgba(0,180,216,.25);
+  outline-offset: 2px;
+}
+
