@@ -13,6 +13,16 @@ import { AcceptInvitationOnMount } from '../../components/invitations/AcceptInvi
 type ToastType = 'success' | 'error' | 'info'
 type ToastState = { type: ToastType; message: string } | null
 
+type PremiumStatusResponse = {
+  status: 'exempt' | 'active' | 'trial' | 'expired'
+  premiumExempt: boolean
+  trialEndsAt: string | null
+  trialDaysRemaining: number
+  premiumUntil: string | null
+  hasSubscription: boolean
+  cancelAtPeriodEnd: boolean
+}
+
 /* ---------- Password rules (Option A) ---------- */
 const MIN_PW = 8
 const MAX_PW = 24
@@ -175,6 +185,9 @@ const Einstellungen = (): JSX.Element => {
   const router = useRouter()
 const searchParams = useSearchParams()
 const [toast, setToast] = useState<ToastState>(null)
+const [premiumStatus, setPremiumStatus] = useState<PremiumStatusResponse | null>(null)
+const [premiumLoading, setPremiumLoading] = useState(true)
+const [premiumActionLoading, setPremiumActionLoading] = useState(false)
 
   // Anzeige-Basics
   const [username, setUsername] = useState<string>('') // read-only
@@ -236,6 +249,117 @@ const loadCustomNda = async () => {
     setCustomNda(null)
   }
 }
+  const loadPremiumStatus = async () => {
+  try {
+    setPremiumLoading(true)
+
+    const res = await fetch('/api/me/premium', {
+      cache: 'no-store',
+      credentials: 'include',
+    })
+
+    if (!res.ok) {
+      setPremiumStatus(null)
+      return
+    }
+
+    const json: PremiumStatusResponse = await res.json()
+    setPremiumStatus(json)
+  } catch {
+    setPremiumStatus(null)
+  } finally {
+    setPremiumLoading(false)
+  }
+}
+
+const formatPremiumDate = (value?: string | null) => {
+  if (!value) return '—'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
+}
+
+const handleActivatePremium = async () => {
+  if (premiumActionLoading) return
+
+  setPremiumActionLoading(true)
+
+  try {
+    const res = await fetch('/api/stripe/premium-checkout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (!res.ok || !json?.url) {
+      setToast({
+        type: 'error',
+        message: json?.error || 'Premium Mitgliedschaft konnte nicht gestartet werden.',
+      })
+      return
+    }
+
+    window.location.href = json.url
+  } catch {
+    setToast({
+      type: 'error',
+      message: 'Premium Mitgliedschaft konnte nicht gestartet werden.',
+    })
+  } finally {
+    setPremiumActionLoading(false)
+  }
+}
+
+const handleCancelPremium = async () => {
+  if (premiumActionLoading) return
+
+  const confirmed = window.confirm(
+    'Möchtest du deine Premium Mitgliedschaft wirklich zum Ende der aktuellen Laufzeit kündigen? Dein Zugang bleibt bis dahin vollständig aktiv.'
+  )
+
+  if (!confirmed) return
+
+  setPremiumActionLoading(true)
+
+  try {
+    const res = await fetch('/api/stripe/premium-cancel', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (!res.ok) {
+      setToast({
+        type: 'error',
+        message: json?.error || 'Premium Mitgliedschaft konnte nicht gekündigt werden.',
+      })
+      return
+    }
+
+    await loadPremiumStatus()
+
+    setToast({
+      type: 'success',
+      message: 'Deine Premium Mitgliedschaft wurde zum Laufzeitende gekündigt.',
+    })
+  } catch {
+    setToast({
+      type: 'error',
+      message: 'Premium Mitgliedschaft konnte nicht gekündigt werden.',
+    })
+  } finally {
+    setPremiumActionLoading(false)
+  }
+}
+
   // ===== Laden (API: GET /api/profile) =====
   useEffect(() => {
     ;(async () => {
@@ -245,8 +369,11 @@ const loadCustomNda = async () => {
         if (!user) {
   setToast({ type: 'info', message: 'Bitte melde dich an.' })
   setProfileLoaded(true)
+  setPremiumLoading(false)
   return
 }
+
+        await loadPremiumStatus()
 
         const res = await fetch('/api/profile', { cache: 'no-store' })
         const j: ApiGetResponse = await res.json()
@@ -728,6 +855,9 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
 
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = useMemo(() => [
+  ...(premiumStatus && premiumStatus.status !== 'exempt'
+    ? [{ id: 'premium', label: 'Premium Mitgliedschaft' }]
+    : []),
   { id: 'profil', label: 'Profil' },
   { id: 'konto', label: 'Kontoart & Anschrift' },
   ...(!isPrivatePerson
@@ -740,7 +870,7 @@ const sections = useMemo(() => [
   { id: 'bewertungen', label: 'Bewertungen' },
   { id: 'einladungen', label: 'Einladungen' },
   { id: 'loeschen', label: 'Löschen' },
-], [isPrivatePerson])
+], [isPrivatePerson, premiumStatus])
 
 
 const [activeId, setActiveId] = useState<string>('profil');
@@ -928,6 +1058,148 @@ const canSaveImpressum = useMemo(() => {
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
+
+      {!premiumLoading && premiumStatus && premiumStatus.status !== 'exempt' && (
+        <div id="premium" className={`${styles.kontoContainer} ${styles.premiumContainer}`}>
+          <div className={styles.premiumHeader}>
+            <div>
+              <h3 className={styles.subSectionTitle}>Premium Mitgliedschaft</h3>
+
+              {premiumStatus.status === 'trial' && (
+                <p className={styles.premiumLead}>
+                  Deine kostenlose Testphase ist aktiv.
+                </p>
+              )}
+
+              {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+                <p className={styles.premiumLead}>
+                  Deine Premium Mitgliedschaft ist aktiv.
+                </p>
+              )}
+
+              {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+                <p className={styles.premiumLead}>
+                  Deine Premium Mitgliedschaft ist zum Laufzeitende gekündigt.
+                </p>
+              )}
+
+              {premiumStatus.status === 'expired' && (
+                <p className={styles.premiumLead}>
+                  Deine kostenlose Testphase ist beendet.
+                </p>
+              )}
+            </div>
+
+            <span
+              className={`${styles.premiumStatusBadge} ${
+                premiumStatus.status === 'active'
+                  ? styles.premiumStatusActive
+                  : premiumStatus.status === 'trial'
+                    ? styles.premiumStatusTrial
+                    : styles.premiumStatusExpired
+              }`}
+            >
+              {premiumStatus.status === 'active'
+                ? premiumStatus.cancelAtPeriodEnd
+                  ? 'Gekündigt'
+                  : 'Aktiv'
+                : premiumStatus.status === 'trial'
+                  ? 'Testphase'
+                  : 'Nicht aktiv'}
+            </span>
+          </div>
+
+          <div className={styles.premiumGrid}>
+            {premiumStatus.status === 'trial' && (
+              <>
+                <div className={styles.premiumInfoCard}>
+                  <span className={styles.premiumInfoLabel}>Verbleibende Testphase</span>
+                  <strong>
+                    {premiumStatus.trialDaysRemaining === 1
+                      ? '1 Tag'
+                      : `${premiumStatus.trialDaysRemaining} Tage`}
+                  </strong>
+                </div>
+
+                <div className={styles.premiumInfoCard}>
+                  <span className={styles.premiumInfoLabel}>Testphase endet am</span>
+                  <strong>{formatPremiumDate(premiumStatus.trialEndsAt)}</strong>
+                </div>
+              </>
+            )}
+
+            {premiumStatus.status === 'active' && (
+              <div className={styles.premiumInfoCard}>
+                <span className={styles.premiumInfoLabel}>
+                  {premiumStatus.cancelAtPeriodEnd ? 'Zugang aktiv bis' : 'Aktuelle Laufzeit bis'}
+                </span>
+                <strong>{formatPremiumDate(premiumStatus.premiumUntil)}</strong>
+              </div>
+            )}
+
+            <div className={styles.premiumInfoCard}>
+              <span className={styles.premiumInfoLabel}>Preis</span>
+              <strong>249 € / Jahr</strong>
+            </div>
+          </div>
+
+          {premiumStatus.status === 'trial' && (
+            <p className={styles.premiumDescription}>
+              Während der Testphase erfolgt keine automatische Abbuchung.
+              Erst wenn du die Premium Mitgliedschaft aktiv buchst, wird das Jahresabo kostenpflichtig.
+            </p>
+          )}
+
+          {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+            <p className={styles.premiumDescription}>
+              Die Premium Mitgliedschaft verlängert sich automatisch um jeweils ein Jahr,
+              sofern sie nicht zum Laufzeitende gekündigt wird.
+            </p>
+          )}
+
+          {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+            <p className={styles.premiumDescription}>
+              Es erfolgt keine weitere automatische Verlängerung.
+              Dein Premium-Zugang bleibt bis zum angezeigten Datum vollständig aktiv.
+            </p>
+          )}
+
+          {premiumStatus.status === 'expired' && (
+            <p className={styles.premiumDescription}>
+              Für neue Geschäftsaktionen ist eine aktive Premium Mitgliedschaft erforderlich.
+              Bereits laufende Vorgänge kannst du weiterhin abschließen.
+            </p>
+          )}
+
+          <div className={styles.premiumActions}>
+            {(premiumStatus.status === 'trial' || premiumStatus.status === 'expired') && (
+              <button
+                type="button"
+                className={styles.saveButton}
+                onClick={handleActivatePremium}
+                disabled={premiumActionLoading}
+              >
+                {premiumActionLoading
+                  ? 'Wird geöffnet …'
+                  : 'Premium Mitgliedschaft aktivieren – 249 € / Jahr'}
+              </button>
+            )}
+
+            {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+              <button
+                type="button"
+                className={styles.premiumCancelButton}
+                onClick={handleCancelPremium}
+                disabled={premiumActionLoading}
+              >
+                {premiumActionLoading
+                  ? 'Wird bearbeitet …'
+                  : 'Zum Laufzeitende kündigen'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
       <div id="profil" className={styles.kontoContainer}>
