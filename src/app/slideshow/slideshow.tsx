@@ -45,7 +45,7 @@ const images = [
     isFullScreen: true
   },
   { 
-    src: "/images/lyasco-colors-2232602.jpg", 
+    src: "/images/avantrend-color-fan-496995.jpg", 
     text1: "Über 4.000.000 Farbtöne und Variationen verfügbar", 
     text2: "Finden Sie das passendste Angebot!", 
     link: "/kaufen" 
