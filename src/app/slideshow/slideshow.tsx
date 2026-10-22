@@ -45,7 +45,7 @@ const images = [
     isFullScreen: true
   },
   { 
-    src: "/images/c388d202-5701-4d76-90b9-16519d01e3ba.png", 
+    src: "/images/lyasco-colors-2232602.jpg", 
     text1: "Über 4.000.000 Farbtöne und Variationen verfügbar", 
     text2: "Finden Sie das passendste Angebot!", 
     link: "/kaufen" 
