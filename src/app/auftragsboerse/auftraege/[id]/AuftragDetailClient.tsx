@@ -126,7 +126,7 @@ const specificationLabels: Record<string, string> = {
   zinksystem: 'Galvanisches Zinksystem',
   galvanikapplikation: 'Ausführung',
   galvanikausfuehrung: 'Ausführung',
-  galvanikpassivierung: 'Passivierung / Ausführung',
+  galvanikpassivierung: 'Passivierung / Chromatierung',
   galvaniknachbehandlung: 'Optionale Nachbehandlung',
   optionale_nachbehandlung: 'Optionale Nachbehandlung',
   optionalenachbehandlung: 'Optionale Nachbehandlung',
@@ -153,6 +153,7 @@ const specificationLabels: Record<string, string> = {
   // Neue Verfahren / Oberflächenbearbeitung
   strahlziel: 'Bearbeitungsziel',
   bearbeitungsziel: 'Bearbeitungsziel',
+  beizwerkstoff: 'Werkstoff / Beizart',
   vorgabe: 'Vorgabe / Norm',
   sonderverfahrenvorgabe: 'Zusätzliche Vorgabe / gewünschte Oberfläche',
   kantenradius: 'Gewünschter Kantenradius',

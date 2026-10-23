@@ -511,7 +511,10 @@ useEffect(() => {
 
   const verzinkenText = `
     <strong>Verzinken</strong> bezeichnet das Aufbringen einer Zinkschicht auf Stahl oder andere geeignete Eisenwerkstoffe, um insbesondere den Korrosionsschutz zu verbessern. Je nach Bauteil, Einsatzbereich und gewünschter Schichteigenschaft stehen unterschiedliche Verfahren zur Verfügung.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    
+    <h4>Passivierung / Chromatierung bei galvanischem Verzinken</h4>
+    Nach dem galvanischen Verzinken kann eine zusätzliche Konversionsschicht gefordert werden. Übliche Angaben sind beispielsweise <strong>Blaupassivieren, Gelbpassivieren, Dickschichtpassivieren, Schwarzpassivieren</strong> oder <strong>Schwarzchromatieren</strong>. Die gewünschte Ausführung sollte ausdrücklich angegeben werden, da Optik, Korrosionsschutz und chemisches System voneinander abweichen können.<br><br>
+<h4>Typische Prozesskette / Vorbehandlung</h4>
     Die Prozesskette unterscheidet sich je nach Verzinkungsverfahren. Beim <strong>Feuerverzinken</strong> ist typisch: Entfetten → Beizen → Spülen → Flussmittelbehandlung → Trocknen → Feuerverzinken → Nachbearbeitung / Kontrolle. Beim <strong>galvanischen Verzinken</strong> ist typisch: Reinigen / Entfetten → Beizen bzw. Aktivieren → Spülen → galvanisch Verzinken → Passivieren → ggf. Versiegeln und Trocknen. Bei starkem Zunder oder besonderen Oberflächenzuständen kann eine zusätzliche mechanische Vorbehandlung erforderlich sein.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
@@ -775,7 +778,10 @@ useEffect(() => {
 
   const beizenText = `
     <strong>Beizen</strong> ist eine chemische Oberflächenbehandlung, bei der Oxidschichten, Zunder, Rost oder andere anorganische Verunreinigungen entfernt werden. Das Verfahren wird häufig als Vorbereitung für galvanische, chemische oder lacktechnische Folgeprozesse eingesetzt.<br><br>
-    <h4>Typische Anwendungen</h4>
+    
+    <h4>Werkstoff / Beizart</h4>
+    Das Beizverfahren muss zum Grundwerkstoff passen. Für die Anfrage sollte daher angegeben werden, ob es sich um <strong>Edelstahl, Stahl, Aluminium</strong> oder einen anderen Werkstoff handelt. Beizmedium, Prozessführung und Ziel der Behandlung unterscheiden sich je nach Werkstoff deutlich.<br><br>
+<h4>Typische Anwendungen</h4>
     <ul><li>Entfernen von Zunder nach Wärmebehandlung oder Schweißen</li><li>Reinigen metallischer Oberflächen vor Beschichtung</li><li>Vorbereitung vor Verzinken, Phosphatieren, Eloxieren oder galvanischen Verfahren</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul><li>Werkstoff und Legierung</li><li>Art und Zustand der Verunreinigung bzw. Oxidschicht</li><li>gewünschter Oberflächenzustand nach dem Beizen</li><li>empfindliche Maß-, Dicht- oder Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>

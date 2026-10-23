@@ -151,8 +151,16 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'radio',
       name: 'galvanikPassivierung',
-      label: 'Passivierung / Ausführung:',
-      options: ['Blau', 'Gelb', 'Schwarz', 'Dickschichtpassivierung'],
+      label: 'Passivierung / Chromatierung:',
+      options: [
+        'Blaupassivieren',
+        'Gelbpassivieren',
+        'Dickschichtpassivieren',
+        'Schwarzpassivieren',
+        'Schwarzchromatieren',
+        'Andere / nach Vorgabe',
+        'Keine / nicht erforderlich'
+      ],
       dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
     },
     {
@@ -222,6 +230,18 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
   Beizen: [
+    {
+      type: 'dropdown',
+      name: 'beizwerkstoff',
+      label: 'Werkstoff / Beizart:',
+      options: [
+        'Edelstahl',
+        'Stahl',
+        'Aluminium',
+        'Andere / nach Vorgabe'
+      ],
+      required: true
+    },
     {
       type: 'radio',
       name: 'verfahren',
