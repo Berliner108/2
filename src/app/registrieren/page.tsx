@@ -665,7 +665,7 @@ const Register = () => {
             <strong>14 Tage Premium kostenlos testen</strong>
 
             <p>
-              Dein Scouti-Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
+              Dein Beschichter Scout-Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
               Registrierung erhältst du zusätzlich 14 Tage Zugriff auf alle
               Premium-Anbieterfunktionen.
             </p>

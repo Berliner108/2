@@ -1233,7 +1233,7 @@ const canSaveImpressum = useMemo(() => {
           </div>
 
           <p className={styles.premiumDescription}>
-            Mit Premium kannst du aktiv neue Geschäfte über Scouti gewinnen: auf Aufträge und Lackanfragen bieten, Artikel verkaufen und neue geschäftliche Kontakte starten. Aufträge und Lackanfragen einstellen, kaufen und die Plattform durchsuchen bleibt kostenlos.
+            Mit Premium kannst du aktiv neue Geschäfte über Beschichter Scout gewinnen: auf Aufträge und Lackanfragen bieten, Artikel verkaufen und neue geschäftliche Kontakte starten. Aufträge und Lackanfragen einstellen, kaufen und die Plattform durchsuchen bleibt kostenlos.
           </p>
 
           {premiumStatus.status === 'trial' && (
