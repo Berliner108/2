@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { getStripe } from '@/lib/stripe'
+import { hasPremiumAccess } from '@/lib/premium'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs' // Node-Runtime sicherstellen (Stripe + fs etc.)
@@ -84,6 +85,35 @@ export async function POST(
     const sb = await supabaseServer()
     const { data: { user } } = await sb.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Nicht angemeldet' }, { status: 401 })
+
+    // Premium ist die erste Voraussetzung fürs Bieten.
+    const { data: premiumProfile, error: premiumError } = await sb
+      .from('profiles')
+      .select('premium_exempt, premium_trial_ends_at, premium_until')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (premiumError) {
+      return NextResponse.json(
+        {
+          error: 'premium_check_failed',
+          message: 'Premium-Status konnte nicht geprüft werden.',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!premiumProfile || !hasPremiumAccess(premiumProfile)) {
+      return NextResponse.json(
+        {
+          error: 'premium_required',
+          reason: 'premium_required',
+          message:
+            'Zum Abgeben eines Angebots benötigst du eine aktive Premium Mitgliedschaft.',
+        },
+        { status: 403 }
+      )
+    }
 
     let body: any = {}
     try {

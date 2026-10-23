@@ -11,6 +11,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
+import PremiumRequiredModal from '@/components/premium/PremiumRequiredModal';
 
 /* ===================== Typen ===================== */
 type ApiItem = {
@@ -548,6 +549,9 @@ function PageBody() {
   // Connect (Stripe) Status
   const [connect, setConnect] = useState<ConnectStatus | null>(null);
   const [connectLoaded, setConnectLoaded] = useState(false);
+  const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
+  const [premiumLoaded, setPremiumLoaded] = useState(false);
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
 
   const requestId = rawParam ? decodeURIComponent(String(rawParam)) : '';
 
@@ -638,6 +642,38 @@ function PageBody() {
     };
   }, [requestId, toastError]);
 
+
+  const fetchPremium = useCallback(async () => {
+    try {
+      const r = await fetch('/api/me/premium', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
+
+      const j = await r.json().catch(() => ({} as any));
+
+      if (r.status === 401) {
+        setPremiumStatus('not_authenticated');
+        return;
+      }
+
+      if (!r.ok) {
+        setPremiumStatus('error');
+        return;
+      }
+
+      setPremiumStatus(String(j?.status || '').toLowerCase());
+    } catch {
+      setPremiumStatus('error');
+    } finally {
+      setPremiumLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPremium();
+  }, [fetchPremium]);
+
   // Connect-Status laden (stabil, ohne Flackern)
   const fetchConnect = useCallback(async () => {
     try {
@@ -707,8 +743,54 @@ function PageBody() {
     }
   }, [toastError]);
 
+
+  const hasPremium =
+    premiumStatus === 'active' ||
+    premiumStatus === 'trial' ||
+    premiumStatus === 'exempt';
+
+  async function ensurePremiumForOffer(): Promise<boolean> {
+    try {
+      const res = await fetch('/api/me/premium', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
+
+      const data = await res.json().catch(() => ({} as any));
+
+      if (res.status === 401) {
+        toastError('Bitte melde dich an.');
+        return false;
+      }
+
+      if (!res.ok) {
+        toastError(data?.message || data?.error || 'Premium-Status konnte nicht geprüft werden.');
+        return false;
+      }
+
+      const status = String(data?.status || '').toLowerCase();
+      const ok = status === 'active' || status === 'trial' || status === 'exempt';
+
+      setPremiumStatus(status);
+      setPremiumLoaded(true);
+
+      if (!ok) {
+        setPremiumModalOpen(true);
+        return false;
+      }
+
+      return true;
+    } catch {
+      toastError('Premium-Status konnte nicht geprüft werden. Bitte versuche es erneut.');
+      return false;
+    }
+  }
+
   async function handleSubmitOffer() {
     if (submitting) return;
+
+    const premiumOk = await ensurePremiumForOffer();
+    if (!premiumOk) return;
 
     const baseStr = (basisPreis || '').replace(/\s/g, '');
     const shipStr = (versandPreis || '').replace(/\s/g, '');
@@ -792,6 +874,16 @@ function PageBody() {
       const j = await res.json().catch(() => ({} as any));
 
       if (!res.ok) {
+        if (
+          res.status === 403 &&
+          (j?.error === 'premium_required' || j?.reason === 'premium_required')
+        ) {
+          setPremiumStatus('expired');
+          setPremiumLoaded(true);
+          setPremiumModalOpen(true);
+          return;
+        }
+
         const field = (j?.field || j?.error_field || '').toString().toLowerCase();
         if (field.includes('item') && field.includes('cent')) throw new Error('Bitte einen gültigen Artikelpreis angeben.');
         if (field.includes('shipping') && field.includes('cent')) {
@@ -866,12 +958,20 @@ function PageBody() {
   const reviewsHref = profileReviewsHrefFromView(artikel);
   const messageTarget = encodeURIComponent(artikel.user_handle || artikel.user || '');
   const darfAngebotAbgeben =
-  connectLoaded &&
-  connect?.ready === true;
+    premiumLoaded &&
+    hasPremium &&
+    connectLoaded &&
+    connect?.ready === true;
 
-const stripeBlockiertAngebot =
-  connectLoaded &&
-  connect?.ready === false;
+  const premiumBlockiertAngebot =
+    premiumLoaded &&
+    !hasPremium;
+
+  const stripeBlockiertAngebot =
+    premiumLoaded &&
+    hasPremium &&
+    connectLoaded &&
+    connect?.ready === false;
   const basisPreisGueltig = (() => {
   const value = basisPreis.trim()
 
@@ -1129,6 +1229,24 @@ const isSubmitDisabled =
                       Mach ein Angebot für diese Lackanfrage
                     </h2>
 
+                    {premiumBlockiertAngebot && (
+                      <div className={styles.connectNotice} role="status" aria-live="polite">
+                        <p>
+                          Um auf diese Lackanfrage bieten zu können, benötigst du eine aktive Premium Mitgliedschaft.
+                        </p>
+
+                        <div className={styles.connectActions}>
+                          <button
+                            type="button"
+                            className={styles.connectBtn}
+                            onClick={() => setPremiumModalOpen(true)}
+                          >
+                            Premium freischalten
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {stripeBlockiertAngebot && (
                       <div className={styles.connectNotice} role="status" aria-live="polite">
                         <p>
@@ -1233,6 +1351,12 @@ const isSubmitDisabled =
           </div>
         </div>
       </div>
+
+      <PremiumRequiredModal
+        open={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        actionText="auf diese Lackanfrage zu bieten"
+      />
 
       {slides.length > 0 && (
         <Lightbox
