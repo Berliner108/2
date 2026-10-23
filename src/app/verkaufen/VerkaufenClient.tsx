@@ -213,6 +213,7 @@ const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
 const [premiumModalOpen, setPremiumModalOpen] = useState(false)
 const [premiumInitialCheckDone, setPremiumInitialCheckDone] = useState(false)
+const [premiumAccess, setPremiumAccess] = useState<boolean | null>(null)
   const searchParams = useSearchParams(); // <-- HIER  
 const {
   editId,
@@ -576,23 +577,28 @@ useEffect(() => {
       }
 
       if (!res.ok) {
+        setPremiumAccess(false)
         setPremiumInitialCheckDone(true)
         return
       }
 
       const status = String(data?.status || '').toLowerCase()
 
-      if (
-        status !== 'active' &&
-        status !== 'trial' &&
-        status !== 'exempt'
-      ) {
+      const hasAccess =
+        status === 'active' ||
+        status === 'trial' ||
+        status === 'exempt'
+
+      setPremiumAccess(hasAccess)
+
+      if (!hasAccess) {
         setPremiumModalOpen(true)
       }
 
       setPremiumInitialCheckDone(true)
     } catch {
       if (active) {
+        setPremiumAccess(false)
         setPremiumInitialCheckDone(true)
       }
     }
@@ -801,23 +807,34 @@ if (p.kategorie === 'nasslack' || p.kategorie === 'pulverlack') {
 
 
 useEffect(() => {
-  fetchConnect();
-}, [fetchConnect]);
-useEffect(() => {
-  checkSellerImprint();
-}, [checkSellerImprint]);
+  // Erst nach erfolgreicher Premium-Prüfung weitere Verkäufer-Voraussetzungen prüfen.
+  if (!premiumInitialCheckDone || premiumAccess !== true) return
+
+  void checkSellerImprint()
+}, [premiumInitialCheckDone, premiumAccess, checkSellerImprint])
 
 useEffect(() => {
+  // Stripe Connect ebenfalls erst prüfen, wenn Premium aktiv ist.
+  if (!premiumInitialCheckDone || premiumAccess !== true || !profileChecked) return
+
+  void fetchConnect()
+}, [premiumInitialCheckDone, premiumAccess, profileChecked, fetchConnect])
+
+useEffect(() => {
+  if (premiumAccess !== true || !profileChecked) return
+
   const onFocus = () => {
-    fetchConnect();
-  };
-  window.addEventListener('focus', onFocus);
-  window.addEventListener('pageshow', onFocus);
+    void fetchConnect()
+  }
+
+  window.addEventListener('focus', onFocus)
+  window.addEventListener('pageshow', onFocus)
+
   return () => {
-    window.removeEventListener('focus', onFocus);
-    window.removeEventListener('pageshow', onFocus);
-  };
-}, [fetchConnect]);
+    window.removeEventListener('focus', onFocus)
+    window.removeEventListener('pageshow', onFocus)
+  }
+}, [premiumAccess, profileChecked, fetchConnect]);
 
 useEffect(() => {
   if (!kategorie) return;
