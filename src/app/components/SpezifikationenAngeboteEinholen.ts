@@ -944,7 +944,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'glanzgrad',
       label: 'Glanzgrad:',
-      options: ['Hochglanz', 'Seidenglanz', 'Glanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+      options: ['Hochglanz', 'Glanz', 'Seidenglanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
     },
     {
       type: 'dropdown',
@@ -1002,7 +1002,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'glanzgrad',
       label: 'Glanzgrad:',
-      options: ['Hochglanz', 'Seidenglanz', 'Glanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+      options: ['Hochglanz', 'Glanz', 'Seidenglanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
     },
     {
       type: 'dropdown',
