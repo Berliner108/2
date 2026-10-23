@@ -72,6 +72,8 @@ const Wissenswertes = () => {
       "#Trowalisieren": 39,
       "#Chemisches-Glänzen": 40,
       "#Versilbern": 41,
+      "#Lacke-Beschichtungsstoffe": 42,
+      "#Lackrecycling-Restlackverwertung": 43,
     };
 
     const openHashTarget = () => {
@@ -193,6 +195,13 @@ useEffect(() => {
       ],
     },
     {
+      title: "Lacke, Restlacke & Recycling",
+      items: [
+        { name: "Lacke & Beschichtungsstoffe", description: "Grundlagen zu Nass- und Pulverlacken, Lackaufbau, Eigenschaften, Auswahl, Lagerung und wichtigen technischen Angaben.", target: "container-42" },
+        { name: "Lackrecycling & Restlackverwertung", description: "Möglichkeiten, geeignete Restlacke weiterzuverwenden, aufzubereiten oder einer sinnvollen Verwertung zuzuführen, statt sie vorschnell zu entsorgen.", target: "container-43" },
+      ],
+    },
+    {
       title: "Weitere Leistungen",
       items: [
         { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-21" },
@@ -308,6 +317,8 @@ useEffect(() => {
     "Trowalisieren",
     "Chemisches Glänzen",
     "Versilbern",
+    "Lacke & Beschichtungsstoffe",
+    "Lackrecycling & Restlackverwertung",
   ];
 
   const ktlText = `
@@ -798,6 +809,75 @@ useEffect(() => {
     <ul><li>Grundwerkstoff und eventuelle Zwischenschichten</li><li>gewünschte Schichtdicke</li><li>technische oder dekorative Anforderung</li><li>Kontakt-, Maß- und Funktionsflächen</li><li>Prüfanforderungen, Stückzahl und Abmessungen</li></ul>
   `;
 
+  const lackeBeschichtungsstoffeText = `
+    <strong>Lacke und Beschichtungsstoffe</strong> schützen Oberflächen, gestalten sie optisch und können ihnen zusätzliche funktionelle Eigenschaften verleihen. Welche Beschichtung geeignet ist, hängt unter anderem vom Grundwerkstoff, der späteren Beanspruchung, dem gewünschten Erscheinungsbild und dem gewählten Applikationsverfahren ab.<br><br>
+    <h4>Nasslacke</h4>
+    Nasslacke werden in flüssiger Form verarbeitet. Sie bestehen je nach System unter anderem aus <strong>Bindemitteln</strong>, <strong>Pigmenten</strong>, <strong>Lösemitteln oder Wasser</strong> sowie Additiven. Nach dem Auftragen entsteht die fertige Lackschicht durch physikalische Trocknung, chemische Reaktion oder eine Kombination daraus.<br><br>
+    <ul>
+      <li><strong>1K-Lacke:</strong> einkomponentige Systeme, die ohne getrennten Härter verarbeitet werden.</li>
+      <li><strong>2K-Lacke:</strong> Lack und Härter werden vor der Verarbeitung im vorgegebenen Verhältnis gemischt. Die Verarbeitungszeit nach dem Anmischen ist begrenzt.</li>
+      <li><strong>Grundierungen:</strong> verbessern je nach System Haftung und Korrosionsschutz und bilden die Basis für weitere Schichten.</li>
+      <li><strong>Decklacke:</strong> bilden die sichtbare und häufig besonders beanspruchte Abschlussbeschichtung.</li>
+      <li><strong>Klarlacke:</strong> transparente Deckschichten zum Schutz oder zur gezielten Beeinflussung von Optik und Glanz.</li>
+    </ul>
+    <h4>Pulverlacke</h4>
+    Pulverlacke sind lösemittelfreie, feste Beschichtungsstoffe in Pulverform. Sie werden typischerweise elektrostatisch auf ein leitfähiges Werkstück aufgebracht und anschließend im Ofen aufgeschmolzen und vernetzt. Häufige Systeme basieren beispielsweise auf <strong>Polyester</strong>, <strong>Epoxid</strong> oder Mischsystemen. Auswahl und Eignung richten sich unter anderem nach Außenbewitterung, Korrosionsschutz, Chemikalienbeständigkeit, Temperaturbeanspruchung und gewünschter Optik.<br><br>
+    <h4>Wichtige Eigenschaften und Angaben</h4>
+    <ul>
+      <li><strong>Farbton:</strong> z. B. RAL, NCS, kundenspezifischer Farbton oder Muster.</li>
+      <li><strong>Glanzgrad:</strong> von matt und tiefmatt bis seidenglänzend oder hochglänzend.</li>
+      <li><strong>Oberflächenstruktur:</strong> glatt, Feinstruktur, Grobstruktur oder spezielle Effekte.</li>
+      <li><strong>Schichtdicke:</strong> beeinflusst Optik, Schutzwirkung, Maßhaltigkeit und Materialverbrauch.</li>
+      <li><strong>Beständigkeit:</strong> je nach Anwendung können UV-, Wetter-, Chemikalien-, Temperatur- oder Abriebbeständigkeit entscheidend sein.</li>
+      <li><strong>Untergrund und Vorbehandlung:</strong> Werkstoff und Vorbehandlung müssen zum Beschichtungssystem passen.</li>
+      <li><strong>Lagerung:</strong> Temperatur, Feuchtigkeit, Verpackung und Lagerdauer können die Verarbeitbarkeit und Qualität beeinflussen.</li>
+    </ul>
+    <h4>Warum die genaue Lackangabe wichtig ist</h4>
+    Zwei Lacke mit gleichem Farbton können technisch völlig unterschiedliche Eigenschaften besitzen. Für eine belastbare Auswahl sollten deshalb nicht nur Farbe und Optik, sondern auch <strong>Hersteller, Produktbezeichnung, Bindemittelsystem, Charge, gewünschte Schichtdicke und spätere Einsatzbedingungen</strong> bekannt sein.<br><br>
+    <strong>Praxis-Hinweis:</strong> Bei Restmengen oder einer späteren Weiterverwendung sollten Originalgebinde, Produktetikett und vorhandene technische Unterlagen möglichst erhalten bleiben. Dadurch lässt sich wesentlich besser beurteilen, wofür ein Lack noch geeignet ist.
+  `;
+
+  const lackrecyclingRestlackText = `
+    <strong>Lackrecycling und Restlackverwertung</strong> zielen darauf ab, noch nutzbare Beschichtungsstoffe möglichst lange im Materialkreislauf zu halten. In Beschichtungsbetrieben entstehen Restmengen beispielsweise durch Projektüberhänge, Farbwechsel, Mindestabnahmemengen, Sortimentswechsel oder nicht vollständig verbrauchte Gebinde. Solche Bestände sind nicht automatisch Abfall: Je nach Zustand und technischer Eignung können sie weiterverwendet, weitergegeben, aufbereitet oder anderweitig verwertet werden.<br><br>
+    <h4>1. Direkte Weiterverwendung</h4>
+    Die einfachste Form der Restlackverwertung ist die weitere Nutzung des unveränderten Materials. Das kann im eigenen Betrieb, für Folgeaufträge oder durch einen anderen geeigneten Anwender erfolgen. Besonders wichtig sind dabei eine eindeutige Produktidentifikation und nachvollziehbare Lagerbedingungen.<br><br>
+    <h4>2. Vermarktung von Restmengen</h4>
+    Noch verwendbare Restbestände können für andere Beschichter interessant sein, wenn Farbe, Qualität und technische Eigenschaften zu deren Bedarf passen. Sinnvolle Angaben sind unter anderem:
+    <ul>
+      <li>Hersteller und genaue Produktbezeichnung</li>
+      <li>Farbton, Glanzgrad und Struktur</li>
+      <li>Bindemittel- bzw. Lacksystem</li>
+      <li>verfügbare Menge und Gebindegröße</li>
+      <li>Charge bzw. Produktionskennzeichnung, sofern vorhanden</li>
+      <li>Lagerzustand und bekannte Lagerdauer</li>
+      <li>Originalverpackung und Zustand des Gebindes</li>
+      <li>technisches Datenblatt oder weitere Produktunterlagen, sofern vorhanden</li>
+    </ul>
+    <h4>3. Aufbereitung und Revitalisierung</h4>
+    Je nach Materialart und Zustand kann eine fachgerechte Aufbereitung sinnvoll sein. Bei Pulverlacken kann beispielsweise geprüft werden, ob Material durch geeignete Aufbereitungs- oder Mischprozesse wieder für definierte Anwendungen nutzbar gemacht werden kann. Entscheidend ist dabei, dass <strong>Verträglichkeit, Farbton, Partikelverteilung, Verarbeitung und geforderte Beschichtungseigenschaften</strong> weiterhin ausreichend sichergestellt werden können.<br><br>
+    Eine Aufbereitung ist nicht gleichbedeutend damit, dass ein Material anschließend wieder uneingeschränkt die Eigenschaften eines ursprünglichen Neuprodukts besitzt. Die tatsächliche Einsatzmöglichkeit muss deshalb immer anhand des konkreten Materials und der späteren Qualitätsanforderungen beurteilt werden.<br><br>
+    <h4>4. Rückgewinnung im Beschichtungsprozess</h4>
+    Beim Pulverbeschichten kann nicht auf dem Werkstück abgeschiedenes Pulver – abhängig von Anlage, Farbwechselkonzept und Qualitätsanforderungen – teilweise innerhalb des Prozesses zurückgewonnen und erneut eingesetzt werden. Dafür sind geeignete Rückgewinnungs-, Sieb- und Dosiersysteme notwendig. Bei hohen optischen oder technischen Anforderungen kann der zulässige Anteil zurückgewonnenen Pulvers begrenzt sein.<br><br>
+    <h4>Wann eine Wiederverwendung kritisch sein kann</h4>
+    <ul>
+      <li>unklare oder nicht nachvollziehbare Produktidentität</li>
+      <li>unbekannte oder offensichtlich ungeeignete Lagerbedingungen</li>
+      <li>Feuchtigkeit, Verklumpung, Verschmutzung oder Fremdmaterial</li>
+      <li>bereits vermischte, nicht kompatible Systeme</li>
+      <li>fehlende Reproduzierbarkeit bei hohen optischen oder technischen Anforderungen</li>
+      <li>Material, dessen Verarbeitbarkeit oder geforderte Eigenschaften nicht mehr sicher beurteilt werden können</li>
+    </ul>
+    <h4>Vorteile einer sinnvollen Restlackverwertung</h4>
+    <ul>
+      <li>weniger ungenutzte Lagerbestände</li>
+      <li>geringere Materialverluste</li>
+      <li>zusätzliche Vermarktungsmöglichkeit für vorhandene Restmengen</li>
+      <li>ressourcenschonenderer Umgang mit bereits hergestellten Beschichtungsstoffen</li>
+      <li>potenziell geringere Beschaffungskosten für passende Anwendungen</li>
+    </ul>
+    <strong>Wichtig:</strong> Ob ein Restlack tatsächlich wiederverwendet oder aufbereitet werden kann, hängt immer vom konkreten Produkt, seinem Zustand und dem vorgesehenen Einsatz ab. Bei sicherheits-, qualitäts- oder kundenspezifisch kritischen Anwendungen sollte die technische Eignung vor Verwendung eindeutig geprüft werden.
+  `;
+
   const baseContainerTexts = [
     legacyContainerTexts[0],
     legacyContainerTexts[1],
@@ -841,6 +921,8 @@ useEffect(() => {
     trowalisierenText,
     chemischesGlaenzenText,
     versilbernText,
+    lackeBeschichtungsstoffeText,
+    lackrecyclingRestlackText,
   ];
 
 
@@ -885,6 +967,8 @@ useEffect(() => {
     39: [{ name: "Entgraten", hash: "#Entgraten" }, { name: "Verrunden", hash: "#Verrunden" }, { name: "Glätten", hash: "#Glätten" }],
     40: [{ name: "Polieren", hash: "#Polieren" }, { name: "Eloxieren", hash: "#Eloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
     41: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
+    42: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Lackrecycling & Restlackverwertung", hash: "#Lackrecycling-Restlackverwertung" }],
+    43: [{ name: "Lacke & Beschichtungsstoffe", hash: "#Lacke-Beschichtungsstoffe" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Entlacken", hash: "#Entlacken" }],
   };
 
   const genericInquiryBlock = `
@@ -901,7 +985,8 @@ useEffect(() => {
   const containerTexts = baseContainerTexts.map((text, index) => {
     if (index < 2) return text;
 
-    const inquiry = text.includes("Wichtige Angaben für eine Anfrage") ? "" : genericInquiryBlock;
+    const isKnowledgeTopic = index === 42 || index === 43;
+    const inquiry = isKnowledgeTopic || text.includes("Wichtige Angaben für eine Anfrage") ? "" : genericInquiryBlock;
     const links = relatedVerfahren[index] ?? [];
     const related = links.length
       ? `<br><br><h4>Verwandte Verfahren</h4><ul>${links
