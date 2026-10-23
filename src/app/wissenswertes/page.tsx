@@ -156,7 +156,7 @@ useEffect(() => {
       items: [
         { name: "Verzinken", description: "Korrosionsschutz durch Feuerverzinken, galvanisches Verzinken, Zinklamellenbeschichtung oder mechanisches Verzinken.", target: "container-4" },
         { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-5" },
-        { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-6" },
+        { name: "Anodisieren", description: "Anodische Oxidation von Titan, Magnesium, Zink und weiteren Sonderwerkstoffen; Aluminium wird unter Eloxieren geführt.", target: "container-6" },
         { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-8" },
         { name: "Mn-Phosphatieren", description: "Manganphosphatschicht für Verschleißschutz, Einlaufverhalten und als Haftgrund für Öle oder weitere Beschichtungen.", target: "container-30" },
         { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-11" },
@@ -164,6 +164,7 @@ useEffect(() => {
         { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-13" },
         { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-14" },
         { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-15" },
+        { name: "Edelstahl-Passivieren", description: "Passivieren nichtrostender Stähle zur Verbesserung der Korrosionsbeständigkeit und Entfernung freier Eisenverunreinigungen.", target: "container-45" },
         { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-16" },
         { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-17" },
         { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-18" },
@@ -194,6 +195,8 @@ useEffect(() => {
         { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-27" },
         { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-28" },
         { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-29" },
+        { name: "Entchromen", description: "Entfernen dekorativer oder technischer Chromschichten vor Aufarbeitung oder Neubeschichtung.", target: "container-46" },
+        { name: "Entkupfern", description: "Entfernen vorhandener Kupferschichten oder Kupfer-Zwischenschichten vor einer Neubeschichtung.", target: "container-47" },
       ],
     },
     {
@@ -676,7 +679,7 @@ useEffect(() => {
       <li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li>
       <li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li>
       <li>Schichtaufbau: <strong>Direktvergoldung von Edelstahl</strong>, <strong>Vergoldung mit Zwischenschicht</strong> oder nach Vorgabe</li>
-      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder <strong>Passivieren</strong></li>
+      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder andere systemspezifische Vorgabe</li>
     </ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>elektrische Kontakte und Steckverbinder</li><li>Elektronik- und Präzisionsbauteile</li><li>Schmuck- und Designteile</li><li>hochwertige Sichtflächen</li></ul>
@@ -961,7 +964,7 @@ useEffect(() => {
       <li><strong>Gelbbronze</strong></li>
       <li><strong>Andere Bronzelegierung / Nach Vorgabe</strong></li>
       <li>gewünschte <strong>Schichtdicke</strong></li>
-      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder <strong>Passivieren</strong></li>
+      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder andere systemspezifische Vorgabe</li>
     </ul>
     <h4>Typische Prozesskette</h4>
     <p><strong>ggf. Schleifen / Polieren → Reinigen / Entfetten → Aktivieren → ggf. Zwischenschicht → Bronzebeschichten → ggf. Nachbehandlung</strong></p>
@@ -975,6 +978,23 @@ useEffect(() => {
       <li>gewünschte Nachbehandlung</li>
       <li>Bauteilabmessungen, Stückzahl und technische Vorgaben</li>
     </ul>
+  `;
+
+
+
+  const edelstahlPassivierenText = `
+    <strong>Edelstahl-Passivieren</strong> dient dazu, die Korrosionsbeständigkeit nichtrostender Stähle zu unterstützen und insbesondere freie Eisenverunreinigungen von der Oberfläche zu entfernen. Je nach Werkstoff, Ausgangszustand und Kundenvorgabe kommen unterschiedliche chemische Passivierungsprozesse infrage.<br><br>
+    <h4>Wichtige Angaben</h4><ul><li>genaue Edelstahlgüte</li><li>Ausgangszustand und vorherige Bearbeitung</li><li>gewünschtes Ziel, z. B. Korrosionsbeständigkeit oder Reinheitsanforderung</li><li>vorheriges Beizen oder Elektropolieren</li><li>Norm, Kundenspezifikation oder Prüfanforderung</li></ul>
+  `;
+
+  const entchromenText = `
+    <strong>Entchromen</strong> entfernt vorhandene dekorative oder technische Chromschichten. Besonders bei Mehrschichtsystemen muss vorab geklärt werden, welche weiteren Schichten – etwa Nickel oder Kupfer – unter dem Chrom liegen und erhalten oder ebenfalls entfernt werden sollen.<br><br>
+    <h4>Wichtige Angaben</h4><ul><li>Grundwerkstoff</li><li>Dekorativchrom, Hartchrom oder unbekannter Schichtaufbau</li><li>vollständige oder partielle Entschichtung</li><li>maßkritische Flächen und Passungen</li><li>geplanter Folgeprozess</li></ul>
+  `;
+
+  const entkupfernText = `
+    <strong>Entkupfern</strong> entfernt vorhandene Kupferschichten, beispielsweise als Vorbereitung einer galvanischen Aufarbeitung. Da Kupfer häufig als Zwischen- oder Ausgleichsschicht eingesetzt wird, sind Grundwerkstoff und vorhandener Schichtaufbau besonders wichtig.<br><br>
+    <h4>Wichtige Angaben</h4><ul><li>Grundwerkstoff</li><li>Art der Kupferschicht, soweit bekannt</li><li>vollständige oder partielle Entschichtung</li><li>maßkritische Flächen</li><li>geplanter Folgeprozess wie Neuverkupfern, Vernickeln oder Verchromen</li></ul>
   `;
 
   const baseContainerTexts = [
@@ -1023,6 +1043,9 @@ useEffect(() => {
     lackeBeschichtungsstoffeText,
     lackrecyclingRestlackText,
     bronzebeschichtenText,
+    edelstahlPassivierenText,
+    entchromenText,
+    entkupfernText,
   ];
 
 
@@ -1070,6 +1093,9 @@ useEffect(() => {
     42: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Lackrecycling & Restlackverwertung", hash: "#Lackrecycling-Restlackverwertung" }],
     43: [{ name: "Lacke & Beschichtungsstoffe", hash: "#Lacke-Beschichtungsstoffe" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Entlacken", hash: "#Entlacken" }],
     44: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Polieren", hash: "#Polieren" }],
+    45: [{ name: "Beizen", hash: "#Beizen" }, { name: "Elektropolieren", hash: "#Elektropolieren" }],
+    46: [{ name: "Verchromen", hash: "#Verchromen" }, { name: "Entnickeln", hash: "#Entnickeln" }],
+    47: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }],
   };
 
   const genericInquiryBlock = `

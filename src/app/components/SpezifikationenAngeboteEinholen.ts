@@ -16,13 +16,46 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Qualistrip',
       ]
     },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'verzinkter Stahl', 'Kunststoff', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'dropdown',
+      name: 'beschichtung',
+      label: 'Vorhandene Beschichtung:',
+      options: ['Nasslack', 'Pulverlack', 'KTL', 'Mehrschicht', 'Unbekannt'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['vollständig', 'partiell', 'Nach Vorgabe'],
+    },
+    {
+      type: 'radio',
+      name: 'materialschonend',
+      label: 'Maß-/oberflächenkritisch:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Brünieren: [
   {
     type: 'radio',
     name: 'verfahren',
     label: 'Verfahren',
-    options: ['Heißbrünieren', 'Kaltbrünieren', 'Schwarzoxidieren']
+    options: ['Heißbrünieren', 'Kaltbrünieren', 'Nach Vorgabe']
   },
   {
     type: 'group',
@@ -34,8 +67,28 @@ export const specificationsMap: Record<string, Specification[]> = {
       'ISO 14001',
       'RoHS / REACH'
     ]
-  }
-],
+  },
+
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl/Eisenwerkstoff', 'Andere nach Vorgabe'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: ['Ölen', 'Fetten', 'Gleitbeschichtung', 'Keine', 'Andere'],
+    },
+    {
+      type: 'text',
+      name: 'norm',
+      label: 'Norm:',
+      maxLength: 120,
+    },
+  ],
   Strahlen: [
     {
       type: 'radio',
@@ -47,8 +100,67 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'strahlziel',
       label: 'Bearbeitungsziel:',
-      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Aufrauen', 'Mattieren', 'Entgraten', 'Verdichten / Verfestigen']
-    }
+      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Andere / Sondervorgabe']
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'verzinkter Stahl', 'Guss', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Andere / Sondervorgabe'],
+      required: true,
+    },
+    {
+      type: 'dropdown',
+      name: 'strahlmittel',
+      label: 'Strahlmittel:',
+      options: ['Stahlkies', 'Stahlguss/Shot', 'Korund', 'Glasperlen', 'Keramikperlen', 'Kunststoff', 'organisch', 'Andere'],
+    },
+    {
+      type: 'radio',
+      name: 'reinheitsgrad',
+      label: 'Reinheitsgrad:',
+      options: ['Sa 1', 'Sa 2', 'Sa 2½', 'Sa 3', 'Nach Vorgabe / unbekannt'],
+    },
+    {
+      type: 'radio',
+      name: 'rauheit_typ',
+      label: 'Rauheitskennwert:',
+      options: ['Ra', 'Rz', 'Profilhöhe'],
+    },
+    {
+      type: 'text',
+      name: 'rauheit_wert',
+      label: 'Rauheit / Profil (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
+    {
+      type: 'radio',
+      name: 'sweep',
+      label: 'Sweep-Strahlen:',
+      options: ['Ja', 'Nein', 'Nach Vorgabe'],
+    },
+    {
+      type: 'radio',
+      name: 'bauteilart',
+      label: 'Bauteilart:',
+      options: ['Schüttgut/Kleinteile', 'Einzel-/Gestellteile', 'Großteile', 'Nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Eloxieren: [
     {
@@ -73,6 +185,8 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Gewünschte Schichtdicke (µm)',
       maxLength: 30
     },
@@ -83,7 +197,6 @@ export const specificationsMap: Record<string, Specification[]> = {
       tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
       options: [
         'Qualanod',
-        'GSB',
         'ISO 9001',
         'ISO 14001',
         'ISO 45001',
@@ -147,7 +260,14 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Zusätzliche Vorgabe / gewünschte Oberfläche',
       maxLength: 80,
       dependsOn: { name: 'verfahren', value: 'Ematal' }
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'farbe',
+      label: 'Farbe:',
+      options: ['Natureloxal', 'Bronze-/Grau-/Schwarz-Töne', 'Andere'],
+    },
   ],
   Verzinken: [
     {
@@ -205,12 +325,51 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: ['Versiegeln', 'Topcoat/Gleitmittel', 'Tempern/Wasserstoffentsprödung'],
+    },
+    {
+      type: 'text',
+      name: 'reibwert',
+      label: 'Reibwertvorgabe:',
+      maxLength: 120,
+    },
+    {
+      type: 'text',
+      name: 'nss_stunden',
+      label: 'Salzsprühnebel-Anforderung nach ISO 9227 (h)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'text',
+      name: 'schichtgewicht',
+      label: 'Gewünschtes Schichtgewicht (g/m²)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
   ],
   Zinkphosphatieren: [
   {
     type: 'text',
     name: 'schichtgewicht',
+    numericOnly: true,
+    allowDecimal: false,
     label: 'Schichtgewicht (g/m²)',
     maxLength: 20
   },
@@ -230,12 +389,28 @@ export const specificationsMap: Record<string, Specification[]> = {
       'ISO 14001',
       'RoHS / REACH'
     ]
-   }
-],
+   },
+
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'verzinkter Stahl', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'zweck',
+      label: 'Zweck / Anforderung:',
+      options: ['Lackhaftung', 'Korrosionsschutz', 'Umformung', 'Andere'],
+    },
+  ],
   'Mn-Phosphatieren': [
     {
       type: 'text',
       name: 'schichtgewicht',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Schichtgewicht (g/m²)',
       maxLength: 20
     },
@@ -251,7 +426,21 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Zertifizierungen:',
       tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
       options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Guss', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'zweck',
+      label: 'Zweck / Anforderung:',
+      options: ['Einlauf-/Gleiteigenschaften', 'Verschleiß', 'Korrosionsschutz', 'Andere'],
+    },
   ],
   Beizen: [
     {
@@ -283,7 +472,20 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'vorgabe',
       label: 'Beizmedium / Norm / Vorgabe',
       maxLength: 80
-    }
+    },
+  
+    {
+      type: 'group',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['Oxide/Zunder entfernen', 'Korrosion entfernen', 'Aktivieren', 'Vorbereitung Folgeprozess'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Entgraten: [
     {
@@ -301,9 +503,31 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'kantenradius',
+      numericOnly: true,
+      allowDecimal: true,
       label: 'Gewünschter Kantenradius / Vorgabe',
       maxLength: 40
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Kunststoff', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['gratfrei', 'Kanten brechen', 'definierter Radius'],
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['einseitig', 'allseitig', 'definierte Kanten'],
+    },
   ],
   Verrunden: [
     {
@@ -315,9 +539,19 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'kantenradius',
+      numericOnly: true,
+      allowDecimal: true,
       label: 'Gewünschter Kantenradius (mm)',
       maxLength: 30
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
   ],
   Glätten: [
     {
@@ -329,9 +563,33 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'rauheit',
+      numericOnly: true,
+      allowDecimal: true,
       label: 'Zielrauheit / Ra / Rz',
       maxLength: 40
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'rauheit_typ',
+      label: 'Rauheitskennwert:',
+      options: ['Ra', 'Rz'],
+    },
+    {
+      type: 'text',
+      name: 'rauheit_wert',
+      label: 'Rauheit / Profil (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
   ],
   Mattieren: [
     {
@@ -345,7 +603,21 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'oberflaechenziel',
       label: 'Gewünschte Optik / Rauheit',
       maxLength: 60
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'finish',
+      label: 'Gewünschtes Finish:',
+      options: ['Fein', 'Mittel', 'Grob', 'Nach Muster/Vorgabe'],
+    },
   ],
   Schleifen: [
     {
@@ -357,6 +629,8 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'rauheit',
+      numericOnly: true,
+      allowDecimal: true,
       label: 'Zielrauheit / Ra / Rz',
       maxLength: 40
     },
@@ -365,7 +639,35 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'schliffbild',
       label: 'Schliffbild:',
       options: ['Längsschliff', 'Kreuzschliff', 'Nach Vorgabe']
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'zweck',
+      label: 'Zweck / Anforderung:',
+      options: ['Technisch', 'Dekorativ', 'Vorbereitung Folgeprozess'],
+    },
+    {
+      type: 'radio',
+      name: 'rauheit_typ',
+      label: 'Rauheitskennwert:',
+      options: ['Ra', 'Rz'],
+    },
+    {
+      type: 'text',
+      name: 'rauheit_wert',
+      label: 'Rauheit / Profil (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
   ],
   Polieren: [
     {
@@ -377,9 +679,33 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'rauheit',
+      numericOnly: true,
+      allowDecimal: true,
       label: 'Zielrauheit / Ra / Rz',
       maxLength: 40
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'rauheit_typ',
+      label: 'Rauheitskennwert:',
+      options: ['Ra', 'Rz'],
+    },
+    {
+      type: 'text',
+      name: 'rauheit_wert',
+      label: 'Rauheit / Profil (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
   ],
   Bürsten: [
     {
@@ -393,7 +719,15 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'koernung',
       label: 'Körnung / Bürstenangabe',
       maxLength: 40
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
+      required: true,
+    },
   ],
   Trowalisieren: [
     {
@@ -407,7 +741,31 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'verfahren',
       label: 'Verfahren:',
       options: ['Vibrationsgleitschleifen', 'Trommelgleitschleifen', 'Fliehkraft- / Schleppfinish', 'Nach Vorgabe']
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Kunststoff', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'zielrauheit',
+      label: 'Zielrauheit (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
+    {
+      type: 'text',
+      name: 'kantenradius',
+      label: 'Gewünschter Kantenradius (mm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
   ],
   'Chemisches Glänzen': [
     {
@@ -421,12 +779,28 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'vorgabe',
       label: 'Norm / Oberflächenvorgabe',
       maxLength: 80
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Aluminium', 'Kupfer/Kupferlegierung', 'Stahl', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['Satinglanz', 'Hochglanz', 'Vorbereitung Eloxieren', 'Nach Vorgabe'],
+    },
   ],
   'KTL-Beschichten': [
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Schichtdicke (µm)',
       maxLength: 20
     },
@@ -451,7 +825,47 @@ export const specificationsMap: Record<string, Specification[]> = {
         'IATF 16949',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Edelstahl', 'verzinkter Stahl', 'Aluminium', 'Zinkdruckguss', 'Guss', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'ktl_ausfuehrung',
+      label: 'KTL-Ausführung:',
+      options: ['Standard-KTL', 'Dickschicht-KTL / D-KTL', 'Nach Vorgabe'],
+    },
+    {
+      type: 'group',
+      name: 'vorbehandlung',
+      label: 'Vorbehandlung:',
+      options: ['Entfetten', 'Beizen', 'Zinkphosphatieren', 'Passivieren', 'Andere'],
+    },
+    {
+      type: 'radio',
+      name: 'verwendung',
+      label: 'Verwendung:',
+      options: ['Endschicht', 'Grundierung für Pulverbeschichtung', 'Grundierung für Nasslack', 'weiterer Aufbau nach Vorgabe'],
+    },
+    {
+      type: 'radio',
+      name: 'farbe',
+      label: 'Farbe:',
+      options: ['Schwarz', 'Andere / nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'nss_stunden',
+      label: 'Salzsprühnebel-Anforderung nach ISO 9227 (h)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
   ],
   Vernickeln: [
     {
@@ -465,13 +879,15 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'radio',
       name: 'chemischNickelPhosphor',
       label: 'Chemisch Nickel:',
-      options: ['Mid Phos', 'High Phos'],
+      options: ['Low Phos', 'Mid Phos', 'High Phos', 'Nach Vorgabe / unbekannt'],
       required: true,
       dependsOn: { name: 'verfahren', value: 'Chemisch' }
     },
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Gewünschte Schichtdicke (µm)',
       maxLength: 30
     },
@@ -486,7 +902,34 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 45001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'galvanik_ausfuehrung',
+      label: 'Galvanische Ausführung:',
+      options: ['Glanznickel', 'Halbglanznickel', 'Mattnickel', 'Technisch Nickel', 'Andere'],
+      dependsOn: { name: 'verfahren', value: 'Galvanisch' },
+    },
+    {
+      type: 'group',
+      name: 'funktion',
+      label: 'Gewünschte Funktion:',
+      options: ['Korrosion', 'Verschleiß', 'Maßhaltigkeit', 'Leitfähigkeit', 'nichtmagnetisch', 'Diffusionssperre', 'dekorativ'],
+    },
+    {
+      type: 'dropdown',
+      name: 'schichtaufbau',
+      label: 'Schichtaufbau:',
+      options: ['Nickel Endschicht', 'Kupfer-Nickel', 'Nickel-Chrom', 'Kupfer-Nickel-Chrom', 'Sperr-/Zwischenschicht', 'Andere'],
+    },
+    {
+      type: 'radio',
+      name: 'waermebehandlung',
+      label: 'Wärmebehandlung:',
+      options: ['Keine', 'Aushärten/Wärmebehandlung', 'Nach Vorgabe'],
+      dependsOn: { name: 'verfahren', value: 'Chemisch' },
+    },
   ],
   Entnickeln: [
     {
@@ -505,7 +948,41 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Kupfer/Kupferlegierung', 'Aluminium', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'nickelart',
+      label: 'Nickelart:',
+      options: ['Galvanisch Nickel', 'Chemisch Nickel', 'unbekannt'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Entzinnen: [
     {
@@ -524,7 +1001,40 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Stahl', 'Kupfer/Kupferlegierung', 'Messing', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'schicht',
+      label: 'Vorhandene Zinnschicht:',
+      maxLength: 120,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Entzinken: [
     {
@@ -543,7 +1053,41 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Stahl', 'Edelstahl', 'Guss', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'dropdown',
+      name: 'vorhandene_schicht',
+      label: 'Vorhandene Schicht:',
+      options: ['galvanisch Zink', 'Zink-Nickel', 'Zink-Eisen', 'feuerverzinkt', 'unbekannt'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Einlagern: [
     {
@@ -553,7 +1097,36 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Trockenen lagern',
       ]
-    }
+    },
+  
+    {
+      type: 'text',
+      name: 'lagerdauer',
+      label: 'Lagerdauer (Tage)',
+      required: true,
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'radio',
+      name: 'lagerart',
+      label: 'Lagerart:',
+      options: ['Innen trocken', 'temperiert', 'Außen geschützt', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'verpackung',
+      label: 'Verpackung / Schutz:',
+      options: ['Korrosionsschutz', 'Folie', 'Zwischenlagen', 'Sonderverpackung', 'Keine'],
+    },
+    {
+      type: 'text',
+      name: 'handling',
+      label: 'Stapel-/Handlingvorgaben:',
+      maxLength: 120,
+    },
   ],
   Isolierstegverpressen: [
     {
@@ -566,7 +1139,33 @@ export const specificationsMap: Record<string, Specification[]> = {
         'RoHS / REACH',
         'RAL-GZ 607/3'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'profilwerkstoff',
+      label: 'Profilwerkstoff:',
+      options: ['Aluminiumprofil', 'Andere nach Vorgabe'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'stegtyp',
+      label: 'Stegtyp / Stegbreite / Herstellerreferenz:',
+      maxLength: 120,
+    },
+    {
+      type: 'radio',
+      name: 'vorbeschichtet',
+      label: 'Profil bereits beschichtet:',
+      options: ['Ja', 'Nein', 'unbekannt'],
+    },
+    {
+      type: 'text',
+      name: 'pruefung_norm',
+      label: 'Prüfung / Normvorgabe:',
+      maxLength: 120,
+    },
   ],
   Folieren: [
     {
@@ -586,7 +1185,45 @@ export const specificationsMap: Record<string, Specification[]> = {
         'RoHS / REACH',
         'RAL-GZ 716'
       ]
-    }
+    },
+  
+    {
+      type: 'text',
+      name: 'werkstoff_oberflaeche',
+      label: 'Grundwerkstoff / vorhandene Oberfläche:',
+      required: true,
+      maxLength: 120,
+    },
+    {
+      type: 'dropdown',
+      name: 'folientyp',
+      label: 'Folientyp / Zweck:',
+      options: ['Dekorfolie', 'Schutzfolie', 'Transportfolie', 'UV-/Witterungsschutz', 'Andere'],
+    },
+    {
+      type: 'radio',
+      name: 'ausfuehrung',
+      label: 'Ausführung:',
+      options: ['Vollflächig', 'Partiell', 'Nach Zeichnung'],
+    },
+    {
+      type: 'text',
+      name: 'farbe_dekor',
+      label: 'Farbe / Dekor / Herstellerreferenz:',
+      maxLength: 120,
+    },
+    {
+      type: 'radio',
+      name: 'einsatzbereich',
+      label: 'Einsatzbereich:',
+      options: ['Innen', 'Außen', 'Innen & Außen'],
+    },
+    {
+      type: 'text',
+      name: 'haltbarkeit',
+      label: 'Gewünschte Haltbarkeit / Vorgabe:',
+      maxLength: 120,
+    },
   ],
   Verzinnen: [
     {
@@ -611,7 +1248,41 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Kupfer/Kupferlegierung', 'Messing', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'auftrag',
+      label: 'Auftragsart:',
+      options: ['Gestell', 'Trommel', 'Nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'funktion',
+      label: 'Gewünschte Funktion:',
+      options: ['Lötbarkeit', 'Korrosionsschutz', 'elektrische Kontakte', 'Lebensmittelkontakt', 'Andere'],
+    },
+    {
+      type: 'group',
+      name: 'sonderanforderung',
+      label: 'Sonderanforderungen:',
+      options: ['Whisker-Anforderung', 'bleifrei/RoHS', 'Andere'],
+    },
   ],
   Anodisieren: [
     {
@@ -641,6 +1312,8 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Gewünschte Schichtdicke (µm)',
       maxLength: 30
     },
@@ -667,14 +1340,21 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 45001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'text',
+      name: 'norm_vorgabe',
+      label: 'Norm / Kundenvorgabe:',
+      maxLength: 120,
+    },
   ],
   Aluminieren: [
     {
       type: 'radio',
       name: 'verfahren',
       label: 'Verfahren',
-      options: ['Schmelztauchaluminieren', 'Spritzaluminieren', 'Feueraluminieren']
+      options: ['Schmelztauch-/Feueraluminieren', 'Thermisches Spritzaluminieren', 'Diffusionsaluminieren / Alitieren', 'Nach Vorgabe']
     },
     {
       type: 'group',
@@ -687,7 +1367,29 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 45001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Nickelbasislegierung', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'funktion',
+      label: 'Gewünschte Funktion:',
+      options: ['Hochtemperatur-Oxidationsschutz', 'Korrosionsschutz', 'Andere'],
+    },
   ],
   Enteloxieren: [
     {
@@ -707,7 +1409,40 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'radio',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Aluminium'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'eloxalschicht',
+      label: 'Vorhandene Eloxalschicht:',
+      maxLength: 120,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Entanodisieren: [
     {
@@ -727,7 +1462,40 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Titan', 'Magnesium', 'Zink', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'schicht_prozess',
+      label: 'Vorhandene anodische Schicht / Prozess:',
+      maxLength: 120,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Entaluminieren: [
     {
@@ -746,7 +1514,41 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'grundwerkstoff',
+      label: 'Grundwerkstoff:',
+      options: ['Stahl', 'Nickelbasislegierung', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'dropdown',
+      name: 'aluschicht',
+      label: 'Vorhandene Aluminiumschicht:',
+      options: ['Spritzaluminium', 'Schmelztauch-/Feueraluminium', 'Diffusionsschicht', 'unbekannt'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'umfang',
+      label: 'Umfang:',
+      options: ['vollständig', 'partiell/nach Zeichnung'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'masskritisch',
+      label: 'Maßkritische Flächen / Passungen:',
+      options: ['Ja', 'Nein'],
+    },
+    {
+      type: 'text',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      maxLength: 120,
+    },
   ],
   Verchromen: [
     {
@@ -798,6 +1600,8 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Gewünschte Schichtdicke (µm)',
       maxLength: 30
     },
@@ -806,7 +1610,14 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'chromNachbehandlung',
       label: 'Optionale Nachbehandlung:',
       options: ['Passivieren', 'Versiegeln', 'Andere / Nach Vorgabe']
-    }
+    },
+  
+    {
+      type: 'group',
+      name: 'nachbearbeitung',
+      label: 'Nachbearbeitung:',
+      options: ['Schleifen', 'Polieren', 'Versiegeln nach System', 'Keine', 'Andere / nach Vorgabe'],
+    },
   ],
   'Aluminium-Passivieren': [
     {
@@ -821,7 +1632,35 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'anforderung',
       label: 'Anforderung:',
       options: ['Korrosionsschutz', 'Lackhaftung', 'Elektrische Leitfähigkeit']
-    }
+    },
+  
+    {
+      type: 'radio',
+      name: 'system',
+      label: 'Passivierungssystem:',
+      options: ['Chrom(III)', 'chromfrei', 'Chrom(VI)', 'Nach Vorgabe/unbekannt'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'zweck',
+      label: 'Zweck / Anforderung:',
+      options: ['Korrosionsschutz', 'Lackhaftung', 'Kleben', 'elektrische Leitfähigkeit', 'Andere'],
+    },
+    {
+      type: 'text',
+      name: 'folgebehandlung',
+      label: 'Folgebehandlung:',
+      maxLength: 120,
+    },
+    {
+      type: 'text',
+      name: 'nss_stunden',
+      label: 'Salzsprühnebel-Anforderung nach ISO 9227 (h)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
   ],
   Elektropolieren: [
     {
@@ -830,7 +1669,44 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Anwendungsbereich:',
       options: ['Lebensmittel', 'Pharma', 'Medizintechnik', 'Industrie allgemein'],
       required: true
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Edelstahl', 'Aluminium', 'Kupfer/Kupferlegierung', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'group',
+      name: 'ziel',
+      label: 'Bearbeitungsziel:',
+      options: ['Glätten', 'Rauheit reduzieren', 'Passivieren', 'Dekorativ', 'Reinigen', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'ausgangsrauheit',
+      label: 'Ausgangsrauheit (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
+    {
+      type: 'text',
+      name: 'zielrauheit',
+      label: 'Zielrauheit (µm)',
+      numericOnly: true,
+      allowDecimal: true,
+      maxLength: 12,
+    },
+    {
+      type: 'radio',
+      name: 'flaechen',
+      label: 'Zu bearbeitende Flächen:',
+      options: ['Außenflächen', 'Innenflächen', 'definierte Flächen', 'komplett'],
+    },
   ],
   Vermessingen: [
     {
@@ -839,7 +1715,29 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Ausführung:',
       options: ['Glänzend', 'Matt', 'Antik / Patiniert'],
       required: true
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Zinkdruckguss', 'Kupfer/Kupferlegierung', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: ['Patinieren/Färben', 'Klarlack', 'Versiegeln', 'Keine'],
+    },
   ],
   Verkupfern: [
     {
@@ -848,7 +1746,41 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Verfahren:',
       options: ['Galvanisch', 'Chemisch'],
       required: true
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'werkstoff',
+      label: 'Werkstoff:',
+      options: ['Stahl', 'Zinkdruckguss', 'Aluminium', 'Edelstahl', 'Andere'],
+      required: true,
+    },
+    {
+      type: 'radio',
+      name: 'auftrag',
+      label: 'Auftragsart:',
+      options: ['Gestell', 'Trommel', 'Nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'funktion',
+      label: 'Gewünschte Funktion:',
+      options: ['Zwischenschicht', 'Leitfähigkeit', 'dekorativ', 'Diffusionssperre', 'Reparatur/Dickkupfer', 'Andere'],
+    },
+    {
+      type: 'group',
+      name: 'folgeprozess',
+      label: 'Geplanter Folgeprozess:',
+      options: ['Vernickeln', 'Verchromen', 'Vergolden', 'Versilbern', 'Keine', 'Andere'],
+    },
   ],
   Bronzebeschichten: [
     {
@@ -861,6 +1793,8 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'text',
       name: 'schichtdicke',
+      numericOnly: true,
+      allowDecimal: false,
       label: 'Gewünschte Schichtdicke (µm)',
       maxLength: 30
     },
@@ -868,7 +1802,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'nachbehandlung',
       label: 'Optionale Nachbehandlung:',
-      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
+      options: ['Versiegeln', 'Anlaufschutz', 'Andere / nach Vorgabe']
     },
     {
       type: 'group',
@@ -876,7 +1810,14 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Zertifizierungen:',
       tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
       options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
-    }
+    },
+  
+    {
+      type: 'radio',
+      name: 'anwendung',
+      label: 'Anwendung:',
+      options: ['Dekorativ', 'Technisch', 'Beides', 'Nach Vorgabe'],
+    },
   ],
   Vergolden: [
     {
@@ -907,8 +1848,17 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'nachbehandlung',
       label: 'Optionale Nachbehandlung:',
-      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
-    }
+      options: ['Versiegeln', 'Anlaufschutz', 'Andere / nach Vorgabe']
+    },
+  
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
   ],
   Versilbern: [
     {
@@ -924,7 +1874,34 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Zertifizierungen:',
       tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
       options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
-    }
+    },
+  
+    {
+      type: 'radio',
+      name: 'optik',
+      label: 'Optik:',
+      options: ['Matt', 'Glänzend', 'Nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'group',
+      name: 'funktion',
+      label: 'Gewünschte Funktion:',
+      options: ['elektrische Leitfähigkeit', 'Wärmeleitfähigkeit', 'Kontaktoberfläche', 'dekorativ', 'Andere'],
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: ['Anlaufschutz', 'Passivierung', 'Versiegelung', 'Keine', 'Andere'],
+    },
   ],
   Nasslackieren: [
     {
@@ -982,7 +1959,94 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'einsatzbereich',
+      label: 'Einsatzbereich:',
+      options: ['Innen', 'Außen', 'Innen & Außen', 'chemisch/industriell belastet', 'Nach Vorgabe'],
+    },
+    {
+      type: 'radio',
+      name: 'komponenten',
+      label: 'Lacksystem:',
+      options: ['1K', '2K', 'Nach Vorgabe / unbekannt'],
+    },
+    {
+      type: 'dropdown',
+      name: 'lacksystem',
+      label: 'Bindemittelsystem:',
+      options: ['Epoxidharz', 'Polyurethan', 'Acryl', 'Alkyd', 'Polysiloxan', 'Andere'],
+    },
+    {
+      type: 'dropdown',
+      name: 'grundierungstyp',
+      label: 'Grundierungstyp:',
+      options: ['Epoxy-Primer', 'Zinkstaub-Grundierung', 'Zinksilikat-Grundierung', 'Haftprimer', 'Andere / nach Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'oberflaechenvorbereitung',
+      label: 'Oberflächenvorbereitung:',
+      options: ['Reinigen/Entfetten', 'Sa 2', 'Sa 2½', 'Sa 3', 'Schleifen', 'Beizen', 'Nach Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'schichtaufbau',
+      label: 'Schichtaufbau:',
+      options: ['Grundierung', 'Grundierung + Decklack', 'Grundierung + Zwischen- + Decklack', 'Mehrschicht nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'grundierung_um',
+      label: 'Grundierung (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'text',
+      name: 'zwischenschicht_um',
+      label: 'Zwischenbeschichtung (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'text',
+      name: 'decklack_um',
+      label: 'Deckbeschichtung (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'text',
+      name: 'gesamt_um',
+      label: 'Gesamtschichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'dropdown',
+      name: 'korrosivitaet',
+      label: 'Korrosivitätskategorie:',
+      options: ['C2', 'C3', 'C4', 'C5', 'CX', 'keine Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'schutzdauer',
+      label: 'Schutzdauer:',
+      options: ['Niedrig', 'Mittel', 'Hoch', 'Sehr hoch', 'Nach Vorgabe'],
+    },
+    {
+      type: 'group',
+      name: 'bestaendigkeit',
+      label: 'Besondere Beständigkeit:',
+      options: ['UV/Witterung', 'Chemikalien', 'Temperatur', 'Abrieb/Verschleiß', 'Lebensmittelkontakt', 'Andere'],
+    },
   ],
   Pulverbeschichten: [
     {
@@ -1047,6 +2111,79 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 14001',
         'RoHS / REACH'
       ]
-    }
-  ]
+    },
+  
+    {
+      type: 'dropdown',
+      name: 'struktur',
+      label: 'Oberfläche / Struktur:',
+      options: ['Glatt', 'Feinstruktur', 'Grobstruktur', 'Hammerschlag', 'Antik', 'Perlglimmer', 'Eisenglimmer', 'Andere'],
+    },
+    {
+      type: 'radio',
+      name: 'einsatzbereich',
+      label: 'Einsatzbereich:',
+      options: ['Innen', 'Außen', 'Innen & Außen', 'Nach Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'pulversystem',
+      label: 'Pulverlacksystem:',
+      options: ['Polyester', 'Epoxy', 'Epoxy-Polyester', 'Polyurethan', 'Thermoplast', 'Nach Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'witterungsqualitaet',
+      label: 'Witterungs-/Qualitätsklasse:',
+      options: ['Standard Industrie', 'erhöhte Witterungsbeständigkeit', 'hochwetterfest/Fassadenqualität', 'Nach Vorgabe'],
+    },
+    {
+      type: 'dropdown',
+      name: 'schichtaufbau',
+      label: 'Schichtaufbau:',
+      options: ['Einschichtig', 'Zweischichtig', 'Grundierung + Deckpulver', 'Duplex: Verzinkung + Pulverbeschichtung', 'Nach Vorgabe'],
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      numericOnly: true,
+      allowDecimal: false,
+      maxLength: 10,
+    },
+    {
+      type: 'dropdown',
+      name: 'korrosivitaet',
+      label: 'Korrosivitätskategorie:',
+      options: ['C2', 'C3', 'C4', 'C5', 'keine Vorgabe/unbekannt'],
+    },
+    {
+      type: 'group',
+      name: 'sonderanforderung',
+      label: 'Sonderanforderungen:',
+      options: ['Metallic', 'Fluoreszierend', 'zweifarbig', 'beigestellter Lack', 'andere'],
+    },
+  ],
+  'Edelstahl-Passivieren': [
+    { type: 'radio', name: 'werkstoff', label: 'Werkstoff:', options: ['Edelstahl / nichtrostender Stahl'], required: true },
+    { type: 'dropdown', name: 'verfahren', label: 'Verfahren:', options: ['Zitronensäure-Passivieren', 'Salpetersäure-Passivieren', 'Nach Vorgabe / unbekannt'] },
+    { type: 'group', name: 'ziel', label: 'Ziel / Anforderung:', options: ['Korrosionsbeständigkeit verbessern', 'Freie Eisenverunreinigungen entfernen', 'Vorbereitung Reinraum / Medizin / Lebensmittel', 'Andere / nach Vorgabe'] },
+    { type: 'group', name: 'vorbehandlung', label: 'Vorbehandlung:', options: ['Reinigen / Entfetten', 'Beizen', 'Elektropolieren', 'Keine / nach Vorgabe'] },
+    { type: 'text', name: 'nss_stunden', label: 'Salzsprühnebel-Anforderung (h)', numericOnly: true, allowDecimal: false, maxLength: 10 },
+    { type: 'text', name: 'norm_vorgabe', label: 'Norm / Kundenvorgabe:', maxLength: 120 },
+  ],
+  Entchromen: [
+    { type: 'dropdown', name: 'grundwerkstoff', label: 'Grundwerkstoff:', options: ['Stahl', 'Edelstahl', 'Kupfer / Kupferlegierung', 'Zinkdruckguss', 'Aluminium', 'Andere'], required: true },
+    { type: 'dropdown', name: 'chromart', label: 'Chromschicht / Aufbau:', options: ['Dekorativchrom', 'Hartchrom', 'Mehrschichtsystem Chrom / Nickel / Kupfer', 'Unbekannt'] },
+    { type: 'radio', name: 'umfang', label: 'Umfang:', options: ['Vollständig', 'Partiell / nach Zeichnung'], required: true },
+    { type: 'radio', name: 'masskritisch', label: 'Maßkritische Flächen / Passungen:', options: ['Ja', 'Nein'] },
+    { type: 'text', name: 'folgeprozess', label: 'Geplanter Folgeprozess:', maxLength: 120 },
+  ],
+  Entkupfern: [
+    { type: 'dropdown', name: 'grundwerkstoff', label: 'Grundwerkstoff:', options: ['Stahl', 'Edelstahl', 'Zinkdruckguss', 'Aluminium', 'Nickelbasis / andere'], required: true },
+    { type: 'dropdown', name: 'kupferschicht', label: 'Kupferschicht:', options: ['Galvanisch Kupfer', 'Chemisch Kupfer', 'Dickkupfer / Reparaturkupfer', 'Unbekannt'] },
+    { type: 'radio', name: 'umfang', label: 'Umfang:', options: ['Vollständig', 'Partiell / nach Zeichnung'], required: true },
+    { type: 'radio', name: 'masskritisch', label: 'Maßkritische Flächen / Passungen:', options: ['Ja', 'Nein'] },
+    { type: 'text', name: 'folgeprozess', label: 'Geplanter Folgeprozess:', maxLength: 120 },
+  ],
 };
