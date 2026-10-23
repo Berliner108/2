@@ -1146,7 +1146,7 @@ const canSaveImpressum = useMemo(() => {
 
               {premiumStatus.status === 'trial' && (
                 <p className={styles.premiumLead}>
-                  Deine kostenlose Testphase ist aktiv.
+                  Deine Premium-Testphase ist aktiv.
                 </p>
               )}
 
@@ -1164,7 +1164,7 @@ const canSaveImpressum = useMemo(() => {
 
               {premiumStatus.status === 'expired' && (
                 <p className={styles.premiumLead}>
-                  Deine kostenlose Testphase ist beendet.
+                  Deine Premium-Testphase ist beendet.
                 </p>
               )}
             </div>
@@ -1183,7 +1183,7 @@ const canSaveImpressum = useMemo(() => {
                   ? 'Gekündigt'
                   : 'Aktiv'
                 : premiumStatus.status === 'trial'
-                  ? 'Testphase'
+                  ? 'Premium-Testphase'
                   : 'Nicht aktiv'}
             </span>
           </div>
@@ -1202,7 +1202,7 @@ const canSaveImpressum = useMemo(() => {
             {premiumStatus.status === 'trial' && (
               <>
                 <div className={styles.premiumInfoCard}>
-                  <span className={styles.premiumInfoLabel}>Verbleibende Testphase</span>
+                  <span className={styles.premiumInfoLabel}>Verbleibende Premium-Testphase</span>
                   <strong>
                     {premiumStatus.trialDaysRemaining === 1
                       ? '1 Tag'
@@ -1211,7 +1211,7 @@ const canSaveImpressum = useMemo(() => {
                 </div>
 
                 <div className={styles.premiumInfoCard}>
-                  <span className={styles.premiumInfoLabel}>Testphase endet am</span>
+                  <span className={styles.premiumInfoLabel}>Premium-Testphase endet am</span>
                   <strong>{formatPremiumDate(premiumStatus.trialEndsAt)}</strong>
                 </div>
               </>
@@ -1233,15 +1233,12 @@ const canSaveImpressum = useMemo(() => {
           </div>
 
           <p className={styles.premiumDescription}>
-            Premium benötigst du, um auf Aufträge und Lackanfragen zu bieten,
-            Artikel zu verkaufen und neue geschäftliche Kontakte zu starten.
-            Aufträge und Lackanfragen einstellen bleibt kostenlos.
+            Mit Premium kannst du aktiv neue Geschäfte über Scouti gewinnen: auf Aufträge und Lackanfragen bieten, Artikel verkaufen und neue geschäftliche Kontakte starten. Aufträge und Lackanfragen einstellen, kaufen und die Plattform durchsuchen bleibt kostenlos.
           </p>
 
           {premiumStatus.status === 'trial' && (
             <p className={styles.premiumDescription}>
-              Während der Testphase erfolgt keine automatische Abbuchung.
-              Erst wenn du die Premium Mitgliedschaft aktiv buchst, wird das Jahresabo kostenpflichtig.
+              Während der Premium-Testphase erfolgt keine automatische Abbuchung. Erst wenn du die Premium Mitgliedschaft aktiv buchst, wird das Jahresabo kostenpflichtig.
             </p>
           )}
 
@@ -1255,14 +1252,13 @@ const canSaveImpressum = useMemo(() => {
           {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
             <p className={styles.premiumDescription}>
               Es erfolgt keine weitere automatische Verlängerung.
-              Dein Premium-Zugang bleibt bis zum angezeigten Datum vollständig aktiv.
+              Deine Premium-Anbieterfunktionen bleiben bis zum angezeigten Datum vollständig aktiv.
             </p>
           )}
 
           {premiumStatus.status === 'expired' && (
             <p className={styles.premiumDescription}>
-              Die Premium-Funktionen sind derzeit nicht aktiv.
-              Bereits laufende Vorgänge kannst du weiterhin abschließen.
+              Deine Premium-Anbieterfunktionen sind derzeit nicht aktiv. Kostenlose Funktionen bleiben weiterhin nutzbar und bereits laufende Vorgänge kannst du abschließen.
             </p>
           )}
 
