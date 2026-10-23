@@ -346,6 +346,10 @@ useEffect(() => {
 
   const verchromenText = `
     Beim <strong>Verchromen</strong> wird eine Chromschicht auf ein metallisches Werkstück aufgebracht. Je nach Ziel kann die Schicht vor allem dekorative Eigenschaften liefern oder gezielt technische Funktionen wie Verschleißschutz, Härte oder verbesserte Gleiteigenschaften erfüllen.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    <strong>Für dekoratives Hochglanzverchromen ist die Oberflächenvorbereitung entscheidend.</strong> Chrom gleicht Schleifriefen, Kratzer oder Unebenheiten nicht aus. Sichtflächen werden deshalb je nach Ausgangszustand zunächst <strong>geschliffen und anschließend poliert</strong>. Bürsten wird vor allem eingesetzt, wenn bewusst eine satinierte oder gebürstete Optik gewünscht ist. Danach folgen die chemische Reinigung und Aktivierung sowie der galvanische Schichtaufbau.<br><br>
+    <strong>Typische Kette bei Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → dekorativ Verchromen.<br><br>
+    <strong>Wichtig:</strong> Bei Hartverchromen ist diese dekorative Hochglanzkette nicht grundsätzlich erforderlich. Dort stehen Funktionsmaß, Schichtdicke und eine gegebenenfalls anschließende Schleif- oder Polierbearbeitung im Vordergrund.<br><br>
     <h4>Varianten</h4>
     <ul>
       <li><strong>Glanzverchromen:</strong> dekorative, glänzende Oberfläche; häufig Teil eines mehrschichtigen galvanischen Aufbaus.</li>
@@ -401,6 +405,8 @@ useEffect(() => {
 
   const nasslackierenText = `
     <strong>Nasslackieren</strong> ist ein Beschichtungsverfahren, bei dem flüssiger Lack auf ein Werkstück aufgetragen und anschließend getrocknet oder ausgehärtet wird. Das Verfahren eignet sich für dekorative, funktionelle und korrosionsschützende Beschichtungen und kann auf unterschiedlichen Werkstoffen eingesetzt werden.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Die genaue Vorbehandlung hängt von Werkstoff, Ausgangszustand und gefordertem Korrosionsschutz ab. Typisch ist: <strong>Reinigen / Entfetten → ggf. Entrosten, Strahlen, Schleifen oder chemische Vorbehandlung → Grundierung → Zwischenbeschichtung → Decklack → Trocknen / Aushärten</strong>. Nicht jeder Auftrag benötigt alle Stufen. Entscheidend ist, dass der Untergrund sauber, tragfähig und für das gewählte Lacksystem geeignet ist.<br><br>
     <h4>Auswahlmöglichkeiten in der Auftragserfassung</h4>
     <ul>
       <li><strong>Farbpalette:</strong> unter anderem RAL, NCS, DB, Pantone, Sonderfarbe / nach Vorlage oder Klarlack</li>
@@ -429,6 +435,8 @@ useEffect(() => {
   `;
 
   const pulverbeschichtenText = legacyContainerTexts[3] + `
+    <br><br><h4>Typische Prozesskette / Vorbehandlung</h4>
+    Eine belastbare Pulverbeschichtung beginnt mit einer zum Werkstoff passenden Vorbehandlung. Typisch ist: <strong>Reinigen / Entfetten → ggf. Strahlen oder Beizen → Konversionsbehandlung bzw. geeignete Vorbehandlung → Spülen → Trocknen → Pulverbeschichten → Einbrennen</strong>. Bei verzinkten Bauteilen oder Duplexsystemen können zusätzliche abgestimmte Vorbehandlungsschritte notwendig sein.
     <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
       <li>Farbpalette, Farbtonbezeichnung bzw. Artikelnummer</li>
@@ -443,6 +451,8 @@ useEffect(() => {
 
   const eloxierenText = `
     <strong>Eloxieren</strong> ist die elektrochemische Oxidation von Aluminium. Dabei wird die Oberfläche des Werkstücks gezielt in eine schützende Oxidschicht umgewandelt. Diese kann den Korrosionsschutz, die Härte, die Verschleißbeständigkeit und die Optik verbessern.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren für die gewünschte Optik → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br>
     <h4>Farbvarianten in der Auftragserfassung</h4>
     <ul>
       <li>C-0 (Natureloxal)</li>
@@ -470,6 +480,8 @@ useEffect(() => {
 
   const verzinkenText = `
     <strong>Verzinken</strong> bezeichnet das Aufbringen einer Zinkschicht auf Stahl oder andere geeignete Eisenwerkstoffe, um insbesondere den Korrosionsschutz zu verbessern. Je nach Bauteil, Einsatzbereich und gewünschter Schichteigenschaft stehen unterschiedliche Verfahren zur Verfügung.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Die Prozesskette unterscheidet sich je nach Verzinkungsverfahren. Beim <strong>Feuerverzinken</strong> ist typisch: Entfetten → Beizen → Spülen → Flussmittelbehandlung → Trocknen → Feuerverzinken → Nachbearbeitung / Kontrolle. Beim <strong>galvanischen Verzinken</strong> ist typisch: Reinigen / Entfetten → Beizen bzw. Aktivieren → Spülen → galvanisch Verzinken → Passivieren → ggf. Versiegeln und Trocknen. Bei starkem Zunder oder besonderen Oberflächenzuständen kann eine zusätzliche mechanische Vorbehandlung erforderlich sein.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
       <li><strong>Feuerverzinken:</strong> Das Werkstück wird in ein Bad aus geschmolzenem Zink getaucht. Dabei entsteht eine metallurgisch gebundene Zinkschicht mit robustem Korrosionsschutz.</li>
@@ -492,6 +504,8 @@ useEffect(() => {
 
   const vernickelnText = `
     <strong>Vernickeln</strong> bezeichnet das Aufbringen einer Nickelschicht auf ein Werkstück. Nickelschichten können dem Korrosions- und Verschleißschutz dienen, technische Oberflächeneigenschaften verbessern oder für dekorative Zwecke eingesetzt werden.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Für dekorative Nickelschichten ist die gewünschte Endoptik bereits vor dem Beschichten vorzubereiten. Je nach Ausgangszustand kann die Kette <strong>Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln</strong> umfassen. Für technische oder chemisch abgeschiedene Nickelschichten kann der mechanische Hochglanzaufbau entfallen; dort stehen Sauberkeit, Aktivierung, Maßhaltigkeit und die geforderte Funktion der Schicht im Vordergrund.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
       <li><strong>Chemisch:</strong> Nickel wird durch eine chemische Reaktion ohne externen elektrischen Strom abgeschieden. Dadurch lassen sich auch komplexe Geometrien vergleichsweise gleichmäßig beschichten.</li>
@@ -624,6 +638,8 @@ useEffect(() => {
 
   const vergoldenText = `
     Beim <strong>Vergolden</strong> wird eine dünne Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Die Goldschicht übernimmt die vorhandene Oberflächenqualität weitgehend. Für dekorative Hochglanzteile wird deshalb typischerweise bereits vorher <strong>geschliffen und poliert</strong>. Anschließend folgen Reinigen / Entfetten, Aktivieren und – abhängig von Grundwerkstoff und Anforderung – geeignete Zwischen- oder Sperrschichten, häufig Nickel. Typisch kann die Kette lauten: <strong>Schleifen → Polieren → Reinigen / Aktivieren → ggf. Verkupfern / Vernickeln → Vergolden</strong>. Bei technischen Kontaktflächen richtet sich der Schichtaufbau dagegen stärker nach elektrischer Funktion, Diffusionssperre und Verschleißanforderung.<br><br>
     <h4>Auswahlmöglichkeiten</h4>
     <ul><li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li><li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li></ul>
     <h4>Typische Anwendungen</h4>
@@ -803,6 +819,8 @@ useEffect(() => {
 
   const versilbernText = `
     <strong>Versilbern</strong> bezeichnet das Aufbringen einer Silberschicht auf ein Werkstück, meist durch galvanische Abscheidung. Silber wird wegen seiner sehr guten elektrischen und thermischen Leitfähigkeit sowie für dekorative und funktionelle Oberflächen eingesetzt.<br><br>
+    <h4>Typische Prozesskette / Vorbehandlung</h4>
+    Vor dem Versilbern muss die Oberfläche metallisch sauber und aktiv sein. Bei dekorativen Sichtteilen wird die gewünschte Glätte häufig bereits durch <strong>Schleifen und Polieren</strong> erzeugt. Danach folgen Reinigen / Entfetten, Aktivieren und je nach Grundwerkstoff geeignete Zwischen- oder Sperrschichten. Typisch ist beispielsweise: <strong>Schleifen / Polieren → Reinigen → Aktivieren → ggf. Verkupfern oder Vernickeln → Versilbern → ggf. Anlaufschutz</strong>. Bei elektrischen Funktionsflächen stehen Leitfähigkeit, Kontaktwiderstand und Schichtdicke stärker im Vordergrund als die Hochglanzoptik.<br><br>
     <h4>Typische Anwendungen</h4>
     <ul><li>elektrische Kontakte und Stromschienen</li><li>Bauteile mit hohen Anforderungen an Leitfähigkeit</li><li>dekorative Metalloberflächen</li><li>technische Funktionsschichten</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
