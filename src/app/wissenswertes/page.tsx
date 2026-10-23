@@ -348,34 +348,62 @@ useEffect(() => {
   `;
 
   const verchromenText = `
-    Beim <strong>Verchromen</strong> wird eine Chromschicht auf ein metallisches Werkstück aufgebracht. Je nach Ziel kann die Schicht vor allem dekorative Eigenschaften liefern oder gezielt technische Funktionen wie Verschleißschutz, Härte oder verbesserte Gleiteigenschaften erfüllen.<br><br>
+    Beim <strong>Verchromen</strong> wird eine Chromschicht auf ein metallisches Werkstück aufgebracht. Dabei sollte zwischen <strong>dekorativem Verchromen</strong> und <strong>Hartverchromen</strong> unterschieden werden: Dekorative Systeme dienen vor allem Optik und Korrosionsschutz, während Hartchrom gezielt für technische Funktionen wie Verschleißschutz, Härte, Maßkorrektur oder verbesserte Gleiteigenschaften eingesetzt wird.<br><br>
+
     <h4>Typische Prozesskette / Vorbehandlung</h4>
-    <strong>Für dekoratives Hochglanzverchromen ist die Oberflächenvorbereitung entscheidend.</strong> Chrom gleicht Schleifriefen, Kratzer oder Unebenheiten nicht aus. Sichtflächen werden deshalb je nach Ausgangszustand zunächst <strong>geschliffen und anschließend poliert</strong>. Bürsten wird vor allem eingesetzt, wenn bewusst eine satinierte oder gebürstete Optik gewünscht ist. Danach folgen die chemische Reinigung und Aktivierung sowie der galvanische Schichtaufbau.<br><br>
-    <strong>Typische Kette bei Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → dekorativ Verchromen.<br><br>
-    <strong>Wichtig:</strong> Bei Hartverchromen ist diese dekorative Hochglanzkette nicht grundsätzlich erforderlich. Dort stehen Funktionsmaß, Schichtdicke und eine gegebenenfalls anschließende Schleif- oder Polierbearbeitung im Vordergrund.<br><br>
-    <h4>Varianten</h4>
+    Für dekorative Sichtoberflächen ist die Oberflächenvorbereitung entscheidend. Chrom gleicht Schleifriefen, Kratzer oder Unebenheiten nicht aus. Je nach gewünschter Optik wird die Oberfläche deshalb vor dem galvanischen Aufbau beispielsweise <strong>geschliffen, poliert oder gebürstet</strong>.<br><br>
+    <strong>Typische Kette bei dekorativem Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → Verchromen.<br><br>
+    Mehrschichtsysteme wie <strong>Kupfer – Nickel – Chrom</strong> oder <strong>Nickel – Chrom</strong> werden eingesetzt, wenn Optik, Haftung und Korrosionsschutz entsprechend aufgebaut werden sollen. Die konkrete Schichtfolge hängt von Werkstoff, Ausgangszustand und Anforderung ab.<br><br>
+    <strong>Wichtig:</strong> Bei Hartverchromen ist eine dekorative Hochglanzvorbereitung nicht grundsätzlich erforderlich. Hier stehen Funktionsmaß, Schichtdicke, Verschleißbeanspruchung und gegebenenfalls eine anschließende Schleif- oder Polierbearbeitung im Vordergrund.<br><br>
+
+    <h4>Verchromungsart</h4>
     <ul>
-      <li><strong>Glanzverchromen:</strong> dekorative, glänzende Oberfläche; häufig Teil eines mehrschichtigen galvanischen Aufbaus.</li>
-      <li><strong>Mattverchromen:</strong> matte bis satinierte Optik für dekorative oder funktionelle Anwendungen.</li>
-      <li><strong>Hartverchromen:</strong> technische Chromschicht für stark beanspruchte Bauteile, beispielsweise zur Erhöhung von Verschleißfestigkeit oder zur Wiederherstellung von Funktionsmaßen.</li>
+      <li><strong>Dekorativverchromen:</strong> für optisch hochwertige Oberflächen und Korrosionsschutz, häufig in Kombination mit Nickel- oder Kupfer-/Nickelschichten.</li>
+      <li><strong>Hartverchromen:</strong> technische Chromschicht für stark beanspruchte Funktionsflächen.</li>
     </ul>
+
+    <h4>Oberfläche / Optik bei dekorativem Verchromen</h4>
+    <ul>
+      <li>Hochglanz</li>
+      <li>Matt / satiniert</li>
+      <li>Strichmatt</li>
+      <li>Perlglanz / Perlmutt</li>
+      <li>Rauchchrom dunkel – matt</li>
+      <li>Rauchchrom dunkel – hochglanz</li>
+      <li>Champagner</li>
+      <li>Andere Oberfläche / nach Muster</li>
+    </ul>
+    Solche Bezeichnungen beschreiben die gewünschte dekorative Wirkung. Das endgültige Erscheinungsbild hängt stark von Vorbearbeitung, Grundwerkstoff und Schichtaufbau ab.<br><br>
+
+    <h4>Chromsystem</h4>
+    In der Anfrage kann zwischen <strong>Chrom(III)</strong>, <strong>Chrom(VI)</strong> und <strong>Nach Vorgabe / unbekannt</strong> unterschieden werden. Moderne dekorative Anlagen arbeiten häufig mit Chrom(III)-Systemen. Welche Variante technisch oder regulatorisch erforderlich ist, sollte bei Bedarf ausdrücklich vorgegeben werden.<br><br>
+
+    <h4>Schichtdicke und Nachbehandlung</h4>
+    Die gewünschte <strong>Schichtdicke in µm</strong> sollte angegeben werden, wenn sie konstruktiv oder funktionell relevant ist. Als optionale Nachbehandlung können beispielsweise <strong>Passivieren</strong> oder <strong>Versiegeln</strong> gefordert werden.<br><br>
+
     <h4>Typische Anwendungen</h4>
     <ul>
-      <li>Maschinen- und Anlagenbau</li>
-      <li>Wellen, Kolbenstangen, Walzen und Führungen</li>
+      <li>Möbel- und Ladenbauteile</li>
+      <li>Automotive- und Designbauteile</li>
+      <li>dekorative Metallteile und Sichtflächen</li>
+      <li>Wellen, Kolbenstangen, Walzen und Führungen bei Hartchrom</li>
       <li>Werkzeuge und verschleißbeanspruchte Funktionsflächen</li>
-      <li>dekorative Metallteile und sichtbare Bauteile</li>
     </ul>
+
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
-      <li>gewünschte Ausführung: <strong>Glanz-, Matt- oder Hartverchromen</strong></li>
+      <li>Verchromungsart: <strong>Dekorativverchromen oder Hartverchromen</strong></li>
+      <li>gewünschte Oberfläche / Optik bei dekorativen Teilen</li>
+      <li>Chromsystem: Chrom(III), Chrom(VI) oder nach Vorgabe</li>
+      <li>gewünschter Schichtaufbau, z. B. Nickel – Chrom oder Kupfer – Nickel – Chrom</li>
+      <li>gewünschte Schichtdicke</li>
       <li>Werkstoff und Ausgangszustand der Oberfläche</li>
       <li>Maße, Gewicht, Stückzahl und zulässige Maßänderungen</li>
       <li>Funktions-, Pass- und Sichtflächen</li>
-      <li>gewünschte Schichtdicke bzw. technische Funktion</li>
+      <li>optionale Nachbehandlung wie Passivieren oder Versiegeln</li>
       <li>Nachbearbeitung wie Schleifen oder Polieren, falls erforderlich</li>
     </ul>
-    <strong>Praxis-Hinweis:</strong> Gerade bei Hartchrom sind Maßhaltigkeit, Ausgangsmaß, spätere Bearbeitung und die tatsächlich zu beschichtenden Funktionsflächen vor Angebotsabgabe eindeutig festzulegen.
+    <strong>Praxis-Hinweis:</strong> Besonders bei dekorativen Chromoberflächen sollte die gewünschte Optik möglichst eindeutig benannt oder durch ein Referenzmuster definiert werden. Bei Hartchrom sind dagegen Maßhaltigkeit, Ausgangsmaß, Schichtdicke, spätere Bearbeitung und die tatsächlich zu beschichtenden Funktionsflächen entscheidend.
   `;
 
   const bruenierenText = `

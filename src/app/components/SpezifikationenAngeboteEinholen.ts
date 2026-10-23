@@ -426,6 +426,12 @@ export const specificationsMap: Record<string, Specification[]> = {
       dependsOn: { name: 'verfahren', value: 'Chemisch' }
     },
     {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      maxLength: 30
+    },
+    {
       type: 'group',
       name: 'zertifizierungen',
       label: 'Zertifizierungen:',
@@ -657,24 +663,65 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
   Verchromen: [
-  {
-    type: 'radio',
-    name: 'verfahren',
-    label: 'Verfahren:',
-    options: [
-      'Glanzverchromen',
-      'Mattverchromen',
-      'Hartverchromen'
-    ],
-    required: true
-  },
-  {
-    type: 'radio',
-    name: 'chromsystem',
-    label: 'Chromsystem:',
-    options: ['Chrom(III)', 'Chrom(VI)', 'Nach Vorgabe / unbekannt']
-  }
-],
+    {
+      type: 'radio',
+      name: 'verfahren',
+      label: 'Verchromungsart:',
+      options: [
+        'Dekorativverchromen',
+        'Hartverchromen',
+        'Nach Vorgabe / unbekannt'
+      ],
+      required: true
+    },
+    {
+      type: 'dropdown',
+      name: 'chromoptik',
+      label: 'Oberfläche / Optik:',
+      options: [
+        'Hochglanz',
+        'Matt / satiniert',
+        'Strichmatt',
+        'Perlglanz / Perlmutt',
+        'Rauchchrom dunkel – matt',
+        'Rauchchrom dunkel – hochglanz',
+        'Champagner',
+        'Andere / nach Muster'
+      ],
+      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
+    },
+    {
+      type: 'radio',
+      name: 'chromsystem',
+      label: 'Chromsystem:',
+      options: ['Chrom(III)', 'Chrom(VI)', 'Nach Vorgabe / unbekannt']
+    },
+    {
+      type: 'dropdown',
+      name: 'schichtaufbau',
+      label: 'Schichtaufbau:',
+      options: [
+        'Direkt auf Grundwerkstoff',
+        'Nickel – Chrom',
+        'Kupfer – Nickel – Chrom',
+        'Andere / nach Vorgabe',
+        'Unbekannt'
+      ],
+      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      maxLength: 30
+    },
+    {
+      type: 'group',
+      name: 'chromNachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: ['Passivieren', 'Versiegeln', 'Andere / Nach Vorgabe']
+    }
+  ],
   'Aluminium-Passivieren': [
     {
       type: 'radio',

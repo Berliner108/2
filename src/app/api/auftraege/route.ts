@@ -44,6 +44,7 @@ const VERFAHREN = [
   'Verkupfern',
   'Vergolden',
   'Versilbern',
+  'Bronzebeschichten',
 ] as const
 const DEFAULT_LIMITS = {
   length: 20000,

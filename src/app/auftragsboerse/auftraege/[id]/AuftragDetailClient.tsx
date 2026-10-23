@@ -135,6 +135,8 @@ const specificationLabels: Record<string, string> = {
   // Verchromen
   verchromungsart: 'Verchromungsart',
   chromsystem: 'Chromsystem',
+  chromoptik: 'Oberfläche / Optik',
+  chromnachbehandlung: 'Optionale Nachbehandlung',
   // Aluminium-Passivieren
   passivierungsart: 'Passivierung',
   anforderung: 'Anforderung',
