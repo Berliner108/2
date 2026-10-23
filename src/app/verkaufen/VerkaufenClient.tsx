@@ -212,6 +212,7 @@ function ArtikelEinstellen() {
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
 const [premiumModalOpen, setPremiumModalOpen] = useState(false)
+const [premiumInitialCheckDone, setPremiumInitialCheckDone] = useState(false)
   const searchParams = useSearchParams(); // <-- HIER  
 const {
   editId,
@@ -554,6 +555,56 @@ const resetFieldsExceptCategory = () => {
 };
 
  
+
+useEffect(() => {
+  let active = true
+
+  const checkPremiumOnLoad = async () => {
+    try {
+      const res = await fetch('/api/me/premium', {
+        cache: 'no-store',
+        credentials: 'include',
+      })
+
+      const data = await res.json().catch(() => ({} as any))
+
+      if (!active) return
+
+      if (res.status === 401) {
+        router.replace('/login')
+        return
+      }
+
+      if (!res.ok) {
+        setPremiumInitialCheckDone(true)
+        return
+      }
+
+      const status = String(data?.status || '').toLowerCase()
+
+      if (
+        status !== 'active' &&
+        status !== 'trial' &&
+        status !== 'exempt'
+      ) {
+        setPremiumModalOpen(true)
+      }
+
+      setPremiumInitialCheckDone(true)
+    } catch {
+      if (active) {
+        setPremiumInitialCheckDone(true)
+      }
+    }
+  }
+
+  void checkPremiumOnLoad()
+
+  return () => {
+    active = false
+  }
+}, [router])
+
 const fetchConnect = useCallback(async () => {
   try {
     const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
