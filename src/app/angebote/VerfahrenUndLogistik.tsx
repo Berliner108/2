@@ -36,8 +36,8 @@ interface VerfahrenUndLogistikProps {
 }
 const allOptions = [
   'Verzinken',
-  'Pulverbeschichten',
   'Nasslackieren',
+  'Pulverbeschichten',
   'KTL-Beschichten',
   'Strahlen',
   'Vernickeln',

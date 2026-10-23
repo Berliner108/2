@@ -9,8 +9,8 @@ import BoerseLoading from '../components/loading/BoerseLoading'
 import type { Auftrag } from '@/lib/types/auftrag'
 const VERFAHREN = [
   'Verzinken',
-  'Pulverbeschichten',
   'Nasslackieren',
+  'Pulverbeschichten',
   'KTL-Beschichten',
   'Strahlen',
   'Vernickeln',

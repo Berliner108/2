@@ -17,14 +17,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'verzinkter Stahl', 'Kunststoff', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'dropdown',
       name: 'beschichtung',
       label: 'Vorhandene Beschichtung:',
@@ -55,7 +48,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     type: 'radio',
     name: 'verfahren',
     label: 'Verfahren',
-    options: ['Heißbrünieren', 'Kaltbrünieren', 'Nach Vorgabe']
+    options: ['Heißbrünieren', 'Kaltbrünieren', 'Schwarzoxidieren', 'Nach Vorgabe']
   },
   {
     type: 'group',
@@ -69,14 +62,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     ]
   },
 
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl/Eisenwerkstoff', 'Andere nach Vorgabe'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'nachbehandlung',
       label: 'Nachbehandlung:',
@@ -100,21 +86,14 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'group',
       name: 'strahlziel',
       label: 'Bearbeitungsziel:',
-      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Andere / Sondervorgabe']
+      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Entgraten', 'Verdichten / Verfestigen', 'Andere / Sondervorgabe']
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'verzinkter Stahl', 'Guss', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'ziel',
       label: 'Bearbeitungsziel:',
-      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Andere / Sondervorgabe'],
+      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Reinigen', 'Aufrauen', 'Mattieren', 'Entgraten', 'Verdichten / Verfestigen', 'Andere / Sondervorgabe'],
       required: true,
     },
     {
@@ -262,13 +241,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       dependsOn: { name: 'verfahren', value: 'Ematal' }
     },
   
-    {
-      type: 'dropdown',
-      name: 'farbe',
-      label: 'Farbe:',
-      options: ['Natureloxal', 'Bronze-/Grau-/Schwarz-Töne', 'Andere'],
-    },
-  ],
+      ],
   Verzinken: [
     {
       type: 'radio',
@@ -391,14 +364,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     ]
    },
 
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'verzinkter Stahl', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'zweck',
       label: 'Zweck / Anforderung:',
@@ -428,14 +394,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Guss', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'zweck',
       label: 'Zweck / Anforderung:',
@@ -443,19 +402,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     },
   ],
   Beizen: [
-    {
-      type: 'dropdown',
-      name: 'beizwerkstoff',
-      label: 'Werkstoff / Beizart:',
-      options: [
-        'Edelstahl',
-        'Stahl',
-        'Aluminium',
-        'Andere / nach Vorgabe'
-      ],
-      required: true
-    },
-    {
+        {
       type: 'radio',
       name: 'verfahren',
       label: 'Beizverfahren:',
@@ -509,14 +456,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 40
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Kunststoff', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'ziel',
       label: 'Bearbeitungsziel:',
@@ -545,14 +485,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 30
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-  ],
+      ],
   Glätten: [
     {
       type: 'radio',
@@ -569,14 +502,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 40
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'rauheit_typ',
       label: 'Rauheitskennwert:',
@@ -605,14 +531,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 60
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'finish',
       label: 'Gewünschtes Finish:',
@@ -641,14 +560,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: ['Längsschliff', 'Kreuzschliff', 'Nach Vorgabe']
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'zweck',
       label: 'Zweck / Anforderung:',
@@ -685,14 +597,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 40
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'rauheit_typ',
       label: 'Rauheitskennwert:',
@@ -721,14 +626,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 40
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Andere'],
-      required: true,
-    },
-  ],
+      ],
   Trowalisieren: [
     {
       type: 'group',
@@ -743,14 +641,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: ['Vibrationsgleitschleifen', 'Trommelgleitschleifen', 'Fliehkraft- / Schleppfinish', 'Nach Vorgabe']
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Aluminium', 'NE-Metall', 'Kunststoff', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'zielrauheit',
       label: 'Zielrauheit (µm)',
@@ -781,14 +672,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       maxLength: 80
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Aluminium', 'Kupfer/Kupferlegierung', 'Stahl', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'ziel',
       label: 'Bearbeitungsziel:',
@@ -827,14 +711,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Edelstahl', 'verzinkter Stahl', 'Aluminium', 'Zinkdruckguss', 'Guss', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'ktl_ausfuehrung',
       label: 'KTL-Ausführung:',
@@ -950,14 +827,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Kupfer/Kupferlegierung', 'Aluminium', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'nickelart',
       label: 'Nickelart:',
@@ -1003,14 +873,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Stahl', 'Kupfer/Kupferlegierung', 'Messing', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'schicht',
       label: 'Vorhandene Zinnschicht:',
@@ -1055,14 +918,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Stahl', 'Edelstahl', 'Guss', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'dropdown',
       name: 'vorhandene_schicht',
       label: 'Vorhandene Schicht:',
@@ -1141,14 +997,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'profilwerkstoff',
-      label: 'Profilwerkstoff:',
-      options: ['Aluminiumprofil', 'Andere nach Vorgabe'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'stegtyp',
       label: 'Stegtyp / Stegbreite / Herstellerreferenz:',
@@ -1187,14 +1036,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'text',
-      name: 'werkstoff_oberflaeche',
-      label: 'Grundwerkstoff / vorhandene Oberfläche:',
-      required: true,
-      maxLength: 120,
-    },
-    {
+        {
       type: 'dropdown',
       name: 'folientyp',
       label: 'Folientyp / Zweck:',
@@ -1250,14 +1092,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Kupfer/Kupferlegierung', 'Messing', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'auftrag',
       label: 'Auftragsart:',
@@ -1285,19 +1120,7 @@ export const specificationsMap: Record<string, Specification[]> = {
     },
   ],
   Anodisieren: [
-    {
-      type: 'dropdown',
-      name: 'anodisierwerkstoff',
-      label: 'Werkstoff:',
-      options: [
-        'Titan',
-        'Magnesium',
-        'Zink',
-        'Andere / nach Vorgabe'
-      ],
-      required: true
-    },
-    {
+        {
       type: 'group',
       name: 'anodisierfunktion',
       label: 'Gewünschte Funktion:',
@@ -1369,14 +1192,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Nickelbasislegierung', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'schichtdicke',
       label: 'Gewünschte Schichtdicke (µm)',
@@ -1411,14 +1227,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'radio',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Aluminium'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'eloxalschicht',
       label: 'Vorhandene Eloxalschicht:',
@@ -1464,14 +1273,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Titan', 'Magnesium', 'Zink', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'schicht_prozess',
       label: 'Vorhandene anodische Schicht / Prozess:',
@@ -1516,14 +1318,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       ]
     },
   
-    {
-      type: 'dropdown',
-      name: 'grundwerkstoff',
-      label: 'Grundwerkstoff:',
-      options: ['Stahl', 'Nickelbasislegierung', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'dropdown',
       name: 'aluschicht',
       label: 'Vorhandene Aluminiumschicht:',
@@ -1556,27 +1351,16 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'verfahren',
       label: 'Verchromungsart:',
       options: [
-        'Dekorativverchromen',
-        'Hartverchromen',
-        'Nach Vorgabe / unbekannt'
+        'Glanzverchromen',
+        'Mattverchromen',
+        'Strichmattverchromen',
+        'Perlglanz / Perlmutt',
+        'Rauchchrom matt',
+        'Rauchchrom hochglanz',
+        'Champagner',
+        'Hartverchromen'
       ],
       required: true
-    },
-    {
-      type: 'dropdown',
-      name: 'chromoptik',
-      label: 'Oberfläche / Optik:',
-      options: [
-        'Hochglanz',
-        'Matt / satiniert',
-        'Strichmatt',
-        'Perlglanz / Perlmutt',
-        'Rauchchrom dunkel – matt',
-        'Rauchchrom dunkel – hochglanz',
-        'Champagner',
-        'Andere / nach Muster'
-      ],
-      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
     },
     {
       type: 'radio',
@@ -1594,8 +1378,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Kupfer – Nickel – Chrom',
         'Andere / nach Vorgabe',
         'Unbekannt'
-      ],
-      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
+      ]
     },
     {
       type: 'text',
@@ -1611,7 +1394,6 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Optionale Nachbehandlung:',
       options: ['Passivieren', 'Versiegeln', 'Andere / Nach Vorgabe']
     },
-  
     {
       type: 'group',
       name: 'nachbearbeitung',
@@ -1671,14 +1453,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       required: true
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Edelstahl', 'Aluminium', 'Kupfer/Kupferlegierung', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'group',
       name: 'ziel',
       label: 'Bearbeitungsziel:',
@@ -1717,14 +1492,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       required: true
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Zinkdruckguss', 'Kupfer/Kupferlegierung', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'text',
       name: 'schichtdicke',
       label: 'Gewünschte Schichtdicke (µm)',
@@ -1748,14 +1516,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       required: true
     },
   
-    {
-      type: 'dropdown',
-      name: 'werkstoff',
-      label: 'Werkstoff:',
-      options: ['Stahl', 'Zinkdruckguss', 'Aluminium', 'Edelstahl', 'Andere'],
-      required: true,
-    },
-    {
+        {
       type: 'radio',
       name: 'auftrag',
       label: 'Auftragsart:',
@@ -2165,23 +1926,20 @@ export const specificationsMap: Record<string, Specification[]> = {
     },
   ],
   'Edelstahl-Passivieren': [
-    { type: 'radio', name: 'werkstoff', label: 'Werkstoff:', options: ['Edelstahl / nichtrostender Stahl'], required: true },
-    { type: 'dropdown', name: 'verfahren', label: 'Verfahren:', options: ['Zitronensäure-Passivieren', 'Salpetersäure-Passivieren', 'Nach Vorgabe / unbekannt'] },
+        { type: 'dropdown', name: 'verfahren', label: 'Verfahren:', options: ['Zitronensäure-Passivieren', 'Salpetersäure-Passivieren', 'Nach Vorgabe / unbekannt'] },
     { type: 'group', name: 'ziel', label: 'Ziel / Anforderung:', options: ['Korrosionsbeständigkeit verbessern', 'Freie Eisenverunreinigungen entfernen', 'Vorbereitung Reinraum / Medizin / Lebensmittel', 'Andere / nach Vorgabe'] },
     { type: 'group', name: 'vorbehandlung', label: 'Vorbehandlung:', options: ['Reinigen / Entfetten', 'Beizen', 'Elektropolieren', 'Keine / nach Vorgabe'] },
     { type: 'text', name: 'nss_stunden', label: 'Salzsprühnebel-Anforderung (h)', numericOnly: true, allowDecimal: false, maxLength: 10 },
     { type: 'text', name: 'norm_vorgabe', label: 'Norm / Kundenvorgabe:', maxLength: 120 },
   ],
   Entchromen: [
-    { type: 'dropdown', name: 'grundwerkstoff', label: 'Grundwerkstoff:', options: ['Stahl', 'Edelstahl', 'Kupfer / Kupferlegierung', 'Zinkdruckguss', 'Aluminium', 'Andere'], required: true },
-    { type: 'dropdown', name: 'chromart', label: 'Chromschicht / Aufbau:', options: ['Dekorativchrom', 'Hartchrom', 'Mehrschichtsystem Chrom / Nickel / Kupfer', 'Unbekannt'] },
+        { type: 'dropdown', name: 'chromart', label: 'Chromschicht / Aufbau:', options: ['Dekorativchrom', 'Hartchrom', 'Mehrschichtsystem Chrom / Nickel / Kupfer', 'Unbekannt'] },
     { type: 'radio', name: 'umfang', label: 'Umfang:', options: ['Vollständig', 'Partiell / nach Zeichnung'], required: true },
     { type: 'radio', name: 'masskritisch', label: 'Maßkritische Flächen / Passungen:', options: ['Ja', 'Nein'] },
     { type: 'text', name: 'folgeprozess', label: 'Geplanter Folgeprozess:', maxLength: 120 },
   ],
   Entkupfern: [
-    { type: 'dropdown', name: 'grundwerkstoff', label: 'Grundwerkstoff:', options: ['Stahl', 'Edelstahl', 'Zinkdruckguss', 'Aluminium', 'Nickelbasis / andere'], required: true },
-    { type: 'dropdown', name: 'kupferschicht', label: 'Kupferschicht:', options: ['Galvanisch Kupfer', 'Chemisch Kupfer', 'Dickkupfer / Reparaturkupfer', 'Unbekannt'] },
+        { type: 'dropdown', name: 'kupferschicht', label: 'Kupferschicht:', options: ['Galvanisch Kupfer', 'Chemisch Kupfer', 'Dickkupfer / Reparaturkupfer', 'Unbekannt'] },
     { type: 'radio', name: 'umfang', label: 'Umfang:', options: ['Vollständig', 'Partiell / nach Zeichnung'], required: true },
     { type: 'radio', name: 'masskritisch', label: 'Maßkritische Flächen / Passungen:', options: ['Ja', 'Nein'] },
     { type: 'text', name: 'folgeprozess', label: 'Geplanter Folgeprozess:', maxLength: 120 },

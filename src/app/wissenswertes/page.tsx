@@ -347,7 +347,7 @@ useEffect(() => {
     </ul>
     <h4>Relevante Qualitätsanforderungen</h4>
     Je nach Auftrag können Qualitäts- und Umweltmanagement sowie branchenspezifische Anforderungen eine Rolle spielen. Bei einer Anfrage können für KTL unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>IATF 16949</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.<br><br>
-    <strong>Praxis-Hinweis:</strong> Für ein belastbares Angebot sollte der Beschichter wissen, ob KTL als Endoberfläche oder als Grundierung für ein weiteres Beschichtungssystem vorgesehen ist.
+    <strong>Konstruktive Hinweise:</strong> Da KTL ein Tauchverfahren ist, müssen Hohlräume, Sacklöcher und schöpfende Geometrien so ausgeführt sein, dass Badflüssigkeit ein- und wieder vollständig auslaufen kann. Entlüftungs- und Ablauföffnungen sowie Kontaktier- und Aufhängestellen sind deshalb konstruktiv mitzudenken.<br><br><strong>Praxis-Hinweis:</strong> Für ein belastbares Angebot sollte der Beschichter wissen, ob KTL als Endoberfläche oder als Grundierung für ein weiteres Beschichtungssystem vorgesehen ist.
   `;
 
   const verchromenText = `
@@ -355,7 +355,7 @@ useEffect(() => {
 
     <h4>Typische Prozesskette / Vorbehandlung</h4>
     Für dekorative Sichtoberflächen ist die Oberflächenvorbereitung entscheidend. Chrom gleicht Schleifriefen, Kratzer oder Unebenheiten nicht aus. Je nach gewünschter Optik wird die Oberfläche deshalb vor dem galvanischen Aufbau beispielsweise <strong>geschliffen, poliert oder gebürstet</strong>.<br><br>
-    <strong>Typische Kette bei dekorativem Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → Verchromen.<br><br>
+    <strong>Konstruktive Hinweise:</strong> Bei galvanischen Chromsystemen müssen Kontaktierstellen für die Stromübertragung vorgesehen werden. Sacklöcher, tiefe Innenkonturen und Hohlräume können nur eingeschränkt oder ungleichmäßig beschichtet werden; bei kritischen Innenflächen sollten Ablaufmöglichkeiten und die gewünschte Beschichtbarkeit vorab mit dem Betrieb abgestimmt werden.<br><br><strong>Typische Kette bei dekorativem Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → Verchromen.<br><br>
     Mehrschichtsysteme wie <strong>Kupfer – Nickel – Chrom</strong> oder <strong>Nickel – Chrom</strong> werden eingesetzt, wenn Optik, Haftung und Korrosionsschutz entsprechend aufgebaut werden sollen. Die konkrete Schichtfolge hängt von Werkstoff, Ausgangszustand und Anforderung ab.<br><br>
     <strong>Wichtig:</strong> Bei Hartverchromen ist eine dekorative Hochglanzvorbereitung nicht grundsätzlich erforderlich. Hier stehen Funktionsmaß, Schichtdicke, Verschleißbeanspruchung und gegebenenfalls eine anschließende Schleif- oder Polierbearbeitung im Vordergrund.<br><br>
 
@@ -465,12 +465,13 @@ useEffect(() => {
       <li>besondere Effekte oder Extras</li>
       <li>gewünschter Schichtaufbau, Korrosionsschutz und zu maskierende Bereiche</li>
     </ul>
+    <strong>Konstruktive Hinweise:</strong> Bei Hohlräumen, Sacklöchern oder schöpfenden Geometrien sollten ausreichende Ablaufmöglichkeiten für Reinigungs- und Vorbehandlungsmedien vorgesehen werden. Aufhängestellen sowie Bereiche, die lackfrei bleiben müssen, sollten vorab festgelegt und in Zeichnungen eindeutig gekennzeichnet werden.<br><br>
     Bei einer Anfrage können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
   `;
 
   const pulverbeschichtenText = legacyContainerTexts[3] + `
     <br><br><h4>Typische Prozesskette / Vorbehandlung</h4>
-    Eine belastbare Pulverbeschichtung beginnt mit einer zum Werkstoff passenden Vorbehandlung. Typisch ist: <strong>Reinigen / Entfetten → ggf. Strahlen oder Beizen → Konversionsbehandlung bzw. geeignete Vorbehandlung → Spülen → Trocknen → Pulverbeschichten → Einbrennen</strong>. Bei verzinkten Bauteilen oder Duplexsystemen können zusätzliche abgestimmte Vorbehandlungsschritte notwendig sein.
+    Eine belastbare Pulverbeschichtung beginnt mit einer zum Werkstoff passenden Vorbehandlung. Typisch ist: <strong>Reinigen / Entfetten → ggf. Strahlen oder Beizen → Konversionsbehandlung bzw. geeignete Vorbehandlung → Spülen → Trocknen → Pulverbeschichten → Einbrennen</strong>. Bei verzinkten Bauteilen oder Duplexsystemen können zusätzliche abgestimmte Vorbehandlungsschritte notwendig sein.<br><br><strong>Konstruktive Hinweise:</strong> Bei schöpfenden Geometrien und Hohlräumen sollten ausreichende Ablauf- und Entlüftungsmöglichkeiten vorgesehen werden, damit Vorbehandlungsmedien vollständig ablaufen können. Aufhängestellen und elektrische Kontaktpunkte können sichtbare Spuren hinterlassen und sollten möglichst früh festgelegt werden.
     <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
       <li>Farbpalette, Farbtonbezeichnung bzw. Artikelnummer</li>
@@ -486,7 +487,7 @@ useEffect(() => {
   const eloxierenText = `
     <strong>Eloxieren</strong> ist die elektrochemische Oxidation von <strong>Aluminium</strong>. Beschichter Scout verwendet „Eloxieren“ gezielt für Aluminium und Aluminiumlegierungen. Für anodische Oxidationsverfahren auf anderen Metallen wird die separate Auswahl <strong>Anodisieren</strong> verwendet.<br><br>
     <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br>
+    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br><strong>Konstruktive Hinweise:</strong> Sacklöcher und Hohlräume sollten so gestaltet sein, dass Prozessbäder vollständig ein- und auslaufen können. Kontaktier- und Aufhängestellen sind verfahrensbedingt notwendig und können sichtbare Kontaktspuren hinterlassen; bei Sichtteilen sollten diese Stellen vorab festgelegt werden.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
       <li><strong>Normaleloxal:</strong> klassisches Eloxieren für dekorative und technische Aluminiumoberflächen.</li>
@@ -515,7 +516,7 @@ useEffect(() => {
     <h4>Passivierung / Chromatierung bei galvanischem Verzinken</h4>
     Nach dem galvanischen Verzinken kann eine zusätzliche Konversionsschicht gefordert werden. Übliche Angaben sind beispielsweise <strong>Blaupassivieren, Gelbpassivieren, Dickschichtpassivieren, Schwarzpassivieren</strong> oder <strong>Schwarzchromatieren</strong>. Die gewünschte Ausführung sollte ausdrücklich angegeben werden, da Optik, Korrosionsschutz und chemisches System voneinander abweichen können.<br><br>
 <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Die Prozesskette unterscheidet sich je nach Verzinkungsverfahren. Beim <strong>Feuerverzinken</strong> ist typisch: Entfetten → Beizen → Spülen → Flussmittelbehandlung → Trocknen → Feuerverzinken → Nachbearbeitung / Kontrolle. Beim <strong>galvanischen Verzinken</strong> ist typisch: Reinigen / Entfetten → Beizen bzw. Aktivieren → Spülen → galvanisch Verzinken → Passivieren → ggf. Versiegeln und Trocknen. Bei starkem Zunder oder besonderen Oberflächenzuständen kann eine zusätzliche mechanische Vorbehandlung erforderlich sein.<br><br>
+    Die Prozesskette unterscheidet sich je nach Verzinkungsverfahren. Beim <strong>Feuerverzinken</strong> ist typisch: Entfetten → Beizen → Spülen → Flussmittelbehandlung → Trocknen → Feuerverzinken → Nachbearbeitung / Kontrolle. Beim <strong>galvanischen Verzinken</strong> ist typisch: Reinigen / Entfetten → Beizen bzw. Aktivieren → Spülen → galvanisch Verzinken → Passivieren → ggf. Versiegeln und Trocknen. Bei starkem Zunder oder besonderen Oberflächenzuständen kann eine zusätzliche mechanische Vorbehandlung erforderlich sein.<br><br><strong>Konstruktive Hinweise:</strong> Beim Feuerverzinken sind bei Hohlprofilen und Hohlbauteilen ausreichend dimensionierte Entlüftungs- und Ablauföffnungen zwingend erforderlich. Geschlossene Hohlräume dürfen nicht vorhanden sein, und schöpfende Bereiche sind zu vermeiden, damit Vorbehandlungsmedien und flüssiges Zink sicher ein- und auslaufen können. Auch Aufhängemöglichkeiten und mögliche Verzüge durch die Temperaturbelastung sollten konstruktiv berücksichtigt werden.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
       <li><strong>Feuerverzinken:</strong> Das Werkstück wird in ein Bad aus geschmolzenem Zink getaucht. Dabei entsteht eine metallurgisch gebundene Zinkschicht mit robustem Korrosionsschutz.</li>
@@ -578,7 +579,7 @@ useEffect(() => {
   `;
 
   const strahlenText = `
-    <strong>Strahlen</strong> ist eine mechanische Oberflächenbehandlung, bei der ein Strahlmittel mit hoher Geschwindigkeit auf ein Werkstück trifft. Dadurch können Oberflächen gereinigt, aufgeraut, mattiert oder für eine nachfolgende Beschichtung vorbereitet werden.<br><br>
+    <strong>Strahlen</strong> ist eine mechanische Oberflächenbehandlung, bei der ein Strahlmittel mit hoher Geschwindigkeit auf ein Werkstück trifft. Dadurch können Oberflächen gereinigt, aufgeraut, mattiert oder für eine nachfolgende Beschichtung vorbereitet werden.<br><br><strong>Konstruktive Hinweise:</strong> Dicht-, Pass-, Gewinde- und Funktionsflächen, die nicht gestrahlt werden dürfen, müssen eindeutig gekennzeichnet beziehungsweise abgedeckt werden. Dünnwandige oder empfindliche Bauteile können sich je nach Strahlmittel und Intensität verformen oder ihre Oberflächenmaße verändern.<br><br>
     <h4>Unterverfahren</h4>
     <ul>
       <li><strong>Sandstrahlen:</strong> abrasive Oberflächenbehandlung zum Reinigen, Entrosten oder Aufrauen geeigneter Werkstücke.</li>
