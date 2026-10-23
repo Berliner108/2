@@ -16,6 +16,7 @@ export default function PremiumRequiredModal({
 }: PremiumRequiredModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [trialDaysRemaining, setTrialDaysRemaining] = useState<number | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -38,8 +39,42 @@ export default function PremiumRequiredModal({
   }, [open, loading, onClose])
 
   useEffect(() => {
-    if (open) {
-      setError(null)
+    if (!open) return
+
+    let active = true
+
+    setError(null)
+    setTrialDaysRemaining(null)
+
+    const loadPremiumStatus = async () => {
+      try {
+        const response = await fetch('/api/me/premium', {
+          cache: 'no-store',
+          credentials: 'include',
+        })
+
+        const data = await response.json().catch(() => ({} as any))
+
+        if (!active || !response.ok) return
+
+        const days = Number(data?.trialDaysRemaining)
+
+        if (
+          String(data?.status || '').toLowerCase() === 'trial' &&
+          Number.isFinite(days) &&
+          days > 0
+        ) {
+          setTrialDaysRemaining(Math.ceil(days))
+        }
+      } catch {
+        // Der Status wird nur für den optionalen Testphasen-Hinweis benötigt.
+      }
+    }
+
+    void loadPremiumStatus()
+
+    return () => {
+      active = false
     }
   }, [open])
 
@@ -106,7 +141,7 @@ export default function PremiumRequiredModal({
           <ul>
             <li>auf Aufträge und Lackanfragen bieten</li>
             <li>Artikel kostenlos einstellen</li>
-            <li>neue geschäftliche Kontakte starten</li>
+            <li>Nachrichten senden und geschäftliche Kontakte pflegen</li>
           </ul>
         </div>
 
@@ -115,7 +150,11 @@ export default function PremiumRequiredModal({
             <span className={styles.price}>249 €</span>
             <span className={styles.period}> / Jahr</span>
           </div>
-          <span className={styles.trial}>14 Tage Premium kostenlos testen</span>
+          {trialDaysRemaining !== null && (
+            <span className={styles.trial}>
+              Noch {trialDaysRemaining} {trialDaysRemaining === 1 ? 'Tag' : 'Tage'} Premium kostenlos
+            </span>
+          )}
         </div>
 
         <p className={styles.freeHint}>
