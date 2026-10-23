@@ -641,9 +641,6 @@ const materialienAlle = [
   'Zinn',
   'Nickel',
   'Chrom',
-  'Titan',
-  'Magnesium',
-  'Zinkdruckguss',
   'Andere',
 ]
 const materialienVerzinken = [
@@ -671,9 +668,8 @@ const materialienEloxieren = [
   'Aluguss',
 ]
 const materialienAnodisieren = [
-  'Titan',
-  'Magnesium',
   'Zink',
+  'Zinn',
   'Andere',
 ]
 const materialienVerzinnen = [
@@ -765,58 +761,6 @@ const materialienGlasperlen = [
   'Kupfer',
   'Andere',
 ]
-const materialienAluminiumPassivieren = [
-  'Aluminium',
-  'Aluguss',
-]
-const materialienEdelstahlPassivieren = [
-  'Edelstahl',
-]
-const materialienBeizen = [
-  'Aluminium',
-  'Aluguss',
-  'Stahl',
-  'Edelstahl',
-  'Kupfer',
-  'Andere',
-]
-const materialienElektropolieren = [
-  'Aluminium',
-  'Aluguss',
-  'Edelstahl',
-  'Kupfer',
-  'Andere',
-]
-const materialienChemischGlaenzen = [
-  'Aluminium',
-  'Aluguss',
-  'Kupfer',
-  'Stahl',
-  'Andere',
-]
-const materialienIsoliersteg = [
-  'Aluminium',
-]
-const materialienEntchromen = [
-  'Aluminium',
-  'Aluguss',
-  'Stahl',
-  'Edelstahl',
-  'Kupfer',
-  'Zink',
-  'Zinkdruckguss',
-  'Andere',
-]
-const materialienEntkupfern = [
-  'Aluminium',
-  'Aluguss',
-  'Stahl',
-  'Edelstahl',
-  'Nickel',
-  'Zink',
-  'Zinkdruckguss',
-  'Andere',
-]
 const istEloxieren =
   selectedOption1 === 'Eloxieren' || selectedOption2 === 'Eloxieren'
 const istAnodisieren =
@@ -855,21 +799,6 @@ const istVersilbern =
 const istKTL =
   selectedOption1 === 'KTL-Beschichten' ||
   selectedOption2 === 'KTL-Beschichten'
-const istAluminiumPassivieren =
-  selectedOption1 === 'Aluminium-Passivieren' || selectedOption2 === 'Aluminium-Passivieren'
-const istEdelstahlPassivieren =
-  selectedOption1 === 'Edelstahl-Passivieren' || selectedOption2 === 'Edelstahl-Passivieren'
-const istBeizen = selectedOption1 === 'Beizen' || selectedOption2 === 'Beizen'
-const istElektropolieren =
-  selectedOption1 === 'Elektropolieren' || selectedOption2 === 'Elektropolieren'
-const istChemischGlaenzen =
-  selectedOption1 === 'Chemisches Glänzen' || selectedOption2 === 'Chemisches Glänzen'
-const istIsoliersteg =
-  selectedOption1 === 'Isolierstegverpressen' || selectedOption2 === 'Isolierstegverpressen'
-const istEntchromen =
-  selectedOption1 === 'Entchromen' || selectedOption2 === 'Entchromen'
-const istEntkupfern =
-  selectedOption1 === 'Entkupfern' || selectedOption2 === 'Entkupfern'
 const strahlVerfahrenRaw =
   specSelections['v1__Strahlen__verfahren'] ||
   specSelections['v2__Strahlen__verfahren']
@@ -883,23 +812,7 @@ if (istBruenieren) {
 } else if (istAnodisieren) {
   materialienAktiv = materialienAnodisieren
 }
-if (istEdelstahlPassivieren) {
-  materialienAktiv = materialienEdelstahlPassivieren
-} else if (istAluminiumPassivieren) {
-  materialienAktiv = materialienAluminiumPassivieren
-} else if (istIsoliersteg) {
-  materialienAktiv = materialienIsoliersteg
-} else if (istEntchromen) {
-  materialienAktiv = materialienEntchromen
-} else if (istEntkupfern) {
-  materialienAktiv = materialienEntkupfern
-} else if (istElektropolieren) {
-  materialienAktiv = materialienElektropolieren
-} else if (istChemischGlaenzen) {
-  materialienAktiv = materialienChemischGlaenzen
-} else if (istBeizen) {
-  materialienAktiv = materialienBeizen
-} else if (istZinkphosphatieren) {
+if (istZinkphosphatieren) {
   materialienAktiv = materialienZinkphosphatieren
 } else if (istMnPhosphatieren) {
   materialienAktiv = materialienMnPhosphatieren

@@ -14,11 +14,9 @@ export interface Specification {
   maxLength?: number;     // 👈 NEU
   showCounter?: boolean;  // 👈 NEU
   required?: boolean;
-  numericOnly?: boolean;
-  allowDecimal?: boolean;
   dependsOn?: {
     name: string;
-    value: string | string[];
+    value: string;
   };
 }
 interface VerfahrenUndLogistikProps {
@@ -35,50 +33,47 @@ interface VerfahrenUndLogistikProps {
   verfahrenRef: React.RefObject<HTMLDivElement>;
 }
 const allOptions = [
-  'Verzinken',
   'Nasslackieren',
   'Pulverbeschichten',
-  'KTL-Beschichten',
-  'Strahlen',
-  'Vernickeln',
+  'Verzinken',
   'Eloxieren',
-  'Verchromen',
-  'Beizen',
-  'Entlacken',
-  'Schleifen',
-  'Trowalisieren',
-  'Entgraten',
-  'Polieren',
-  'Zinkphosphatieren',
-  'Aluminium-Passivieren',
-  'Edelstahl-Passivieren',
-  'Verkupfern',
-  'Verzinnen',
-  'Elektropolieren',
-  'Brünieren',
-  'Bürsten',
-  'Mn-Phosphatieren',
   'Anodisieren',
-  'Folieren',
-  'Versilbern',
-  'Vergolden',
-  'Isolierstegverpressen',
+  'KTL-Beschichten',
+  'Zinkphosphatieren',
+  'Mn-Phosphatieren',
+  'Beizen',
+  'Entgraten',
   'Verrunden',
   'Glätten',
   'Mattieren',
+  'Schleifen',
+  'Polieren',
+  'Bürsten',
+  'Trowalisieren',
   'Chemisches Glänzen',
+  'Strahlen',
+  'Entlacken',
+  'Brünieren',
+  'Verzinnen',
   'Aluminieren',
+  'Vernickeln',
+  'Aluminium-Passivieren',
+  'Elektropolieren',
+  'Verchromen',
   'Vermessingen',
+  'Verkupfern',
   'Bronzebeschichten',
+  'Vergolden',
+  'Versilbern',
+  'Folieren',
+  'Isolierstegverpressen',
   'Einlagern',
   'Entzinken',
-  'Entnickeln',
-  'Entchromen',
-  'Entkupfern',
   'Enteloxieren',
   'Entanodisieren',
   'Entzinnen',
   'Entaluminieren',
+  'Entnickeln',
 ];
 const validSecondOptions: { [key: string]: string[] } = {
   Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
@@ -582,9 +577,6 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Einlagern',
     'Isolierstegverpressen',
   ],
-  'Edelstahl-Passivieren': ['Pulverbeschichten', 'Nasslackieren', 'Folieren', 'Einlagern'],
-  Entchromen: ['Schleifen', 'Polieren', 'Vernickeln', 'Verchromen', 'Verkupfern', 'Folieren', 'Einlagern'],
-  Entkupfern: ['Verkupfern', 'Vernickeln', 'Verchromen', 'Vergolden', 'Versilbern', 'Folieren', 'Einlagern'],
 };
 // 🔹 Hilfsfunktion für eindeutige Keys
 const makeSelectionKey = (
@@ -603,11 +595,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   verfahrenError,
   verfahrenRef,
 }) => {
-  const secondOptions = [...(validSecondOptions[selectedOption1] || [])].sort((a, b) => {
-    const ai = allOptions.indexOf(a);
-    const bi = allOptions.indexOf(b);
-    return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi);
-  });
+  const secondOptions = validSecondOptions[selectedOption1] || [];
   const searchParams = useSearchParams();
   const firstParam = searchParams.get('first');
   useEffect(() => {
@@ -630,10 +618,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           verfahrenName,
           spec.dependsOn.name,
         );
-        const expected = spec.dependsOn.value;
-        return Array.isArray(expected)
-          ? expected.includes(String(specSelections[dependencyKey] ?? ''))
-          : specSelections[dependencyKey] === expected;
+        return specSelections[dependencyKey] === spec.dependsOn.value;
       })
       .map((spec, index) => {
         const selectionKey = makeSelectionKey(
@@ -647,10 +632,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           return (
             <div key={selectionKey} className={styles.inputRow}>
               <div className={styles.labelRowNeutral}>
-                <span className={styles.labelTextNormal}>
-                  {spec.label}
-                  {spec.required && <span className={styles.requiredStar}>*</span>}
-                </span>
+                <span className={styles.labelTextNormal}>{spec.label}</span>
                 {spec.tooltip && (
                   <span className={styles.labelTooltipIcon}>
                     <HelpCircle size={18} />
@@ -665,16 +647,8 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                 className={styles.inputField2}
                 value={value}
                 maxLength={maxLen} // 👈 Begrenzung greift hier
-                required={spec.required}
-                inputMode={spec.numericOnly ? (spec.allowDecimal ? 'decimal' : 'numeric') : undefined}
-                pattern={spec.numericOnly ? (spec.allowDecimal ? '[0-9]+([\.,][0-9]+)?' : '[0-9]*') : undefined}
                 onChange={(e) => {
-                  const rawValue = e.target.value;
-                  const nextValue = spec.numericOnly
-                    ? spec.allowDecimal
-                      ? rawValue.replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
-                      : rawValue.replace(/\D/g, '')
-                    : rawValue;
+                  const nextValue = e.target.value;
                   setSpecSelections((prev) => {
                     const next = { ...prev };
                     if (nextValue.trim()) {
@@ -769,9 +743,7 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                             specs.forEach((dependentSpec) => {
                               if (
                                 dependentSpec.dependsOn?.name === spec.name &&
-                                !(Array.isArray(dependentSpec.dependsOn.value)
-                                  ? dependentSpec.dependsOn.value.includes(opt)
-                                  : dependentSpec.dependsOn.value === opt)
+                                dependentSpec.dependsOn.value !== opt
                               ) {
                                 delete next[
                                   makeSelectionKey(
@@ -802,7 +774,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             <div key={selectionKey} className={styles.checkboxGroup}>
               <p className={styles.groupLabel}>
                 {spec.label}
-                {spec.required && <span className={styles.requiredStar}>*</span>}
                 {spec.tooltip && (
                   <span className={styles.iconTooltip}>
                     <HelpCircle size={18} />
@@ -826,7 +797,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                         id={id}
                         type="checkbox"
                         checked={checked}
-                        required={spec.required && selectedValues.length === 0 && i === 0}
                         onChange={(e) => {
                           const updated = e.target.checked
                             ? [...selectedValues, opt]
