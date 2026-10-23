@@ -927,9 +927,7 @@ const [showPwConfirm, setShowPwConfirm] = useState(false);
 
   // --- Sticky-Nav: Sektionen + aktiver Tab ---
 const sections = useMemo(() => [
-  ...(premiumStatus && premiumStatus.status !== 'exempt'
-    ? [{ id: 'premium', label: 'Premium Mitgliedschaft' }]
-    : []),
+  { id: 'premium', label: 'Premium Mitgliedschaft' },
   { id: 'profil', label: 'Profil' },
   { id: 'konto', label: 'Kontoart & Anschrift' },
   ...(!isPrivatePerson
@@ -948,11 +946,11 @@ const sections = useMemo(() => [
 const [activeId, setActiveId] = useState<string>('profil');
 
 useEffect(() => {
-  if (!premiumStatus || premiumStatus.status === 'exempt') return
+  if (!profileLoaded) return
   if (typeof window !== 'undefined' && window.location.hash) return
 
   setActiveId('premium')
-}, [premiumStatus])
+}, [profileLoaded])
 
 useEffect(() => {
   if (!profileLoaded) return;
@@ -1138,31 +1136,48 @@ const canSaveImpressum = useMemo(() => {
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
 
-      {!premiumLoading && premiumStatus && premiumStatus.status !== 'exempt' && (
-        <div id="premium" className={`${styles.kontoContainer} ${styles.premiumContainer}`}>
+      <div id="premium" className={`${styles.kontoContainer} ${styles.premiumContainer}`}>
           <div className={styles.premiumHeader}>
             <div>
               <h3 className={styles.subSectionTitle}>Premium Mitgliedschaft</h3>
 
-              {premiumStatus.status === 'trial' && (
+              {premiumLoading && (
+                <p className={styles.premiumLead}>
+                  Dein Premium-Status wird geladen …
+                </p>
+              )}
+
+              {!premiumLoading && !premiumStatus && (
+                <p className={styles.premiumLead}>
+                  Dein Premium-Status konnte nicht geladen werden.
+                </p>
+              )}
+
+              {!premiumLoading && premiumStatus?.status === 'exempt' && (
+                <p className={styles.premiumLead}>
+                  Deine Premium Mitgliedschaft ist aktiv. Du bist von der Zahlung ausgenommen.
+                </p>
+              )}
+
+              {premiumStatus?.status === 'trial' && (
                 <p className={styles.premiumLead}>
                   Deine Premium-Testphase ist aktiv.
                 </p>
               )}
 
-              {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+              {premiumStatus?.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
                 <p className={styles.premiumLead}>
                   Deine Premium Mitgliedschaft ist aktiv.
                 </p>
               )}
 
-              {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+              {premiumStatus?.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
                 <p className={styles.premiumLead}>
                   Deine Premium Mitgliedschaft ist zum Laufzeitende gekündigt.
                 </p>
               )}
 
-              {premiumStatus.status === 'expired' && (
+              {premiumStatus?.status === 'expired' && (
                 <p className={styles.premiumLead}>
                   Deine Premium-Testphase ist beendet.
                 </p>
@@ -1171,24 +1186,30 @@ const canSaveImpressum = useMemo(() => {
 
             <span
               className={`${styles.premiumStatusBadge} ${
-                premiumStatus.status === 'active'
+                premiumStatus?.status === 'active' || premiumStatus?.status === 'exempt'
                   ? styles.premiumStatusActive
-                  : premiumStatus.status === 'trial'
+                  : premiumStatus?.status === 'trial'
                     ? styles.premiumStatusTrial
                     : styles.premiumStatusExpired
               }`}
             >
-              {premiumStatus.status === 'active'
-                ? premiumStatus.cancelAtPeriodEnd
-                  ? 'Gekündigt'
-                  : 'Aktiv'
-                : premiumStatus.status === 'trial'
-                  ? 'Premium-Testphase'
-                  : 'Nicht aktiv'}
+              {premiumLoading
+                ? 'Wird geladen'
+                : !premiumStatus
+                  ? 'Unbekannt'
+                  : premiumStatus.status === 'exempt'
+                    ? 'Aktiv'
+                    : premiumStatus.status === 'active'
+                      ? premiumStatus.cancelAtPeriodEnd
+                        ? 'Gekündigt'
+                        : 'Aktiv'
+                      : premiumStatus.status === 'trial'
+                        ? 'Premium-Testphase'
+                        : 'Nicht aktiv'}
             </span>
           </div>
 
-          {premiumStatus.paymentFailed && (
+          {premiumStatus?.paymentFailed && premiumStatus.status !== 'exempt' && (
             <div className={styles.premiumPaymentWarning} role="alert">
               <strong>Zahlung fehlgeschlagen</strong>
               <span>
@@ -1198,7 +1219,15 @@ const canSaveImpressum = useMemo(() => {
             </div>
           )}
 
+          {!premiumLoading && premiumStatus && (
           <div className={styles.premiumGrid}>
+            {premiumStatus.status === 'exempt' && (
+              <div className={styles.premiumInfoCard}>
+                <span className={styles.premiumInfoLabel}>Premium-Status</span>
+                <strong>Aktiv – von der Zahlung ausgenommen</strong>
+              </div>
+            )}
+
             {premiumStatus.status === 'trial' && (
               <>
                 <div className={styles.premiumInfoCard}>
@@ -1217,7 +1246,7 @@ const canSaveImpressum = useMemo(() => {
               </>
             )}
 
-            {premiumStatus.status === 'active' && (
+            {premiumStatus?.status === 'active' && (
               <div className={styles.premiumInfoCard}>
                 <span className={styles.premiumInfoLabel}>
                   {premiumStatus.cancelAtPeriodEnd ? 'Zugang aktiv bis' : 'Aktuelle Laufzeit bis'}
@@ -1226,42 +1255,65 @@ const canSaveImpressum = useMemo(() => {
               </div>
             )}
 
-            <div className={styles.premiumInfoCard}>
-              <span className={styles.premiumInfoLabel}>Preis</span>
-              <strong>249 € / Jahr</strong>
-            </div>
+            {premiumStatus.status !== 'exempt' && (
+              <div className={styles.premiumInfoCard}>
+                <span className={styles.premiumInfoLabel}>Preis</span>
+                <strong>249 € / Jahr</strong>
+              </div>
+            )}
           </div>
+          )}
+
+          {!premiumLoading && !premiumStatus && (
+            <div className={styles.premiumActions}>
+              <button
+                type="button"
+                className={styles.premiumSecondaryButton}
+                onClick={loadPremiumStatus}
+                disabled={premiumLoading}
+              >
+                Premium-Status erneut laden
+              </button>
+            </div>
+          )}
 
           <p className={styles.premiumDescription}>
-            Mit Premium kannst du aktiv neue Geschäfte über Beschichter Scout gewinnen: auf Aufträge und Lackanfragen bieten, Artikel kostenlos einstellen und neue geschäftliche Kontakte starten. Aufträge und Lackanfragen einstellen, Artikel kaufen und die Plattform durchsuchen bleibt kostenlos.
+            Mit Premium kannst du aktiv neue Geschäfte über Beschichter Scout gewinnen: auf Aufträge und Lackanfragen bieten, Artikel kostenlos einstellen sowie Nachrichten senden und geschäftliche Kontakte pflegen. Aufträge und Lackanfragen einstellen, Artikel kaufen und die Plattform durchsuchen bleibt kostenlos.
           </p>
 
-          {premiumStatus.status === 'trial' && (
+          {premiumStatus?.status === 'exempt' && (
+            <p className={styles.premiumDescription}>
+              Für dein Konto ist Premium dauerhaft freigeschaltet. Es erfolgt keine Premium-Abbuchung.
+            </p>
+          )}
+
+          {premiumStatus?.status === 'trial' && (
             <p className={styles.premiumDescription}>
               Während der Premium-Testphase erfolgt keine automatische Abbuchung. Erst wenn du die Premium Mitgliedschaft aktiv buchst, wird das Jahresabo kostenpflichtig.
             </p>
           )}
 
-          {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+          {premiumStatus?.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
             <p className={styles.premiumDescription}>
               Die Premium Mitgliedschaft verlängert sich automatisch um jeweils ein Jahr,
               sofern sie nicht zum Laufzeitende gekündigt wird.
             </p>
           )}
 
-          {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+          {premiumStatus?.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
             <p className={styles.premiumDescription}>
               Es erfolgt keine weitere automatische Verlängerung.
               Deine Premium-Anbieterfunktionen bleiben bis zum angezeigten Datum vollständig aktiv.
             </p>
           )}
 
-          {premiumStatus.status === 'expired' && (
+          {premiumStatus?.status === 'expired' && (
             <p className={styles.premiumDescription}>
-              Deine Premium-Anbieterfunktionen sind derzeit nicht aktiv. Kostenlose Funktionen bleiben weiterhin nutzbar und bereits laufende Vorgänge kannst du abschließen.
+              Deine Premium-Anbieterfunktionen sind derzeit nicht aktiv. Kostenlose Funktionen bleiben weiterhin nutzbar.
             </p>
           )}
 
+          {premiumStatus && premiumStatus.status !== 'exempt' && (
           <div className={styles.premiumActions}>
             {premiumStatus.status === 'active' && (
               <button
@@ -1276,7 +1328,7 @@ const canSaveImpressum = useMemo(() => {
               </button>
             )}
 
-            {(premiumStatus.status === 'trial' || premiumStatus.status === 'expired') && (
+            {(premiumStatus?.status === 'trial' || premiumStatus?.status === 'expired') && (
               <button
                 type="button"
                 className={styles.saveButton}
@@ -1289,7 +1341,7 @@ const canSaveImpressum = useMemo(() => {
               </button>
             )}
 
-            {premiumStatus.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
+            {premiumStatus?.status === 'active' && !premiumStatus.cancelAtPeriodEnd && (
               <button
                 type="button"
                 className={styles.premiumCancelButton}
@@ -1303,7 +1355,7 @@ const canSaveImpressum = useMemo(() => {
             )}
 
 
-            {premiumStatus.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
+            {premiumStatus?.status === 'active' && premiumStatus.cancelAtPeriodEnd && (
               <button
                 type="button"
                 className={styles.saveButton}
@@ -1316,8 +1368,8 @@ const canSaveImpressum = useMemo(() => {
               </button>
             )}
           </div>
+          )}
         </div>
-      )}
 
       {/* === Container 1: Profil + Adresse + Firma + "Änderungen speichern" === */}
       <div id="profil" className={styles.kontoContainer}>
