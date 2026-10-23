@@ -717,6 +717,34 @@ export const specificationsMap: Record<string, Specification[]> = {
       required: true
     }
   ],
+  Bronzebeschichten: [
+    {
+      type: 'radio',
+      name: 'bronzeart',
+      label: 'Bronzeart:',
+      options: ['Weißbronze', 'Gelbbronze', 'Andere Bronzelegierung / Nach Vorgabe'],
+      required: true
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      maxLength: 30
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Zertifizierungen:',
+      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
+    }
+  ],
   Vergolden: [
     {
       type: 'radio',
@@ -731,6 +759,22 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Anwendung:',
       options: ['Dekorativ', 'Technisch'],
       required: true
+    },
+    {
+      type: 'radio',
+      name: 'schichtaufbau',
+      label: 'Schichtaufbau / Ausführung:',
+      options: [
+        'Direktvergoldung von Edelstahl',
+        'Vergoldung mit Zwischenschicht',
+        'Nach Vorgabe / unbekannt'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
     }
   ],
   Versilbern: [
