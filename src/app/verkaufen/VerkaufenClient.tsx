@@ -11,7 +11,7 @@ import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useArticleEditPrefill } from '@/hooks/useArticleEditPrefill';
-import PremiumRequiredModal from '../../components/premium/PremiumRequiredModal'
+import PremiumRequiredModal from '../components/premium/PremiumRequiredModal';
 
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
