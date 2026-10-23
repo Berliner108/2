@@ -74,6 +74,7 @@ const Wissenswertes = () => {
       "#Versilbern": 41,
       "#Lacke-Beschichtungsstoffe": 42,
       "#Lackrecycling-Restlackverwertung": 43,
+      "#Bronzebeschichten": 44,
     };
 
     const openHashTarget = () => {
@@ -169,6 +170,7 @@ useEffect(() => {
         { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-19" },
         { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-20" },
         { name: "Versilbern", description: "Silberschichten für elektrische Leitfähigkeit, Kontaktflächen, Korrosionsschutz und dekorative Anwendungen.", target: "container-41" },
+        { name: "Bronzebeschichten", description: "Galvanische Bronzelegierungsschichten, beispielsweise Weißbronze oder Gelbbronze, für dekorative und funktionelle Oberflächen.", target: "container-44" },
       ],
     },
     {
@@ -319,6 +321,7 @@ useEffect(() => {
     "Versilbern",
     "Lacke & Beschichtungsstoffe",
     "Lackrecycling & Restlackverwertung",
+    "Bronzebeschichten",
   ];
 
   const ktlText = `
@@ -637,15 +640,20 @@ useEffect(() => {
   `;
 
   const vergoldenText = `
-    Beim <strong>Vergolden</strong> wird eine dünne Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Die Goldschicht übernimmt die vorhandene Oberflächenqualität weitgehend. Für dekorative Hochglanzteile wird deshalb typischerweise bereits vorher <strong>geschliffen und poliert</strong>. Anschließend folgen Reinigen / Entfetten, Aktivieren und – abhängig von Grundwerkstoff und Anforderung – geeignete Zwischen- oder Sperrschichten, häufig Nickel. Typisch kann die Kette lauten: <strong>Schleifen → Polieren → Reinigen / Aktivieren → ggf. Verkupfern / Vernickeln → Vergolden</strong>. Bei technischen Kontaktflächen richtet sich der Schichtaufbau dagegen stärker nach elektrischer Funktion, Diffusionssperre und Verschleißanforderung.<br><br>
+    Beim <strong>Vergolden</strong> wird eine Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
+    Die Goldschicht übernimmt die vorhandene Oberflächenqualität weitgehend. Für dekorative Hochglanzteile wird deshalb typischerweise bereits vorher <strong>geschliffen und poliert</strong>. Anschließend folgen Reinigen / Entfetten und Aktivieren. Abhängig von Grundwerkstoff und Anforderung können geeignete Zwischen- oder Sperrschichten, beispielsweise Kupfer oder Nickel, erforderlich sein. Typisch kann die Kette lauten: <strong>Schleifen → Polieren → Reinigen / Aktivieren → ggf. Verkupfern / Vernickeln → Vergolden</strong>.<br><br>
+    Bei Edelstahl kann je nach eingesetztem Prozess auch eine <strong>Direktvergoldung</strong> ohne klassische Nickel-Zwischenschicht vorgesehen sein. Ob das technisch sinnvoll ist, hängt vom Grundwerkstoff, der Vorbehandlung, dem verwendeten Elektrolytsystem und der späteren Beanspruchung ab. Bei technischen Kontaktflächen richtet sich der Schichtaufbau insbesondere nach elektrischer Funktion, Diffusionssperre und Verschleißanforderung.<br><br>
     <h4>Auswahlmöglichkeiten</h4>
-    <ul><li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li><li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li></ul>
+    <ul>
+      <li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li>
+      <li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li>
+      <li>Schichtaufbau: <strong>Direktvergoldung von Edelstahl</strong>, <strong>Vergoldung mit Zwischenschicht</strong> oder nach Vorgabe</li>
+      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder <strong>Passivieren</strong></li>
+    </ul>
     <h4>Typische Anwendungen</h4>
     <ul><li>elektrische Kontakte und Steckverbinder</li><li>Elektronik- und Präzisionsbauteile</li><li>Schmuck- und Designteile</li><li>hochwertige Sichtflächen</li></ul>
     <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und vorhandene Zwischenschichten</li><li>Reingold oder Hartgold</li><li>dekorative oder technische Anwendung</li><li>Kontakt- und Funktionsflächen</li><li>gewünschte Schichtdicke sowie Stückzahl</li></ul>
+    <ul><li>Grundwerkstoff und vorhandene Zwischenschichten</li><li>Reingold oder Hartgold</li><li>dekorative oder technische Anwendung</li><li>gewünschter Schichtaufbau bzw. Direktvergoldung</li><li>Kontakt- und Funktionsflächen</li><li>gewünschte Nachbehandlung</li><li>gewünschte Schichtdicke sowie Stückzahl</li></ul>
   `;
 
   const folierenText = legacyContainerTexts[11] + `
@@ -896,6 +904,32 @@ useEffect(() => {
     <strong>Wichtig:</strong> Ob ein Restlack tatsächlich wiederverwendet oder aufbereitet werden kann, hängt immer vom konkreten Produkt, seinem Zustand und dem vorgesehenen Einsatz ab. Bei sicherheits-, qualitäts- oder kundenspezifisch kritischen Anwendungen sollte die technische Eignung vor Verwendung eindeutig geprüft werden.
   `;
 
+  const bronzebeschichtenText = `
+    Beim <strong>Bronzebeschichten</strong> wird galvanisch eine Bronzelegierung auf die Oberfläche eines Werkstücks abgeschieden. Je nach Legierungszusammensetzung entstehen unterschiedliche Farbtöne und funktionelle Eigenschaften. In der Praxis werden unter anderem <strong>Weißbronze</strong> und <strong>Gelbbronze</strong> eingesetzt.<br><br>
+    <strong>Weißbronze</strong> bezeichnet helle, silbrig wirkende Kupfer-Zinn- beziehungsweise Kupfer-Zinn-Zink-Legierungsschichten. Sie werden unter anderem eingesetzt, wenn eine dekorative helle Metalloberfläche oder eine funktionelle galvanische Legierungsschicht gewünscht ist. <strong>Gelbbronze</strong> besitzt dagegen einen wärmeren gelblichen bis goldähnlichen Farbton. Die genaue Zusammensetzung und das resultierende Erscheinungsbild hängen vom eingesetzten Elektrolytsystem und der Prozessführung ab.<br><br>
+    Wie bei anderen dekorativen galvanischen Überzügen ist die <strong>Oberflächenvorbereitung entscheidend</strong>. Kratzer, Schleifspuren oder Unebenheiten des Grundmaterials können im fertigen Überzug sichtbar bleiben. Für hochwertige Sichtflächen kann deshalb vorab Schleifen, Polieren oder eine andere definierte Vorbearbeitung erforderlich sein. Danach folgen typischerweise Reinigen / Entfetten, Aktivieren, gegebenenfalls geeignete Zwischenschichten und anschließend die Bronzebeschichtung.<br><br>
+    <h4>Auswahlmöglichkeiten</h4>
+    <ul>
+      <li><strong>Weißbronze</strong></li>
+      <li><strong>Gelbbronze</strong></li>
+      <li><strong>Andere Bronzelegierung / Nach Vorgabe</strong></li>
+      <li>gewünschte <strong>Schichtdicke</strong></li>
+      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder <strong>Passivieren</strong></li>
+    </ul>
+    <h4>Typische Prozesskette</h4>
+    <p><strong>ggf. Schleifen / Polieren → Reinigen / Entfetten → Aktivieren → ggf. Zwischenschicht → Bronzebeschichten → ggf. Nachbehandlung</strong></p>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul>
+      <li>Grundwerkstoff und Ausgangszustand</li>
+      <li>Weißbronze, Gelbbronze oder andere Bronzelegierung</li>
+      <li>gewünschte Optik und Oberflächenqualität</li>
+      <li>gewünschte Schichtdicke</li>
+      <li>Funktions- und Sichtflächen</li>
+      <li>gewünschte Nachbehandlung</li>
+      <li>Bauteilabmessungen, Stückzahl und technische Vorgaben</li>
+    </ul>
+  `;
+
   const baseContainerTexts = [
     legacyContainerTexts[0],
     legacyContainerTexts[1],
@@ -941,6 +975,7 @@ useEffect(() => {
     versilbernText,
     lackeBeschichtungsstoffeText,
     lackrecyclingRestlackText,
+    bronzebeschichtenText,
   ];
 
 
@@ -987,6 +1022,7 @@ useEffect(() => {
     41: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
     42: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Lackrecycling & Restlackverwertung", hash: "#Lackrecycling-Restlackverwertung" }],
     43: [{ name: "Lacke & Beschichtungsstoffe", hash: "#Lacke-Beschichtungsstoffe" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Entlacken", hash: "#Entlacken" }],
+    44: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Polieren", hash: "#Polieren" }],
   };
 
   const genericInquiryBlock = `

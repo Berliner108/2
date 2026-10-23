@@ -146,6 +146,8 @@ const specificationLabels: Record<string, string> = {
   goldart: 'Goldart',
   anwendung: 'Anwendung',
   ausfuehrung: 'Ausführung',
+  schichtaufbau: 'Schichtaufbau / Ausführung',
+  bronzeart: 'Bronzeart',
   // Neue Verfahren / Oberflächenbearbeitung
   strahlziel: 'Bearbeitungsziel',
   bearbeitungsziel: 'Bearbeitungsziel',
