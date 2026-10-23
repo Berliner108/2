@@ -1232,6 +1232,12 @@ const canSaveImpressum = useMemo(() => {
             </div>
           </div>
 
+          <p className={styles.premiumDescription}>
+            Premium benötigst du, um auf Aufträge und Lackanfragen zu bieten,
+            Artikel zu verkaufen und neue geschäftliche Kontakte zu starten.
+            Aufträge und Lackanfragen einstellen bleibt kostenlos.
+          </p>
+
           {premiumStatus.status === 'trial' && (
             <p className={styles.premiumDescription}>
               Während der Testphase erfolgt keine automatische Abbuchung.
@@ -1255,7 +1261,7 @@ const canSaveImpressum = useMemo(() => {
 
           {premiumStatus.status === 'expired' && (
             <p className={styles.premiumDescription}>
-              Für neue Geschäftsaktionen ist eine aktive Premium Mitgliedschaft erforderlich.
+              Die Premium-Funktionen sind derzeit nicht aktiv.
               Bereits laufende Vorgänge kannst du weiterhin abschließen.
             </p>
           )}
