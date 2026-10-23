@@ -13,6 +13,8 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Auftrag } from '@/lib/types/auftrag';
+import PremiumRequiredModal from '../../../components/premium/PremiumRequiredModal';
+
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 const NDA_VERSION_LABEL = 'v1';
 const NDA_STAND_LABEL = '29.06.2026';
@@ -373,8 +375,34 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   // Connect (Stripe) Status – identisch zur Lackanfragen-Detailseite
   const [connect, setConnect] = useState<ConnectStatus | null>(null);
   const [connectLoaded, setConnectLoaded] = useState(false);
+  const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
+  const [premiumLoaded, setPremiumLoaded] = useState(false);
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const [accountType, setAccountType] = useState<string>('');
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const fetchPremium = useCallback(async () => {
+    try {
+      const r = await fetch('/api/me/premium', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
+      const j = await r.json().catch(() => ({} as any));
+      if (r.status === 401) {
+        setPremiumStatus('not_authenticated');
+        return;
+      }
+      if (!r.ok) {
+        setPremiumStatus('error');
+        return;
+      }
+      setPremiumStatus(String(j?.status || '').toLowerCase());
+    } catch {
+      setPremiumStatus('error');
+    } finally {
+      setPremiumLoaded(true);
+    }
+  }, []);
+
   const fetchConnect = useCallback(async () => {
     try {
       const r = await fetch('/api/connect/status', { cache: 'no-store', credentials: 'include' });
@@ -401,9 +429,10 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   }
 }, []);
   useEffect(() => {
+  fetchPremium();
   fetchConnect();
   fetchProfile();
-}, [fetchConnect, fetchProfile]);
+}, [fetchPremium, fetchConnect, fetchProfile]);
   useEffect(() => {
     const onFocus = () => fetchConnect();
     window.addEventListener('focus', onFocus);
@@ -512,9 +541,48 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
     if (n === null) return false;
     return true;
   })();
+  const hasPremium =
+    premiumStatus === 'active' ||
+    premiumStatus === 'trial' ||
+    premiumStatus === 'exempt';
+
+  async function ensurePremiumForOffer(): Promise<boolean> {
+    try {
+      const res = await fetch('/api/me/premium', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (res.status === 401) {
+        toastError('Bitte melde dich an.');
+        return false;
+      }
+      if (!res.ok) {
+        toastError(data?.message || data?.error || 'Premium-Status konnte nicht geprüft werden.');
+        return false;
+      }
+      const status = String(data?.status || '').toLowerCase();
+      const ok = status === 'active' || status === 'trial' || status === 'exempt';
+      setPremiumStatus(status);
+      setPremiumLoaded(true);
+      if (!ok) {
+        setPremiumModalOpen(true);
+        return false;
+      }
+      return true;
+    } catch {
+      toastError('Premium-Status konnte nicht geprüft werden. Bitte versuche es erneut.');
+      return false;
+    }
+  }
+
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPreisError(null);
+
+    const premiumOk = await ensurePremiumForOffer();
+    if (!premiumOk) return;
+
     if (offerSent) {
       toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
       return;
@@ -585,6 +653,15 @@ try {
       const j = await res.json().catch(() => ({} as any));
       if (!res.ok) {
         const code = String(j?.error || '');
+        if (
+          res.status === 403 &&
+          (code === 'premium_required' || String(j?.reason || '') === 'premium_required')
+        ) {
+          setPremiumStatus('expired');
+          setPremiumLoaded(true);
+          setPremiumModalOpen(true);
+          return;
+        }
         if (code === 'already_offered') {
           toastError('Du hast für diesen Auftrag bereits ein Angebot abgegeben.');
           setOfferSent(true);
@@ -626,19 +703,31 @@ try {
     loading || !!preisError || !isGesamtPreisValid || !isLogistikPreisValid;
   const verfahrenName = auftrag.verfahren.map((v) => v.name).join(' & ');
   const vermittelt = auftrag.published === false;
+  const premiumBlockiertAngebot =
+    premiumLoaded &&
+    !hasPremium;
+
+  const istPrivaterNutzer =
+    premiumLoaded &&
+    hasPremium &&
+    profileLoaded &&
+    accountType !== 'business';
+
+  const stripeBlockiertAngebot =
+    premiumLoaded &&
+    hasPremium &&
+    profileLoaded &&
+    accountType === 'business' &&
+    connectLoaded &&
+    connect?.ready === false;
+
   const darfAngebotAbgeben =
-  profileLoaded &&
-  accountType === 'business' &&
-  connectLoaded &&
-  connect?.ready === true;
-const stripeBlockiertAngebot =
-  profileLoaded &&
-  accountType === 'business' &&
-  connectLoaded &&
-  connect?.ready === false;
-const istPrivaterNutzer =
-  profileLoaded &&
-  accountType !== 'business';
+    premiumLoaded &&
+    hasPremium &&
+    profileLoaded &&
+    accountType === 'business' &&
+    connectLoaded &&
+    connect?.ready === true;
   const serienauftragAktiv =
   Boolean((auftrag as any).serienauftrag_aktiv) ||
   Boolean((auftrag as any).serienauftrag);
@@ -998,6 +1087,23 @@ if ((auftrag as any).ndaLocked) {
 ) : (
   <div className={`${styles.metaItem} ${styles.priceSection}`}>
     <h2 className={styles.priceHeading}>Mach ein Angebot für diesen Auftrag</h2>
+    {premiumBlockiertAngebot && (
+      <div className={styles.connectNotice} role="status" aria-live="polite">
+        <p>
+          Um auf diesen Auftrag bieten zu können, benötigst du eine aktive Premium Mitgliedschaft.
+        </p>
+        <div className={styles.connectActions}>
+          <button
+            type="button"
+            className={styles.connectBtn}
+            onClick={() => setPremiumModalOpen(true)}
+          >
+            Premium freischalten
+          </button>
+        </div>
+      </div>
+    )}
+
     {istPrivaterNutzer && (
       <div className={styles.connectNotice} role="status" aria-live="polite">
         <p>Nur gewerbliche Nutzer können Angebote für Aufträge abgeben.</p>
@@ -1095,6 +1201,12 @@ if ((auftrag as any).ndaLocked) {
             </div>
           </div>
       </div>
+      <PremiumRequiredModal
+        open={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        actionText="auf diesen Auftrag zu bieten"
+      />
+
       {/* Lightbox */}
       {lightboxOpen && (
         <Lightbox

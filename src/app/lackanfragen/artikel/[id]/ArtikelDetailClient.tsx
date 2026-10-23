@@ -11,7 +11,7 @@ import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
 import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import { LocalToastProvider, useLocalToast } from '../../../components/ui/local-toast';
-import PremiumRequiredModal from '@/components/premium/PremiumRequiredModal';
+import PremiumRequiredModal from '../../../components/premium/PremiumRequiredModal';
 
 /* ===================== Typen ===================== */
 type ApiItem = {

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { hasPremiumAccess } from '@/lib/premium'
 
 type Body = {
   artikel_cents: number
@@ -213,6 +214,37 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
 
     if (authErr || !user) {
       return NextResponse.json({ ok: false, error: 'unauthenticated' }, { status: 401 })
+    }
+
+    // Premium ist die erste Voraussetzung fürs Bieten.
+    const { data: premiumProfile, error: premiumError } = await sb
+      .from('profiles')
+      .select('premium_exempt, premium_trial_ends_at, premium_until')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (premiumError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'premium_check_failed',
+          message: 'Premium-Status konnte nicht geprüft werden.',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!premiumProfile || !hasPremiumAccess(premiumProfile)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'premium_required',
+          reason: 'premium_required',
+          message:
+            'Zum Abgeben eines Angebots benötigst du eine aktive Premium Mitgliedschaft.',
+        },
+        { status: 403 }
+      )
     }
 
     const raw = await req.json().catch(() => ({}))
