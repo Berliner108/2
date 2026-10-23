@@ -60,6 +60,18 @@ const Wissenswertes = () => {
       "#Entzinnen": 27,
       "#Entaluminieren": 28,
       "#Entnickeln": 29,
+      "#Mn-Phosphatieren": 30,
+      "#Beizen": 31,
+      "#Entgraten": 32,
+      "#Verrunden": 33,
+      "#Glätten": 34,
+      "#Mattieren": 35,
+      "#Schleifen": 36,
+      "#Polieren": 37,
+      "#Bürsten": 38,
+      "#Trowalisieren": 39,
+      "#Chemisches-Glänzen": 40,
+      "#Versilbern": 41,
     };
 
     const openHashTarget = () => {
@@ -143,6 +155,7 @@ useEffect(() => {
         { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-5" },
         { name: "Anodisieren", description: "Anodische Oxidation, insbesondere von Aluminium, zur Erzeugung einer definierten Oxidschicht.", target: "container-6" },
         { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-8" },
+        { name: "Mn-Phosphatieren", description: "Manganphosphatschicht für Verschleißschutz, Einlaufverhalten und als Haftgrund für Öle oder weitere Beschichtungen.", target: "container-30" },
         { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-11" },
         { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-12" },
         { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-13" },
@@ -153,11 +166,22 @@ useEffect(() => {
         { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-18" },
         { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-19" },
         { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-20" },
+        { name: "Versilbern", description: "Silberschichten für elektrische Leitfähigkeit, Kontaktflächen, Korrosionsschutz und dekorative Anwendungen.", target: "container-41" },
       ],
     },
     {
       title: "Vorbehandlung & Entschichtung",
       items: [
+        { name: "Beizen", description: "Chemisches Entfernen von Oxiden, Zunder, Rost oder Verunreinigungen zur Vorbereitung der Oberfläche.", target: "container-31" },
+        { name: "Entgraten", description: "Entfernen scharfer Grate und Bearbeitungsrückstände an Kanten, Bohrungen und Konturen.", target: "container-32" },
+        { name: "Verrunden", description: "Gezieltes Abrunden scharfer Kanten zur Verbesserung von Sicherheit, Beschichtbarkeit und Bauteilfunktion.", target: "container-33" },
+        { name: "Glätten", description: "Reduzieren von Rauheit und Bearbeitungsspuren für eine gleichmäßigere technische oder optische Oberfläche.", target: "container-34" },
+        { name: "Mattieren", description: "Erzeugen einer gleichmäßig matten Oberfläche durch mechanische, chemische oder strahltechnische Bearbeitung.", target: "container-35" },
+        { name: "Schleifen", description: "Spanende Feinbearbeitung zur Formkorrektur, Rauheitsreduzierung und Vorbereitung weiterer Oberflächenprozesse.", target: "container-36" },
+        { name: "Polieren", description: "Feinstbearbeitung zur Verringerung der Rauheit und Erzeugung glatter bis hochglänzender Oberflächen.", target: "container-37" },
+        { name: "Bürsten", description: "Mechanische Bearbeitung für Reinigung, Strukturierung oder ein definiertes Schliffbild auf Metalloberflächen.", target: "container-38" },
+        { name: "Trowalisieren", description: "Gleitschleifen von Werkstücken zum Entgraten, Glätten, Polieren oder Reinigen in einem Arbeitsbehälter.", target: "container-39" },
+        { name: "Chemisches Glänzen", description: "Chemisches Einebnen und Aufhellen einer Oberfläche ohne mechanische Polierbearbeitung.", target: "container-40" },
         { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-9" },
         { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-10" },
         { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-24" },
@@ -272,6 +296,18 @@ useEffect(() => {
     "Entzinnen",
     "Entaluminieren",
     "Entnickeln",
+    "Mn-Phosphatieren",
+    "Beizen",
+    "Entgraten",
+    "Verrunden",
+    "Glätten",
+    "Mattieren",
+    "Schleifen",
+    "Polieren",
+    "Bürsten",
+    "Trowalisieren",
+    "Chemisches Glänzen",
+    "Versilbern",
   ];
 
   const ktlText = `
@@ -666,6 +702,102 @@ useEffect(() => {
     <ul><li>Werkstoff und Legierung</li><li>gewünschte Schichteigenschaften</li><li>Farb- und Sichtanforderungen, sofern relevant</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Abmessungen</li></ul>
     Beim Anodisieren kommen als mögliche Anforderungen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
   `;
+  const mnPhosphatierenText = `
+    <strong>Mn-Phosphatieren (Manganphosphatieren)</strong> ist ein chemisches Konversionsverfahren für Eisen- und Stahlwerkstoffe. Dabei entsteht auf der Oberfläche eine kristalline Manganphosphatschicht. Sie wird vor allem eingesetzt, wenn Verschleiß reduziert, das Einlaufverhalten verbessert oder eine gute Aufnahme von Öl und Schmierstoffen erreicht werden soll.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Zahnräder, Wellen und Getriebeteile</li><li>Gleit- und Reibpartner</li><li>Bauteile mit erhöhten Anforderungen an Einlauf- und Verschleißverhalten</li><li>Vorbehandlung vor Ölen oder weiteren Schutzsystemen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Materialgüte</li><li>gewünschte Schichtausführung bzw. Schichtgewicht</li><li>anschließende Beölung oder weitere Behandlung</li><li>Maß- und Funktionsflächen sowie Toleranzen</li><li>Stückzahl, Abmessungen und Bauteilgewicht</li></ul>
+  `;
+
+  const beizenText = `
+    <strong>Beizen</strong> ist eine chemische Oberflächenbehandlung, bei der Oxidschichten, Zunder, Rost oder andere anorganische Verunreinigungen entfernt werden. Das Verfahren wird häufig als Vorbereitung für galvanische, chemische oder lacktechnische Folgeprozesse eingesetzt.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Entfernen von Zunder nach Wärmebehandlung oder Schweißen</li><li>Reinigen metallischer Oberflächen vor Beschichtung</li><li>Vorbereitung vor Verzinken, Phosphatieren, Eloxieren oder galvanischen Verfahren</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Legierung</li><li>Art und Zustand der Verunreinigung bzw. Oxidschicht</li><li>gewünschter Oberflächenzustand nach dem Beizen</li><li>empfindliche Maß-, Dicht- oder Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
+  `;
+
+  const entgratenText = `
+    <strong>Entgraten</strong> entfernt scharfe Kanten, Grate und Materialüberstände, die beispielsweise beim Sägen, Bohren, Fräsen, Stanzen, Lasern oder Gießen entstehen. Ziel sind sichere, funktionsgerechte und für Folgeprozesse geeignete Bauteilkanten.<br><br>
+    <h4>Verfahrensmöglichkeiten</h4>
+    <ul><li>mechanisches Entgraten</li><li>Gleitschleifen / Trowalisieren</li><li>Bürsten oder Schleifen</li><li>Strahlverfahren</li><li>thermische oder elektrochemische Verfahren für spezielle Anwendungen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Herstellverfahren</li><li>Art, Lage und Größe der Grate</li><li>zulässige Kantenverrundung</li><li>kritische Maß- und Funktionsflächen</li><li>Stückzahl und gewünschtes Ergebnis</li></ul>
+  `;
+
+  const verrundenText = `
+    <strong>Verrunden</strong> bezeichnet das gezielte Abrunden scharfer Bauteilkanten. Dadurch können Verletzungsrisiken reduziert, Beschichtungen gleichmäßiger aufgebaut und Kerbwirkungen oder unerwünschte scharfe Übergänge vermindert werden.<br><br>
+    <h4>Typische Verfahren</h4>
+    <ul><li>Schleifen</li><li>Bürsten</li><li>Gleitschleifen / Trowalisieren</li><li>Strahlen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Bauteilgeometrie</li><li>gewünschter Kantenradius bzw. Verrundungsgrad</li><li>zu bearbeitende und auszunehmende Bereiche</li><li>Maßtoleranzen</li><li>geplante Folgebehandlung</li></ul>
+  `;
+
+  const glaettenText = `
+    <strong>Glätten</strong> reduziert Rauheit, Spitzen und Bearbeitungsspuren auf einer Oberfläche. Je nach Ausgangszustand und Ziel können mechanische, gleitschleifende oder andere Feinbearbeitungsverfahren eingesetzt werden.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>geringere Oberflächenrauheit</li><li>verbesserte Haptik und Optik</li><li>bessere Reinigbarkeit</li><li>Vorbereitung für Polieren, Beschichten oder galvanische Verfahren</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Ausgangsoberfläche</li><li>gewünschter Rauheitswert oder Referenzoberfläche</li><li>zulässiger Materialabtrag</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Folgeprozess</li></ul>
+  `;
+
+  const mattierenText = `
+    <strong>Mattieren</strong> erzeugt eine gleichmäßig matte, reflexionsarme Oberfläche. Je nach Werkstoff und gewünschter Optik kann dies beispielsweise durch Strahlen, Bürsten, Schleifen oder chemische Verfahren erfolgen.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>gleichmäßige dekorative Optik</li><li>Reduzierung von Glanz und Reflexionen</li><li>Kaschieren leichter Oberflächenunterschiede</li><li>Vorbereitung für nachfolgende Beschichtungen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff</li><li>gewünschter Mattierungsgrad bzw. Referenzmuster</li><li>Sichtflächen und nicht zu bearbeitende Bereiche</li><li>zulässige Rauheit und Materialabtrag</li><li>geplante Folgebehandlung</li></ul>
+  `;
+
+  const schleifenText = `
+    <strong>Schleifen</strong> ist ein spanendes Feinbearbeitungsverfahren, bei dem mit gebundenen oder flexiblen Schleifmitteln Material abgetragen wird. Es dient der Form- und Maßkorrektur, der Verringerung der Rauheit sowie der Vorbereitung dekorativer oder technischer Oberflächen.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Entfernen von Bearbeitungsspuren und Unebenheiten</li><li>Erzeugen definierter Schliffbilder</li><li>Vorbereitung zum Polieren, Bürsten oder Beschichten</li><li>Bearbeitung von Kanten und Übergängen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Ausgangszustand</li><li>gewünschtes Schliffbild oder Rauheit</li><li>zulässiger Materialabtrag und Toleranzen</li><li>Sicht- und Funktionsflächen</li><li>Stückzahl und Folgebehandlung</li></ul>
+  `;
+
+  const polierenText = `
+    <strong>Polieren</strong> ist eine Feinbearbeitung zur deutlichen Verringerung der Oberflächenrauheit und zur Erzeugung glatter bis hochglänzender Flächen. Je nach Werkstoff und Anforderung kann das Polieren dekorativen, hygienischen oder funktionellen Zwecken dienen.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>Hochglanz oder definierter Glanzgrad</li><li>geringere Rauheit</li><li>verbesserte Reinigbarkeit</li><li>Vorbereitung für dekorative galvanische Schichten</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff</li><li>gewünschte Oberflächenqualität bzw. Referenzmuster</li><li>Rauheits- oder Glanzanforderungen</li><li>Geometrie und schwer zugängliche Bereiche</li><li>zulässiger Materialabtrag und Stückzahl</li></ul>
+  `;
+
+  const buerstenText = `
+    <strong>Bürsten</strong> ist eine mechanische Oberflächenbearbeitung mit rotierenden oder linearen Bürstwerkzeugen. Das Verfahren kann zum Reinigen, Entgraten, Strukturieren oder Erzeugen eines definierten dekorativen Schliffbilds eingesetzt werden.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>Strukturieren von Edelstahl- und Aluminiumoberflächen</li><li>Entfernen leichter Oxide oder Rückstände</li><li>Entgraten kleiner Kanten</li><li>Erzeugen eines gleichmäßigen Sichtbilds</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Ausgangszustand</li><li>gewünschte Bürstrichtung und Oberflächenstruktur</li><li>Sichtflächen und Kantenanforderungen</li><li>Referenzmuster, falls vorhanden</li><li>Stückzahl und Folgebehandlung</li></ul>
+  `;
+
+  const trowalisierenText = `
+    <strong>Trowalisieren</strong>, auch Gleitschleifen genannt, ist ein mechanisches Verfahren, bei dem Werkstücke zusammen mit Schleif- oder Polierkörpern und Prozessflüssigkeit in einem Arbeitsbehälter bewegt werden. Dadurch lassen sich Bauteile entgraten, verrunden, glätten, reinigen oder polieren.<br><br>
+    <h4>Typische Ziele</h4>
+    <ul><li>Entgraten und Kantenverrunden</li><li>Glätten und Polieren</li><li>Reinigen und Entzundern leichter Rückstände</li><li>gleichmäßige Bearbeitung großer Stückzahlen</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff, Geometrie und Bauteilgröße</li><li>gewünschtes Bearbeitungsergebnis</li><li>zulässige Kantenverrundung und Materialabtrag</li><li>empfindliche Flächen oder Gewinde</li><li>Stückzahl und Folgeprozess</li></ul>
+  `;
+
+  const chemischesGlaenzenText = `
+    <strong>Chemisches Glänzen</strong> ist ein chemisches Verfahren zum Einebnen und Aufhellen metallischer Oberflächen. Durch kontrollierten chemischen Abtrag werden mikroskopische Rauheitsspitzen reduziert, wodurch eine gleichmäßigere und glänzendere Oberfläche entstehen kann.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>dekorative Oberflächen</li><li>Vorbehandlung vor Eloxieren oder anderen Veredelungen</li><li>Bearbeitung komplexer Geometrien, die mechanisch schwer zugänglich sind</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Werkstoff und Legierung</li><li>gewünschte Optik bzw. Referenzoberfläche</li><li>zulässiger Materialabtrag</li><li>Maß- und Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
+  `;
+
+  const versilbernText = `
+    <strong>Versilbern</strong> bezeichnet das Aufbringen einer Silberschicht auf ein Werkstück, meist durch galvanische Abscheidung. Silber wird wegen seiner sehr guten elektrischen und thermischen Leitfähigkeit sowie für dekorative und funktionelle Oberflächen eingesetzt.<br><br>
+    <h4>Typische Anwendungen</h4>
+    <ul><li>elektrische Kontakte und Stromschienen</li><li>Bauteile mit hohen Anforderungen an Leitfähigkeit</li><li>dekorative Metalloberflächen</li><li>technische Funktionsschichten</li></ul>
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    <ul><li>Grundwerkstoff und eventuelle Zwischenschichten</li><li>gewünschte Schichtdicke</li><li>technische oder dekorative Anforderung</li><li>Kontakt-, Maß- und Funktionsflächen</li><li>Prüfanforderungen, Stückzahl und Abmessungen</li></ul>
+  `;
+
   const baseContainerTexts = [
     legacyContainerTexts[0],
     legacyContainerTexts[1],
@@ -697,6 +829,18 @@ useEffect(() => {
     entzinnenText,
     entaluminierenText,
     entnickelnText,
+    mnPhosphatierenText,
+    beizenText,
+    entgratenText,
+    verrundenText,
+    glaettenText,
+    mattierenText,
+    schleifenText,
+    polierenText,
+    buerstenText,
+    trowalisierenText,
+    chemischesGlaenzenText,
+    versilbernText,
   ];
 
 
@@ -729,6 +873,18 @@ useEffect(() => {
     27: [{ name: "Verzinnen", hash: "#Verzinnen" }, { name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }],
     28: [{ name: "Aluminieren", hash: "#Aluminieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Entlacken", hash: "#Entlacken" }],
     29: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Verkupfern", hash: "#Verkupfern" }],
+    30: [{ name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }, { name: "Schleifen", hash: "#Schleifen" }, { name: "KTL-Beschichten", hash: "#KTL-Beschichten" }],
+    31: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Verzinken", hash: "#Verzinken" }, { name: "Eloxieren", hash: "#Eloxieren" }],
+    32: [{ name: "Verrunden", hash: "#Verrunden" }, { name: "Trowalisieren", hash: "#Trowalisieren" }, { name: "Bürsten", hash: "#Bürsten" }],
+    33: [{ name: "Entgraten", hash: "#Entgraten" }, { name: "Trowalisieren", hash: "#Trowalisieren" }, { name: "Schleifen", hash: "#Schleifen" }],
+    34: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Polieren", hash: "#Polieren" }, { name: "Trowalisieren", hash: "#Trowalisieren" }],
+    35: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Bürsten", hash: "#Bürsten" }, { name: "Schleifen", hash: "#Schleifen" }],
+    36: [{ name: "Polieren", hash: "#Polieren" }, { name: "Bürsten", hash: "#Bürsten" }, { name: "Mattieren", hash: "#Mattieren" }],
+    37: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Chemisches Glänzen", hash: "#Chemisches-Glänzen" }, { name: "Verchromen", hash: "#Verchromen" }],
+    38: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Mattieren", hash: "#Mattieren" }, { name: "Entgraten", hash: "#Entgraten" }],
+    39: [{ name: "Entgraten", hash: "#Entgraten" }, { name: "Verrunden", hash: "#Verrunden" }, { name: "Glätten", hash: "#Glätten" }],
+    40: [{ name: "Polieren", hash: "#Polieren" }, { name: "Eloxieren", hash: "#Eloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
+    41: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
   };
 
   const genericInquiryBlock = `
