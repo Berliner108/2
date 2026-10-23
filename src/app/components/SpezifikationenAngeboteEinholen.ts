@@ -55,8 +55,26 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'radio',
       name: 'verfahren',
       label: 'Verfahren:',
-      options: ['Normaleloxal', 'Harteloxal / Hartanodisieren', 'Chromsäureanodisieren', 'Tioxal', 'Ematal'],
+      options: [
+        'Normaleloxal',
+        'Harteloxal / Hartanodisieren',
+        'Chromsäureanodisieren',
+        'Tioxal',
+        'Ematal'
+      ],
       required: true
+    },
+    {
+      type: 'radio',
+      name: 'eloxalanwendung',
+      label: 'Anwendung:',
+      options: ['Dekorativ', 'Technisch', 'Dekorativ & technisch', 'Nach Vorgabe / unbekannt']
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      maxLength: 30
     },
     {
       type: 'group',
@@ -104,6 +122,12 @@ export const specificationsMap: Record<string, Specification[]> = {
       dependsOn: { name: 'verfahren', value: 'Chromsäureanodisieren' }
     },
     {
+      type: 'radio',
+      name: 'eloxalverdichtung',
+      label: 'Verdichtung:',
+      options: ['Verdichten', 'Nicht verdichten', 'Nach Vorgabe / unbekannt']
+    },
+    {
       type: 'group',
       name: 'anforderung',
       label: 'Optionale Anforderung:',
@@ -123,7 +147,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Zusätzliche Vorgabe / gewünschte Oberfläche',
       maxLength: 80,
       dependsOn: { name: 'verfahren', value: 'Ematal' }
-    },
+    }
   ],
   Verzinken: [
     {
@@ -591,14 +615,56 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Anodisieren: [
     {
+      type: 'dropdown',
+      name: 'anodisierwerkstoff',
+      label: 'Werkstoff:',
+      options: [
+        'Titan',
+        'Magnesium',
+        'Zink',
+        'Andere / nach Vorgabe'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'anodisierfunktion',
+      label: 'Gewünschte Funktion:',
+      options: [
+        'Korrosionsschutz',
+        'Verschleißschutz',
+        'Dekorative Oberfläche / Färbung',
+        'Elektrische Isolation',
+        'Andere / nach Vorgabe'
+      ]
+    },
+    {
+      type: 'text',
+      name: 'schichtdicke',
+      label: 'Gewünschte Schichtdicke (µm)',
+      maxLength: 30
+    },
+    {
+      type: 'text',
+      name: 'anodisierfarbe',
+      label: 'Farbe / Optik (optional)',
+      maxLength: 60
+    },
+    {
+      type: 'text',
+      name: 'anodisiernachbehandlung',
+      label: 'Nachbehandlung / Prozessvorgabe (optional)',
+      maxLength: 80
+    },
+    {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Zertifizierungen / Anforderungen:',
+      tooltip: 'Wähle Anforderungen aus, die für den Beschichter bzw. den Auftrag relevant sind.',
       options: [
-        'Qualanod',
         'ISO 9001',
         'ISO 14001',
+        'ISO 45001',
         'RoHS / REACH'
       ]
     }

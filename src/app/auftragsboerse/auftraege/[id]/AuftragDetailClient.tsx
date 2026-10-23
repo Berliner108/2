@@ -121,6 +121,12 @@ const specificationLabels: Record<string, string> = {
   zertifizierungen: 'Zertifizierungen',
   // Eloxieren
   farbeeloxieren: 'Farbe',
+  eloxalanwendung: 'Anwendung',
+  eloxalverdichtung: 'Verdichtung',
+  anodisierwerkstoff: 'Werkstoff',
+  anodisierfunktion: 'Gewünschte Funktion',
+  anodisierfarbe: 'Farbe / Optik',
+  anodisiernachbehandlung: 'Nachbehandlung / Prozessvorgabe',
   // Verzinken / Galvanik
   galvaniksystem: 'Galvanisches Zinksystem',
   zinksystem: 'Galvanisches Zinksystem',

@@ -481,30 +481,27 @@ useEffect(() => {
   `;
 
   const eloxierenText = `
-    <strong>Eloxieren</strong> ist die elektrochemische Oxidation von Aluminium. Dabei wird die Oberfläche des Werkstücks gezielt in eine schützende Oxidschicht umgewandelt. Diese kann den Korrosionsschutz, die Härte, die Verschleißbeständigkeit und die Optik verbessern.<br><br>
+    <strong>Eloxieren</strong> ist die elektrochemische Oxidation von <strong>Aluminium</strong>. Beschichter Scout verwendet „Eloxieren“ gezielt für Aluminium und Aluminiumlegierungen. Für anodische Oxidationsverfahren auf anderen Metallen wird die separate Auswahl <strong>Anodisieren</strong> verwendet.<br><br>
     <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren für die gewünschte Optik → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br>
-    <h4>Farbvarianten in der Auftragserfassung</h4>
+    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br>
+    <h4>Unterverfahren</h4>
     <ul>
-      <li>C-0 (Natureloxal)</li>
-      <li>C-31 bis C-34 (Bronzetöne)</li>
-      <li>C-35 (Schwarz)</li>
-      <li>C-36 bis C-38 (Grautöne)</li>
+      <li><strong>Normaleloxal:</strong> klassisches Eloxieren für dekorative und technische Aluminiumoberflächen.</li>
+      <li><strong>Harteloxal / Hartanodisieren:</strong> dickere und härtere Oxidschichten für stärker beanspruchte Funktionsflächen.</li>
+      <li><strong>Chromsäureanodisieren:</strong> spezielles anodisches Verfahren für Aluminium, insbesondere bei entsprechenden technischen Vorgaben.</li>
+      <li><strong>Tioxal und Ematal:</strong> spezielle Eloxal-/Anodisierausführungen, die nach konkreter Prozess- oder Oberflächenvorgabe ausgeschrieben werden sollten.</li>
     </ul>
-    <h4>Typische Anwendungen</h4>
-    <ul>
-      <li>Aluminiumprofile und Fassadenbauteile</li>
-      <li>Maschinen- und Präzisionsteile</li>
-      <li>Sicht- und Designteile</li>
-      <li>Bauteile mit Anforderungen an Korrosions- oder Verschleißschutz</li>
-    </ul>
+    <h4>Farbe und Verdichtung</h4>
+    Bei Normaleloxal können beispielsweise Natur-, Bronze-, Schwarz- und Grautöne gefordert werden. Die <strong>Verdichtung</strong> beeinflusst die Eigenschaften der porösen Oxidschicht und sollte deshalb angegeben werden, wenn eine konkrete technische Vorgabe besteht.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
     <ul>
       <li>Aluminiumlegierung bzw. genaue Werkstoffangabe</li>
-      <li>gewünschter Eloxalfarbton</li>
+      <li>gewünschtes Eloxalverfahren</li>
+      <li>dekorative oder technische Anwendung</li>
+      <li>gewünschte Schichtdicke</li>
+      <li>Farbton und gewünschte Verdichtung</li>
       <li>Maße, Gewicht, Stückzahl und Sichtflächen</li>
       <li>Funktionsflächen, Passungen, Gewinde und Bereiche, die frei bleiben müssen</li>
-      <li>Anforderungen an Optik, Korrosionsschutz und Dokumentation</li>
     </ul>
     Als Anforderungen können unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
   `;
@@ -761,12 +758,28 @@ useEffect(() => {
   `;
 
   const anodisierenText = `
-    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. Bei Aluminium entspricht dies im allgemeinen Sprachgebrauch dem Eloxieren. Beschichter Scout führt beide Begriffe als eigene Auswahl, damit Aufträge so erfasst werden können, wie sie vom Auftraggeber bezeichnet werden.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>Korrosionsschutz</li><li>definierte elektrische oder tribologische Eigenschaften</li><li>dekorative Oberflächen</li><li>Vorbereitung für bestimmte technische Anwendungen</li></ul>
+    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. In Beschichter Scout wird diese Auswahl für <strong>Anodisieraufträge außerhalb des klassischen Aluminium-Eloxierens</strong> verwendet. Aluminiumaufträge sollten deshalb grundsätzlich unter <strong>Eloxieren</strong> erfasst werden.<br><br>
+    <h4>Relevante Werkstoffe</h4>
+    <ul>
+      <li><strong>Titan:</strong> anodische Oxidschichten können für technische Eigenschaften und für definierte dekorative Farbwirkungen eingesetzt werden.</li>
+      <li><strong>Magnesium:</strong> anodische bzw. elektrochemische Oxidationsschichten werden insbesondere für Schutz- und Funktionsanforderungen eingesetzt.</li>
+      <li><strong>Zink:</strong> spezielle anodische Oxidationsprozesse sind möglich und sollten nach konkreter Prozessvorgabe ausgeschrieben werden.</li>
+      <li><strong>Andere Werkstoffe:</strong> nur nach eindeutiger technischer Vorgabe oder Zeichnung.</li>
+    </ul>
+    <h4>Typische Anforderungen</h4>
+    Je nach Werkstoff und Verfahren können <strong>Korrosionsschutz, Verschleißschutz, elektrische Isolation</strong> oder eine <strong>dekorative Oberfläche bzw. Färbung</strong> im Vordergrund stehen. Die konkrete Prozessführung ist stark werkstoffabhängig und sollte bei Spezialverfahren möglichst durch Zeichnung, Norm oder Kundenspezifikation beschrieben werden.<br><br>
     <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Legierung</li><li>gewünschte Schichteigenschaften</li><li>Farb- und Sichtanforderungen, sofern relevant</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Abmessungen</li></ul>
-    Beim Anodisieren kommen als mögliche Anforderungen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
+    <ul>
+      <li>Werkstoff und genaue Legierung</li>
+      <li>gewünschte Funktion der anodischen Schicht</li>
+      <li>gewünschte Schichtdicke, sofern vorgegeben</li>
+      <li>Farbe / Optik, sofern relevant</li>
+      <li>Nachbehandlung oder konkrete Prozessvorgabe</li>
+      <li>Maß-, Kontakt-, Pass- und Funktionsflächen</li>
+      <li>Stückzahl und Abmessungen</li>
+      <li>Norm, Zeichnung oder Kundenspezifikation bei Sonderverfahren</li>
+    </ul>
+    <strong>Abgrenzung:</strong> Klassisches Anodisieren von Aluminium wird auf Beschichter Scout unter <strong>Eloxieren</strong> geführt. Dadurch bleiben Aluminium-Eloxalaufträge und spezielle Anodisieraufträge auf anderen Metallen eindeutig getrennt.
   `;
   const mnPhosphatierenText = `
     <strong>Mn-Phosphatieren (Manganphosphatieren)</strong> ist ein chemisches Konversionsverfahren für Eisen- und Stahlwerkstoffe. Dabei entsteht auf der Oberfläche eine kristalline Manganphosphatschicht. Sie wird vor allem eingesetzt, wenn Verschleiß reduziert, das Einlaufverhalten verbessert oder eine gute Aufnahme von Öl und Schmierstoffen erreicht werden soll.<br><br>
