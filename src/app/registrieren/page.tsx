@@ -665,15 +665,15 @@ const Register = () => {
             <strong>14 Tage Premium kostenlos testen</strong>
 
             <p>
-              Dein Beschichter Scout-Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
+              Dein Scouti-Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
               Registrierung erhältst du zusätzlich 14 Tage Zugriff auf alle
               Premium-Anbieterfunktionen.
             </p>
 
             <p>
               Premium benötigst du, wenn du auf Aufträge oder Lackanfragen bieten,
-              Artikel verkaufen oder neue geschäftliche Kontakte starten möchtest.
-              Aufträge und Lackanfragen einstellen sowie die Plattform durchsuchen
+              Artikel kostenlos einstellen oder neue geschäftliche Kontakte starten möchtest.
+              Aufträge und Lackanfragen einstellen, Artikel kaufen sowie die Plattform durchsuchen
               bleibt kostenlos.
             </p>
 

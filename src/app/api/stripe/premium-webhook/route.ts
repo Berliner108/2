@@ -12,6 +12,61 @@ function toIsoFromUnix(seconds?: number | null) {
   return new Date(seconds * 1000).toISOString()
 }
 
+function getSubscriptionIdFromInvoice(invoice: any): string | null {
+  if (typeof invoice?.subscription === 'string') return invoice.subscription
+  if (invoice?.subscription?.id) return invoice.subscription.id
+
+  const parentSubscription = invoice?.parent?.subscription_details?.subscription
+  if (typeof parentSubscription === 'string') return parentSubscription
+  if (parentSubscription?.id) return parentSubscription.id
+
+  return null
+}
+
+function getCustomerId(subscription: any): string | null {
+  if (typeof subscription?.customer === 'string') return subscription.customer
+  return subscription?.customer?.id ?? null
+}
+
+function getCurrentPeriodEnd(subscription: any): number | null {
+  if (
+    typeof subscription?.current_period_end === 'number' &&
+    subscription.current_period_end > 0
+  ) {
+    return subscription.current_period_end
+  }
+
+  const itemEnds = Array.isArray(subscription?.items?.data)
+    ? subscription.items.data
+        .map((item: any) =>
+          typeof item?.current_period_end === 'number'
+            ? item.current_period_end
+            : null
+        )
+        .filter((value: number | null): value is number => value !== null)
+    : []
+
+  return itemEnds.length ? Math.max(...itemEnds) : null
+}
+
+function subscriptionContainsPremiumPrice(
+  subscription: any,
+  premiumPriceId: string
+): boolean {
+  const items = Array.isArray(subscription?.items?.data)
+    ? subscription.items.data
+    : []
+
+  return items.some((item: any) => {
+    const priceId =
+      typeof item?.price === 'string'
+        ? item.price
+        : item?.price?.id
+
+    return priceId === premiumPriceId
+  })
+}
+
 export async function POST(req: Request) {
   const stripe = getStripe()
 
@@ -23,7 +78,6 @@ export async function POST(req: Request) {
   }
 
   const webhookSecret = process.env.STRIPE_PREMIUM_WEBHOOK_SECRET
-
   if (!webhookSecret) {
     return NextResponse.json(
       { error: 'STRIPE_PREMIUM_WEBHOOK_SECRET fehlt' },
@@ -31,8 +85,15 @@ export async function POST(req: Request) {
     )
   }
 
-  const signature = req.headers.get('stripe-signature')
+  const premiumPriceId = process.env.STRIPE_PREMIUM_PRICE_ID
+  if (!premiumPriceId) {
+    return NextResponse.json(
+      { error: 'STRIPE_PREMIUM_PRICE_ID fehlt' },
+      { status: 500 }
+    )
+  }
 
+  const signature = req.headers.get('stripe-signature')
   if (!signature) {
     return NextResponse.json(
       { error: 'Stripe-Signatur fehlt' },
@@ -51,11 +112,7 @@ export async function POST(req: Request) {
       webhookSecret
     )
   } catch (error: any) {
-    console.error(
-      '[premium-webhook] Ungültige Signatur:',
-      error?.message
-    )
-
+    console.error('[premium-webhook] Ungültige Signatur:', error?.message)
     return NextResponse.json(
       { error: 'Ungültige Signatur' },
       { status: 400 }
@@ -66,77 +123,78 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
-
-      /*
-       * WICHTIG:
-       * Erst eine tatsächlich erfolgreiche Rechnungszahlung
-       * aktiviert bzw. verlängert Premium.
-       */
       case 'invoice.payment_succeeded': {
         const invoice: any = event.data.object
+        const subscriptionId = getSubscriptionIdFromInvoice(invoice)
 
-        // Subscription-ID – mit Fallback für verschiedene Stripe-API-Versionen
-        let subscriptionId: string | null = null
+        if (!subscriptionId) break
 
-        if (typeof invoice.subscription === 'string') {
-          subscriptionId = invoice.subscription
-        } else if (invoice.subscription?.id) {
-          subscriptionId = invoice.subscription.id
-        } else {
-          const parentSubscription =
-            invoice.parent?.subscription_details?.subscription
-
-          if (typeof parentSubscription === 'string') {
-            subscriptionId = parentSubscription
-          } else if (parentSubscription?.id) {
-            subscriptionId = parentSubscription.id
-          }
-        }
-
-        if (!subscriptionId) {
-          break
-        }
-
-        // Subscription frisch von Stripe laden.
-        // Wir vertrauen NICHT einfach irgendwelchen Client-Daten.
         const subscription: any =
           await stripe.subscriptions.retrieve(subscriptionId)
 
         const purpose = subscription.metadata?.purpose
         const userId = subscription.metadata?.scouti_user_id
 
-        // Nur Scouti-Premium-Abos behandeln
-        if (
-          purpose !== 'scouti_premium' ||
-          !userId
-        ) {
+        if (purpose !== 'scouti_premium' || !userId) break
+
+        if (!subscriptionContainsPremiumPrice(subscription, premiumPriceId)) {
+          console.warn(
+            '[premium-webhook] Falsche Price für Premium-Subscription:',
+            subscription.id
+          )
           break
         }
 
-        /*
-         * Zusätzliche Sicherheitsprüfung:
-         * Die Invoice muss wirklich bezahlt sein.
-         */
         if (invoice.paid !== true) {
           console.warn(
-            '[premium-webhook] invoice.payment_succeeded aber invoice.paid != true',
+            '[premium-webhook] invoice.payment_succeeded aber invoice.paid != true:',
             invoice.id
           )
           break
         }
 
-        const customerId =
-          typeof subscription.customer === 'string'
-            ? subscription.customer
-            : subscription.customer?.id ?? null
+        const customerId = getCustomerId(subscription)
+        if (!customerId) {
+          throw new Error('Subscription hat keinen Customer')
+        }
 
-        const premiumUntil =
-          toIsoFromUnix(subscription.current_period_end)
+        const { data: profile, error: profileError } = await admin
+          .from('profiles')
+          .select('id, stripe_customer_id, stripe_subscription_id')
+          .eq('id', userId)
+          .maybeSingle()
+
+        if (profileError) throw profileError
+        if (!profile) break
+
+        if (
+          profile.stripe_customer_id &&
+          profile.stripe_customer_id !== customerId
+        ) {
+          console.warn(
+            '[premium-webhook] Stripe-Customer passt nicht zum Profil:',
+            userId,
+            customerId
+          )
+          break
+        }
+
+        if (
+          profile.stripe_subscription_id &&
+          profile.stripe_subscription_id !== subscription.id
+        ) {
+          console.warn(
+            '[premium-webhook] Andere Subscription bereits im Profil hinterlegt:',
+            userId
+          )
+          break
+        }
+
+        const periodEnd = getCurrentPeriodEnd(subscription)
+        const premiumUntil = toIsoFromUnix(periodEnd)
 
         if (!premiumUntil) {
-          throw new Error(
-            'Subscription hat kein current_period_end'
-          )
+          throw new Error('Subscription hat kein current_period_end')
         }
 
         const { error } = await admin
@@ -150,9 +208,7 @@ export async function POST(req: Request) {
           })
           .eq('id', userId)
 
-        if (error) {
-          throw error
-        }
+        if (error) throw error
 
         console.log(
           '[premium-webhook] Premium bestätigt:',
@@ -164,15 +220,6 @@ export async function POST(req: Request) {
         break
       }
 
-      /*
-       * Zahlung fehlgeschlagen:
-       * NICHT sofort Premium löschen.
-       *
-       * premium_until bleibt unverändert.
-       * Damit kann Stripe seine Retry-Logik durchführen.
-       * Wenn keine erfolgreiche Verlängerung kommt,
-       * läuft premium_until automatisch ab.
-       */
       case 'invoice.payment_failed': {
         const invoice: any = event.data.object
 
@@ -181,27 +228,8 @@ export async function POST(req: Request) {
           invoice.id
         )
 
-        // Subscription-ID – mit demselben Fallback wie oben
-        let subscriptionId: string | null = null
-
-        if (typeof invoice.subscription === 'string') {
-          subscriptionId = invoice.subscription
-        } else if (invoice.subscription?.id) {
-          subscriptionId = invoice.subscription.id
-        } else {
-          const parentSubscription =
-            invoice.parent?.subscription_details?.subscription
-
-          if (typeof parentSubscription === 'string') {
-            subscriptionId = parentSubscription
-          } else if (parentSubscription?.id) {
-            subscriptionId = parentSubscription.id
-          }
-        }
-
-        if (!subscriptionId) {
-          break
-        }
+        const subscriptionId = getSubscriptionIdFromInvoice(invoice)
+        if (!subscriptionId) break
 
         const subscription: any =
           await stripe.subscriptions.retrieve(subscriptionId)
@@ -209,63 +237,74 @@ export async function POST(req: Request) {
         const purpose = subscription.metadata?.purpose
         const userId = subscription.metadata?.scouti_user_id
 
+        if (purpose !== 'scouti_premium' || !userId) break
+
+        if (!subscriptionContainsPremiumPrice(subscription, premiumPriceId)) {
+          break
+        }
+
+        const customerId = getCustomerId(subscription)
+        if (!customerId) {
+          throw new Error('Subscription hat keinen Customer')
+        }
+
+        const { data: profile, error: profileError } = await admin
+          .from('profiles')
+          .select('id, stripe_customer_id, stripe_subscription_id')
+          .eq('id', userId)
+          .maybeSingle()
+
+        if (profileError) throw profileError
+        if (!profile) break
+
         if (
-          purpose !== 'scouti_premium' ||
-          !userId
+          profile.stripe_customer_id &&
+          profile.stripe_customer_id !== customerId
         ) {
+          console.warn(
+            '[premium-webhook] Customer-Mismatch bei fehlgeschlagener Zahlung:',
+            userId
+          )
+          break
+        }
+
+        if (
+          profile.stripe_subscription_id &&
+          profile.stripe_subscription_id !== subscription.id
+        ) {
+          console.warn(
+            '[premium-webhook] Subscription-Mismatch bei fehlgeschlagener Zahlung:',
+            userId
+          )
           break
         }
 
         const { error } = await admin
           .from('profiles')
           .update({
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscription.id,
             premium_payment_failed: true,
             updated_at: new Date().toISOString(),
           })
           .eq('id', userId)
-          .eq('stripe_subscription_id', subscription.id)
 
-        if (error) {
-          throw error
-        }
+        if (error) throw error
 
-        // WICHTIG:
         // premium_until wird absichtlich NICHT verändert.
-        // Eine fehlgeschlagene Verlängerungszahlung darf
-        // keine neue Premium-Laufzeit freischalten.
-
         break
       }
 
-      /*
-       * Abo endgültig beendet.
-       *
-       * premium_until wird NICHT künstlich in die Zukunft gesetzt.
-       * Ein bereits gespeichertes Laufzeitende bleibt bestehen.
-       */
       case 'customer.subscription.deleted': {
         const subscription: any = event.data.object
 
-        if (
-          subscription.metadata?.purpose !== 'scouti_premium'
-        ) {
+        if (subscription.metadata?.purpose !== 'scouti_premium') {
           break
         }
 
-        const userId =
-          subscription.metadata?.scouti_user_id
+        const userId = subscription.metadata?.scouti_user_id
+        if (!userId) break
 
-        if (!userId) {
-          break
-        }
-
-        /*
-         * Subscription-ID entfernen.
-         * premium_until bleibt bestehen.
-         *
-         * Falls das Datum bereits vorbei ist,
-         * liefert hasPremiumAccess automatisch false.
-         */
         const { error } = await admin
           .from('profiles')
           .update({
@@ -275,10 +314,9 @@ export async function POST(req: Request) {
           .eq('id', userId)
           .eq('stripe_subscription_id', subscription.id)
 
-        if (error) {
-          throw error
-        }
+        if (error) throw error
 
+        // premium_until bleibt absichtlich bestehen.
         break
       }
 
@@ -287,17 +325,13 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-
   } catch (error: any) {
     console.error(
       '[premium-webhook] Verarbeitung fehlgeschlagen:',
       event.type,
       error?.message || error
     )
-    /*
-     * 500 ist hier ABSICHTLICH:
-     * Stripe soll den Webhook erneut versuchen.
-     */
+
     return NextResponse.json(
       { error: 'Webhook-Verarbeitung fehlgeschlagen' },
       { status: 500 }

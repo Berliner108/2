@@ -9,7 +9,7 @@ const AgbPage = () => {
       <h1 className={styles.heading}>Allgemeine Geschäftsbedingungen (AGB)</h1>
       <section className={styles.section}>
   <p>
-    <strong>Stand:</strong> 20.06.2026
+    <strong>Stand:</strong> 23.10.2026
   </p>
   <p>
     Diese AGB gelten ergänzend zum Impressum, zur Datenschutzerklärung sowie zu allen auf der Plattform
@@ -277,6 +277,62 @@ const AgbPage = () => {
           Prüfungspflicht und keine Haftung für steuerliche oder rechtliche Richtigkeit von Angaben der Nutzer:innen.
         </p>
       </section>
+
+      <h2 className={styles.subheading}>14a. Premium Mitgliedschaft</h2>
+      <section className={styles.section}>
+        <p>
+          Bestimmte Anbieterfunktionen der Plattform setzen eine aktive <strong>Premium Mitgliedschaft</strong> voraus.
+          Hierzu zählen insbesondere das Abgeben von Angeboten auf Aufträge und Lackanfragen, das Einstellen von Artikeln zum Verkauf sowie das aktive Starten neuer geschäftlicher Kontakte.
+        </p>
+
+        <p>
+          Das Einstellen von Aufträgen und Lackanfragen, der Kauf von Artikeln sowie das Durchsuchen der Plattform bleiben ohne Premium Mitgliedschaft möglich, soweit im jeweiligen Prozess nicht ausdrücklich etwas anderes angegeben ist.
+        </p>
+
+        <p>
+          Nach der Registrierung erhält der/die Nutzer:in für <strong>14 Tage</strong> kostenlosen Zugang zu den
+          Premium-Funktionen. Diese Premium-Testphase endet automatisch. Sie wird <strong>nicht automatisch in eine
+          kostenpflichtige Mitgliedschaft umgewandelt</strong> und es erfolgt allein aufgrund des Ablaufs der Testphase keine Abbuchung.
+          Eine kostenpflichtige Premium Mitgliedschaft entsteht ausschließlich durch eine ausdrückliche Buchung durch den/die Nutzer:in.
+        </p>
+
+        <p>
+          Die Premium Mitgliedschaft kostet <strong>249 € pro Jahr</strong>. Maßgeblich sind der im Buchungsprozess
+          ausgewiesene Gesamtpreis und die dort angegebene steuerliche Behandlung.
+        </p>
+
+        <p>
+          Die kostenpflichtige Premium Mitgliedschaft beginnt mit erfolgreicher Zahlung und wird für eine Laufzeit von
+          <strong> zwölf Monaten</strong> abgeschlossen. Sie verlängert sich anschließend automatisch um jeweils weitere
+          zwölf Monate, sofern sie nicht vor Ablauf der jeweils aktuellen Laufzeit zum Laufzeitende gekündigt wird.
+        </p>
+
+        <p>
+          Die Kündigung kann über die hierfür vorgesehene Funktion im Nutzerkonto erfolgen. Wird zum Laufzeitende gekündigt,
+          bleiben die Premium-Funktionen bis zum Ende der bereits bezahlten Laufzeit nutzbar. Eine bereits erklärte Kündigung
+          kann – soweit die technische Funktion angeboten wird und die Mitgliedschaft noch nicht beendet ist – vor Ablauf
+          der aktuellen Laufzeit zurückgenommen werden.
+        </p>
+
+        <p>
+          Schlägt eine Verlängerungszahlung fehl, kann der Zahlungsdienstleister weitere Zahlungsversuche durchführen.
+          Eine neue Premium-Laufzeit wird erst nach erfolgreicher Zahlung freigeschaltet. Nach Ablauf der bereits bezahlten
+          Laufzeit können die Premium-Funktionen eingeschränkt werden.
+        </p>
+
+        <p>
+          Bereits bestehende Verträge, Bestellungen, Aufträge, Zahlungsabwicklungen, Reklamationen sowie
+          transaktionsbezogene Kommunikation können auch nach Ende der Premium Mitgliedschaft weiter abgewickelt werden.
+        </p>
+
+        <p>
+          Die Zahlung und Abrechnung der Premium Mitgliedschaft erfolgt über den eingebundenen Zahlungsdienstleister Stripe.
+          Rechnungen und Zahlungsinformationen können elektronisch, insbesondere per E-Mail oder über den von Stripe
+          bereitgestellten Abrechnungsbereich, zur Verfügung gestellt werden. Nutzer:innen sind verpflichtet, ihre für die
+          Rechnungsstellung erforderlichen Unternehmens-, Adress- und Steuerdaten vollständig und richtig anzugeben und aktuell zu halten.
+        </p>
+      </section>
+
 
       {/* NEU: Gebühren-/Preisanpassungen */}
       <h2 className={styles.subheading}>15. Gebührenänderungen und Preisanpassungen</h2>
@@ -833,18 +889,22 @@ const AgbPage = () => {
           besteht keine Haftung der Plattform für hieraus resultierende Verzögerungen oder Ausfälle, soweit gesetzlich zulässig.
         </p>
       </section>
-
       <h2 className={styles.subheading}>39. Gebühren</h2>
       <section className={styles.section}>
         <p>
-  Das Einstellen von Auftragsanfragen, Lackanfragen und Artikeln ist für Nutzer:innen bis auf Widerruf kostenlos.
-</p>
+          Das Einstellen von Aufträgen und Lackanfragen ist für Nutzer:innen kostenlos. Das Einstellen von Artikeln zum Verkauf setzt eine aktive Premium Mitgliedschaft oder eine noch laufende Premium-Testphase voraus. Für das Einstellen eines Artikels fällt innerhalb der Premium Mitgliedschaft keine zusätzliche Einstellgebühr an.
+        </p>
         <p>
-  Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom <strong>Brutto-Auftrags- bzw. Warenwert</strong> an.
-  Die jeweils geltenden Gebühren sind in diesen AGB geregelt und können im Rahmen der Stripe-Zahlungsabwicklung berücksichtigt werden.
-</p>
-        
+          Für die Premium Mitgliedschaft fällt ein Entgelt von <strong>249 € pro Jahr</strong> an.
+          Maßgeblich sind der im Buchungsprozess ausgewiesene Gesamtpreis und die dort angegebene steuerliche Behandlung.
+        </p>
+        <p>
+          Für erfolgreiche Abschlüsse über die Plattform fällt eine Provision von <strong>7%</strong> vom
+          <strong> Brutto-Auftrags- bzw. Warenwert</strong> an. Die jeweils geltenden Gebühren sind in diesen AGB geregelt
+          und können im Rahmen der Stripe-Zahlungsabwicklung berücksichtigt werden.
+        </p>
       </section>
+
 
       <h2 className={styles.subheading}>40. Rangfolge und Zusatzbedingungen</h2>
       <section className={styles.section}>

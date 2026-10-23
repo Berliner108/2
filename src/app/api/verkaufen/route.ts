@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { createSupabaseRouteClient } from "@/lib/supabase-route";
+import { hasPremiumAccess } from "@/lib/premium";
 
 type SupabaseClientType = Awaited<ReturnType<typeof createSupabaseRouteClient>>;
 
@@ -179,6 +180,43 @@ async function assertSellerImprintComplete(
 
   return { ok: true };
 }
+
+async function assertPremiumAccess(
+  supabase: SupabaseClientType,
+  userId: string
+) {
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select(`
+      premium_exempt,
+      premium_trial_ends_at,
+      premium_until
+    `)
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      ok: false,
+      status: 500,
+      error: "premium_check_failed",
+      message: "Premium-Status konnte nicht geprüft werden.",
+    };
+  }
+
+  if (!profile || !hasPremiumAccess(profile)) {
+    return {
+      ok: false,
+      status: 403,
+      error: "premium_required",
+      message:
+        "Zum Einstellen und Verkaufen von Artikeln benötigst du eine aktive Premium Mitgliedschaft.",
+    };
+  }
+
+  return { ok: true };
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await createSupabaseRouteClient();
@@ -193,6 +231,17 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "NOT_AUTHENTICATED", hint: "No session cookie received by route" },
         { status: 401 }
+      );
+    }
+
+    const premiumCheck = await assertPremiumAccess(supabase, user.id);
+    if (!premiumCheck.ok) {
+      return NextResponse.json(
+        {
+          error: premiumCheck.error,
+          message: premiumCheck.message,
+        },
+        { status: premiumCheck.status }
       );
     }
     const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
@@ -476,6 +525,17 @@ export async function PUT(req: Request) {
     const user = sessionRes?.session?.user;
     if (!user) {
       return NextResponse.json({ error: "NOT_AUTHENTICATED" }, { status: 401 });
+    }
+
+    const premiumCheck = await assertPremiumAccess(supabase, user.id);
+    if (!premiumCheck.ok) {
+      return NextResponse.json(
+        {
+          error: premiumCheck.error,
+          message: premiumCheck.message,
+        },
+        { status: premiumCheck.status }
+      );
     }
     const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
 if (!imprintCheck.ok) {

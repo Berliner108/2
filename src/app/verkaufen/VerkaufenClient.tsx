@@ -11,6 +11,7 @@ import DateiVorschau from './DateiVorschau';
 import { Star, Search, Crown, Loader2 } from 'lucide-react';
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useArticleEditPrefill } from '@/hooks/useArticleEditPrefill';
+import PremiumRequiredModal from '@/components/premium/PremiumRequiredModal';
 
     const herstellerListePulver = [
     'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
@@ -210,6 +211,7 @@ function ArtikelEinstellen() {
   const router = useRouter()
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
 const [overlayText, setOverlayText] = useState('Wir leiten gleich weiter.')
+const [premiumModalOpen, setPremiumModalOpen] = useState(false)
   const searchParams = useSearchParams(); // <-- HIER  
 const {
   editId,
@@ -980,10 +982,50 @@ async function uploadPublicFilesBrowser(
 
   return urls
 }
+
+const checkPremiumForSelling = async (): Promise<boolean> => {
+  try {
+    const res = await fetch('/api/me/premium', {
+      cache: 'no-store',
+      credentials: 'include',
+    })
+
+    const data = await res.json().catch(() => ({} as any))
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        router.push('/login')
+        return false
+      }
+
+      alert(data?.error || 'Premium-Status konnte nicht geprüft werden.')
+      return false
+    }
+
+    const status = String(data?.status || '').toLowerCase()
+
+    if (status === 'active' || status === 'trial' || status === 'exempt') {
+      return true
+    }
+
+    setPremiumModalOpen(true)
+    return false
+  } catch {
+    alert('Premium-Status konnte nicht geprüft werden. Bitte versuche es erneut.')
+    return false
+  }
+}
+
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
-  if (submitDisabled || submitLockRef.current) return;
+  if (ladeStatus || bilderWerdenOptimiert || submitLockRef.current) return;
+
+  // Premium ist die erste Voraussetzung fürs Einstellen/Verkaufen.
+  const hasPremium = await checkPremiumForSelling()
+  if (!hasPremium) return
+
+  if (!profileChecked) return;
 
   submitLockRef.current = true;
   setLadeStatus(true);
@@ -1457,7 +1499,15 @@ const res = await fetch('/api/verkaufen', {
 
   // ❌ Fehlerfall: "Fehler beim Hochladen" bleibt drin
   if (!res.ok) {
-    const msg = data?.error || 'Fehler beim Hochladen';
+    if (
+      res.status === 403 &&
+      (data?.error === 'premium_required' || data?.reason === 'premium_required')
+    ) {
+      setPremiumModalOpen(true)
+      return
+    }
+
+    const msg = data?.message || data?.error || 'Fehler beim Hochladen';
     alert(msg);
     return;
   }
@@ -1906,7 +1956,7 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
 
   const progress = berechneFortschritt();
 const stripeReady = connectLoaded && connect?.ready === true;
-const submitDisabled = ladeStatus || bilderWerdenOptimiert || !stripeReady || !profileChecked;
+const submitDisabled = ladeStatus || bilderWerdenOptimiert || !profileChecked;
 
 
 return (
@@ -1920,7 +1970,7 @@ return (
     className={styles.infoBox}
     viewport={{ once: true }}
   >
-    💡 Ab sofort ist das Einstellen von Artikeln <strong>kostenlos</strong>!
+    💡 Mit Premium kannst du Artikel <strong>kostenlos einstellen</strong>!
     <a href="/agb" className={styles.infoLink}>Mehr erfahren</a>
   </motion.div>
 
@@ -3913,13 +3963,9 @@ onFocus={() => {
       ? isEditMode
         ? 'Änderungen werden gespeichert …'
         : 'Artikel wird eingestellt …'
-      : !connectLoaded
-        ? 'Stripe-Status wird geprüft…'
-        : !stripeReady
-          ? 'Stripe-Verifizierung erforderlich'
-          : isEditMode
-            ? 'Änderungen speichern'
-            : 'Artikel kostenlos einstellen'}
+      : isEditMode
+        ? 'Änderungen speichern'
+        : 'Artikel kostenlos einstellen'}
 </button>
 
 {connectLoaded && connect?.ready === false && (
@@ -3949,6 +3995,13 @@ onFocus={() => {
 </div>
 
       </form>
+
+      <PremiumRequiredModal
+        open={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        actionText="Artikel kostenlos einzustellen"
+      />
+
       <AnimatePresence>
   {ladeStatus && (
     <motion.div
