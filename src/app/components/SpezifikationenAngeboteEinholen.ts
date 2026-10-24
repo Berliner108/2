@@ -775,7 +775,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'extra',
       label: 'Extra:',
       options: [
-        'Trockenen lagern',
+        'Trocken lagern',
       ]
     }
   ],

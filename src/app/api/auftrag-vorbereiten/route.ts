@@ -29,10 +29,21 @@ function validateRequiredSpecs(body: any) {
           'Normaleloxal',
           'Harteloxal / Hartanodisieren',
           'Chromsäureanodisieren',
+          'Tioxal',
+          'Ematal',
         ],
       },
     ],
     Verzinken: [
+      {
+        field: 'verfahren',
+        allowed: [
+          'Feuerverzinken',
+          'Galvanisches Verzinken',
+          'Zinklamellenbeschichtung',
+          'Mechanisches Verzinken',
+        ],
+      },
       {
         field: 'galvanikSystem',
         allowed: ['Zink-Standard', 'Zink-Nickel', 'Zink-Eisen', 'Zinn-Zink'],
@@ -47,12 +58,118 @@ function validateRequiredSpecs(body: any) {
     Vernickeln: [
       {
         field: 'verfahren',
-        allowed: ['Chemisch', 'Galvanisch'],
+        allowed: ['Galvanisches Vernickeln', 'Chemisch Vernickeln'],
       },
       {
         field: 'chemischNickelPhosphor',
-        allowed: ['Mid Phos', 'High Phos'],
-        dependsOn: { field: 'verfahren', value: 'Chemisch' },
+        allowed: ['Low Phos', 'Mid Phos', 'High Phos'],
+        dependsOn: { field: 'verfahren', value: 'Chemisch Vernickeln' },
+      },
+    ],
+    Entnickeln: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entzinnen: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entzinken: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Verzinnen: [
+      {
+        field: 'verfahren',
+        allowed: [
+          'Galvanisches Verzinnen',
+          'Feuerverzinnen / Schmelztauchverzinnen',
+          'Chemisches Verzinnen',
+        ],
+      },
+    ],
+    Aluminieren: [
+      {
+        field: 'verfahren',
+        allowed: [
+          'Schmelztauchaluminieren / Feueraluminieren',
+          'Thermisches Spritzaluminieren',
+        ],
+      },
+    ],
+    Enteloxieren: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch / Beizen'],
+      },
+    ],
+    Entanodisieren: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch / Beizen', 'Mechanisch / Strahlen'],
+      },
+    ],
+    Entaluminieren: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entchromen: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entkupfern: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entmessingen: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entbronzieren: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entgolden: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Entsilbern: [
+      {
+        field: 'verfahren',
+        allowed: ['Chemisch', 'Elektrochemisch'],
+      },
+    ],
+    Verchromen: [
+      {
+        field: 'verchromungsart',
+        allowed: [
+          'Glanzverchromen',
+          'Mattverchromen',
+          'Hartverchromen',
+          'Schwarzverchromen',
+        ],
+      },
+      {
+        field: 'chromsystem',
+        allowed: ['Chrom(III)', 'Chrom(VI)'],
       },
     ],
     'Aluminium-Passivieren': [
@@ -61,51 +178,54 @@ function validateRequiredSpecs(body: any) {
         allowed: [
           'Chrom(III)-Passivierung',
           'Chromfreie Passivierung',
-          'Chrom(VI) / Gelbchromatierung',
+          'Chrom(VI)-Chromatierung / Gelbchromatierung',
         ],
-      },
-    ],
-    Elektropolieren: [
-      {
-        field: 'anwendungsbereich',
-        allowed: ['Lebensmittel', 'Pharma', 'Medizintechnik', 'Industrie allgemein'],
-      },
-    ],
-    Verchromen: [
-      {
-        field: 'verfahren',
-        allowed: ['Glanzverchromen', 'Mattverchromen', 'Hartverchromen'],
       },
     ],
     Vermessingen: [
       {
         field: 'ausfuehrung',
-        allowed: ['Glänzend', 'Matt', 'Antik / Patiniert'],
+        allowed: ['Glänzend', 'Matt', 'Antik / Patiniert', 'Vintage / Altmessing'],
       },
     ],
     Verkupfern: [
       {
         field: 'verfahren',
-        allowed: ['Galvanisch', 'Chemisch'],
+        allowed: [
+          'Galvanisches Verkupfern',
+          'Chemisches / stromloses Verkupfern',
+        ],
       },
     ],
-    Versilbern: [
+    Bronzebeschichten: [
       {
-        field: 'ausfuehrung',
-        allowed: ['Technisch', 'Dekorativ', 'Hartversilbern'],
+        field: 'bronzeart',
+        allowed: ['Rotbronze', 'Gelbbronze', 'Weißbronze', 'Hartbronze'],
       },
     ],
     Vergolden: [
       {
-        field: 'goldart',
-        allowed: ['Reingold', 'Hartgold'],
+        field: 'vergoldungsart',
+        allowed: [
+          'Feingold / Weichgold',
+          'Hartgold',
+          'Chemisch / stromlos vergoldet',
+          'Farbvergoldung',
+        ],
       },
+    ],
+    Versilbern: [
       {
-        field: 'anwendung',
-        allowed: ['Dekorativ', 'Technisch'],
+        field: 'versilberungsart',
+        allowed: [
+          'Glanzsilber',
+          'Hartsilber',
+          'Chemisch / stromlos versilbert',
+        ],
       },
     ],
   }
+
   const selected = [
     { prefix: 'v1', verfahren: String(body?.verfahren1 ?? '') },
     { prefix: 'v2', verfahren: String(body?.verfahren2 ?? '') },
