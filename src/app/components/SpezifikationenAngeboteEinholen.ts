@@ -404,12 +404,6 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   'KTL-Beschichten': [
     {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Schichtdicke (µm)',
-      maxLength: 20
-    },
-    {
       type: 'dropdown',
       name: 'farbton',
       label: 'Farbton:',
@@ -422,14 +416,19 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
         'ISO 14001',
         'IATF 16949',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Korrosionsschutzanforderungen, Vorbehandlung, konkrete Prüf- oder Normvorgaben sowie weitere technische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Vernickeln: [

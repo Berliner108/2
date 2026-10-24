@@ -657,10 +657,13 @@ const materialienMnPhosphatieren = [
   'Andere',
 ]
 const materialienKTL = [
+  'Stahl',
+  'Edelstahl',
+  'Gusseisen',
+  'Verzinkter Stahl',
   'Aluminium',
   'Aluguss',
-  'Stahl',
-  'Zink',
+  'Magnesium',
   'Andere',
 ]
 const materialienEloxieren = [
