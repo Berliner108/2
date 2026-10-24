@@ -649,7 +649,10 @@ const materialienVerzinken = [
 ]
 const materialienZinkphosphatieren = [
   'Stahl',
+  'Verzinkter Stahl',
   'Zink',
+  'Aluminium',
+  'Aluguss',
   'Andere',
 ]
 const materialienMnPhosphatieren = [

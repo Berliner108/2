@@ -187,30 +187,35 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
   Zinkphosphatieren: [
-  {
-    type: 'text',
-    name: 'schichtgewicht',
-    label: 'Schichtgewicht (g/m²)',
-    maxLength: 20
-  },
-  {
-    type: 'radio',
-    name: 'nachbehandlung',
-    label: 'Nachbehandlung:',
-    options: ['Keine', 'Geölt', 'Versiegelt']
-  },
-  {
-    type: 'group',
-    name: 'zertifizierungen',
-    label: 'Zertifizierungen:',
-    tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
-    options: [
-      'ISO 9001',
-      'ISO 14001',
-      'RoHS / REACH'
-    ]
-   }
-],
+    {
+      type: 'dropdown',
+      name: 'nachbehandlung',
+      label: 'Nachbehandlung:',
+      options: [
+        'Keine',
+        'Geölt',
+        'Versiegelt',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9717',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschtes Schichtgewicht, Korrosionsschutzanforderungen, Vorbehandlung, konkrete Prüf- oder Normvorgaben sowie weitere technische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
   'Mn-Phosphatieren': [
     {
       type: 'text',
