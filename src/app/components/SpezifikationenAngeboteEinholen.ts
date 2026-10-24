@@ -1002,17 +1002,16 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'extras',
       label: 'Extras / besondere Ausführung:',
       options: [
-        'Zweifarbig / mehrfarbig',
+        'Zweifarbig',
         'Beigestellter Lack',
-        'Bereiche abdecken / lackfrei halten',
-        'Besondere Korrosionsschutzanforderung',
+        'Bereiche abdecken',
         'Sonstige Vorgabe'
       ]
     },
     {
       type: 'note',
       name: 'technischerHinweis',
-      label: 'Gewünschte Schichtdicken, konkrete Schichtaufbauten sowie weitere technische Vorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+      label: 'Gewünschte Schichtdicken, konkrete Schichtaufbauten sowie weitere technische Vorgaben und Sonderanforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Pulverbeschichten: [
