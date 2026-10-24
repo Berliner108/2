@@ -944,19 +944,36 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   'Aluminium-Passivieren': [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'passivierungsart',
-      label: 'Passivierung:',
-      options: ['Chrom(III)-Passivierung', 'Chromfreie Passivierung', 'Chrom(VI) / Gelbchromatierung'],
+      label: 'Passivierungsart:',
+      options: [
+        'Chrom(III)-Passivierung',
+        'Chromfreie Passivierung',
+        'Chrom(VI)-Chromatierung / Gelbchromatierung'
+      ],
       required: true
     },
     {
       type: 'group',
-      name: 'anforderung',
-      label: 'Anforderung:',
-      options: ['Korrosionsschutz', 'Lackhaftung', 'Elektrische Leitfähigkeit']
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'DIN EN 12487',
+        'ASTM B921',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Anforderungen an Korrosionsschutz, Lackhaftung, elektrische Leitfähigkeit bzw. Kontaktwiderstand, gewünschte Optik, anschließende Beschichtung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Elektropolieren: [
     {
       type: 'radio',

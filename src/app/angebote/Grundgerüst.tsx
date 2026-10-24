@@ -857,6 +857,12 @@ const materialienAluminieren = [
   'Nickellegierung',
   'Andere',
 ]
+
+const materialienAluminiumPassivieren = [
+  'Aluminium',
+  'Aluguss',
+  'Andere',
+]
 const materialienBruenieren = [
   'Stahl',
   'Gusseisen',
@@ -967,6 +973,9 @@ const istEnteloxieren =
   selectedOption1 === 'Enteloxieren' || selectedOption2 === 'Enteloxieren'
 const istAluminieren =
   selectedOption1 === 'Aluminieren' || selectedOption2 === 'Aluminieren'
+const istAluminiumPassivieren =
+  selectedOption1 === 'Aluminium-Passivieren' ||
+  selectedOption2 === 'Aluminium-Passivieren'
 const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
 const istBruenieren =
@@ -1080,6 +1089,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienEnteloxieren
 } else if (istAluminieren) {
   materialienAktiv = materialienAluminieren
+} else if (istAluminiumPassivieren) {
+  materialienAktiv = materialienAluminiumPassivieren
 } else if (istVernickeln) {
   materialienAktiv = materialienVernickeln
 } else if (istVerzinken) {
