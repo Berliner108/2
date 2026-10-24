@@ -673,23 +673,42 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Entzinken: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      label: 'Entzinkungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Konservieren / Korrosionsschutz',
+        'Aktivieren für Neubeschichtung'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Zinkschicht bzw. des Zink-Schichtsystems, gewünschter Entzinkungsumfang, Schutz des Grundwerkstoffs, Anforderungen an zulässigen Materialabtrag und Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Einlagern: [
     {
       type: 'group',
@@ -825,24 +844,42 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Enteloxieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      label: 'Enteloxierverfahren:',
+      options: [
+        'Chemisch / Beizen'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Dekapieren / Aktivieren',
+        'Vorbereitung für erneutes Eloxieren',
+        'Konservieren / Korrosionsschutz'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
-        'Qualanod',
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Eloxalschicht, gewünschter Enteloxierungsumfang, Schutz des Aluminiumgrundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung bzw. erneutes Eloxieren sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Entanodisieren: [
     {
       type: 'radio',

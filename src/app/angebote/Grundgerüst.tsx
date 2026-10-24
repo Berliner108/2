@@ -839,6 +839,7 @@ const materialienEntaluminieren = [
 const materialienEntzinken = [
   'Stahl',
   'Edelstahl',
+  'Gusseisen',
   'Andere',
 ]
 const materialienEntanodisieren = [
