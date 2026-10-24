@@ -828,6 +828,7 @@ const materialienEntzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
+  'Messing',
   'Andere',
 ]
 const materialienEntaluminieren = [
@@ -843,8 +844,8 @@ const materialienEntzinken = [
   'Andere',
 ]
 const materialienEntanodisieren = [
-  'Zink',
-  'Zinn',
+  'Titan',
+  'Magnesium',
   'Andere',
 ]
 const materialienEnteloxieren = [

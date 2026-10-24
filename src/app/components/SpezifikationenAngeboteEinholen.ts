@@ -654,23 +654,43 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Entzinnen: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      label: 'Entzinnungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Zinn- bzw. Zinnlegierungsschicht, gewünschter Entzinnungsumfang, Grundwerkstoff und gegebenenfalls vorhandene Diffusions- oder Zwischenschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Entzinken: [
     {
       type: 'dropdown',
@@ -882,24 +902,44 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Entanodisieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Galvanisch']
+      label: 'Entanodisierverfahren:',
+      options: [
+        'Chemisch / Beizen',
+        'Mechanisch / Strahlen',
+        'Nach Vorgabe / spezialchemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Dekapieren / Aktivieren',
+        'Vorbereitung für erneutes Anodisieren',
+        'Konservieren / Korrosionsschutz'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
-        'Qualanod',
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen anodischen Oxidschicht, Grundwerkstoff und Legierung, gewünschter Entanodisierungsumfang, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung bzw. erneutes Anodisieren sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Entaluminieren: [
     {
       type: 'radio',
