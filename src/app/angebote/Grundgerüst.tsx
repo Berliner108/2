@@ -780,6 +780,61 @@ const materialienEntchromen = [
   'Andere',
 ]
 
+const materialienEntkupfern = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Messing',
+  'Bronze',
+  'Nickel',
+  'Kunststoff',
+  'Andere',
+]
+
+const materialienEntmessingen = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Nickel',
+  'Kunststoff',
+  'Andere',
+]
+
+const materialienEntbronzieren = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Messing',
+  'Nickel',
+  'Kunststoff',
+  'Andere',
+]
+
+const materialienEntgolden = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Messing',
+  'Bronze',
+  'Nickel',
+  'Kunststoff',
+  'Andere',
+]
+
+const materialienEntsilbern = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Messing',
+  'Bronze',
+  'Nickel',
+  'Kunststoff',
+  'Andere',
+]
+
 const materialienBeizen = [
   'Stahl',
   'Edelstahl',
@@ -1205,6 +1260,21 @@ const istEdelstahlPassivieren =
 const istEntchromen =
   selectedOption1 === 'Entchromen' ||
   selectedOption2 === 'Entchromen'
+const istEntkupfern =
+  selectedOption1 === 'Entkupfern' ||
+  selectedOption2 === 'Entkupfern'
+const istEntmessingen =
+  selectedOption1 === 'Entmessingen' ||
+  selectedOption2 === 'Entmessingen'
+const istEntbronzieren =
+  selectedOption1 === 'Entbronzieren' ||
+  selectedOption2 === 'Entbronzieren'
+const istEntgolden =
+  selectedOption1 === 'Entgolden' ||
+  selectedOption2 === 'Entgolden'
+const istEntsilbern =
+  selectedOption1 === 'Entsilbern' ||
+  selectedOption2 === 'Entsilbern'
 const istBeizen =
   selectedOption1 === 'Beizen' ||
   selectedOption2 === 'Beizen'
@@ -1266,6 +1336,16 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienEdelstahlPassivieren
 } else if (istEntchromen) {
   materialienAktiv = materialienEntchromen
+} else if (istEntkupfern) {
+  materialienAktiv = materialienEntkupfern
+} else if (istEntmessingen) {
+  materialienAktiv = materialienEntmessingen
+} else if (istEntbronzieren) {
+  materialienAktiv = materialienEntbronzieren
+} else if (istEntgolden) {
+  materialienAktiv = materialienEntgolden
+} else if (istEntsilbern) {
+  materialienAktiv = materialienEntsilbern
 } else if (istBeizen) {
   materialienAktiv = materialienBeizen
 } else if (istEntgraten) {

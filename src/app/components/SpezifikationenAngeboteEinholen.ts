@@ -1013,6 +1013,201 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
 
+  Entkupfern: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entkupferungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Kupferschicht, gewünschter Entkupferungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
+  Entmessingen: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entmessingungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Messingschicht, gewünschter Entmessingungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
+  Entbronzieren: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entbronzierungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Bronzeschicht, gewünschter Entbronzierungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
+  Entgolden: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entgoldungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Goldschicht, gewünschter Entgoldungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, gewünschte Edelmetallrückgewinnung, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
+  Entsilbern: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entsilberungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Silberschicht, gewünschter Entsilberungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, gewünschte Edelmetallrückgewinnung, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
   Entchromen: [
     {
       type: 'dropdown',
