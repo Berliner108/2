@@ -787,6 +787,7 @@ const materialienVerzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
+  'Messing',
   'Andere',
 ]
 

@@ -39,7 +39,6 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Heißbrünieren',
         'Kaltbrünieren',
-        'Nach Vorgabe / unbekannt'
       ]
     },
     {
@@ -728,27 +727,33 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Verzinnen: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Galvanisch']
-    },
-    {
-      type: 'radio',
-      name: 'ausfuehrung',
-      label: 'Ausführung:',
-      options: ['Glänzend', 'Matt']
+      label: 'Verzinnungsverfahren:',
+      options: [
+        'Galvanisches Verzinnen',
+        'Feuerverzinnen / Schmelztauchverzinnen',
+        'Chemisches Verzinnen'
+      ],
+      required: true
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
+        'DIN 50965',
+        'ISO 2093',
         'ISO 9001',
         'ISO 14001',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Anforderungen an Lötbarkeit, Korrosionsschutz oder elektrische Eigenschaften, gewünschte Optik, eventuelle Nachbehandlung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Anodisieren: [
