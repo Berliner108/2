@@ -853,7 +853,8 @@ const materialienEnteloxieren = [
 const materialienAluminieren = [
   'Stahl',
   'Edelstahl',
-  'Nickel',
+  'Gusseisen',
+  'Nickellegierung',
   'Andere',
 ]
 const materialienBruenieren = [
@@ -862,11 +863,13 @@ const materialienBruenieren = [
   'Andere',
 ]
 const materialienVernickeln = [
-  'Aluminium',
-  'Aluguss',
   'Stahl',
   'Edelstahl',
+  'Aluminium',
+  'Aluguss',
   'Kupfer',
+  'Messing',
+  'Gusseisen',
   'Zink',
   'Andere',
 ]

@@ -592,37 +592,45 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Vernickeln: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Galvanisch'],
+      label: 'Vernickelungsverfahren:',
+      options: [
+        'Galvanisches Vernickeln',
+        'Chemisch Vernickeln'
+      ],
       required: true
     },
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'chemischNickelPhosphor',
-      label: 'Chemisch Nickel:',
-      options: ['Mid Phos', 'High Phos'],
+      label: 'Nickel-Phosphor-Ausführung:',
+      options: [
+        'Low Phos',
+        'Mid Phos',
+        'High Phos'
+      ],
       required: true,
-      dependsOn: { name: 'verfahren', value: 'Chemisch' }
-    },
-    {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Gewünschte Schichtdicke (µm)',
-      maxLength: 30
+      dependsOn: { name: 'verfahren', value: 'Chemisch Vernickeln' }
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
+        'ISO 4526',
+        'ISO 4527',
+        'ISO 1456',
         'ISO 9001',
         'ISO 14001',
-        'ISO 45001',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Anforderungen an Korrosionsschutz, Verschleiß, Härte, Maßhaltigkeit oder Optik, gewünschte Wärmebehandlung bzw. Nachbehandlung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Entnickeln: [
@@ -788,22 +796,31 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Aluminieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Schmelztauchaluminieren', 'Spritzaluminieren', 'Feueraluminieren']
+      label: 'Aluminierverfahren:',
+      options: [
+        'Schmelztauchaluminieren / Feueraluminieren',
+        'Thermisches Spritzaluminieren'
+      ],
+      required: true
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
+        'ISO 2063',
         'ISO 9001',
         'ISO 14001',
-        'ISO 45001',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Korrosions- und Hochtemperaturanforderungen, gewünschte Nachbehandlung bzw. Versiegelung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Enteloxieren: [
