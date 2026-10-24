@@ -929,6 +929,20 @@ const materialienBronzebeschichten = [
   'Zinkdruckguss',
   'Andere',
 ]
+
+const materialienVergolden = [
+  'Stahl',
+  'Edelstahl',
+  'Kupfer',
+  'Messing',
+  'Bronze',
+  'Nickel',
+  'Silber',
+  'Aluminium',
+  'Aluguss',
+  'Kunststoff',
+  'Andere',
+]
 const materialienVersilbern = [
   'Aluminium',
   'Aluguss',
@@ -1039,6 +1053,8 @@ const istVerkupfern =
   selectedOption1 === 'Verkupfern' || selectedOption2 === 'Verkupfern'
 const istBronzebeschichten =
   selectedOption1 === 'Bronzebeschichten' || selectedOption2 === 'Bronzebeschichten'
+const istVergolden =
+  selectedOption1 === 'Vergolden' || selectedOption2 === 'Vergolden'
 const istBruenieren =
   selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
 const istEntlacken =
@@ -1164,6 +1180,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienVerkupfern
 } else if (istBronzebeschichten) {
   materialienAktiv = materialienBronzebeschichten
+} else if (istVergolden) {
+  materialienAktiv = materialienVergolden
 } else if (istVerzinken) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {

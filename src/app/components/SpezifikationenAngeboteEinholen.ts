@@ -1192,36 +1192,63 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Vergolden: [
     {
-      type: 'radio',
-      name: 'goldart',
-      label: 'Goldart:',
-      options: ['Reingold', 'Hartgold'],
-      required: true
-    },
-    {
-      type: 'radio',
-      name: 'anwendung',
-      label: 'Anwendung:',
-      options: ['Dekorativ', 'Technisch'],
-      required: true
-    },
-    {
-      type: 'radio',
-      name: 'schichtaufbau',
-      label: 'Schichtaufbau / Ausführung:',
+      type: 'dropdown',
+      name: 'vergoldungsart',
+      label: 'Vergoldungsart:',
       options: [
-        'Direktvergoldung von Edelstahl',
-        'Vergoldung mit Zwischenschicht',
-        'Nach Vorgabe / unbekannt'
-      ]
+        'Feingold / Weichgold',
+        'Hartgold',
+        'Chemisch / stromlos vergoldet',
+        'Farbvergoldung'
+      ],
+      required: true
+    },
+    {
+      type: 'dropdown',
+      name: 'farbton',
+      label: 'Farbton / Optik:',
+      options: [
+        'Gelbgold',
+        'Roségold',
+        'Rotgold',
+        'Grüngold',
+        'Weißgold',
+        'Champagnergold',
+        'Nach Muster / Sonderfarbton'
+      ],
+      dependsOn: { name: 'vergoldungsart', value: 'Farbvergoldung' }
     },
     {
       type: 'group',
       name: 'nachbehandlung',
       label: 'Optionale Nachbehandlung:',
-      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
+      options: [
+        'Polieren',
+        'Versiegeln / Schutzlack',
+        'Anlaufschutz',
+        'Passivieren'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 4523',
+        'ISO 8654',
+        'ASTM B488',
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Goldgehalt bzw. Legierung und Farbton, Funktion der Beschichtung (z. B. dekorativ, elektrische Kontakte, Bondbarkeit oder Verschleißschutz), notwendige Unter- bzw. Diffusionssperrschichten, Anforderungen an Härte, Leitfähigkeit, Lötbarkeit und Oberflächenqualität sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Versilbern: [
     {
       type: 'radio',
