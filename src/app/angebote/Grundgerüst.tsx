@@ -719,7 +719,9 @@ const materialienMattieren = [
   'Messing',
   'Titan',
   'Andere',
-]const materialienKTL = [
+]
+
+const materialienKTL = [
   'Stahl',
   'Edelstahl',
   'Gusseisen',
@@ -742,7 +744,9 @@ const materialienSchleifen = [
   'Titan',
   'Nickel',
   'Andere',
-]const materialienEloxieren = [
+]
+
+const materialienEloxieren = [
   'Aluminium',
   'Aluguss',
 ]
@@ -759,7 +763,9 @@ const materialienPolieren = [
   'Nickel',
   'Chrom',
   'Andere',
-]const materialienAnodisieren = [
+]
+
+const materialienAnodisieren = [
   'Titan',
   'Magnesium',
   'Andere',
@@ -775,7 +781,9 @@ const materialienBuersten = [
   'Messing',
   'Titan',
   'Andere',
-]const materialienVerzinnen = [
+]
+
+const materialienVerzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
@@ -794,7 +802,9 @@ const materialienTrowalisieren = [
   'Titan',
   'Zink',
   'Andere',
-]const materialienEntnickeln = [
+]
+
+const materialienEntnickeln = [
   'Aluminium',
   'Aluguss',
   'Stahl',
@@ -811,7 +821,9 @@ const materialienChemischesGlaenzen = [
   'Messing',
   'Stahl',
   'Andere',
-]const materialienEntzinnen = [
+]
+
+const materialienEntzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
