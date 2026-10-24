@@ -668,8 +668,8 @@ const materialienEloxieren = [
   'Aluguss',
 ]
 const materialienAnodisieren = [
-  'Zink',
-  'Zinn',
+  'Titan',
+  'Magnesium',
   'Andere',
 ]
 const materialienVerzinnen = [

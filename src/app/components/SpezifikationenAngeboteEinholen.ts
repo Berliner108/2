@@ -595,57 +595,31 @@ export const specificationsMap: Record<string, Specification[]> = {
   Anodisieren: [
     {
       type: 'dropdown',
-      name: 'anodisierwerkstoff',
-      label: 'Werkstoff:',
-      options: [
-        'Titan',
-        'Magnesium',
-        'Zink',
-        'Andere / nach Vorgabe'
-      ],
-      required: true
-    },
-    {
-      type: 'group',
-      name: 'anodisierfunktion',
-      label: 'Gewünschte Funktion:',
-      options: [
-        'Korrosionsschutz',
-        'Verschleißschutz',
-        'Dekorative Oberfläche / Färbung',
-        'Elektrische Isolation',
-        'Andere / nach Vorgabe'
-      ]
-    },
-    {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Gewünschte Schichtdicke (µm)',
-      maxLength: 30
-    },
-    {
-      type: 'text',
       name: 'anodisierfarbe',
-      label: 'Farbe / Optik (optional)',
-      maxLength: 60
-    },
-    {
-      type: 'text',
-      name: 'anodisiernachbehandlung',
-      label: 'Nachbehandlung / Prozessvorgabe (optional)',
-      maxLength: 80
+      label: 'Farbe / Optik:',
+      options: [
+        'Natur / technisch',
+        'Farbig',
+        'Nach Vorgabe / Muster',
+        'Unbekannt'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen / Anforderungen:',
-      tooltip: 'Wähle Anforderungen aus, die für den Beschichter bzw. den Auftrag relevant sind.',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
+        'SAE / AMS nach Vorgabe',
         'ISO 9001',
         'ISO 14001',
-        'ISO 45001',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Funktion der Beschichtung, konkrete Prozess- oder Normvorgaben sowie besondere technische und optische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Aluminieren: [
