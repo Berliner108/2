@@ -884,64 +884,91 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Verchromen: [
     {
-      type: 'radio',
-      name: 'verfahren',
+      type: 'dropdown',
+      name: 'verchromungsart',
       label: 'Verchromungsart:',
       options: [
-        'Dekorativverchromen',
+        'Glanzverchromen',
+        'Mattverchromen',
         'Hartverchromen',
-        'Nach Vorgabe / unbekannt'
+        'Schwarzverchromen'
+      ],
+      required: true
+    },
+    {
+      type: 'dropdown',
+      name: 'chromsystem',
+      label: 'Chromsystem:',
+      options: [
+        'Chrom(III)',
+        'Chrom(VI)'
       ],
       required: true
     },
     {
       type: 'dropdown',
       name: 'chromoptik',
-      label: 'Oberfläche / Optik:',
+      label: 'Optik / Farbton:',
       options: [
-        'Hochglanz',
-        'Matt / satiniert',
-        'Strichmatt',
-        'Perlglanz / Perlmutt',
-        'Rauchchrom dunkel – matt',
-        'Rauchchrom dunkel – hochglanz',
+        'Standard Chrom',
+        'Perlglanz',
+        'Rauchchrom / Dark Chrome',
         'Champagner',
-        'Andere / nach Muster'
+        'Schwarz',
+        'Nach Muster / Sonderoptik'
       ],
-      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
-    },
-    {
-      type: 'radio',
-      name: 'chromsystem',
-      label: 'Chromsystem:',
-      options: ['Chrom(III)', 'Chrom(VI)', 'Nach Vorgabe / unbekannt']
-    },
-    {
-      type: 'dropdown',
-      name: 'schichtaufbau',
-      label: 'Schichtaufbau:',
-      options: [
-        'Direkt auf Grundwerkstoff',
-        'Nickel – Chrom',
-        'Kupfer – Nickel – Chrom',
-        'Andere / nach Vorgabe',
-        'Unbekannt'
-      ],
-      dependsOn: { name: 'verfahren', value: 'Dekorativverchromen' }
-    },
-    {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Gewünschte Schichtdicke (µm)',
-      maxLength: 30
+      dependsOn: {
+        name: 'verchromungsart',
+        values: ['Glanzverchromen', 'Mattverchromen', 'Schwarzverchromen']
+      }
     },
     {
       type: 'group',
-      name: 'chromNachbehandlung',
+      name: 'nachbehandlungDekorativ',
       label: 'Optionale Nachbehandlung:',
-      options: ['Passivieren', 'Versiegeln', 'Andere / Nach Vorgabe']
+      options: [
+        'Passivieren',
+        'Versiegeln',
+        'Polieren'
+      ],
+      dependsOn: {
+        name: 'verchromungsart',
+        values: ['Glanzverchromen', 'Mattverchromen', 'Schwarzverchromen']
+      }
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlungHartchrom',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Schleifen',
+        'Honen',
+        'Läppen',
+        'Polieren',
+        'Tempern / Wasserstoffentsprödung'
+      ],
+      dependsOn: { name: 'verchromungsart', value: 'Hartverchromen' }
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 1456',
+        'ISO 6158',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Schichtaufbau und Zwischenschichten, gewünschte Optik bzw. Referenzoberfläche, Anforderungen an Härte, Verschleiß, Korrosionsschutz und Maßhaltigkeit sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   'Aluminium-Passivieren': [
     {
       type: 'dropdown',
