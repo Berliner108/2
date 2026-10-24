@@ -232,6 +232,36 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Gewünschte Schichtdicken, Korrosionsschutzanforderungen, besondere Normvorgaben sowie konstruktive Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+  'KTL-Beschichten': [
+    {
+      type: 'dropdown',
+      name: 'farbton',
+      label: 'Farbton:',
+      options: [
+        'Schwarz',
+        'Grau',
+        'Andere / nach Vorgabe'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001',
+        'IATF 16949',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Korrosionsschutzanforderungen, Vorbehandlung, konkrete Prüf- oder Normvorgaben sowie weitere technische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
   Zinkphosphatieren: [
     {
       type: 'dropdown',
