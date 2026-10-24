@@ -657,6 +657,18 @@ const materialienZinkphosphatieren = [
 ]
 const materialienMnPhosphatieren = [
   'Stahl',
+  'Gusseisen',
+  'Andere',
+]
+
+const materialienBeizen = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Titan',
+  'Nickel',
   'Andere',
 ]
 const materialienKTL = [
@@ -799,6 +811,9 @@ const istZinkphosphatieren =
 const istMnPhosphatieren =
   selectedOption1 === 'Mn-Phosphatieren' ||
   selectedOption2 === 'Mn-Phosphatieren'
+const istBeizen =
+  selectedOption1 === 'Beizen' ||
+  selectedOption2 === 'Beizen'
 const istVersilbern =
   selectedOption1 === 'Versilbern' ||
   selectedOption2 === 'Versilbern'
@@ -822,6 +837,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienZinkphosphatieren
 } else if (istMnPhosphatieren) {
   materialienAktiv = materialienMnPhosphatieren
+} else if (istBeizen) {
+  materialienAktiv = materialienBeizen
 } else if (istVersilbern) {
   materialienAktiv = materialienVersilbern
 } else if (istKTL) {

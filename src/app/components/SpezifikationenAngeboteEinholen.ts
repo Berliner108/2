@@ -218,55 +218,62 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   'Mn-Phosphatieren': [
     {
-      type: 'text',
-      name: 'schichtgewicht',
-      label: 'Schichtgewicht (g/m²)',
-      maxLength: 20
-    },
-    {
-      type: 'radio',
+      type: 'dropdown',
       name: 'nachbehandlung',
       label: 'Nachbehandlung:',
-      options: ['Keine', 'Geölt', 'Versiegelt']
+      options: [
+        'Keine',
+        'Geölt',
+        'Versiegelt',
+        'Nach Vorgabe'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
-      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9717',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschtes Schichtgewicht, Korrosionsschutz- und Gleiteigenschaften, Vorbehandlung, konkrete Prüf- oder Normvorgaben sowie weitere technische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Beizen: [
     {
       type: 'dropdown',
-      name: 'beizwerkstoff',
-      label: 'Werkstoff / Beizart:',
-      options: [
-        'Edelstahl',
-        'Stahl',
-        'Aluminium',
-        'Andere / nach Vorgabe'
-      ],
-      required: true
-    },
-    {
-      type: 'radio',
       name: 'verfahren',
       label: 'Beizverfahren:',
-      options: ['Chemisch', 'Elektrochemisch', 'Nach Vorgabe']
+      options: [
+        'Chemisch',
+        'Elektrochemisch',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'group',
-      name: 'bearbeitungsziel',
-      label: 'Bearbeitungsziel:',
-      options: ['Entrosten', 'Entzundern', 'Aktivieren / Vorbehandeln']
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'EN ISO 8504-4',
+        'ASTM A380/A380M',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
     },
     {
-      type: 'text',
-      name: 'vorgabe',
-      label: 'Beizmedium / Norm / Vorgabe',
-      maxLength: 80
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Bearbeitungsziel (z. B. Entrosten, Entzundern, Entfernen von Oxidschichten oder Aktivieren), gewünschter Materialabtrag, Beizmedium, besondere Oberflächenanforderungen, anschließende Passivierung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Entgraten: [
