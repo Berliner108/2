@@ -944,12 +944,16 @@ const materialienVergolden = [
   'Andere',
 ]
 const materialienVersilbern = [
-  'Aluminium',
-  'Aluguss',
   'Stahl',
   'Edelstahl',
   'Kupfer',
+  'Messing',
+  'Bronze',
   'Nickel',
+  'Aluminium',
+  'Aluguss',
+  'Zinkdruckguss',
+  'Kunststoff',
   'Andere',
 ]
 const materialienEntlacken = [

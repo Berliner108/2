@@ -1251,20 +1251,44 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Versilbern: [
     {
-      type: 'radio',
-      name: 'ausfuehrung',
-      label: 'Ausführung:',
-      options: ['Technisch', 'Dekorativ', 'Hartversilbern'],
+      type: 'dropdown',
+      name: 'versilberungsart',
+      label: 'Versilberungsart:',
+      options: [
+        'Glanzsilber',
+        'Hartsilber',
+        'Chemisch / stromlos versilbert'
+      ],
       required: true
     },
     {
       type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Polieren',
+        'Anlaufschutz',
+        'Versiegeln / Schutzlack'
+      ]
+    },
+    {
+      type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
-      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 4521',
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Silbergehalt bzw. Legierung, Funktion der Beschichtung (z. B. elektrische Leitfähigkeit, Kontaktierung, Lötbarkeit, Verschleißschutz oder dekorative Anwendung), notwendige Unter- bzw. Zwischenschichten, Anforderungen an Härte, Kontaktwiderstand, Anlaufschutz und Oberflächenqualität sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Nasslackieren: [
     {
       type: 'dropdown',
