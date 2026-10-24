@@ -52,9 +52,9 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Eloxieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
+      label: 'Eloxalverfahren:',
       options: [
         'Normaleloxal',
         'Harteloxal / Hartanodisieren',
@@ -63,32 +63,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Ematal'
       ],
       required: true
-    },
-    {
-      type: 'radio',
-      name: 'eloxalanwendung',
-      label: 'Anwendung:',
-      options: ['Dekorativ', 'Technisch', 'Dekorativ & technisch', 'Nach Vorgabe / unbekannt']
-    },
-    {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Gewünschte Schichtdicke (µm)',
-      maxLength: 30
-    },
-    {
-      type: 'group',
-      name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
-      options: [
-        'Qualanod',
-        'GSB',
-        'ISO 9001',
-        'ISO 14001',
-        'ISO 45001',
-        'RoHS / REACH'
-      ]
     },
     {
       type: 'dropdown',
@@ -103,7 +77,8 @@ export const specificationsMap: Record<string, Specification[]> = {
         'C-35 (Schwarz)',
         'C-36 (Hellgrau)',
         'C-37 (Mittelgrau)',
-        'C-38 (Dunkelgrau)'
+        'C-38 (Dunkelgrau)',
+        'Andere / Nach Vorgabe'
       ],
       dependsOn: { name: 'verfahren', value: 'Normaleloxal' }
     },
@@ -118,35 +93,32 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'farbeeloxieren',
       label: 'Farbe:',
-      options: ['Natur / Grau', 'Schwarz / Nach Vorgabe'],
+      options: ['Natur / Grau', 'Schwarz', 'Andere / Nach Vorgabe'],
       dependsOn: { name: 'verfahren', value: 'Chromsäureanodisieren' }
     },
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'eloxalverdichtung',
       label: 'Verdichtung:',
       options: ['Verdichten', 'Nicht verdichten', 'Nach Vorgabe / unbekannt']
     },
     {
       type: 'group',
-      name: 'anforderung',
-      label: 'Optionale Anforderung:',
-      options: ['CO₂-reduziertes / nachhaltiges Verfahren'],
-      dependsOn: { name: 'verfahren', value: 'Harteloxal / Hartanodisieren' }
+      name: 'zertifizierungen',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'QUALANOD',
+        'ISO 7599',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
     },
     {
-      type: 'text',
-      name: 'sonderverfahrenVorgabe',
-      label: 'Zusätzliche Vorgabe / gewünschte Oberfläche',
-      maxLength: 80,
-      dependsOn: { name: 'verfahren', value: 'Tioxal' }
-    },
-    {
-      type: 'text',
-      name: 'sonderverfahrenVorgabe',
-      label: 'Zusätzliche Vorgabe / gewünschte Oberfläche',
-      maxLength: 80,
-      dependsOn: { name: 'verfahren', value: 'Ematal' }
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Anwendung (z. B. dekorativ oder technisch), Toleranzen, besondere optische oder technische Anforderungen sowie konkrete Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Verzinken: [
