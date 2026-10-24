@@ -124,7 +124,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'C-36 (Hellgrau)',
         'C-37 (Mittelgrau)',
         'C-38 (Dunkelgrau)',
-        'Andere / Nach Vorgabe'
       ],
       dependsOn: { name: 'verfahren', value: 'Normaleloxal' }
     },
@@ -132,15 +131,21 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'farbeeloxieren',
       label: 'Farbe:',
-      options: ['Natur / Eigenfarbe', 'Schwarz', 'Andere / Nach Vorgabe'],
+      options: ['Natur / Eigenfarbe', 'Schwarz'],
       dependsOn: { name: 'verfahren', value: 'Harteloxal / Hartanodisieren' }
     },
     {
       type: 'dropdown',
       name: 'farbeeloxieren',
       label: 'Farbe:',
-      options: ['Natur / Grau', 'Schwarz', 'Andere / Nach Vorgabe'],
+      options: ['Natur / Grau', 'Schwarz'],
       dependsOn: { name: 'verfahren', value: 'Chromsäureanodisieren' }
+    },
+    {
+      type: 'radio',
+      name: 'eloxalverdichtung',
+      label: 'Verdichtung',
+      options: ['Ja', 'Nein']
     },
     {
       type: 'dropdown',
@@ -158,7 +163,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 7599',
         'ISO 9001',
         'ISO 14001',
-        'Nach Vorgabe'
       ]
     },
     {
@@ -200,8 +204,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Dickschichtpassivierung',
         'Schwarzpassivierung',
         'Gelbchromatierung',
-        'Andere / nach Vorgabe',
-        'Keine / nicht erforderlich'
       ],
       dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
     },
@@ -223,7 +225,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'EN 1090',
         'ISO 9001',
         'ISO 14001',
-        'Nach Vorgabe'
       ]
     },
     {
@@ -1545,7 +1546,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'RAL Effect',
         'Klarlack',
         'Sonderfarbe / nach Vorlage',
-        'Andere / unbekannt'
+        'Andere'
       ]
     },
     {
@@ -1566,7 +1567,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Seidenmatt',
         'Matt',
         'Stumpfmatt',
-        'Nach Vorgabe / unbekannt'
       ]
     },
     {
@@ -1590,7 +1590,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Polyurethan',
         'Thermoplast',
         'Hochwetterfest / Fassadenqualität',
-        'Andere / nach Vorgabe'
       ]
     },
     {
@@ -1604,7 +1603,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Eisenglimmer',
         'Candy',
         'Neon',
-        'Sonstiger Effekt'
       ]
     },
     {
