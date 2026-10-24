@@ -1455,7 +1455,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'RAL Effect',
         'Klarlack',
         'Sonderfarbe / nach Vorlage',
-        'Andere / unbekannt'
+        'Andere'
       ]
     },
     {
@@ -1476,7 +1476,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Seidenmatt',
         'Matt',
         'Stumpfmatt',
-        'Nach Vorgabe / unbekannt'
       ]
     },
     {
@@ -1488,7 +1487,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Feinstruktur',
         'Grobstruktur',
         'Hammerschlag',
-        'Nach Vorgabe / Muster'
       ]
     },
     {
@@ -1499,7 +1497,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Einschichtlackierung',
         'Grundierung + Decklack',
         'Mehrschichtaufbau',
-        'Nach Vorgabe / unbekannt'
       ]
     },
     {
@@ -1512,7 +1509,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Eisenglimmer',
         'Candy',
         'Neon',
-        'Sonstiger Effekt'
       ]
     },
     {
@@ -1523,7 +1519,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Zweifarbig',
         'Beigestellter Lack',
         'Bereiche abdecken',
-        'Sonstige Vorgabe'
       ]
     },
     {
