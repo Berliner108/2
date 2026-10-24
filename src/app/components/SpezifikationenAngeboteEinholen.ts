@@ -1444,8 +1444,15 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'RAL',
         'NCS',
+        'MCS',
         'DB',
+        'BS',
+        'Munsell',
         'Pantone',
+        'Sikkens',
+        'HKS',
+        'RAL Design',
+        'RAL Effect',
         'Klarlack',
         'Sonderfarbe / nach Vorlage',
         'Andere / unbekannt'
@@ -1503,7 +1510,8 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Metallic',
         'Perlmutteffekt',
         'Eisenglimmer',
-        'Fluoreszierend',
+        'Candy',
+        'Neon',
         'Sonstiger Effekt'
       ]
     },
