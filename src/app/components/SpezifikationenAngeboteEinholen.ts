@@ -151,13 +151,13 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Verzinken: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
       label: 'Verfahren:',
       options: ['Feuerverzinken', 'Galvanisches Verzinken', 'Zinklamellenbeschichtung', 'Mechanisches Verzinken']
     },
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'galvanikSystem',
       label: 'Galvanisches Zinksystem:',
       options: ['Zink-Standard', 'Zink-Nickel', 'Zink-Eisen', 'Zinn-Zink'],
@@ -165,7 +165,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
     },
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'galvanikApplikation',
       label: 'Ausführung:',
       options: ['Trommelverfahren', 'Gestellverfahren'],
@@ -173,15 +173,14 @@ export const specificationsMap: Record<string, Specification[]> = {
       dependsOn: { name: 'verfahren', value: 'Galvanisches Verzinken' }
     },
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'galvanikPassivierung',
       label: 'Passivierung / Chromatierung:',
       options: [
-        'Blaupassivieren',
-        'Gelbpassivieren',
-        'Dickschichtpassivieren',
-        'Schwarzpassivieren',
-        'Schwarzchromatieren',
+        'Blau / transparent',
+        'Dickschichtpassivierung',
+        'Schwarzpassivierung',
+        'Gelbchromatierung',
         'Andere / nach Vorgabe',
         'Keine / nicht erforderlich'
       ],
@@ -197,14 +196,21 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
-        'RAL-GZ',
+        'DIN EN ISO 1461',
+        'DASt-Richtlinie 022',
+        'EN 1090',
         'ISO 9001',
         'ISO 14001',
-        'RoHS / REACH'
+        'Nach Vorgabe'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicken, Korrosionsschutzanforderungen, besondere Normvorgaben sowie konstruktive Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Zinkphosphatieren: [
@@ -991,7 +997,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Effekte:',
       options: [
         'Metallic',
-        'Perl-/Perlmutteffekt',
+        'Perlmutteffekt',
         'Eisenglimmer',
         'Fluoreszierend',
         'Sonstiger Effekt'
