@@ -32,6 +32,13 @@
   font-weight: 700;
 }
 
+/* Nur Pflichtfeld-Labels: Stern direkt neben dem Feldnamen halten */
+.dropdownContainer .inputRow > label:has(.requiredStar) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+}
+
 .requiredStarInline {
   color: #e53935;
   margin-left: 2px;

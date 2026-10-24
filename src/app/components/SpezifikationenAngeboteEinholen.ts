@@ -153,8 +153,9 @@ export const specificationsMap: Record<string, Specification[]> = {
     {
       type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Feuerverzinken', 'Galvanisches Verzinken', 'Zinklamellenbeschichtung', 'Mechanisches Verzinken']
+      label: 'Verzinkungsverfahren:',
+      options: ['Feuerverzinken', 'Galvanisches Verzinken', 'Zinklamellenbeschichtung', 'Mechanisches Verzinken'],
+      required: true
     },
     {
       type: 'dropdown',
