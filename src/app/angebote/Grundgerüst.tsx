@@ -906,6 +906,18 @@ const materialienVermessingen = [
   'Zinkdruckguss',
   'Andere',
 ]
+
+const materialienVerkupfern = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Zinkdruckguss',
+  'Kunststoff',
+  'Andere',
+]
 const materialienVersilbern = [
   'Aluminium',
   'Aluguss',
@@ -1012,6 +1024,8 @@ const istVerchromen =
   selectedOption1 === 'Verchromen' || selectedOption2 === 'Verchromen'
 const istVermessingen =
   selectedOption1 === 'Vermessingen' || selectedOption2 === 'Vermessingen'
+const istVerkupfern =
+  selectedOption1 === 'Verkupfern' || selectedOption2 === 'Verkupfern'
 const istBruenieren =
   selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
 const istEntlacken =
@@ -1133,6 +1147,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienVerchromen
 } else if (istVermessingen) {
   materialienAktiv = materialienVermessingen
+} else if (istVerkupfern) {
+  materialienAktiv = materialienVerkupfern
 } else if (istVerzinken) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {

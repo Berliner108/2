@@ -917,10 +917,35 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Schwarz',
         'Nach Muster / Sonderoptik'
       ],
-      dependsOn: {
-        name: 'verchromungsart',
-        values: ['Glanzverchromen', 'Mattverchromen', 'Schwarzverchromen']
-      }
+      dependsOn: { name: 'verchromungsart', value: 'Glanzverchromen' }
+    },
+    {
+      type: 'dropdown',
+      name: 'chromoptik',
+      label: 'Optik / Farbton:',
+      options: [
+        'Standard Chrom',
+        'Perlglanz',
+        'Rauchchrom / Dark Chrome',
+        'Champagner',
+        'Schwarz',
+        'Nach Muster / Sonderoptik'
+      ],
+      dependsOn: { name: 'verchromungsart', value: 'Mattverchromen' }
+    },
+    {
+      type: 'dropdown',
+      name: 'chromoptik',
+      label: 'Optik / Farbton:',
+      options: [
+        'Standard Chrom',
+        'Perlglanz',
+        'Rauchchrom / Dark Chrome',
+        'Champagner',
+        'Schwarz',
+        'Nach Muster / Sonderoptik'
+      ],
+      dependsOn: { name: 'verchromungsart', value: 'Schwarzverchromen' }
     },
     {
       type: 'group',
@@ -931,10 +956,29 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Versiegeln',
         'Polieren'
       ],
-      dependsOn: {
-        name: 'verchromungsart',
-        values: ['Glanzverchromen', 'Mattverchromen', 'Schwarzverchromen']
-      }
+      dependsOn: { name: 'verchromungsart', value: 'Glanzverchromen' }
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlungDekorativ',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Passivieren',
+        'Versiegeln',
+        'Polieren'
+      ],
+      dependsOn: { name: 'verchromungsart', value: 'Mattverchromen' }
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlungDekorativ',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Passivieren',
+        'Versiegeln',
+        'Polieren'
+      ],
+      dependsOn: { name: 'verchromungsart', value: 'Schwarzverchromen' }
     },
     {
       type: 'group',
@@ -1066,13 +1110,44 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Verkupfern: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Galvanisch', 'Chemisch'],
+      label: 'Verkupferungsverfahren:',
+      options: [
+        'Galvanisches Verkupfern',
+        'Chemisches / stromloses Verkupfern'
+      ],
       required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Polieren',
+        'Versiegeln / Klarlack',
+        'Patinieren / Färben'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 1456',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Funktion der Kupferschicht (z. B. dekorativ, Leitfähigkeit, Haftgrund oder Zwischenschicht), gewünschte Optik bzw. Patinierung, notwendige Folge- oder Nachbehandlung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Bronzebeschichten: [
     {
       type: 'radio',
