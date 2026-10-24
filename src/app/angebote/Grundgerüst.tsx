@@ -764,13 +764,37 @@ const materialienPolieren = [
   'Magnesium',
   'Andere',
 ]
-const materialienVerzinnen = [
+
+
+const materialienBuersten = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Andere',
+]const materialienVerzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
   'Andere',
 ]
-const materialienEntnickeln = [
+
+
+const materialienTrowalisieren = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Zink',
+  'Andere',
+]const materialienEntnickeln = [
   'Aluminium',
   'Aluguss',
   'Stahl',
@@ -779,7 +803,15 @@ const materialienEntnickeln = [
   'Zink',
   'Andere',
 ]
-const materialienEntzinnen = [
+
+
+const materialienChemischesGlaenzen = [
+  'Aluminium',
+  'Kupfer',
+  'Messing',
+  'Stahl',
+  'Andere',
+]const materialienEntzinnen = [
   'Stahl',
   'Edelstahl',
   'Kupfer',
@@ -906,6 +938,15 @@ const istSchleifen =
 const istPolieren =
   selectedOption1 === 'Polieren' ||
   selectedOption2 === 'Polieren'
+const istBuersten =
+  selectedOption1 === 'Bürsten' ||
+  selectedOption2 === 'Bürsten'
+const istTrowalisieren =
+  selectedOption1 === 'Trowalisieren' ||
+  selectedOption2 === 'Trowalisieren'
+const istChemischesGlaenzen =
+  selectedOption1 === 'Chemisches Glänzen' ||
+  selectedOption2 === 'Chemisches Glänzen'
 const istVersilbern =
   selectedOption1 === 'Versilbern' ||
   selectedOption2 === 'Versilbern'
@@ -943,6 +984,12 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienSchleifen
 } else if (istPolieren) {
   materialienAktiv = materialienPolieren
+} else if (istBuersten) {
+  materialienAktiv = materialienBuersten
+} else if (istTrowalisieren) {
+  materialienAktiv = materialienTrowalisieren
+} else if (istChemischesGlaenzen) {
+  materialienAktiv = materialienChemischesGlaenzen
 } else if (istVersilbern) {
   materialienAktiv = materialienVersilbern
 } else if (istKTL) {

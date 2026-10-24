@@ -465,73 +465,83 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Bürsten: [
     {
-      type: 'radio',
-      name: 'schliffbild',
-      label: 'Bürstbild:',
-      options: ['Längs', 'Quer', 'Kreuz', 'Nach Vorgabe']
-    },
-    {
-      type: 'text',
-      name: 'koernung',
-      label: 'Körnung / Bürstenangabe',
-      maxLength: 40
-    }
-  ],
-  Trowalisieren: [
-    {
-      type: 'group',
-      name: 'bearbeitungsziel',
-      label: 'Bearbeitungsziel:',
-      options: ['Entgraten', 'Kantenverrunden', 'Glätten', 'Polieren', 'Reinigen / Entfetten', 'Entzundern / Entrosten']
-    },
-    {
-      type: 'radio',
-      name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Vibrationsgleitschleifen', 'Trommelgleitschleifen', 'Fliehkraft- / Schleppfinish', 'Nach Vorgabe']
-    }
-  ],
-  'Chemisches Glänzen': [
-    {
-      type: 'group',
-      name: 'bearbeitungsziel',
-      label: 'Bearbeitungsziel:',
-      options: ['Glanzsteigerung', 'Einebnen / Glätten', 'Vorbehandlung vor Eloxieren']
-    },
-    {
-      type: 'text',
-      name: 'vorgabe',
-      label: 'Norm / Oberflächenvorgabe',
-      maxLength: 80
-    }
-  ],
-  'KTL-Beschichten': [
-    {
       type: 'dropdown',
-      name: 'farbton',
-      label: 'Farbton:',
+      name: 'ausfuehrung',
+      label: 'Bürstausführung:',
       options: [
-        'Schwarz',
-        'Grau',
-        'Andere / Nach Vorgabe'
+        'Technisch',
+        'Dekorativ',
+        'Mattierend',
+        'Entgraten / Kanten brechen',
+        'Nach Vorgabe / unbekannt'
       ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Normen / Zertifizierungen:',
-      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
+        'ISO 21920',
         'ISO 9001',
         'ISO 14001',
-        'IATF 16949',
         'Nach Vorgabe'
       ]
     },
     {
       type: 'note',
       name: 'technischerHinweis',
-      label: 'Gewünschte Schichtdicke, Korrosionsschutzanforderungen, Vorbehandlung, konkrete Prüf- oder Normvorgaben sowie weitere technische Anforderungen sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+      label: 'Gewünschtes Bürstbild, Bürstrichtung, Körnung bzw. gewünschte Oberflächenrauheit, Anforderungen an Kanten und Entgratung sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+  Trowalisieren: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Trowalisierverfahren:',
+      options: [
+        'Vibrationsgleitschleifen',
+        'Trommelgleitschleifen',
+        'Fliehkraftgleitschleifen',
+        'Schleppschleifen',
+        'Nach Vorgabe / unbekannt'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'DIN 8589',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Bearbeitungsziel (z. B. Entgraten, Kanten verrunden, Glätten, Polieren, Mattieren oder Reinigen), gewünschte Oberflächenrauheit, zulässiger Materialabtrag sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+  'Chemisches Glänzen': [
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'DIN 17611',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschter Glanzgrad bzw. Referenzoberfläche, zulässiger Materialabtrag, gewünschte Folgebehandlung (z. B. Eloxieren) sowie konkrete optische, Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Vernickeln: [
