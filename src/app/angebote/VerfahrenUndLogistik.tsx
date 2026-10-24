@@ -79,11 +79,6 @@ const allOptions = [
   'Entaluminieren',
   'Entnickeln',
   'Entchromen',
-  'Entkupfern',
-  'Entmessingen',
-  'Entbronzieren',
-  'Entgolden',
-  'Entsilbern',
 ];
 const validSecondOptions: { [key: string]: string[] } = {
   Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],
