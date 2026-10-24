@@ -931,57 +931,88 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'farbpalette',
       label: 'Farbpalette:',
-      options: ['RAL', 'NCS', 'MCS', 'DB', 'BS', 'Munsell', 'Candy', 'Neon', 'Pantone', 'Sikkens', 'HKS', 'Klarlack', 'Sonderfarbe / Nach Vorlage', 'RAL D2-Design', 'RAL E4-Effekt']
+      options: [
+        'RAL',
+        'NCS',
+        'DB',
+        'Pantone',
+        'Klarlack',
+        'Sonderfarbe / nach Vorlage',
+        'Andere / unbekannt'
+      ]
     },
     {
       type: 'text',
       name: 'farbton',
       label: 'Farbtonbezeichnung oder Artikelnummer',
-      maxLength: 40,      // 👈 z.B. 40 Zeichen
-      showCounter: true   // 👈 Counter anzeigen
+      maxLength: 40,
+      showCounter: true
     },
     {
       type: 'dropdown',
       name: 'glanzgrad',
       label: 'Glanzgrad:',
-      options: ['Hochglanz', 'Glanz', 'Seidenglanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+      options: [
+        'Hochglänzend',
+        'Glänzend',
+        'Seidenglänzend',
+        'Seidenmatt',
+        'Matt',
+        'Stumpfmatt',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'dropdown',
+      type: 'radio',
       name: 'oberfläche',
       label: 'Oberfläche:',
-      options: ['Glatt', 'Feinstruktur', 'Grobstruktur']
+      options: [
+        'Glatt',
+        'Feinstruktur',
+        'Grobstruktur',
+        'Hammerschlag',
+        'Nach Vorgabe / Muster'
+      ]
+    },
+    {
+      type: 'radio',
+      name: 'lackaufbau',
+      label: 'Lackaufbau:',
+      options: [
+        'Einschichtlackierung',
+        'Grundierung + Decklack',
+        'Mehrschichtaufbau',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'group',
       name: 'effekte',
       label: 'Effekte:',
-      tooltip: 'Weitere Effekte kannst du in der Beschreibung angeben.',
-      options: ['Metallic', 'Fluoreszierend']
+      options: [
+        'Metallic',
+        'Perl-/Perlmutteffekt',
+        'Eisenglimmer',
+        'Fluoreszierend',
+        'Sonstiger Effekt'
+      ]
     },
     {
       type: 'group',
       name: 'extras',
-      label: 'Extras:',
-      tooltip: 'Weitere Angaben kannst du in der Beschreibung machen.',
+      label: 'Extras / besondere Ausführung:',
       options: [
-        'Zweifärbig ',
-        'Duplexbeschichtung ',
-        'Beigestellter Lack'
+        'Zweifarbig / mehrfarbig',
+        'Beigestellter Lack',
+        'Bereiche abdecken / lackfrei halten',
+        'Besondere Korrosionsschutzanforderung',
+        'Sonstige Vorgabe'
       ]
     },
     {
-      type: 'group',
-      name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
-      options: [
-        'GSB',
-        'ISO 9001',
-        'ISO 12944',
-        'ISO 14001',
-        'RoHS / REACH'
-      ]
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicken, konkrete Schichtaufbauten sowie weitere technische Vorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Pulverbeschichten: [
