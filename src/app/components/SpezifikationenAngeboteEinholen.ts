@@ -1605,7 +1605,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       tooltip: 'Weitere Effekte kannst du in der Beschreibung angeben.',
       options: [
         'Metallic',
-        'Perlglanz / Perlmutteffekt',
+        'Perlmutteffekt',
         'Eisenglimmer',
         'Candy',
         'Neon',
