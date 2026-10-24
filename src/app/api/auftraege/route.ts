@@ -19,6 +19,7 @@ const VERFAHREN = [
   'Entgraten',
   'Polieren',
   'Zinkphosphatieren',
+  'Eisenphosphatieren',
   'Aluminium-Passivieren',
   'Edelstahl-Passivieren',
   'Verkupfern',
