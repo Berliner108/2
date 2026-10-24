@@ -1150,32 +1150,46 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Bronzebeschichten: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'bronzeart',
       label: 'Bronzeart:',
-      options: ['Weißbronze', 'Gelbbronze', 'Andere Bronzelegierung / Nach Vorgabe'],
+      options: [
+        'Rotbronze',
+        'Gelbbronze',
+        'Weißbronze',
+        'Hartbronze'
+      ],
       required: true
-    },
-    {
-      type: 'text',
-      name: 'schichtdicke',
-      label: 'Gewünschte Schichtdicke (µm)',
-      maxLength: 30
     },
     {
       type: 'group',
       name: 'nachbehandlung',
       label: 'Optionale Nachbehandlung:',
-      options: ['Versiegeln', 'Anlaufschutz', 'Passivieren']
+      options: [
+        'Polieren',
+        'Schleifen',
+        'Honen',
+        'Anlaufschutz',
+        'Versiegeln / Klarlack'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
-      options: ['ISO 9001', 'ISO 14001', 'RoHS / REACH']
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke und Bronzelegierung bzw. Zusammensetzung, Funktion der Beschichtung (z. B. Gleit- und Verschleißschutz, Korrosionsschutz, dekorative oder elektrische Anwendung), notwendige Unter- bzw. Zwischenschichten, gewünschte Oberflächenqualität und Nachbearbeitung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Vergolden: [
     {
       type: 'radio',
