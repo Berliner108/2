@@ -1537,7 +1537,21 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'farbpalette',
       label: 'Farbpalette:',
-      options: ['RAL', 'NCS', 'MCS', 'DB', 'BS', 'Munsell', 'Candy', 'Neon', 'Pantone', 'Sikkens', 'HKS', 'Klarlack', 'Sonderfarbe / Nach Vorlage', 'RAL D2-Design', 'RAL E4-Effekt']
+      options: [
+        'RAL',
+        'NCS',
+        'DB',
+        'BS',
+        'Munsell',
+        'Pantone',
+        'Sikkens',
+        'HKS',
+        'RAL Design',
+        'RAL Effect',
+        'Klarlack',
+        'Sonderfarbe / nach Vorlage',
+        'Andere / unbekannt'
+      ]
     },
     {
       type: 'text',
@@ -1550,26 +1564,53 @@ export const specificationsMap: Record<string, Specification[]> = {
       type: 'dropdown',
       name: 'glanzgrad',
       label: 'Glanzgrad:',
-      options: ['Hochglanz', 'Glanz', 'Seidenglanz', 'Matt', 'Seidenmatt', 'Stumpfmatt']
+      options: [
+        'Hochglänzend',
+        'Glänzend',
+        'Seidenglänzend',
+        'Seidenmatt',
+        'Matt',
+        'Stumpfmatt',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'dropdown',
       name: 'oberfläche',
       label: 'Oberfläche:',
-      options: ['Glatt', 'Feinstruktur', 'Grobstruktur']
+      options: [
+        'Glatt',
+        'Feinstruktur',
+        'Grobstruktur'
+      ]
     },
     {
       type: 'dropdown',
       name: 'qualität',
       label: 'Pulverlack-Qualität:',
-      options: ['Polyester', 'Epoxy-Polyester', 'Polyurethan','Polyester für Feuerverzinkung', 'Thermoplast']
+      options: [
+        'Polyester',
+        'Epoxid',
+        'Epoxy-Polyester',
+        'Polyurethan',
+        'Thermoplast',
+        'Hochwetterfest / Fassadenqualität',
+        'Andere / nach Vorgabe'
+      ]
     },
     {
       type: 'group',
       name: 'effekte',
       label: 'Effekte:',
       tooltip: 'Weitere Effekte kannst du in der Beschreibung angeben.',
-      options: ['Metallic', 'Fluoreszierend']
+      options: [
+        'Metallic',
+        'Perlglanz / Perlmutteffekt',
+        'Eisenglimmer',
+        'Candy',
+        'Neon',
+        'Sonstiger Effekt'
+      ]
     },
     {
       type: 'group',
@@ -1577,9 +1618,9 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Extras:',
       tooltip: 'Weitere Angaben kannst du in der Beschreibung machen.',
       options: [
-        'Zweifärbig ',
-        'Duplexbeschichtung ',
-        'Beigestellter Lack'
+        'Zweifarbig',
+        'Duplexbeschichtung',
+        'Beigestellter Pulverlack'
       ]
     },
     {
@@ -1589,12 +1630,16 @@ export const specificationsMap: Record<string, Specification[]> = {
       tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
       options: [
         'GSB',
-        'Qualicoat',
-        'Qualisteelcoat',
+        'QUALICOAT',
+        'QUALISTEELCOAT',
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Schichtdicke, Vorbehandlung, Korrosionsschutzanforderungen, konkrete Schichtaufbauten, besondere Anforderungen an Witterungs- oder Chemikalienbeständigkeit sowie weitere technische, Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ]
 };
