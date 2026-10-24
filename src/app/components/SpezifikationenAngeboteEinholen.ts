@@ -1024,13 +1024,46 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Vermessingen: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'ausfuehrung',
-      label: 'Ausführung:',
-      options: ['Glänzend', 'Matt', 'Antik / Patiniert'],
+      label: 'Ausführung / Optik:',
+      options: [
+        'Glänzend',
+        'Matt',
+        'Antik / Patiniert',
+        'Vintage / Altmessing',
+        'Nach Muster / Sonderoptik'
+      ],
       required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Klarlack / Versiegelung',
+        'Polieren',
+        'Patinieren / Färben'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschter Farbton bzw. Referenzoberfläche, Schichtaufbau und notwendige Zwischenschichten, gewünschte Patinierung oder Färbung, Anforderungen an Anlauf- und Korrosionsschutz sowie konkrete Prüf- oder Qualitätsvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Verkupfern: [
     {
       type: 'radio',

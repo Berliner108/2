@@ -895,6 +895,17 @@ const materialienVerchromen = [
   'Gusseisen',
   'Andere',
 ]
+
+const materialienVermessingen = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Zinkdruckguss',
+  'Andere',
+]
 const materialienVersilbern = [
   'Aluminium',
   'Aluguss',
@@ -999,6 +1010,8 @@ const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
 const istVerchromen =
   selectedOption1 === 'Verchromen' || selectedOption2 === 'Verchromen'
+const istVermessingen =
+  selectedOption1 === 'Vermessingen' || selectedOption2 === 'Vermessingen'
 const istBruenieren =
   selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
 const istEntlacken =
@@ -1118,6 +1131,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienVernickeln
 } else if (istVerchromen) {
   materialienAktiv = materialienVerchromen
+} else if (istVermessingen) {
+  materialienAktiv = materialienVermessingen
 } else if (istVerzinken) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {
