@@ -635,23 +635,43 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Entnickeln: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch']
+      label: 'Entnickelungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art der vorhandenen Nickelschicht (z. B. galvanisch, chemisch Nickel bzw. Nickel-Phosphor), gewünschter Entnickelungsumfang, Grundwerkstoff und vorhandene Zwischen- oder Deckschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Entzinnen: [
     {
       type: 'dropdown',
@@ -942,23 +962,43 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Entaluminieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch', 'Mechanisch']
+      label: 'Entaluminierverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
-        'ISO 14001',
-        'RoHS / REACH'
+        'ISO 14001'
       ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Aluminiumschicht, gewünschter Entaluminierungsumfang, Grundwerkstoff und gegebenenfalls vorhandene Zwischen- oder Diffusionsschichten, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Verchromen: [
     {
       type: 'dropdown',

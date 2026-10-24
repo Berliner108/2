@@ -806,12 +806,15 @@ const materialienTrowalisieren = [
 ]
 
 const materialienEntnickeln = [
-  'Aluminium',
-  'Aluguss',
   'Stahl',
   'Edelstahl',
+  'Aluminium',
+  'Aluguss',
   'Kupfer',
-  'Zink',
+  'Messing',
+  'Bronze',
+  'Titan',
+  'Kunststoff',
   'Andere',
 ]
 
@@ -834,7 +837,8 @@ const materialienEntzinnen = [
 const materialienEntaluminieren = [
   'Stahl',
   'Edelstahl',
-  'Nickel',
+  'Nickellegierung',
+  'Gusseisen',
   'Andere',
 ]
 const materialienEntzinken = [
