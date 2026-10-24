@@ -1140,6 +1140,36 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
 
+  'Edelstahl-Passivieren': [
+    {
+      type: 'dropdown',
+      name: 'passivierungsart',
+      label: 'Passivierungsart:',
+      options: [
+        'Salpetersäure-Passivierung',
+        'Zitronensäure-Passivierung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Zertifizierungen:',
+      tooltip: 'Wähle Normen oder Zertifizierungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ASTM A967/A967M',
+        'ASTM A380/A380M',
+        'AMS 2700',
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Edelstahlgüte, Oberflächenzustand, vorhandene Verunreinigungen bzw. freies Eisen, gewünschte Passivierungsart, Anforderungen an Korrosionsbeständigkeit sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
   'Aluminium-Passivieren': [
     {
       type: 'dropdown',
