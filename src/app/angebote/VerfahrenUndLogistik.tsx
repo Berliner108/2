@@ -5,7 +5,7 @@ import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 export interface Specification {
-  type: 'checkbox' | 'text' | 'radio' | 'group' | 'title' | 'dropdown' | 'note';
+  type: 'checkbox' | 'text' | 'radio' | 'group' | 'title' | 'dropdown';
   label: string;
   name: string;
   options?: string[];
@@ -827,16 +827,6 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
             <h5 key={selectionKey} className={styles.sectionTitle}>
               {spec.label}
             </h5>
-          );
-        }
-
-        if (spec.type === 'note') {
-          return (
-            <div key={selectionKey} className={styles.inputRow}>
-              <p className={styles.groupLabel}>
-                <strong>Hinweis:</strong> {spec.label}
-              </p>
-            </div>
           );
         }
         return null;
