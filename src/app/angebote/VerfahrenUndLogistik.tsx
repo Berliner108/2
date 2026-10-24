@@ -43,6 +43,7 @@ const allOptions = [
   'KTL-Beschichten',
   'Zinkphosphatieren',
   'Mn-Phosphatieren',
+  'Eisenphosphatieren',
   'Beizen',
   'Entgraten',
   'Verrunden',
@@ -60,6 +61,7 @@ const allOptions = [
   'Aluminieren',
   'Vernickeln',
   'Aluminium-Passivieren',
+  'Edelstahl-Passivieren',
   'Elektropolieren',
   'Verchromen',
   'Vermessingen',
@@ -76,6 +78,7 @@ const allOptions = [
   'Entzinnen',
   'Entaluminieren',
   'Entnickeln',
+  'Entchromen',
 ];
 const validSecondOptions: { [key: string]: string[] } = {
   Nasslackieren: ['Folieren', 'Isolierstegverpressen', 'Einlagern'],

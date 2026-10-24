@@ -1013,6 +1013,45 @@ export const specificationsMap: Record<string, Specification[]> = {
     }
   ],
 
+  Entchromen: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Entchromungsverfahren:',
+      options: [
+        'Chemisch',
+        'Elektrochemisch'
+      ],
+      required: true
+    },
+    {
+      type: 'group',
+      name: 'nachbehandlung',
+      label: 'Optionale Nachbehandlung:',
+      options: [
+        'Neutralisieren / Spülen',
+        'Aktivieren / Dekapieren',
+        'Konservieren / Korrosionsschutz',
+        'Vorbereitung für Neubeschichtung'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 9001',
+        'ISO 14001'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Chromschicht, vorhandener Schichtaufbau bzw. Zwischenlagen (z. B. Nickel oder Kupfer), gewünschter Entchromungsumfang, Grundwerkstoff, Schutz des Grundwerkstoffs, zulässiger Materialabtrag und gewünschter Oberflächenzustand, vorgesehene Folgebehandlung oder Neubeschichtung sowie konkrete Prüf-, Qualitäts- oder sonstige Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+
   Verchromen: [
     {
       type: 'dropdown',

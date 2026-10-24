@@ -755,6 +755,31 @@ const materialienMnPhosphatieren = [
   'Andere',
 ]
 
+const materialienEisenphosphatieren = [
+  'Stahl',
+  'Verzinkter Stahl',
+  'Zink',
+  'Aluminium',
+  'Aluguss',
+  'Andere',
+]
+
+const materialienEdelstahlPassivieren = [
+  'Edelstahl',
+  'Andere',
+]
+
+const materialienEntchromen = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Kunststoff',
+  'Andere',
+]
+
 const materialienBeizen = [
   'Stahl',
   'Edelstahl',
@@ -1171,6 +1196,15 @@ const istZinkphosphatieren =
 const istMnPhosphatieren =
   selectedOption1 === 'Mn-Phosphatieren' ||
   selectedOption2 === 'Mn-Phosphatieren'
+const istEisenphosphatieren =
+  selectedOption1 === 'Eisenphosphatieren' ||
+  selectedOption2 === 'Eisenphosphatieren'
+const istEdelstahlPassivieren =
+  selectedOption1 === 'Edelstahl-Passivieren' ||
+  selectedOption2 === 'Edelstahl-Passivieren'
+const istEntchromen =
+  selectedOption1 === 'Entchromen' ||
+  selectedOption2 === 'Entchromen'
 const istBeizen =
   selectedOption1 === 'Beizen' ||
   selectedOption2 === 'Beizen'
@@ -1226,6 +1260,12 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienZinkphosphatieren
 } else if (istMnPhosphatieren) {
   materialienAktiv = materialienMnPhosphatieren
+} else if (istEisenphosphatieren) {
+  materialienAktiv = materialienEisenphosphatieren
+} else if (istEdelstahlPassivieren) {
+  materialienAktiv = materialienEdelstahlPassivieren
+} else if (istEntchromen) {
+  materialienAktiv = materialienEntchromen
 } else if (istBeizen) {
   materialienAktiv = materialienBeizen
 } else if (istEntgraten) {
