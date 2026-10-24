@@ -31,6 +31,8 @@ interface VerfahrenUndLogistikProps {
   >;
   verfahrenError: boolean;
   verfahrenRef: React.RefObject<HTMLDivElement>;
+  requiredErrors: Record<string, boolean>;
+  clearRequiredError: (selectionKey: string) => void;
 }
 const allOptions = [
   'Nasslackieren',
@@ -594,9 +596,12 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
   setSpecSelections,
   verfahrenError,
   verfahrenRef,
+  requiredErrors,
+  clearRequiredError,
 }) => {
   const secondOptions = validSecondOptions[selectedOption1] || [];
   const searchParams = useSearchParams();
+
   const firstParam = searchParams.get('first');
   useEffect(() => {
     if (firstParam && allOptions.includes(firstParam)) {
@@ -630,7 +635,11 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
           const maxLen = spec.maxLength ?? 255;
           const value = (specSelections[selectionKey] as string) || '';
           return (
-            <div key={selectionKey} className={styles.inputRow}>
+            <div
+              key={selectionKey}
+              className={styles.inputRow}
+              data-spec-key={selectionKey}
+            >
               <div className={styles.labelRowNeutral}>
                 <span className={styles.labelTextNormal}>{spec.label}</span>
                 {spec.tooltip && (
@@ -644,11 +653,15 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
               </div>
               <input
                 type="text"
-                className={styles.inputField2}
+                className={`${styles.inputField2} ${
+                  requiredErrors[selectionKey] ? styles.inputError : ''
+                }`}
                 value={value}
                 maxLength={maxLen} // 👈 Begrenzung greift hier
+                aria-invalid={requiredErrors[selectionKey] || undefined}
                 onChange={(e) => {
                   const nextValue = e.target.value;
+                  if (nextValue.trim()) clearRequiredError(selectionKey);
                   setSpecSelections((prev) => {
                     const next = { ...prev };
                     if (nextValue.trim()) {
@@ -660,6 +673,11 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                   });
                 }}
               />
+              {requiredErrors[selectionKey] && (
+                <p className={styles.feldFehlerText}>
+                  Bitte fülle dieses Pflichtfeld aus.
+                </p>
+              )}
               {spec.showCounter && (
                 <div className={styles.charCounter}>
                   {value.length}/{maxLen}
@@ -671,17 +689,28 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
         if (spec.type === 'dropdown') {
           const currentValue = (specSelections[selectionKey] as string) || '';
           return (
-            <div key={selectionKey} className={styles.inputRow}>
+            <div
+              key={selectionKey}
+              className={styles.inputRow}
+              data-spec-key={selectionKey}
+            >
               <label>
                 {spec.label}
                 {spec.required && <span className={styles.requiredStar}>*</span>}
               </label>
               <select
-                className={styles.inputField2}
+                className={`${styles.inputField2} ${
+                  requiredErrors[selectionKey] ? styles.inputError : ''
+                }`}
                 value={currentValue}
-                required={spec.required}
+                aria-invalid={requiredErrors[selectionKey] || undefined}
                 onChange={(e) => {
                   const nextValue = e.target.value;
+
+                  if (nextValue.trim()) {
+                    clearRequiredError(selectionKey);
+                  }
+
                   setSpecSelections((prev) => {
                     const next = { ...prev };
                     if (nextValue.trim()) {
@@ -700,12 +729,22 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                   </option>
                 ))}
               </select>
+
+              {requiredErrors[selectionKey] && (
+                <p className={styles.feldFehlerText}>
+                  Bitte wähle eine Option aus.
+                </p>
+              )}
             </div>
           );
         }
         if (spec.type === 'radio') {
           return (
-            <div key={selectionKey} className={styles.radioGroup}>
+            <div
+              key={selectionKey}
+              className={styles.radioGroup}
+              data-spec-key={selectionKey}
+            >
               <div className={styles.radioLabel}>
                 {spec.label}
                 {spec.required && <span className={styles.requiredStar}>*</span>}
@@ -729,8 +768,9 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                         name={selectionKey} // 🔹 wichtig: Name = selectionKey → pro Verfahren getrennt
                         value={opt}
                         checked={specSelections[selectionKey] === opt}
-                        required={spec.required}
-                        onChange={() =>
+                        aria-invalid={requiredErrors[selectionKey] || undefined}
+                        onChange={() => {
+                          clearRequiredError(selectionKey);
                           setSpecSelections((prev) => {
                             const next = { ...prev };
                             if (String(opt ?? '').trim()) {
@@ -755,14 +795,19 @@ const VerfahrenUndLogistik: React.FC<VerfahrenUndLogistikProps> = ({
                               }
                             });
                             return next;
-                          })
-                        }
+                          });
+                        }}
                       />
                       {opt}
                     </label>
                   );
                 })}
               </div>
+              {requiredErrors[selectionKey] && (
+                <p className={styles.feldFehlerText}>
+                  Bitte wähle eine Option aus.
+                </p>
+              )}
             </div>
           );
         }

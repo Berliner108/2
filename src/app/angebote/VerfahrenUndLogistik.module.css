@@ -1057,3 +1057,12 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     font-size: 1.05rem;
   }
 }
+
+/* Einheitliche Fehlermeldung für Pflichtfelder in den Verfahrens-Spezifikationen */
+.feldFehlerText {
+  color: red;
+  font-weight: 500;
+  margin: 0.2rem 0 0;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+}

@@ -229,6 +229,67 @@ const [overlayText, setOverlayText]   = useState('Wir leiten gleich weiter.')
  const [specSelections, setSpecSelections] = useState<
   Record<string, string | string[]>
 >({})
+const [specRequiredErrors, setSpecRequiredErrors] = useState<Record<string, boolean>>({})
+
+const clearSpecRequiredError = (selectionKey: string) => {
+  setSpecRequiredErrors((prev) => {
+    if (!prev[selectionKey]) return prev
+    const next = { ...prev }
+    delete next[selectionKey]
+    return next
+  })
+}
+
+const makeSpecSelectionKey = (
+  blockPrefix: 'v1' | 'v2',
+  verfahrenName: string,
+  fieldName: string,
+) => `${blockPrefix}__${verfahrenName}__${fieldName}`
+
+const getMissingRequiredSpecificationKeys = () => {
+  const missing: string[] = []
+
+  const checkProcedure = (
+    verfahrenName: string,
+    blockPrefix: 'v1' | 'v2',
+  ) => {
+    if (!verfahrenName) return
+
+    const specs = specificationsMap[verfahrenName] || []
+
+    specs.forEach((spec) => {
+      if (!spec.required) return
+
+      if (spec.dependsOn) {
+        const dependencyKey = makeSpecSelectionKey(
+          blockPrefix,
+          verfahrenName,
+          spec.dependsOn.name,
+        )
+        if (specSelections[dependencyKey] !== spec.dependsOn.value) return
+      }
+
+      const selectionKey = makeSpecSelectionKey(
+        blockPrefix,
+        verfahrenName,
+        spec.name,
+      )
+      const value = specSelections[selectionKey]
+      const isEmpty = Array.isArray(value)
+        ? value.length === 0
+        : !String(value ?? '').trim()
+
+      if (isEmpty && !missing.includes(selectionKey)) {
+        missing.push(selectionKey)
+      }
+    })
+  }
+
+  checkProcedure(selectedOption1, 'v1')
+  checkProcedure(selectedOption2, 'v2')
+
+  return missing
+}
 // 🔹 Hilfsfunktion: alle Keys mit bestimmtem Prefix löschen (v1__ / v2__)
 const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
   setSpecSelections((prev) => {
@@ -237,6 +298,11 @@ const clearSpecsByPrefix = (prefix: 'v1__' | 'v2__') => {
     )
     return Object.fromEntries(entries)
   })
+  setSpecRequiredErrors((prev) =>
+    Object.fromEntries(
+      Object.entries(prev).filter(([key]) => !key.startsWith(prefix)),
+    ),
+  )
 }
   const istGueltigDatei = (file: File) => {
     const erlaubteEndungen = ['.pdf', '.zip', '.dxf']
@@ -378,6 +444,7 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   return
 }
   let firstErrorRef: React.RefObject<HTMLDivElement> | null = null
+  let firstSpecErrorKey: string | null = null
   // 1️⃣ DATEI (Pflicht)
   setWarnungBilder('')
   if (fileFiles.length === 0) {
@@ -397,31 +464,44 @@ if (dokumenteGesamtGroesse > MAX_DOCUMENT_TOTAL_SIZE) {
   } else {
     setVerfahrenError(false)
   }
-  // 3️⃣ MATERIALGÜTE
+
+  // 3️⃣ VERFAHRENSSPEZIFISCHE PFLICHTFELDER
+  const missingSpecKeys = getMissingRequiredSpecificationKeys()
+  const nextSpecErrors = Object.fromEntries(
+    missingSpecKeys.map((key) => [key, true]),
+  )
+  setSpecRequiredErrors(nextSpecErrors)
+
+  if (missingSpecKeys.length > 0) {
+    if (!firstErrorRef) firstSpecErrorKey = missingSpecKeys[0]
+    hasError = true
+  }
+
+  // 4️⃣ MATERIALGÜTE
   if (!materialGuete || (materialGuete === 'Andere' && !customMaterial.trim())) {
   setMaterialGueteError(true)
-  if (!firstErrorRef) firstErrorRef = materialGueteRef
+  if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = materialGueteRef
   hasError = true
 } else {
     setMaterialGueteError(false)
   }
-  // 4️⃣ ABMESSUNGEN
+  // 5️⃣ ABMESSUNGEN
 if (!laenge || !breite || !hoehe || !masse) {
   setAbmessungError(true)
-  if (!firstErrorRef) firstErrorRef = materialGueteRef
+  if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = materialGueteRef
   hasError = true
 } else {
     setAbmessungError(false)
   }
-  // 5️⃣ BESCHREIBUNG
+  // 6️⃣ BESCHREIBUNG
   if (!beschreibung.trim()) {
     setBeschreibungError(true)
-    if (!firstErrorRef) firstErrorRef = beschreibungRef
+    if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = beschreibungRef
     hasError = true
   } else {
     setBeschreibungError(false)
   }
-// 6️⃣ LOGISTIK
+// 7️⃣ LOGISTIK
 if (
   !lieferDatum ||
   !abholDatum ||
@@ -431,21 +511,21 @@ if (
 ) {
   setLogistikError(true)
   setRhythmusError(serienauftrag && !rhythmus)
-  if (!firstErrorRef) firstErrorRef = logistikRef
+  if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = logistikRef
   hasError = true
 } else if (new Date(lieferDatum) > new Date(abholDatum)) {
   setLogistikError(true)
   setRhythmusError(false)
-  if (!firstErrorRef) firstErrorRef = logistikRef
+  if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = logistikRef
   hasError = true
 } else {
   setLogistikError(false)
   setRhythmusError(false)
 }
-  // 7️⃣ AGB
+  // 8️⃣ AGB
   if (!agbAccepted) {
     setAgbError(true)
-    if (!firstErrorRef) firstErrorRef = agbRef
+    if (!firstErrorRef && !firstSpecErrorKey) firstErrorRef = agbRef
     hasError = true
   } else {
     setAgbError(false)
@@ -457,6 +537,20 @@ if (
   if (hasError) {
     if (firstErrorRef) {
       scrollToError(firstErrorRef)
+    } else if (firstSpecErrorKey) {
+      const specKeyToScroll = firstSpecErrorKey
+      requestAnimationFrame(() => {
+        const element = document.querySelector<HTMLElement>(
+          `[data-spec-key="${CSS.escape(specKeyToScroll)}"]`,
+        )
+        if (!element) return
+
+        const y = element.getBoundingClientRect().top + window.scrollY - 90
+        window.scrollTo({
+          top: y,
+          behavior: 'smooth',
+        })
+      })
     }
     return
   }
@@ -1561,6 +1655,8 @@ const formatAbholArt = (value: string) => abholArtLabel[value] ?? value;
   setSpecSelections={setSpecSelections}
   verfahrenError={verfahrenError}
   verfahrenRef={verfahrenRef}
+  requiredErrors={specRequiredErrors}
+  clearRequiredError={clearSpecRequiredError}
 />
 <div className={styles.dividerLine} />
 <div ref={materialGueteRef}>
