@@ -9,8 +9,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Chemisch',
         'Thermisch',
         'Mechanisch',
-        'Laserentlackung',
-        'Nach Vorgabe / unbekannt'
+        'Laserentlackung'
       ]
     },
     {
@@ -22,7 +21,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'QUALISTRIP',
         'ISO 9001',
         'ISO 14001',
-        'Nach Vorgabe'
       ]
     },
     {
@@ -50,7 +48,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'DIN 50938',
         'ISO 9001',
         'ISO 14001',
-        'Nach Vorgabe'
       ]
     },
     {
@@ -72,9 +69,8 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Keramikperlenstrahlen',
         'Sodastrahlen',
         'Kunststoffstrahlen',
-        'Kugelstrahlen / Shot Peening',
+        'Kugelstrahlen',
         'Staubstrahlen',
-        'Andere / Nach Vorgabe'
       ]
     },
     {
@@ -86,8 +82,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 8501-1',
         'ISO 8503',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -146,12 +141,6 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'eloxalverdichtung',
       label: 'Verdichtung',
       options: ['Ja', 'Nein']
-    },
-    {
-      type: 'dropdown',
-      name: 'eloxalverdichtung',
-      label: 'Verdichtung:',
-      options: ['Verdichten', 'Nicht verdichten', 'Nach Vorgabe / unbekannt']
     },
     {
       type: 'group',
@@ -241,7 +230,6 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Schwarz',
         'Grau',
-        'Andere / nach Vorgabe'
       ]
     },
     {
@@ -253,7 +241,6 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 9001',
         'ISO 14001',
         'IATF 16949',
-        'Nach Vorgabe'
       ]
     },
     {
@@ -269,10 +256,8 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'nachbehandlung',
       label: 'Nachbehandlung:',
       options: [
-        'Keine',
         'Geölt',
-        'Versiegelt',
-        'Nach Vorgabe'
+        'Versiegelt'
       ]
     },
     {
@@ -283,8 +268,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 9717',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -299,10 +283,8 @@ export const specificationsMap: Record<string, Specification[]> = {
       name: 'nachbehandlung',
       label: 'Nachbehandlung:',
       options: [
-        'Keine',
         'Geölt',
-        'Versiegelt',
-        'Nach Vorgabe'
+        'Versiegelt'
       ]
     },
     {
@@ -313,8 +295,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 9717',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -330,8 +311,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Beizverfahren:',
       options: [
         'Chemisch',
-        'Elektrochemisch',
-        'Nach Vorgabe / unbekannt'
+        'Elektrochemisch'
       ]
     },
     {
@@ -343,8 +323,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'EN ISO 8504-4',
         'ASTM A380/A380M',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -363,8 +342,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Thermisch',
         'Elektrochemisch',
         'Gleitschleifen',
-        'Bürsten / Schleifen',
-        'Nach Vorgabe / unbekannt'
+        'Bürsten / Schleifen'
       ]
     },
     {
@@ -375,8 +353,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 13715',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -394,8 +371,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Gleitschleifen',
         'Bürsten / Schleifen',
         'Strahlen',
-        'Mechanisch',
-        'Nach Vorgabe / unbekannt'
+        'Mechanisch'
       ]
     },
     {
@@ -406,8 +382,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 13715',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -426,8 +401,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Gleitschleifen',
         'Chemisch',
         'Elektropolieren',
-        'Bürsten / Schleifen',
-        'Nach Vorgabe / unbekannt'
+        'Bürsten / Schleifen'
       ]
     },
     {
@@ -438,8 +412,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 21920',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -457,8 +430,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Strahlen',
         'Schleifen',
         'Bürsten',
-        'Chemisch',
-        'Nach Vorgabe / unbekannt'
+        'Chemisch'
       ]
     },
     {
@@ -469,8 +441,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 21920',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -488,8 +459,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Bandschleifen',
         'Flachschleifen',
         'Rundschleifen',
-        'Handschleifen',
-        'Nach Vorgabe / unbekannt'
+        'Handschleifen'
       ]
     },
     {
@@ -500,8 +470,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 21920',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -518,8 +487,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'Technisch',
         'Dekorativ',
-        'Hochglanz',
-        'Nach Vorgabe / unbekannt'
+        'Hochglanz'
       ]
     },
     {
@@ -530,8 +498,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 21920',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -549,8 +516,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Technisch',
         'Dekorativ',
         'Mattierend',
-        'Entgraten / Kanten brechen',
-        'Nach Vorgabe / unbekannt'
+        'Entgraten / Kanten brechen'
       ]
     },
     {
@@ -561,8 +527,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 21920',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -580,8 +545,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Vibrationsgleitschleifen',
         'Trommelgleitschleifen',
         'Fliehkraftgleitschleifen',
-        'Schleppschleifen',
-        'Nach Vorgabe / unbekannt'
+        'Schleppschleifen'
       ]
     },
     {
@@ -592,8 +556,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'DIN 8589',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -611,8 +574,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'DIN 17611',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -654,8 +616,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 4527',
         'ISO 1456',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -844,8 +805,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'DIN 50965',
         'ISO 2093',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -861,9 +821,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Farbe / Optik:',
       options: [
         'Natur / technisch',
-        'Farbig',
-        'Nach Vorgabe / Muster',
-        'Unbekannt'
+        'Farbig'
       ]
     },
     {
@@ -874,8 +832,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'SAE / AMS nach Vorgabe',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -903,8 +860,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 2063',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -958,8 +914,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       label: 'Entanodisierverfahren:',
       options: [
         'Chemisch / Beizen',
-        'Mechanisch / Strahlen',
-        'Nach Vorgabe / spezialchemisch'
+        'Mechanisch / Strahlen'
       ],
       required: true
     },
@@ -1062,8 +1017,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Perlglanz',
         'Rauchchrom / Dark Chrome',
         'Champagner',
-        'Schwarz',
-        'Nach Muster / Sonderoptik'
+        'Schwarz'
       ],
       dependsOn: { name: 'verchromungsart', value: 'Glanzverchromen' }
     },
@@ -1076,8 +1030,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Perlglanz',
         'Rauchchrom / Dark Chrome',
         'Champagner',
-        'Schwarz',
-        'Nach Muster / Sonderoptik'
+        'Schwarz'
       ],
       dependsOn: { name: 'verchromungsart', value: 'Mattverchromen' }
     },
@@ -1090,8 +1043,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Perlglanz',
         'Rauchchrom / Dark Chrome',
         'Champagner',
-        'Schwarz',
-        'Nach Muster / Sonderoptik'
+        'Schwarz'
       ],
       dependsOn: { name: 'verchromungsart', value: 'Schwarzverchromen' }
     },
@@ -1150,8 +1102,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'ISO 1456',
         'ISO 6158',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -1182,8 +1133,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'DIN EN 12487',
         'ASTM B921',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -1203,8 +1153,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'DIN EN ISO 15730',
         'ASTM B912',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -1223,8 +1172,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Glänzend',
         'Matt',
         'Antik / Patiniert',
-        'Vintage / Altmessing',
-        'Nach Muster / Sonderoptik'
+        'Vintage / Altmessing'
       ],
       required: true
     },
@@ -1245,8 +1193,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -1285,8 +1232,7 @@ export const specificationsMap: Record<string, Specification[]> = {
       options: [
         'ISO 1456',
         'ISO 9001',
-        'ISO 14001',
-        'Nach Vorgabe'
+        'ISO 14001'
       ]
     },
     {
@@ -1361,8 +1307,7 @@ export const specificationsMap: Record<string, Specification[]> = {
         'Rotgold',
         'Grüngold',
         'Weißgold',
-        'Champagnergold',
-        'Nach Muster / Sonderfarbton'
+        'Champagnergold'
       ],
       dependsOn: { name: 'vergoldungsart', value: 'Farbvergoldung' }
     },
