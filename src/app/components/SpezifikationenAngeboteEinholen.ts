@@ -2,52 +2,99 @@ import type { Specification } from '../angebote/VerfahrenUndLogistik'; // <--- P
 export const specificationsMap: Record<string, Specification[]> = {
   Entlacken: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren',
-      options: ['Chemisch', 'Elektrochemisch', 'Thermisch', 'Mechanisch']
+      label: 'Entlackungsverfahren:',
+      options: [
+        'Chemisch',
+        'Thermisch',
+        'Mechanisch',
+        'Laserentlackung',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'group',
       name: 'zertifizierungen',
-      label: 'Zertifizierungen:',
-      tooltip: 'Wähle Zertifizierungen aus, die den Beschichter auszeichnen müssen.',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
       options: [
-        'Qualistrip',
+        'QUALISTRIP',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
       ]
     },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Art und Zustand der vorhandenen Beschichtung (z. B. Pulverlack, Nasslack, KTL), gewünschter Entlackungsumfang, zulässiger Materialabtrag bzw. Anforderungen an den Grundwerkstoff, notwendige Nachreinigung oder Konservierung sowie konkrete Prüf- oder Qualitätsvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
   ],
   Brünieren: [
-  {
-    type: 'radio',
-    name: 'verfahren',
-    label: 'Verfahren',
-    options: ['Heißbrünieren', 'Kaltbrünieren', 'Schwarzoxidieren']
-  },
-  {
-    type: 'group',
-    name: 'zertifizierungen',
-    label: 'Zertifizierungen:',
-    tooltip: 'Wähle Zertifizierungen aus, die den Anbieter auszeichnen müssen.',
-    options: [
-      'ISO 9001',
-      'ISO 14001',
-      'RoHS / REACH'
-    ]
-  }
-],
-  Strahlen: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Strahlverfahren:',
-      options: ['Sandstrahlen', 'Glasperlenstrahlen', 'Korundstrahlen', 'Stahlkiesstrahlen', 'Keramikperlenstrahlen', 'Sodastrahlen', 'Kunststoffstrahlen', 'Kugelstrahlen / Shot Peening', 'Staubstrahlen', 'Andere / Nach Vorgabe']
+      label: 'Brünierverfahren:',
+      options: [
+        'Heißbrünieren',
+        'Kaltbrünieren',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'group',
-      name: 'strahlziel',
-      label: 'Bearbeitungsziel:',
-      options: ['Entrosten', 'Entzundern', 'Entlacken', 'Aufrauen', 'Mattieren', 'Entgraten', 'Verdichten / Verfestigen']
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'DIN 50938',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Optik, Anforderungen an Korrosionsschutz und Maßhaltigkeit, gewünschte Nachbehandlung bzw. Konservierung (z. B. Ölen), besondere tribologische Anforderungen sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
+    }
+  ],
+  Strahlen: [
+    {
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Strahlverfahren:',
+      options: [
+        'Sandstrahlen',
+        'Glasperlenstrahlen',
+        'Korundstrahlen',
+        'Stahlkiesstrahlen',
+        'Keramikperlenstrahlen',
+        'Sodastrahlen',
+        'Kunststoffstrahlen',
+        'Kugelstrahlen / Shot Peening',
+        'Staubstrahlen',
+        'Andere / Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 8501-1',
+        'ISO 8503',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Bearbeitungsziel (z. B. Entrosten, Entzundern, Entlacken, Aufrauen, Mattieren oder Entgraten), gewünschter Reinheitsgrad bzw. Oberflächenzustand, gewünschte Rauheit bzw. Rauheitsprofil, Strahlmittelvorgaben sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Eloxieren: [

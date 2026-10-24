@@ -857,7 +857,7 @@ const materialienAluminieren = [
 ]
 const materialienBruenieren = [
   'Stahl',
-  'Edelstahl',
+  'Gusseisen',
   'Andere',
 ]
 const materialienVernickeln = [
@@ -878,23 +878,69 @@ const materialienVersilbern = [
   'Nickel',
   'Andere',
 ]
+const materialienEntlacken = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Verzinkter Stahl',
+  'Kupfer',
+  'Messing',
+  'Magnesium',
+  'Andere',
+]
+
 const materialienSandstrahlen = [
   'Stahl',
   'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
   'Andere',
 ]
 const materialienStaubstrahlen = [
-  'Aluminium',
-  'Aluguss',
   'Stahl',
   'Edelstahl',
+  'Aluminium',
+  'Aluguss',
   'Andere',
 ]
 const materialienGlasperlen = [
+  'Edelstahl',
   'Aluminium',
   'Aluguss',
-  'Edelstahl',
   'Kupfer',
+  'Messing',
+  'Titan',
+  'Andere',
+]
+
+const materialienKorundStahlkies = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Andere',
+]
+
+const materialienSodaKunststoff = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Andere',
+]
+
+const materialienShotPeening = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Titan',
+  'Nickel',
   'Andere',
 ]
 const istEloxieren =
@@ -921,6 +967,8 @@ const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
 const istBruenieren =
   selectedOption1 === 'Brünieren' || selectedOption2 === 'Brünieren'
+const istEntlacken =
+  selectedOption1 === 'Entlacken' || selectedOption2 === 'Entlacken'
 const istVerzinken =
   selectedOption1 === 'Verzinken' || selectedOption2 === 'Verzinken'
 const istZinkphosphatieren =
@@ -971,7 +1019,9 @@ const strahlVerfahrenRaw =
 const strahlVerfahren =
   typeof strahlVerfahrenRaw === 'string' ? strahlVerfahrenRaw : ''
 let materialienAktiv = materialienAlle
-if (istBruenieren) {
+if (istEntlacken) {
+  materialienAktiv = materialienEntlacken
+} else if (istBruenieren) {
   materialienAktiv = materialienBruenieren
 } else if (istEloxieren) {
   materialienAktiv = materialienEloxieren
@@ -1032,13 +1082,25 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienVerzinken
 } else if (strahlVerfahren === 'Sandstrahlen') {
   materialienAktiv = materialienSandstrahlen
-} else if (strahlVerfahren === 'Staubstrahlen') {
-  materialienAktiv = materialienStaubstrahlen
 } else if (
-    strahlVerfahren === 'Glasperlenstrahlen' ||
-    strahlVerfahren === 'Keramikperlenstrahlen'
+  strahlVerfahren === 'Korundstrahlen' ||
+  strahlVerfahren === 'Stahlkiesstrahlen'
+) {
+  materialienAktiv = materialienKorundStahlkies
+} else if (
+  strahlVerfahren === 'Glasperlenstrahlen' ||
+  strahlVerfahren === 'Keramikperlenstrahlen'
 ) {
   materialienAktiv = materialienGlasperlen
+} else if (
+  strahlVerfahren === 'Sodastrahlen' ||
+  strahlVerfahren === 'Kunststoffstrahlen'
+) {
+  materialienAktiv = materialienSodaKunststoff
+} else if (strahlVerfahren === 'Kugelstrahlen / Shot Peening') {
+  materialienAktiv = materialienShotPeening
+} else if (strahlVerfahren === 'Staubstrahlen') {
+  materialienAktiv = materialienStaubstrahlen
 }
 useEffect(() => {
   if (materialGuete && !materialienAktiv.includes(materialGuete)) {
