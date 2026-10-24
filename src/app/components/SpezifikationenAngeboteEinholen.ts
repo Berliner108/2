@@ -278,98 +278,189 @@ export const specificationsMap: Record<string, Specification[]> = {
   ],
   Entgraten: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Mechanisch', 'Thermisch', 'Elektrochemisch', 'Gleitschleifen', 'Nach Vorgabe']
+      label: 'Entgratverfahren:',
+      options: [
+        'Mechanisch',
+        'Thermisch',
+        'Elektrochemisch',
+        'Gleitschleifen',
+        'Bürsten / Schleifen',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
       type: 'group',
-      name: 'anforderung',
-      label: 'Anforderung:',
-      options: ['Gratfrei', 'Kanten brechen', 'Definierte Kantenverrundung']
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 13715',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
     },
     {
-      type: 'text',
-      name: 'kantenradius',
-      label: 'Gewünschter Kantenradius / Vorgabe',
-      maxLength: 40
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Anforderungen wie gratfrei, Kanten brechen, gewünschter Kantenradius bzw. definierte Kantenverrundung, zulässiger Materialabtrag sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Verrunden: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Mechanisch', 'Gleitschleifen', 'Bürsten / Schleifen', 'Nach Vorgabe']
+      label: 'Verrundungsverfahren:',
+      options: [
+        'Gleitschleifen',
+        'Bürsten / Schleifen',
+        'Strahlen',
+        'Mechanisch',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'text',
-      name: 'kantenradius',
-      label: 'Gewünschter Kantenradius (mm)',
-      maxLength: 30
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 13715',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschter Kantenradius bzw. Umfang der Verrundung, zu bearbeitende Innen- oder Außenkanten, zulässiger Materialabtrag sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Glätten: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Mechanisch', 'Gleitschleifen', 'Chemisch', 'Nach Vorgabe']
+      label: 'Glättverfahren:',
+      options: [
+        'Mechanisch',
+        'Gleitschleifen',
+        'Chemisch',
+        'Elektropolieren',
+        'Bürsten / Schleifen',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'text',
-      name: 'rauheit',
-      label: 'Zielrauheit / Ra / Rz',
-      maxLength: 40
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 21920',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Oberflächenrauheit bzw. Ra-/Rz-Werte, zulässiger Materialabtrag, optische Anforderungen sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Mattieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'verfahren',
-      label: 'Verfahren:',
-      options: ['Mechanisch', 'Chemisch', 'Strahlen', 'Nach Vorgabe']
+      label: 'Mattierverfahren:',
+      options: [
+        'Strahlen',
+        'Schleifen',
+        'Bürsten',
+        'Chemisch',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'text',
-      name: 'oberflaechenziel',
-      label: 'Gewünschte Optik / Rauheit',
-      maxLength: 60
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 21920',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschter Mattierungsgrad, Oberflächenrauheit bzw. Ra-/Rz-Werte, gewünschtes Strahl- oder Schliffbild, zulässiger Materialabtrag sowie konkrete Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Schleifen: [
     {
-      type: 'text',
-      name: 'koernung',
-      label: 'Körnung / Schleifmittel',
-      maxLength: 40
+      type: 'dropdown',
+      name: 'verfahren',
+      label: 'Schleifverfahren:',
+      options: [
+        'Bandschleifen',
+        'Flachschleifen',
+        'Rundschleifen',
+        'Handschleifen',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'text',
-      name: 'rauheit',
-      label: 'Zielrauheit / Ra / Rz',
-      maxLength: 40
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 21920',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
     },
     {
-      type: 'radio',
-      name: 'schliffbild',
-      label: 'Schliffbild:',
-      options: ['Längsschliff', 'Kreuzschliff', 'Nach Vorgabe']
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Körnung, Oberflächenrauheit bzw. Ra-/Rz-Werte, Schliffbild und Schleifrichtung, zulässiger Materialabtrag sowie konkrete Maß-, Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Polieren: [
     {
-      type: 'radio',
+      type: 'dropdown',
       name: 'ausfuehrung',
-      label: 'Ausführung:',
-      options: ['Technisch', 'Dekorativ', 'Hochglanz', 'Nach Vorgabe']
+      label: 'Polierausführung:',
+      options: [
+        'Technisch',
+        'Dekorativ',
+        'Hochglanz',
+        'Nach Vorgabe / unbekannt'
+      ]
     },
     {
-      type: 'text',
-      name: 'rauheit',
-      label: 'Zielrauheit / Ra / Rz',
-      maxLength: 40
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'ISO 21920',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschter Glanzgrad bzw. Referenzoberfläche, Oberflächenrauheit bzw. Ra-/Rz-Werte, zulässiger Materialabtrag sowie konkrete optische, Prüf- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
   Bürsten: [

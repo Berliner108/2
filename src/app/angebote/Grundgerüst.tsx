@@ -671,7 +671,55 @@ const materialienBeizen = [
   'Nickel',
   'Andere',
 ]
-const materialienKTL = [
+
+const materialienEntgraten = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Andere',
+]
+
+const materialienVerrunden = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Andere',
+]
+
+const materialienGlaetten = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Nickel',
+  'Andere',
+]
+
+
+const materialienMattieren = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Andere',
+]const materialienKTL = [
   'Stahl',
   'Edelstahl',
   'Gusseisen',
@@ -681,11 +729,37 @@ const materialienKTL = [
   'Magnesium',
   'Andere',
 ]
-const materialienEloxieren = [
+
+
+const materialienSchleifen = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Gusseisen',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Nickel',
+  'Andere',
+]const materialienEloxieren = [
   'Aluminium',
   'Aluguss',
 ]
-const materialienAnodisieren = [
+
+
+const materialienPolieren = [
+  'Stahl',
+  'Edelstahl',
+  'Aluminium',
+  'Aluguss',
+  'Kupfer',
+  'Messing',
+  'Titan',
+  'Nickel',
+  'Chrom',
+  'Andere',
+]const materialienAnodisieren = [
   'Titan',
   'Magnesium',
   'Andere',
@@ -814,6 +888,24 @@ const istMnPhosphatieren =
 const istBeizen =
   selectedOption1 === 'Beizen' ||
   selectedOption2 === 'Beizen'
+const istEntgraten =
+  selectedOption1 === 'Entgraten' ||
+  selectedOption2 === 'Entgraten'
+const istVerrunden =
+  selectedOption1 === 'Verrunden' ||
+  selectedOption2 === 'Verrunden'
+const istGlaetten =
+  selectedOption1 === 'Glätten' ||
+  selectedOption2 === 'Glätten'
+const istMattieren =
+  selectedOption1 === 'Mattieren' ||
+  selectedOption2 === 'Mattieren'
+const istSchleifen =
+  selectedOption1 === 'Schleifen' ||
+  selectedOption2 === 'Schleifen'
+const istPolieren =
+  selectedOption1 === 'Polieren' ||
+  selectedOption2 === 'Polieren'
 const istVersilbern =
   selectedOption1 === 'Versilbern' ||
   selectedOption2 === 'Versilbern'
@@ -839,6 +931,18 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienMnPhosphatieren
 } else if (istBeizen) {
   materialienAktiv = materialienBeizen
+} else if (istEntgraten) {
+  materialienAktiv = materialienEntgraten
+} else if (istVerrunden) {
+  materialienAktiv = materialienVerrunden
+} else if (istGlaetten) {
+  materialienAktiv = materialienGlaetten
+} else if (istMattieren) {
+  materialienAktiv = materialienMattieren
+} else if (istSchleifen) {
+  materialienAktiv = materialienSchleifen
+} else if (istPolieren) {
+  materialienAktiv = materialienPolieren
 } else if (istVersilbern) {
   materialienAktiv = materialienVersilbern
 } else if (istKTL) {
