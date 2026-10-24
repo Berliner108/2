@@ -976,13 +976,25 @@ export const specificationsMap: Record<string, Specification[]> = {
 
   Elektropolieren: [
     {
-      type: 'radio',
-      name: 'anwendungsbereich',
-      label: 'Anwendungsbereich:',
-      options: ['Lebensmittel', 'Pharma', 'Medizintechnik', 'Industrie allgemein'],
-      required: true
+      type: 'group',
+      name: 'zertifizierungen',
+      label: 'Normen / Anforderungen:',
+      tooltip: 'Wähle Normen oder Anforderungen aus, die für den Auftrag bzw. den Beschichter relevant sind.',
+      options: [
+        'DIN EN ISO 15730',
+        'ASTM B912',
+        'ISO 9001',
+        'ISO 14001',
+        'Nach Vorgabe'
+      ]
+    },
+    {
+      type: 'note',
+      name: 'technischerHinweis',
+      label: 'Gewünschte Oberflächenrauheit bzw. Ra-/Rz-Werte, gewünschter Glanzgrad, zulässiger Materialabtrag, Anforderungen an Korrosionsbeständigkeit und Passivierung sowie konkrete Prüf-, Reinheits- oder Normvorgaben sollten aus den hochgeladenen Dateien oder dem Beschreibungsfeld hervorgehen.'
     }
   ],
+
   Vermessingen: [
     {
       type: 'radio',

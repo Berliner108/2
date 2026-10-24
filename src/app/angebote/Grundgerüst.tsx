@@ -863,6 +863,11 @@ const materialienAluminiumPassivieren = [
   'Aluguss',
   'Andere',
 ]
+
+const materialienElektropolieren = [
+  'Edelstahl',
+  'Andere',
+]
 const materialienBruenieren = [
   'Stahl',
   'Gusseisen',
@@ -976,6 +981,9 @@ const istAluminieren =
 const istAluminiumPassivieren =
   selectedOption1 === 'Aluminium-Passivieren' ||
   selectedOption2 === 'Aluminium-Passivieren'
+const istElektropolieren =
+  selectedOption1 === 'Elektropolieren' ||
+  selectedOption2 === 'Elektropolieren'
 const istVernickeln =
   selectedOption1 === 'Vernickeln' || selectedOption2 === 'Vernickeln'
 const istBruenieren =
@@ -1091,6 +1099,8 @@ if (istZinkphosphatieren) {
   materialienAktiv = materialienAluminieren
 } else if (istAluminiumPassivieren) {
   materialienAktiv = materialienAluminiumPassivieren
+} else if (istElektropolieren) {
+  materialienAktiv = materialienElektropolieren
 } else if (istVernickeln) {
   materialienAktiv = materialienVernickeln
 } else if (istVerzinken) {
