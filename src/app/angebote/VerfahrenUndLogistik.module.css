@@ -1034,7 +1034,14 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   font-weight: 600;
 }
 @supports (-webkit-touch-callout: none) {
-  .verfahrenSelect,
+  .verfahrenSelect {
+    height: 42px;
+    min-height: 42px;
+    box-sizing: border-box;
+    color: #111 !important;
+    -webkit-text-fill-color: #111 !important;
+  }
+
   .inputField2,
   .serienauftragSelect select,
   .logistikSelect,
@@ -1051,7 +1058,6 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     -webkit-text-fill-color: #111;
   }
 
-  /* Nur iPhone/iOS Safari: Datum-Felder optisch wie auf Android */
   .inputGroup input[readonly] {
     min-height: 35px;
     padding: 0.5rem;
@@ -1062,7 +1068,6 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     opacity: 1;
   }
 
-  /* Nur iPhone/iOS Safari: Lieferart & Abholart gleich hoch wie Verfahren */
   .logistikSelect {
     padding: 0.6rem 0.8rem;
     font-size: 1.05rem;

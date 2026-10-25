@@ -53,7 +53,14 @@
 
 
 @supports (-webkit-touch-callout: none) {
-  .dropdown,
+  .dropdown {
+    height: 34px;
+    min-height: 34px;
+    box-sizing: border-box;
+    color: #111 !important;
+    -webkit-text-fill-color: #111 !important;
+  }
+
   .dropdown option {
     color: #111 !important;
     -webkit-text-fill-color: #111 !important;
