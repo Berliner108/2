@@ -16,7 +16,7 @@ const images = [
   { 
     src: "/images/skelleftea-kommun-Qqb7MJuGp0k-unsplash.jpg", 
     text1: "Beschichtungsaufträge unkompliziert vergeben", 
-    text2: "Nasslackieren, Pulverbeschichten, Verzinken, Eloxieren, Strahlen, Entlacken, uvm.", 
+    text2: "Nasslackieren, Pulverbeschichten, Verzinken, Eloxieren, Strahlen, Entlacken, u.v.m.", 
     link: "/angebote" 
   },
   { 
@@ -27,26 +27,26 @@ const images = [
   },
   { 
     src: "/images/slide5.webp", 
-    text1: "Lassen Sie Ihr Material einlagern", 
-    text2: "Und auf Abruf beschichten", 
+    text1: "Lass dein Material einlagern",
+    text2: "Und bei Bedarf auf Abruf beschichten",
     link: "/angebote",
     isFullScreen: true
   },
   { 
     src: "/images/recycling.jpg", 
-    text1: "Revitalisiere deine Restlacke - statt sie ungenutzt einzulagern!",
-    text2: "Recycle deine Altlacke, statt für die Entsorgung zu zahlen!", 
+    text1: "Revitalisiere deine Restlacke – statt sie ungenutzt einzulagern!",
+    text2: "Recycle deine Altlacke, statt für die Entsorgung zu zahlen!",
     link: "/verkaufen" 
   },
   { 
     src: "/images/avantrend-color-fan-496995.jpg", 
     text1: "Über 4.000.000 Farbtöne und Variationen verfügbar", 
-    text2: "Finden Sie das passendste Angebot!", 
+    text2: "Finde das passende Angebot!", 
     link: "/kaufen" 
   },
   { 
     src: "/images/asdf.png", 
-    text1: "Qualitative Mängel? Lieferverzug? Volle Sicherheit für Ihre Aufträge", 
+    text1: "Qualitätsmängel? Lieferverzug? Volle Sicherheit für deine Aufträge", 
     text2: "Einfache und rasche Reklamationsabwicklung mit höchster Kundenorientierung", 
     link: "/wissenswertes#Sofunktioniert’s"
   },
