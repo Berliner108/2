@@ -236,12 +236,12 @@ type Adresse = {
 };
 
 const glanzgradListe = [
-  { name: 'Stumpfmatt', value: 'Stumpfmatt' },
-  { name: 'Seidenmatt', value: 'Seidenmatt' },
-  { name: 'Matt', value: 'Matt' },
+  { name: 'Hochglanz', value: 'Hochglanz' },
   { name: 'Glanz', value: 'Glanz' },
   { name: 'Seidenglanz', value: 'Seidenglanz' },
-  { name: 'Hochglanz', value: 'Hochglanz' },
+  { name: 'Seidenmatt', value: 'Seidenmatt' },
+  { name: 'Matt', value: 'Matt' },
+  { name: 'Stumpfmatt', value: 'Stumpfmatt' },  
 ];
 
 const toAddressString = (a?: Partial<Adresse>) => {
