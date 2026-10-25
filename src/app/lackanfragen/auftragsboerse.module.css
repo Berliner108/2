@@ -798,3 +798,9 @@
     -webkit-text-fill-color: #111;
   }
 }
+@supports (-webkit-touch-callout: none) {
+  .sortSelect {
+    height: 42px;
+    min-height: 42px;
+  }
+}
