@@ -2070,15 +2070,17 @@ if (bootLoading) {
                 </button>
                 {lieferDatum && (
                   <button
-  type="button"
-  className={styles.zuruecksetzenButton}
-  onClick={() => {
-    setLieferDatum(null);
-    setWarnung('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
-  }}
->
-  Löschen
-</button>
+                    type="button"
+                    className={styles.dateClearButton}
+                    aria-label="Lieferdatum löschen"
+                    title="Lieferdatum löschen"
+                    onClick={() => {
+                      setLieferDatum(null);
+                      setWarnung('Bitte einen zulässigen Werktag wählen (nicht heute, kein Sa/So, kein gemeinsamer Feiertag in DE/AT).');
+                    }}
+                  >
+                    ×
+                  </button>
                 )}
               </div>
 

@@ -1097,3 +1097,21 @@
     -webkit-text-fill-color: #111 !important;
   }
 }
+.dateClearButton {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  -webkit-text-fill-color: #dc2626;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  flex-shrink: 0;
+}
+
+.dateClearButton:hover {
+  color: #b91c1c;
+  -webkit-text-fill-color: #b91c1c;
+}
