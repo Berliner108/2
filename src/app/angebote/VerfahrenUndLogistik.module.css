@@ -481,8 +481,6 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   cursor: pointer;
   font-size: 0.9rem;
   font-family: 'Oswald', sans-serif;
-  color: #111;
-  -webkit-text-fill-color: #111;
   transition: background-color 0.2s ease;
 }
 
@@ -1051,6 +1049,17 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   .logistikSelect option {
     color: #111;
     -webkit-text-fill-color: #111;
+  }
+
+  /* Nur iPhone/iOS Safari: Datum-Felder optisch wie auf Android */
+  .inputGroup input[readonly] {
+    min-height: 35px;
+    padding: 0.5rem;
+    font-size: 13.3333px;
+    line-height: normal;
+    box-sizing: border-box;
+    background-color: #fff;
+    opacity: 1;
   }
 
   /* Nur iPhone/iOS Safari: Lieferart & Abholart gleich hoch wie Verfahren */
