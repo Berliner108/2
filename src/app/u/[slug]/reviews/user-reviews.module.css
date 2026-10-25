@@ -125,10 +125,17 @@
 }
 
 .sortSelect{
-  padding:10px 12px; /* ↑ für 44x44 */
+  min-width:220px;
+  padding:10px 36px 10px 12px;
   border:1px solid var(--border);
   border-radius:10px;
   background:#fff;
+  color:var(--text);
+  font-family:'Oswald', system-ui, sans-serif;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  box-sizing:border-box;
 }
 
 /* OPTIONAL: sticky Sortierleiste */
@@ -561,7 +568,7 @@
 
   /* Fancy Dropdown mobil zentrieren */
   .sortWrap{ justify-content:center; width:100%; }
-  .sortBtn{ width: min(100%, 360px); }
+  .sortSelect{ width:min(100%, 360px); min-width:0; }
   .sortMenu{
     left:50%;
     right:auto;

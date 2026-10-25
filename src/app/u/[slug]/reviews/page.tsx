@@ -246,7 +246,7 @@ function CollapsibleText({ text, lines = 5 }: { text: string; lines?: number }) 
   )
 }
 
-/* ---------- Fancy Sort Dropdown ---------- */
+/* ---------- Sortierung: natives Select auf allen Plattformen ---------- */
 function SortDropdown({
   value,
   onChange,
@@ -261,64 +261,29 @@ function SortDropdown({
   onChange: (v: 'neueste' | 'älteste' | 'beste' | 'schlechteste') => void
   options?: { value: any; label: string }[]
 }) {
-  const [open, setOpen] = React.useState(false)
-  const boxRef = React.useRef<HTMLDivElement | null>(null)
-
-  React.useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (!boxRef.current) return
-      if (!boxRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [])
-
-  const current = options.find((o) => o.value === value)?.label || ''
-
   return (
-    <div className={styles.sortWrap} ref={boxRef}>
+    <label className={styles.sortWrap}>
       <span className={styles.sortLabelFancy}>Sortieren:</span>
-      <button
-        type="button"
-        className={`${styles.sortBtn} ${styles.hit}`}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+      <select
+        className={styles.sortSelect}
+        value={value}
+        onChange={(e) =>
+          onChange(
+            e.target.value as
+              | 'neueste'
+              | 'älteste'
+              | 'beste'
+              | 'schlechteste',
+          )
+        }
       >
-        <span>{current}</span>
-        <svg className={styles.sortCaret} width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-          <path
-            d="M6 9l6 6 6-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      {open && (
-        <ul className={styles.sortMenu} role="listbox">
-          {options.map((o) => (
-            <li key={o.value}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={o.value === value}
-                className={`${styles.sortItem} ${o.value === value ? styles.isActive : ''}`}
-                onClick={() => {
-                  onChange(o.value as any)
-                  setOpen(false)
-                }}
-              >
-                {o.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 
