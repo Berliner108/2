@@ -1271,6 +1271,7 @@
 
   .staffelHeading {
     margin: 0;
+    margin-top: 10px;
     font-size: 1.15rem;
     line-height: 1.35;
   }
