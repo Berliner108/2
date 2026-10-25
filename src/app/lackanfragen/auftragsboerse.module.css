@@ -800,7 +800,7 @@
 }
 @supports (-webkit-touch-callout: none) {
   .sortSelect {
-    height: 42px;
-    min-height: 42px;
+    height: 36px;
+    min-height: 36px;
   }
 }
