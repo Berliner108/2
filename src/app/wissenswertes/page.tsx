@@ -1796,17 +1796,35 @@ useEffect(() => {
   ];
 
   const normalizedKnowledgeSearch = normalizeSearchText(knowledgeSearch);
+  const compactKnowledgeSearch = normalizedKnowledgeSearch.replace(/\s+/g, "");
   const knowledgeSearchTerms = normalizedKnowledgeSearch.split(" ").filter(Boolean);
   const knowledgeSearchResults = knowledgeSearchTerms.length
     ? searchEntries
         .map((entry) => {
           const haystack = normalizeSearchText(`${entry.title} ${entry.description} ${entry.searchText}`);
+          const compactHaystack = haystack.replace(/\s+/g, "");
           const title = normalizeSearchText(entry.title);
-          const matchesAll = knowledgeSearchTerms.every((term) => haystack.includes(term));
-          const score = matchesAll
+          const compactTitle = title.replace(/\s+/g, "");
+
+          // Zusätzlich zur normalen Wortsuche wird eine kompakte Variante geprüft.
+          // Dadurch finden z. B. "C33" -> "C-33", "RAL7016" -> "RAL 7016"
+          // und "ZinkNickel" -> "Zink-Nickel" zuverlässig.
+          const matchesAll = knowledgeSearchTerms.every((term) =>
+            haystack.includes(term) || compactHaystack.includes(term.replace(/\s+/g, ""))
+          );
+          const matchesCompactQuery =
+            compactKnowledgeSearch.length >= 2 && compactHaystack.includes(compactKnowledgeSearch);
+          const matches = matchesAll || matchesCompactQuery;
+          const score = matches
             ? knowledgeSearchTerms.reduce(
-                (sum, term) => sum + (title.includes(term) ? 4 : haystack.includes(term) ? 1 : 0),
-                0
+                (sum, term) =>
+                  sum +
+                  (title.includes(term) || compactTitle.includes(term.replace(/\s+/g, ""))
+                    ? 4
+                    : haystack.includes(term) || compactHaystack.includes(term.replace(/\s+/g, ""))
+                      ? 1
+                      : 0),
+                matchesCompactQuery ? 2 : 0
               )
             : 0;
           return { ...entry, score };
@@ -2349,39 +2367,34 @@ useEffect(() => {
           <div
             role="search"
             aria-label="Wissenswertes durchsuchen"
-            style={{ marginTop: "24px", maxWidth: "760px", position: "relative" }}
+            className={styles.knowledgeSearch}
           >
-            <label htmlFor="wissenswertes-search" style={{ display: "block", fontWeight: 600, marginBottom: "8px" }}>
+            <label
+              htmlFor="wissenswertes-search"
+              className={styles.knowledgeSearchLabel}
+            >
               Verfahren oder Fachbegriff suchen
             </label>
-            <input
-              id="wissenswertes-search"
-              type="search"
-              value={knowledgeSearch}
-              onChange={(event) => setKnowledgeSearch(event.target.value)}
-              placeholder="z. B. Zink-Nickel, Glanzgrad, C-33, Ra, Hartchrom …"
-              autoComplete="off"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "13px 15px",
-                border: "1px solid rgba(127,127,127,0.45)",
-                borderRadius: "10px",
-                background: "transparent",
-                color: "inherit",
-                font: "inherit",
-              }}
-            />
+
+            <div className={styles.knowledgeSearchInputWrap}>
+              <span className={styles.knowledgeSearchIcon} aria-hidden="true">
+                ⌕
+              </span>
+              <input
+                id="wissenswertes-search"
+                type="search"
+                value={knowledgeSearch}
+                onChange={(event) => setKnowledgeSearch(event.target.value)}
+                placeholder="z. B. Zink-Nickel, Glanzgrad, C-33, Ra, Hartchrom …"
+                autoComplete="off"
+                className={styles.knowledgeSearchInput}
+              />
+            </div>
 
             {normalizedKnowledgeSearch && (
               <div
                 aria-live="polite"
-                style={{
-                  marginTop: "10px",
-                  border: "1px solid rgba(127,127,127,0.30)",
-                  borderRadius: "10px",
-                  overflow: "hidden",
-                }}
+                className={styles.knowledgeSearchResults}
               >
                 {knowledgeSearchResults.length > 0 ? (
                   knowledgeSearchResults.map((result) => (
@@ -2389,25 +2402,18 @@ useEffect(() => {
                       type="button"
                       key={`${result.title}-${result.target}`}
                       onClick={() => scrollToVerfahren(result.target)}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        padding: "12px 15px",
-                        border: 0,
-                        borderBottom: "1px solid rgba(127,127,127,0.20)",
-                        background: "transparent",
-                        color: "inherit",
-                        textAlign: "left",
-                        cursor: "pointer",
-                        font: "inherit",
-                      }}
+                      className={styles.knowledgeSearchResult}
                     >
-                      <strong style={{ display: "block", marginBottom: "3px" }}>{result.title}</strong>
-                      <span style={{ display: "block", opacity: 0.78, fontSize: "0.92em" }}>{result.description}</span>
+                      <strong className={styles.knowledgeSearchResultTitle}>
+                        {result.title}
+                      </strong>
+                      <span className={styles.knowledgeSearchResultText}>
+                        {result.description}
+                      </span>
                     </button>
                   ))
                 ) : (
-                  <p style={{ margin: 0, padding: "12px 15px" }}>
+                  <p className={styles.knowledgeSearchEmpty}>
                     Kein passender Eintrag gefunden. Versuche einen allgemeineren Begriff.
                   </p>
                 )}
