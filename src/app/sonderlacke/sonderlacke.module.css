@@ -860,6 +860,20 @@
   isolation: isolate; /* eigener Stacking-Context, verhindert „Durchschimmern“ */
 }
 
+
+@media (max-width: 400px) {
+  .calendarPopover {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .calendarPopover > div {
+    width: calc(100vw - 32px) !important;
+    max-width: 320px;
+    box-sizing: border-box;
+  }
+}
+
 /* Sicherheitsnetz: Radios bekommen keinen eigenen hohen Layer */
 .radioLabel input[type="radio"],
 .checkboxLabel input[type="radio"] {
