@@ -9,6 +9,7 @@ import Vision from "./Vision";  // Importiere die Komponente
 
 const Wissenswertes = () => {
   const [openContainers, setOpenContainers] = useState<{ [key: number]: boolean }>({});
+  const [knowledgeSearch, setKnowledgeSearch] = useState("");
 
   const [isClient, setIsClient] = useState(false); // Um sicherzustellen, dass es nur im Client läuft
   // Container-Logik für das Öffnen
@@ -32,50 +33,59 @@ const Wissenswertes = () => {
     const hashTargets: Record<string, number> = {
       "#Beschichtungstechnik": 0,
       "#Verfahren": 1,
+      "#Technische-Angaben": 1,
       "#Nasslackieren": 2,
       "#Pulverbeschichten": 3,
-      "#Verzinken": 4,
-      "#Eloxieren": 5,
-      "#Anodisieren": 6,
-      "#KTL-Beschichten": 7,
-      "#Zinkphosphatieren": 8,
-      "#Strahlen": 9,
-      "#Entlacken": 10,
-      "#Brünieren": 11,
-      "#Verzinnen": 12,
-      "#Aluminieren": 13,
-      "#Vernickeln": 14,
-      "#Aluminium-Passivieren": 15,
-      "#Elektropolieren": 16,
-      "#Verchromen": 17,
-      "#Vermessingen": 18,
-      "#Verkupfern": 19,
-      "#Vergolden": 20,
-      "#Folieren": 21,
-      "#Isolierstegverpressen": 22,
-      "#Einlagern": 23,
-      "#Entzinken": 24,
-      "#Enteloxieren": 25,
-      "#Entanodisieren": 26,
-      "#Entzinnen": 27,
-      "#Entaluminieren": 28,
-      "#Entnickeln": 29,
-      "#Mn-Phosphatieren": 30,
-      "#Beizen": 31,
-      "#Entgraten": 32,
-      "#Verrunden": 33,
-      "#Glätten": 34,
-      "#Mattieren": 35,
-      "#Schleifen": 36,
-      "#Polieren": 37,
-      "#Bürsten": 38,
-      "#Trowalisieren": 39,
-      "#Chemisches-Glänzen": 40,
-      "#Versilbern": 41,
-      "#Lacke-Beschichtungsstoffe": 42,
-      "#Lackrecycling-Restlackverwertung": 43,
-      "#Bronzebeschichten": 44,
-    };
+      "#KTL-Beschichten": 4,
+      "#Verzinken": 5,
+      "#Vernickeln": 6,
+      "#Verchromen": 7,
+      "#Verkupfern": 8,
+      "#Verzinnen": 9,
+      "#Vermessingen": 10,
+      "#Bronzebeschichten": 11,
+      "#Vergolden": 12,
+      "#Versilbern": 13,
+      "#Aluminieren": 14,
+      "#Eloxieren": 15,
+      "#Anodisieren": 16,
+      "#Aluminium-Passivieren": 17,
+      "#Edelstahl-Passivieren": 18,
+      "#Zinkphosphatieren": 19,
+      "#Eisenphosphatieren": 20,
+      "#Mn-Phosphatieren": 21,
+      "#Brünieren": 22,
+      "#Beizen": 23,
+      "#Elektropolieren": 24,
+      "#Strahlen": 25,
+      "#Schleifen": 26,
+      "#Polieren": 27,
+      "#Bürsten": 28,
+      "#Trowalisieren": 29,
+      "#Entgraten": 30,
+      "#Verrunden": 31,
+      "#Glätten": 32,
+      "#Mattieren": 33,
+      "#Chemisches-Glänzen": 34,
+      "#Entlacken": 35,
+      "#Entzinken": 36,
+      "#Entnickeln": 37,
+      "#Entchromen": 38,
+      "#Entkupfern": 39,
+      "#Entmessingen": 40,
+      "#Entbronzieren": 41,
+      "#Entgolden": 42,
+      "#Entsilbern": 43,
+      "#Entzinnen": 44,
+      "#Entaluminieren": 45,
+      "#Enteloxieren": 46,
+      "#Entanodisieren": 47,
+      "#Folieren": 48,
+      "#Isolierstegverpressen": 49,
+      "#Einlagern": 50,
+      "#Lacke-Beschichtungsstoffe": 51,
+      "#Lackrecycling-Restlackverwertung": 52
+};
 
     const openHashTarget = () => {
       const index = hashTargets[window.location.hash];
@@ -142,76 +152,1582 @@ useEffect(() => {
     );
   };
 
+
+  type ProcedureInfo = {
+    summary: string;
+    purpose: string[];
+    options: string[];
+    important: string[];
+    standards: string[];
+    practice: string;
+    example: string;
+  };
+
+  const procedureOrder = [
+  "Nasslackieren",
+  "Pulverbeschichten",
+  "KTL-Beschichten",
+  "Verzinken",
+  "Vernickeln",
+  "Verchromen",
+  "Verkupfern",
+  "Verzinnen",
+  "Vermessingen",
+  "Bronzebeschichten",
+  "Vergolden",
+  "Versilbern",
+  "Aluminieren",
+  "Eloxieren",
+  "Anodisieren",
+  "Aluminium-Passivieren",
+  "Edelstahl-Passivieren",
+  "Zinkphosphatieren",
+  "Eisenphosphatieren",
+  "Mn-Phosphatieren",
+  "Brünieren",
+  "Beizen",
+  "Elektropolieren",
+  "Strahlen",
+  "Schleifen",
+  "Polieren",
+  "Bürsten",
+  "Trowalisieren",
+  "Entgraten",
+  "Verrunden",
+  "Glätten",
+  "Mattieren",
+  "Chemisches Glänzen",
+  "Entlacken",
+  "Entzinken",
+  "Entnickeln",
+  "Entchromen",
+  "Entkupfern",
+  "Entmessingen",
+  "Entbronzieren",
+  "Entgolden",
+  "Entsilbern",
+  "Entzinnen",
+  "Entaluminieren",
+  "Enteloxieren",
+  "Entanodisieren",
+  "Folieren",
+  "Isolierstegverpressen",
+  "Einlagern"
+] as const;
+
+  const procedureInfo: Record<string, ProcedureInfo> = {
+  "Nasslackieren": {
+    "summary": "Beim Nasslackieren wird ein flüssiger Beschichtungsstoff aufgebracht und anschließend getrocknet oder chemisch bzw. thermisch ausgehärtet.",
+    "purpose": [
+      "Korrosionsschutz",
+      "dekorative Farb- und Effektoberflächen",
+      "chemisch oder funktionell belastbare Beschichtungen",
+      "Beschichtung auch komplexer oder temperaturempfindlicher Bauteile"
+    ],
+    "options": [
+      "<strong>Farbpalette:</strong> RAL, NCS, MCS, DB, BS, Munsell, Pantone, Sikkens, HKS, RAL Design, RAL Effect, Klarlack, Sonderfarbe / nach Vorlage oder Andere. Klarlack wird im Formular bewusst als praktische Auswahl für eine transparente Beschichtung geführt.",
+      "<strong>Farbtonbezeichnung oder Artikelnummer:</strong> konkrete Farbnummer oder Hersteller-/Produktnummer. Eine Artikelnummer kann das Material eindeutiger bestimmen als ein Farbton allein.",
+      "<strong>Glanzgrad:</strong> Hochglänzend, Glänzend, Seidenglänzend, Seidenmatt, Matt oder Stumpfmatt. Bei technisch enger Vorgabe besser GU-Wert und Messwinkel nennen.",
+      "<strong>Oberfläche:</strong> Glatt, Feinstruktur, Grobstruktur oder Hammerschlag. Struktur und Glanzgrad sind getrennte Eigenschaften.",
+      "<strong>Lackaufbau:</strong> Einschichtlackierung, Grundierung + Decklack oder Mehrschichtaufbau. Die Schichten können unterschiedliche Aufgaben übernehmen.",
+      "<strong>Effekte:</strong> Metallic, Perlmutteffekt, Eisenglimmer, Candy und Neon. Bei Effektlacken ist ein Referenzmuster besonders hilfreich.",
+      "<strong>Extras:</strong> Zweifarbig, Beigestellter Lack und Bereiche abdecken. Bei beigestelltem Lack Hersteller, Produkt, Charge, Menge und Haltbarkeit angeben."
+    ],
+    "important": [
+      "Werkstoff und Ausgangszustand",
+      "Vorbehandlung",
+      "Schichtdicke bzw. Schichtaufbau",
+      "Sicht- und Funktionsflächen",
+      "Maskierbereiche",
+      "Einsatzumgebung, Temperatur-, UV- und Chemikalienbelastung",
+      "Farb-/Glanzreferenz und Prüfanforderungen"
+    ],
+    "standards": [
+      "Je nach Anwendung können z. B. ISO 12944 für Korrosionsschutzsysteme sowie konkrete Prüfstandards für Schichtdicke, Haftfestigkeit, Glanz oder Farbe relevant sein. ISO 9001/14001 beschreiben Managementsysteme, nicht die Beschichtungsleistung selbst."
+    ],
+    "practice": "Bei farbkritischen Sichtteilen sind physische Freigabemuster verlässlicher als Fotos oder Bildschirmdarstellungen. Gleicher RAL-Ton bedeutet nicht automatisch identisches Erscheinungsbild.",
+    "example": "Stahlgehäuse, außen eingesetzt; RAL 7016, seidenmatt, glatt; Grundierung + Decklack; definierte Gesamtschichtdicke; Gewinde und Massepunkte beschichtungsfrei."
+  },
+  "Pulverbeschichten": {
+    "summary": "Beim Pulverbeschichten wird trockenes Pulver elektrostatisch aufgebracht und anschließend im Ofen aufgeschmolzen und ausgehärtet.",
+    "purpose": [
+      "dekorative und robuste Serienoberflächen",
+      "Korrosionsschutz im geeigneten System",
+      "Innen- und Außenanwendungen",
+      "strukturierte und funktionelle Oberflächen"
+    ],
+    "options": [
+      "<strong>Farbpalette:</strong> RAL, NCS, DB, BS, Munsell, Pantone, Sikkens, HKS, RAL Design, RAL Effect, Klarlack, Sonderfarbe / nach Vorlage oder Andere.",
+      "<strong>Glanzgrad:</strong> Hochglänzend bis Stumpfmatt.",
+      "<strong>Oberfläche:</strong> Glatt, Feinstruktur oder Grobstruktur.",
+      "<strong>Polyester:</strong> verbreitet für Außenanwendungen mit guter UV- und Wetterbeständigkeit.",
+      "<strong>Epoxid:</strong> gute chemische und mechanische Eigenschaften, jedoch typischerweise nicht für dauerhafte UV-Außenbelastung.",
+      "<strong>Epoxy-Polyester:</strong> Hybrid-System, häufig für Innenanwendungen.",
+      "<strong>Polyurethan:</strong> System für spezielle Anforderungen an Optik und Beständigkeit.",
+      "<strong>Thermoplast:</strong> schmilzt beim Erwärmen und erstarrt beim Abkühlen; andere Materiallogik als duroplastische Pulverlacke.",
+      "<strong>Hochwetterfest / Fassadenqualität:</strong> für erhöhte Anforderungen an UV-Beständigkeit, Farbtonstabilität und Glanzerhalt.",
+      "<strong>Effekte:</strong> Metallic, Perlmutteffekt, Eisenglimmer, Candy und Neon.",
+      "<strong>Extras:</strong> Zweifarbig, Duplexbeschichtung und Beigestellter Pulverlack. Duplex bedeutet typischerweise metallischer Korrosionsschutz plus organische Beschichtung, z. B. Feuerverzinken + Pulverbeschichten."
+    ],
+    "important": [
+      "Vorbehandlung passend zum Grundwerkstoff",
+      "Schichtdicke",
+      "Einbrennbarkeit und Wärmeempfindlichkeit des Bauteils",
+      "Kanten, Hohlräume und Faradaysche Käfige",
+      "Korrosionsschutzanforderung",
+      "Witterungs- und Chemikalienbeständigkeit",
+      "Maskier- und Kontaktstellen"
+    ],
+    "standards": [
+      "<strong>GSB:</strong> Qualitätssystem für hochwertige Beschichtungen, u. a. im Architektur-/Fassadenbereich. <strong>QUALICOAT:</strong> Qualitätsanforderungen für beschichtetes Aluminium. <strong>QUALISTEELCOAT:</strong> Qualitätsanforderungen für organisch beschichteten Stahl. ISO 9001/14001 betreffen Managementsysteme."
+    ],
+    "practice": "Die erforderliche Objekttemperatur ist entscheidender als nur die angezeigte Ofenlufttemperatur. Massive Teile benötigen länger, bis der Bauteilkern die nötige Aushärtetemperatur erreicht.",
+    "example": "Aluminiumprofile, Außenfassade; RAL 9005, matt, Feinstruktur; hochwetterfest/Fassadenqualität; QUALICOAT gefordert; Sichtseiten nach Muster."
+  },
+  "KTL-Beschichten": {
+    "summary": "KTL steht für kathodische Tauchlackierung. Das leitfähige Werkstück wird in ein Lackbad getaucht und elektrochemisch als Kathode beschichtet.",
+    "purpose": [
+      "gleichmäßiger Korrosionsschutz",
+      "Grundierung für Pulverlack oder Nasslack",
+      "Serienteile und komplexe Geometrien",
+      "Automotive- und industrielle Anwendungen"
+    ],
+    "options": [
+      "<strong>Farbton:</strong> Schwarz oder Grau. Diese beiden Varianten sind im aktuellen Formular vorgesehen."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Vorbehandlung",
+      "Korrosionsschutzanforderung",
+      "Hohlräume, Sacklöcher und Ablaufmöglichkeiten",
+      "Kontaktierstellen",
+      "spätere Weiterbeschichtung",
+      "Maskierbereiche"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein; <strong>IATF 16949</strong> ist insbesondere für die Automobil-Lieferkette relevant."
+    ],
+    "practice": "Als Tauchverfahren braucht KTL geeignete Entlüftungs- und Ablaufmöglichkeiten. KTL erreicht Hohlräume gut, aber die elektrische Feldverteilung und Zugänglichkeit bleiben konstruktiv relevant.",
+    "example": "Stahl-Serienteil; KTL schwarz; definierte Schichtdicke; als Grundierung für anschließendes Pulverbeschichten; Innengewinde beschichtungsfrei."
+  },
+  "Verzinken": {
+    "summary": "Verzinken schützt vor allem Stahl durch eine Zink- oder zinkbasierte Schutzschicht. Die im Formular angebotenen Verfahren unterscheiden sich technisch deutlich.",
+    "purpose": [
+      "Korrosionsschutz",
+      "Verbindungselemente",
+      "Stahlkonstruktionen",
+      "maßkritische oder serienmäßige Bauteile"
+    ],
+    "options": [
+      "<strong>Feuerverzinken:</strong> Eintauchen des Stahlbauteils in flüssiges Zink; robuste, vergleichsweise dicke Schutzschicht.",
+      "<strong>Galvanisches Verzinken:</strong> elektrochemische Zinkabscheidung; dünnere, gut steuerbare Schichten.",
+      "<strong>Zinklamellenbeschichtung:</strong> zinkreiche Lamellensysteme, häufig bei Schrauben und Verbindungselementen mit hohen Korrosionsschutzanforderungen.",
+      "<strong>Mechanisches Verzinken:</strong> Zink wird mechanisch aufgebracht; kann bei bestimmten hochfesten Verbindungselementen sinnvoll sein.",
+      "<strong>Zink-Standard:</strong> klassische galvanische Zinkschicht.",
+      "<strong>Zink-Nickel:</strong> Zinklegierung mit Nickel, häufig für erhöhten Korrosionsschutz.",
+      "<strong>Zink-Eisen:</strong> Zinklegierung mit Eisen für spezielle Passivierungs- und Korrosionsschutzsysteme.",
+      "<strong>Zinn-Zink:</strong> Zink-Zinn-Legierung für spezielle technische Anwendungen.",
+      "<strong>Trommelverfahren:</strong> wirtschaftlich für viele kleine robuste Massenteile; Teile berühren sich während des Prozesses.",
+      "<strong>Gestellverfahren:</strong> Teile werden definiert aufgehängt; günstiger für größere, empfindliche oder optisch anspruchsvollere Teile.",
+      "<strong>Blau / transparent:</strong> helle Passivierung. <strong>Dickschichtpassivierung:</strong> verstärkte Passivierung. <strong>Schwarzpassivierung:</strong> dunkle Optik. <strong>Gelbchromatierung:</strong> gelblich-iridisierende Chromatierung, bei der regulatorische Chrom(VI)-Anforderungen zu beachten sind.",
+      "<strong>Versiegelung:</strong> zusätzlicher Oberflächenschutz. <strong>Gleitmittelbeschichtung:</strong> kann Reibwerte z. B. bei Schrauben einstellen. <strong>Tempern:</strong> kann bei gefährdeten hochfesten Stählen zur Wasserstoffentsprödung erforderlich sein."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Grundwerkstoff und Festigkeit",
+      "Konstruktion und Ablauf-/Entlüftungsöffnungen beim Feuerverzinken",
+      "Gewinde und Passungen",
+      "Korrosionsumgebung",
+      "Reibwert bei Verbindungselementen",
+      "Duplex-Folgebehandlung"
+    ],
+    "standards": [
+      "<strong>DIN EN ISO 1461:</strong> Stückverzinken von Eisen- und Stahlteilen. <strong>DASt-Richtlinie 022:</strong> relevant bei bestimmten tragenden feuerverzinkten Stahlbauteilen. <strong>EN 1090:</strong> Ausführung tragender Stahl-/Aluminiumbauteile. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Feuerverzinken und galvanisches Verzinken sind nicht austauschbar. Bei hochfesten Stählen muss außerdem das Risiko wasserstoffinduzierter Versprödung berücksichtigt werden.",
+    "example": "Schrauben aus hochfestem Stahl; galvanisch Zink-Nickel, Gestell/Trommel nach Eignung; definierte Schichtdicke, Reibwert und Korrosionsanforderung; Wasserstoffentsprödung prüfen."
+  },
+  "Vernickeln": {
+    "summary": "Beim Vernickeln wird eine Nickelschicht galvanisch oder chemisch/stromlos abgeschieden.",
+    "purpose": [
+      "Korrosionsschutz",
+      "Verschleißschutz",
+      "dekorative Oberflächen",
+      "maßhaltige Funktionsschichten",
+      "Zwischenschichten"
+    ],
+    "options": [
+      "<strong>Galvanisches Vernickeln:</strong> elektrochemische Abscheidung; Schichtverteilung wird von Geometrie und Stromdichte beeinflusst.",
+      "<strong>Chemisch Vernickeln:</strong> stromlose chemische Abscheidung; sehr gleichmäßige Schicht auch an komplexeren Geometrien.",
+      "<strong>Low Phos:</strong> niedriger Phosphorgehalt; typischerweise höhere Härte und gute Verschleißeigenschaften.",
+      "<strong>Mid Phos:</strong> verbreiteter Kompromiss zwischen Härte, Korrosion und Prozessierbarkeit.",
+      "<strong>High Phos:</strong> hoher Phosphorgehalt; häufig für besonders hohe Korrosionsbeständigkeit interessant."
+    ],
+    "important": [
+      "Schichtdicke und Toleranzen",
+      "Korrosions- und Verschleißanforderung",
+      "Härte",
+      "Wärmebehandlung",
+      "Optik",
+      "Grundwerkstoff",
+      "Unter- oder Sperrschichten"
+    ],
+    "standards": [
+      "<strong>ISO 4526:</strong> galvanische Nickelüberzüge für technische Zwecke. <strong>ISO 4527:</strong> chemisch abgeschiedene Nickel-Phosphor-Schichten. <strong>ISO 1456:</strong> dekorative Nickel-/Chromsysteme. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Eine Wärmebehandlung kann die Härte und den Gefügezustand chemisch abgeschiedener Nickel-Phosphor-Schichten deutlich verändern. Maßkritische Teile müssen deshalb mit Schichtdicke und Nachbearbeitung zusammen betrachtet werden.",
+    "example": "Welle aus Stahl; chemisch Nickel Mid Phos; 25 µm; Korrosionsschutz + Verschleiß; Funktionsdurchmesser nach Beschichtung toleriert; Wärmebehandlung nach Vorgabe."
+  },
+  "Verchromen": {
+    "summary": "Beim Verchromen werden dekorative oder technische Chromschichten erzeugt. Das aktuelle Formular unterscheidet Glanz-, Matt-, Hart- und Schwarzverchromen.",
+    "purpose": [
+      "hochwertige Sichtoberflächen",
+      "Korrosionsschutz in Mehrschichtsystemen",
+      "Verschleißschutz",
+      "Maßkorrektur und Funktionsflächen"
+    ],
+    "options": [
+      "<strong>Glanzverchromen:</strong> dekorative helle Chromoberfläche, häufig auf Nickel bzw. Kupfer/Nickel.",
+      "<strong>Mattverchromen:</strong> dekorative matte bzw. satinierte Chromwirkung.",
+      "<strong>Hartverchromen:</strong> technische Chromschicht für Härte, Verschleißschutz, Gleit- und Maßanforderungen.",
+      "<strong>Schwarzverchromen:</strong> dunkle dekorative oder funktionelle Chromoberfläche.",
+      "<strong>Chrom(III):</strong> dreiwertiges Chromsystem. <strong>Chrom(VI):</strong> sechswertiges Chromsystem mit strengeren regulatorischen Anforderungen.",
+      "<strong>Optiken:</strong> Standard Chrom, Perlglanz, Rauchchrom / Dark Chrome, Champagner und Schwarz. Nicht jede Optik ist mit jedem Betrieb und jedem Chromsystem gleich realisierbar; Referenzmuster ist sinnvoll.",
+      "<strong>Dekorative Nachbehandlungen:</strong> Passivieren, Versiegeln, Polieren.",
+      "<strong>Hartchrom-Nachbearbeitung:</strong> Schleifen, Honen, Läppen, Polieren oder Tempern / Wasserstoffentsprödung."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Schichtaufbau und Zwischenschichten",
+      "Untergrundvorbereitung",
+      "Sicht-/Funktionsflächen",
+      "Maßhaltigkeit",
+      "Härte und Verschleiß",
+      "Kontaktierstellen",
+      "Nachbearbeitung"
+    ],
+    "standards": [
+      "<strong>ISO 1456:</strong> dekorative Nickel-, Nickel-plus-Chrom- und Kupfer-plus-Nickel-plus-Chrom-Überzüge. <strong>ISO 6158:</strong> technische Chromüberzüge. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Chrom gleicht Kratzer oder Schleifriefen nicht automatisch aus. Bei dekorativen Oberflächen bestimmt die Vorbearbeitung die Optik stark; bei Hartchrom stehen dagegen Funktionsmaß und Nachbearbeitung im Vordergrund.",
+    "example": "Kolbenstange; Hartverchromen; 80 µm vor Schleifen; Endmaß nach Schleifen; Härte/Verschleiß gefordert; Wasserstoffentsprödung nach Werkstofffestigkeit prüfen."
+  },
+  "Verkupfern": {
+    "summary": "Beim Verkupfern wird Kupfer galvanisch oder chemisch/stromlos abgeschieden.",
+    "purpose": [
+      "elektrische Leitfähigkeit",
+      "Haft- oder Zwischenschicht",
+      "dekorative Kupferoberflächen",
+      "Vorbereitung weiterer galvanischer Schichten"
+    ],
+    "options": [
+      "<strong>Galvanisches Verkupfern:</strong> elektrochemische Kupferabscheidung.",
+      "<strong>Chemisches / stromloses Verkupfern:</strong> Kupferabscheidung ohne externe Stromführung.",
+      "<strong>Polieren:</strong> verbessert Glanz und Oberflächenqualität.",
+      "<strong>Versiegeln / Klarlack:</strong> schützt dekoratives Kupfer vor Anlaufen.",
+      "<strong>Patinieren / Färben:</strong> gezielte Veränderung der Kupferoptik."
+    ],
+    "important": [
+      "Schichtdicke",
+      "elektrische Funktion",
+      "Zwischenschicht-Funktion",
+      "Optik",
+      "Untergrund",
+      "Folgebeschichtung",
+      "Anlaufschutz"
+    ],
+    "standards": [
+      "<strong>ISO 1456</strong> kann bei dekorativen Kupfer-Nickel-Chrom-Systemen relevant sein. ISO 9001/14001 betreffen Managementsysteme."
+    ],
+    "practice": "Kupfer läuft unbehandelt an. Bei dekorativen Oberflächen muss deshalb geklärt werden, ob natürliche Alterung gewünscht oder durch Klarlack/Versiegelung verhindert werden soll.",
+    "example": "Messingbauteil galvanisch verkupfern; dekorativ, hochglänzend; anschließend Klarlack/Versiegelung; Farbton nach Referenzmuster."
+  },
+  "Verzinnen": {
+    "summary": "Beim Verzinnen wird Zinn als metallische Funktions- oder Schutzschicht aufgebracht.",
+    "purpose": [
+      "Lötbarkeit",
+      "elektrische Kontaktflächen",
+      "Korrosionsschutz",
+      "technische Funktionsschichten"
+    ],
+    "options": [
+      "<strong>Galvanisches Verzinnen:</strong> elektrochemisch abgeschiedene Zinnschicht.",
+      "<strong>Feuerverzinnen / Schmelztauchverzinnen:</strong> Bauteil wird mit einer Zinnschmelze benetzt bzw. darin getaucht.",
+      "<strong>Chemisches Verzinnen:</strong> stromlose chemische Zinnabscheidung."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Lötbarkeit",
+      "elektrische Eigenschaften",
+      "Grundwerkstoff",
+      "Zwischenschichten",
+      "Optik",
+      "Nachbehandlung"
+    ],
+    "standards": [
+      "<strong>DIN 50965</strong> und <strong>ISO 2093</strong> können je nach galvanischer Zinnanwendung relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Die Eignung für Lötprozesse hängt nicht nur von der Zinnschicht, sondern auch von Alterung, Zwischenschichten, Legierung und nachfolgender Lagerung ab.",
+    "example": "Kupferkontakt galvanisch verzinnen; 10 µm; gute Lötbarkeit erforderlich; Kontaktfläche vollständig beschichtet; Prüfzeugnis nach Vorgabe."
+  },
+  "Vermessingen": {
+    "summary": "Beim Vermessingen wird eine messingartige Kupfer-Zink-Schicht erzeugt, meist mit dekorativem Schwerpunkt.",
+    "purpose": [
+      "dekorative Oberflächen",
+      "Beschläge und Designteile",
+      "gezielt gealterte bzw. patinierte Optiken"
+    ],
+    "options": [
+      "<strong>Glänzend:</strong> reflektierende Messingoptik.",
+      "<strong>Matt:</strong> reduzierte Reflexion.",
+      "<strong>Antik / Patiniert:</strong> bewusst gealterte bzw. chemisch veränderte Oberfläche.",
+      "<strong>Vintage / Altmessing:</strong> dekorative Alt-Messing-Wirkung.",
+      "<strong>Klarlack / Versiegelung:</strong> schützt die Optik vor weiterem Anlaufen.",
+      "<strong>Polieren:</strong> erhöht Glanz und Gleichmäßigkeit.",
+      "<strong>Patinieren / Färben:</strong> erzeugt gezielt einen Farb- bzw. Alterungseffekt."
+    ],
+    "important": [
+      "Referenzoberfläche",
+      "Schichtaufbau und Zwischenschichten",
+      "Anlauf- und Korrosionsschutz",
+      "Sichtseiten",
+      "Nachbehandlung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Unternehmensanforderungen gewählt werden."
+    ],
+    "practice": "Bezeichnungen wie Antik oder Vintage sind nicht exakt messbare Farbnormen. Für Serien oder sichtbare Teile ist ein Freigabemuster besonders wichtig.",
+    "example": "Beschlag vermessingen; Vintage / Altmessing; Farbwirkung nach Muster; anschließend Klarlack; alle Sichtflächen gleichmäßig."
+  },
+  "Bronzebeschichten": {
+    "summary": "Beim Bronzebeschichten werden Bronzelegierungsschichten für dekorative oder funktionelle Eigenschaften abgeschieden.",
+    "purpose": [
+      "dekorative Oberflächen",
+      "Gleit- und Verschleißfunktionen",
+      "Korrosionsschutz",
+      "elektrische oder technische Sonderanwendungen"
+    ],
+    "options": [
+      "<strong>Rotbronze:</strong> rötliche Bronzeoptik.",
+      "<strong>Gelbbronze:</strong> gelblich-goldene Bronzeoptik.",
+      "<strong>Weißbronze:</strong> helle, silbrig wirkende Bronzelegierung.",
+      "<strong>Hartbronze:</strong> technisch orientierte Bronzeausführung für erhöhte Verschleiß-/Gleitanforderungen.",
+      "<strong>Nachbehandlungen:</strong> Polieren, Schleifen, Honen, Anlaufschutz oder Versiegeln / Klarlack."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Bronzelegierung bzw. Zusammensetzung",
+      "Funktion der Schicht",
+      "Zwischenschichten",
+      "Oberflächenqualität",
+      "Nachbearbeitung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Die Bezeichnung Bronze allein reicht bei technischen Anwendungen nicht: Zusammensetzung und Funktion müssen angegeben werden, weil unterschiedliche Bronzelegierungen deutlich andere Eigenschaften besitzen.",
+    "example": "Lagerfläche mit Hartbronze; definierte Schichtdicke nach Bearbeitung; Gleit-/Verschleißfunktion; anschließend Honen auf Endmaß."
+  },
+  "Vergolden": {
+    "summary": "Beim Vergolden wird Gold als dekorative oder technische Edelmetallschicht aufgebracht.",
+    "purpose": [
+      "hochwertige dekorative Oberflächen",
+      "elektrische Kontakte",
+      "Bond- und Lötflächen",
+      "korrosionsbeständige Funktionsflächen"
+    ],
+    "options": [
+      "<strong>Feingold / Weichgold:</strong> hoher Goldgehalt und relativ weiche Schicht.",
+      "<strong>Hartgold:</strong> legiertes Gold mit erhöhter Härte und Verschleißfestigkeit.",
+      "<strong>Chemisch / stromlos vergoldet:</strong> Goldabscheidung ohne klassische galvanische Stromführung.",
+      "<strong>Farbvergoldung:</strong> Legierung/Prozess wird auf eine gewünschte Goldfarbe abgestimmt.",
+      "<strong>Farbton:</strong> Gelbgold, Roségold, Rotgold, Grüngold, Weißgold oder Champagnergold.",
+      "<strong>Nachbehandlungen:</strong> Polieren, Versiegeln / Schutzlack, Anlaufschutz oder Passivieren."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Goldgehalt/Legierung",
+      "Unter- und Diffusionssperrschichten",
+      "Kontaktwiderstand",
+      "Bondbarkeit",
+      "Lötbarkeit",
+      "Verschleiß",
+      "Optik"
+    ],
+    "standards": [
+      "<strong>ISO 4523</strong>, <strong>ISO 8654</strong> und <strong>ASTM B488</strong> können je nach Goldanwendung relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Bei technischen Kontakten ist die Schichtfolge oft wichtiger als die reine Goldfarbe. Nickel kann z. B. als Diffusionssperre dienen.",
+    "example": "Kontaktstift: Hartgold nach ASTM B488; definierte Goldschicht auf Nickelsperrschicht; niedriger Kontaktwiderstand und Verschleißfestigkeit gefordert."
+  },
+  "Versilbern": {
+    "summary": "Beim Versilbern wird Silber für dekorative oder besonders leitfähige Funktionsoberflächen abgeschieden.",
+    "purpose": [
+      "elektrische Leitfähigkeit",
+      "Kontaktflächen",
+      "Lötbarkeit",
+      "dekorative Oberflächen"
+    ],
+    "options": [
+      "<strong>Glanzsilber:</strong> helle glänzende Silberoberfläche.",
+      "<strong>Hartsilber:</strong> legierte bzw. härtere Silberausführung für höhere Verschleißanforderungen.",
+      "<strong>Chemisch / stromlos versilbert:</strong> Silberabscheidung ohne klassische galvanische Stromführung.",
+      "<strong>Nachbehandlungen:</strong> Polieren, Anlaufschutz oder Versiegeln / Schutzlack."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Silbergehalt bzw. Legierung",
+      "Unter-/Zwischenschichten",
+      "Kontaktwiderstand",
+      "Lötbarkeit",
+      "Verschleiß",
+      "Anlaufschutz"
+    ],
+    "standards": [
+      "<strong>ISO 4521</strong> kann für galvanische Silberüberzüge relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Silber läuft in geeigneten Atmosphären sichtbar an. Anlaufschutz kann die Optik stabilisieren, darf bei elektrischen Kontakten aber die Funktion nicht ungewollt verschlechtern.",
+    "example": "Stromkontakt versilbern; Hartsilber; definierte Schichtdicke; niedriger Kontaktwiderstand; kein isolierender Schutzlack auf Kontaktfläche."
+  },
+  "Aluminieren": {
+    "summary": "Beim Aluminieren wird Aluminium metallisch auf einen anderen Werkstoff aufgebracht, vor allem für Korrosions- und Hochtemperaturschutz.",
+    "purpose": [
+      "Korrosionsschutz",
+      "Hochtemperatur-/Oxidationsschutz",
+      "große Stahlbauteile und thermisch belastete Komponenten"
+    ],
+    "options": [
+      "<strong>Schmelztauchaluminieren / Feueraluminieren:</strong> Werkstück wird in eine Aluminium- bzw. Aluminiumlegierungsschmelze eingetaucht.",
+      "<strong>Thermisches Spritzaluminieren:</strong> Aluminium wird aufgeschmolzen und als Spritzschicht auf die vorbereitete Oberfläche aufgebracht."
+    ],
+    "important": [
+      "Schichtdicke",
+      "Einsatztemperatur",
+      "Korrosionsumgebung",
+      "Vorbehandlung",
+      "Versiegelung/Nachbehandlung",
+      "Geometrie und Maßhaltigkeit"
+    ],
+    "standards": [
+      "<strong>ISO 2063</strong> ist insbesondere für thermisch gespritzte metallische Schutzschichten aus Zink, Aluminium und deren Legierungen relevant. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Schmelztauchen und thermisches Spritzen sind unterschiedliche Verfahren. Für thermisch gespritzte Schichten ist die Strahlvorbereitung des Untergrunds besonders wichtig.",
+    "example": "Stahlkonstruktion thermisch spritzaluminieren; definierte Schichtdicke; Außen-/Industrieatmosphäre; Strahlvorbereitung und Versiegelung nach Spezifikation."
+  },
+  "Eloxieren": {
+    "summary": "Eloxieren ist die elektrochemische Oxidation von Aluminium. Die Oxidschicht wächst aus dem Aluminium selbst und wird nicht wie Lack aufgetragen.",
+    "purpose": [
+      "Korrosionsschutz",
+      "dekorative Aluminiumoberflächen",
+      "Härte und Verschleißschutz",
+      "elektrisch isolierende Funktionsschichten"
+    ],
+    "options": [
+      "<strong>Normaleloxal:</strong> Standardverfahren für dekorative und korrosionsschützende Anwendungen.",
+      "<strong>Harteloxal / Hartanodisieren:</strong> technisch orientierte, härtere und häufig dickere Oxidschichten.",
+      "<strong>Chromsäureanodisieren:</strong> spezielles anodisches Verfahren für definierte technische Anwendungen.",
+      "<strong>Tioxal:</strong> spezielle anodische Aluminiumoberfläche mit charakteristischen Eigenschaften.",
+      "<strong>Ematal:</strong> spezielle dekorativ-technische anodische Oberfläche.",
+      "<strong>C-0:</strong> Natureloxal. <strong>C-31:</strong> Leichtbronze. <strong>C-32:</strong> Hellbronze. <strong>C-33:</strong> Mittelbronze. <strong>C-34:</strong> Dunkelbronze. <strong>C-35:</strong> Schwarz. <strong>C-36:</strong> Hellgrau. <strong>C-37:</strong> Mittelgrau. <strong>C-38:</strong> Dunkelgrau.",
+      "<strong>Harteloxal-Farbe:</strong> Natur / Eigenfarbe oder Schwarz. <strong>Chromsäureanodisieren:</strong> Natur / Grau oder Schwarz.",
+      "<strong>Verdichtung Ja:</strong> Poren werden geschlossen und die Beständigkeit wird typischerweise erhöht. <strong>Nein:</strong> kann für bestimmte technische Folgeprozesse bewusst gefordert sein."
+    ],
+    "important": [
+      "Aluminiumlegierung",
+      "Vorbehandlung und gewünschte Optik",
+      "Schichtdicke",
+      "Maßänderung",
+      "Verdichtung",
+      "Farbgleichmäßigkeit",
+      "Kontakt-/Maskierstellen",
+      "technische oder dekorative Funktion"
+    ],
+    "standards": [
+      "<strong>QUALANOD:</strong> Qualitätslabel für anodisierte Aluminiumoberflächen. <strong>ISO 7599:</strong> allgemeine Spezifikationen für anodische Oxidschichten auf Aluminium. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Legierung und Ausgangsoberfläche beeinflussen Farbe und Gleichmäßigkeit stark. Zwei unterschiedliche Aluminiumlegierungen können trotz identischem Eloxalprozess sichtbar verschieden aussehen.",
+    "example": "EN AW-6060 Profile; Normaleloxal C-0; 20 µm; verdichtet; Sichtflächen gleichmäßig; QUALANOD/ISO 7599 gefordert."
+  },
+  "Anodisieren": {
+    "summary": "Anodisieren ist der übergeordnete Begriff für elektrochemisch erzeugte Oxidschichten. Im Formular wird es für anodische Anwendungen außerhalb der klassischen Aluminium-Eloxal-Auswahl geführt.",
+    "purpose": [
+      "technische Oxidschichten",
+      "Korrosions- oder Verschleißfunktionen",
+      "farbige oder technische Oberflächen auf geeigneten Metallen"
+    ],
+    "options": [
+      "<strong>Natur / technisch:</strong> funktionelle Oberfläche ohne primäre Farbvorgabe.",
+      "<strong>Farbig:</strong> anodische Oberfläche mit gewünschter Farbwirkung."
+    ],
+    "important": [
+      "Grundwerkstoff und Legierung",
+      "gewünschte Funktion",
+      "Schichtdicke",
+      "Farbe/Optik",
+      "konkrete Prozess- oder Kundennorm",
+      "Maß- und Maskieranforderungen"
+    ],
+    "standards": [
+      "Im Formular ist <strong>SAE / AMS nach Vorgabe</strong> vorgesehen, wenn eine konkrete Luftfahrt-/Kundenspezifikation gilt. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Anodisieren ist kein universell identischer Prozess für alle Metalle. Werkstoff und Spezifikation müssen genannt werden, weil Elektrolyt, Spannung und Schichtcharakter stark variieren.",
+    "example": "Titanbauteil anodisieren; farbig nach Referenz; konkrete AMS-/Kundenspezifikation; Sicht- und Kontaktflächen in Zeichnung markiert."
+  },
+  "Aluminium-Passivieren": {
+    "summary": "Beim Passivieren von Aluminium wird eine dünne Konversionsschicht erzeugt, die Korrosionsschutz, Lackhaftfestigkeit oder elektrische Eigenschaften unterstützen kann.",
+    "purpose": [
+      "Vorbehandlung für Lack/Pulver",
+      "Korrosionsschutz",
+      "elektrisch leitfähige bzw. kontaktfähige Konversionsschichten"
+    ],
+    "options": [
+      "<strong>Chrom(III)-Passivierung:</strong> Konversionsschicht auf Basis dreiwertiger Chromchemie.",
+      "<strong>Chromfreie Passivierung:</strong> chromfreies Konversionssystem.",
+      "<strong>Chrom(VI)-Chromatierung / Gelbchromatierung:</strong> klassische gelblich-iridisierende Chromatierung mit regulatorisch relevantem Chrom(VI)."
+    ],
+    "important": [
+      "Korrosionsschutz",
+      "Lackhaftfestigkeit",
+      "elektrische Leitfähigkeit bzw. Kontaktwiderstand",
+      "Optik",
+      "Folgebeschichtung",
+      "Werkstoff/Legierung"
+    ],
+    "standards": [
+      "<strong>DIN EN 12487</strong> und <strong>ASTM B921</strong> können für chemische Konversionsschichten auf Aluminium relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Eine Konversionsschicht ist sehr dünn und nicht mit einer dicken Lack- oder Eloxalschicht zu verwechseln. Für elektrische Kontaktflächen ist der Kontaktwiderstand entscheidend.",
+    "example": "Aluminiumgehäuse chromfrei passivieren; anschließende Pulverbeschichtung; gute Lackhaftfestigkeit; Massekontaktbereiche leitfähig und beschichtungsfrei halten."
+  },
+  "Edelstahl-Passivieren": {
+    "summary": "Beim Edelstahl-Passivieren werden insbesondere freie Eisenverunreinigungen entfernt und die Ausbildung einer stabilen korrosionsbeständigen Passivschicht unterstützt.",
+    "purpose": [
+      "Entfernung von Fremdeisen",
+      "Verbesserung des passiven Oberflächenzustands",
+      "hygienische und korrosionskritische Edelstahlbauteile"
+    ],
+    "options": [
+      "<strong>Salpetersäure-Passivierung:</strong> klassisches Passivierungsverfahren.",
+      "<strong>Zitronensäure-Passivierung:</strong> alternative chemische Passivierung mit Zitronensäure."
+    ],
+    "important": [
+      "Edelstahlgüte",
+      "Oberflächenzustand",
+      "Fremdeisen/Verunreinigungen",
+      "vorheriges Beizen oder Elektropolieren",
+      "Korrosionsanforderung",
+      "Reinheit und Prüfanforderungen"
+    ],
+    "standards": [
+      "<strong>ASTM A967/A967M:</strong> Passivierungsbehandlungen für Edelstahlteile. <strong>ASTM A380/A380M:</strong> Reinigung, Entzunderung und Passivierung von Edelstahl. <strong>AMS 2700:</strong> Passivierungsanforderungen insbesondere im Aerospace-Umfeld. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Passivieren ist keine zusätzliche Metallschicht und ersetzt bei starken Schweißanlauffarben oder Oxiden nicht automatisch das Beizen. Edelstahlwerkzeuge müssen fremdeisenfrei eingesetzt werden.",
+    "example": "1.4404 Bauteil; nach Bearbeitung zitronensäure-passivieren; Fremdeisenfreiheit gefordert; ASTM A967; Sichtoberfläche darf optisch nicht verändert werden."
+  },
+  "Zinkphosphatieren": {
+    "summary": "Zinkphosphatieren erzeugt eine kristalline Phosphatschicht, häufig als Lackvorbehandlung oder funktionelle Konversionsschicht.",
+    "purpose": [
+      "Haftgrund für Lack/KTL",
+      "Korrosionsschutzsysteme",
+      "Ölaufnahme und funktionelle Vorbehandlung"
+    ],
+    "options": [
+      "<strong>Geölt:</strong> Öl wird von der Phosphatschicht aufgenommen und kann Schutz-/Gleiteigenschaften verbessern.",
+      "<strong>Versiegelt:</strong> zusätzliche chemische Nachbehandlung zur Stabilisierung bzw. Verbesserung des Schutzes."
+    ],
+    "important": [
+      "Schichtgewicht",
+      "Vorbehandlung",
+      "Korrosionsschutzanforderung",
+      "Folgebeschichtung",
+      "Nachbehandlung"
+    ],
+    "standards": [
+      "<strong>ISO 9717</strong> beschreibt Phosphatüberzüge auf Metallen. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Bei Phosphatierungen ist häufig das Schichtgewicht in g/m² aussagekräftiger als eine klassische Schichtdicke in µm.",
+    "example": "Stahlteil zinkphosphatieren; Schichtgewicht nach Spezifikation; anschließend KTL; keine Öl-Nachbehandlung vor Lackierung."
+  },
+  "Eisenphosphatieren": {
+    "summary": "Eisenphosphatieren erzeugt eine vergleichsweise leichte Phosphatschicht und wird häufig als Vorbehandlung vor organischen Beschichtungen eingesetzt.",
+    "purpose": [
+      "Lack- und Pulverlackvorbehandlung",
+      "Oberflächenkonditionierung",
+      "Unterstützung von Haftfestigkeit und Korrosionsschutz"
+    ],
+    "options": [
+      "<strong>Geölt:</strong> Öl-Nachbehandlung für temporären Schutz bzw. spezielle Anwendungen.",
+      "<strong>Versiegelt:</strong> chemische Nachbehandlung der Phosphatschicht."
+    ],
+    "important": [
+      "Schichtgewicht",
+      "Grundwerkstoff",
+      "Folgebeschichtung",
+      "Korrosionsanforderung",
+      "Reinigungs- und Spülprozess"
+    ],
+    "standards": [
+      "<strong>ISO 9717</strong> beschreibt Phosphatüberzüge auf Metallen. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Eisenphosphatieren ist nicht automatisch gleichwertig mit Zinkphosphatieren. Die geeignete Vorbehandlung hängt von Werkstoff, Beschichtung und gefordertem Korrosionsschutz ab.",
+    "example": "Stahlblech eisenphosphatieren als Vorbehandlung für Pulverbeschichtung; anschließend direkt beschichten; Korrosionsanforderung in Spezifikation."
+  },
+  "Mn-Phosphatieren": {
+    "summary": "Manganphosphatieren erzeugt eine ausgeprägte kristalline Phosphatschicht, die besonders für tribologische Anwendungen genutzt wird.",
+    "purpose": [
+      "Einlaufverhalten",
+      "Ölaufnahme",
+      "Reib- und Gleiteigenschaften",
+      "Verschleißunterstützung"
+    ],
+    "options": [
+      "<strong>Geölt:</strong> typische Nachbehandlung, weil die poröse Schicht Öl aufnehmen kann.",
+      "<strong>Versiegelt:</strong> zusätzliche Nachbehandlung für definierte Schutzanforderungen."
+    ],
+    "important": [
+      "Schichtgewicht",
+      "Gleit-/Verschleißanforderung",
+      "Ölsorte bzw. Nachbehandlung",
+      "Maßhaltigkeit",
+      "Vorbehandlung"
+    ],
+    "standards": [
+      "<strong>ISO 9717</strong> beschreibt Phosphatüberzüge auf Metallen. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Die Manganphosphatschicht wird oft nicht als alleiniger Korrosionsschutz betrachtet, sondern als System zusammen mit Öl oder anderen Nachbehandlungen.",
+    "example": "Getriebeteil manganphosphatieren; geölt; Schichtgewicht nach Zeichnung; Einlauf- und Gleiteigenschaften gefordert."
+  },
+  "Brünieren": {
+    "summary": "Brünieren erzeugt auf geeigneten Eisenwerkstoffen eine dünne dunkle Konversionsschicht mit sehr geringer Maßänderung.",
+    "purpose": [
+      "dunkle Optik",
+      "leichter Korrosionsschutz zusammen mit Konservierung",
+      "maßhaltige Maschinen- und Werkzeugteile"
+    ],
+    "options": [
+      "<strong>Heißbrünieren:</strong> klassischer chemischer Prozess bei erhöhter Temperatur.",
+      "<strong>Kaltbrünieren:</strong> Prozess bei niedrigerer Temperatur, häufig für Reparatur-/Sonderanwendungen."
+    ],
+    "important": [
+      "Optik",
+      "Korrosionsanforderung",
+      "Ölen/Konservierung",
+      "Maßhaltigkeit",
+      "Werkstoff"
+    ],
+    "standards": [
+      "<strong>DIN 50938</strong> kann für Brünieren von Eisenwerkstoffen relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Die Brünierschicht selbst bietet nur begrenzten Korrosionsschutz. Häufig ist die anschließende Konservierung mit Öl ein wesentlicher Teil des Systems.",
+    "example": "Präzisionsteil aus Stahl heißbrünieren; schwarz gleichmäßig; anschließend ölen; Passungen und Maße unverändert erhalten."
+  },
+  "Beizen": {
+    "summary": "Beizen entfernt Oxide, Zunder, Rost oder oberflächennahe Verunreinigungen chemisch bzw. elektrochemisch.",
+    "purpose": [
+      "Entrosten und Entzundern",
+      "Entfernung von Schweißanlauffarben",
+      "Aktivierung vor weiteren Oberflächenprozessen"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> Material wird durch ein geeignetes Beizmedium kontrolliert angegriffen.",
+      "<strong>Elektrochemisch:</strong> chemische Wirkung wird durch elektrische Stromführung unterstützt."
+    ],
+    "important": [
+      "Bearbeitungsziel",
+      "Grundwerkstoff",
+      "gewünschter bzw. maximaler Materialabtrag",
+      "Beizmedium, falls vorgeschrieben",
+      "Passivierung/Folgebehandlung",
+      "kritische Maße"
+    ],
+    "standards": [
+      "<strong>EN ISO 8504-4</strong> kann für chemische Oberflächenvorbereitung von Stahl relevant sein. <strong>ASTM A380/A380M</strong> ist für Reinigung/Beizen/Passivieren von Edelstahl relevant. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Beizen ist echter Materialabtrag. Bei Passungen, dünnen Bauteilen oder hochfesten Stählen müssen Werkstoffangriff und mögliche Wasserstoffeffekte berücksichtigt werden.",
+    "example": "Edelstahl-Schweißbaugruppe beizen; Anlauffarben vollständig entfernen; anschließend passivieren; Sichtflächen gleichmäßig."
+  },
+  "Elektropolieren": {
+    "summary": "Elektropolieren ist ein elektrochemischer Materialabtrag, bei dem Oberflächenspitzen bevorzugt reduziert werden.",
+    "purpose": [
+      "Rauheitsreduzierung",
+      "bessere Reinigbarkeit",
+      "glänzende Edelstahloberflächen",
+      "Unterstützung der Korrosionsbeständigkeit"
+    ],
+    "options": [
+      "Das Formular enthält keine weitere Verfahrensauswahl; entscheidend sind die technischen Zielwerte wie Rauheit, Glanz und zulässiger Materialabtrag."
+    ],
+    "important": [
+      "Ra-/Rz-Zielwert",
+      "Materialabtrag",
+      "Werkstoffgüte",
+      "Glanz/Optik",
+      "Passivierung",
+      "Reinheitsanforderungen",
+      "Maßtoleranzen"
+    ],
+    "standards": [
+      "<strong>DIN EN ISO 15730</strong> und <strong>ASTM B912</strong> können für Elektropolieren/Passivieren von Edelstahl relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Elektropolieren kann eine schlecht vorbereitete oder stark zerkratzte Oberfläche nicht beliebig einebnen. Für enge Rauheitsziele ist der Ausgangszustand entscheidend.",
+    "example": "1.4404 Rohrbauteil elektropolieren; Ra ≤ 0,8 µm; hygienische Oberfläche; Materialabtrag maßlich berücksichtigt; Prüfprotokoll gefordert."
+  },
+  "Strahlen": {
+    "summary": "Beim Strahlen trifft ein Strahlmittel mit hoher Geschwindigkeit auf die Oberfläche. Das Verfahren kann reinigen, aufrauen, mattieren oder Material abtragen.",
+    "purpose": [
+      "Entrosten und Entzundern",
+      "Lack-/Beschichtungsentfernung",
+      "Aufrauen für Folgebeschichtungen",
+      "Mattieren und Oberflächenfinish"
+    ],
+    "options": [
+      "<strong>Sandstrahlen:</strong> allgemeine Bezeichnung für abrasives Strahlen mit mineralischen Medien.",
+      "<strong>Glasperlenstrahlen:</strong> häufig für gleichmäßig matte/satinierte Oberflächen.",
+      "<strong>Korundstrahlen:</strong> scharfkantig und abrasiv; gut zum Aufrauen und Reinigen.",
+      "<strong>Stahlkiesstrahlen:</strong> metallisches Strahlmittel für robuste Stahloberflächen.",
+      "<strong>Keramikperlenstrahlen:</strong> feines, langlebiges Medium für gleichmäßige Oberflächen.",
+      "<strong>Sodastrahlen:</strong> relativ schonendes Reinigungsverfahren.",
+      "<strong>Kunststoffstrahlen:</strong> für empfindlichere Oberflächen bzw. spezielle Entlackungsaufgaben.",
+      "<strong>Kugelstrahlen:</strong> runde Medien; je nach Prozess Reinigung oder gezielte mechanische Oberflächenbeeinflussung.",
+      "<strong>Staubstrahlen:</strong> sehr feine Strahlbearbeitung für empfindliche bzw. fein definierte Oberflächen."
+    ],
+    "important": [
+      "Bearbeitungsziel",
+      "Reinheitsgrad",
+      "Rauheitsprofil",
+      "Strahlmittel",
+      "Werkstoff",
+      "Folgebeschichtung",
+      "Vermeidung von Fremdeisen bei Edelstahl"
+    ],
+    "standards": [
+      "<strong>ISO 8501-1:</strong> visuelle Reinheitsgrade wie Sa 1, Sa 2, Sa 2½ und Sa 3. <strong>ISO 8503:</strong> Rauheits-/Oberflächenprofil gestrahlter Stahloberflächen. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Reinheitsgrad und Rauheit sind zwei verschiedene Anforderungen. Sa 2½ sagt nicht aus, welchen Ra/Rz-Wert oder welches Profil die Oberfläche hat.",
+    "example": "Stahlrahmen strahlen auf Sa 2½; definierter Rauheitsbereich für nachfolgende Beschichtung; Strahlmittel frei von schädlicher Kontamination."
+  },
+  "Schleifen": {
+    "summary": "Schleifen ist eine spanende Feinbearbeitung mit abrasivem Werkzeug zur Form-, Maß- oder Oberflächenbearbeitung.",
+    "purpose": [
+      "Rauheitsreduzierung",
+      "Vorbereitung zum Polieren oder Beschichten",
+      "definiertes Sichtschliffbild",
+      "Maß- und Formkorrektur"
+    ],
+    "options": [
+      "<strong>Bandschleifen:</strong> gut für größere Flächen und gerichtete Schliffbilder.",
+      "<strong>Flachschleifen:</strong> präzise Bearbeitung ebener Flächen.",
+      "<strong>Rundschleifen:</strong> Bearbeitung rotationssymmetrischer Flächen.",
+      "<strong>Handschleifen:</strong> manuelle Bearbeitung lokaler oder komplexer Bereiche."
+    ],
+    "important": [
+      "Körnung",
+      "Ra/Rz",
+      "Schliffbild und Schleifrichtung",
+      "Materialabtrag",
+      "Maßtoleranz",
+      "Sichtflächen"
+    ],
+    "standards": [
+      "<strong>ISO 21920</strong> ist für geometrische Produktspezifikation und Oberflächenprofil-Kenngrößen relevant. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Körnung und Rauheitswert sind nicht dasselbe. Ein Schleifpapier mit gleicher Körnung kann je nach Prozess unterschiedliche Ra-/Rz-Werte und Schliffbilder erzeugen.",
+    "example": "Edelstahlblech längs schleifen; Körnung 240 als Prozessvorgabe; Ra-Ziel nach Zeichnung; keine Querschliffe auf Sichtseite."
+  },
+  "Polieren": {
+    "summary": "Polieren ist eine sehr feine mechanische Oberflächenbearbeitung zur Glättung und/oder Glanzsteigerung.",
+    "purpose": [
+      "technische Rauheitsreduzierung",
+      "dekorative Sichtoberflächen",
+      "Hochglanz- oder Spiegelwirkung"
+    ],
+    "options": [
+      "<strong>Technisch:</strong> funktionelle Oberflächenqualität, z. B. definierte Rauheit.",
+      "<strong>Dekorativ:</strong> optische Wirkung steht im Vordergrund.",
+      "<strong>Hochglanz:</strong> stark reflektierende Oberfläche; definiert allein keinen exakten Ra-Wert."
+    ],
+    "important": [
+      "Glanz bzw. Referenzoberfläche",
+      "Ra/Rz",
+      "Materialabtrag",
+      "Werkstoff",
+      "Sicht-/Funktionsflächen",
+      "Maßhaltigkeit"
+    ],
+    "standards": [
+      "<strong>ISO 21920</strong> kann für Rauheits-/Profilanforderungen relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Polieren trägt Material ab und kann Kanten, Gravuren oder Maße verändern. Bei beschichteten Teilen muss außerdem genügend Schichtreserve vorhanden sein.",
+    "example": "Edelstahl-Sichtteil dekorativ hochglanzpolieren; Referenzmuster verbindlich; keine sichtbaren Schleifspuren; Funktionspassung nicht bearbeiten."
+  },
+  "Bürsten": {
+    "summary": "Bürsten bearbeitet die Oberfläche mit metallischen oder abrasiven Bürstwerkzeugen und kann reinigen, strukturieren, mattieren oder leicht entgraten.",
+    "purpose": [
+      "dekoratives Bürstbild",
+      "Reinigung",
+      "Mattierung",
+      "leichte Entgratung/Kantenbearbeitung"
+    ],
+    "options": [
+      "<strong>Technisch:</strong> funktionelle Reinigung bzw. Oberflächenbearbeitung.",
+      "<strong>Dekorativ:</strong> sichtbares gleichmäßiges Bürstbild.",
+      "<strong>Mattierend:</strong> diffuse, weniger reflektierende Oberfläche.",
+      "<strong>Entgraten / Kanten brechen:</strong> leichte Grate entfernen bzw. Kanten entschärfen."
+    ],
+    "important": [
+      "Bürstbild",
+      "Bürstrichtung",
+      "Werkzeug/Körnung",
+      "Ra/Rz",
+      "Kantenanforderung",
+      "Werkstoff und Kontaminationsschutz"
+    ],
+    "standards": [
+      "<strong>ISO 21920</strong> kann für Rauheits-/Profilanforderungen relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Bei Edelstahl dürfen keine ungeeigneten Stahlbürsten oder kontaminierten Werkzeuge verwendet werden, da Fremdeisen später Roststellen verursachen kann.",
+    "example": "Edelstahlfront dekorativ längs bürsten; gleichmäßiges Bild; keine Querschliffe; Referenzmuster; Kanten nur leicht brechen."
+  },
+  "Trowalisieren": {
+    "summary": "Trowalisieren bzw. Gleitschleifen bewegt Werkstücke zusammen mit Schleif- oder Polierkörpern und Prozessflüssigkeit.",
+    "purpose": [
+      "Entgraten",
+      "Kanten verrunden",
+      "Glätten",
+      "Polieren/Entmattieren",
+      "Serienbearbeitung kleiner und mittlerer Teile"
+    ],
+    "options": [
+      "<strong>Vibrationsgleitschleifen:</strong> verbreitet für Entgraten, Glätten und Verrunden.",
+      "<strong>Trommelgleitschleifen:</strong> einfache rotierende Trommel, gut für robuste Werkstücke.",
+      "<strong>Fliehkraftgleitschleifen:</strong> hohe Bearbeitungsintensität und kurze Prozesszeiten.",
+      "<strong>Schleppschleifen:</strong> Werkstücke werden fixiert durch das Medium bewegt; Werkstück-zu-Werkstück-Kontakt kann vermieden werden."
+    ],
+    "important": [
+      "Bearbeitungsziel",
+      "zulässiger Materialabtrag",
+      "Kantenradius",
+      "Ra/Rz",
+      "Kontaktspuren zulässig?",
+      "Maßhaltigkeit"
+    ],
+    "standards": [
+      "<strong>DIN 8589</strong> kann im Kontext spanender/abrasiver Fertigungsverfahren relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Beim normalen Gleitschleifen können Werkstücke einander berühren. Für hochwertige Sichtteile oder empfindliche Geometrien kann Schleppschleifen geeigneter sein.",
+    "example": "Kleine Frästeile vibrationsgleitschleifen; gratfrei und Kanten leicht verrundet; maximaler Materialabtrag nach Zeichnung."
+  },
+  "Entgraten": {
+    "summary": "Entgraten entfernt unerwünschte scharfe Grate und Bearbeitungsüberstände.",
+    "purpose": [
+      "Sicherheit",
+      "Montagefähigkeit",
+      "Beschichtbarkeit",
+      "Schutz von Dichtungen und Passungen"
+    ],
+    "options": [
+      "<strong>Mechanisch:</strong> Schleifen, Fräsen, Feilen oder Maschinenentgraten.",
+      "<strong>Thermisch:</strong> sehr kurze thermische Reaktion entfernt geeignete Grate auch in schwer zugänglichen Bereichen.",
+      "<strong>Elektrochemisch:</strong> selektiver elektrochemischer Materialabtrag.",
+      "<strong>Gleitschleifen:</strong> wirtschaftlich für viele kleine Teile.",
+      "<strong>Bürsten / Schleifen:</strong> klassische mechanische Entgratung."
+    ],
+    "important": [
+      "gratfrei vs. Kantenradius",
+      "Innen-/Außenkanten",
+      "Bohrungsdurchbrüche",
+      "Sichtflächen",
+      "Materialabtrag",
+      "kritische Maße"
+    ],
+    "standards": [
+      "<strong>ISO 13715</strong> beschreibt Angaben für Kanten unbestimmter Form. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Gratfrei bedeutet nicht automatisch verrundet. Soll ein definierter Radius entstehen, muss dieser separat angegeben werden.",
+    "example": "Laserschnittteile allseitig gratfrei; Außenkanten leicht brechen, kein definierter Radius; Sichtflächen ohne Schleifspuren."
+  },
+  "Verrunden": {
+    "summary": "Beim Verrunden werden scharfe Kanten gezielt mit einer Rundung versehen.",
+    "purpose": [
+      "bessere Beschichtbarkeit",
+      "gleichmäßigerer Kantenschutz",
+      "Sicherheit und Haptik",
+      "definierte Geometrie"
+    ],
+    "options": [
+      "<strong>Gleitschleifen:</strong> gleichzeitige Verrundung vieler zugänglicher Kanten.",
+      "<strong>Bürsten / Schleifen:</strong> mechanische Kantenbearbeitung.",
+      "<strong>Strahlen:</strong> kann je nach Prozess Kanten beeinflussen, ist jedoch weniger exakt als spanende Bearbeitung.",
+      "<strong>Mechanisch:</strong> gezielte Bearbeitung mit Werkzeug/Maschine."
+    ],
+    "important": [
+      "gewünschter Radius",
+      "welche Innen-/Außenkanten",
+      "zulässiger Materialabtrag",
+      "Pass-/Dichtflächen",
+      "Sichtkanten"
+    ],
+    "standards": [
+      "<strong>ISO 13715</strong> ist für die Zeichnungsangabe von Kanten relevant. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "R2 bedeutet Radius 2 mm. 'Kanten brechen' ist dagegen keine gleichbedeutende Angabe und kann nur eine kleine Fase oder leichte Verrundung meinen.",
+    "example": "Alle zugänglichen Außenkanten R2; Innenkanten und Passflächen unverändert; Radius auf Sichtkanten gleichmäßig."
+  },
+  "Glätten": {
+    "summary": "Glätten reduziert Unebenheiten, Rauheitsspitzen oder Bearbeitungsspuren, ohne dass Hochglanz zwingend das Ziel ist.",
+    "purpose": [
+      "Rauheitsreduzierung",
+      "Funktionsflächen",
+      "Vorbereitung zum Polieren/Beschichten",
+      "Verbesserung der Reinigbarkeit"
+    ],
+    "options": [
+      "<strong>Mechanisch:</strong> gezielter Materialabtrag mit Werkzeugen.",
+      "<strong>Gleitschleifen:</strong> flächige Serienbearbeitung.",
+      "<strong>Chemisch:</strong> kontrollierter chemischer Materialabtrag.",
+      "<strong>Elektropolieren:</strong> elektrochemisches Einebnen.",
+      "<strong>Bürsten / Schleifen:</strong> mechanische Glättung bzw. Vereinheitlichung."
+    ],
+    "important": [
+      "Ra/Rz",
+      "Materialabtrag",
+      "Maße",
+      "optische Anforderungen",
+      "Funktionsflächen"
+    ],
+    "standards": [
+      "<strong>ISO 21920</strong> kann für Profil- und Rauheitskennwerte relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Eine optisch glatte Oberfläche besitzt nicht automatisch einen definierten Ra-Wert. Wenn die Funktion davon abhängt, muss der Messwert angegeben werden.",
+    "example": "Funktionsfläche glätten auf Ra ≤ 1,6 µm; Maßtoleranz nach Zeichnung; übrige Flächen unbearbeitet."
+  },
+  "Mattieren": {
+    "summary": "Mattieren erzeugt eine optisch weniger reflektierende Oberfläche durch mechanische, strahltechnische oder chemische Bearbeitung.",
+    "purpose": [
+      "dekorative matte Oberflächen",
+      "gleichmäßiges Erscheinungsbild",
+      "Vorbehandlung vor Eloxieren oder anderen Prozessen"
+    ],
+    "options": [
+      "<strong>Strahlen:</strong> matte Oberfläche durch geeignetes Strahlmittel.",
+      "<strong>Schleifen:</strong> gerichtetes mattes Schliffbild.",
+      "<strong>Bürsten:</strong> satinierte/gebürstete Mattierung.",
+      "<strong>Chemisch:</strong> chemische Mikrostrukturierung, z. B. bei Aluminium."
+    ],
+    "important": [
+      "Mattierungsgrad",
+      "Ra/Rz",
+      "Strahl-/Schliffbild",
+      "Werkstoff",
+      "Materialabtrag",
+      "Referenzmuster"
+    ],
+    "standards": [
+      "<strong>ISO 21920</strong> kann für Rauheitskennwerte relevant sein. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Matt ist eine optische Beschreibung und kein Rauheitswert. Eine Oberfläche kann matt und trotzdem sehr fein oder relativ rau sein.",
+    "example": "Aluminium-Sichtteil chemisch mattieren vor Eloxieren; gleichmäßige Optik nach Referenzmuster; keine Wolkenbildung."
+  },
+  "Chemisches Glänzen": {
+    "summary": "Chemisches Glänzen ebnet und hellt eine Metalloberfläche durch kontrollierten chemischen Materialabtrag auf.",
+    "purpose": [
+      "dekoratives Glänzen",
+      "Vorbehandlung vor Eloxieren",
+      "optische Vereinheitlichung von Aluminium, Kupfer oder Messing"
+    ],
+    "options": [
+      "Im Formular gibt es keine Unterverfahrensauswahl; entscheidend sind gewünschter Glanz, Referenzoberfläche, Materialabtrag und Folgebehandlung."
+    ],
+    "important": [
+      "Werkstoff/Legierung",
+      "Glanzziel",
+      "Materialabtrag",
+      "Maßtoleranz",
+      "Folgebehandlung, z. B. Eloxieren",
+      "Referenzmuster"
+    ],
+    "standards": [
+      "<strong>DIN 17611</strong> ist im Kontext anodisierter Aluminiumhalbzeuge bzw. dekorativer Aluminiumoberflächen relevant. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Besonders bei Aluminium beeinflusst die Legierung das erreichbare Glanzergebnis stark. Chemisches Glänzen ist nicht mit mechanischem Polieren oder Elektropolieren gleichzusetzen.",
+    "example": "EN AW-6060 chemisch glänzen, anschließend Natureloxal; Optik nach Freigabemuster; Materialabtrag berücksichtigen."
+  },
+  "Entlacken": {
+    "summary": "Entlacken entfernt vorhandene Lack-, Pulver- oder KTL-Systeme, um den Grundwerkstoff freizulegen oder neu beschichten zu können.",
+    "purpose": [
+      "Aufarbeitung und Neubeschichtung",
+      "Reparatur",
+      "Entfernung fehlerhafter oder alter Beschichtungen"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> Beschichtung wird mit geeigneter Chemie gelöst oder aufgequollen.",
+      "<strong>Thermisch:</strong> Beschichtung wird durch Wärme zersetzt bzw. pyrolysiert.",
+      "<strong>Mechanisch:</strong> z. B. Strahlen, Schleifen oder Bürsten.",
+      "<strong>Laserentlackung:</strong> gezielter Abtrag durch Laserenergie."
+    ],
+    "important": [
+      "Art/Zustand der Beschichtung",
+      "Grundwerkstoff",
+      "Entlackungsumfang",
+      "zulässiger Materialabtrag",
+      "Oberflächenzustand danach",
+      "Konservierung/Folgebeschichtung"
+    ],
+    "standards": [
+      "<strong>QUALISTRIP</strong> ist ein Qualitätslabel für kontrollierte Entlackungsprozesse. ISO 9001/14001: Managementsysteme."
+    ],
+    "practice": "Nicht jedes Entlackungsverfahren ist für jeden Grundwerkstoff geeignet. Wärme kann Bauteile verziehen oder beeinflussen; aggressive Chemie kann den Grundwerkstoff angreifen.",
+    "example": "Aluminiumprofile mit Pulverlack vollständig entlacken; Grundwerkstoff nicht sichtbar angreifen; anschließend für erneutes Pulverbeschichten vorbereiten."
+  },
+  "Entzinken": {
+    "summary": "Entzinken entfernt vorhandene Zink- bzw. zinkbasierte Schichten zur Reparatur oder Neubeschichtung.",
+    "purpose": [
+      "Aufarbeitung verzinkter Teile",
+      "Neubeschichtung",
+      "Korrektur fehlerhafter Zinkschichten"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> kontrolliertes chemisches Lösen der Zinkschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemischer Abtrag der Zinkschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozessreste entfernen.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> den freigelegten Stahl temporär schützen.",
+      "<strong>Aktivieren für Neubeschichtung:</strong> Oberfläche unmittelbar für den Folgeprozess vorbereiten."
+    ],
+    "important": [
+      "Art des Zinksystems",
+      "Grundwerkstoff",
+      "Entzinkungsumfang",
+      "Materialabtrag",
+      "Korrosionsschutz nach dem Entzinken",
+      "Folgeprozess"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Feuerzink, galvanisches Zink und Zinklegierungen benötigen unterschiedliche Prozessführung. Der freigelegte Stahl kann nach dem Entzinken sehr schnell korrodieren.",
+    "example": "Stahlteil chemisch entzinken; gesamte Zinkschicht entfernen; anschließend sofort aktivieren und neu galvanisch verzinken."
+  },
+  "Entnickeln": {
+    "summary": "Entnickeln entfernt eine vorhandene Nickel- bzw. Nickel-Phosphor-Schicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Nickel- bzw. Nickel-Phosphor-Schicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Nickel- bzw. Nickel-Phosphor-Schicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Stahlteil chemisch entnickeln; chemisch Nickel vollständig entfernen; Grundwerkstoff schützen; anschließend neu beschichten."
+  },
+  "Entchromen": {
+    "summary": "Entchromen entfernt eine vorhandene Chromschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Chromschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Chromschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "vorhandener Kupfer-/Nickel-Unterbau"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Dekoratives Bauteil elektrochemisch entchromen; nur Chrom entfernen, Nickelschicht erhalten; anschließend neu verchromen."
+  },
+  "Entkupfern": {
+    "summary": "Entkupfern entfernt eine vorhandene Kupferschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Kupferschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Kupferschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Stahlbauteil chemisch entkupfern; Kupfer-Zwischenschicht vollständig entfernen; Grundwerkstoff schonen; anschließend aktivieren."
+  },
+  "Entmessingen": {
+    "summary": "Entmessingen entfernt eine vorhandene Messingschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Messingschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Messingschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Dekoratives Bauteil chemisch entmessingen; gesamte Messingschicht entfernen; Untergrund für Neubeschichtung vorbereiten."
+  },
+  "Entbronzieren": {
+    "summary": "Entbronzieren entfernt eine vorhandene Bronzeschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Bronzeschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Bronzeschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "Bronzelegierung bzw. Zusammensetzung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Funktionsbauteil chemisch entbronzieren; Hartbronze entfernen; Grundmaß und Grundwerkstoff erhalten; anschließend Neubeschichtung."
+  },
+  "Entgolden": {
+    "summary": "Entgolden entfernt eine vorhandene Goldschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Goldschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Goldschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "gewünschte Edelmetallrückgewinnung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Kontaktteile elektrochemisch entgolden; Edelmetallrückgewinnung gewünscht; Nickelsperrschicht möglichst erhalten."
+  },
+  "Entsilbern": {
+    "summary": "Entsilbern entfernt eine vorhandene Silberschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Silberschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Silberschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "gewünschte Edelmetallrückgewinnung"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Kupferkontakte chemisch entsilbern; Silber rückgewinnen; Grundwerkstoff schonen; anschließend neu versilbern."
+  },
+  "Entzinnen": {
+    "summary": "Entzinnen entfernt eine vorhandene Zinn- bzw. Zinnlegierungsschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen Zinn- bzw. Zinnlegierungsschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen Zinn- bzw. Zinnlegierungsschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "eventuelle Diffusionsschichten"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Kupferkontakt elektrochemisch entzinnen; Zinn vollständig entfernen; Zwischenschicht beachten; anschließend neu verzinnen."
+  },
+  "Entaluminieren": {
+    "summary": "Entaluminieren entfernt eine vorhandene metallischen Aluminiumschicht, ohne den Grundwerkstoff stärker als zulässig zu verändern.",
+    "purpose": [
+      "Reparatur",
+      "Neubeschichtung",
+      "Aufarbeitung und Wiederverwendung"
+    ],
+    "options": [
+      "<strong>Chemisch:</strong> chemische Entfernung der vorhandenen metallischen Aluminiumschicht.",
+      "<strong>Elektrochemisch:</strong> elektrochemische Entfernung der vorhandenen metallischen Aluminiumschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen und Oberfläche stabilisieren.",
+      "<strong>Aktivieren / Dekapieren:</strong> Oberfläche für den nächsten Prozess chemisch aktivieren.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> freigelegten Grundwerkstoff bis zur Weiterbearbeitung schützen.",
+      "<strong>Vorbereitung für Neubeschichtung:</strong> Oberfläche gezielt für den Folgeprozess herstellen."
+    ],
+    "important": [
+      "Art und Zustand der vorhandenen Schicht",
+      "Grundwerkstoff",
+      "Zwischen-/Deckschichten",
+      "gewünschter Entschichtungsumfang",
+      "Schutz des Grundwerkstoffs",
+      "zulässiger Materialabtrag",
+      "Folgebehandlung",
+      "eventuelle Diffusions-/Zwischenschichten"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Bei Mehrschichtsystemen muss eindeutig festgelegt werden, ob nur die oberste Schicht oder der gesamte Schichtaufbau entfernt werden soll.",
+    "example": "Stahlteil chemisch entaluminieren; Aluminiumschicht entfernen; Grundwerkstoff nicht angreifen; anschließend neu beschichten."
+  },
+  "Enteloxieren": {
+    "summary": "Enteloxieren entfernt die anodische Oxidschicht von Aluminium. Da die Eloxalschicht aus dem Grundwerkstoff entstanden ist, kann der Entschichtungsprozess auch das Aluminiummaß beeinflussen.",
+    "purpose": [
+      "Neueloxieren",
+      "Korrektur fehlerhafter Eloxalschichten",
+      "Aufarbeitung von Aluminiumteilen"
+    ],
+    "options": [
+      "<strong>Chemisch / Beizen:</strong> chemische Entfernung der Eloxalschicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozesschemie entfernen.",
+      "<strong>Dekapieren / Aktivieren:</strong> Oberfläche für Folgeprozesse aktivieren.",
+      "<strong>Vorbereitung für erneutes Eloxieren:</strong> Oberfläche gezielt für die neue Eloxalschicht herstellen.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> temporärer Schutz, wenn nicht sofort weiterbehandelt wird."
+    ],
+    "important": [
+      "Aluminiumlegierung",
+      "Art/Dicke der Eloxalschicht",
+      "zulässiger Materialabtrag",
+      "Maßhaltigkeit",
+      "gewünschter Oberflächenzustand",
+      "erneutes Eloxieren"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Enteloxieren kann Maße und Oberflächenoptik verändern. Besonders bei wiederholtem Enteloxieren und Neueloxieren muss der kumulierte Materialabtrag berücksichtigt werden.",
+    "example": "EN AW-6060 Profil chemisch enteloxieren; anschließend erneut C-0 eloxieren; Sichtmaß und Passung prüfen."
+  },
+  "Entanodisieren": {
+    "summary": "Entanodisieren entfernt eine anodisch erzeugte Oxidschicht von einem geeigneten Grundwerkstoff.",
+    "purpose": [
+      "Neuanodisieren",
+      "Reparatur",
+      "Aufarbeitung technischer anodischer Schichten"
+    ],
+    "options": [
+      "<strong>Chemisch / Beizen:</strong> chemische Entfernung der Oxidschicht.",
+      "<strong>Mechanisch / Strahlen:</strong> mechanischer Abtrag der anodischen Schicht.",
+      "<strong>Neutralisieren / Spülen:</strong> Prozessreste entfernen.",
+      "<strong>Dekapieren / Aktivieren:</strong> Oberfläche für Folgeprozess vorbereiten.",
+      "<strong>Vorbereitung für erneutes Anodisieren:</strong> erneute anodische Behandlung ermöglichen.",
+      "<strong>Konservieren / Korrosionsschutz:</strong> temporärer Schutz des freigelegten Grundwerkstoffs."
+    ],
+    "important": [
+      "Grundwerkstoff und Legierung",
+      "Art der anodischen Schicht",
+      "Materialabtrag",
+      "Maßhaltigkeit",
+      "Folgeprozess"
+    ],
+    "standards": [
+      "ISO 9001 und ISO 14001 können als Managementanforderungen relevant sein."
+    ],
+    "practice": "Die geeignete Entanodisierung hängt stark vom Grundwerkstoff ab. Ein Verfahren für Aluminium kann nicht einfach auf Titan, Magnesium oder andere Metalle übertragen werden.",
+    "example": "Anodisierte Titanbauteile nach Spezifikation entanodisieren; Grundwerkstoff schützen; anschließend erneut anodisieren."
+  },
+  "Folieren": {
+    "summary": "Beim Folieren wird eine technische oder dekorative Folie auf eine vorbereitete Oberfläche aufgebracht.",
+    "purpose": [
+      "Dekoration",
+      "Oberflächenschutz",
+      "Kennzeichnung",
+      "funktionelle Folienanwendungen"
+    ],
+    "options": [
+      "<strong>Innen:</strong> Anwendung in geschützter Umgebung; Witterung und UV sind meist weniger kritisch.",
+      "<strong>Außen:</strong> Folie muss zu UV-, Witterungs-, Temperatur- und Feuchtigkeitsbelastung passen."
+    ],
+    "important": [
+      "Folienart/Hersteller",
+      "Farbe oder Design",
+      "Innen/Außen",
+      "vollflächig oder Teilbereiche",
+      "Untergrund",
+      "Temperatur/UV/Chemikalien",
+      "gewünschte Haltbarkeit"
+    ],
+    "standards": [
+      "ISO 9001/14001 und RoHS/REACH können je nach Auftrag/Material als Unternehmens- bzw. Stoffanforderungen relevant sein. <strong>RAL-GZ 716</strong> kann für Kunststoff-Fensterprofilsysteme bzw. relevante Güteanforderungen eine Rolle spielen."
+    ],
+    "practice": "Die Haftfestigkeit einer Folie hängt stark vom Untergrund und dessen Oberflächenenergie, Sauberkeit und Struktur ab. Frische Lack-/Pulverbeschichtungen müssen ausreichend ausgehärtet sein.",
+    "example": "Aluminiumblende außen folieren; UV-beständige schwarze Dekorfolie; Teilbereiche nach Zeichnung; Haltbarkeit für Außenanwendung gefordert."
+  },
+  "Isolierstegverpressen": {
+    "summary": "Beim Isolierstegverpressen werden insbesondere Aluminiumprofilhälften mit thermisch trennenden Kunststoffstegen mechanisch zu einem Verbundprofil verbunden.",
+    "purpose": [
+      "Fenster-, Türen- und Fassadenprofile",
+      "thermische Trennung",
+      "Herstellung mehrteiliger Aluminium-Verbundprofile"
+    ],
+    "options": [
+      "Das aktuelle Formular enthält keine zusätzliche technische Auswahl. Die konkrete Ausführung ergibt sich aus Profilsystem, Stegtyp und Zeichnung."
+    ],
+    "important": [
+      "Profilsystem/Hersteller",
+      "Stegtyp und Abmessungen",
+      "Profilzustand",
+      "Toleranzen",
+      "Stückzahl",
+      "Beschichtungszustand",
+      "Prozessreihenfolge vor/nach Oberflächenbehandlung"
+    ],
+    "standards": [
+      "ISO 9001/14001 und RoHS/REACH können relevant sein. <strong>RAL-GZ 607/3</strong> betrifft Güteanforderungen an thermisch getrennte Aluminiumprofile/Verbundsysteme."
+    ],
+    "practice": "Beschichten und Verpressen beeinflussen sich gegenseitig. Je nach Profilsystem muss feststehen, ob die Profile vor oder nach dem Verpressen oberflächenbehandelt werden.",
+    "example": "Aluminium-Fassadenprofile nach Systemzeichnung verpressen; Stege beigestellt; Profile bereits pulverbeschichtet; Maß- und Schubverbundanforderungen nach Systemvorgabe."
+  },
+  "Einlagern": {
+    "summary": "Einlagern ist eine ergänzende Leistung innerhalb der Auftragsabwicklung und kein Oberflächenverfahren.",
+    "purpose": [
+      "Zwischenlagerung zwischen Prozessschritten",
+      "Fertigwarenlagerung",
+      "Abruflager für beschichtete Bauteile"
+    ],
+    "options": [
+      "<strong>Trocken lagern:</strong> Bauteile vor direkter Feuchtigkeit und Nässe geschützt lagern."
+    ],
+    "important": [
+      "Lagerdauer",
+      "Verpackung",
+      "Korrosionsschutz",
+      "zulässige Luftfeuchtigkeit/Temperatur falls kritisch",
+      "Abrufmengen",
+      "Schutz empfindlicher Sichtflächen"
+    ],
+    "standards": [
+      "Für die reine Lagerleistung sind im aktuellen Formular keine zusätzlichen technischen Normen vorgesehen."
+    ],
+    "practice": "Einlagern ist bewusst kein Endpunkt der Verfahrenskette. Nach der Lagerung können weitere Beschichtungs-, Montage- oder Bearbeitungsschritte folgen.",
+    "example": "Pulverbeschichtete Profile 8 Wochen trocken und verpackt zwischenlagern; Sichtflächen gegen Scheuern schützen; Abruf in Teilmengen."
+  }
+};
+
+  const beschichtungstechnikText = "Die <strong>Beschichtungstechnik bzw. Oberflächentechnik</strong> verändert gezielt die Oberfläche eines Bauteils, ohne dass dafür zwangsläufig der gesamte Grundwerkstoff verändert werden muss. Je nach Verfahren stehen <strong>Korrosionsschutz, Verschleißschutz, Optik, elektrische Eigenschaften, Reibung, Reinigbarkeit oder die Vorbereitung eines Folgeprozesses</strong> im Vordergrund.<br><br>\n<h4>Warum die genaue Spezifikation wichtig ist</h4>\nEin Verfahren allein beschreibt das gewünschte Ergebnis noch nicht vollständig. Werkstoff, Ausgangszustand, Geometrie, Schichtdicke, Optik, Toleranzen, Einsatzumgebung und Prüfanforderungen können das Ergebnis wesentlich beeinflussen.<br><br>\n<strong>Beschichter Scout</strong> soll deshalb nicht nur ein Verfahren auswählen lassen, sondern verständlich machen, welche technischen Angaben für ein belastbares Angebot wirklich wichtig sind.";
+  const technischeAngabenText = "<strong>Viele Begriffe im Anfrageformular sind für mehrere Verfahren gleich wichtig.</strong> Diese Grundlagen werden hier einmal zentral erklärt. Bei den einzelnen Verfahren wird anschließend nur noch auf die verfahrensspezifischen Besonderheiten eingegangen.<br><br>\n\n<h4>Farbpalette / Farbsystem</h4>\nEine Farbpalette bezeichnet das System, aus dem ein Farbton gewählt wird – noch nicht den konkreten Farbton. <strong>RAL</strong> steht im Formular für die klassischen RAL-Farbtöne wie RAL 7016 oder RAL 9005. <strong>RAL Design</strong> ist ein umfangreicheres systematisch aufgebautes Farbsystem, <strong>RAL Effect</strong> enthält Uni- und Metallicfarbtöne. Weitere mögliche Systeme sind <strong>NCS, MCS, DB, BS, Munsell, Pantone, Sikkens und HKS</strong>.<br><br>\n<strong>Sonderfarbe / nach Vorlage</strong> wird verwendet, wenn ein physisches Muster, ein vorhandenes Bauteil, ein Herstellerfarbton oder eine Kundenspezifikation maßgeblich ist. <strong>Andere</strong> ist für weitere Farbsysteme vorgesehen.<br><br>\n<strong>Klarlack</strong> bleibt im Formular bewusst als praktische Auswahl unter Farbpalette enthalten. Fachlich ist Klarlack keine Farbpalette, sondern eine transparente Beschichtung. Für die Anfrage ist die Auswahl trotzdem nützlich, wenn keine deckende Farbe gewünscht ist.<br><br>\n\n<h4>Farbtonbezeichnung oder Artikelnummer</h4>\nDie Farbpalette benennt das System, die Farbtonbezeichnung den konkreten Farbton. Beispiel: <strong>RAL → RAL 7016</strong>. Eine Hersteller- oder Artikelnummer kann noch eindeutiger sein, weil zwei Beschichtungsstoffe mit gleichem Farbton unterschiedliche Bindemittel, Glanzgrade, Strukturen oder Beständigkeiten besitzen können.<br><br>\n\n<h4>Glanzgrad</h4>\nDer Glanzgrad beschreibt die Lichtreflexion einer Oberfläche. Im Formular werden <strong>Hochglänzend, Glänzend, Seidenglänzend, Seidenmatt, Matt und Stumpfmatt</strong> unterschieden. Für technisch enge Anforderungen kann zusätzlich ein konkreter Glanzwert in <strong>Gloss Units (GU)</strong> mit Messwinkel angegeben werden, z. B. nach ISO 2813. Die Begriffe matt oder seidenglänzend haben nicht bei jedem Hersteller exakt dieselben GU-Grenzen.<br><br>\n\n<h4>Oberfläche / Struktur</h4>\n<strong>Glatt, Feinstruktur, Grobstruktur und Hammerschlag</strong> beschreiben die Oberflächenstruktur und sind vom Glanzgrad getrennt zu betrachten. Eine matte Beschichtung kann glatt oder strukturiert sein. Struktur beeinflusst Optik, Haptik, Reinigbarkeit und die Sichtbarkeit kleiner Untergrundfehler.<br><br>\n\n<h4>Lack- und Schichtaufbau</h4>\n<strong>Einschichtlackierung</strong> bedeutet, dass die geforderte Funktion grundsätzlich mit einem Beschichtungssystem ohne separate Grund-/Deckschichtkombination erreicht werden soll. <strong>Grundierung + Decklack</strong> teilt Funktionen wie Haftfestigkeit/Korrosionsschutz und Optik auf. Ein <strong>Mehrschichtaufbau</strong> kann zusätzlich Zwischenbeschichtungen enthalten. Die Anzahl der Spritzgänge ist nicht automatisch identisch mit der Anzahl funktioneller Schichten.<br><br>\n\n<h4>Schichtdicke</h4>\nSchichtdicken werden häufig in <strong>µm</strong> angegeben. 1 µm entspricht 0,001 mm. Bei einem Mehrschichtsystem können Einzelschichtdicken und Gesamtschichtdicke getrennt gefordert sein. Mehr Schichtdicke ist nicht automatisch besser: zu hohe Schichten können ebenso Probleme verursachen wie zu geringe. Bei Passungen, Gewinden und Bohrungen verändert die Beschichtung außerdem das Maß.<br><br>\n\n<h4>Schichtgewicht</h4>\nBei Konversionsschichten wie Phosphatierungen wird häufig ein <strong>Schichtgewicht in g/m²</strong> angegeben. Schichtgewicht und Schichtdicke sind nicht dasselbe und dürfen nicht ohne Kenntnis von Material und Dichte ineinander umgerechnet werden.<br><br>\n\n<h4>Rauheit – Ra und Rz</h4>\nRauheit beschreibt mikroskopische Unebenheiten. <strong>Ra</strong> und <strong>Rz</strong> sind unterschiedliche Profilkennwerte und dürfen nicht gleichgesetzt werden. Auch eine Schleifkörnung definiert keinen festen Ra-Wert. Wenn eine Funktion von der Rauheit abhängt, sollte der Messwert mit Messbedingungen vorgegeben werden.<br><br>\n\n<h4>Materialabtrag</h4>\nSchleifen, Polieren, Beizen, Elektropolieren, Trowalisieren und Entschichten können Material entfernen. Bei Passflächen, dünnen Wandungen, Gravuren oder engen Toleranzen muss deshalb der zulässige Abtrag angegeben werden. Wichtig ist auch, ob ein Maß <strong>vor oder nach der Oberflächenbehandlung</strong> gilt.<br><br>\n\n<h4>Maskieren / beschichtungsfreie Bereiche</h4>\nTypische Bereiche, die beschichtungsfrei bleiben können, sind <strong>Gewinde, Passungen, Dichtflächen, Lagerstellen, elektrische Kontaktflächen, Massepunkte, Klebeflächen oder Schweißbereiche</strong>. Kritische Bereiche sollten möglichst in einer Zeichnung gekennzeichnet werden.<br><br>\n\n<h4>Sichtflächen und Funktionsflächen</h4>\nEine <strong>Sichtfläche</strong> ist optisch relevant. Eine <strong>Funktionsfläche</strong> kann Anforderungen an Maß, Rauheit, Dichtheit, Reibung oder elektrische Eigenschaften besitzen. Eine Fläche kann beides gleichzeitig sein.<br><br>\n\n<h4>Werkstoff und Werkstoffgüte</h4>\n„Stahl“, „Edelstahl“ oder „Aluminium“ ist häufig zu ungenau. Beispiele sind <strong>S235JR, S355J2, C45, 42CrMo4, 1.4301, 1.4404, EN AW-6060 oder EN AW-6082</strong>. Die genaue Werkstoffgüte kann Beschichtbarkeit, Farbwirkung, Korrosionsverhalten, Wärmebehandlung und Entschichtbarkeit beeinflussen.<br><br>\n\n<h4>Ausgangszustand</h4>\nRelevant können sein: blank, rostig, verzundert, ölig, geschweißt, mit Anlauffarben, bereits lackiert, verzinkt, eloxiert, gestrahlt, geschliffen, gebürstet oder poliert. Fotos helfen bei der Einschätzung, ersetzen aber keine Werkstoff- oder Zeichnungsangaben.<br><br>\n\n<h4>Vorbehandlung</h4>\nMögliche Schritte sind Reinigen/Entfetten, Beizen, Strahlen, Schleifen, Aktivieren, Phosphatieren, Passivieren, Spülen und Trocknen. Die Vorbehandlung beeinflusst häufig maßgeblich <strong>Haftfestigkeit und Korrosionsschutz</strong>.<br><br>\n\n<h4>Nachbehandlung</h4>\nMögliche Nachbehandlungen sind Versiegeln, Ölen, Polieren, Passivieren, Anlaufschutz, Konservieren, Neutralisieren, Aktivieren/Dekapieren, Gleitmittelbeschichtung oder Vorbereitung für eine Neubeschichtung.<br><br>\n\n<h4>Korrosionsschutz und Einsatzumgebung</h4>\n„Guter Korrosionsschutz“ ist zu ungenau. Sinnvoller sind Angaben zu Innen-/Außenbereich, Feuchtigkeit, Industrieatmosphäre, Küste/Chloriden, Streusalz, Chemikalien oder dauerndem Wasserkontakt. Korrosivitätskategorien nach ISO 12944 beschreiben die Umgebungsbelastung und nicht automatisch einen bestimmten Schichtaufbau.<br><br>\n\n<h4>Temperatur-, Chemikalien-, UV- und Wetterbeständigkeit</h4>\nBei Temperatur sollte zwischen Dauer- und Spitzentemperatur unterschieden werden. Bei Chemikalien sind Medium, Konzentration, Temperatur und Kontaktdauer relevant. Für Außenoberflächen können UV-Beständigkeit, Farbtonstabilität und Glanzerhalt entscheidend sein.<br><br>\n\n<h4>Elektrische Eigenschaften</h4>\nEine Oberfläche kann leitfähig, niederohmig, isolierend oder elektrostatisch ableitfähig gefordert sein. Metallische Beschichtungen wie Silber, Gold, Kupfer, Nickel oder Zinn können elektrische Funktionen übernehmen; Lack- und Pulverbeschichtungen wirken normalerweise isolierend, sofern kein spezielles System eingesetzt wird.<br><br>\n\n<h4>Härte, Verschleiß, Reibung und Gleitverhalten</h4>\nHärte ist nicht dasselbe wie Verschleißfestigkeit. Bei Funktionsflächen können zusätzlich Reibwert, Schmierung, Trockenlauf oder Einlaufverhalten relevant sein. Deshalb sollte möglichst die tatsächliche Belastung beschrieben werden.<br><br>\n\n<h4>Farbeffekte und Referenzmuster</h4>\nMetallic-, Perlmutteffekt-, Candy-, Neon- oder patinierte Oberflächen reagieren besonders sensibel auf Untergrund, Schichtdicke, Applikation und Charge. Bei sichtbaren Serienbauteilen empfiehlt sich ein physisches Freigabemuster. Fotos und Monitore sind keine verbindliche Farbreferenz.<br><br>\n\n<h4>Farbabweichung / ΔE</h4>\nΔE beschreibt einen messbaren Farbabstand, ist aber nur mit definiertem Farbraum, Messgeometrie und Toleranz sinnvoll. Bei Metallic- oder Effektoberflächen kann zusätzlich eine Mehrwinkelmessung bzw. visuelle Musterfreigabe notwendig sein.<br><br>\n\n<h4>Trocknung / Aushärtung / Einbrenntemperatur</h4>\nTrocknen und vollständiges Aushärten sind nicht dasselbe. Bei Pulverlack ist insbesondere die <strong>Objekttemperatur</strong> wichtig: Die erforderliche Haltezeit beginnt erst, wenn das Bauteil selbst die geforderte Temperatur erreicht hat. Bei 2K-Nasslacken sind Mischungsverhältnis und Topfzeit relevant.<br><br>\n\n<h4>Prüfungen</h4>\nJe nach Auftrag können Schichtdicke, Haftfestigkeit, Gitterschnitt, Abreißfestigkeit, Glanz, Farbe, Rauheit, Härte, Korrosion, Porosität, Maßhaltigkeit oder elektrische Eigenschaften geprüft werden. Prüfungen und Dokumentationsumfang sollten vor Auftragserteilung festgelegt werden.<br><br>\n\n<h4>Normen, Anforderungen und Zertifizierungen</h4>\nEine technische Norm beschreibt nicht dasselbe wie eine Unternehmenszertifizierung. <strong>ISO 9001</strong> beschreibt ein Qualitätsmanagementsystem, <strong>ISO 14001</strong> ein Umweltmanagementsystem. Verfahrenstechnische Normen, Gütezeichen und Kundenspezifikationen können dagegen konkrete Anforderungen an Schicht, Prüfung oder Prozess stellen. Deshalb nur Anforderungen auswählen, die für den Auftrag tatsächlich notwendig sind.<br><br>\n\n<h4>Wenn ein Wert unbekannt ist</h4>\nKeine technische Zahl raten. Stattdessen Funktion und Einsatz beschreiben, z. B. „Bauteil steht ganzjährig außen und ist Streusalz ausgesetzt“, „Sichtteil aus Edelstahl, gleichmäßig matt“ oder „Bohrung ist eine Passung und muss nach Beschichtung im Toleranzfeld liegen“. Ein Fachbetrieb kann daraus häufig besser das geeignete Verfahren ableiten.";
+  const lackeBeschichtungsstoffeText = "<strong>Lacke und Beschichtungsstoffe</strong> unterscheiden sich nicht nur nach Farbe, sondern auch nach Bindemittel, Pigmentierung, Glanz, Struktur, Aushärtung und technischen Eigenschaften.<br><br>\n<h4>Nasslacke</h4>\nTypische Systeme sind 1K- und 2K-Lacke, wasserbasierte und lösemittelbasierte Systeme, Grundierungen, Zwischen- und Decklacke, Klarlacke sowie Spezialbeschichtungen. Bei 2K-Lacken sind Mischungsverhältnis und Topfzeit wichtig.<br><br>\n<h4>Pulverlacke</h4>\nTypische Bindemittelsysteme sind Polyester, Epoxid, Epoxy-Polyester, Polyurethan und Thermoplaste. Für Außenanwendungen können hochwetterfeste bzw. Fassadenqualitäten erforderlich sein.<br><br>\n<h4>Für eine eindeutige Materialvorgabe</h4>\nHersteller, Produktname, Artikelnummer, Charge, Farbton, Glanzgrad, Struktur und gegebenenfalls technisches Datenblatt angeben. Bei beigestelltem Material zusätzlich Menge und Haltbarkeit nennen.";
+  const lackrecyclingRestlackText = "<strong>Restlacke und Beschichtungsstoffe können je nach Zustand weiterverwendet, vermittelt, aufbereitet oder fachgerecht verwertet werden.</strong><br><br>\n<h4>Für eine Weiterverwendung wichtig</h4>\nHersteller, Produkt, Artikelnummer, Farbton, Glanzgrad, Gebindegröße, Restmenge, Charge, Herstell-/Ablaufdatum, Lagerzustand und vorhandene Sicherheits-/Technikdaten sollten möglichst bekannt sein.<br><br>\nPulverlacke müssen trocken, sauber und frei von Fremdmaterial gelagert sein. Bei Nasslacken sind unter anderem Hautbildung, Sedimentation, Mischbarkeit und Haltbarkeit zu prüfen. Ob ein Restmaterial noch technisch einsetzbar ist, entscheidet letztlich die konkrete Produkt- und Qualitätsprüfung.";
+
+  const htmlList = (items: string[]) => `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+
+  const buildProcedureText = (name: string, info: ProcedureInfo) => `
+    <strong>${info.summary}</strong><br><br>
+    <h4>Wofür wird ${name} eingesetzt?</h4>
+    ${htmlList(info.purpose)}
+    <h4>Auswahlmöglichkeiten im Formular</h4>
+    ${htmlList(info.options)}
+    <h4>Wichtige Angaben für eine Anfrage</h4>
+    ${htmlList(info.important)}
+    <h4>Normen / Anforderungen</h4>
+    ${htmlList(info.standards)}
+    <h4>Praxis-Hinweis</h4>
+    ${info.practice}<br><br>
+    <h4>Beispiel einer guten Anfrage</h4>
+    <em>${info.example}</em>
+  `;
+
+  const procedureIndex: Record<string, number> = Object.fromEntries(
+    procedureOrder.map((name, index) => [name, index + 2])
+  );
+
+  const groupDefinitions: Record<string, readonly string[]> = {
+  "Lackieren": [
+    "Nasslackieren",
+    "Pulverbeschichten",
+    "KTL-Beschichten"
+  ],
+  "Metallische & chemische Oberflächen": [
+    "Verzinken",
+    "Vernickeln",
+    "Verchromen",
+    "Verkupfern",
+    "Verzinnen",
+    "Vermessingen",
+    "Bronzebeschichten",
+    "Vergolden",
+    "Versilbern",
+    "Aluminieren",
+    "Eloxieren",
+    "Anodisieren",
+    "Aluminium-Passivieren",
+    "Edelstahl-Passivieren",
+    "Zinkphosphatieren",
+    "Eisenphosphatieren",
+    "Mn-Phosphatieren",
+    "Brünieren",
+    "Elektropolieren"
+  ],
+  "Mechanische Bearbeitung & Vorbehandlung": [
+    "Beizen",
+    "Strahlen",
+    "Schleifen",
+    "Polieren",
+    "Bürsten",
+    "Trowalisieren",
+    "Entgraten",
+    "Verrunden",
+    "Glätten",
+    "Mattieren",
+    "Chemisches Glänzen"
+  ],
+  "Entschichten": [
+    "Entlacken",
+    "Entzinken",
+    "Entnickeln",
+    "Entchromen",
+    "Entkupfern",
+    "Entmessingen",
+    "Entbronzieren",
+    "Entgolden",
+    "Entsilbern",
+    "Entzinnen",
+    "Entaluminieren",
+    "Enteloxieren",
+    "Entanodisieren"
+  ],
+  "Weitere Leistungen": [
+    "Folieren",
+    "Isolierstegverpressen",
+    "Einlagern"
+  ]
+};
+
   const verfahrensGruppen = [
-    {
-      title: "Lackieren",
-      items: [
-        { name: "Nasslackieren", description: "Flüssiglacke für dekorative, funktionelle und korrosionsschützende Oberflächen.", target: "container-2" },
-        { name: "Pulverbeschichten", description: "Pulverlack wird elektrostatisch aufgebracht und anschließend eingebrannt.", target: "container-3" },
-        { name: "KTL-Beschichten", description: "Kathodische Tauchlackierung für gleichmäßigen und widerstandsfähigen Korrosionsschutz.", target: "container-7" },
-      ],
-    },
-    {
-      title: "Galvanische & chemische Oberflächen",
-      items: [
-        { name: "Verzinken", description: "Korrosionsschutz durch Feuerverzinken, galvanisches Verzinken, Zinklamellenbeschichtung oder mechanisches Verzinken.", target: "container-4" },
-        { name: "Eloxieren", description: "Elektrochemische Oxidschicht auf Aluminium für Schutz, Optik und technische Eigenschaften.", target: "container-5" },
-        { name: "Anodisieren", description: "Anodische Oxidation von Titan, Magnesium, Zink und weiteren Sonderwerkstoffen; Aluminium wird unter Eloxieren geführt.", target: "container-6" },
-        { name: "Zinkphosphatieren", description: "Phosphatschicht als Korrosionsschutz und als Haftgrund für nachfolgende Beschichtungen.", target: "container-8" },
-        { name: "Mn-Phosphatieren", description: "Manganphosphatschicht für Verschleißschutz, Einlaufverhalten und als Haftgrund für Öle oder weitere Beschichtungen.", target: "container-30" },
-        { name: "Brünieren", description: "Dünne dunkle Konversionsschicht auf Eisenwerkstoffen, häufig mit anschließender Konservierung.", target: "container-11" },
-        { name: "Verzinnen", description: "Zinnschichten für Korrosionsschutz, Lötbarkeit und funktionelle Oberflächeneigenschaften.", target: "container-12" },
-        { name: "Aluminieren", description: "Aluminiumschichten für Korrosions- und Hochtemperaturschutz.", target: "container-13" },
-        { name: "Vernickeln", description: "Nickelschichten für Korrosionsschutz, Verschleißschutz, Optik oder als Zwischenschicht.", target: "container-14" },
-        { name: "Aluminium-Passivieren", description: "Chemische Passivierung von Aluminium zur Verbesserung von Korrosionsschutz und Lackhaftung.", target: "container-15" },
-        { name: "Edelstahl-Passivieren", description: "Passivieren nichtrostender Stähle zur Verbesserung der Korrosionsbeständigkeit und Entfernung freier Eisenverunreinigungen.", target: "container-45" },
-        { name: "Elektropolieren", description: "Elektrochemisches Glätten und Reinigen metallischer Oberflächen, besonders bei Edelstahl.", target: "container-16" },
-        { name: "Verchromen", description: "Chromschichten für dekorative oder technische Anforderungen, beispielsweise Hartchrom.", target: "container-17" },
-        { name: "Vermessingen", description: "Messingfarbene Metallbeschichtung für dekorative und funktionelle Anwendungen.", target: "container-18" },
-        { name: "Verkupfern", description: "Kupferschichten als Funktions-, Haft- oder Zwischenschicht sowie für dekorative Anwendungen.", target: "container-19" },
-        { name: "Vergolden", description: "Goldschichten für hochwertige Optik, Kontaktflächen und besondere technische Anforderungen.", target: "container-20" },
-        { name: "Versilbern", description: "Silberschichten für elektrische Leitfähigkeit, Kontaktflächen, Korrosionsschutz und dekorative Anwendungen.", target: "container-41" },
-        { name: "Bronzebeschichten", description: "Galvanische Bronzelegierungsschichten, beispielsweise Weißbronze oder Gelbbronze, für dekorative und funktionelle Oberflächen.", target: "container-44" },
-      ],
-    },
-    {
-      title: "Vorbehandlung & Entschichtung",
-      items: [
-        { name: "Beizen", description: "Chemisches Entfernen von Oxiden, Zunder, Rost oder Verunreinigungen zur Vorbereitung der Oberfläche.", target: "container-31" },
-        { name: "Entgraten", description: "Entfernen scharfer Grate und Bearbeitungsrückstände an Kanten, Bohrungen und Konturen.", target: "container-32" },
-        { name: "Verrunden", description: "Gezieltes Abrunden scharfer Kanten zur Verbesserung von Sicherheit, Beschichtbarkeit und Bauteilfunktion.", target: "container-33" },
-        { name: "Glätten", description: "Reduzieren von Rauheit und Bearbeitungsspuren für eine gleichmäßigere technische oder optische Oberfläche.", target: "container-34" },
-        { name: "Mattieren", description: "Erzeugen einer gleichmäßig matten Oberfläche durch mechanische, chemische oder strahltechnische Bearbeitung.", target: "container-35" },
-        { name: "Schleifen", description: "Spanende Feinbearbeitung zur Formkorrektur, Rauheitsreduzierung und Vorbereitung weiterer Oberflächenprozesse.", target: "container-36" },
-        { name: "Polieren", description: "Feinstbearbeitung zur Verringerung der Rauheit und Erzeugung glatter bis hochglänzender Oberflächen.", target: "container-37" },
-        { name: "Bürsten", description: "Mechanische Bearbeitung für Reinigung, Strukturierung oder ein definiertes Schliffbild auf Metalloberflächen.", target: "container-38" },
-        { name: "Trowalisieren", description: "Gleitschleifen von Werkstücken zum Entgraten, Glätten, Polieren oder Reinigen in einem Arbeitsbehälter.", target: "container-39" },
-        { name: "Chemisches Glänzen", description: "Chemisches Einebnen und Aufhellen einer Oberfläche ohne mechanische Polierbearbeitung.", target: "container-40" },
-        { name: "Strahlen", description: "Mechanische Oberflächenbehandlung zur Reinigung, Aufrauung oder Erzeugung definierter Oberflächen.", target: "container-9" },
-        { name: "Entlacken", description: "Entfernen vorhandener Lack- und Beschichtungssysteme als Vorbereitung für die Weiterbearbeitung.", target: "container-10" },
-        { name: "Entzinken", description: "Gezieltes Entfernen vorhandener Zinkschichten vor Reparatur oder Neubeschichtung.", target: "container-24" },
-        { name: "Enteloxieren", description: "Entfernen bestehender Eloxalschichten von Aluminiumoberflächen.", target: "container-25" },
-        { name: "Entanodisieren", description: "Entfernen anodisch erzeugter Oxidschichten als Vorbereitung für eine neue Oberflächenbehandlung.", target: "container-26" },
-        { name: "Entzinnen", description: "Chemisches oder elektrochemisches Entfernen vorhandener Zinnschichten.", target: "container-27" },
-        { name: "Entaluminieren", description: "Entfernen vorhandener Aluminiumschichten vor einer erneuten Oberflächenbehandlung.", target: "container-28" },
-        { name: "Entnickeln", description: "Chemisches oder elektrochemisches Entfernen von Nickelschichten.", target: "container-29" },
-        { name: "Entchromen", description: "Entfernen dekorativer oder technischer Chromschichten vor Aufarbeitung oder Neubeschichtung.", target: "container-46" },
-        { name: "Entkupfern", description: "Entfernen vorhandener Kupferschichten oder Kupfer-Zwischenschichten vor einer Neubeschichtung.", target: "container-47" },
-      ],
-    },
+    ...Object.entries(groupDefinitions).map(([title, names]) => ({
+      title,
+      items: names.map((name) => ({
+        name,
+        description: procedureInfo[name].summary,
+        target: `container-${procedureIndex[name]}`,
+      })),
+    })),
     {
       title: "Lacke, Restlacke & Recycling",
       items: [
-        { name: "Lacke & Beschichtungsstoffe", description: "Grundlagen zu Nass- und Pulverlacken, Lackaufbau, Eigenschaften, Auswahl, Lagerung und wichtigen technischen Angaben.", target: "container-42" },
-        { name: "Lackrecycling & Restlackverwertung", description: "Möglichkeiten, geeignete Restlacke weiterzuverwenden, aufzubereiten oder einer sinnvollen Verwertung zuzuführen, statt sie vorschnell zu entsorgen.", target: "container-43" },
-      ],
-    },
-    {
-      title: "Weitere Leistungen",
-      items: [
-        { name: "Folieren", description: "Aufbringen technischer oder dekorativer Folien für Innen- und Außenanwendungen.", target: "container-21" },
-        { name: "Isolierstegverpressen", description: "Verbinden von Aluminiumprofilen mit thermisch trennenden Isolierstegen.", target: "container-22" },
-        { name: "Einlagern", description: "Zwischen- oder Fertigwarenlagerung als ergänzende Leistung innerhalb der Auftragsabwicklung.", target: "container-23" },
+        {
+          name: "Lacke & Beschichtungsstoffe",
+          description: "Grundlagen zu Nass- und Pulverlacken, Werkstoffsystemen, Produktangaben und technischer Auswahl.",
+          target: `container-${procedureOrder.length + 2}`,
+        },
+        {
+          name: "Lackrecycling & Restlackverwertung",
+          description: "Wichtige Angaben für Weiterverwendung, Vermittlung und fachgerechte Verwertung von Restmaterialien.",
+          target: `container-${procedureOrder.length + 3}`,
+        },
       ],
     },
   ];
@@ -233,871 +1749,351 @@ useEffect(() => {
     });
   };
 
-  const legacyContainerHeadings = [
-    "Beschichtungstechnik",
-    "Verfahren",
-    "Nasslackieren",
-    "Pulverbeschichten",
-    "Eloxieren / Anodisieren & Enteloxieren / Entanodisieren",
-    "Verzinken & Entzinken",
-    "Verzinnen & Entzinnen",
-    "Aluminieren & Entaluminieren",
-    "Vernickeln & Entnickeln",
-    "Entlacken",
-    "Strahlen",
-    "Folieren",
-    "Isolierstegverpressen",
+  const normalizeSearchText = (value: string) =>
+    value
+      .toLocaleLowerCase("de-DE")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/[^a-z0-9äöüßµ]+/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const searchEntries = [
+    {
+      title: "Technische Angaben verstehen",
+      description: "Farbpalette, Farbton, Glanzgrad, Schichtdicke, Rauheit, Werkstoff, Maskieren, Prüfungen und weitere Grundlagen.",
+      target: "container-1",
+      searchText: technischeAngabenText,
+    },
+    ...procedureOrder.map((name) => ({
+      title: name,
+      description: procedureInfo[name].summary,
+      target: `container-${procedureIndex[name]}`,
+      searchText: [
+        name,
+        procedureInfo[name].summary,
+        ...procedureInfo[name].purpose,
+        ...procedureInfo[name].options,
+        ...procedureInfo[name].important,
+        ...procedureInfo[name].standards,
+        procedureInfo[name].practice,
+        procedureInfo[name].example,
+      ].join(" "),
+    })),
+    {
+      title: "Lacke & Beschichtungsstoffe",
+      description: "Grundlagen zu Nasslacken, Pulverlacken, Produktangaben und Materialsystemen.",
+      target: `container-${procedureOrder.length + 2}`,
+      searchText: lackeBeschichtungsstoffeText,
+    },
+    {
+      title: "Lackrecycling & Restlackverwertung",
+      description: "Weiterverwendung, Vermittlung und Verwertung von Restlacken und Beschichtungsstoffen.",
+      target: `container-${procedureOrder.length + 3}`,
+      searchText: lackrecyclingRestlackText,
+    },
   ];
 
-  const legacyContainerTexts = [
-    "Die <strong>Beschichtungstechnik</strong> (bzw. Oberflächentechnik) ist ein Teilbereich der Materialwissenschaften, der sich mit der <span class='highlight'>gezielten Modifikation von Oberflächen</span> beschäftigt, um deren Eigenschaften zu verbessern. Ziel ist es, Materialien oder Bauteile <strong>funktionaler</strong>, <strong>langlebiger</strong> und <strong>ästhetisch ansprechender</strong> zu gestalten. Die Beschichtungstechnik leistet somit einen wesentlichen Beitrag zur Langlebigkeit und Umweltfreundlichkeit metallischer Produkte. Die Anwendungen reichen von <strong>Korrosions-</strong> und <strong>Verschleißschutz</strong> bis hin zur Optimierung <span class='highlight'>chemischer</span>, <span class='highlight'>elektrischer</span> und <span class='highlight'>mechanischer</span> Eigenschaften sowie der visuellen Gestaltung. Dabei wird ausschließlich die Oberfläche behandelt, während das Grundmaterial unverändert bleibt. Diese Technologie spielt eine essenzielle Rolle in zahlreichen Industrien, darunter die <strong>Automobilbranche</strong>, <strong>Luft- und Raumfahrt</strong>, <strong>Maschinenbau</strong>, <strong>Medizintechnik</strong> und <strong>Elektronik</strong>.<br><br><h4>Ziele der Beschichtung:</h4><ul><li><strong>Dekoration:</strong> Lackieren oder Pulverbeschichten mit verschiedenen Lacken verändern Farbe, Glanz und Textur der Oberfläche.</li><li><strong>Schutz:</strong> Reduktion von Korrosion, Abrieb, Kratzer und UV-Strahlung.</li><li><strong>Funktionalität:</strong> Die Oberfläche wird mit spezifischen Eigenschaften ausgestattet, etwa durch Verbesserung der Haftung, Gleitfähigkeit, elektrischen Leitfähigkeit oder Wärmeleitfähigkeit</span>.</li><li><strong>Hygiene:</strong> Spezielle Beschichtungen können Schmutzanhaftungen reduzieren und die Reinigung erleichtern. Dies ist besonders in der Lebensmittelindustrie und der Medizintechnik von großem Nutzen.</li></ul>",
-
-    
-    "Die <strong>Verfahren in der Beschichtungstechnik</strong> sind vielfältig und können in vier verschiedene Verfahrenstypen eingeteilt werden:<br><br><strong>Thermische Verfahren:</strong> Durch Hitzezufuhr wird auf dem Werkstück eine Beschichtung erzeugt. <span class='highlight'>Verzinken durch Flammspritzen</span> oder <span class='highlight'>Lackieren durch Pulverbeschichten</span>, sind häufig eingesetzte Techniken.<br><br><strong>Chemische Verfahren:</strong> Durch Chemikalien werden Oberflächenstruktur und -beschaffenheit verändert. Zu den bekanntesten Prozessen zählen das <span class='highlight'>Beizen</span> (entfernen von Oxidschichten / Rost), das <span class='highlight'>Passivieren</span> (Überziehen einer Schutzschicht) und das <span class='highlight'>Anodisieren</span> (Eloxieren), also das Bilden einer stabilen Oxidschicht.<br><br><strong>Galvanische oder elektrolytische Verfahren:</strong> In einer Lösung mit Metallionen (meist Zink, Chrom oder Nickel) welche auf die Oberfläche eines Werkstücks abgeschieden werden, bildet sich eine <span class='highlight'>Korrosionsschutzschicht</span>, welche die Lebensdauer des Werkstücks gegen Korrosion erhöht.<br><br><strong>Mechanische Verfahren:</strong> <span class='highlight'>Nasslackieren</span>, <span class='highlight'>Schleifen</span>, <span class='highlight'>Polieren</span>, <span class='highlight'>Bürsten</span>, <span class='highlight'>mechanisches Entlacken</span> oder <span class='highlight'>Strahlen</span> zählen zu den Verfahren, bei denen die Oberfläche durch mechanische Einwirkung strukturiert wird.",
-
-   "Das <strong>Nasslackieren</strong> ist ein Beschichtungsverfahren, bei dem flüssiger Lack auf die Oberfläche eines Werkstücks aufgetragen wird, um es zu schützen oder ästhetisch zu gestalten. Der Prozess umfasst das Auftragen des Lacks mit verschiedenen Methoden und endet mit einer Trocknung oder Aushärtung des Lacks. Nasslackieren wird in vielen Industrien eingesetzt, um eine <strong>korrosionsbeständige</strong>, <strong>dekorative</strong> oder <strong>funktionelle</strong> Oberfläche zu erzielen.<br><br><strong>Spritzlackieren</strong> ist eine der häufigsten Methoden des Nasslackierens. Dabei wird der flüssige Lack mit einem Sprühgerät auf das Werkstück aufgetragen. Diese Methode wird besonders für Bauteile mit komplexen Formen oder großen Oberflächen verwendet. Sie ermöglicht eine gleichmäßige Lackierung und wird in Bereichen wie der <span class='highlight'>Automobilindustrie</span>, <span class='highlight'>Möbelherstellung</span> und <span class='highlight'>Maschinenbau</span> eingesetzt.<br><br>Beim <strong>Tauchlackieren</strong> wird das Werkstück in ein Bad aus flüssigem Lack getaucht. Dieses Verfahren eignet sich gut für Bauteile mit komplexen Geometrien, da der Lack gleichmäßig auf der Oberfläche haftet. Tauchlackieren findet oft in der <span class='highlight'>Automobilindustrie</span> Anwendung. <strong>Rolllackieren</strong> wird eingesetzt, indem der Lack mit einer Walze auf das Werkstück aufgetragen wird. Diese Methode eignet sich gut für große flache Oberflächen wie Türen oder Möbelplatten und ist weniger präzise als das Spritzlackieren. Für kleinere Flächen oder in Bereichen, in denen Präzision weniger wichtig ist, wird auch <strong>Pinsel- und Rollenlackierung</strong> eingesetzt. Diese traditionelle Methode erlaubt es, den Lack direkt auf das Werkstück aufzutragen.<br><br><strong>KTL (Kathodische Tauchlackierung)</strong> ist ein spezielles Verfahren, das in der <span class='highlight'>Automobilindustrie</span> und anderen Bereichen verwendet wird, um eine besonders korrosionsbeständige Lackschicht zu erzeugen. Bei KTL wird das Werkstück in ein Lackbad getaucht, das elektrisch geladen ist. Durch Anlegen eines elektrischen Stroms wird das Werkstück zur Kathode, und der Lack wird elektrochemisch aufgetragen, wodurch eine sehr gleichmäßige und strapazierfähige Schicht entsteht. KTL ist besonders effektiv für den Schutz von Bauteilen vor Rost und Korrosion, da die Schicht besonders dick und widerstandsfähig ist.<br><br>Das <strong>Nasslackieren</strong> bietet den Vorteil einer gleichmäßigen Beschichtung, die besonders schwer zu erzielen wäre, wenn man andere Verfahren wie das Pulverbeschichten verwendet. Es gibt eine breite Auswahl an Farben und Effekten, die mit Nasslack erreicht werden können, und es eignet sich für viele verschiedene Materialien wie <span class='highlight'>Holz</span>, <span class='highlight'>Metall</span> und <span class='highlight'>Kunststoff</span>. Zudem lässt sich eine Beschichtung aus Nasslack relativ einfach reparieren, wenn Schäden auftreten. Das Verfahren ist sehr vielseitig und findet in zahlreichen Branchen Anwendung. Auf der anderen Seite hat Nasslackieren auch einige Nachteile. Die Trocknungszeit ist relativ lang, besonders im Vergleich zu anderen Verfahren wie dem Pulver- oder UV-Lackieren, was die Produktionsgeschwindigkeit verlangsamen kann. Viele flüssige Lacke enthalten Lösungsmittel oder flüchtige organische Verbindungen (VOCs), die schädlich für die Umwelt sein können, weshalb zunehmend <strong>wasserbasierte</strong> oder <strong>umweltfreundlichere Lacke</strong> verwendet werden. Ein weiteres Problem ist der <strong>Materialverlust</strong>, der besonders beim Spritzlackieren auftreten kann, wenn ein Teil des Lacks durch Overspray verloren geht. Dies führt zu einem höheren Materialverbrauch und einer geringeren Effizienz. Obwohl Nasslack eine gleichmäßige Beschichtung ermöglicht, können ungewollte Tropfenbildung oder Lufteinschlüsse entstehen, wenn das Verfahren nicht ordnungsgemäß ausgeführt wird. Nasslackieren wird in vielen Industrien wie der <span class='highlight'>Automobilindustrie</span>, <span class='highlight'>Möbelproduktion</span> und bei <span class='highlight'>Haushaltsgeräten</span> eingesetzt. Es bietet eine hohe Flexibilität bei der Farbgestaltung und Oberflächenveredelung. Besonders bei Bauteilen, die hohen mechanischen Belastungen ausgesetzt sind oder spezifische dekorative Anforderungen erfüllen müssen, ist Nasslackieren eine gängige Wahl. Das Verfahren ist eine bewährte und vielseitige Lösung für die Oberflächenbehandlung, obwohl es einige Herausforderungen hinsichtlich der Effizienz und Umweltaspekte gibt.<br><br><strong>Relevante Zertifizierungen und Normen:</strong><br>Beim Nasslackieren sind je nach Einsatzbereich vor allem Korrosionsschutzanforderungen, Schichtaufbau, Schichtdicke, Haftung, Glanzgrad, Farbton, Beständigkeit und Prüfzeugnisse relevant. Für Stahlbauteile im Korrosionsschutz ist <strong>DIN EN ISO 12944</strong> ein wichtiger Orientierungspunkt. In regulierten Branchen können außerdem kundenspezifische Vorgaben, Werksnormen sowie Qualitäts- und Umweltmanagementsysteme wie <strong>ISO 9001</strong> oder <strong>ISO 14001</strong> relevant sein. Für das Beschichtungsergebnis bedeutet das: Der gewünschte Schutzgrad, die Optik und die technische Beständigkeit werden klarer definiert und können besser geprüft werden.<br><br><strong>Korrosionsschutzklassen:</strong><br>Bei Bauteilen aus Stahl oder beschichtetem Metall können Korrosivitätskategorien nach <strong>DIN EN ISO 12944</strong> relevant sein. Sie beschreiben, wie stark die spätere Umgebung das Bauteil korrosiv belastet. <strong>C1</strong> steht für sehr geringe Belastung, z. B. trockene Innenräume. <strong>C2</strong> steht für geringe Belastung, z. B. unbeheizte Innenräume oder ländliche Außenbereiche. <strong>C3</strong> beschreibt mittlere Belastung, z. B. Stadtbereiche, leichte Industrie oder feuchtere Produktionsräume. <strong>C4</strong> steht für hohe Belastung, z. B. Industrieumgebung oder Küstennähe. <strong>C5</strong> und <strong>CX</strong> stehen für sehr hohe bis extreme Belastung, z. B. starke Industrie-, Meeres- oder Offshore-Umgebungen. Für das Ergebnis bedeutet das: Je höher die Klasse, desto genauer müssen Vorbehandlung, Schichtaufbau, Schichtdicke und Beschichtungssystem auf den Einsatzbereich abgestimmt werden.<br><br><strong>Nasslacke</strong><br><br>Nasslacke sind flüssige Beschichtungen, die auf Werkstücke aufgetragen werden, um deren Oberflächen zu schützen, zu verschönern oder funktionelle Eigenschaften zu verleihen. Sie bestehen aus verschiedenen Bestandteilen wie <span class='highlight'>Bindemitteln</span>, <span class='highlight'>Pigmenten</span>, <span class='highlight'>Lösungsmitteln</span> und <span class='highlight'>Additiven</span>. Die Beschichtung wird in flüssiger Form aufgebracht und trocknet anschließend, um eine feste, schützende Schicht zu bilden. Nasslacke werden in einer Vielzahl von Branchen verwendet, von der <span class='highlight'>Automobilindustrie</span> über <span class='highlight'>Möbelherstellung</span> bis hin zur <span class='highlight'>Elektroindustrie</span>.<br>Nasslacke bestehen hauptsächlich aus <strong>Bindemitteln</strong> (Harze oder Kunststoffe), die für die Haftung auf der Oberfläche verantwortlich sind, <strong>Pigmenten</strong>, die Farbe und Deckkraft liefern, und <strong>Lösungsmitteln</strong>, die die Viskosität des Lacks anpassen und die Anwendung erleichtern. Zusatzstoffe wie <span class='highlight'>UV-Stabilisatoren</span>, <span class='highlight'>Antioxidantien</span> oder <span class='highlight'>Flammschutzmittel</span> können ebenfalls hinzugefügt werden, um bestimmte Eigenschaften zu verbessern, wie etwa <strong>Wetterbeständigkeit</strong> oder <strong>Brandverhalten</strong>.<br>Es gibt verschiedene Arten von Nasslacken, die je nach Anwendungsbereich und den gewünschten Eigenschaften des Endprodukts ausgewählt werden:<br> <strong>Lösemittelhaltige Nasslacke:</strong> Diese Lacke enthalten Lösungsmittel, die beim Trocknen verdampfen und die Lackschicht hinterlassen. Sie sind einfach zu verarbeiten und bieten eine hohe Beständigkeit gegenüber Umwelteinflüssen. Aufgrund der enthaltenen flüchtigen organischen Verbindungen (VOCs) gelten sie jedoch als weniger umweltfreundlich und müssen unter besonderen Vorsichtsmaßnahmen eingesetzt werden.<br> <strong>Wasserbasierte Nasslacke:</strong> Diese Lacke enthalten Wasser als Hauptverdünnungsmittel anstelle von Lösungsmitteln. Sie sind umweltfreundlicher, da sie weniger VOCs freisetzen und weniger schädlich für die Luftqualität sind. Wasserbasierte Lacke bieten dennoch eine gute Leistung und werden zunehmend in der <span class='highlight'>Automobilindustrie</span>, bei <span class='highlight'>Möbeln</span> und in der <span class='highlight'>Bauindustrie</span> eingesetzt.<br> <strong>2K-Nasslacke (Zweikomponentenlacke):</strong> Diese Lacke bestehen aus zwei Komponenten – dem Basislack und einem Härter. Beide werden erst kurz vor der Anwendung gemischt. Diese Art von Lack bietet eine besonders hohe Widerstandsfähigkeit und Beständigkeit gegenüber mechanischen Belastungen, was sie ideal für industrielle Anwendungen wie <span class='highlight'>Maschinenbau</span>, <span class='highlight'>Fahrzeugbau</span> oder <span class='highlight'>Korrosionsschutz</span> macht. Nasslacke bieten eine hohe Flexibilität in der Anwendung. Sie können auf nahezu jede Art von Oberfläche aufgetragen werden, darunter <strong>Metall</strong>, <strong>Holz</strong>, <strong>Kunststoff</strong> und <strong>Glas</strong>. Sie ermöglichen die Erstellung von glatten, gleichmäßigen Beschichtungen mit einer breiten Auswahl an Farben und Oberflächenstrukturen (glänzend, matt, satin). Darüber hinaus bieten sie eine hohe Beständigkeit gegen Umwelteinflüsse wie <strong>UV-Strahlung</strong>, <strong>Feuchtigkeit</strong> und <strong>Temperaturunterschiede</strong>. Ein weiterer Vorteil von Nasslacken ist ihre Vielseitigkeit. Sie können in verschiedenen Anwendungen eingesetzt werden, von <strong>dekorativen Beschichtungen</strong> bis hin zu <strong>funktionellen Schutzschichten</strong>. Sie sind besonders geeignet für Anwendungen, bei denen eine hohe Farbvielfalt, eine gute Deckkraft und eine gleichmäßige Oberfläche gewünscht sind.<br>Ein großer Nachteil von Nasslacken ist die <strong>Trocknungszeit</strong>. Im Vergleich zu anderen Beschichtungsverfahren wie dem Pulver- oder UV-Lackieren benötigen Nasslacke deutlich mehr Zeit, um vollständig zu trocknen oder auszuhärten. Dies kann die Produktionsgeschwindigkeit in industriellen Anwendungen verlangsamen. Viele Nasslacke enthalten <strong>flüchtige organische Verbindungen (VOCs)</strong>, die umweltschädlich sein können und spezielle Sicherheitsvorkehrungen erfordern. Um diesem Problem entgegenzuwirken, werden zunehmend <span class='highlight'>wasserbasierte Nasslacke</span> verwendet, die weniger VOCs freisetzen und umweltfreundlicher sind. Trotz ihrer geringeren Umweltbelastung haben wasserbasierte Lacke oft eine geringere Widerstandsfähigkeit gegenüber extremen Witterungsbedingungen und mechanischen Belastungen als lösemittelbasierte Lacke. Außerdem kann das Nasslackieren aufgrund von <strong>Materialverlusten</strong> durch Overspray oder Überlackierung weniger effizient sein. Beim Sprühen von Lack entsteht feiner Sprühnebel, der nicht auf der Oberfläche landet, sondern in der Luft verbleibt oder sich auf anderen Oberflächen absetzt, was zu einem höheren Materialverbrauch führt. Nasslacke finden in einer Vielzahl von Bereichen Anwendung. Sie werden in der <span class='highlight'>Automobilindustrie</span> zur Lackierung von Fahrzeugen und Fahrzeugteilen eingesetzt, in der <span class='highlight'>Möbelherstellung</span> zur Veredelung von Holzoberflächen sowie im <span class='highlight'>Bau</span> für Fensterrahmen, Türen und Stahlkonstruktionen. Zudem finden sie Anwendung in der <span class='highlight'>Elektronikindustrie</span> für Leiterplatten und in der <span class='highlight'>Maschinenbauindustrie</span>, um Maschinenbauteile vor Korrosion zu schützen. Insgesamt bieten Nasslacke eine sehr vielseitige und weit verbreitete Lösung für eine Vielzahl von Oberflächenbehandlungsanforderungen. Sie sind besonders geeignet für Anwendungen, bei denen eine hohe <strong>Farbgenauigkeit</strong> und eine gleichmäßige, <strong>dauerhafte Beschichtung</strong> gewünscht sind.",
-
-    "Das <strong>Pulverbeschichten</strong>, auch bekannt als <strong>Thermo-</strong> oder <strong>Pulverlackierung</strong>, ist ein Verfahren zur Oberflächenbeschichtung, das auf <span class='highlight'>elektrisch leitfähigen Materialien</span> angewendet wird. Typischerweise kommen dabei <span class='highlight'>Metalle</span> wie Aluminium, Stahl, verzinkter Stahl, Edelstahl oder Messing zum Einsatz, doch auch andere Werkstoffe lassen sich auf diese Weise beschichten. Damit die Beschichtung optimal haftet und ihren Zweck erfüllt, ist eine <strong>sorgfältige Vorbehandlung</strong> erforderlich. Diese umfasst in der Regel eine <span class='highlight'>Entfettung</span>, <span class='highlight'>Beizung</span> sowie eine <span class='highlight'>Passivierung</span> – je nach Grundmaterial können dabei unterschiedliche Verfahren und Chemikalien zum Einsatz kommen. Nach der Vorbehandlung werden die Werkstücke getrocknet und anschließend mit <strong>Pulverlack</strong> besprüht. Im nächsten Schritt erfolgt das <strong>Einbrennen</strong> des Pulvers im Ofen bei Temperaturen zwischen <span class='highlight'>110 und 250 °C</span>. Dabei vernetzt sich das Pulver und bildet eine <strong>widerstandsfähige, optisch ansprechende Schutzschicht</strong>.<br><br>Die Pulverbeschichtung ist auch für <span class='highlight'>großformatige Bauteile</span> geeignet – Werkstücke mit einer Größe von bis zu <strong>10 × 5 × 3 Metern</strong> (HxBxT) lassen sich problemlos bearbeiten, in Sonderfällen sogar noch größere. Die <strong>Dicke der Beschichtung</strong> variiert je nach Anwendungsbereich und liegt in der Regel zwischen <span class='highlight'>60 und 120 µm</span>, wobei sowohl dünnere als auch dickere Schichten realisierbar sind.<br><br><strong>Relevante Zertifizierungen und Normen:</strong><br>Für Pulverbeschichtungen können je nach Material, Einsatzbereich und Qualitätsanforderung unterschiedliche Zertifizierungen, Qualitätslabels oder Normen relevant sein. <strong>QUALICOAT</strong> ist vor allem bei beschichtetem Aluminium für architektonische Anwendungen relevant und steht für Anforderungen an Vorbehandlung, Beschichtungsstoffe, Anlagen und fertige Produkte. <strong>GSB</strong> steht ebenfalls für geprüfte Qualität bei hochwertigen Beschichtungen von Aluminium und Stahl. Bei beschichtetem Stahl kann <strong>QUALISTEELCOAT</strong> relevant sein, insbesondere wenn Anforderungen an Korrosionsschutz, Vorbehandlung, Beschichtungssysteme und Qualitätskontrolle bestehen. Für Korrosionsschutz an Stahlbauteilen sind außerdem <strong>DIN EN ISO 12944</strong> sowie bei Pulverbeschichtung von Stahlbauteilen <strong>DIN 55633</strong> und <strong>DIN 55634</strong> wichtige Orientierungspunkte. Bei feuerverzinkten und anschließend pulverbeschichteten Bauteilen können zusätzlich Anforderungen an Duplex-Systeme relevant sein. Für das Beschichtungsergebnis bedeutet das: Vorbehandlung, Haftung, Schichtaufbau, Schichtdicke, Korrosionsschutz, Beständigkeit und regelmäßige Qualitätsprüfungen werden klarer geregelt. Die Oberfläche soll dadurch gleichmäßiger, beständiger und besser auf den vorgesehenen Einsatzbereich abgestimmt sein.<br><br><strong>Korrosionsschutzklassen:</strong><br>Bei Bauteilen aus Stahl oder beschichtetem Metall können Korrosivitätskategorien nach <strong>DIN EN ISO 12944</strong> relevant sein. Sie beschreiben die spätere Belastung durch die Umgebung. <strong>C1</strong> bedeutet sehr geringe Belastung, z. B. trockene Innenräume. <strong>C2</strong> bedeutet geringe Belastung, z. B. unbeheizte Innenräume oder ländliche Außenbereiche. <strong>C3</strong> bedeutet mittlere Belastung, z. B. Stadtbereiche, leichte Industrie oder feuchtere Produktionsräume. <strong>C4</strong> bedeutet hohe Belastung, z. B. Industrieumgebung oder Küstennähe. <strong>C5</strong> und <strong>CX</strong> bedeuten sehr hohe bis extreme Belastung, z. B. starke Industrie-, Meeres- oder Offshore-Umgebungen. Für das Ergebnis bedeutet das: Je höher die Korrosionsschutzklasse, desto wichtiger sind passende Vorbehandlung, Pulverlack-System, Schichtdicke, Kantenabdeckung und Qualitätsprüfung.<br><br><strong>Pulverlacke</strong> sind in sehr vielen verschiedenen Variationen kommerziell erhältlich. Die meisten Pulverlacke haben <span class='highlight'>Polyamid</span>, <span class='highlight'>Polyesterharz</span> oder <span class='highlight'>Epoxidharz</span> als Basis. Pulverlacke unterscheiden sich je nach Zusammensetzung in <strong>Farben & Erscheinung</strong>, <strong>Glanzgraden</strong>, <strong>Oberflächenstrukturen</strong>, <strong>Verarbeitung</strong>, <strong>Einsatzzwecken</strong> und <strong>Eigenschaften gegenüber äußeren Einflüssen</strong>. Es sind <span class='highlight'>kratzresistente</span>, <span class='highlight'>elektrisch ableitfähige</span>, <span class='highlight'>hochwetterfeste</span>, <span class='highlight'>anti-Graffiti</span>, <span class='highlight'>fluoreszierende</span>, <span class='highlight'>metallic</span>, <span class='highlight'>anti-Quietsch</span>, <span class='highlight'>anti-Rutsch</span>, <span class='highlight'>anti-Ausgasung</span> und weitere Variationen erhältlich, je nach geforderter Anwendung. Pulverlacke sind auf Kundenwunsch auch <strong>nach Vorlage oder individuellen Bedürfnissen</strong> produzierbar. Ebenso gibt es <span class='highlight'>GSB</span> und <span class='highlight'>Qualicoat</span> zertifizierte Pulverlacke, welche bestimmte Mindeststandards jedenfalls erfüllen müssen.",
-
-    "Das <strong>Eloxieren</strong> ist ein Verfahren zur <span class='highlight'>elektrolytischen Oxidation von Aluminium</span>, bei dem eine schützende Oxidschicht auf der Oberfläche gebildet wird. Diese Schicht bewahrt das Material vor Korrosion und verbessert seine Widerstandsfähigkeit. Dabei wird die oberste Metallschicht gezielt in Aluminiumoxid bzw. Hydroxid umgewandelt, wodurch eine <strong>widerstandsfähige</strong> und <strong>gleichmäßige Schutzschicht</strong> entsteht. Die Dicke der Eloxalschicht beträgt in der Regel zwischen <span class='highlight'>5 und 25 Mikrometern</span>, kann jedoch für spezielle Anwendungen auch dicker ausgeführt werden. Eine <strong>fehlerfreie, geschlossene Struktur</strong> ist essenziell, um die Schutzfunktion vollständig zu gewährleisten. Neben der <strong>Korrosionsbeständigkeit</strong> bietet das Verfahren weitere Vorteile: Die Oberfläche wird deutlich <strong>härter</strong> (Standard: 200–350 HV, Harteloxal: bis zu 600 HV), das Material erhält eine <strong>elektrische Isolierung</strong> und die <strong>Reibungseigenschaften</strong> werden verbessert. Ein besonderer Vorteil des Eloxierens ist die <span class='highlight'>gleichmäßige Beschichtung selbst bei komplexen Geometrien</span>. Die entstehende Oxidschicht besitzt zunächst Mikroporen, die durch ein <strong>abschließendes Verdichten oder Versiegeln</strong> verschlossen werden. Die Qualität der Schicht hängt stark von der <span class='highlight'>Reinheit des Aluminiums</span> ab – während reines Aluminium ideale Ergebnisse liefert, können bestimmte Legierungen zu Unregelmäßigkeiten führen. Daher sollte die <strong>Materialzusammensetzung</strong> sorgfältig auf die Anforderungen abgestimmt und die <span class='highlight'>Empfehlungen des Eloxalbetriebs</span> berücksichtigt werden. Der Prozess beginnt mit einer gründlichen <strong>Vorbehandlung</strong>, bei der die Werkstücke <span class='highlight'>entfettet</span> und <span class='highlight'>gebeizt</span> werden. Anschließend erfolgt die <strong>elektrolytische Oxidation</strong>. Danach kann das eloxierte Material in <span class='highlight'>verschiedenen Farben eingefärbt</span> oder mit speziellen Verfahren partiell behandelt werden. Zudem lassen sich Eloxalschichten bei Bedarf auch wieder <strong>entfernen</strong>.<br><br><strong>Relevante Zertifizierungen und Normen:</strong><br>Beim Eloxieren bzw. Anodisieren von Aluminium kann <strong>QUALANOD</strong> relevant sein. QUALANOD ist ein Qualitätslabel für anodisierte bzw. eloxierte Aluminiumoberflächen und steht für Anforderungen an Prozessüberwachung, Schichtqualität und Ausführung durch lizenzierte Betriebe. Je nach Anwendung können zusätzlich Schichtdickenvorgaben, Prüfzeugnisse, Farbvorgaben, Anforderungen an Verdichtung, Abriebfestigkeit, Korrosionsbeständigkeit oder kundenspezifische Werksnormen wichtig sein. Für das Beschichtungsergebnis bedeutet das: Schichtdicke, Verdichtung, Farbgleichmäßigkeit und Beständigkeit werden besser nachvollziehbar und prüfbar. Gerade bei sichtbaren Aluminiumteilen, Fassadenprofilen oder technischen Funktionsflächen sollte der gewünschte Qualitätsstandard vorab angegeben werden.<br><br>Das <strong>Anodisieren</strong> ist ein <span class='highlight'>elektrochemisches Verfahren</span> zur gezielten Oxidation von Metallen, das eine <strong>schützende</strong> und <strong>veredelnde Oxidschicht</strong> auf der Materialoberfläche erzeugt. Allerdings eignet sich nicht jedes Metall für diesen Prozess. Neben <span class='highlight'>Aluminium</span> und seinen Legierungen können auch <span class='highlight'>Titan</span>, <span class='highlight'>Magnesium</span>, <span class='highlight'>Zink</span>, <span class='highlight'>Niob</span> und <span class='highlight'>Tantal</span> anodisiert werden. Ähnlich wie beim Eloxieren erfolgt zunächst eine gründliche <strong>Vorbehandlung</strong>, bei der die Werkstücke <span class='highlight'>gereinigt</span>, <span class='highlight'>entfettet</span> und gegebenenfalls <span class='highlight'>gebeizt</span> werden. Diese Schritte sind entscheidend für eine <strong>gleichmäßige</strong> und <strong>hochwertige Oxidschicht</strong>. Anschließend werden die Bauteile <strong>elektrochemisch behandelt</strong>, wodurch sich die gewünschte Schutzschicht bildet. Die <span class='highlight'>Schichtdicke</span> hängt unter anderem von der <span class='highlight'>angelegten Spannung</span> und der <span class='highlight'>Dauer des Prozesses</span> ab. Zusätzlich besteht die Möglichkeit, die Oberfläche in <strong>verschiedenen Farben zu färben</strong>, bevor die poröse Oxidschicht in einem abschließenden Schritt <strong>versiegelt</strong> wird. Dies erhöht die <strong>Widerstandsfähigkeit</strong> und sorgt für eine <strong>lange Haltbarkeit</strong>. Das Anodisieren verbessert nicht nur den <span class='highlight'>Korrosionsschutz</span> und die <span class='highlight'>Abriebfestigkeit</span> gegenüber mechanischer Beanspruchung, sondern bietet auch vielfältige <strong>gestalterische Möglichkeiten</strong>. Zudem ist das Verfahren <strong>umweltfreundlich</strong>, da es – im Gegensatz zu galvanischen Beschichtungen – ohne den Einsatz <span class='highlight'>schädlicher Metalle</span> auskommt.<br><br><br><strong>Enteloxieren bzw. Entanodisieren</strong> bezieht sich auf das <span class='highlight'>Entfernen der anodisierten Schicht</span> von Metalloberflächen, die durch das Anodisieren eine schützende Oxidschicht erhalten haben. Enteloxieren wird nur im Bezug auf <strong>Aluminium</strong> verwendet, Entanodisieren wird für andere Materialien angewendet, die anodisiert wurden. Das Ziel des Enteloxierens bzw. Entanodisierens ist es, die <strong>schützende Oxidschicht zu entfernen</strong>, um die Oberfläche für eine weitere Bearbeitung oder ein anderes Finish vorzubereiten.<br><br><strong>Aluminium:</strong> Wie bereits erwähnt, ist das Entanodisieren von Aluminium am häufigsten. Dabei wird die Schicht, die durch den elektrolytischen Prozess entsteht, <strong>entfernt</strong>, um das ursprüngliche Material freizulegen oder eine erneute Anodisierung zu ermöglichen.<br><br><strong>Andere Metalle:</strong> Auch andere <span class='highlight'>Metalle oder Legierungen</span> können anodisiert und anschließend entanodisiert werden. Zu diesen Materialien gehören <strong>Titan</strong> und <strong>Magnesium</strong>. Titan wird häufig in <span class='highlight'>medizinischen</span> und <span class='highlight'>industriellen Anwendungen</span> anodisiert, wobei eine schützende Oxidschicht entsteht. Das Entanodisieren von Titan kann erforderlich sein, um bestimmte <strong>Eigenschaften des Materials freizulegen</strong> oder seine <strong>Oberflächenstruktur</strong> für spezifische Anwendungen zu verändern. Magnesium wird in einigen Fällen anodisiert, um <strong>Korrosionsbeständigkeit</strong> zu erhöhen, und das Entanodisieren wird angewendet, wenn eine <span class='highlight'>Veränderung der Oberflächenbeschaffenheit</span> oder die <span class='highlight'>Wiederherstellung des ursprünglichen Aussehens</span> gewünscht wird.<br><br>Für das <strong>Enteloxieren</strong> bzw. <strong>Entanodisieren</strong> stehen <span class='highlight'>chemische</span>, <span class='highlight'>mechanische</span> und <span class='highlight'>galvanische Methoden</span> zur Verfügung, wobei die <strong>chemische Methode</strong> mit Abstand am häufigsten Anwendung findet.",
-
-   "Beim <strong>Verzinken</strong> wird meistens <span class='highlight'>Stahl</span> mit einer dünnen Schicht <span class='highlight'>Zink</span> überzogen, um ihn vor <strong>Korrosion</strong> zu schützen. Dafür gibt es verschiedene Verfahren mit unterschiedlichen Parametern. Die häufigsten Verfahren sind das <strong>Feuerverzinken</strong> und das <strong>galvanische Verzinken</strong>, wobei beide Methoden ihre eigenen Vorteile bieten:<br><br> Beim <strong>Feuerverzinken</strong> werden Werkstücke in ein Bad aus geschmolzenem Zink getaucht. Vorab werden <span class='highlight'>Öl-, Fett-, Rost- und Schmutzrückstände</span> durch <strong>Entfetten</strong>, <strong>Beizen</strong> und das Auftragen eines <strong>Flussmittels</strong> entfernt. Nach der Reinigung erfolgt das Eintauchen der Werkstücke in das etwa <span class='highlight'>450°C heiße Zinkbad</span>. Das flüssige Zink reagiert mit dem Stahl und bildet eine <strong>dauerhaft haftende Schutzschicht</strong>. Diese Schicht schützt über Jahre, oft bis zu <strong>50 Jahre</strong>, vor Korrosion.<br><br><strong>Relevante Zertifizierungen und Normen:</strong><br>Beim Feuerverzinken von Stahlteilen ist <strong>DIN EN ISO 1461</strong> eine zentrale Norm. Sie beschreibt Anforderungen und Prüfungen für durch Stückverzinken hergestellte Zinküberzüge auf Eisen- und Stahlteilen. Bei tragenden feuerverzinkten Stahlbauteilen können zusätzlich bauaufsichtliche oder projektspezifische Anforderungen relevant sein, etwa die <strong>DASt-Richtlinie 022</strong>. Bei Duplex-Systemen, also Feuerverzinken mit zusätzlicher Nass- oder Pulverbeschichtung, sollten die Anforderungen vorab klar angegeben werden. Für das Beschichtungsergebnis bedeutet das: Mindestanforderungen an Zinküberzug, Ausführung, Prüfung und Eignung für den Einsatzbereich werden klarer definiert.<br><br><strong>Korrosionsschutzklassen:</strong><br>Auch beim Verzinken ist die spätere Korrosionsbelastung wichtig. Innenbereiche, ländliche Außenbereiche, Stadt- und Industrieumgebung, Küstennähe oder stark aggressive Atmosphären stellen unterschiedliche Anforderungen an Zinkschicht, Nachbehandlung oder zusätzliche Beschichtung. Bei höheren Anforderungen kann ein <strong>Duplex-System</strong> sinnvoll sein, also Feuerverzinken mit zusätzlicher Nass- oder Pulverbeschichtung. Für das Ergebnis bedeutet das: Der Auftraggeber sollte angeben, ob das Teil innen, außen, in Industrieumgebung, in Küstennähe oder unter besonders korrosiver Belastung eingesetzt wird.<br><br>Beim <strong>galvanischen Verzinken</strong> wird Zink <strong>elektrochemisch</strong> in einem Zinkbad aufgebracht. Das Verfahren erzeugt eine <strong>dünne Zinkschicht</strong>, die vor allem für Anwendungen mit <span class='highlight'>hoher Maßgenauigkeit</span> und <span class='highlight'>ästhetischen Anforderungen</span> geeignet ist. Es bietet einen guten Korrosionsschutz, ist aber <strong>weniger widerstandsfähig</strong> gegenüber mechanischen Belastungen als andere Verfahren.<br><br>Beim <strong>Lamellenverzinken</strong> wird eine <strong>Zink-Aluminium-Lamellenschicht</strong> aufgetragen, die besonders <strong>korrosionsbeständig</strong> ist. Es eignet sich für <strong>kleine oder komplex geformte Bauteile</strong> wie <span class='highlight'>Schrauben</span> und ist besonders in der <strong>Automobilindustrie</strong> und im <strong>Maschinenbau</strong> verbreitet. Die Beschichtung ist <span class='highlight'>dünn</span>, haftet jedoch hervorragend, selbst an Bauteilen mit <strong>Gewinden</strong>. Die <strong>mechanische Belastbarkeit</strong> ist jedoch begrenzt.<br><br>Beim <strong>mechanischen Verzinken</strong> wird durch <span class='highlight'>mechanische Energie</span> auf die Werkstücke aufgetragen. Es eignet sich vor allem für <strong>kleine Bauteile</strong> wie <span class='highlight'>Schrauben</span> und <span class='highlight'>Nägel</span>. Die Zinkschicht wird durch <strong>Glasperlen</strong> und <strong>Zinkpulver</strong> aufgebracht und bietet <strong>zuverlässigen Korrosionsschutz</strong>. Das Verfahren ist <strong>umweltfreundlich</strong>, da keine chemischen Reaktionen erforderlich sind, ist jedoch für <strong>große Bauteile weniger geeignet</strong>.<br><br><br><br><strong>Das Entzinken</strong> ist der Prozess, bei dem eine <span class='highlight'>Zinkbeschichtung</span> von einem Werkstück entfernt wird, um es wieder in seinen ursprünglichen Zustand zu versetzen oder für eine weitere Behandlung vorzubereiten. Es gibt verschiedene Methoden, die je nach Art der Zinkschicht und den Anforderungen des Werkstücks eingesetzt werden können:<br><br><strong>Mechanisches Entzinken:</strong> Hierbei wird die Zinkschicht durch <strong>Schleifen</strong>, <strong>Strahlen</strong> oder <strong>Bürsten</strong> mechanisch entfernt. Diese Methode eignet sich besonders für <span class='highlight'>Bauteile mit dünnen Zinkschichten</span> und ist <strong>umweltfreundlich</strong>, da keine chemischen Substanzen verwendet werden. Sie ist jedoch <strong>arbeitsintensiv</strong> und nicht immer für <strong>komplex geformte Teile</strong> geeignet.<br><br><strong>Chemisches Entzinken:</strong> In dieser Methode wird die Zinkschicht durch <strong>chemische Reaktionen</strong> mit Säuren oder speziellen Lösungsmitteln entfernt. Häufig werden <strong>Salzsäure</strong> oder <strong>Schwefelsäure</strong> verwendet, die die Zinkschicht auflösen, ohne das darunterliegende Material zu beschädigen. Dies ist eine <span class='highlight'>effiziente Methode</span>, besonders für <strong>große Mengen von Bauteilen</strong>, jedoch kann die chemische Behandlung das Material beanspruchen und erfordert eine <strong>sorgfältige Handhabung</strong> der Chemikalien.<br><br><strong>Thermisches Entzinken:</strong> Bei dieser Methode wird die Zinkschicht durch <strong>hohe Temperaturen</strong> entfernt. Das Zink wird durch Erwärmen auf Temperaturen über dem <span class='highlight'>Schmelzpunkt</span> (etwa 420°C) verflüssigt und kann dann abgewaschen oder abgezogen werden. Diese Methode wird <strong>seltener angewendet</strong>, ist jedoch effektiv bei <strong>dickeren Zinkschichten</strong>.",
-
-    "<strong>Verzinnen</strong> ist der Prozess, bei dem eine Schicht Zinn auf die Oberfläche eines Werkstücks aufgebracht wird, um es vor Korrosion zu schützen oder die Lötfähigkeit zu verbessern. Es wird häufig auf Metalle wie Stahl, Kupfer und Messing angewendet und bietet sowohl ästhetische Vorteile als auch eine verbesserte Widerstandsfähigkeit gegenüber Umwelteinflüssen.<br><br><strong>Das am häufigsten angewendete Verfahren ist das galvanische Verzinnen.</strong> Dabei wird das Werkstück in ein elektrolytisches Bad getaucht, das Zinnsalze enthält. Durch Anlegen eines elektrischen Stroms wird das Zinn an der Oberfläche des Werkstücks abgeschieden. Dieses Verfahren ermöglicht eine präzise und gleichmäßige Schichtdicke und ist besonders für Bauteile mit komplexen Geometrien geeignet. Das galvanische Verzinnen wird vor allem in der Elektronikindustrie für Leiterplatten und Bauteile genutzt, aber auch in der Lebensmittelindustrie für Konservendosen und in der Maschinenbauindustrie für Bauteile, die Korrosion ausgesetzt sind.<br><br><strong>Ein weiteres gängiges Verfahren ist das Feuerverzinnen,</strong> bei dem das Werkstück in ein Bad aus geschmolzenem Zinn getaucht wird, das sich bei etwa 450°C befindet. Vor dem Eintauchen muss das Werkstück gründlich gereinigt werden, um Öl, Fett und Rost zu entfernen. Sobald das Werkstück in das Zinnbad getaucht wird, bildet sich eine Zink-Eisen-Legierung, die eine starke und langlebige Schutzschicht gegen Korrosion bietet. Feuerverzinnen wird häufig in der Bauindustrie für Stahlkonstruktionen, Rohre und Zäune sowie in der Automobilindustrie für Unterbodenschutz und korrosionsanfällige Bauteile verwendet.<br><br><strong>Das Spritzverzinnen</strong> ist eine weitere Methode, bei der Zinn in einem Brenner erhitzt und als Sprühnebel auf das Werkstück aufgebracht wird. Dies ist besonders nützlich für große oder komplexe Bauteile, die nicht in ein Zinnbad getaucht werden können. Das Verfahren ist direkt vor Ort anwendbar und ermöglicht eine flexible, schnelle und kostengünstige Verzinnung, ohne dass spezielle Anlagen erforderlich sind. Es wird häufig in der Bauindustrie und im Maschinenbau eingesetzt, um große Bauteile vor Ort zu verzinnen.<br><br><strong>Weiters gibt es noch das Vakuum-Verzinnen,</strong> auch als PVD-Verfahren bekannt, welches jedoch seltener Anwendung findet.<br><br><strong>Relevante Anforderungen:</strong><br>Beim Verzinnen sind häufig Schichtdicke, Korrosionsbeständigkeit, Lötfähigkeit, Haftung, Optik, Kontaktierstellen, Prüfzeugnisse und kundenspezifische Vorgaben entscheidend. Je nach Branche können außerdem Qualitäts- und Umweltmanagementsysteme des Betriebs, z. B. <strong>ISO 9001</strong> oder <strong>ISO 14001</strong>, relevant sein. Für das Beschichtungsergebnis bedeutet das: Die gewünschte Funktion, z. B. Lötbarkeit, Korrosionsschutz oder elektrische Eigenschaften, sollte klar beschrieben werden, weil Schichtdicke, Kontaktierung und Nachbehandlung das Ergebnis sichtbar und technisch beeinflussen können.<br><br><strong>Verzinnen bietet zahlreiche Vorteile,</strong> darunter eine hohe Korrosionsbeständigkeit, insbesondere in feuchter Umgebung oder bei chemischen Angriffen, sowie die Verbesserung der Lötbarkeit von Bauteilen. Es ist eine kostengünstige Möglichkeit, die Lebensdauer von Bauteilen zu verlängern und ihre Widerstandsfähigkeit gegenüber Umwelteinflüssen zu erhöhen. Auch die ästhetischen Aspekte spielen eine Rolle, da verzinnte Oberflächen häufig eine glänzende, attraktive Erscheinung haben. Allerdings gibt es auch Nachteile, insbesondere in Bezug auf die Schichtdicke, die bei Verfahren wie dem galvanischen Verzinnen begrenzt sein kann. In diesen Fällen ist Feuerverzinnen die bevorzugte Methode, da es dickere und widerstandsfähigere Schichten liefert.<br><br><strong>Entzinnen</strong> ist der Prozess, bei dem die Zinnbeschichtung von einem Werkstück entfernt wird, um das ursprüngliche Material freizulegen oder es für eine weitere Bearbeitung vorzubereiten. Es wird häufig durchgeführt, wenn eine Zinnschicht beschädigt, abgenutzt oder nicht mehr benötigt wird, oder wenn das Werkstück für eine neue Beschichtung oder Oberflächenbehandlung vorbereitet werden muss.<br><br><strong>Ein häufig verwendetes Verfahren ist das chemische Entzinnen,</strong> bei dem das Werkstück in eine Lösung aus Säuren oder speziellen Chemikalien getaucht wird, die das Zinn auflösen. Salpetersäure oder Schwefelsäure werden häufig verwendet, um die Zinnschicht zu entfernen. Dieser Prozess wird in der Regel in der Elektronikindustrie angewendet, wenn Leiterplatten oder andere Bauteile gereinigt und von Zinnbefleckungen befreit werden müssen.<br><br><strong>Das mechanische Entzinnen</strong> wird in der Regel angewendet, wenn das Werkstück nicht in eine chemische Lösung getaucht werden kann oder eine präzisere Bearbeitung erforderlich ist. Hierbei wird die Zinnschicht durch Schleifen, Bürsten oder Strahlen entfernt. Diese Methode wird häufig verwendet, um kleinere Bauteile oder Bauteile mit empfindlichen Geometrien zu reinigen, bei denen eine chemische Behandlung möglicherweise nicht möglich ist.<br><br><strong>Ein weiteres Verfahren ist das elektrolytische Entzinnen,</strong> das ähnlich wie galvanisches Verzinnen funktioniert, jedoch mit dem Ziel, das Zinn von der Oberfläche abzutragen. Dabei wird das Werkstück in ein Bad getaucht, das Zinnionen enthält. Durch Anlegen eines elektrischen Stroms wird das Zinn von der Oberfläche abgelöst und in die Lösung zurückgeführt. Entzinnen wird hauptsächlich verwendet, um Bauteile, die mit Zinn beschichtet wurden, wieder für eine andere Behandlung oder für die Wiederverwendung vorzubereiten. In der Elektronikindustrie wird es eingesetzt, um beschädigte oder überschüssige Zinnbeschichtungen von Leiterplatten oder Bauteilen zu entfernen, um eine saubere Oberfläche für Reparaturen oder eine neue Beschichtung zu gewährleisten.<br><br><strong>Ein wesentlicher Vorteil des Entzinnens</strong> ist, dass es die Wiederverwendbarkeit von Bauteilen ermöglicht, die mit Zinn beschichtet wurden. Dies spart Materialkosten und trägt zur Nachhaltigkeit bei. Darüber hinaus stellt es sicher, dass die Werkstücke vor einer erneuten Bearbeitung oder Beschichtung sauber und frei von Zinnrückständen sind. Besonders bei mechanischem Entzinnen kann das Verfahren sehr präzise durchgeführt werden, wodurch die Zinnschicht ohne Beschädigung des darunterliegenden Materials entfernt wird.<br><br><strong>Ein weiterer Vorteil von Entzinnen</strong> ist, dass es eine wichtige Rolle bei der Reinigung von Bauteilen spielt. In der Elektronikindustrie wird das Verfahren oft angewendet, um überschüssiges oder beschädigtes Zinn von Leiterplatten zu entfernen, um so eine saubere Grundlage für Reparaturen oder eine neue Beschichtung zu schaffen. In vielen Fällen ermöglicht es eine effiziente Vorbereitung von Bauteilen für eine weitere Bearbeitung.<br><br><strong>Jedoch gibt es auch einige Nachteile.</strong> Bei unsachgemäßer Anwendung, insbesondere beim chemischen Entzinnen, kann das darunterliegende Material angegriffen oder beschädigt werden. Dies erfordert eine präzise Kontrolle des Prozesses, um eine unerwünschte Materialbeschädigung zu vermeiden. Ein weiterer Nachteil ist, dass chemisches Entzinnen oft teuer sein kann, da spezielle Chemikalien und eine kontrollierte Prozessführung erforderlich sind. Schließlich kann das mechanische Entzinnen, insbesondere bei großen oder komplexen Bauteilen, schwieriger sein, da die Zinnschicht nicht immer gleichmäßig und ohne Kratzer entfernt werden kann.",
-
-    "<strong>Aluminieren</strong> ist ein Verfahren, bei dem eine Aluminiumschicht auf die Oberfläche eines Werkstücks aufgebracht wird, um die Korrosionsbeständigkeit zu erhöhen und die thermischen sowie mechanischen Eigenschaften zu verbessern. Dies wird oft auf Stahl, Eisen und andere Metalle angewendet, um deren Widerstandsfähigkeit gegen hohe Temperaturen, Abrieb und chemische Angriffe zu steigern.<br><br><strong>Beim Schmelztauchaluminieren</strong> wird das gereinigte Werkstück direkt in ein flüssiges Aluminium‑ oder Aluminium‑Silizium‑Bad getaucht. Typische Temperaturbereiche liegen zwischen 700 °C und 760 °C. Durch den direkten Kontakt diffundieren Aluminium- und Siliziumatome in die Oberfläche des Grundmetalls, während gleichzeitig Stahl- oder Eisenteilchen in das flüssige Bad gelangen. An der Grenzfläche bildet sich so eine mikrostrukturell vorgereinigte, metallurgisch gebundene Intermetallisch‑Schicht (vor allem Fe₂Al₅ und FeAl₃), typischerweise 50 µm bis 200 µm dick. Vorteile dieses Verfahrens sind eine gleichmäßige und dichte Schicht, dichte Korrosions- und Hitzebeständigkeit bereits nach kurzer Eintauchdauer, gut für großflächige oder seriengefertigte Bauteile. Nachteile sind der hohe Materialverbrauch der Aluminiumbads, aufwändige Badpflege (Abzug von Stahlablagerungen), nicht ideal für sehr komplexe Innengeometrien.<br><br><strong>Ein weiteres Verfahren ist das Spritzaluminieren,</strong> bei dem Aluminium durch einen Brenner oder Lichtbogen erhitzt wird und als Sprühnebel auf das Werkstück aufgebracht wird. Diese Methode ist besonders nützlich für große oder komplex geformte Bauteile, die nicht in ein Aluminierungsbad getaucht werden können. Das Spritzaluminieren ist weniger präzise und führt zu einer ungleichmäßigen Schichtdicke, was in einigen Fällen problematisch sein kann.<br><br><strong>Feueraluminieren</strong>, auch Packaluminieren genannt, ist ein Feststoff‑Diffusionsverfahren. Das Werkstück wird in einem dicht verschlossenen Behälter („Pack“) aus Aluminiumpulver, Aktivatoren (z. B. Ammoniumchlorid) und Inertstoffen (z. B. Aluminiumoxid) eingebettet. Bei Temperaturen von 700 °C bis 1000 °C reagiert das Aktivatorsalz und setzt Aluminium‑Gasteilchen frei, die in die Oberfläche des Bauteils diffundieren. Dort entsteht in Abhängigkeit von Prozessparameter (Temperatur, Zeit, Pack‑Zusammensetzung) eine Eisen‑Aluminium‑Legierungsschicht (vor allem Fe₂Al₅ und FeAl₃) mit einer typischen Dicke von 10 µm bis 50 µm. Vorteile sind der geringe Verbrauch von Ausgangsaluminium, exakte Steuerung der Schichtdicke durch Pack-Zusatz und Haltezeit, gute Haftfestigkeitauch auf komplizierten Bauteilformen. Nachteile sind die längere Prozessdauer, hohe Ofentemperaturen und spezielle Ausrüstung welche notwendig ist und Herausforderungen bei sehr großen Werkstücken durch homogene Pack-Verteilung.<br><br><strong>Entaluminieren</strong> ist der Prozess, bei dem eine Aluminiumschicht von einem Werkstück entfernt wird, um das ursprüngliche Material freizulegen oder es für eine weitere Bearbeitung vorzubereiten. Dies wird oft angewendet, wenn die Aluminiumbeschichtung beschädigt oder nicht mehr erforderlich ist oder wenn das Werkstück für eine neue Oberflächenbehandlung vorbereitet werden soll.<br><br><strong>Ein gängiges Verfahren des Entaluminierens</strong> ist das chemische Entaluminieren, bei dem das Werkstück in eine Lösung aus Säuren oder speziellen Chemikalien getaucht wird, die das Aluminium von der Oberfläche auflösen. In der Regel werden Natronlauge (NaOH) oder Salzsäure (HCl) verwendet, um das Aluminium zu entfernen. Dieser Prozess ist besonders effektiv, wenn eine gleichmäßige Entfernung der Aluminiumschicht erforderlich ist.<br><br><strong>Ein weiteres Verfahren ist das mechanische Entaluminieren,</strong> bei dem die Aluminiumschicht durch Schleifen, Bürsten oder Strahlen entfernt wird. Diese Methode wird häufig verwendet, wenn das Werkstück nicht in eine chemische Lösung getaucht werden kann oder eine präzise Bearbeitung erforderlich ist. Mechanisches Entaluminieren eignet sich gut für kleinere Bauteile oder Bauteile mit komplexen Geometrien, die chemisch schwer zu behandeln sind.<br><br><strong>Das elektrolytische Entaluminieren</strong> ist eine weniger häufig angewandte Methode, bei der das Werkstück in eine Lösung getaucht wird, die Aluminiumionen enthält, und ein elektrischer Strom angelegt wird, um die Aluminiumschicht abzutragen. Diese Methode wird hauptsächlich in spezialisierten Anwendungen eingesetzt, wenn eine genaue Kontrolle über die Entfernung der Aluminiumschicht erforderlich ist.<br><br><strong>Relevante Anforderungen:</strong><br>Beim Aluminieren sind häufig Schichtdicke, Temperaturbeständigkeit, Korrosionsbeständigkeit, Haftung, Materialverträglichkeit und kundenspezifische Vorgaben entscheidend. Je nach Branche können Prüfzeugnisse, Werkstoffvorgaben sowie Qualitäts- und Umweltmanagementsysteme wie <strong>ISO 9001</strong> oder <strong>ISO 14001</strong> relevant sein. Für das Beschichtungsergebnis bedeutet das: Die Aluminiumschicht muss zum späteren Einsatz passen, z. B. bei hoher Temperatur, Korrosionsbelastung oder funktionellen Anforderungen. Deshalb sollten Einsatztemperatur, Umgebung und gewünschte Schutzwirkung vorab angegeben werden.<br><br><strong>Entaluminieren wird in der Regel durchgeführt,</strong> um Bauteile für eine erneute Bearbeitung oder Beschichtung vorzubereiten. In der Luft- und Raumfahrtindustrie kann es beispielsweise erforderlich sein, Aluminiumbeschichtungen zu entfernen, um das darunterliegende Material zu reparieren oder eine neue Beschichtung anzubringen.<br><br><strong>Das Entaluminieren ermöglicht die Wiederverwendung</strong> von Bauteilen, die mit Aluminium beschichtet wurden, und spart somit Materialkosten. Es stellt auch sicher, dass die Werkstücke für eine neue Bearbeitung oder Beschichtung sauber sind, was insbesondere für die Qualität der Endprodukte wichtig ist.<br><br><strong>Ein Nachteil des chemischen Entaluminierens</strong> ist, dass die Chemikalien das darunterliegende Material beeinträchtigen oder angreifen können, insbesondere wenn der Prozess nicht richtig kontrolliert wird. Das mechanische Entaluminieren erfordert oft viel manuelle Arbeit und kann zu einer ungleichmäßigen Entfernung der Schicht führen, insbesondere bei komplexeren Geometrien. In einigen Fällen kann auch das Entfernen von großen Aluminiumflächen sehr zeitaufwendig und teuer sein.",
-
-    "<strong>Vernickeln</strong> bezeichnet den Prozess, bei dem eine dünne Schicht Nickel auf die Oberfläche eines Metallbauteils aufgebracht wird, um es vor Korrosion zu schützen, die Haltbarkeit zu verbessern oder die Optik zu verschönern. Nickel kann auf verschiedene Weisen aufgebracht werden:<br><br><strong>Galvanisches Vernickeln:</strong> Dies ist der häufigste Prozess, bei dem das Werkstück in ein elektrolytisches Bad aus Nickel und einem anderen chemischen Zusatzstoff getaucht wird. Durch Anlegen eines elektrischen Stroms wird das Nickel an der Oberfläche des Werkstücks abgeschieden. Diese Methode ist präzise und ermöglicht das Vernickeln von Bauteilen mit komplexen Formen und feinen Details.<br><br><strong>Chemisches Vernickeln:</strong> Bei diesem Verfahren wird Nickel durch eine chemische Reaktion auf die Werkstückoberfläche abgelagert, ohne dass ein elektrischer Strom erforderlich ist. Stattdessen wird das Werkstück in eine Lösung getaucht, die Nickelionen enthält, die durch eine katalytische Reaktion an der Oberfläche des Werkstücks abgeschieden werden. Das chemische Vernickeln ist besonders geeignet für Bauteile mit komplexen Geometrien oder unregelmäßigen Oberflächen und sorgt für eine gleichmäßige Beschichtung ohne Strom.<br><br><strong>Darüber hinaus</strong> gibt es das Spritzvernickeln und das Vakuum-Vernickeln (PVD), welche jedoch viel seltener Anwendung finden.<br><br><strong>Relevante Anforderungen:</strong><br>Beim Vernickeln sind häufig Schichtdicke, Korrosionsprüfung, Haftung, Verschleißbeständigkeit, Optik, Kontaktierstellen, Prüfzeugnisse und kundenspezifische Normen entscheidend. Je nach Einsatzbereich können auch Anforderungen an Dokumentation, Rückverfolgbarkeit sowie Qualitäts- und Umweltmanagementsysteme des Betriebs, z. B. <strong>ISO 9001</strong> oder <strong>ISO 14001</strong>, relevant sein. Für das Beschichtungsergebnis bedeutet das: Je nach geforderter Funktion kann die Nickelschicht eher dekorativ, korrosionsschützend, verschleißfest oder technisch funktional ausgelegt werden. Kontaktierstellen, Schichtdicke und Prüfanforderungen sollten daher vorab definiert werden.<br><br><strong>Das Entnickeln</strong> ist der Prozess, bei dem die Nickelschicht von einem Werkstück entfernt wird. Dies kann notwendig sein, wenn die Nickelbeschichtung beschädigt, abgenutzt oder nicht mehr benötigt wird. Es gibt verschiedene Methoden des Entnickelns:<br><br><strong>Chemisches Entnickeln:</strong> Die Nickelschicht wird durch den Einsatz von Säuren, wie etwa Salpetersäure oder Schwefelsäure, entfernt. Die chemische Behandlung löst das Nickel von der Oberfläche, ohne das darunterliegende Material zu beschädigen. Diese Methode ist effektiv und kann auch für größere Bauteile angewendet werden.<br><br><strong>Elektrolytisches Entnickeln:</strong> Diese Methode funktioniert ähnlich wie das galvanische Vernickeln, allerdings wird der Elektrolytprozess so angepasst, dass das Nickel von der Oberfläche abgezogen wird. Die Werkstücke werden in eine Lösung getaucht, und durch Anlegen eines Stroms wird das Nickel entfernt.<br><br><strong>Mechanisches Entnickeln:</strong> Hierbei wird die Nickelschicht durch Schleifen, Bürsten oder Strahlen entfernt. Diese Methode eignet sich für kleinere Bauteile oder wenn eine präzise Bearbeitung erforderlich ist. Es kann jedoch das darunterliegende Material beschädigen, wenn nicht vorsichtig vorgegangen wird.",
-
-    "Das Entlacken ist ein Verfahren zum Entfernen von alten Lackschichten. Je nachdem, welcher Werkstoff und welche Beschichtung eingesetzt wurden, stehen verschiedene Verfahren und Mittel zur Verfügung. Entscheidend für den Kunden oder Dienstleister ist, wie die gewünschte Qualität am günstigsten erreicht werden kann. Beim Entlacken kann <strong>QUALISTRIP</strong> als Qualitätslabel relevant sein. Es dient als Hinweis darauf, dass ein Entlackungsbetrieb nach definierten Anforderungen arbeitet. Für das Ergebnis bedeutet das: Die alte Beschichtung soll kontrolliert entfernt werden, ohne das Grundmaterial unnötig zu beschädigen. Wichtig sind außerdem Angaben zur gewünschten Oberflächenqualität nach dem Entlacken, zur Weiterbeschichtung, zum Materialschutz und dazu, ob das Werkstück nach dem Entlacken erneut beschichtet, geprüft oder dokumentiert werden soll. Ziel beim Entlacken ist es, wieder eine beschichtungsfähige Oberfläche zu erhalten. Entlackungsmethoden lassen sich unterteilen in chemische, thermische und mechanische Entlackung. Es sind jeweils unterschiedliche Varianten im Einsatz mit unterschiedlichem Ergebnis.<br><br><strong>Typische Entlackungsmethoden:</strong><ul><li><strong>Chemische Entlackung:</strong> Einsatz von Lösemitteln oder alkalischen/sauren Medien zum Auflösen der Lackschicht. Besonders geeignet für komplexe Bauteile und temperaturempfindliche Werkstoffe.</li><li><strong>Thermische Entlackung:</strong> Hier wird der Lack durch Hitzeeinwirkung verbrannt oder pyrolysiert. Dazu zählen Verfahren wie das Pyrolyseofen-Verfahren oder die Infrarotentlackung.</li><li><strong>Mechanische Entlackung:</strong> Die Beschichtung wird durch Schleifen, Bürsten oder Strahlen abgetragen. Diese Methode ist besonders präzise, aber aufwendiger und nicht für jede Geometrie bzw. Materialgüte und -dicke geeignet.</li><li><strong>Kombinierte Verfahren:</strong> Kombination aus z. B. thermischer und chemischer Entlackung zur effektiveren und schonenderen Bearbeitung.</li></ul><br>Je nach Material, Geometrie und Beschichtungsart kann die geeignete Entlackungsmethode gewählt werden, um eine saubere, beschädigungsfreie Oberfläche für eine neue Beschichtung zu erzielen.",
-
-    "Beim Strahlen wird ein Strahlmittel mit hoher Geschwindigkeit (bis zu 160 m/s) auf die Oberfläche eines Werkstücks gelenkt. Je nach Ziel des Verfahrens kann dies entweder zu einem Materialabtrag führen – beispielsweise zum Entfernen von Rost oder Lackschichten – oder zur schonenden Reinigung von Fett- und Ölfilmen, ohne dabei das Grundmaterial zu beschädigen.<br><br><strong>Typische Anwendungsbereiche des Strahlens</strong><ul><li><strong>Glätten und Polieren:</strong> Reduzierung von Bearbeitungsspuren für eine homogenere Oberfläche</li><li><strong>Putzen:</strong> Reinigung von Gussteilen zur Entfernung von Formsand oder anderen Rückständen</li><li><strong>Aufrauen:</strong> Verbesserung der Haftung für nachfolgende Lackierungen oder Beschichtungen</li><li><strong>Entgraten und Verrunden:</strong> Beseitigung von scharfen Schnittgraten nach der Bearbeitung</li><li><strong>Umformen:</strong> Anpassung von Metallstrukturen, etwa zur Herstellung gewölbter Bauteile</li><li><strong>Entzundern:</strong> Beseitigung von Oxidschichten nach dem Schmieden oder Schweißen</li><li><strong>Reinigung:</strong> Entfetten, Entfernen von Formrückständen oder Kokillenreinigung</li><li><strong>Mattieren:</strong> Vorbereitung für galvanische oder andere metallische Überzüge</li><li><strong>Materialabtrag:</strong> Entfernen von Rost, Lack oder anderen Beschichtungen</li></ul><br><strong>Häufig eingesetzte Strahlmittel:</strong><ul><li>Organische Strahlmittel: Kunststoffgranulat, zermahlene Nussschalen</li><li>Mineralische Strahlmittel: Granatsand, Korund, Schmirgel, Hochofenschlacke, Kalk</li><li>Metallische Strahlmittel: Stahlkies, Stahlkugeln, Drahtkorn, Bronzekies</li><li>Glasbasierte Strahlmittel: Glasperlen, Glasbruch</li><li>Keramische Strahlmittel</li><li>Trockeneis</li></ul><br><strong>Strahltechniken:</strong><ul><li>Druckluftstrahlen: Hoher Materialabtrag</li><li>Niedrigdruckstrahlen: Schonender für empfindliche Oberflächen</li><li>Hochdruckwasserstrahlen: Materialschonend, entfernt weiche Beläge</li><li>Verdichtungsstrahlen: Verfestigung und Verbesserung mechanischer Eigenschaften</li><li>Vakuum-Saugstrahlen: Staubfrei, ideal für empfindliche Oberflächen</li></ul><br>Durch die Wahl des richtigen Strahlverfahrens und des passenden Strahlmittels lassen sich unterschiedlichste Anforderungen an die Oberflächenbearbeitung effizient erfüllen.<br><br><strong>Relevante Anforderungen:</strong><br>Beim Strahlen sind vor allem der gewünschte Reinheitsgrad, die Oberflächenrauheit, das Strahlmittel und die spätere Weiterbeschichtung wichtig. Je nach Auftrag können Vorgaben wie <strong>ISO 8501</strong> für den Oberflächenvorbereitungsgrad oder Anforderungen an Rauheit und Dokumentation relevant sein. Für das Beschichtungsergebnis bedeutet das: Die gestrahlte Oberfläche muss zur geplanten Beschichtung passen. Wird zu stark, zu schwach oder mit ungeeignetem Strahlmittel gestrahlt, kann das Haftung, Optik, Korrosionsschutz oder Maßhaltigkeit beeinflussen.",
-
-    "<strong>Industrielles Folieren</strong> ist ein automatisierter Prozess bei dem Folien auf verschiedene Materialien wie Metall, Kunststoff, Holz oder Glas aufgebracht werden. Ziel ist es, diese zu schützen, zu dekorieren oder ihre funktionalen Eigenschaften zu verbessern. Dieser Prozess wird großflächig in Fertigungsanlagen durchgeführt und kommt in vielen Branchen zum Einsatz, darunter Bauwesen, Automobilindustrie, Verpackungsbranche und Möbelproduktion.<br><br>Zum Schutz empfindlicher Oberflächen wie Glas, Edelstahl oder lackierter Metalle werden spezielle Schutzfolien verwendet. Diese verhindern Kratzer, Schmutzablagerungen und Korrosion. Dekorative Folien finden Anwendung bei Möbeln, Türen oder Paneelen, um optische Effekte wie Holzimitationen oder Metalloberflächen zu erzielen.<br><br>In funktionalen Bereichen können die Folien Eigenschaften wie Hitzebeständigkeit, elektrische Isolierung oder Chemikalienbeständigkeit bieten, was besonders in der Elektroindustrie von Bedeutung ist. Verpackungsfolien wiederum schützen Produkte während des Transports oder verlängern deren Haltbarkeit, wie es beispielsweise bei Lebensmitteln der Fall ist. In der Automobilindustrie wird Folieren genutzt, um Fahrzeugteile zu schützen oder zu gestalten, etwa durch Carbon-Look-Folien.<br><br>Vor dem Aufbringen der Folie wird die Oberfläche gründlich gereinigt und vorbereitet. Anschließend wird die Folie durch Maschinen mit Hilfe von Wärme, Druck oder speziellen Klebstoffen dauerhaft fixiert. Industriegerechte Anlagen, wie Kaschieranlagen oder Vakuumpressen, sorgen dabei für eine gleichmäßige und präzise Anwendung.<br><br>Das industrielle Folieren ist ein effizientes, flexibles und kostengünstiges Verfahren, das nicht nur die Oberfläche schützt, sondern auch vielfältige Gestaltungsmöglichkeiten bietet. Es ermöglicht die Veredelung verschiedenster Materialien und wird in zahlreichen Bereichen erfolgreich eingesetzt.",
-
-    "<strong>Die Isoliersteg-Verpressung</strong>, auch bekannt als Isolierverbund oder thermische Trennung, ist ein Verfahren, bei dem zwei Aluminiumprofile über einen Kunststoffsteg miteinander verbunden und unter Druck verpresst werden. Dieser Prozess findet vor allem Anwendung im Fenster-, Türen- und Fassadenbau, um Aluminiumprofile thermisch zu trennen. Ziel ist es, die Wärmedämmung zu verbessern und den Wärmefluss zwischen der Innen- und Außenseite des Profils zu verringern.<br><br>In diesem Verfahren wird ein speziell geformter Isoliersteg aus einem wärmedämmenden Kunststoff, meist Polyamid, in die vorgesehenen Kammern der beiden Aluminiumprofile eingelegt. Anschließend werden die Profile und der Isoliersteg in einer Verpressmaschine unter hohem Druck zusammengepresst. Dabei verformt sich das Aluminium leicht und umschließt den Kunststoffsteg, was eine stabile mechanische Verbindung erzeugt.<br><br>Nach dem Verpressen bleibt die Verbindung stabil, und die Profile bleiben thermisch voneinander getrennt, ohne die mechanische Stabilität zu beeinträchtigen. Zu den Vorteilen dieses Verfahrens zählen eine verbesserte Wärmedämmung, die Aufrechterhaltung der Stabilität und die Vielseitigkeit des Verfahrens, da unterschiedliche Profildesigns und Farben realisiert werden können."
-  ];
-
+  const normalizedKnowledgeSearch = normalizeSearchText(knowledgeSearch);
+  const knowledgeSearchTerms = normalizedKnowledgeSearch.split(" ").filter(Boolean);
+  const knowledgeSearchResults = knowledgeSearchTerms.length
+    ? searchEntries
+        .map((entry) => {
+          const haystack = normalizeSearchText(`${entry.title} ${entry.description} ${entry.searchText}`);
+          const title = normalizeSearchText(entry.title);
+          const matchesAll = knowledgeSearchTerms.every((term) => haystack.includes(term));
+          const score = matchesAll
+            ? knowledgeSearchTerms.reduce(
+                (sum, term) => sum + (title.includes(term) ? 4 : haystack.includes(term) ? 1 : 0),
+                0
+              )
+            : 0;
+          return { ...entry, score };
+        })
+        .filter((entry) => entry.score > 0)
+        .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, "de"))
+        .slice(0, 12)
+    : [];
 
   const containerHeadings = [
-    legacyContainerHeadings[0],
-    legacyContainerHeadings[1],
-    "Nasslackieren",
-    "Pulverbeschichten",
-    "Verzinken",
-    "Eloxieren",
-    "Anodisieren",
-    "KTL-Beschichten",
-    "Zinkphosphatieren",
-    "Strahlen",
-    "Entlacken",
-    "Brünieren",
-    "Verzinnen",
-    "Aluminieren",
-    "Vernickeln",
-    "Aluminium-Passivieren",
-    "Elektropolieren",
-    "Verchromen",
-    "Vermessingen",
-    "Verkupfern",
-    "Vergolden",
-    "Folieren",
-    "Isolierstegverpressen",
-    "Einlagern",
-    "Entzinken",
-    "Enteloxieren",
-    "Entanodisieren",
-    "Entzinnen",
-    "Entaluminieren",
-    "Entnickeln",
-    "Mn-Phosphatieren",
-    "Beizen",
-    "Entgraten",
-    "Verrunden",
-    "Glätten",
-    "Mattieren",
-    "Schleifen",
-    "Polieren",
-    "Bürsten",
-    "Trowalisieren",
-    "Chemisches Glänzen",
-    "Versilbern",
+    "Beschichtungstechnik",
+    "Technische Angaben verstehen",
+    ...procedureOrder,
     "Lacke & Beschichtungsstoffe",
     "Lackrecycling & Restlackverwertung",
-    "Bronzebeschichten",
   ];
-
-  const ktlText = `
-    <strong>KTL-Beschichten</strong> steht für kathodische Tauchlackierung. Dabei wird ein elektrisch leitfähiges Werkstück vollständig in ein wasserbasiertes Lackbad eingetaucht und als Kathode geschaltet. Durch das elektrische Feld lagern sich die Lackbestandteile gleichmäßig auf der Oberfläche ab. Nach dem Spülen wird die Beschichtung eingebrannt und ausgehärtet.<br><br>
-    <h4>Wann wird KTL eingesetzt?</h4>
-    <ul>
-      <li><strong>Korrosionsschutz:</strong> KTL wird häufig als Grundbeschichtung eingesetzt, besonders bei Stahlbauteilen und komplexen Geometrien.</li>
-      <li><strong>Serienteile:</strong> Das Verfahren eignet sich besonders für wiederkehrende Stückzahlen und industrielle Serienprozesse.</li>
-      <li><strong>Hohlräume und schwer zugängliche Bereiche:</strong> Durch das Tauchverfahren werden auch Bereiche erreicht, die beim reinen Spritzauftrag schwierig zu beschichten wären.</li>
-      <li><strong>Mehrschichtsysteme:</strong> KTL kann als Grundierung für anschließendes Pulverbeschichten oder Nasslackieren dienen.</li>
-    </ul>
-    <h4>Typische Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Werkstoff, Abmessungen, Gewicht und Stückzahl</li>
-      <li>gewünschte <strong>Schichtdicke in µm</strong></li>
-      <li>gewünschter Farbton: <strong>Schwarz, Grau oder andere Vorgabe</strong></li>
-      <li>spätere Weiterbeschichtung und gewünschter Korrosionsschutz</li>
-      <li>Bereiche, die frei von Beschichtung bleiben müssen</li>
-      <li>Anforderungen an Prüfungen, Dokumentation oder Zertifizierungen</li>
-    </ul>
-    <h4>Relevante Qualitätsanforderungen</h4>
-    Je nach Auftrag können Qualitäts- und Umweltmanagement sowie branchenspezifische Anforderungen eine Rolle spielen. Bei einer Anfrage können für KTL unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>IATF 16949</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.<br><br>
-    <strong>Konstruktive Hinweise:</strong> Da KTL ein Tauchverfahren ist, müssen Hohlräume, Sacklöcher und schöpfende Geometrien so ausgeführt sein, dass Badflüssigkeit ein- und wieder vollständig auslaufen kann. Entlüftungs- und Ablauföffnungen sowie Kontaktier- und Aufhängestellen sind deshalb konstruktiv mitzudenken.<br><br><strong>Praxis-Hinweis:</strong> Für ein belastbares Angebot sollte der Beschichter wissen, ob KTL als Endoberfläche oder als Grundierung für ein weiteres Beschichtungssystem vorgesehen ist.
-  `;
-
-  const verchromenText = `
-    Beim <strong>Verchromen</strong> wird eine Chromschicht auf ein metallisches Werkstück aufgebracht. Dabei sollte zwischen <strong>dekorativem Verchromen</strong> und <strong>Hartverchromen</strong> unterschieden werden: Dekorative Systeme dienen vor allem Optik und Korrosionsschutz, während Hartchrom gezielt für technische Funktionen wie Verschleißschutz, Härte, Maßkorrektur oder verbesserte Gleiteigenschaften eingesetzt wird.<br><br>
-
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Für dekorative Sichtoberflächen ist die Oberflächenvorbereitung entscheidend. Chrom gleicht Schleifriefen, Kratzer oder Unebenheiten nicht aus. Je nach gewünschter Optik wird die Oberfläche deshalb vor dem galvanischen Aufbau beispielsweise <strong>geschliffen, poliert oder gebürstet</strong>.<br><br>
-    <strong>Konstruktive Hinweise:</strong> Bei galvanischen Chromsystemen müssen Kontaktierstellen für die Stromübertragung vorgesehen werden. Sacklöcher, tiefe Innenkonturen und Hohlräume können nur eingeschränkt oder ungleichmäßig beschichtet werden; bei kritischen Innenflächen sollten Ablaufmöglichkeiten und die gewünschte Beschichtbarkeit vorab mit dem Betrieb abgestimmt werden.<br><br><strong>Typische Kette bei dekorativem Hochglanz:</strong> Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln → Verchromen.<br><br>
-    Mehrschichtsysteme wie <strong>Kupfer – Nickel – Chrom</strong> oder <strong>Nickel – Chrom</strong> werden eingesetzt, wenn Optik, Haftung und Korrosionsschutz entsprechend aufgebaut werden sollen. Die konkrete Schichtfolge hängt von Werkstoff, Ausgangszustand und Anforderung ab.<br><br>
-    <strong>Wichtig:</strong> Bei Hartverchromen ist eine dekorative Hochglanzvorbereitung nicht grundsätzlich erforderlich. Hier stehen Funktionsmaß, Schichtdicke, Verschleißbeanspruchung und gegebenenfalls eine anschließende Schleif- oder Polierbearbeitung im Vordergrund.<br><br>
-
-    <h4>Verchromungsart</h4>
-    <ul>
-      <li><strong>Dekorativverchromen:</strong> für optisch hochwertige Oberflächen und Korrosionsschutz, häufig in Kombination mit Nickel- oder Kupfer-/Nickelschichten.</li>
-      <li><strong>Hartverchromen:</strong> technische Chromschicht für stark beanspruchte Funktionsflächen.</li>
-    </ul>
-
-    <h4>Oberfläche / Optik bei dekorativem Verchromen</h4>
-    <ul>
-      <li>Hochglanz</li>
-      <li>Matt / satiniert</li>
-      <li>Strichmatt</li>
-      <li>Perlglanz / Perlmutt</li>
-      <li>Rauchchrom dunkel – matt</li>
-      <li>Rauchchrom dunkel – hochglanz</li>
-      <li>Champagner</li>
-      <li>Andere Oberfläche / nach Muster</li>
-    </ul>
-    Solche Bezeichnungen beschreiben die gewünschte dekorative Wirkung. Das endgültige Erscheinungsbild hängt stark von Vorbearbeitung, Grundwerkstoff und Schichtaufbau ab.<br><br>
-
-    <h4>Chromsystem</h4>
-    In der Anfrage kann zwischen <strong>Chrom(III)</strong>, <strong>Chrom(VI)</strong> und <strong>Nach Vorgabe / unbekannt</strong> unterschieden werden. Moderne dekorative Anlagen arbeiten häufig mit Chrom(III)-Systemen. Welche Variante technisch oder regulatorisch erforderlich ist, sollte bei Bedarf ausdrücklich vorgegeben werden.<br><br>
-
-    <h4>Schichtdicke und Nachbehandlung</h4>
-    Die gewünschte <strong>Schichtdicke in µm</strong> sollte angegeben werden, wenn sie konstruktiv oder funktionell relevant ist. Als optionale Nachbehandlung können beispielsweise <strong>Passivieren</strong> oder <strong>Versiegeln</strong> gefordert werden.<br><br>
-
-    <h4>Typische Anwendungen</h4>
-    <ul>
-      <li>Möbel- und Ladenbauteile</li>
-      <li>Automotive- und Designbauteile</li>
-      <li>dekorative Metallteile und Sichtflächen</li>
-      <li>Wellen, Kolbenstangen, Walzen und Führungen bei Hartchrom</li>
-      <li>Werkzeuge und verschleißbeanspruchte Funktionsflächen</li>
-    </ul>
-
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Verchromungsart: <strong>Dekorativverchromen oder Hartverchromen</strong></li>
-      <li>gewünschte Oberfläche / Optik bei dekorativen Teilen</li>
-      <li>Chromsystem: Chrom(III), Chrom(VI) oder nach Vorgabe</li>
-      <li>gewünschter Schichtaufbau, z. B. Nickel – Chrom oder Kupfer – Nickel – Chrom</li>
-      <li>gewünschte Schichtdicke</li>
-      <li>Werkstoff und Ausgangszustand der Oberfläche</li>
-      <li>Maße, Gewicht, Stückzahl und zulässige Maßänderungen</li>
-      <li>Funktions-, Pass- und Sichtflächen</li>
-      <li>optionale Nachbehandlung wie Passivieren oder Versiegeln</li>
-      <li>Nachbearbeitung wie Schleifen oder Polieren, falls erforderlich</li>
-    </ul>
-    <strong>Praxis-Hinweis:</strong> Besonders bei dekorativen Chromoberflächen sollte die gewünschte Optik möglichst eindeutig benannt oder durch ein Referenzmuster definiert werden. Bei Hartchrom sind dagegen Maßhaltigkeit, Ausgangsmaß, Schichtdicke, spätere Bearbeitung und die tatsächlich zu beschichtenden Funktionsflächen entscheidend.
-  `;
-
-  const bruenierenText = `
-    <strong>Brünieren</strong> ist eine chemische Oberflächenbehandlung für Eisenwerkstoffe, bei der eine sehr dünne dunkle Konversionsschicht erzeugt wird. Das charakteristische schwarze bis schwarzblaue Erscheinungsbild entsteht nicht durch eine dick aufgetragene Lack- oder Metallschicht, sondern durch eine gezielte Umwandlung der Werkstückoberfläche.<br><br>
-    <h4>Varianten</h4>
-    <ul>
-      <li><strong>Heißbrünieren:</strong> industriell häufig eingesetztes Verfahren mit beheizten Prozessbädern.</li>
-      <li><strong>Kaltbrünieren:</strong> Behandlung bei niedrigerer Temperatur, häufig für kleinere Bauteile, Reparaturen oder besondere Anwendungen.</li>
-      <li><strong>Schwarzoxidieren:</strong> Bezeichnung für Verfahren zur Erzeugung einer schwarzen Oxidschicht auf geeigneten Eisenwerkstoffen.</li>
-    </ul>
-    <h4>Eigenschaften und Anwendungen</h4>
-    <ul>
-      <li>dunkle, technisch-dekorative Oberfläche</li>
-      <li>nur geringe Veränderung der Bauteilmaße</li>
-      <li>geeignet für Werkzeuge, Vorrichtungen, Verbindungselemente, Maschinenbauteile und sichtbare Metallteile</li>
-      <li>Korrosionsschutz wird üblicherweise durch eine anschließende Konservierung, beispielsweise Ölen, verbessert</li>
-    </ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Werkstoff bzw. genaue Stahlgüte</li>
-      <li>gewünschtes Verfahren: <strong>Heißbrünieren, Kaltbrünieren oder Schwarzoxidieren</strong></li>
-      <li>Stückzahl, Maße und Gewicht</li>
-      <li>optische Anforderungen und Sichtflächen</li>
-      <li>gewünschte Nachbehandlung oder Konservierung</li>
-      <li>notwendige Zertifizierungen oder Dokumentationsanforderungen</li>
-    </ul>
-    Bei einer Anfrage können beim Brünieren unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen ausgewählt werden.<br><br>
-    <strong>Praxis-Hinweis:</strong> Die genaue Stahlgüte sollte möglichst angegeben werden, weil Werkstoffzusammensetzung und Wärmebehandlungszustand das optische Ergebnis beeinflussen können.
-  `;
-
-  const nasslackierenText = `
-    <strong>Nasslackieren</strong> ist ein Beschichtungsverfahren, bei dem flüssiger Lack auf ein Werkstück aufgetragen und anschließend getrocknet oder ausgehärtet wird. Das Verfahren eignet sich für dekorative, funktionelle und korrosionsschützende Beschichtungen und kann auf unterschiedlichen Werkstoffen eingesetzt werden.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Die genaue Vorbehandlung hängt von Werkstoff, Ausgangszustand und gefordertem Korrosionsschutz ab. Typisch ist: <strong>Reinigen / Entfetten → ggf. Entrosten, Strahlen, Schleifen oder chemische Vorbehandlung → Grundierung → Zwischenbeschichtung → Decklack → Trocknen / Aushärten</strong>. Nicht jeder Auftrag benötigt alle Stufen. Entscheidend ist, dass der Untergrund sauber, tragfähig und für das gewählte Lacksystem geeignet ist.<br><br>
-    <h4>Auswahlmöglichkeiten in der Auftragserfassung</h4>
-    <ul>
-      <li><strong>Farbpalette:</strong> unter anderem RAL, NCS, DB, Pantone, Sonderfarbe / nach Vorlage oder Klarlack</li>
-      <li><strong>Farbton:</strong> genaue Farbtonbezeichnung oder Artikelnummer</li>
-      <li><strong>Glanzgrad:</strong> Hochglanz, Seidenglanz, Glanz, Matt, Seidenmatt oder Stumpfmatt</li>
-      <li><strong>Oberfläche:</strong> glatt, Feinstruktur oder Grobstruktur</li>
-      <li><strong>Effekte:</strong> Metallic oder fluoreszierend</li>
-      <li><strong>Extras:</strong> zweifärbig, Duplexbeschichtung oder beigestellter Lack</li>
-    </ul>
-    <h4>Typische Anwendungen</h4>
-    <ul>
-      <li>Maschinen- und Anlagenbauteile</li>
-      <li>Stahl- und Metallkonstruktionen</li>
-      <li>Fahrzeug- und Gerätebauteile</li>
-      <li>Bauteile mit speziellen Farb-, Optik- oder Korrosionsschutzanforderungen</li>
-    </ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Werkstoff, Maße, Gewicht und Stückzahl</li>
-      <li>Farbpalette und exakte Farbtonbezeichnung bzw. Artikelnummer</li>
-      <li>gewünschter Glanzgrad und Oberflächenstruktur</li>
-      <li>besondere Effekte oder Extras</li>
-      <li>gewünschter Schichtaufbau, Korrosionsschutz und zu maskierende Bereiche</li>
-    </ul>
-    <strong>Konstruktive Hinweise:</strong> Bei Hohlräumen, Sacklöchern oder schöpfenden Geometrien sollten ausreichende Ablaufmöglichkeiten für Reinigungs- und Vorbehandlungsmedien vorgesehen werden. Aufhängestellen sowie Bereiche, die lackfrei bleiben müssen, sollten vorab festgelegt und in Zeichnungen eindeutig gekennzeichnet werden.<br><br>
-    Bei einer Anfrage können unter anderem <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 12944</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> als Anforderungen angegeben werden.
-  `;
-
-  const pulverbeschichtenText = legacyContainerTexts[3] + `
-    <br><br><h4>Typische Prozesskette / Vorbehandlung</h4>
-    Eine belastbare Pulverbeschichtung beginnt mit einer zum Werkstoff passenden Vorbehandlung. Typisch ist: <strong>Reinigen / Entfetten → ggf. Strahlen oder Beizen → Konversionsbehandlung bzw. geeignete Vorbehandlung → Spülen → Trocknen → Pulverbeschichten → Einbrennen</strong>. Bei verzinkten Bauteilen oder Duplexsystemen können zusätzliche abgestimmte Vorbehandlungsschritte notwendig sein.<br><br><strong>Konstruktive Hinweise:</strong> Bei schöpfenden Geometrien und Hohlräumen sollten ausreichende Ablauf- und Entlüftungsmöglichkeiten vorgesehen werden, damit Vorbehandlungsmedien vollständig ablaufen können. Aufhängestellen und elektrische Kontaktpunkte können sichtbare Spuren hinterlassen und sollten möglichst früh festgelegt werden.
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Farbpalette, Farbtonbezeichnung bzw. Artikelnummer</li>
-      <li>Glanzgrad: von Hochglanz bis Stumpfmatt</li>
-      <li>Oberfläche: glatt, Feinstruktur oder Grobstruktur</li>
-      <li>gewünschte Pulverlack-Qualität, z. B. Polyester, Epoxy-Polyester, Polyurethan, Thermoplast oder Qualität für Feuerverzinkung</li>
-      <li>besondere Effekte, zweifärbige Ausführung oder Duplexbeschichtung</li>
-      <li>Werkstoff, Bauteilabmessungen, Gewicht, Stückzahl und zu maskierende Bereiche</li>
-    </ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>GSB</strong>, <strong>Qualicoat</strong>, <strong>Qualisteelcoat</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
-  `;
-
-  const eloxierenText = `
-    <strong>Eloxieren</strong> ist die elektrochemische Oxidation von <strong>Aluminium</strong>. Beschichter Scout verwendet „Eloxieren“ gezielt für Aluminium und Aluminiumlegierungen. Für anodische Oxidationsverfahren auf anderen Metallen wird die separate Auswahl <strong>Anodisieren</strong> verwendet.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Das spätere Erscheinungsbild wird stark durch die mechanische und chemische Vorbehandlung bestimmt. Typisch ist: <strong>Reinigen / Entfetten → ggf. Schleifen, Bürsten oder Polieren → Beizen → Spülen → Neutralisieren / Dekapieren → Eloxieren → ggf. Färben → Verdichten</strong>. Für glänzende oder besonders gleichmäßige Sichtoberflächen kann zusätzlich chemisches Glänzen eingesetzt werden.<br><br><strong>Konstruktive Hinweise:</strong> Sacklöcher und Hohlräume sollten so gestaltet sein, dass Prozessbäder vollständig ein- und auslaufen können. Kontaktier- und Aufhängestellen sind verfahrensbedingt notwendig und können sichtbare Kontaktspuren hinterlassen; bei Sichtteilen sollten diese Stellen vorab festgelegt werden.<br><br>
-    <h4>Unterverfahren</h4>
-    <ul>
-      <li><strong>Normaleloxal:</strong> klassisches Eloxieren für dekorative und technische Aluminiumoberflächen.</li>
-      <li><strong>Harteloxal / Hartanodisieren:</strong> dickere und härtere Oxidschichten für stärker beanspruchte Funktionsflächen.</li>
-      <li><strong>Chromsäureanodisieren:</strong> spezielles anodisches Verfahren für Aluminium, insbesondere bei entsprechenden technischen Vorgaben.</li>
-      <li><strong>Tioxal und Ematal:</strong> spezielle Eloxal-/Anodisierausführungen, die nach konkreter Prozess- oder Oberflächenvorgabe ausgeschrieben werden sollten.</li>
-    </ul>
-    <h4>Farbe und Verdichtung</h4>
-    Bei Normaleloxal können beispielsweise Natur-, Bronze-, Schwarz- und Grautöne gefordert werden. Die <strong>Verdichtung</strong> beeinflusst die Eigenschaften der porösen Oxidschicht und sollte deshalb angegeben werden, wenn eine konkrete technische Vorgabe besteht.<br><br>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Aluminiumlegierung bzw. genaue Werkstoffangabe</li>
-      <li>gewünschtes Eloxalverfahren</li>
-      <li>dekorative oder technische Anwendung</li>
-      <li>gewünschte Schichtdicke</li>
-      <li>Farbton und gewünschte Verdichtung</li>
-      <li>Maße, Gewicht, Stückzahl und Sichtflächen</li>
-      <li>Funktionsflächen, Passungen, Gewinde und Bereiche, die frei bleiben müssen</li>
-    </ul>
-    Als Anforderungen können unter anderem <strong>Qualanod</strong>, <strong>GSB</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
-  `;
-
-  const verzinkenText = `
-    <strong>Verzinken</strong> bezeichnet das Aufbringen einer Zinkschicht auf Stahl oder andere geeignete Eisenwerkstoffe, um insbesondere den Korrosionsschutz zu verbessern. Je nach Bauteil, Einsatzbereich und gewünschter Schichteigenschaft stehen unterschiedliche Verfahren zur Verfügung.<br><br>
-    
-    <h4>Passivierung / Chromatierung bei galvanischem Verzinken</h4>
-    Nach dem galvanischen Verzinken kann eine zusätzliche Konversionsschicht gefordert werden. Übliche Angaben sind beispielsweise <strong>Blaupassivieren, Gelbpassivieren, Dickschichtpassivieren, Schwarzpassivieren</strong> oder <strong>Schwarzchromatieren</strong>. Die gewünschte Ausführung sollte ausdrücklich angegeben werden, da Optik, Korrosionsschutz und chemisches System voneinander abweichen können.<br><br>
-<h4>Typische Prozesskette / Vorbehandlung</h4>
-    Die Prozesskette unterscheidet sich je nach Verzinkungsverfahren. Beim <strong>Feuerverzinken</strong> ist typisch: Entfetten → Beizen → Spülen → Flussmittelbehandlung → Trocknen → Feuerverzinken → Nachbearbeitung / Kontrolle. Beim <strong>galvanischen Verzinken</strong> ist typisch: Reinigen / Entfetten → Beizen bzw. Aktivieren → Spülen → galvanisch Verzinken → Passivieren → ggf. Versiegeln und Trocknen. Bei starkem Zunder oder besonderen Oberflächenzuständen kann eine zusätzliche mechanische Vorbehandlung erforderlich sein.<br><br><strong>Konstruktive Hinweise:</strong> Beim Feuerverzinken sind bei Hohlprofilen und Hohlbauteilen ausreichend dimensionierte Entlüftungs- und Ablauföffnungen zwingend erforderlich. Geschlossene Hohlräume dürfen nicht vorhanden sein, und schöpfende Bereiche sind zu vermeiden, damit Vorbehandlungsmedien und flüssiges Zink sicher ein- und auslaufen können. Auch Aufhängemöglichkeiten und mögliche Verzüge durch die Temperaturbelastung sollten konstruktiv berücksichtigt werden.<br><br>
-    <h4>Unterverfahren</h4>
-    <ul>
-      <li><strong>Feuerverzinken:</strong> Das Werkstück wird in ein Bad aus geschmolzenem Zink getaucht. Dabei entsteht eine metallurgisch gebundene Zinkschicht mit robustem Korrosionsschutz.</li>
-      <li><strong>Galvanisches Verzinken:</strong> Zink wird elektrochemisch abgeschieden. Das Verfahren eignet sich besonders für dünnere, gleichmäßige Schichten und maßhaltige Bauteile.</li>
-      <li><strong>Zinklamellenbeschichtung:</strong> Zinkhaltige Lamellensysteme erzeugen dünne Korrosionsschutzschichten und werden häufig bei Verbindungselementen und geometrisch anspruchsvollen Teilen eingesetzt.</li>
-      <li><strong>Mechanisches Verzinken:</strong> Zink wird mechanisch auf die Oberfläche aufgebracht. Das Verfahren wird vor allem bei kleineren Bauteilen eingesetzt.</li>
-    </ul>
-    <h4>Zusätzliche Angaben bei galvanischem Verzinken</h4>
-    Wird <strong>Galvanisches Verzinken</strong> gewählt, können zusätzlich das Zinksystem <strong>Zink-Standard, Zink-Nickel oder Zink-Eisen</strong>, die Ausführung als <strong>Trommel- oder Gestellverfahren</strong> sowie optionale Nachbehandlungen wie <strong>Versiegelung, Gleitmittelbeschichtung oder Tempern</strong> angegeben werden. Diese Angaben sind Spezifikationen des galvanischen Verzinkens und keine zusätzlichen Unterverfahren.<br><br>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Werkstoff, Maße, Gewicht und Stückzahl</li>
-      <li>gewünschtes Unterverfahren</li>
-      <li>beim galvanischen Verzinken gegebenenfalls Zinksystem, Trommel-/Gestellverfahren und Nachbehandlung</li>
-      <li>Funktionsflächen, Gewinde, Hohlräume und Bereiche, die frei bleiben müssen</li>
-      <li>Einsatzbedingungen und gewünschter Korrosionsschutz</li>
-    </ul>
-    Als Anforderungen können unter anderem <strong>RAL-GZ</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
-  `;
-
-  const vernickelnText = `
-    <strong>Vernickeln</strong> bezeichnet das Aufbringen einer Nickelschicht auf ein Werkstück. Nickelschichten können dem Korrosions- und Verschleißschutz dienen, technische Oberflächeneigenschaften verbessern oder für dekorative Zwecke eingesetzt werden.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Für dekorative Nickelschichten ist die gewünschte Endoptik bereits vor dem Beschichten vorzubereiten. Je nach Ausgangszustand kann die Kette <strong>Schleifen → Polieren → Reinigen / Entfetten → Aktivieren → ggf. Verkupfern → Vernickeln</strong> umfassen. Für technische oder chemisch abgeschiedene Nickelschichten kann der mechanische Hochglanzaufbau entfallen; dort stehen Sauberkeit, Aktivierung, Maßhaltigkeit und die geforderte Funktion der Schicht im Vordergrund.<br><br>
-    <h4>Unterverfahren</h4>
-    <ul>
-      <li><strong>Chemisch:</strong> Nickel wird durch eine chemische Reaktion ohne externen elektrischen Strom abgeschieden. Dadurch lassen sich auch komplexe Geometrien vergleichsweise gleichmäßig beschichten.</li>
-      <li><strong>Galvanisch:</strong> Nickel wird elektrolytisch auf der Werkstückoberfläche abgeschieden. Das Verfahren ermöglicht definierte Schichtaufbauten und wird für technische wie dekorative Anwendungen eingesetzt.</li>
-    </ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>gewünschtes Verfahren: chemisch oder galvanisch</li>
-      <li>Werkstoff, Ausgangszustand und Geometrie</li>
-      <li>Maße, Gewicht und Stückzahl</li>
-      <li>optische bzw. technische Funktion der Nickelschicht</li>
-      <li>Funktions-, Pass- und Sichtflächen sowie gegebenenfalls nachfolgende Beschichtungen</li>
-    </ul>
-    Als Anforderungen können unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
-  `;
-
-  const entlackenText = `
-    <strong>Entlacken</strong> dient dazu, vorhandene Lack- oder Beschichtungsschichten kontrolliert zu entfernen. Welches Verfahren geeignet ist, hängt insbesondere vom Grundwerkstoff, der vorhandenen Beschichtung, der Bauteilgeometrie und der geplanten Weiterbearbeitung ab.<br><br>
-    <h4>Unterverfahren</h4>
-    <ul>
-      <li><strong>Chemisch:</strong> Die Beschichtung wird mit geeigneten chemischen Medien angelöst oder entfernt.</li>
-      <li><strong>Elektrochemisch:</strong> Die Entschichtung wird durch einen elektrochemischen Prozess unterstützt.</li>
-      <li><strong>Thermisch:</strong> Die Beschichtung wird durch Wärmeeinwirkung zersetzt oder abgelöst.</li>
-      <li><strong>Mechanisch:</strong> Die Beschichtung wird beispielsweise durch Schleifen, Bürsten oder Strahlen abgetragen.</li>
-    </ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Grundwerkstoff</li>
-      <li>Art und Zustand der vorhandenen Beschichtung</li>
-      <li>gewünschtes Entlackungsverfahren</li>
-      <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
-      <li>empfindliche Funktionsflächen und gewünschter Zustand nach dem Entlacken</li>
-      <li>geplante Weiterbehandlung</li>
-    </ul>
-    Als Qualitätsanforderung kann insbesondere <strong>Qualistrip</strong> relevant sein.
-  `;
-
-  const strahlenText = `
-    <strong>Strahlen</strong> ist eine mechanische Oberflächenbehandlung, bei der ein Strahlmittel mit hoher Geschwindigkeit auf ein Werkstück trifft. Dadurch können Oberflächen gereinigt, aufgeraut, mattiert oder für eine nachfolgende Beschichtung vorbereitet werden.<br><br><strong>Konstruktive Hinweise:</strong> Dicht-, Pass-, Gewinde- und Funktionsflächen, die nicht gestrahlt werden dürfen, müssen eindeutig gekennzeichnet beziehungsweise abgedeckt werden. Dünnwandige oder empfindliche Bauteile können sich je nach Strahlmittel und Intensität verformen oder ihre Oberflächenmaße verändern.<br><br>
-    <h4>Unterverfahren</h4>
-    <ul>
-      <li><strong>Sandstrahlen:</strong> abrasive Oberflächenbehandlung zum Reinigen, Entrosten oder Aufrauen geeigneter Werkstücke.</li>
-      <li><strong>Staubstrahlen:</strong> in der Auftragserfassung als eigene Strahlvariante auswählbar.</li>
-      <li><strong>Glasperlen:</strong> Behandlung mit Glasperlen, häufig zur Reinigung, Mattierung oder Erzeugung einer gleichmäßigen Oberfläche.</li>
-    </ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Grundwerkstoff und Ausgangszustand</li>
-      <li>gewünschtes Unterverfahren</li>
-      <li>Ziel der Behandlung: Reinigen, Entrosten, Aufrauen, Mattieren oder Vorbereitung für eine Folgebeschichtung</li>
-      <li>Bauteilabmessungen, Gewicht und Stückzahl</li>
-      <li>empfindliche Flächen, Passungen, Gewinde und Bereiche mit Maßanforderungen</li>
-      <li>gewünschtes Ergebnis bzw. gewünschte Rauheit, sofern vorgegeben</li>
-    </ul>
-  `;
-
-
-  const zinkphosphatierenText = `
-    <strong>Zinkphosphatieren</strong> ist eine chemische Vorbehandlung, bei der auf Stahl- oder verzinkten Oberflächen eine feinkristalline Phosphatschicht erzeugt wird. Sie dient häufig als Haftgrund für eine nachfolgende Lackierung oder Pulverbeschichtung und kann zugleich den Korrosionsschutz des Gesamtsystems verbessern.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Vorbehandlung vor Nasslackierung oder Pulverbeschichtung</li><li>Automobil- und Maschinenbauteile</li><li>Serienteile mit definierten Anforderungen an Lackhaftung und Korrosionsschutz</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Oberflächenzustand</li><li>gewünschtes <strong>Schichtgewicht in g/m²</strong></li><li>Nachbehandlung: <strong>keine, geölt oder versiegelt</strong></li><li>geplante Folgebehandlung oder Endbeschichtung</li><li>Stückzahl, Abmessungen und Gewicht</li></ul>
-    Als zusätzliche Anforderungen können <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.<br><br>
-    <strong>Praxis-Hinweis:</strong> Entscheidend ist, ob die Phosphatierung als eigenständige temporäre Schutzschicht oder als Vorbehandlung für ein späteres Beschichtungssystem vorgesehen ist.
-  `;
-
-  const verzinnenText = `
-    <strong>Verzinnen</strong> bezeichnet das Aufbringen einer Zinnschicht auf ein Werkstück. Zinnschichten werden unter anderem eingesetzt, wenn Korrosionsschutz, gute Lötbarkeit oder definierte elektrische und funktionelle Eigenschaften gefragt sind.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Galvanisch:</strong> Zinn wird elektrolytisch auf der Oberfläche abgeschieden.</li><li><strong>Chemisch:</strong> Zinn wird durch eine chemische Abscheidung ohne externen Strom aufgebracht.</li></ul>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>elektrische und elektronische Bauteile</li><li>Steck- und Kontaktteile</li><li>Bauteile mit Anforderungen an Lötbarkeit</li><li>funktionelle Oberflächen auf Kupfer, Messing oder geeigneten Stählen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff</li><li>chemisches oder galvanisches Verzinnen</li><li>gewünschte Funktion und gegebenenfalls Schichtdicke</li><li>Kontakt-, Löt- und Sichtflächen</li><li>Stückzahl, Abmessungen und Prüfanforderungen</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als auswählbare Anforderungen.
-  `;
-
-  const aluminierenText = `
-    <strong>Aluminieren</strong> erzeugt eine aluminiumhaltige Schutzschicht auf einem Werkstück. Je nach Verfahren wird Aluminium metallurgisch, thermisch oder durch Spritzen aufgebracht. Solche Schichten werden insbesondere eingesetzt, wenn Korrosions- oder Temperaturbeständigkeit gefordert ist.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Schmelztauchaluminieren</strong></li><li><strong>Spritzaluminieren</strong></li><li><strong>Feueraluminieren</strong></li></ul>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Stahlbauteile in korrosiver Umgebung</li><li>Bauteile mit erhöhter Temperaturbelastung</li><li>große oder geometrisch anspruchsvolle Werkstücke beim Spritzaluminieren</li><li>Industrie- und Anlagenbau</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und gewünschtes Verfahren</li><li>Einsatztemperatur und Umgebungsbedingungen</li><li>gewünschte Schichtdicke und Schutzwirkung</li><li>Abmessungen, Gewicht und Stückzahl</li><li>Bereiche, die nicht beschichtet werden dürfen</li></ul>
-    Als Anforderungen können unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>ISO 45001</strong> sowie <strong>RoHS / REACH</strong> angegeben werden.
-  `;
-
-  const aluminiumPassivierenText = `
-    Beim <strong>Aluminium-Passivieren</strong> wird die Aluminiumoberfläche chemisch behandelt, um ihre Korrosionsbeständigkeit zu verbessern oder eine geeignete Grundlage für nachfolgende Beschichtungen zu schaffen. Je nach System kann zugleich die elektrische Leitfähigkeit der Oberfläche eine Rolle spielen.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chrom(III)-Passivierung</strong></li><li><strong>Chromfreie Passivierung</strong></li></ul>
-    <h4>Mögliche Anforderungen</h4>
-    <ul><li>Korrosionsschutz</li><li>Lackhaftung</li><li>elektrische Leitfähigkeit</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Aluminiumlegierung</li><li>gewünschte Passivierungsart</li><li>Hauptanforderung an die Oberfläche</li><li>geplante Folgebehandlung</li><li>Stückzahl, Maße und Funktionsflächen</li></ul>
-    <strong>Praxis-Hinweis:</strong> Besonders wichtig ist, ob die passivierte Oberfläche später lackiert wird oder als funktionelle Endoberfläche eingesetzt wird.
-  `;
-
-  const elektropolierenText = `
-    <strong>Elektropolieren</strong> ist ein elektrochemisches Abtragsverfahren. Dabei werden mikroskopische Rauheitsspitzen bevorzugt abgetragen, wodurch die Oberfläche geglättet, gereinigt und optisch verfeinert wird. Das Verfahren wird besonders häufig bei Edelstahl eingesetzt.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>Reduzierung der Oberflächenrauheit</li><li>bessere Reinigbarkeit und hygienische Eigenschaften</li><li>Entfernung von Bearbeitungsspuren und Oberflächenverunreinigungen</li><li>gleichmäßigeres, technisch sauberes Erscheinungsbild</li></ul>
-    <h4>Anwendungsbereiche</h4>
-    <ul><li><strong>Lebensmittel</strong></li><li><strong>Pharma</strong></li><li><strong>Medizintechnik</strong></li><li><strong>Industrie allgemein</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Werkstoffgüte</li><li>Anwendungsbereich</li><li>Ausgangsrauheit und gewünschtes Ergebnis</li><li>Sicht- und Funktionsflächen</li><li>Bauteilgröße, Stückzahl und gegebenenfalls Dokumentationsanforderungen</li></ul>
-  `;
-
-  const vermessingenText = `
-    Beim <strong>Vermessingen</strong> wird eine messingfarbene Kupfer-Zink-Schicht auf ein Werkstück aufgebracht. Das Verfahren wird vor allem für dekorative Oberflächen verwendet, kann aber auch Bestandteil eines technischen Schichtaufbaus sein.<br><br>
-    <h4>Ausführungen</h4>
-    <ul><li><strong>Glänzend</strong></li><li><strong>Matt</strong></li><li><strong>Antik / patiniert</strong></li></ul>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Beschläge und dekorative Metallteile</li><li>Möbel- und Innenausbauteile</li><li>Leuchten, Sichtteile und Designkomponenten</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff</li><li>gewünschte optische Ausführung</li><li>Sichtflächen und zulässige Farbabweichungen</li><li>Stückzahl und Abmessungen</li><li>gegebenenfalls gewünschte Schutz- oder Deckschicht</li></ul>
-  `;
-
-  const verkupfernText = `
-    <strong>Verkupfern</strong> bedeutet, eine Kupferschicht auf einem Werkstück abzuscheiden. Kupfer kann als dekorative Oberfläche, als funktionelle Schicht oder als Zwischen- und Haftschicht für weitere galvanische Beschichtungen eingesetzt werden.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Galvanisch</strong></li><li><strong>Chemisch</strong></li></ul>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Zwischenschichten vor Vernickeln oder Verchromen</li><li>elektrisch leitfähige Oberflächen</li><li>dekorative Metallteile</li><li>Aufbau oder Ausgleich definierter Oberflächen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff</li><li>galvanische oder chemische Ausführung</li><li>Funktion der Kupferschicht</li><li>gewünschte Folgebeschichtung</li><li>Schichtdicke, Stückzahl und Funktionsflächen</li></ul>
-  `;
-
-  const vergoldenText = `
-    Beim <strong>Vergolden</strong> wird eine Goldschicht auf ein Bauteil aufgebracht. Gold wird sowohl wegen seiner hochwertigen Optik als auch aufgrund seiner Korrosionsbeständigkeit und guten elektrischen Eigenschaften eingesetzt.<br><br>
-    Die Goldschicht übernimmt die vorhandene Oberflächenqualität weitgehend. Für dekorative Hochglanzteile wird deshalb typischerweise bereits vorher <strong>geschliffen und poliert</strong>. Anschließend folgen Reinigen / Entfetten und Aktivieren. Abhängig von Grundwerkstoff und Anforderung können geeignete Zwischen- oder Sperrschichten, beispielsweise Kupfer oder Nickel, erforderlich sein. Typisch kann die Kette lauten: <strong>Schleifen → Polieren → Reinigen / Aktivieren → ggf. Verkupfern / Vernickeln → Vergolden</strong>.<br><br>
-    Bei Edelstahl kann je nach eingesetztem Prozess auch eine <strong>Direktvergoldung</strong> ohne klassische Nickel-Zwischenschicht vorgesehen sein. Ob das technisch sinnvoll ist, hängt vom Grundwerkstoff, der Vorbehandlung, dem verwendeten Elektrolytsystem und der späteren Beanspruchung ab. Bei technischen Kontaktflächen richtet sich der Schichtaufbau insbesondere nach elektrischer Funktion, Diffusionssperre und Verschleißanforderung.<br><br>
-    <h4>Auswahlmöglichkeiten</h4>
-    <ul>
-      <li>Goldart: <strong>Reingold</strong> oder <strong>Hartgold</strong></li>
-      <li>Anwendung: <strong>dekorativ</strong> oder <strong>technisch</strong></li>
-      <li>Schichtaufbau: <strong>Direktvergoldung von Edelstahl</strong>, <strong>Vergoldung mit Zwischenschicht</strong> oder nach Vorgabe</li>
-      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder andere systemspezifische Vorgabe</li>
-    </ul>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>elektrische Kontakte und Steckverbinder</li><li>Elektronik- und Präzisionsbauteile</li><li>Schmuck- und Designteile</li><li>hochwertige Sichtflächen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und vorhandene Zwischenschichten</li><li>Reingold oder Hartgold</li><li>dekorative oder technische Anwendung</li><li>gewünschter Schichtaufbau bzw. Direktvergoldung</li><li>Kontakt- und Funktionsflächen</li><li>gewünschte Nachbehandlung</li><li>gewünschte Schichtdicke sowie Stückzahl</li></ul>
-  `;
-
-  const folierenText = legacyContainerTexts[11] + `
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Einsatz <strong>innen oder außen</strong></li><li>Grundmaterial und vorhandene Oberfläche</li><li>gewünschte Folienart, Optik und Funktion</li><li>Bauteilabmessungen und Stückzahl</li><li>Anforderungen an Kanten, Radien, Ausschnitte und Sichtflächen</li></ul>
-    Für Folieraufträge kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> und <strong>RAL-GZ 716</strong> als mögliche Anforderungen.
-  `;
-
-  const isolierstegText = legacyContainerTexts[12] + `
-    <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Profiltyp, Zeichnung und Abmessungen</li><li>Werkstoff und Oberflächenzustand der Profile</li><li>Art und Abmessung des Isolierstegs</li><li>Stückzahl bzw. laufende Meter</li><li>Anforderungen an Prüfung, Verbundfestigkeit und Dokumentation</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong>, <strong>RoHS / REACH</strong> sowie <strong>RAL-GZ 607/3</strong> als mögliche Anforderungen.
-  `;
-
-  const einlagernText = `
-    <strong>Einlagern</strong> ist als ergänzende Leistung vorgesehen, wenn Bauteile zwischen Fertigung, Beschichtung, Abruf oder Auslieferung zwischengelagert werden sollen. Dadurch kann ein Beschichtungs- oder Logistikauftrag auch dann abgewickelt werden, wenn die Teile nicht unmittelbar weitertransportiert werden.<br><br>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Menge, Abmessungen und Gewicht der einzulagernden Teile</li><li>gewünschte Lagerdauer</li><li>Verpackungszustand und Stapelbarkeit</li><li>Abruf- und Ausliefermodalitäten</li><li>besondere Lagerbedingungen</li></ul>
-    Als besondere Lageranforderung kann ausdrücklich <strong>„trocken lagern“</strong> angegeben werden.<br><br>
-    <strong>Praxis-Hinweis:</strong> Bei beschichteten Sichtteilen sollte zusätzlich festgelegt werden, wie Verpackung, Zwischenlagen und Handhabung erfolgen müssen, damit keine Kratzer oder Druckstellen entstehen.
-  `;
-
-  const entzinkenText = `
-    <strong>Entzinken</strong> bezeichnet das gezielte Entfernen einer vorhandenen Zinkschicht. Das ist beispielsweise erforderlich, wenn ein Bauteil repariert, erneut verzinkt, anders beschichtet oder auf seinen Grundwerkstoff zurückgeführt werden soll.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und vorhandenes Zinksystem</li><li>Bauteilabmessungen und Stückzahl</li><li>gewünschter Zustand nach dem Entzinken</li><li>anschließende Weiterbehandlung</li><li>empfindliche Flächen und Maßanforderungen</li></ul>
-  `;
-
-  const enteloxierenText = `
-    <strong>Enteloxieren</strong> entfernt eine vorhandene Eloxalschicht von Aluminium. Das Verfahren wird eingesetzt, wenn eine Oberfläche neu eloxiert, repariert oder für eine andere Behandlung vorbereitet werden soll.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Aluminiumlegierung</li><li>vorhandene Eloxalschicht und Farbton</li><li>gewünschter Zustand nach dem Enteloxieren</li><li>Maß- und Sichtflächen</li><li>geplante Neubeschichtung oder erneute Eloxierung</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> sowie <strong>RoHS / REACH</strong>.
-  `;
-
-  const entanodisierenText = `
-    <strong>Entanodisieren</strong> ist das Entfernen einer anodisch erzeugten Oxidschicht, um das Grundmaterial für eine Reparatur, Nacharbeit oder neue Oberflächenbehandlung freizulegen.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Galvanisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und vorhandene anodische Schicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag und Maßtoleranzen</li><li>Sicht- und Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>Qualanod</strong>, <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
-  `;
-
-  const entzinnenText = `
-    <strong>Entzinnen</strong> entfernt vorhandene Zinnschichten, beispielsweise vor Reparatur, Recycling oder einer erneuten Oberflächenbehandlung.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff</li><li>Art und Zustand der vorhandenen Zinnschicht</li><li>gewünschter Zustand nach dem Entzinnen</li><li>Bauteilabmessungen, Stückzahl und empfindliche Bereiche</li><li>geplante Weiterbearbeitung oder Neubeschichtung</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
-  `;
-
-  const entaluminierenText = `
-    <strong>Entaluminieren</strong> bezeichnet das Entfernen einer vorhandenen Aluminiumschicht. Das Verfahren kann notwendig sein, wenn eine Beschichtung beschädigt ist, ein Bauteil repariert oder für ein neues Schichtsystem vorbereitet werden soll.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li><li><strong>Mechanisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und vorhandene Aluminiumschicht</li><li>gewünschtes Entschichtungsverfahren</li><li>zulässiger Materialabtrag</li><li>Geometrie, Abmessungen und Stückzahl</li><li>geplante Folgebeschichtung</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong> als mögliche Anforderungen.
-  `;
-
-  const entnickelnText = `
-    <strong>Entnickeln</strong> entfernt eine vorhandene Nickelschicht von einem Werkstück. Das ist beispielsweise bei fehlerhaften Schichten, Reparaturen oder vor einer erneuten galvanischen Behandlung erforderlich.<br><br>
-    <h4>Varianten / Ausführungen</h4>
-    <ul><li><strong>Chemisch</strong></li><li><strong>Elektrochemisch</strong></li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und vorhandene Nickelschicht</li><li>chemisches oder elektrochemisches Entnickeln</li><li>zulässiger Angriff auf den Grundwerkstoff</li><li>Maß-, Sicht- und Funktionsflächen</li><li>geplante Folgebeschichtung</li></ul>
-    Als mögliche Anforderungen kommen unter anderem <strong>ISO 9001</strong>, <strong>ISO 14001</strong> und <strong>RoHS / REACH</strong>.
-  `;
-
-  const anodisierenText = `
-    <strong>Anodisieren</strong> bezeichnet die elektrochemische Erzeugung einer Oxidschicht auf einer Metalloberfläche. In Beschichter Scout wird diese Auswahl für <strong>Anodisieraufträge außerhalb des klassischen Aluminium-Eloxierens</strong> verwendet. Aluminiumaufträge sollten deshalb grundsätzlich unter <strong>Eloxieren</strong> erfasst werden.<br><br>
-    <h4>Relevante Werkstoffe</h4>
-    <ul>
-      <li><strong>Titan:</strong> anodische Oxidschichten können für technische Eigenschaften und für definierte dekorative Farbwirkungen eingesetzt werden.</li>
-      <li><strong>Magnesium:</strong> anodische bzw. elektrochemische Oxidationsschichten werden insbesondere für Schutz- und Funktionsanforderungen eingesetzt.</li>
-      <li><strong>Zink:</strong> spezielle anodische Oxidationsprozesse sind möglich und sollten nach konkreter Prozessvorgabe ausgeschrieben werden.</li>
-      <li><strong>Andere Werkstoffe:</strong> nur nach eindeutiger technischer Vorgabe oder Zeichnung.</li>
-    </ul>
-    <h4>Typische Anforderungen</h4>
-    Je nach Werkstoff und Verfahren können <strong>Korrosionsschutz, Verschleißschutz, elektrische Isolation</strong> oder eine <strong>dekorative Oberfläche bzw. Färbung</strong> im Vordergrund stehen. Die konkrete Prozessführung ist stark werkstoffabhängig und sollte bei Spezialverfahren möglichst durch Zeichnung, Norm oder Kundenspezifikation beschrieben werden.<br><br>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Werkstoff und genaue Legierung</li>
-      <li>gewünschte Funktion der anodischen Schicht</li>
-      <li>gewünschte Schichtdicke, sofern vorgegeben</li>
-      <li>Farbe / Optik, sofern relevant</li>
-      <li>Nachbehandlung oder konkrete Prozessvorgabe</li>
-      <li>Maß-, Kontakt-, Pass- und Funktionsflächen</li>
-      <li>Stückzahl und Abmessungen</li>
-      <li>Norm, Zeichnung oder Kundenspezifikation bei Sonderverfahren</li>
-    </ul>
-    <strong>Abgrenzung:</strong> Klassisches Anodisieren von Aluminium wird auf Beschichter Scout unter <strong>Eloxieren</strong> geführt. Dadurch bleiben Aluminium-Eloxalaufträge und spezielle Anodisieraufträge auf anderen Metallen eindeutig getrennt.
-  `;
-  const mnPhosphatierenText = `
-    <strong>Mn-Phosphatieren (Manganphosphatieren)</strong> ist ein chemisches Konversionsverfahren für Eisen- und Stahlwerkstoffe. Dabei entsteht auf der Oberfläche eine kristalline Manganphosphatschicht. Sie wird vor allem eingesetzt, wenn Verschleiß reduziert, das Einlaufverhalten verbessert oder eine gute Aufnahme von Öl und Schmierstoffen erreicht werden soll.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Zahnräder, Wellen und Getriebeteile</li><li>Gleit- und Reibpartner</li><li>Bauteile mit erhöhten Anforderungen an Einlauf- und Verschleißverhalten</li><li>Vorbehandlung vor Ölen oder weiteren Schutzsystemen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Materialgüte</li><li>gewünschte Schichtausführung bzw. Schichtgewicht</li><li>anschließende Beölung oder weitere Behandlung</li><li>Maß- und Funktionsflächen sowie Toleranzen</li><li>Stückzahl, Abmessungen und Bauteilgewicht</li></ul>
-  `;
-
-  const beizenText = `
-    <strong>Beizen</strong> ist eine chemische Oberflächenbehandlung, bei der Oxidschichten, Zunder, Rost oder andere anorganische Verunreinigungen entfernt werden. Das Verfahren wird häufig als Vorbereitung für galvanische, chemische oder lacktechnische Folgeprozesse eingesetzt.<br><br>
-    
-    <h4>Werkstoff / Beizart</h4>
-    Das Beizverfahren muss zum Grundwerkstoff passen. Für die Anfrage sollte daher angegeben werden, ob es sich um <strong>Edelstahl, Stahl, Aluminium</strong> oder einen anderen Werkstoff handelt. Beizmedium, Prozessführung und Ziel der Behandlung unterscheiden sich je nach Werkstoff deutlich.<br><br>
-<h4>Typische Anwendungen</h4>
-    <ul><li>Entfernen von Zunder nach Wärmebehandlung oder Schweißen</li><li>Reinigen metallischer Oberflächen vor Beschichtung</li><li>Vorbereitung vor Verzinken, Phosphatieren, Eloxieren oder galvanischen Verfahren</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Legierung</li><li>Art und Zustand der Verunreinigung bzw. Oxidschicht</li><li>gewünschter Oberflächenzustand nach dem Beizen</li><li>empfindliche Maß-, Dicht- oder Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
-  `;
-
-  const entgratenText = `
-    <strong>Entgraten</strong> entfernt scharfe Kanten, Grate und Materialüberstände, die beispielsweise beim Sägen, Bohren, Fräsen, Stanzen, Lasern oder Gießen entstehen. Ziel sind sichere, funktionsgerechte und für Folgeprozesse geeignete Bauteilkanten.<br><br>
-    <h4>Verfahrensmöglichkeiten</h4>
-    <ul><li>mechanisches Entgraten</li><li>Gleitschleifen / Trowalisieren</li><li>Bürsten oder Schleifen</li><li>Strahlverfahren</li><li>thermische oder elektrochemische Verfahren für spezielle Anwendungen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Herstellverfahren</li><li>Art, Lage und Größe der Grate</li><li>zulässige Kantenverrundung</li><li>kritische Maß- und Funktionsflächen</li><li>Stückzahl und gewünschtes Ergebnis</li></ul>
-  `;
-
-  const verrundenText = `
-    <strong>Verrunden</strong> bezeichnet das gezielte Abrunden scharfer Bauteilkanten. Dadurch können Verletzungsrisiken reduziert, Beschichtungen gleichmäßiger aufgebaut und Kerbwirkungen oder unerwünschte scharfe Übergänge vermindert werden.<br><br>
-    <h4>Typische Verfahren</h4>
-    <ul><li>Schleifen</li><li>Bürsten</li><li>Gleitschleifen / Trowalisieren</li><li>Strahlen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Bauteilgeometrie</li><li>gewünschter Kantenradius bzw. Verrundungsgrad</li><li>zu bearbeitende und auszunehmende Bereiche</li><li>Maßtoleranzen</li><li>geplante Folgebehandlung</li></ul>
-  `;
-
-  const glaettenText = `
-    <strong>Glätten</strong> reduziert Rauheit, Spitzen und Bearbeitungsspuren auf einer Oberfläche. Je nach Ausgangszustand und Ziel können mechanische, gleitschleifende oder andere Feinbearbeitungsverfahren eingesetzt werden.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>geringere Oberflächenrauheit</li><li>verbesserte Haptik und Optik</li><li>bessere Reinigbarkeit</li><li>Vorbereitung für Polieren, Beschichten oder galvanische Verfahren</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Ausgangsoberfläche</li><li>gewünschter Rauheitswert oder Referenzoberfläche</li><li>zulässiger Materialabtrag</li><li>Maß- und Funktionsflächen</li><li>Stückzahl und Folgeprozess</li></ul>
-  `;
-
-  const mattierenText = `
-    <strong>Mattieren</strong> erzeugt eine gleichmäßig matte, reflexionsarme Oberfläche. Je nach Werkstoff und gewünschter Optik kann dies beispielsweise durch Strahlen, Bürsten, Schleifen oder chemische Verfahren erfolgen.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>gleichmäßige dekorative Optik</li><li>Reduzierung von Glanz und Reflexionen</li><li>Kaschieren leichter Oberflächenunterschiede</li><li>Vorbereitung für nachfolgende Beschichtungen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff</li><li>gewünschter Mattierungsgrad bzw. Referenzmuster</li><li>Sichtflächen und nicht zu bearbeitende Bereiche</li><li>zulässige Rauheit und Materialabtrag</li><li>geplante Folgebehandlung</li></ul>
-  `;
-
-  const schleifenText = `
-    <strong>Schleifen</strong> ist ein spanendes Feinbearbeitungsverfahren, bei dem mit gebundenen oder flexiblen Schleifmitteln Material abgetragen wird. Es dient der Form- und Maßkorrektur, der Verringerung der Rauheit sowie der Vorbereitung dekorativer oder technischer Oberflächen.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Entfernen von Bearbeitungsspuren und Unebenheiten</li><li>Erzeugen definierter Schliffbilder</li><li>Vorbereitung zum Polieren, Bürsten oder Beschichten</li><li>Bearbeitung von Kanten und Übergängen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Ausgangszustand</li><li>gewünschtes Schliffbild oder Rauheit</li><li>zulässiger Materialabtrag und Toleranzen</li><li>Sicht- und Funktionsflächen</li><li>Stückzahl und Folgebehandlung</li></ul>
-  `;
-
-  const polierenText = `
-    <strong>Polieren</strong> ist eine Feinbearbeitung zur deutlichen Verringerung der Oberflächenrauheit und zur Erzeugung glatter bis hochglänzender Flächen. Je nach Werkstoff und Anforderung kann das Polieren dekorativen, hygienischen oder funktionellen Zwecken dienen.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>Hochglanz oder definierter Glanzgrad</li><li>geringere Rauheit</li><li>verbesserte Reinigbarkeit</li><li>Vorbereitung für dekorative galvanische Schichten</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff</li><li>gewünschte Oberflächenqualität bzw. Referenzmuster</li><li>Rauheits- oder Glanzanforderungen</li><li>Geometrie und schwer zugängliche Bereiche</li><li>zulässiger Materialabtrag und Stückzahl</li></ul>
-  `;
-
-  const buerstenText = `
-    <strong>Bürsten</strong> ist eine mechanische Oberflächenbearbeitung mit rotierenden oder linearen Bürstwerkzeugen. Das Verfahren kann zum Reinigen, Entgraten, Strukturieren oder Erzeugen eines definierten dekorativen Schliffbilds eingesetzt werden.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>Strukturieren von Edelstahl- und Aluminiumoberflächen</li><li>Entfernen leichter Oxide oder Rückstände</li><li>Entgraten kleiner Kanten</li><li>Erzeugen eines gleichmäßigen Sichtbilds</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Ausgangszustand</li><li>gewünschte Bürstrichtung und Oberflächenstruktur</li><li>Sichtflächen und Kantenanforderungen</li><li>Referenzmuster, falls vorhanden</li><li>Stückzahl und Folgebehandlung</li></ul>
-  `;
-
-  const trowalisierenText = `
-    <strong>Trowalisieren</strong>, auch Gleitschleifen genannt, ist ein mechanisches Verfahren, bei dem Werkstücke zusammen mit Schleif- oder Polierkörpern und Prozessflüssigkeit in einem Arbeitsbehälter bewegt werden. Dadurch lassen sich Bauteile entgraten, verrunden, glätten, reinigen oder polieren.<br><br>
-    <h4>Typische Ziele</h4>
-    <ul><li>Entgraten und Kantenverrunden</li><li>Glätten und Polieren</li><li>Reinigen und Entzundern leichter Rückstände</li><li>gleichmäßige Bearbeitung großer Stückzahlen</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff, Geometrie und Bauteilgröße</li><li>gewünschtes Bearbeitungsergebnis</li><li>zulässige Kantenverrundung und Materialabtrag</li><li>empfindliche Flächen oder Gewinde</li><li>Stückzahl und Folgeprozess</li></ul>
-  `;
-
-  const chemischesGlaenzenText = `
-    <strong>Chemisches Glänzen</strong> ist ein chemisches Verfahren zum Einebnen und Aufhellen metallischer Oberflächen. Durch kontrollierten chemischen Abtrag werden mikroskopische Rauheitsspitzen reduziert, wodurch eine gleichmäßigere und glänzendere Oberfläche entstehen kann.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>dekorative Oberflächen</li><li>Vorbehandlung vor Eloxieren oder anderen Veredelungen</li><li>Bearbeitung komplexer Geometrien, die mechanisch schwer zugänglich sind</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Werkstoff und Legierung</li><li>gewünschte Optik bzw. Referenzoberfläche</li><li>zulässiger Materialabtrag</li><li>Maß- und Funktionsflächen</li><li>geplante Folgebehandlung</li></ul>
-  `;
-
-  const versilbernText = `
-    <strong>Versilbern</strong> bezeichnet das Aufbringen einer Silberschicht auf ein Werkstück, meist durch galvanische Abscheidung. Silber wird wegen seiner sehr guten elektrischen und thermischen Leitfähigkeit sowie für dekorative und funktionelle Oberflächen eingesetzt.<br><br>
-    <h4>Typische Prozesskette / Vorbehandlung</h4>
-    Vor dem Versilbern muss die Oberfläche metallisch sauber und aktiv sein. Bei dekorativen Sichtteilen wird die gewünschte Glätte häufig bereits durch <strong>Schleifen und Polieren</strong> erzeugt. Danach folgen Reinigen / Entfetten, Aktivieren und je nach Grundwerkstoff geeignete Zwischen- oder Sperrschichten. Typisch ist beispielsweise: <strong>Schleifen / Polieren → Reinigen → Aktivieren → ggf. Verkupfern oder Vernickeln → Versilbern → ggf. Anlaufschutz</strong>. Bei elektrischen Funktionsflächen stehen Leitfähigkeit, Kontaktwiderstand und Schichtdicke stärker im Vordergrund als die Hochglanzoptik.<br><br>
-    <h4>Typische Anwendungen</h4>
-    <ul><li>elektrische Kontakte und Stromschienen</li><li>Bauteile mit hohen Anforderungen an Leitfähigkeit</li><li>dekorative Metalloberflächen</li><li>technische Funktionsschichten</li></ul>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul><li>Grundwerkstoff und eventuelle Zwischenschichten</li><li>gewünschte Schichtdicke</li><li>technische oder dekorative Anforderung</li><li>Kontakt-, Maß- und Funktionsflächen</li><li>Prüfanforderungen, Stückzahl und Abmessungen</li></ul>
-  `;
-
-  const lackeBeschichtungsstoffeText = `
-    <strong>Lacke und Beschichtungsstoffe</strong> schützen Oberflächen, gestalten sie optisch und können ihnen zusätzliche funktionelle Eigenschaften verleihen. Welche Beschichtung geeignet ist, hängt unter anderem vom Grundwerkstoff, der späteren Beanspruchung, dem gewünschten Erscheinungsbild und dem gewählten Applikationsverfahren ab.<br><br>
-    <h4>Nasslacke</h4>
-    Nasslacke werden in flüssiger Form verarbeitet. Sie bestehen je nach System unter anderem aus <strong>Bindemitteln</strong>, <strong>Pigmenten</strong>, <strong>Lösemitteln oder Wasser</strong> sowie Additiven. Nach dem Auftragen entsteht die fertige Lackschicht durch physikalische Trocknung, chemische Reaktion oder eine Kombination daraus.<br><br>
-    <ul>
-      <li><strong>1K-Lacke:</strong> einkomponentige Systeme, die ohne getrennten Härter verarbeitet werden.</li>
-      <li><strong>2K-Lacke:</strong> Lack und Härter werden vor der Verarbeitung im vorgegebenen Verhältnis gemischt. Die Verarbeitungszeit nach dem Anmischen ist begrenzt.</li>
-      <li><strong>Grundierungen:</strong> verbessern je nach System Haftung und Korrosionsschutz und bilden die Basis für weitere Schichten.</li>
-      <li><strong>Decklacke:</strong> bilden die sichtbare und häufig besonders beanspruchte Abschlussbeschichtung.</li>
-      <li><strong>Klarlacke:</strong> transparente Deckschichten zum Schutz oder zur gezielten Beeinflussung von Optik und Glanz.</li>
-    </ul>
-    <h4>Pulverlacke</h4>
-    Pulverlacke sind lösemittelfreie, feste Beschichtungsstoffe in Pulverform. Sie werden typischerweise elektrostatisch auf ein leitfähiges Werkstück aufgebracht und anschließend im Ofen aufgeschmolzen und vernetzt. Häufige Systeme basieren beispielsweise auf <strong>Polyester</strong>, <strong>Epoxid</strong> oder Mischsystemen. Auswahl und Eignung richten sich unter anderem nach Außenbewitterung, Korrosionsschutz, Chemikalienbeständigkeit, Temperaturbeanspruchung und gewünschter Optik.<br><br>
-    <h4>Wichtige Eigenschaften und Angaben</h4>
-    <ul>
-      <li><strong>Farbton:</strong> z. B. RAL, NCS, kundenspezifischer Farbton oder Muster.</li>
-      <li><strong>Glanzgrad:</strong> von matt und tiefmatt bis seidenglänzend oder hochglänzend.</li>
-      <li><strong>Oberflächenstruktur:</strong> glatt, Feinstruktur, Grobstruktur oder spezielle Effekte.</li>
-      <li><strong>Schichtdicke:</strong> beeinflusst Optik, Schutzwirkung, Maßhaltigkeit und Materialverbrauch.</li>
-      <li><strong>Beständigkeit:</strong> je nach Anwendung können UV-, Wetter-, Chemikalien-, Temperatur- oder Abriebbeständigkeit entscheidend sein.</li>
-      <li><strong>Untergrund und Vorbehandlung:</strong> Werkstoff und Vorbehandlung müssen zum Beschichtungssystem passen.</li>
-      <li><strong>Lagerung:</strong> Temperatur, Feuchtigkeit, Verpackung und Lagerdauer können die Verarbeitbarkeit und Qualität beeinflussen.</li>
-    </ul>
-    <h4>Warum die genaue Lackangabe wichtig ist</h4>
-    Zwei Lacke mit gleichem Farbton können technisch völlig unterschiedliche Eigenschaften besitzen. Für eine belastbare Auswahl sollten deshalb nicht nur Farbe und Optik, sondern auch <strong>Hersteller, Produktbezeichnung, Bindemittelsystem, Charge, gewünschte Schichtdicke und spätere Einsatzbedingungen</strong> bekannt sein.<br><br>
-    <strong>Praxis-Hinweis:</strong> Bei Restmengen oder einer späteren Weiterverwendung sollten Originalgebinde, Produktetikett und vorhandene technische Unterlagen möglichst erhalten bleiben. Dadurch lässt sich wesentlich besser beurteilen, wofür ein Lack noch geeignet ist.
-  `;
-
-  const lackrecyclingRestlackText = `
-    <strong>Lackrecycling und Restlackverwertung</strong> zielen darauf ab, noch nutzbare Beschichtungsstoffe möglichst lange im Materialkreislauf zu halten. In Beschichtungsbetrieben entstehen Restmengen beispielsweise durch Projektüberhänge, Farbwechsel, Mindestabnahmemengen, Sortimentswechsel oder nicht vollständig verbrauchte Gebinde. Solche Bestände sind nicht automatisch Abfall: Je nach Zustand und technischer Eignung können sie weiterverwendet, weitergegeben, aufbereitet oder anderweitig verwertet werden.<br><br>
-    <h4>1. Direkte Weiterverwendung</h4>
-    Die einfachste Form der Restlackverwertung ist die weitere Nutzung des unveränderten Materials. Das kann im eigenen Betrieb, für Folgeaufträge oder durch einen anderen geeigneten Anwender erfolgen. Besonders wichtig sind dabei eine eindeutige Produktidentifikation und nachvollziehbare Lagerbedingungen.<br><br>
-    <h4>2. Vermarktung von Restmengen</h4>
-    Noch verwendbare Restbestände können für andere Beschichter interessant sein, wenn Farbe, Qualität und technische Eigenschaften zu deren Bedarf passen. Sinnvolle Angaben sind unter anderem:
-    <ul>
-      <li>Hersteller und genaue Produktbezeichnung</li>
-      <li>Farbton, Glanzgrad und Struktur</li>
-      <li>Bindemittel- bzw. Lacksystem</li>
-      <li>verfügbare Menge und Gebindegröße</li>
-      <li>Charge bzw. Produktionskennzeichnung, sofern vorhanden</li>
-      <li>Lagerzustand und bekannte Lagerdauer</li>
-      <li>Originalverpackung und Zustand des Gebindes</li>
-      <li>technisches Datenblatt oder weitere Produktunterlagen, sofern vorhanden</li>
-    </ul>
-    <h4>3. Aufbereitung und Revitalisierung</h4>
-    Je nach Materialart und Zustand kann eine fachgerechte Aufbereitung sinnvoll sein. Bei Pulverlacken kann beispielsweise geprüft werden, ob Material durch geeignete Aufbereitungs- oder Mischprozesse wieder für definierte Anwendungen nutzbar gemacht werden kann. Entscheidend ist dabei, dass <strong>Verträglichkeit, Farbton, Partikelverteilung, Verarbeitung und geforderte Beschichtungseigenschaften</strong> weiterhin ausreichend sichergestellt werden können.<br><br>
-    Eine Aufbereitung ist nicht gleichbedeutend damit, dass ein Material anschließend wieder uneingeschränkt die Eigenschaften eines ursprünglichen Neuprodukts besitzt. Die tatsächliche Einsatzmöglichkeit muss deshalb immer anhand des konkreten Materials und der späteren Qualitätsanforderungen beurteilt werden.<br><br>
-    <h4>4. Rückgewinnung im Beschichtungsprozess</h4>
-    Beim Pulverbeschichten kann nicht auf dem Werkstück abgeschiedenes Pulver – abhängig von Anlage, Farbwechselkonzept und Qualitätsanforderungen – teilweise innerhalb des Prozesses zurückgewonnen und erneut eingesetzt werden. Dafür sind geeignete Rückgewinnungs-, Sieb- und Dosiersysteme notwendig. Bei hohen optischen oder technischen Anforderungen kann der zulässige Anteil zurückgewonnenen Pulvers begrenzt sein.<br><br>
-    <h4>Wann eine Wiederverwendung kritisch sein kann</h4>
-    <ul>
-      <li>unklare oder nicht nachvollziehbare Produktidentität</li>
-      <li>unbekannte oder offensichtlich ungeeignete Lagerbedingungen</li>
-      <li>Feuchtigkeit, Verklumpung, Verschmutzung oder Fremdmaterial</li>
-      <li>bereits vermischte, nicht kompatible Systeme</li>
-      <li>fehlende Reproduzierbarkeit bei hohen optischen oder technischen Anforderungen</li>
-      <li>Material, dessen Verarbeitbarkeit oder geforderte Eigenschaften nicht mehr sicher beurteilt werden können</li>
-    </ul>
-    <h4>Vorteile einer sinnvollen Restlackverwertung</h4>
-    <ul>
-      <li>weniger ungenutzte Lagerbestände</li>
-      <li>geringere Materialverluste</li>
-      <li>zusätzliche Vermarktungsmöglichkeit für vorhandene Restmengen</li>
-      <li>ressourcenschonenderer Umgang mit bereits hergestellten Beschichtungsstoffen</li>
-      <li>potenziell geringere Beschaffungskosten für passende Anwendungen</li>
-    </ul>
-    <strong>Wichtig:</strong> Ob ein Restlack tatsächlich wiederverwendet oder aufbereitet werden kann, hängt immer vom konkreten Produkt, seinem Zustand und dem vorgesehenen Einsatz ab. Bei sicherheits-, qualitäts- oder kundenspezifisch kritischen Anwendungen sollte die technische Eignung vor Verwendung eindeutig geprüft werden.
-  `;
-
-  const bronzebeschichtenText = `
-    Beim <strong>Bronzebeschichten</strong> wird galvanisch eine Bronzelegierung auf die Oberfläche eines Werkstücks abgeschieden. Je nach Legierungszusammensetzung entstehen unterschiedliche Farbtöne und funktionelle Eigenschaften. In der Praxis werden unter anderem <strong>Weißbronze</strong> und <strong>Gelbbronze</strong> eingesetzt.<br><br>
-    <strong>Weißbronze</strong> bezeichnet helle, silbrig wirkende Kupfer-Zinn- beziehungsweise Kupfer-Zinn-Zink-Legierungsschichten. Sie werden unter anderem eingesetzt, wenn eine dekorative helle Metalloberfläche oder eine funktionelle galvanische Legierungsschicht gewünscht ist. <strong>Gelbbronze</strong> besitzt dagegen einen wärmeren gelblichen bis goldähnlichen Farbton. Die genaue Zusammensetzung und das resultierende Erscheinungsbild hängen vom eingesetzten Elektrolytsystem und der Prozessführung ab.<br><br>
-    Wie bei anderen dekorativen galvanischen Überzügen ist die <strong>Oberflächenvorbereitung entscheidend</strong>. Kratzer, Schleifspuren oder Unebenheiten des Grundmaterials können im fertigen Überzug sichtbar bleiben. Für hochwertige Sichtflächen kann deshalb vorab Schleifen, Polieren oder eine andere definierte Vorbearbeitung erforderlich sein. Danach folgen typischerweise Reinigen / Entfetten, Aktivieren, gegebenenfalls geeignete Zwischenschichten und anschließend die Bronzebeschichtung.<br><br>
-    <h4>Auswahlmöglichkeiten</h4>
-    <ul>
-      <li><strong>Weißbronze</strong></li>
-      <li><strong>Gelbbronze</strong></li>
-      <li><strong>Andere Bronzelegierung / Nach Vorgabe</strong></li>
-      <li>gewünschte <strong>Schichtdicke</strong></li>
-      <li>optionale Nachbehandlung: <strong>Versiegeln</strong>, <strong>Anlaufschutz</strong> oder andere systemspezifische Vorgabe</li>
-    </ul>
-    <h4>Typische Prozesskette</h4>
-    <p><strong>ggf. Schleifen / Polieren → Reinigen / Entfetten → Aktivieren → ggf. Zwischenschicht → Bronzebeschichten → ggf. Nachbehandlung</strong></p>
-    <h4>Wichtige Angaben für eine Anfrage</h4>
-    <ul>
-      <li>Grundwerkstoff und Ausgangszustand</li>
-      <li>Weißbronze, Gelbbronze oder andere Bronzelegierung</li>
-      <li>gewünschte Optik und Oberflächenqualität</li>
-      <li>gewünschte Schichtdicke</li>
-      <li>Funktions- und Sichtflächen</li>
-      <li>gewünschte Nachbehandlung</li>
-      <li>Bauteilabmessungen, Stückzahl und technische Vorgaben</li>
-    </ul>
-  `;
-
-
-
-  const edelstahlPassivierenText = `
-    <strong>Edelstahl-Passivieren</strong> dient dazu, die Korrosionsbeständigkeit nichtrostender Stähle zu unterstützen und insbesondere freie Eisenverunreinigungen von der Oberfläche zu entfernen. Je nach Werkstoff, Ausgangszustand und Kundenvorgabe kommen unterschiedliche chemische Passivierungsprozesse infrage.<br><br>
-    <h4>Wichtige Angaben</h4><ul><li>genaue Edelstahlgüte</li><li>Ausgangszustand und vorherige Bearbeitung</li><li>gewünschtes Ziel, z. B. Korrosionsbeständigkeit oder Reinheitsanforderung</li><li>vorheriges Beizen oder Elektropolieren</li><li>Norm, Kundenspezifikation oder Prüfanforderung</li></ul>
-  `;
-
-  const entchromenText = `
-    <strong>Entchromen</strong> entfernt vorhandene dekorative oder technische Chromschichten. Besonders bei Mehrschichtsystemen muss vorab geklärt werden, welche weiteren Schichten – etwa Nickel oder Kupfer – unter dem Chrom liegen und erhalten oder ebenfalls entfernt werden sollen.<br><br>
-    <h4>Wichtige Angaben</h4><ul><li>Grundwerkstoff</li><li>Dekorativchrom, Hartchrom oder unbekannter Schichtaufbau</li><li>vollständige oder partielle Entschichtung</li><li>maßkritische Flächen und Passungen</li><li>geplanter Folgeprozess</li></ul>
-  `;
-
-  const entkupfernText = `
-    <strong>Entkupfern</strong> entfernt vorhandene Kupferschichten, beispielsweise als Vorbereitung einer galvanischen Aufarbeitung. Da Kupfer häufig als Zwischen- oder Ausgleichsschicht eingesetzt wird, sind Grundwerkstoff und vorhandener Schichtaufbau besonders wichtig.<br><br>
-    <h4>Wichtige Angaben</h4><ul><li>Grundwerkstoff</li><li>Art der Kupferschicht, soweit bekannt</li><li>vollständige oder partielle Entschichtung</li><li>maßkritische Flächen</li><li>geplanter Folgeprozess wie Neuverkupfern, Vernickeln oder Verchromen</li></ul>
-  `;
 
   const baseContainerTexts = [
-    legacyContainerTexts[0],
-    legacyContainerTexts[1],
-    nasslackierenText,
-    pulverbeschichtenText,
-    verzinkenText,
-    eloxierenText,
-    anodisierenText,
-    ktlText,
-    zinkphosphatierenText,
-    strahlenText,
-    entlackenText,
-    bruenierenText,
-    verzinnenText,
-    aluminierenText,
-    vernickelnText,
-    aluminiumPassivierenText,
-    elektropolierenText,
-    verchromenText,
-    vermessingenText,
-    verkupfernText,
-    vergoldenText,
-    folierenText,
-    isolierstegText,
-    einlagernText,
-    entzinkenText,
-    enteloxierenText,
-    entanodisierenText,
-    entzinnenText,
-    entaluminierenText,
-    entnickelnText,
-    mnPhosphatierenText,
-    beizenText,
-    entgratenText,
-    verrundenText,
-    glaettenText,
-    mattierenText,
-    schleifenText,
-    polierenText,
-    buerstenText,
-    trowalisierenText,
-    chemischesGlaenzenText,
-    versilbernText,
+    beschichtungstechnikText,
+    technischeAngabenText,
+    ...procedureOrder.map((name) => buildProcedureText(name, procedureInfo[name])),
     lackeBeschichtungsstoffeText,
     lackrecyclingRestlackText,
-    bronzebeschichtenText,
-    edelstahlPassivierenText,
-    entchromenText,
-    entkupfernText,
   ];
 
 
-  const relatedVerfahren: Record<number, { name: string; hash: string }[]> = {
-    2: [{ name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "KTL-Beschichten", hash: "#KTL-Beschichten" }, { name: "Strahlen", hash: "#Strahlen" }],
-    3: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }],
-    4: [{ name: "Entzinken", hash: "#Entzinken" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Strahlen", hash: "#Strahlen" }],
-    5: [{ name: "Enteloxieren", hash: "#Enteloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }, { name: "Strahlen", hash: "#Strahlen" }],
-    6: [{ name: "Entanodisieren", hash: "#Entanodisieren" }, { name: "Eloxieren", hash: "#Eloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
-    7: [{ name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }, { name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
-    8: [{ name: "KTL-Beschichten", hash: "#KTL-Beschichten" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
-    9: [{ name: "Entlacken", hash: "#Entlacken" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
-    10: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
-    11: [{ name: "Entlacken", hash: "#Entlacken" }, { name: "Folieren", hash: "#Folieren" }, { name: "Einlagern", hash: "#Einlagern" }],
-    12: [{ name: "Entzinnen", hash: "#Entzinnen" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verkupfern", hash: "#Verkupfern" }],
-    13: [{ name: "Entaluminieren", hash: "#Entaluminieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
-    14: [{ name: "Entnickeln", hash: "#Entnickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Vergolden", hash: "#Vergolden" }],
-    15: [{ name: "Eloxieren", hash: "#Eloxieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
-    16: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Strahlen", hash: "#Strahlen" }],
-    17: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Entnickeln", hash: "#Entnickeln" }, { name: "Verkupfern", hash: "#Verkupfern" }],
-    18: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
-    19: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Vergolden", hash: "#Vergolden" }],
-    20: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Elektropolieren", hash: "#Elektropolieren" }],
-    21: [{ name: "Isolierstegverpressen", hash: "#Isolierstegverpressen" }, { name: "Einlagern", hash: "#Einlagern" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }],
-    22: [{ name: "Folieren", hash: "#Folieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Einlagern", hash: "#Einlagern" }],
-    23: [{ name: "Folieren", hash: "#Folieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Nasslackieren", hash: "#Nasslackieren" }],
-    24: [{ name: "Verzinken", hash: "#Verzinken" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Entlacken", hash: "#Entlacken" }],
-    25: [{ name: "Eloxieren", hash: "#Eloxieren" }, { name: "Entanodisieren", hash: "#Entanodisieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
-    26: [{ name: "Anodisieren", hash: "#Anodisieren" }, { name: "Enteloxieren", hash: "#Enteloxieren" }, { name: "Eloxieren", hash: "#Eloxieren" }],
-    27: [{ name: "Verzinnen", hash: "#Verzinnen" }, { name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }],
-    28: [{ name: "Aluminieren", hash: "#Aluminieren" }, { name: "Strahlen", hash: "#Strahlen" }, { name: "Entlacken", hash: "#Entlacken" }],
-    29: [{ name: "Vernickeln", hash: "#Vernickeln" }, { name: "Verchromen", hash: "#Verchromen" }, { name: "Verkupfern", hash: "#Verkupfern" }],
-    30: [{ name: "Zinkphosphatieren", hash: "#Zinkphosphatieren" }, { name: "Schleifen", hash: "#Schleifen" }, { name: "KTL-Beschichten", hash: "#KTL-Beschichten" }],
-    31: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Verzinken", hash: "#Verzinken" }, { name: "Eloxieren", hash: "#Eloxieren" }],
-    32: [{ name: "Verrunden", hash: "#Verrunden" }, { name: "Trowalisieren", hash: "#Trowalisieren" }, { name: "Bürsten", hash: "#Bürsten" }],
-    33: [{ name: "Entgraten", hash: "#Entgraten" }, { name: "Trowalisieren", hash: "#Trowalisieren" }, { name: "Schleifen", hash: "#Schleifen" }],
-    34: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Polieren", hash: "#Polieren" }, { name: "Trowalisieren", hash: "#Trowalisieren" }],
-    35: [{ name: "Strahlen", hash: "#Strahlen" }, { name: "Bürsten", hash: "#Bürsten" }, { name: "Schleifen", hash: "#Schleifen" }],
-    36: [{ name: "Polieren", hash: "#Polieren" }, { name: "Bürsten", hash: "#Bürsten" }, { name: "Mattieren", hash: "#Mattieren" }],
-    37: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Chemisches Glänzen", hash: "#Chemisches-Glänzen" }, { name: "Verchromen", hash: "#Verchromen" }],
-    38: [{ name: "Schleifen", hash: "#Schleifen" }, { name: "Mattieren", hash: "#Mattieren" }, { name: "Entgraten", hash: "#Entgraten" }],
-    39: [{ name: "Entgraten", hash: "#Entgraten" }, { name: "Verrunden", hash: "#Verrunden" }, { name: "Glätten", hash: "#Glätten" }],
-    40: [{ name: "Polieren", hash: "#Polieren" }, { name: "Eloxieren", hash: "#Eloxieren" }, { name: "Aluminium-Passivieren", hash: "#Aluminium-Passivieren" }],
-    41: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Vergolden", hash: "#Vergolden" }],
-    42: [{ name: "Nasslackieren", hash: "#Nasslackieren" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Lackrecycling & Restlackverwertung", hash: "#Lackrecycling-Restlackverwertung" }],
-    43: [{ name: "Lacke & Beschichtungsstoffe", hash: "#Lacke-Beschichtungsstoffe" }, { name: "Pulverbeschichten", hash: "#Pulverbeschichten" }, { name: "Entlacken", hash: "#Entlacken" }],
-    44: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }, { name: "Polieren", hash: "#Polieren" }],
-    45: [{ name: "Beizen", hash: "#Beizen" }, { name: "Elektropolieren", hash: "#Elektropolieren" }],
-    46: [{ name: "Verchromen", hash: "#Verchromen" }, { name: "Entnickeln", hash: "#Entnickeln" }],
-    47: [{ name: "Verkupfern", hash: "#Verkupfern" }, { name: "Vernickeln", hash: "#Vernickeln" }],
-  };
+  const relatedByName: Record<string, string[]> = {
+  "Nasslackieren": [
+    "Pulverbeschichten",
+    "KTL-Beschichten",
+    "Strahlen"
+  ],
+  "Pulverbeschichten": [
+    "Nasslackieren",
+    "Verzinken",
+    "Zinkphosphatieren"
+  ],
+  "KTL-Beschichten": [
+    "Zinkphosphatieren",
+    "Nasslackieren",
+    "Pulverbeschichten"
+  ],
+  "Verzinken": [
+    "Entzinken",
+    "Pulverbeschichten",
+    "Strahlen"
+  ],
+  "Vernickeln": [
+    "Entnickeln",
+    "Verchromen",
+    "Vergolden"
+  ],
+  "Verchromen": [
+    "Vernickeln",
+    "Entchromen",
+    "Polieren"
+  ],
+  "Verkupfern": [
+    "Entkupfern",
+    "Vernickeln",
+    "Vergolden"
+  ],
+  "Verzinnen": [
+    "Entzinnen",
+    "Verkupfern",
+    "Versilbern"
+  ],
+  "Vermessingen": [
+    "Verkupfern",
+    "Polieren",
+    "Entmessingen"
+  ],
+  "Bronzebeschichten": [
+    "Entbronzieren",
+    "Verkupfern",
+    "Polieren"
+  ],
+  "Vergolden": [
+    "Entgolden",
+    "Vernickeln",
+    "Verkupfern"
+  ],
+  "Versilbern": [
+    "Entsilbern",
+    "Verkupfern",
+    "Vergolden"
+  ],
+  "Aluminieren": [
+    "Entaluminieren",
+    "Strahlen",
+    "Verzinken"
+  ],
+  "Eloxieren": [
+    "Enteloxieren",
+    "Aluminium-Passivieren",
+    "Chemisches Glänzen"
+  ],
+  "Anodisieren": [
+    "Entanodisieren",
+    "Eloxieren",
+    "Elektropolieren"
+  ],
+  "Aluminium-Passivieren": [
+    "Eloxieren",
+    "Pulverbeschichten",
+    "Nasslackieren"
+  ],
+  "Edelstahl-Passivieren": [
+    "Beizen",
+    "Elektropolieren",
+    "Bürsten"
+  ],
+  "Zinkphosphatieren": [
+    "Eisenphosphatieren",
+    "KTL-Beschichten",
+    "Pulverbeschichten"
+  ],
+  "Eisenphosphatieren": [
+    "Zinkphosphatieren",
+    "Pulverbeschichten",
+    "Nasslackieren"
+  ],
+  "Mn-Phosphatieren": [
+    "Trowalisieren",
+    "Schleifen",
+    "Brünieren"
+  ],
+  "Brünieren": [
+    "Mn-Phosphatieren",
+    "Schleifen",
+    "Polieren"
+  ],
+  "Beizen": [
+    "Edelstahl-Passivieren",
+    "Eloxieren",
+    "Verzinken"
+  ],
+  "Elektropolieren": [
+    "Edelstahl-Passivieren",
+    "Polieren",
+    "Beizen"
+  ],
+  "Strahlen": [
+    "Schleifen",
+    "Entlacken",
+    "Pulverbeschichten"
+  ],
+  "Schleifen": [
+    "Polieren",
+    "Bürsten",
+    "Mattieren"
+  ],
+  "Polieren": [
+    "Schleifen",
+    "Chemisches Glänzen",
+    "Elektropolieren"
+  ],
+  "Bürsten": [
+    "Schleifen",
+    "Mattieren",
+    "Entgraten"
+  ],
+  "Trowalisieren": [
+    "Entgraten",
+    "Verrunden",
+    "Glätten"
+  ],
+  "Entgraten": [
+    "Verrunden",
+    "Trowalisieren",
+    "Bürsten"
+  ],
+  "Verrunden": [
+    "Entgraten",
+    "Trowalisieren",
+    "Schleifen"
+  ],
+  "Glätten": [
+    "Schleifen",
+    "Polieren",
+    "Trowalisieren"
+  ],
+  "Mattieren": [
+    "Strahlen",
+    "Bürsten",
+    "Schleifen"
+  ],
+  "Chemisches Glänzen": [
+    "Polieren",
+    "Eloxieren",
+    "Elektropolieren"
+  ],
+  "Entlacken": [
+    "Strahlen",
+    "Pulverbeschichten",
+    "Nasslackieren"
+  ],
+  "Entzinken": [
+    "Verzinken",
+    "Strahlen",
+    "Beizen"
+  ],
+  "Entnickeln": [
+    "Vernickeln",
+    "Verchromen",
+    "Beizen"
+  ],
+  "Entchromen": [
+    "Verchromen",
+    "Entnickeln",
+    "Polieren"
+  ],
+  "Entkupfern": [
+    "Verkupfern",
+    "Vernickeln",
+    "Beizen"
+  ],
+  "Entmessingen": [
+    "Vermessingen",
+    "Verkupfern",
+    "Polieren"
+  ],
+  "Entbronzieren": [
+    "Bronzebeschichten",
+    "Verkupfern",
+    "Polieren"
+  ],
+  "Entgolden": [
+    "Vergolden",
+    "Vernickeln",
+    "Verkupfern"
+  ],
+  "Entsilbern": [
+    "Versilbern",
+    "Verkupfern",
+    "Vergolden"
+  ],
+  "Entzinnen": [
+    "Verzinnen",
+    "Verkupfern",
+    "Vernickeln"
+  ],
+  "Entaluminieren": [
+    "Aluminieren",
+    "Strahlen",
+    "Beizen"
+  ],
+  "Enteloxieren": [
+    "Eloxieren",
+    "Anodisieren",
+    "Aluminium-Passivieren"
+  ],
+  "Entanodisieren": [
+    "Anodisieren",
+    "Eloxieren",
+    "Beizen"
+  ],
+  "Folieren": [
+    "Pulverbeschichten",
+    "Nasslackieren",
+    "Einlagern"
+  ],
+  "Isolierstegverpressen": [
+    "Pulverbeschichten",
+    "Eloxieren",
+    "Einlagern"
+  ],
+  "Einlagern": [
+    "Pulverbeschichten",
+    "Folieren",
+    "Isolierstegverpressen"
+  ]
+};
+
+  const procedureHash = (name: string) =>
+    name === "Chemisches Glänzen" ? "#Chemisches-Glänzen" : `#${name}`;
+
+  const relatedVerfahren: Record<number, { name: string; hash: string }[]> =
+    Object.fromEntries(
+      procedureOrder.map((name, i) => [
+        i + 2,
+        (relatedByName[name] ?? []).map((relatedName) => ({
+          name: relatedName,
+          hash: procedureHash(relatedName),
+        })),
+      ])
+    );
 
   const genericInquiryBlock = `
     <br><br><h4>Wichtige Angaben für eine Anfrage</h4>
@@ -1113,7 +2109,7 @@ useEffect(() => {
   const containerTexts = baseContainerTexts.map((text, index) => {
     if (index < 2) return text;
 
-    const isKnowledgeTopic = index === 42 || index === 43;
+    const isKnowledgeTopic = index >= procedureOrder.length + 2;
     const inquiry = isKnowledgeTopic || text.includes("Wichtige Angaben für eine Anfrage") ? "" : genericInquiryBlock;
     const links = relatedVerfahren[index] ?? [];
     const related = links.length
@@ -1136,7 +2132,7 @@ useEffect(() => {
             <p className={styles.sectionKicker}>Wissenswertes</p>
             <h1>Beschichtungstechnik verständlich erklärt</h1>
             <p className={styles.heroLead}>
-              Ein kompakter Fachguide zu Beschichtungsverfahren, Vorbereitung,
+              Ein praxisnaher Fachguide zu Beschichtungsverfahren, Vorbereitung,
               Qualitätsanforderungen und typischen Einsatzbereichen.
             </p>
             <div className={styles.heroMeta}>
@@ -1253,7 +2249,7 @@ useEffect(() => {
               <p>
                 Vor vielen Beschichtungs- und Oberflächenverfahren müssen Werkstücke
                 gründlich gereinigt und entfettet werden. Öl, Fett, Staub,
-                Bearbeitungsrückstände und andere Verunreinigungen können die Haftung
+                Bearbeitungsrückstände und andere Verunreinigungen können die Haftfestigkeit
                 einer nachfolgenden Beschichtung deutlich verschlechtern.
               </p>
               <p>
@@ -1309,8 +2305,8 @@ useEffect(() => {
                 Bereiche sollten vorab angegeben werden.
               </li>
               <li>
-                <strong>Zertifizierungen:</strong> Auftraggeber:innen können vor der
-                Auftragsvergabe benötigte Zertifizierungen, Normen oder
+                <strong>Normen / Anforderungen:</strong> Auftraggeber:innen können vor der
+                Auftragsvergabe benötigte Normen, Zertifizierungen oder
                 Qualitätsanforderungen angeben.
               </li>
               <li>
@@ -1349,6 +2345,75 @@ useEffect(() => {
             typische Anwendungen, relevante Anforderungen und technische
             Besonderheiten.
           </p>
+
+          <div
+            role="search"
+            aria-label="Wissenswertes durchsuchen"
+            style={{ marginTop: "24px", maxWidth: "760px", position: "relative" }}
+          >
+            <label htmlFor="wissenswertes-search" style={{ display: "block", fontWeight: 600, marginBottom: "8px" }}>
+              Verfahren oder Fachbegriff suchen
+            </label>
+            <input
+              id="wissenswertes-search"
+              type="search"
+              value={knowledgeSearch}
+              onChange={(event) => setKnowledgeSearch(event.target.value)}
+              placeholder="z. B. Zink-Nickel, Glanzgrad, C-33, Ra, Hartchrom …"
+              autoComplete="off"
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "13px 15px",
+                border: "1px solid rgba(127,127,127,0.45)",
+                borderRadius: "10px",
+                background: "transparent",
+                color: "inherit",
+                font: "inherit",
+              }}
+            />
+
+            {normalizedKnowledgeSearch && (
+              <div
+                aria-live="polite"
+                style={{
+                  marginTop: "10px",
+                  border: "1px solid rgba(127,127,127,0.30)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                }}
+              >
+                {knowledgeSearchResults.length > 0 ? (
+                  knowledgeSearchResults.map((result) => (
+                    <button
+                      type="button"
+                      key={`${result.title}-${result.target}`}
+                      onClick={() => scrollToVerfahren(result.target)}
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        padding: "12px 15px",
+                        border: 0,
+                        borderBottom: "1px solid rgba(127,127,127,0.20)",
+                        background: "transparent",
+                        color: "inherit",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        font: "inherit",
+                      }}
+                    >
+                      <strong style={{ display: "block", marginBottom: "3px" }}>{result.title}</strong>
+                      <span style={{ display: "block", opacity: 0.78, fontSize: "0.92em" }}>{result.description}</span>
+                    </button>
+                  ))
+                ) : (
+                  <p style={{ margin: 0, padding: "12px 15px" }}>
+                    Kein passender Eintrag gefunden. Versuche einen allgemeineren Begriff.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </section>
 
         <div className={styles.verfahrenGroups}>
