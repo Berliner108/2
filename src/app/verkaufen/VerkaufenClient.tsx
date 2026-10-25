@@ -136,23 +136,6 @@ async function compressImageFile(file: File): Promise<File> {
   })
 }
 
-function useOnClickOutside(
-  ref: React.RefObject<HTMLElement>,
-  handler: () => void
-) {
-  useEffect(() => {
-    const listener = (event: MouseEvent) => {
-      const el = ref.current;
-      if (!el) return;
-      if (el.contains(event.target as Node)) return;
-      handler();
-    };
-
-    document.addEventListener('mousedown', listener);
-    return () => document.removeEventListener('mousedown', listener);
-  }, [ref, handler]);
-}
-
 function istGueltigeDatei(file: File): boolean {
 const erlaubteMimeTypen = [
   'application/pdf',
@@ -233,7 +216,6 @@ const didPrefillRef = useRef(false);
     kategorie === 'arbeitsmittel' || kategorie === 'galvano_zubehoer';
   const [titel, setTitel] = useState('');
   const [farbpaletteWert, setFarbpaletteWert] = useState('');
-  const herstellerRef = useRef<HTMLDivElement>(null);
   const [zustand, setZustand] = useState('');
   const [warnungKategorie, setWarnungKategorie] = useState('');
   const [warnungBilder, setWarnungBilder] = useState('');
@@ -245,7 +227,6 @@ const didPrefillRef = useRef(false);
   const [warnungOberflaeche, setWarnungOberflaeche] = useState('');
   const [anwendung, setAnwendung] = useState('');
   const [farbcode, setFarbcode] = useState('');
-    const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState(false);
   const [verkaufAn, setVerkaufAn] = useState('');
 const [warnungVerkaufAn, setWarnungVerkaufAn] = useState('');
 const [verkaufsArt, setVerkaufsArt] = useState<
@@ -259,13 +240,10 @@ const [staffeln, setStaffeln] = useState<Staffelzeile[]>([
   { minMenge: '1', maxMenge: '', preis: '', versand: '' },
 ]);
 
-  const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState(false);
-  const glanzgradRef = useRef<HTMLDivElement>(null);
   const [sondereffekte, setSondereffekte] = useState<string[]>([]);
   const [sondereffekteOffen, setSondereffekteOffen] = useState(false);
   const [effekt, setEffekt] = useState<string[]>([]);
   const [qualitaet, setQualitaet] = useState('');
-  const [qualitaetOffen, setQualitaetOffen] = useState(false);
   const [lieferdatum, setLieferdatum] = useState('');
   const [ladeStatus, setLadeStatus] = useState(false);
   const submitLockRef = useRef(false);
@@ -943,12 +921,7 @@ const aktuelleHerstellerListe =
 
 
 
-const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState(false);
-const farbpaletteRef = useRef<HTMLDivElement>(null);
 
-useOnClickOutside(herstellerRef, () => setHerstellerDropdownOffen(false));
-useOnClickOutside(glanzgradRef, () => setGlanzgradDropdownOffen(false));
-useOnClickOutside(farbpaletteRef, () => setFarbpaletteDropdownOffen(false));
 
 
   function handleMengeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -2358,60 +2331,7 @@ return (
       </option>
     ))}
   </select>
-  <div
-  ref={herstellerRef}
-  className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-  onClick={() => {
-    setHerstellerDropdownOffen(prev => !prev);
-    if (warnungHersteller) setWarnungHersteller('');
-  }}
->
-    <div className={styles.selectedValue}>
-  {hersteller === HERSTELLER_ANDERE_VALUE
-    ? (herstellerAndere ? `Andere: ${herstellerAndere}` : 'Andere…')
-    : (hersteller || 'Alle')}
-</div>
 
-    {herstellerDropdownOffen && (
-      <div className={styles.optionList}>
-        <div
-          className={styles.optionItem}
-          onClick={e => {
-            e.stopPropagation();
-            setHersteller('');
-            setWarnungHersteller('');
-            setHerstellerDropdownOffen(false);
-          }}
-        >
-          Alle
-        </div>
-        {aktuelleHerstellerListe.map(option => (
-          <div
-            key={option}
-            className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
-           onClick={e => {
-            e.stopPropagation();
-
-            if (option === 'Andere…') {
-            setHersteller(HERSTELLER_ANDERE_VALUE);
-            setWarnungHersteller('');
-            setHerstellerDropdownOffen(false);
-            return;
-          }
-
-          setHersteller(option);
-          setHerstellerAndere('');
-          setWarnungHersteller('');
-          setHerstellerDropdownOffen(false);
-          }}
-
-          >
-            {option}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
 </label>
 {warnungHersteller && hersteller !== HERSTELLER_ANDERE_VALUE && (
   <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
@@ -2545,7 +2465,7 @@ return (
     Farbpalette: <span style={{ color: 'red' }}>*</span>
   </span>
 
-  {/* Android/Desktop: natives Select wie bei „Angebote einholen“ */}
+  {/* Natives Select auf allen Plattformen inkl. iPhone */}
   <select
     className={`${styles.platformNativeSelect} ${warnungPalette ? styles.selectError : ''}`}
     value={farbpaletteWert}
@@ -2562,39 +2482,7 @@ return (
     ))}
   </select>
 
-  <div
-    ref={farbpaletteRef}
-    className={`${styles.customSelect} ${styles.platformCustomSelect} ${warnungPalette ? styles.selectError : ''}`}
-    onClick={() => {
-      setFarbpaletteDropdownOffen((prev) => !prev);
-      if (warnungPalette) setWarnungPalette('');
-    }}
-  >
-    <div className={styles.selectedValue}>
-      {farbpalette.find((p) => p.value === farbpaletteWert)?.name || 'Bitte wählen'}
-    </div>
 
-    {farbpaletteDropdownOffen && (
-      <div className={styles.optionList}>
-        {farbpalette.map((p) => (
-          <div
-            key={p.value}
-            className={`${styles.optionItem} ${
-              farbpaletteWert === p.value ? styles.activeOption : ''
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setFarbpaletteWert(p.value);
-              setFarbpaletteDropdownOffen(false);
-              setWarnungPalette('');
-            }}
-          >
-            {p.name}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
 </label>
 
 {warnungPalette && (
@@ -2608,7 +2496,7 @@ return (
     Glanzgrad: <span style={{ color: 'red' }}>*</span>
   </span>
 
-  {/* Android/Desktop: natives Select wie bei „Angebote einholen“ */}
+  {/* Natives Select auf allen Plattformen inkl. iPhone */}
 <select
   className={`${styles.platformNativeSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
   value={glanzgrad}
@@ -2626,39 +2514,7 @@ return (
     ))}
   </select>
 
-  {/* EIN benutzerdefiniertes Dropdown */}
-  <div
-    ref={glanzgradRef}
-    className={`${styles.customSelect} ${styles.platformCustomSelect} ${warnungGlanzgrad ? styles.selectError : ''}`}
-    onClick={() => {
-      setGlanzgradDropdownOffen(!glanzgradDropdownOffen);
-      if (warnungGlanzgrad) setWarnungGlanzgrad('');
-    }}
-  >
-    <div className={styles.selectedValue}>
-      {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
-    </div>
-    {glanzgradDropdownOffen && (
-      <div className={styles.optionList}>
-        {glanzgradListe.map((g) => (
-          <div
-            key={g.value}
-            className={`${styles.optionItem} ${
-              glanzgrad === g.value ? styles.activeOption : ''
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setGlanzgrad(g.value);
-              setWarnungGlanzgrad('');
-              setGlanzgradDropdownOffen(false);
-            }}
-            >
-            {g.name}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
+
 </label>
  {warnungGlanzgrad && (
   <p className={`${styles.validierungsfehler} ${styles.validierungsfehlerKompakt}`}>
@@ -2685,40 +2541,7 @@ return (
       <option key={q} value={q}>{q}</option>
     ))}
   </select>
-  <div
-    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-    onClick={() => setQualitaetOffen(prev => !prev)}
-    tabIndex={0}
-    onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
-  >
-    <div className={styles.selectedValue}>
-      {qualitaet || 'Bitte wählen'}
-    </div>
-    {qualitaetOffen && (
-      <div className={styles.optionList}>
-        {[
-          'Standard',
-          'Polyester',
-          'Polyurethan',
-          'Polyester für Feuerverzinkung',
-          'Epoxy-Polyester',
-          'Thermoplast',
-        ].map((q) => (
-          <div
-            key={q}
-            className={styles.optionItem}
-            onClick={(e) => {
-              e.stopPropagation();
-              setQualitaet(q);
-              setQualitaetOffen(false);
-            }}
-          >
-            {q}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
+
 </label>
 )}
 { kategorie === 'nasslack' && (
@@ -2738,37 +2561,7 @@ return (
       <option key={q} value={q}>{q}</option>
     ))}
   </select>
-  <div
-    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-    onClick={() => setQualitaetOffen(prev => !prev)}
-    tabIndex={0}
-    onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
-  >
-    <div className={styles.selectedValue}>
-      {qualitaet || 'Bitte wählen'}
-    </div>
-    {qualitaetOffen && (
-      <div className={styles.optionList}>
-        {[
-          '1K‑Lack',
-          '2K‑Lack',
-          'UV‑härtender Lack',
-        ].map((q) => (
-          <div
-            key={q}
-            className={styles.optionItem}
-            onClick={(e) => {
-              e.stopPropagation();
-              setQualitaet(q);
-              setQualitaetOffen(false);
-            }}
-          >
-            {q}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
+
 </label>
 )}
 

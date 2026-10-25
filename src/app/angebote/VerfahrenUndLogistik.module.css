@@ -481,6 +481,8 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   cursor: pointer;
   font-size: 0.9rem;
   font-family: 'Oswald', sans-serif;
+  color: #111;
+  -webkit-text-fill-color: #111;
   transition: background-color 0.2s ease;
 }
 

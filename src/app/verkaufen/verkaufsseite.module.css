@@ -542,6 +542,8 @@
   font-size: 0.95rem;
   transition: background-color 0.2s ease;
   font-family: 'Oswald';
+  color: #111;
+  -webkit-text-fill-color: #111;
 }
 
 .zuruecksetzenButton:hover {
@@ -1513,7 +1515,7 @@
     height: 23px;
   }
 }
-/* Plattform-Dropdowns: Android/Desktop nativ wie „Angebote einholen“, iPhone/iOS Safari custom. */
+/* Plattform-Dropdowns: auf allen Plattformen nativ – inkl. iPhone/iOS Safari. */
 .platformNativeSelect {
   width: 100%;
   margin-top: 0.5rem;
@@ -1530,26 +1532,4 @@
 .platformNativeSelect option {
   font-size: 1.05rem;
   color: #111;
-}
-
-.platformCustomSelect {
-  display: none;
-}
-
-@supports (-webkit-touch-callout: none) {
-  .platformNativeSelect {
-    display: none !important;
-  }
-
-  .platformCustomSelect {
-    display: block;
-  }
-}
-
-@supports (-webkit-touch-callout: none) {
-  .selectedValue,
-  .optionItem {
-    color: #111;
-    -webkit-text-fill-color: #111;
-  }
 }
