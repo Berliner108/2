@@ -984,3 +984,29 @@
     min-width: 0;
   }
 }
+@supports (-webkit-touch-callout: none) {
+  .select {
+    height: 40px;
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+
+  .pageSize {
+    height: 34px;
+    min-height: 34px;
+    box-sizing: border-box;
+  }
+
+  .select,
+  .pageSize,
+  .pageBtn,
+  .segmentedBtn {
+    color: #111;
+    -webkit-text-fill-color: #111;
+  }
+
+  .segmentedActive {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+  }
+}

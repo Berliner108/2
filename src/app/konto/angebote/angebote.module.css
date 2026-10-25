@@ -1455,3 +1455,16 @@
     -webkit-text-fill-color: #fff;
   }
 }
+@supports (-webkit-touch-callout: none) {
+  .select {
+    height: 40px;
+    min-height: 40px;
+    box-sizing: border-box;
+  }
+
+  .pageSize {
+    height: 34px;
+    min-height: 34px;
+    box-sizing: border-box;
+  }
+}
