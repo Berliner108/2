@@ -170,12 +170,12 @@ const heute = new Date().toISOString().split('T')[0];
 
 
   const glanzgradListe = [
-  { name: 'Stumpfmatt', value: 'Stumpfmatt' },
+  { name: 'Hochglanz', value: 'Hochglanz' },
+  { name: 'Glanz', value: 'Glanz' },
+  { name: 'Seidenglanz', value: 'Seidenglanz' },  
   { name: 'Seidenmatt', value: 'Seidenmatt' },
   { name: 'Matt', value: 'Matt' },
-  { name: 'Glanz', value: 'Glanz' },
-  { name: 'Seidenglanz', value: 'Seidenglanz' },
-  { name: 'Hochglanz', value: 'Hochglanz' },
+  { name: 'Stumpfmatt', value: 'Stumpfmatt' },  
 ];
 type Staffelzeile = {
   minMenge: string;   // "ab"
