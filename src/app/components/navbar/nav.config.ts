@@ -33,7 +33,8 @@ export const NAV_ITEMS: NavItem[] = [
     links: [
       { href: '/kaufen?kategorie=Nasslack', text: 'Nasslacke' },
       { href: '/kaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
-      { href: '/kaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
+      { href: '/kaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' },
+      { href: '/kaufen?kategorie=galvano_zubehoer', text: 'Galvano-Zubehör' }
     ]
   },
   
@@ -69,7 +70,8 @@ export const NAV_ITEMS: NavItem[] = [
     links: [
       { href: '/verkaufen?kategorie=Nasslack', text: 'Nasslacke' },
       { href: '/verkaufen?kategorie=Pulverlack', text: 'Pulverlacke' },
-      { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' }
+      { href: '/verkaufen?kategorie=Arbeitsmittel', text: 'Arbeitsmittel' },
+      { href: '/verkaufen?kategorie=galvano_zubehoer', text: 'Galvano-Zubehör' }
     ]
   },
   {
