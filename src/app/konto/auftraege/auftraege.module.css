@@ -961,3 +961,26 @@
     -webkit-text-fill-color: #fff;
   }
 }
+@media (max-width: 768px) {
+  .toolbar,
+  .skelToolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .skelSegmented {
+    width: 100%;
+  }
+
+  .skelMetaGrid {
+    grid-template-columns: 1fr;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .skelMetaBlock,
+  .skelMetaSmall {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
