@@ -485,11 +485,7 @@ useEffect(() => {
   const [bilderWerdenOptimiert, setBilderWerdenOptimiert] = useState(false);
 
   // UI/State
-  const [glanzgradDropdownOffen, setGlanzgradDropdownOffen] = useState<boolean>(false);
   const [sondereffekteOffen, setSondereffekteOffen] = useState<boolean>(false);
-  const [qualitaetOffen, setQualitaetOffen] = useState<boolean>(false);
-  const [herstellerDropdownOffen, setHerstellerDropdownOffen] = useState<boolean>(false);
-  const [farbpaletteDropdownOffen, setFarbpaletteDropdownOffen] = useState<boolean>(false);
   const [vorschauAktiv, setVorschauAktiv] = useState<boolean>(false);
   const [ladeStatus, setLadeStatus] = useState<boolean>(false);
   const [formAbgesendet, setFormAbgesendet] = useState<boolean>(false);
@@ -517,9 +513,6 @@ useEffect(() => {
 
   // Refs
   // Refs
-  const herstellerRef = useRef<HTMLDivElement>(null);
-  const farbpaletteRef = useRef<HTMLDivElement>(null);
-  const glanzgradRef = useRef<HTMLDivElement>(null);
   const agbRef = useRef<HTMLDivElement>(null);
 
   const bilderRef = useRef<HTMLDivElement>(null);
@@ -658,24 +651,6 @@ useEffect(() => {
       setLand(profilAdresse.land);
     }
   }, [lieferadresseOption, profilAdresse]);
-
-  // Dropdowns schließen bei Click außerhalb
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (herstellerRef.current && !herstellerRef.current.contains(event.target as Node)) {
-        setHerstellerDropdownOffen(false);
-      }
-      if (farbpaletteRef.current && !farbpaletteRef.current.contains(event.target as Node)) {
-        setFarbpaletteDropdownOffen(false);
-      }
-      if (glanzgradRef.current && !glanzgradRef.current.contains(event.target as Node)) {
-        setGlanzgradDropdownOffen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   // Bild-Previews
   useEffect(() => {
     const urls = bilder.map((file: File) => URL.createObjectURL(file));
@@ -1585,53 +1560,7 @@ if (bootLoading) {
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
-                    <div
-                      ref={herstellerRef}
-                      className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-                      onClick={() => setHerstellerDropdownOffen(prev => !prev)}
-                    >
-                      <div className={styles.selectedValue}>
-                        {hersteller === ANDERER_HERSTELLER
-                          ? (herstellerAndere.trim() ? `Andere: ${herstellerAndere}` : 'Anderer Hersteller')
-                          : (hersteller || 'Alle')}
-                      </div>
-                      {herstellerDropdownOffen && (
-                        <div className={styles.optionList}>
-                          <div
-                            className={styles.optionItem}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setHersteller('Alle');
-                              setHerstellerAndere('');
-                              setHerstellerDropdownOffen(false);
-                            }}
-                          >
-                            Alle
-                          </div>
-                          {aktuelleHerstellerListe.map((option: string) => (
-                            <div
-                              key={option}
-                              className={`${styles.optionItem} ${hersteller === option ? styles.activeOption : ''}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-
-                                if (option === 'Anderer Hersteller') {
-                                  setHersteller(ANDERER_HERSTELLER);
-                                  setHerstellerDropdownOffen(false);
-                                  return;
-                                }
-
-                                setHersteller(option);
-                                setHerstellerAndere('');
-                                setHerstellerDropdownOffen(false);
-                              }}
-                            >
-                              {option}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    
                   </label>
                   {hersteller === ANDERER_HERSTELLER && (
                     <label className={styles.label}>
@@ -1689,33 +1618,7 @@ if (bootLoading) {
                       {farbpalette.map(f => <option key={f.value} value={f.value}>{f.name}</option>)}
                     </select>
 
-                    <div
-                      ref={farbpaletteRef}
-                      className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-                      onClick={() => setFarbpaletteDropdownOffen(prev => !prev)}
-                    >
-                      <div className={styles.selectedValue}>
-                        {farbpalette.find(f => f.value === farbpaletteWert)?.name || 'Bitte wählen'}
-                      </div>
-                      {farbpaletteDropdownOffen && (
-                        <div className={styles.optionList}>
-                          {farbpalette.map(farbe => (
-                            <div
-                              key={farbe.value}
-                              className={`${styles.optionItem} ${farbpaletteWert === farbe.value ? styles.activeOption : ''}`}
-                              onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFarbpaletteWert(farbe.value);
-                                  setWarnungPalette('');
-                                  setFarbpaletteDropdownOffen(false);
-                                }}
-                            >
-                              {farbe.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    
                   </label>
                   {warnungPalette && <p className={styles.validierungsfehler}>{warnungPalette}</p>}
 
@@ -1775,36 +1678,7 @@ if (bootLoading) {
     ))}
   </select>
 
-  <div
-    ref={glanzgradRef}
-    className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-    onClick={() => setGlanzgradDropdownOffen(prev => !prev)}
-  >
-    <div className={styles.selectedValue}>
-      {glanzgradListe.find((g) => g.value === glanzgrad)?.name || 'Bitte wählen'}
-    </div>
-
-    {glanzgradDropdownOffen && (
-      <div className={styles.optionList}>
-        {glanzgradListe.map((g) => (
-          <div
-            key={g.value}
-            className={`${styles.optionItem} ${
-              glanzgrad === g.value ? styles.activeOption : ''
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setGlanzgrad(g.value);
-              setWarnungGlanzgrad('');
-              setGlanzgradDropdownOffen(false);
-            }}
-          >
-            {g.name}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
+  
 </label>
 
 {warnungGlanzgrad && (
@@ -1825,31 +1699,7 @@ if (bootLoading) {
                           <option key={q} value={q}>{q}</option>
                         ))}
                       </select>
-                      <div
-                        className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-                        onClick={() => setQualitaetOffen(prev => !prev)}
-                        tabIndex={0}
-                        onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
-                      >
-                        <div className={styles.selectedValue}>{qualitaet || 'Bitte wählen'}</div>
-                        {qualitaetOffen && (
-                          <div className={styles.optionList}>
-                            {['Standard','Polyester','Epoxy-Polyester','Polyurethan','Polyester für Feuerverzinkung','Thermoplast'].map((q) => (
-                              <div
-                                key={q}
-                                className={styles.optionItem}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setQualitaet(q);
-                                  setQualitaetOffen(false);
-                                }}
-                              >
-                                {q}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      
                     </label>
                   )}
                   {kategorie === 'nasslack' && (
@@ -1865,31 +1715,7 @@ if (bootLoading) {
                           <option key={q} value={q}>{q}</option>
                         ))}
                       </select>
-                      <div
-                        className={`${styles.customSelect} ${styles.platformCustomSelect}`}
-                        onClick={() => setQualitaetOffen(prev => !prev)}
-                        tabIndex={0}
-                        onBlur={() => setTimeout(() => setQualitaetOffen(false), 100)}
-                      >
-                        <div className={styles.selectedValue}>{qualitaet || 'Bitte wählen'}</div>
-                        {qualitaetOffen && (
-                          <div className={styles.optionList}>
-                            {['1K-Lack','2K-Lack','UV-härtender Lack'].map((q) => (
-                              <div
-                                key={q}
-                                className={styles.optionItem}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setQualitaet(q);
-                                  setQualitaetOffen(false);
-                                }}
-                              >
-                                {q}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      
                     </label>
                   )}
 

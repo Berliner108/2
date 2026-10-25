@@ -494,6 +494,8 @@
   font-size: 0.95rem;
   transition: background-color 0.2s ease;
   font-family: 'Oswald';
+  color: #111;
+  -webkit-text-fill-color: #111;
 }
 .zuruecksetzenButton:hover {
   background-color: #ddd;
@@ -1054,7 +1056,7 @@
   }
 }
 
-/* Plattform-Dropdowns: Android/Desktop nativ, iPhone/iOS Safari custom. */
+/* Plattform-Dropdowns: auf allen Geräten nativ. */
 .platformNativeSelect {
   width: 100%;
   margin-top: 0.5rem;
@@ -1073,24 +1075,11 @@
   color: #111;
 }
 
-.platformCustomSelect {
-  display: none;
-}
 
 @supports (-webkit-touch-callout: none) {
-  .platformNativeSelect {
-    display: none !important;
-  }
-
-  .platformCustomSelect {
-    display: block;
-  }
-
-  .selectedValue,
-  .optionItem,
+  .platformNativeSelect,
   .safariTextControl {
     color: #111 !important;
     -webkit-text-fill-color: #111 !important;
   }
 }
-
