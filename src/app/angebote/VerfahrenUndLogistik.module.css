@@ -1094,3 +1094,9 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
     transform: translateX(-50%);
   }
 }
+@supports (-webkit-touch-callout: none) {
+  .inputGroup input[readonly]::placeholder {
+    font-size: 16px;
+    opacity: 1;
+  }
+}

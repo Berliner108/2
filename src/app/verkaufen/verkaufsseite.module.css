@@ -1301,9 +1301,14 @@
   }
 
   .staffelInput {
-    width: 100%;
-    box-sizing: border-box;
-  }
+  width: 100%;
+  box-sizing: border-box;
+  max-height: none;
+  height: 42px;
+  min-height: 42px;
+  padding: 0.5rem 0.7rem;
+  font-size: 16px;
+}
 
   .staffelCellEnd {
     grid-column: 1 / -1;
