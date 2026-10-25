@@ -3328,37 +3328,46 @@ onFocus={() => {
 
       {(kategorie === 'nasslack' || kategorie === 'pulverlack') && (
         <label className={styles.radioLabel}>
-          <input
-  type="radio"
-  name="verkaufsArt"
-  value="pro_kg"
-  checked={verkaufsArt === 'pro_kg'}
-  onChange={() => {
-    setVerkaufsArt('pro_kg');
-    setWarnungVerkaufsArt('');
-    setWarnungPreis('');
-    setWarnungVersand('');
-  }}
-/>
-          <span>Verkauf mit gestaffelten Preisen</span>
-        </label>
+  <input
+    type="radio"
+    name="verkaufsArt"
+    value="pro_kg"
+    checked={verkaufsArt === 'pro_kg'}
+    disabled={!aufLager && menge <= 1}
+    onChange={() => {
+      setVerkaufsArt('pro_kg');
+      setWarnungVerkaufsArt('');
+      setWarnungPreis('');
+      setWarnungVersand('');
+    }}
+  />
+
+  <span>
+    Verkauf mit gestaffelten Preisen
+    {!aufLager && menge <= 1 && ' (ab Menge 2 möglich)'}
+  </span>
+</label>
       )}
 
       {istStueckKategorie && (
         <label className={styles.radioLabel}>
           <input
-  type="radio"
-  name="verkaufsArt"
-  value="pro_stueck"
-  checked={verkaufsArt === 'pro_stueck'}
-  onChange={() => {
-    setVerkaufsArt('pro_stueck');
-    setWarnungVerkaufsArt('');
-    setWarnungPreis('');
-    setWarnungVersand('');
-  }}
-/>
-          <span>Verkauf pro Stück</span>
+            type="radio"
+            name="verkaufsArt"
+            value="pro_stueck"
+            checked={verkaufsArt === 'pro_stueck'}
+            disabled={!aufLager && mengeStueck <= 1}
+            onChange={() => {
+              setVerkaufsArt('pro_stueck');
+              setWarnungVerkaufsArt('');
+              setWarnungPreis('');
+              setWarnungVersand('');
+            }}
+          />
+          <span>
+            Verkauf pro Stück
+            {!aufLager && mengeStueck <= 1 && ' (ab Menge 2 möglich)'}
+          </span>
         </label>
       )}
     </div>
@@ -3400,7 +3409,9 @@ onFocus={() => {
     {/* Kopfzeile nur am Desktop */}
     <div className={styles.staffelTableHead} aria-hidden>
       <div>Ab</div>
-      <div>Bis (optional)</div>
+      <div>
+        {aufLager ? 'Bis (optional in letzter Staffel)' : 'Bis'}
+      </div>
       <div>
   Preis {verkaufsArt === 'pro_kg'
     ? `€/${kategorie === 'nasslack' ? 'Liter' : 'kg'}`
@@ -3496,7 +3507,7 @@ onFocus={() => {
     )}
 
     <p className={styles.staffelHinweis}>
-  Hinweis: Bei „Auf Lager“ darf die letzte Staffel offen sein (Bis leer). Bei „Begrenzte Menge“ ist „Bis“ Pflicht und die letzte Staffel muss exakt bis zur Menge gehen.
+  Hinweis: Bei „Auf Lager“ darf die letzte Staffel offen sein (Bis leer). Bei „Begrenzte Menge“ ist „Bis“ Pflicht und die letzte Staffel muss exakt bis zur angebotenen Menge gehen.
 </p>
 
   </div>
