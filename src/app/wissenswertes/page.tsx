@@ -92,14 +92,12 @@ const Wissenswertes = () => {
       if (index === undefined) return;
 
       setOpenContainers({ [index]: true });
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          document.getElementById(`container-${index}`)?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+      window.setTimeout(() => {
+        document.getElementById(`container-${index}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
-      });
+      }, 520);
     };
 
     openHashTarget();
@@ -1734,19 +1732,23 @@ useEffect(() => {
 
   const scrollToVerfahren = (target: string) => {
     const match = target.match(/container-(\d+)/);
-    if (match) {
-      const index = Number(match[1]);
-      setOpenContainers({ [index]: true });
-    }
+    if (!match) return;
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.getElementById(target)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+    const index = Number(match[1]);
+    setOpenContainers({ [index]: true });
+
+    // Das Schließen eines zuvor geöffneten Akkordeons verändert die Seitenhöhe.
+    // Erst nach Abschluss der Accordion-Animation scrollen, sonst verschiebt sich
+    // das Ziel nachträglich und der Nutzer landet sichtbar beim falschen Abschnitt.
+    window.setTimeout(() => {
+      const element = document.getElementById(target);
+      if (!element) return;
+
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
-    });
+    }, 520);
   };
 
   const normalizeSearchText = (value: string) =>
@@ -1758,6 +1760,11 @@ useEffect(() => {
       .replace(/[^a-z0-9äöüßµ]+/gi, " ")
       .replace(/\s+/g, " ")
       .trim();
+
+  // Zweiter Suchindex ohne Trennzeichen. So sind z. B. C-33, C 33 und c33
+  // sowie Zink-Nickel und zinknickel für die Suche identisch.
+  const compactSearchText = (value: string) =>
+    normalizeSearchText(value).replace(/[^a-z0-9äöüßµ]/gi, "");
 
   const searchEntries = [
     {
@@ -1796,37 +1803,41 @@ useEffect(() => {
   ];
 
   const normalizedKnowledgeSearch = normalizeSearchText(knowledgeSearch);
-  const compactKnowledgeSearch = normalizedKnowledgeSearch.replace(/\s+/g, "");
+  const compactKnowledgeSearch = compactSearchText(knowledgeSearch);
   const knowledgeSearchTerms = normalizedKnowledgeSearch.split(" ").filter(Boolean);
-  const knowledgeSearchResults = knowledgeSearchTerms.length
+
+  const knowledgeSearchResults = compactKnowledgeSearch.length
     ? searchEntries
         .map((entry) => {
-          const haystack = normalizeSearchText(`${entry.title} ${entry.description} ${entry.searchText}`);
-          const compactHaystack = haystack.replace(/\s+/g, "");
+          const searchableText = `${entry.title} ${entry.description} ${entry.searchText}`;
+          const haystack = normalizeSearchText(searchableText);
+          const compactHaystack = compactSearchText(searchableText);
           const title = normalizeSearchText(entry.title);
-          const compactTitle = title.replace(/\s+/g, "");
+          const compactTitle = compactSearchText(entry.title);
 
-          // Zusätzlich zur normalen Wortsuche wird eine kompakte Variante geprüft.
-          // Dadurch finden z. B. "C33" -> "C-33", "RAL7016" -> "RAL 7016"
-          // und "ZinkNickel" -> "Zink-Nickel" zuverlässig.
-          const matchesAll = knowledgeSearchTerms.every((term) =>
-            haystack.includes(term) || compactHaystack.includes(term.replace(/\s+/g, ""))
-          );
-          const matchesCompactQuery =
-            compactKnowledgeSearch.length >= 2 && compactHaystack.includes(compactKnowledgeSearch);
-          const matches = matchesAll || matchesCompactQuery;
-          const score = matches
-            ? knowledgeSearchTerms.reduce(
-                (sum, term) =>
-                  sum +
-                  (title.includes(term) || compactTitle.includes(term.replace(/\s+/g, ""))
-                    ? 4
-                    : haystack.includes(term) || compactHaystack.includes(term.replace(/\s+/g, ""))
-                      ? 1
-                      : 0),
-                matchesCompactQuery ? 2 : 0
-              )
-            : 0;
+          // Komplette Eingabe kompakt prüfen (C33 -> C-33, RAL7016 -> RAL 7016).
+          const matchesCompactQuery = compactHaystack.includes(compactKnowledgeSearch);
+
+          // Zusätzlich normale Mehrwortsuche unterstützen.
+          const matchesAllTerms = knowledgeSearchTerms.every((term) => {
+            const compactTerm = compactSearchText(term);
+            return haystack.includes(term) || (compactTerm.length > 0 && compactHaystack.includes(compactTerm));
+          });
+
+          const matches = matchesCompactQuery || matchesAllTerms;
+          if (!matches) return { ...entry, score: 0 };
+
+          let score = 1;
+          if (compactTitle.includes(compactKnowledgeSearch)) score += 8;
+          else if (title.includes(normalizedKnowledgeSearch)) score += 6;
+          if (matchesCompactQuery) score += 3;
+          score += knowledgeSearchTerms.reduce((sum, term) => {
+            const compactTerm = compactSearchText(term);
+            if (title.includes(term) || (compactTerm && compactTitle.includes(compactTerm))) return sum + 3;
+            if (haystack.includes(term) || (compactTerm && compactHaystack.includes(compactTerm))) return sum + 1;
+            return sum;
+          }, 0);
+
           return { ...entry, score };
         })
         .filter((entry) => entry.score > 0)
