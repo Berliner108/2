@@ -98,7 +98,6 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Pulverbeschichten',
     'Folieren',
     'Einlagern',
-    'Isolierstegverpressen',
   ],
   Eloxieren: [
     'Nasslackieren',
@@ -128,10 +127,13 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Pulverbeschichten',
     'Verzinken',
     'Zinkphosphatieren',
+    'Eisenphosphatieren',
     'Mn-Phosphatieren',
     'Eloxieren',
+    'Anodisieren',
     'KTL-Beschichten',
     'Aluminium-Passivieren',
+    'Edelstahl-Passivieren',
     'Vernickeln',
     'Verchromen',
     'Verkupfern',
@@ -140,7 +142,6 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Vergolden',
     'Versilbern',
     'Elektropolieren',
-    'Folieren',
     'Einlagern',
   ],
   Entgraten: [
@@ -478,7 +479,6 @@ const validSecondOptions: { [key: string]: string[] } = {
   Anodisieren: [
     'Nasslackieren',
     'Pulverbeschichten',
-    'Strahlen',
     'Folieren',
     'Einlagern',
     'Isolierstegverpressen',
@@ -486,10 +486,8 @@ const validSecondOptions: { [key: string]: string[] } = {
   Verzinnen: [
     'Nasslackieren',
     'Pulverbeschichten',
-    'Strahlen',
     'Folieren',
     'Einlagern',
-    'Isolierstegverpressen',
   ],
   Vernickeln: [
     'Verchromen',
@@ -500,7 +498,6 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Pulverbeschichten',
     'Folieren',
     'Einlagern',
-    'Isolierstegverpressen',
   ],
   Verchromen: [
     'Folieren',
@@ -548,7 +545,6 @@ const validSecondOptions: { [key: string]: string[] } = {
     'Pulverbeschichten',
     'Folieren',
     'Einlagern',
-    'Isolierstegverpressen',
   ],
   Entanodisieren: [
     'Nasslackieren',
@@ -596,7 +592,6 @@ const validSecondOptions: { [key: string]: string[] } = {
   'Edelstahl-Passivieren': [
     'Nasslackieren',
     'Pulverbeschichten',
-    'Elektropolieren',
     'Folieren',
     'Einlagern',
   ],
