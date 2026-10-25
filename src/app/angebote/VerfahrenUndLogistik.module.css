@@ -1077,3 +1077,15 @@ position: relative; /* Sind die Fragezeichen neben den Begriffen */
   font-family: 'Oswald', sans-serif;
   font-size: 0.9rem;
 }
+@media (max-width: 400px) {
+  .calendarPopover > div {
+    width: calc(100vw - 32px) !important;
+    max-width: 320px;
+    box-sizing: border-box;
+  }
+
+  .calendarPopover {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
