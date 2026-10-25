@@ -1473,9 +1473,9 @@
 /* ===== Verkaufsseite: große Bildschirme, nur diese Seite ===== */
 @media (min-width: 1200px) {
   .container {
-    width: min(1040px, calc(100% - 96px));
+    width: min(1240px, calc(100% - 96px));
     max-width: none;
-    margin: 0 auto;
+    margin: 1.5rem auto 0;
     padding: 1.5rem 2rem 3rem;
   }
 
@@ -1532,4 +1532,11 @@
 .platformNativeSelect option {
   font-size: 1.05rem;
   color: #111;
+}
+@media (max-width: 599px) {
+  .container {
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 1rem;
+  }
 }

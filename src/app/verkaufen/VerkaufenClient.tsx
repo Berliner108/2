@@ -2595,7 +2595,7 @@ return (
     setWarnungZustand('');
   }}
 />
-      <span>Geöffnet & einwandfrei</span>
+      <span>Geöffnet / einwandfrei</span>
     </label>
   </div>
 </fieldset>  
