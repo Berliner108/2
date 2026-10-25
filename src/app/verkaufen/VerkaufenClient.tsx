@@ -2581,7 +2581,7 @@ return (
     setWarnungZustand('');
   }}
 />
-  <span>Neu und ungeöffnet</span>
+  <span>Neu / ungeöffnet</span>
 </label>
 
     <label className={styles.radioLabel}>
@@ -2595,7 +2595,7 @@ return (
     setWarnungZustand('');
   }}
 />
-      <span>Geöffnet und einwandfrei</span>
+      <span>Geöffnet & einwandfrei</span>
     </label>
   </div>
 </fieldset>  
