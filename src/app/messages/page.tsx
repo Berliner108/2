@@ -1,3 +1,5 @@
-export default function BitteWaehlen() {
-  return <p>Bitte eine Konversation auswählen.</p>;
+import { redirect } from 'next/navigation';
+
+export default function MessagesPage() {
+  redirect('/messages/chat1');
 }
