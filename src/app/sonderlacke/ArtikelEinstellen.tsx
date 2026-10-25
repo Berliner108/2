@@ -2065,9 +2065,15 @@ if (bootLoading) {
                   placeholder="Datum wählen"
                   onClick={() => setCalOpen(true)}
                 />
-                <button type="button" className={styles.zuruecksetzenButton} onClick={() => setCalOpen(true)}>
-                  Datum wählen
-                </button>
+                {!lieferDatum && (
+                  <button
+                    type="button"
+                    className={styles.zuruecksetzenButton}
+                    onClick={() => setCalOpen(true)}
+                  >
+                    Datum wählen
+                  </button>
+                )}
                 {lieferDatum && (
                   <button
                     type="button"
