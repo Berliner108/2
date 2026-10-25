@@ -8,13 +8,14 @@ export const NAV_ITEMS: NavItem[] = [
     links: [
       { href: '/angebote?first=Nasslackieren', text: 'Nasslackieren' },
       { href: '/angebote?first=Pulverbeschichten', text: 'Pulverbeschichten' },
+      { href: '/angebote?first=KTL-Beschichten', text: 'KTL-Beschichten' },
       { href: '/angebote?first=Verzinken', text: 'Verzinken' },
       { href: '/angebote?first=Eloxieren', text: 'Eloxieren' },
+      { href: '/angebote?first=Vernickeln', text: 'Vernickeln' },
+      { href: '/angebote?first=Verchromen', text: 'Verchromen' },
       { href: '/angebote?first=Strahlen', text: 'Strahlen' },
+      { href: '/angebote?first=Verkupfern', text: 'Verkupfern' },
       { href: '/angebote?first=Entlacken', text: 'Entlacken' },
-      { href: '/angebote?first=Einlagern', text: 'Einlagern' },
-      { href: '/angebote?first=Isolierstegverpressen', text: 'Isolierstegverpressung' },
-      { href: '/angebote?first=Folieren', text: 'Folieren' },
       { href: '/angebote', text: 'Kombiniert' }
     ]
   },
@@ -40,16 +41,17 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Auftragsbörse',
     href: '/auftragsboerse',
     links: [
-      { href: '/auftragsboerse?verfahren=Nasslackieren',          text: 'Nasslackieren' },
-      { href: '/auftragsboerse?verfahren=Pulverbeschichten',      text: 'Pulverbeschichten' },
-      { href: '/auftragsboerse?verfahren=Verzinken',              text: 'Verzinken' },
-      { href: '/auftragsboerse?verfahren=Eloxieren',              text: 'Eloxieren' },
-      { href: '/auftragsboerse?verfahren=Strahlen',               text: 'Strahlen' },
-      { href: '/auftragsboerse?verfahren=Entlacken',              text: 'Entlacken' },
-      { href: '/auftragsboerse?verfahren=Einlagern',              text: 'Einlagern' },
-      { href: '/auftragsboerse?verfahren=Isolierstegverpressung', text: 'Isolierstegverpressung' },
-      { href: '/auftragsboerse?verfahren=Folieren',               text: 'Folieren' },
-      { href: '/auftragsboerse',                                  text: 'Alle' }
+      { href: '/auftragsboerse?verfahren=Nasslackieren',     text: 'Nasslackieren' },
+      { href: '/auftragsboerse?verfahren=Pulverbeschichten', text: 'Pulverbeschichten' },
+      { href: '/auftragsboerse?verfahren=KTL-Beschichten',   text: 'KTL-Beschichten' },
+      { href: '/auftragsboerse?verfahren=Verzinken',         text: 'Verzinken' },
+      { href: '/auftragsboerse?verfahren=Eloxieren',         text: 'Eloxieren' },
+      { href: '/auftragsboerse?verfahren=Vernickeln',        text: 'Vernickeln' },
+      { href: '/auftragsboerse?verfahren=Verchromen',        text: 'Verchromen' },
+      { href: '/auftragsboerse?verfahren=Strahlen',          text: 'Strahlen' },
+      { href: '/auftragsboerse?verfahren=Verkupfern',       text: 'Verkupfern' },
+      { href: '/auftragsboerse?verfahren=Entlacken',         text: 'Entlacken' },
+      { href: '/auftragsboerse',                             text: 'Alle' }
     ]
   },
   
