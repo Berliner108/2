@@ -559,3 +559,10 @@
     box-sizing: border-box;
   }
 }
+
+.taxHint {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #555;
+}
