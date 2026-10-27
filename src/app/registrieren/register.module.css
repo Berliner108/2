@@ -559,3 +559,22 @@
     box-sizing: border-box;
   }
 }
+
+.requiredStar {
+  color: #d00000;
+  font-weight: 600;
+}
+
+.requiredHint {
+  width: 90%;
+  margin: -16px 0 18px;
+  font-size: 13px;
+  color: #555;
+  text-align: left;
+}
+
+@media (max-width: 1100px) {
+  .requiredHint {
+    width: 100%;
+  }
+}
