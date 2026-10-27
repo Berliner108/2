@@ -127,6 +127,7 @@ async function assertSellerImprintComplete(
       account_type,
       company_name,
       vat_number,
+      tax_status,
       address,
       imprint_email,
       imprint_phone,
@@ -137,7 +138,7 @@ async function assertSellerImprintComplete(
 
   if (error) {
     return {
-      ok: false,
+      ok: false as const,
       status: 500,
       error: "Profil konnte nicht geprüft werden.",
     };
@@ -145,21 +146,43 @@ async function assertSellerImprintComplete(
 
   if (!profile) {
     return {
-      ok: false,
+      ok: false as const,
       status: 400,
       error: "Bitte vervollständige zuerst dein Profil.",
     };
   }
 
   if (profile.account_type !== "business") {
-    return { ok: true };
+    return {
+      ok: true as const,
+      priceMode: "no_vat" as const,
+    };
+  }
+
+  const taxStatus = String(profile.tax_status ?? "").trim();
+
+  if (taxStatus !== "vat_registered" && taxStatus !== "vat_exempt") {
+    return {
+      ok: false as const,
+      status: 400,
+      error:
+        "Bitte wähle zuerst deinen Umsatzsteuerstatus in den Kontoeinstellungen aus.",
+    };
+  }
+
+  if (taxStatus === "vat_registered" && !profile.vat_number) {
+    return {
+      ok: false as const,
+      status: 400,
+      error:
+        "Bitte hinterlege zuerst deine Umsatzsteuer-ID in den Kontoeinstellungen.",
+    };
   }
 
   const address = (profile.address ?? {}) as any;
 
-  const missing =
+  const missingImprint =
     !profile.company_name ||
-    !profile.vat_number ||
     !address.street ||
     !address.houseNumber ||
     !address.zip ||
@@ -169,16 +192,22 @@ async function assertSellerImprintComplete(
     !profile.imprint_phone ||
     !profile.imprint_represented_by;
 
-  if (missing) {
+  if (missingImprint) {
     return {
-      ok: false,
+      ok: false as const,
       status: 400,
       error:
         "Bitte vervollständige zuerst dein Verkäufer-Impressum in den Kontoeinstellungen.",
     };
   }
 
-  return { ok: true };
+  return {
+    ok: true as const,
+    priceMode:
+      taxStatus === "vat_registered"
+        ? ("net" as const)
+        : ("no_vat" as const),
+  };
 }
 
 async function assertPremiumAccess(
@@ -245,12 +274,14 @@ export async function POST(req: Request) {
       );
     }
     const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
-if (!imprintCheck.ok) {
-  return NextResponse.json(
-    { error: imprintCheck.error },
-    { status: imprintCheck.status }
-  );
-}
+    if (!imprintCheck.ok) {
+      return NextResponse.json(
+        { error: imprintCheck.error },
+        { status: imprintCheck.status }
+      );
+    }
+
+    const priceMode = imprintCheck.priceMode;
 
     const fd = await req.formData();
     // ✅ Lack-Felder (Formular-Keys) -> DB-Spalten
@@ -354,6 +385,7 @@ if (isPieceCategory(category)) {
       manufacturer,
       condition,
       sale_type: verkaufsArt,
+      price_mode: priceMode,
       // ✅ nur für Lacke (arbeitsmittel bekommt automatisch null/[])
 color_palette: isPieceCategory(category) ? null : color_palette,
 gloss_level:   isPieceCategory(category) ? null : gloss_level,
@@ -538,19 +570,23 @@ export async function PUT(req: Request) {
       );
     }
     const imprintCheck = await assertSellerImprintComplete(supabase, user.id);
-if (!imprintCheck.ok) {
-  return NextResponse.json(
-    { error: imprintCheck.error },
-    { status: imprintCheck.status }
-  );
-}
+    if (!imprintCheck.ok) {
+      return NextResponse.json(
+        { error: imprintCheck.error },
+        { status: imprintCheck.status }
+      );
+    }
 
     const fd = await req.formData();
     const id = toStr(fd.get("id")).trim();
     if (!id) return NextResponse.json({ error: "MISSING_ID" }, { status: 400 });
 
     // Ownership check
-    const ownerCheck = await supabase.from("articles").select("owner_id").eq("id", id).single();
+    const ownerCheck = await supabase
+      .from("articles")
+      .select("owner_id, price_mode")
+      .eq("id", id)
+      .single();
     if (ownerCheck.error) return NextResponse.json({ error: ownerCheck.error.message }, { status: 404 });
     if ((ownerCheck.data as any)?.owner_id && (ownerCheck.data as any).owner_id !== user.id) {
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
@@ -654,6 +690,8 @@ if (!imprintCheck.ok) {
       return NextResponse.json({ error: "NO_IMAGES" }, { status: 400 });
     }
 
+    // price_mode beim Bearbeiten bewusst nicht ändern:
+    // legacy_gross bleibt legacy_gross; neue Artikel behalten ihren ursprünglichen Modus.
     const updatePayload: any = {
       title,
       description,
