@@ -215,6 +215,17 @@ function normalizeCountryCode(v: unknown): "DE" | "AT" | "CH" | "LI" | null {
 function standardVatRate(country: "DE" | "AT"): number {
   return country === "DE" ? 0.19 : 0.20;
 }
+type PriceCalc = {
+  unitPrice: number;
+  shipping: number;
+  articleTotal: number;
+  total: number;
+  netTotal: number | null;
+  vat: number | null;
+  grossTotal: number | null;
+  vatRate: number | null;
+};
+
 /* ===================== Seite ===================== */
 export default function ArtikelDetailPage() {
   const params = useParams<{ id: string }>();
@@ -468,7 +479,7 @@ const chosenTier = useMemo(() => {
 }, [article, tiers, unit, qty]);
 
 
-  const priceCalc = useMemo(() => {
+  const priceCalc = useMemo<PriceCalc | null>(() => {
     if (!article || !chosenTier) return null;
 
     const p = Number(chosenTier.price ?? 0);
