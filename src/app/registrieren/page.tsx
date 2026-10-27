@@ -97,6 +97,7 @@ const Register = () => {
     city: '',
     country: COUNTRY_OPTIONS[0].value,
     companyName: '',
+    taxStatus: 'vat_registered' as 'vat_registered' | 'vat_exempt',
     vatNumber: '',
   });
 
@@ -208,7 +209,10 @@ const Register = () => {
       if (!formData.companyName.trim() || formData.companyName.length > COMPANY_MAX) {
         newErrors.companyName = `Firmenname ist erforderlich (max. ${COMPANY_MAX} Zeichen).`;
       }
-      if (!VAT_RE.test(formData.vatNumber.trim().toUpperCase())) {
+      if (
+        formData.taxStatus === 'vat_registered' &&
+        !VAT_RE.test(formData.vatNumber.trim().toUpperCase())
+      ) {
         newErrors.vatNumber = "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-').";
       }
     }
@@ -284,7 +288,11 @@ const Register = () => {
           country: formData.country,
         },
         companyName: isPrivatePerson ? null : formData.companyName,
-        vatNumber: isPrivatePerson ? null : formData.vatNumber,
+        taxStatus: isPrivatePerson ? 'private' : formData.taxStatus,
+        vatNumber:
+          isPrivatePerson || formData.taxStatus === 'vat_exempt'
+            ? null
+            : formData.vatNumber.trim().toUpperCase(),
       };
       if (invitedBy) meta.invited_by = invitedBy; // nur setzen, wenn valide UUID
 
@@ -634,7 +642,7 @@ const Register = () => {
           )}
 
           {!isPrivatePerson && (
-            <div className={styles.inputRow}>
+            <>
               <div className={styles.inputContainer}>
                 <label>Firmenname <span className={styles.requiredStar}>*</span></label>
                 <input
@@ -648,21 +656,38 @@ const Register = () => {
                 />
                 {errors.companyName && <p className={styles.error}>{errors.companyName}</p>}
               </div>
+
               <div className={styles.inputContainer}>
-                <label>Umsatzsteuer-ID <span className={styles.requiredStar}>*</span></label>
-                <input
-                  type="text"
-                  name="vatNumber"
-                  value={formData.vatNumber}
+                <label>Umsatzsteuerstatus <span className={styles.requiredStar}>*</span></label>
+                <select
+                  name="taxStatus"
+                  value={formData.taxStatus}
                   onChange={handleInputChange}
+                  className={styles.select}
                   required
-                  inputMode="text"
-                  maxLength={14}
-                  title="8–14 Zeichen (A–Z, 0–9, '-')"
-                />
-                {errors.vatNumber && <p className={styles.error}>{errors.vatNumber}</p>}
+                >
+                  <option value="vat_registered">Umsatzsteuerpflichtig</option>
+                  <option value="vat_exempt">Keine Umsatzsteuer ausweisbar</option>
+                </select>
               </div>
-            </div>
+
+              {formData.taxStatus === 'vat_registered' && (
+                <div className={styles.inputContainer}>
+                  <label>Umsatzsteuer-ID <span className={styles.requiredStar}>*</span></label>
+                  <input
+                    type="text"
+                    name="vatNumber"
+                    value={formData.vatNumber}
+                    onChange={handleInputChange}
+                    required
+                    inputMode="text"
+                    maxLength={14}
+                    title="8–14 Zeichen (A–Z, 0–9, '-')"
+                  />
+                  {errors.vatNumber && <p className={styles.error}>{errors.vatNumber}</p>}
+                </div>
+              )}
+            </>
           )}
           <div className={styles.premiumNotice}>
             <strong>14 Tage Premium kostenlos testen</strong>
