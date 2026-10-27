@@ -194,9 +194,15 @@ type ApiShopSale = {
   created_at: string;
   status: ShopOrderStatus;
   price_gross_cents: number;
-shipping_gross_cents: number;
-
+  shipping_gross_cents: number;
   total_gross_cents: number;
+
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
+  tax_rate?: number | null;
+  price_net_cents?: number | null;
+  shipping_net_cents?: number | null;
+  total_net_cents?: number | null;
+  vat_cents?: number | null;
 
   article_id: string;
   article_title: string | null;
