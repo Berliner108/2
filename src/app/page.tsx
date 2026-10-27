@@ -519,10 +519,10 @@ const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)}
 
 const taxLabel =
   art.price_mode === "net"
-    ? "Nettopreis"
+    ? "netto"
     : art.price_mode === "no_vat"
-      ? "keine USt. ausweisbar"
-      : "inkl. USt.";
+      ? "ohne USt."
+      : "brutto";
 
 // ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
 const unitSuffix =
