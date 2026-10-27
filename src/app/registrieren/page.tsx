@@ -709,7 +709,7 @@ const Register = () => {
       }}
     />
     <span>
-      Ich akzeptiere <span className={styles.requiredStar}>*</span> die{' '}
+      Ich akzeptiere die{' '}
       <Link href="/agb" target="_blank" rel="noopener noreferrer">
         AGB
       </Link>
