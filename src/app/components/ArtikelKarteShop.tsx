@@ -80,7 +80,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
   const taxLabel =
     artikel.price_mode === 'net'
-      ? 'zzgl. USt.'
+      ? 'Nettopreis'
       : artikel.price_mode === 'no_vat'
         ? 'keine USt. ausweisbar'
         : 'inkl. USt.';
