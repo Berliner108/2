@@ -167,7 +167,14 @@ buyerRatingCount?: number | null;
   buyerDisplayName?: string | null;
   amountCents: number
   itemCents?: number | null
-shippingCents?: number | null
+  shippingCents?: number | null
+
+  priceMode?: "legacy_gross" | "net" | "no_vat"
+  taxRate?: number | null
+  priceNetCents?: number | null
+  shippingNetCents?: number | null
+  totalNetCents?: number | null
+  vatCents?: number | null
 
   dateIso: string
   invoiceId: string
