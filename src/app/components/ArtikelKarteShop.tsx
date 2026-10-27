@@ -21,6 +21,7 @@ type ArtikelProps = {
     // kommt aus DB (price_unit)
     einheit: 'kg' | 'stueck';
     sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+    price_mode?: "legacy_gross" | "net" | "no_vat" | null;
 
     // ✅ Verkäufer-Typ (profiles.account_type)
     seller_account_type?: 'business' | 'private' | null;
@@ -77,6 +78,13 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
   const showSellLabel = Boolean(sellerLabel);
 
+  const taxLabel =
+    artikel.price_mode === 'net'
+      ? 'zzgl. USt.'
+      : artikel.price_mode === 'no_vat'
+        ? 'keine USt. ausweisbar'
+        : 'inkl. USt.';
+
   return (
     <Link href={`/kaufen/artikel/${id}`} className={styles.cardLink}>
       <div className={styles.card}>
@@ -128,9 +136,13 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
           <div className={styles.cardText7}>
             {artikel.sale_type === "gesamt" ? (
-              <>Preis: {typeof preis === "number" ? preis.toFixed(2) : "—"} €</>
+              <>
+                Preis: {typeof preis === "number" ? preis.toFixed(2) : "—"} € · {taxLabel}
+              </>
             ) : (
-              <>Preis ab: {typeof preis === "number" ? preis.toFixed(2) : "—"} € / {einheitLabel}</>
+              <>
+                Preis ab: {typeof preis === "number" ? preis.toFixed(2) : "—"} € / {einheitLabel} · {taxLabel}
+              </>
             )}
           </div>
 

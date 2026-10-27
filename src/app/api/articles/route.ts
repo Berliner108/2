@@ -166,7 +166,7 @@ export async function GET(req: Request) {
     const maxPriceAvailable = Number(maxPriceRows?.[0]?.price ?? 0);
 
     const columns =
-      "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, condition, created_at, updated_at";
+      "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, price_mode, condition, created_at, updated_at";
 
     const applyFilters = (query: any) => {
       let next = query;

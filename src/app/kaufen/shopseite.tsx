@@ -91,6 +91,7 @@ type ShopArtikel = {
   gewerblich?: boolean;
   privat?: boolean;
   sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
 
 };
 
@@ -111,6 +112,7 @@ type ApiArticle = {
   condition?: string | null; // optional, falls API liefert
   zustand?: string | null;   // optional fallback
   sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
 
 };
 
@@ -330,6 +332,7 @@ export default function Shopseite() {
             gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
             privat: sellTo === 'beide',
             sale_type: a.sale_type ?? null,
+            price_mode: a.price_mode ?? "legacy_gross",
           };
         });
 
