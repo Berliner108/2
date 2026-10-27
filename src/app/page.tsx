@@ -160,6 +160,7 @@ type ShopArtikel = {
   price_from: number | null;
   price_unit: "kg" | "stueck" | null;
   price_is_from: boolean;
+  price_mode: "legacy_gross" | "net" | "no_vat" | null;
 };
 
 /* ---------- Skeleton-Karten (Horizontalscroller) ---------- */
@@ -375,6 +376,7 @@ const mapped: ShopArtikel[] = top12.map((a) => ({
         price_from: a.price_from ?? null,
         price_unit: a.sale_type === "gesamt" ? null : a.price_unit ?? null,
         price_is_from: !!a.price_is_from,
+        price_mode: a.price_mode ?? "legacy_gross",
       }));
 
       if (active) setShopArtikel(mapped);
@@ -515,6 +517,13 @@ const showSkeletonLack = loadingLack
     const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
 const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
 
+const taxLabel =
+  art.price_mode === "net"
+    ? "Nettopreis"
+    : art.price_mode === "no_vat"
+      ? "keine USt. ausweisbar"
+      : "inkl. USt.";
+
 // ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
 const unitSuffix =
   art.price_unit
@@ -540,7 +549,7 @@ const unitSuffix =
           <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>
 
           <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray" }}>
-            <strong>{priceLabel}</strong> {priceText}{unitSuffix}
+            <strong>{priceLabel}</strong> {priceText}{unitSuffix} · {taxLabel}
           </p>
         </div>
       </Link>
