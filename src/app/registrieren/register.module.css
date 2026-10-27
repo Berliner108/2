@@ -1,1135 +1,561 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&display=swap');
 
 
-
-
-
 .registerContainer {
-
   display: flex;
-
   width: 100%;
-
   min-height: 100vh;
-
   background-color: #f5f5f5;
-
 }
-
 .leftContainer {
-
   width: 55%;
-
   position: relative;
-
   border-top-right-radius: 10px;
-
   border-bottom-right-radius: 10px;
-
   display: flex;
-
   flex-direction: column;
-
 }
-
 .inputRow {
-
   display: flex;
-
   gap: 2rem;
-
   width: 90%;
-
   flex-wrap: nowrap;
-
   justify-content: left; /* linksbündig */
-
   align-items: flex-start;     /* vertikal bündig */
-
 }
-
 .inputContainer {
-
   flex: 1;
-
   display: flex;
-
   flex-direction: column;
-
   width: 90%;
-
   margin-bottom: 15px;
-
   text-align: left;
-
 }
-
 .smallInput {
-
   flex: 0 0 120px;
-
   max-width: 120px;
-
   width: 100%;
-
 }
-
 .image {
-
   width: 100%;
-
   height: 100%;
-
   object-fit: cover;
-
   border-top-right-radius: 10px;
-
   border-bottom-right-radius: 10px;
-
 }
-
 .rightContainer {
-
   width: 45%;
-
   display: flex;
-
   align-items: flex-start;
-
   flex-direction: column;
-
   padding: 20px;
-
   margin-left: 20px;
-
 }
-
 .leftContainer,
-
 .rightContainer {
-
   box-sizing: border-box;
-
 }
-
 .leftContainer {
-
   flex-grow: 1;
-
 }
-
 .rightContainer {
-
   flex-grow: 1;
-
 }
-
 .registerForm {
-
   width: 90%;
-
   padding: 20px;
-
   background: #e0e0e0;
-
   border-radius: 8px;
-
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
 }
-
 .error {
-
   color: red;
-
   font-size: 14px;
-
   margin-top: 5px;
-
   text-align: left;
-
 }
-
 .recaptchaContainer {
-
   margin: 15px 0;
-
   display: flex;
-
   justify-content: center;
-
 }
-
 .confirmBox {
-
   margin-top: 20px;
-
   padding: 15px;
-
   background-color: #f0f4f8;
-
   border: 1px solid #ccc;
-
   border-radius: 6px;
-
   font-size: 14px;
-
   word-break: break-word;
-
 }
-
-
 
 .confirmBox a {
-
   color: #00b5d8;
-
   text-decoration: underline;
-
 }
-
-
 
 .sliderContainer {
-
   position: relative;
-
   width: 100%;
-
   height: 40px;
-
   background-color: #ccc;
-
   border-radius: 25px;
-
   overflow: hidden;
-
   margin-bottom: 20px;
-
   cursor: pointer;
-
 }
-
-
 
 .slider {
-
   position: absolute;
-
   top: 0;
-
   left: 0;
-
   width: 50%;
-
   height: 100%;
-
   background-color: #00b5d8;
-
   border-radius: 25px;
-
   transition: all 0.3s ease;
-
 }
-
-
 
 .sliderLabelLeft {
-
   position: absolute;
-
   left: 10px;
-
   top: 50%;
-
   transform: translateY(-50%);
-
   color: white;
-
   font-size: 14px;
-
   font-weight: bold;
-
 }
-
-
 
 .sliderLabelRight {
-
   position: absolute;
-
   right: 10px;
-
   top: 50%;
-
   transform: translateY(-50%);
-
   color: white;
-
   font-size: 14px;
-
   font-weight: bold;
-
 }
-
-
 
 .inputContainer label {
-
   display: block;
-
   margin-bottom: 5px;
-
   font-size: 14px;
-
   color: black;
-
 }
-
-
 
 .inputContainer input {
-
   width: 100%;
-
   padding: 10px;
-
   border: 1px solid #ccc;
-
   border-radius: 4px;
-
   font-size: 16px;
-
   margin-bottom: 5px;
-
   font-family: 'Oswald';
-
 }
-
-
 
 .registerForm button[type="submit"] {
-
   width: 60%;
-
   padding: 12px;
-
   background-color: #00b5d8;
-
   color: white;
-
   border: none;
-
   border-radius: 4px;
-
   font-size: 16px;
-
   cursor: pointer;
-
   transition: background-color 0.3s;
-
   margin-top: 10px;
-
   font-family: 'Oswald';
-
 }
-
-
 
 .registerForm button[type="submit"]:hover {
-
   background-color: #00e5ff;
-
 }
-
 /* --- schlanke Erfolgs-Meldung --- */
-
 .successBanner {
-
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
   background: #ecfdf5;              /* green-50 */
-
   border: 1px solid #86efac;         /* green-300 */
-
   color: #065f46;                    /* green-800 */
-
   border-radius: 10px;
-
   padding: 10px 12px;
-
   margin-top: 14px;
-
   font-size: 14px;
-
 }
-
-
 
 .successIcon {
-
   color: #10b981;                    /* green-500 */
-
   line-height: 0;
-
   animation: pop .25s ease-out, bob 2.2s ease-in-out .25s infinite;
-
 }
-
-
 
 @keyframes pop {
-
   0%   { transform: scale(.6); opacity: 0; }
-
   80%  { transform: scale(1.05); opacity: 1; }
-
   100% { transform: scale(1); }
-
 }
-
 @keyframes bob {
-
   0%,100% { transform: translateY(0); }
-
   50%     { transform: translateY(-1px); }
-
 }
-
-
 
 /* Barrierefreiheit: Animation bei reduziertem Bewegungswunsch aus */
-
 @media (prefers-reduced-motion: reduce) {
-
   .successIcon { animation: none; }
-
 }
-
-
 
 .spinner {
-
   border: 3px solid #e0e0e0;
-
   border-top: 3px solid #00b5d8;
-
   border-radius: 50%;
-
   width: 18px;
-
   height: 18px;
-
   animation: spin 0.7s linear infinite;
-
   display: inline-block;
-
   vertical-align: middle;
-
   margin-left: 8px;
-
 }
-
 .inputContainer select,
-
 .select {
-
   -webkit-appearance: none;
-
   -moz-appearance: none;
-
   appearance: none;
-
   width: 105%;
-
   padding: 10px;
-
   border: 1px solid #ccc;
-
   border-radius: 4px;
-
   font-size: 16px;
-
   margin-bottom: 5px;
-
   background-color: #fff;
-
   font-family: 'Oswald';
-
   background-repeat: no-repeat;
-
   background-position: right 10px center;
-
   background-size: 14px 14px;
-
   cursor: pointer;
-
-
-
+  
 }
-
 @keyframes spin {
-
   to {
-
     transform: rotate(360deg);
-
   }
-
 }
-
 @media (max-width: 1100px) {
-
   .registerContainer {
-
     flex-direction: column;
-
     height: 100%;
-
   }
-
-
 
   .rightContainer {
-
     width: 90%;
-
     margin: 20px auto;
-
     padding: 0;
-
   }
-
-
 
   .registerForm {
-
     width: 90%;
-
   }
-
   .inputContainer select {
-
   width: 93%;
-
   padding: 10px;
-
   border: 1px solid #ccc;
-
   border-radius: 4px;
-
   font-size: 16px;
-
   margin-bottom: 5px;
-
   font-family: 'Oswald';
-
 }
-
-
 
   .sliderContainer {
-
-    width: 80%;
-
+    width: 80%;    
   }
-
   .leftContainer {
-
     width: 100%;
-
     height: 40%;
-
     display: block;
-
   }
-
   .image {
-
     width: 100%;
-
     height: auto;
-
     display: none;
-
   }
-
   .inputRow {
-
     flex-direction: column;
-
     gap: 0;
-
-  }
-
+  }  
   .smallInput {
-
     flex: none;
-
     max-width: 100% !important;
-
     width: 100% !important;
-
   }
-
   .inputRow {
-
-  display: flex;
-
+  display: flex;  
   width: 100%;
-
   flex-wrap: nowrap;
-
   justify-content: left; /* linksbündig */
-
   align-items: flex-start;     /* vertikal bündig */
-
 }
-
 .inputContainer {
-
   flex: 1;
-
   display: flex;
-
   flex-direction: column;
-
   width: 100%;
-
-
-
+  
   text-align: left;
-
 }
-
 .inputContainer label {
-
   display: block;
-
   margin-bottom: 5px;
-
   font-size: 14px;
-
   color: black;
-
 }
-
-
 
 .inputContainer input {
-
   width: 90%;
-
   padding: 10px;
-
   border: 1px solid #ccc;
-
   border-radius: 4px;
-
   font-size: 16px;
-
   margin-bottom: 5px;
-
   font-family: 'Oswald';
-
 }
-
 .registerForm h1 {
-
     font-size: 22px;
-
     margin-bottom: 28px;
-
     text-align: center;
-
   }
-
 }
-
 /* Button mit abgerundeten Ecken, Oswald-Font */
-
 .linkButton {
-
   --btn: #00e5ff;         /* hell */
-
   --btn-strong: #00b4d8;  /* dunkel */
-
   --radius: 10px;
-
   font-family: 'Oswald', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
-
   font-weight: 600;
-
   display: inline-flex;
-
   align-items: center;
-
   justify-content: center;
-
   gap: 0.4rem;
-
   padding: 0.5rem 0.9rem;
-
   border-radius: var(--radius);
-
   border: 1px solid color-mix(in srgb, var(--btn) 60%, transparent);
-
   background: color-mix(in srgb, var(--btn) 10%, transparent);
-
   color: var(--btn-strong);
-
   font-size: 0.95rem;
-
   line-height: 1;
-
   text-decoration: none;
-
   cursor: pointer;
-
   transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .06s ease;
-
 }
-
 @supports not (color-mix: in srgb, red, white) {
-
   .linkButton {
-
     border-color: rgba(0, 229, 255, .6);
-
     background: rgba(0, 229, 255, .10);
-
   }
-
 }
-
 .linkButton:hover {
-
   background: color-mix(in srgb, var(--btn) 16%, white 84%);
-
   border-color: var(--btn);
-
   color: var(--btn-strong);
-
 }
-
 .linkButton:active { transform: translateY(1px); }
 
-
-
 .linkButton:focus-visible {
-
   outline: 3px solid color-mix(in srgb, var(--btn) 35%, transparent);
-
   outline-offset: 2px;
-
   border-radius: calc(var(--radius) + 2px);
-
 }
-
 .linkButton[disabled] {
-
   opacity: .55;
-
   cursor: not-allowed;
-
   pointer-events: none;
-
 }
-
 .successBanner .linkButton { margin-left: 12px; }
 
-
-
 @media (prefers-reduced-motion: reduce) {
-
   .linkButton { transition: none; }
-
 }
-
 .passwordField {
-
   position: relative;
-
   width: 100%;              /* genauso breit wie die anderen Felder */
-
 }
-
-
-
-
 
 
 
 .eyeIcon {
-
   position: absolute;
-
   right: 2px;
-
   top: 50%;
-
   transform: translateY(-50%);  /* vertikal zentrieren */
-
   border: none;
-
   background: transparent;
-
   padding: 0;
-
   margin: 0;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   line-height: 0;
-
 }
-
 @media (min-width: 1px) and (max-width: 529px) {
-
   .eyeIcon {
-
   position: absolute;
-
   right: 20px;
-
   top: 50%;
-
   transform: translateY(-50%);  /* vertikal zentrieren */
-
   border: none;
-
   background: transparent;
-
   padding: 0;
-
   margin: 0;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   line-height: 0;
 
-
-
   }}
-
 @media (min-width: 760px) and (max-width: 1050px) {
-
   .eyeIcon {
-
   position: absolute;
-
   right: 65px;
-
   top: 50%;
-
   transform: translateY(-50%);  /* vertikal zentrieren */
-
   border: none;
-
   background: transparent;
-
   padding: 0;
-
   margin: 0;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   line-height: 0;
 
-
-
   }}
-
   @media (min-width: 530px) and (max-width: 759px) {
-
   .eyeIcon {
-
   position: absolute;
-
   right: 55px;
-
   top: 50%;
-
   transform: translateY(-50%);  /* vertikal zentrieren */
-
   border: none;
-
   background: transparent;
-
   padding: 0;
-
   margin: 0;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   line-height: 0;
 
-
-
   }}
-
     @media (min-width: 1179px) and (max-width: 1370px) {
-
   .eyeIcon {
-
   position: absolute;
-
   right: 1px;
-
   top: 50%;
-
   transform: translateY(-50%);  /* vertikal zentrieren */
-
   border: none;
-
   background: transparent;
-
   padding: 0;
-
   margin: 0;
-
   cursor: pointer;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   line-height: 0;
 
-
-
   }}
-
-
 
   .hint {
-
   font-size: 13px;      /* oder 11px, wie du magst */
-
   color: #555;          /* etwas heller als normaler Text */
-
   line-height: 1.4;
-
   margin-top: 2px;      /* kannst dann das inline-style entfernen */
-
 }
-
 .premiumNotice {
-
   width: 90%;
-
   box-sizing: border-box;
-
   margin-top: 0.5rem;
-
   margin-bottom: 0.75rem;
-
   padding: 14px 16px;
-
   background: #f0fbfd;
-
   border: 1px solid #00b5d8;
-
   border-radius: 8px;
-
   color: #222;
-
   text-align: left;
-
   font-size: 0.9rem;
-
   line-height: 1.45;
-
 }
-
-
 
 .premiumNotice strong {
-
   color: #007f99;
-
   font-size: 1rem;
-
 }
-
-
 
 .premiumNotice p {
-
   margin: 6px 0 0 0;
-
 }
-
-
 
 .termsBox {
-
   width: 90%;
-
   margin-top: 1rem;
-
   margin-bottom: 1rem;
-
 }
-
-
 
 .termsLabel {
-
   display: flex;
-
   align-items: flex-start;
-
   gap: 0.6rem;
-
   font-size: 0.9rem;
-
   line-height: 1.4;
-
   color: #222;
-
   text-align: left;
-
 }
-
-
 
 .termsLabel input {
-
   width: auto;
-
   margin-top: 0.25rem;
-
   flex-shrink: 0;
-
   accent-color: #00b5d8;
-
 }
-
-
 
 .termsLabel span {
-
   display: block;
-
 }
-
-
 
 .termsLabel a {
-
   color: #00b5d8;
-
   font-weight: 600;
-
   text-decoration: underline;
-
 }
-
-
 
 @media (max-width: 1100px) {
-
   .premiumNotice {
-
     width: 100%;
-
     font-size: 0.85rem;
-
   }
-
-
 
   .termsBox {
-
     width: 100%;
-
   }
-
-
 
   .termsLabel {
-
     font-size: 0.85rem;
-
   }
-
 }
-
 @media (min-width: 1400px) {
-
   .inputContainer select,
-
   .select {
-
     width: 103%;
-
     box-sizing: border-box;
-
   }
-
 }
-
 @media (min-width: 2500px) {
-
   .inputContainer select,
-
   .select {
-
     width: 102%;
-
     box-sizing: border-box;
-
   }
-
-}
-
-
-
-.taxHint {
-
-  margin: 2px 0 0;
-
-  font-size: 13px;
-
-  line-height: 1.35;
-
-  color: #555;
-
 }
