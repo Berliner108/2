@@ -67,6 +67,7 @@ type Article = {
   file_urls?: string[] | null;
   sale_type: "gesamt" | "pro_kg" | "pro_stueck";
   condition?: string | null;
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
 
   price_from?: number | null;
   price_unit?: "kg" | "stueck" | null;
@@ -365,6 +366,20 @@ useEffect(() => {
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
   const showSellerImprint = seller?.account_type === "business";
   const sellerAddress = seller?.address ?? null;
+
+  const taxPriceNote = useMemo(() => {
+    const mode = article?.price_mode ?? "legacy_gross";
+
+    if (mode === "net") {
+      return "Die angezeigten Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer.";
+    }
+
+    if (mode === "no_vat") {
+      return "Die angezeigten Preise enthalten keine ausweisbare Umsatzsteuer.";
+    }
+
+    return "Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer.";
+  }, [article?.price_mode]);
 
   const availableUnits = useMemo(() => {
     const set = new Set<"kg" | "stueck">();
@@ -1094,7 +1109,7 @@ if (!article) {
                 )}
 
                 <p className={styles.offerNote}>
-                  Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer. 
+                  {taxPriceNote}{" "}
                   Mit dem Kauf bestätigst du die geltenden AGB zu akzeptieren.
                 </p>
               </div>

@@ -889,3 +889,24 @@
   }
 }
 
+/* ===== Pflichtfelder ===== */
+.requiredStar {
+  color: #d00000;
+  font-weight: 700;
+}
+
+.requiredHint {
+  width: 100%;
+  margin: -8px 0 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #555;
+  text-align: left;
+}
+
+@media (max-width: 560px) {
+  .requiredHint {
+    margin-top: -6px;
+    font-size: 12px;
+  }
+}

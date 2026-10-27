@@ -1443,6 +1443,9 @@ const canSaveImpressum = useMemo(() => {
 {/* === B: Kontoart & Anschrift (eigener Container) === */}
 <div id="konto" className={styles.kontoContainer}>
   <h3 className={styles.subSectionTitle}>Kontoart &amp; Anschrift</h3>
+  <p className={styles.requiredHint}>
+    Alle Felder mit <span className={styles.requiredStar}>*</span> sind Pflicht.
+  </p>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
     {/* Kontoart */}
     <div className={styles.radioRow} role="radiogroup" aria-label="Kontoart wählen">
@@ -1477,7 +1480,7 @@ const canSaveImpressum = useMemo(() => {
 {/* Reihe 1: Straße + Hausnr. */}
 <div className={styles.inputRow2}>
   <div className={styles.inputGroup}>
-    <label>Straße</label>
+    <label>Straße <span className={styles.requiredStar}>*</span></label>
     <input
       type="text"
       value={street}
@@ -1492,7 +1495,7 @@ const canSaveImpressum = useMemo(() => {
   </div>
 
   <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-    <label>Hausnr.</label>
+    <label>Hausnr. <span className={styles.requiredStar}>*</span></label>
     <input
       type="text"
       value={houseNumber}
@@ -1511,7 +1514,7 @@ const canSaveImpressum = useMemo(() => {
 {/* Reihe 2: PLZ + Ort + Land */}
 <div className={styles.inputRowZipLand}>
   <div className={`${styles.inputGroup} ${styles.smallInput}`}>
-    <label>PLZ</label>
+    <label>PLZ <span className={styles.requiredStar}>*</span></label>
     <input
       type="text"
       value={zip}
@@ -1526,7 +1529,7 @@ const canSaveImpressum = useMemo(() => {
   </div>
 
   <div className={styles.inputGroup}>
-    <label>Ort</label>
+    <label>Ort <span className={styles.requiredStar}>*</span></label>
     <input
       type="text"
       value={city}
@@ -1541,7 +1544,7 @@ const canSaveImpressum = useMemo(() => {
   </div>
 
   <div className={styles.inputGroup}>
-    <label>Land</label>
+    <label>Land <span className={styles.requiredStar}>*</span></label>
     <select
       value={country || ''}
       onChange={(e) => setCountry(e.target.value)}
@@ -1562,7 +1565,7 @@ const canSaveImpressum = useMemo(() => {
           {!isPrivatePerson && (
             <>
               <div className={styles.inputGroup}>
-                <label>Firmenname</label>
+                <label>Firmenname <span className={styles.requiredStar}>*</span></label>
                 <input
                   type="text"
                   value={companyName}
@@ -1575,7 +1578,7 @@ const canSaveImpressum = useMemo(() => {
               </div>
 
               <div className={styles.inputGroup}>
-                <label>Umsatzsteuerstatus</label>
+                <label>Umsatzsteuerstatus <span className={styles.requiredStar}>*</span></label>
                 <select
                   value={taxStatus === 'private' ? '' : taxStatus}
                   onChange={(e) => setTaxStatus(e.target.value as '' | DbTaxStatus)}
@@ -1590,7 +1593,12 @@ const canSaveImpressum = useMemo(() => {
 
               {taxStatus === 'vat_registered' && (
                 <div className={styles.inputGroup}>
-                  <label>Umsatzsteuer-ID</label>
+                  <label>
+                  Umsatzsteuer-ID
+                  {taxStatus === 'vat_registered' && (
+                    <> <span className={styles.requiredStar}>*</span></>
+                  )}
+                </label>
                   <input
                     type="text"
                     value={vatNumber}
@@ -1637,6 +1645,9 @@ const canSaveImpressum = useMemo(() => {
   <div id="impressum" className={styles.kontoContainer}>
     <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
       <h3 className={styles.subSectionTitle}>Verkäufer-Impressum</h3>
+      <p className={styles.requiredHint}>
+        Alle Felder mit <span className={styles.requiredStar}>*</span> sind Pflicht.
+      </p>
 
       <p className={styles.description} style={{ marginTop: 0 }}>
         Diese Angaben werden bei gewerblichen Verkäufern öffentlich auf der Shop-Detailseite angezeigt.
@@ -1644,7 +1655,7 @@ const canSaveImpressum = useMemo(() => {
 
       <div className={styles.inputRowCompany}>
         <div className={styles.inputGroup}>
-          <label>Impressums-E-Mail</label>
+          <label>Impressums-E-Mail <span className={styles.requiredStar}>*</span></label>
           <input
   type="email"
   value={imprintEmail}
@@ -1657,7 +1668,7 @@ const canSaveImpressum = useMemo(() => {
         </div>
 
         <div className={styles.inputGroup}>
-          <label>Telefon</label>
+          <label>Telefon <span className={styles.requiredStar}>*</span></label>
           <input
   type="text"
   value={imprintPhone}
@@ -1672,7 +1683,7 @@ const canSaveImpressum = useMemo(() => {
 
       <div className={styles.inputRowCompany}>
         <div className={styles.inputGroup}>
-          <label>Vertreten durch / Inhaber</label>
+          <label>Vertreten durch / Inhaber <span className={styles.requiredStar}>*</span></label>
           <input
   type="text"
   value={imprintRepresentedBy}
@@ -1844,9 +1855,12 @@ const canSaveImpressum = useMemo(() => {
 <div id="passwort" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form} autoComplete="on">
     <h3 className={styles.subSectionTitle}>Passwort ändern</h3>
+    <p className={styles.requiredHint}>
+      Alle Felder mit <span className={styles.requiredStar}>*</span> sind Pflicht.
+    </p>
 
     <div className={styles.inputGroup}>
-  <label htmlFor="password">Aktuelles Passwort</label>
+  <label htmlFor="password">Aktuelles Passwort <span className={styles.requiredStar}>*</span></label>
   <div className={styles.fieldWithIcon}>
     <input
       id="password"
@@ -1874,7 +1888,7 @@ const canSaveImpressum = useMemo(() => {
 
 
     <div className={styles.inputGroup}>
-  <label htmlFor="newPassword">Neues Passwort</label>
+  <label htmlFor="newPassword">Neues Passwort <span className={styles.requiredStar}>*</span></label>
   <div className={styles.fieldWithIcon}>
     <input
       id="newPassword"
@@ -1907,7 +1921,7 @@ const canSaveImpressum = useMemo(() => {
 
 
     <div className={styles.inputGroup}>
-  <label htmlFor="confirmPassword">Neues Passwort bestätigen</label>
+  <label htmlFor="confirmPassword">Neues Passwort bestätigen <span className={styles.requiredStar}>*</span></label>
   <div className={styles.fieldWithIcon}>
     <input
       id="confirmPassword"
@@ -2199,6 +2213,9 @@ const canSaveImpressum = useMemo(() => {
 <div id="loeschen" className={styles.kontoContainer}>
   <form onSubmit={(e) => e.preventDefault()} className={styles.form}>
     <h3 className={styles.subSectionTitle}>Konto löschen</h3>
+    <p className={styles.requiredHint}>
+      Alle Felder mit <span className={styles.requiredStar}>*</span> sind Pflicht.
+    </p>
 
     <p className={styles.deleteConfirmationText}>
       Hier kannst du eine Löschanfrage stellen. Dein Konto wird nicht sofort gelöscht,
@@ -2292,7 +2309,7 @@ const canSaveImpressum = useMemo(() => {
           onChange={(e) => setDeleteConfirm(e.target.checked)}
           disabled={!canRequestDelete}
         />
-        Ich bestätige, dass ich eine Löschanfrage stellen möchte.
+        Ich bestätige <span className={styles.requiredStar}>*</span>, dass ich eine Löschanfrage stellen möchte.
       </label>
 
       {!canRequestDelete && (
