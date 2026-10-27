@@ -110,6 +110,7 @@ export async function POST(req: Request) {
   category,
   condition,
   sale_type,
+  price_mode,
   owner_id,
   published,
   sold_out,
@@ -316,22 +317,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Grenzüberschreitendes B2B DE↔AT mit USt-ID benötigt eine eigene
-    // innergemeinschaftliche/VIES-Logik. Bis diese vorhanden ist, nicht automatisch besteuern.
-    const crossBorderEuB2B =
-      sellerCountry !== buyerCountry &&
-      sellerSnap.account_type === "business" &&
-      buyerSnap.account_type === "business" &&
-      !!sellerSnap.vat_number &&
-      !!buyerSnap.vat_number;
-
-    if (crossBorderEuB2B) {
-      return NextResponse.json(
-        { error: "Grenzüberschreitende B2B-Käufe zwischen Deutschland und Österreich werden steuerlich separat geprüft und sind im automatischen Checkout noch nicht freigeschaltet." },
-        { status: 400 }
-      );
-    }
-
     if (buyerCountry !== "DE" && buyerCountry !== "AT") {
       return NextResponse.json(
         { error: "Für dieses Käuferland ist noch keine automatische Umsatzsteuerberechnung eingerichtet." },
@@ -339,30 +324,56 @@ export async function POST(req: Request) {
       );
     }
 
-    taxRate = standardVatRate(buyerCountry);
-    taxCountryCode = buyerCountry;
-    taxTreatment =
-      sellerCountry === buyerCountry
-        ? "domestic_standard_rate"
-        : "destination_standard_rate";
+    const crossBorderEuB2B =
+      sellerCountry !== buyerCountry &&
+      (sellerCountry === "DE" || sellerCountry === "AT") &&
+      (buyerCountry === "DE" || buyerCountry === "AT") &&
+      sellerSnap.account_type === "business" &&
+      buyerSnap.account_type === "business" &&
+      sellerSnap.tax_status === "vat_registered" &&
+      buyerSnap.tax_status === "vat_registered" &&
+      !!sellerSnap.vat_number &&
+      !!buyerSnap.vat_number;
 
     priceNetCents = storedUnitPriceCents;
     shippingNetCents = storedShippingCents;
-
-    unitPriceGrossCents = Math.round(priceNetCents * (1 + taxRate));
-    shippingGrossCents = Math.round(shippingNetCents * (1 + taxRate));
 
     totalNetCents =
       saleType === "gesamt"
         ? priceNetCents + shippingNetCents
         : qty * priceNetCents + shippingNetCents;
 
-    totalGrossCents =
-      saleType === "gesamt"
-        ? unitPriceGrossCents + shippingGrossCents
-        : qty * unitPriceGrossCents + shippingGrossCents;
+    if (crossBorderEuB2B) {
+      // Innergemeinschaftlicher B2B-Fall DE↔AT:
+      // Der gespeicherte Artikelpreis ist netto, im Checkout werden 0 % USt. berechnet.
+      // Die USt-IDs werden als Snapshot gespeichert; eine externe VIES-Prüfung kann
+      // später zusätzlich vorgeschaltet werden.
+      taxRate = 0;
+      taxCountryCode = null;
+      taxTreatment = "intra_community_supply";
 
-    vatCents = totalGrossCents - totalNetCents;
+      unitPriceGrossCents = priceNetCents;
+      shippingGrossCents = shippingNetCents;
+      totalGrossCents = totalNetCents;
+      vatCents = 0;
+    } else {
+      taxRate = standardVatRate(buyerCountry);
+      taxCountryCode = buyerCountry;
+      taxTreatment =
+        sellerCountry === buyerCountry
+          ? "domestic_standard_rate"
+          : "destination_standard_rate";
+
+      unitPriceGrossCents = Math.round(priceNetCents * (1 + taxRate));
+      shippingGrossCents = Math.round(shippingNetCents * (1 + taxRate));
+
+      totalGrossCents =
+        saleType === "gesamt"
+          ? unitPriceGrossCents + shippingGrossCents
+          : qty * unitPriceGrossCents + shippingGrossCents;
+
+      vatCents = totalGrossCents - totalNetCents;
+    }
   }
 
   // ✅ (2) "gesamt" sofort reservieren (OHNE stock_status wegen DB-Constraint)

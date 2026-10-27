@@ -243,6 +243,7 @@ export default function ArtikelDetailPage() {
   const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
   const [viewerCountry, setViewerCountry] = useState<"DE" | "AT" | "CH" | "LI" | null>(null);
+  const [viewerVatNumber, setViewerVatNumber] = useState<string | null>(null);
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -276,13 +277,15 @@ export default function ArtikelDetailPage() {
           if (!cancelled) {
             setViewerIsBusiness(false);
             setViewerCountry(null);
+            setViewerVatNumber(null);
+            setViewerVatNumber(null);
           }
           return;
         }
 
         const { data: prof, error } = await supa
           .from("profiles")
-          .select("account_type, address")
+          .select("account_type, address, vat_number")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -297,6 +300,11 @@ export default function ArtikelDetailPage() {
         if (!cancelled) {
           setViewerIsBusiness(prof?.account_type === "business");
           setViewerCountry(normalizeCountryCode((prof as any)?.address?.country));
+          setViewerVatNumber(
+            typeof (prof as any)?.vat_number === "string" && (prof as any).vat_number.trim()
+              ? (prof as any).vat_number.trim()
+              : null
+          );
         }
       } finally {
         if (!cancelled) setViewerChecked(true);
@@ -402,11 +410,33 @@ useEffect(() => {
   const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
   const showSellerImprint = seller?.account_type === "business";
   const sellerAddress = seller?.address ?? null;
+  const sellerCountry = normalizeCountryCode(seller?.address?.country);
+
+  const isCrossBorderEuB2B = useMemo(() => {
+    if (!viewerIsBusiness) return false;
+    if (!viewerVatNumber) return false;
+    if (seller?.account_type !== "business") return false;
+    if (!seller?.vat_number) return false;
+    if (viewerCountry !== "DE" && viewerCountry !== "AT") return false;
+    if (sellerCountry !== "DE" && sellerCountry !== "AT") return false;
+    return viewerCountry !== sellerCountry;
+  }, [
+    viewerIsBusiness,
+    viewerVatNumber,
+    viewerCountry,
+    seller?.account_type,
+    seller?.vat_number,
+    sellerCountry,
+  ]);
 
   const taxPriceNote = useMemo(() => {
     const mode = article?.price_mode ?? "legacy_gross";
 
     if (mode === "net") {
+      if (isCrossBorderEuB2B) {
+        return "Grenzüberschreitender B2B-Kauf DE/AT: Vorschau mit 0 % Umsatzsteuer. Die endgültige steuerliche Behandlung wird im Checkout geprüft.";
+      }
+
       if (viewerCountry === "DE") {
         return "Die angezeigten Preise verstehen sich netto zzgl. 19 % deutscher Umsatzsteuer.";
       }
@@ -423,7 +453,7 @@ useEffect(() => {
     }
 
     return "Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer.";
-  }, [article?.price_mode, viewerCountry]);
+  }, [article?.price_mode, viewerCountry, isCrossBorderEuB2B]);
 
   const availableUnits = useMemo(() => {
     const set = new Set<"kg" | "stueck">();
@@ -515,7 +545,7 @@ const chosenTier = useMemo(() => {
       };
     }
 
-    const vatRate = standardVatRate(viewerCountry);
+    const vatRate = isCrossBorderEuB2B ? 0 : standardVatRate(viewerCountry);
 
     // Gleiche Rundungslogik wie im Checkout: Einzelpreis und Versand werden
     // jeweils auf Cent brutto gerundet, danach wird die Menge multipliziert.
@@ -538,7 +568,7 @@ const chosenTier = useMemo(() => {
       grossTotal,
       vatRate,
     };
-  }, [article, chosenTier, qty, viewerCountry]);
+  }, [article, chosenTier, qty, viewerCountry, isCrossBorderEuB2B]);
 
   const disableBuy = useMemo(() => {
     if (!article) return true;
