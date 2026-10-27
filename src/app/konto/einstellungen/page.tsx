@@ -435,28 +435,33 @@ const handleManagePaymentMethod = async () => {
   }
 }
 
-  // ===== Laden (API: GET /api/profile) =====
+  // ===== Initiales Laden: alles parallel, Seite erst danach anzeigen =====
   useEffect(() => {
     ;(async () => {
       try {
         const sb = supabaseBrowser()
         const { data: { user } } = await sb.auth.getUser()
+
         if (!user) {
-  setToast({ type: 'info', message: 'Bitte melde dich an.' })
-  setProfileLoaded(true)
-  setPremiumLoading(false)
-  return
-}
+          setToast({ type: 'info', message: 'Bitte melde dich an.' })
+          setPremiumLoading(false)
+          setProfileLoaded(true)
+          return
+        }
 
-        await loadPremiumStatus()
+        // Premium und Profil gleichzeitig laden.
+        const premiumPromise = loadPremiumStatus()
+        const profilePromise = fetch('/api/profile', { cache: 'no-store' })
 
-        const res = await fetch('/api/profile', { cache: 'no-store' })
+        const res = await profilePromise
         const j: ApiGetResponse = await res.json()
+
         if (!res.ok) {
-  setToast({ type: 'error', message: 'Profil konnte nicht geladen werden.' })
-  setProfileLoaded(true)
-  return
-}
+          await premiumPromise
+          setToast({ type: 'error', message: 'Profil konnte nicht geladen werden.' })
+          setProfileLoaded(true)
+          return
+        }
 
         setEmail(j.email ?? '')
         setUsername(j.profile.username ?? (j.email?.split('@')[0] ?? ''))
@@ -469,9 +474,11 @@ const handleManagePaymentMethod = async () => {
         setHouseNumber(a.houseNumber || '')
         setZip(a.zip || '')
         setCity(a.city || '')
-
-        // Country aus Profil übernehmen, nur wenn erlaubt – sonst leer (Pflicht wird unten geprüft)
-        setCountry(a.country && (COUNTRY_OPTIONS as readonly string[]).includes(a.country) ? a.country : '')
+        setCountry(
+          a.country && (COUNTRY_OPTIONS as readonly string[]).includes(a.country)
+            ? a.country
+            : ''
+        )
 
         setCompanyName(j.profile.company || '')
         setTaxStatus(
@@ -491,21 +498,28 @@ const handleManagePaymentMethod = async () => {
         setImprintChamber(j.profile.imprintChamber || '')
         setImprintSupervisoryAuthority(j.profile.imprintSupervisoryAuthority || '')
 
-                const origin = window.location.origin.replace(/\/$/, '')
+        const origin = window.location.origin.replace(/\/$/, '')
         setInviteLink(`${origin}/registrieren?invited_by=${j.id}`)
 
-        loadInvites(1)
-                await loadDeleteRequest()
-        await loadCustomNda()
+        // Zusatzdaten parallel laden.
+        await Promise.allSettled([
+          premiumPromise,
+          loadInvites(1),
+          loadDeleteRequest(),
+          loadCustomNda(),
+        ])
+
         setProfileLoaded(true)
       } catch {
+        setPremiumLoading(false)
         setToast({ type: 'error', message: 'Fehler beim Laden des Profils.' })
         setProfileLoaded(true)
       }
-
     })()
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
   useEffect(() => {
   const hinweis = searchParams.get('hinweis')
 
@@ -1144,9 +1158,18 @@ const canSaveImpressum = useMemo(() => {
   <>
     <Navbar />
     <AcceptInvitationOnMount />   {/* 👈 löst /api/invitations/accept aus */}
-    <div className={styles.page}></div>
-    <h3 className={styles.title}>Kontoeinstellungen</h3>
-    {profileLoaded && (
+
+    {!profileLoaded ? (
+      <div className={styles.initialLoading} role="status" aria-live="polite">
+        <div className={styles.initialLoadingInner}>
+          <span className={styles.initialSpinner} aria-hidden="true" />
+          <span>Kontoeinstellungen werden geladen …</span>
+        </div>
+      </div>
+    ) : (
+      <>
+        <div className={styles.page}></div>
+        <h3 className={styles.title}>Kontoeinstellungen</h3>
   <nav className={`${styles.stickyNav} ${styles.stickyShadow}`}>
     <div className={styles.stickyNavTrack}>
       {sections.map(s => (
@@ -1161,7 +1184,6 @@ const canSaveImpressum = useMemo(() => {
       ))}
     </div>
   </nav>
-)}
     {/* --- Weg mit "alles-umschließender" Container: wir nutzen die Wrapper-Zeile
          und packen ZWEI separate .kontoContainer darunter --- */}
     <div className={styles.wrapper}>
@@ -2297,6 +2319,8 @@ const canSaveImpressum = useMemo(() => {
 
 
     </div>
+      </>
+    )}
 
     <Toast toast={toast} onClose={() => setToast(null)} />
   </>
