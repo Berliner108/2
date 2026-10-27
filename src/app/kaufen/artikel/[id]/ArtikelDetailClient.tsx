@@ -1118,7 +1118,7 @@ if (!article) {
       <>
         <div className={styles.buyPriceLine}>
           <span>Netto:</span>
-          <strong>{euro(priceCalc.netTotal)} €</strong>
+          <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
         </div>
 
         {priceCalc.vat != null && priceCalc.vatRate != null ? (
@@ -1130,13 +1130,13 @@ if (!article) {
 
             <div className={styles.buyTotal}>
               <span>Gesamt brutto:</span>
-              <strong>{euro(priceCalc.grossTotal)} €</strong>
+              <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
             </div>
           </>
         ) : (
           <div className={styles.buyTotal}>
             <span>Gesamt netto:</span>
-            <strong>{euro(priceCalc.netTotal)} €</strong>
+            <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
           </div>
         )}
       </>

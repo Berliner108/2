@@ -94,6 +94,13 @@ type ApiShopOrder = {
   shipping_gross_cents: number;
   total_gross_cents: number;
 
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
+  tax_rate?: number | null;
+  price_net_cents?: number | null;
+  shipping_net_cents?: number | null;
+  total_net_cents?: number | null;
+  vat_cents?: number | null;
+
 
   article_id: string;
   article_title: string | null;
@@ -130,6 +137,13 @@ sellerRatingCount?: number | null
   amountCents: number
   itemCents?: number | null;
   shippingCents?: number | null;
+
+  priceMode?: "legacy_gross" | "net" | "no_vat";
+  taxRate?: number | null;
+  priceNetCents?: number | null;
+  shippingNetCents?: number | null;
+  totalNetCents?: number | null;
+  vatCents?: number | null;
 
   dateIso: string
   status: OrderStatus
@@ -251,6 +265,13 @@ const mapApiToMyOrder = (o: ApiShopOrder): MyOrder => {
     amountCents: o.total_gross_cents,
     itemCents: o.price_gross_cents ?? null,
     shippingCents: o.shipping_gross_cents ?? null,
+
+    priceMode: o.price_mode ?? "legacy_gross",
+    taxRate: o.tax_rate ?? null,
+    priceNetCents: o.price_net_cents ?? null,
+    shippingNetCents: o.shipping_net_cents ?? null,
+    totalNetCents: o.total_net_cents ?? null,
+    vatCents: o.vat_cents ?? null,
 
     dateIso: o.created_at,
 
@@ -679,9 +700,31 @@ return (
                               Versand: {(o.shippingCents ?? 0) === 0 ? "kostenlos" : formatEUR(o.shippingCents ?? 0)}
                             </div>
 
-                            <div>
-                              <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
-                            </div>
+                            {o.priceMode === "net" && o.totalNetCents != null && o.vatCents != null ? (
+                              <>
+                                <div>Netto: {formatEUR(o.totalNetCents)}</div>
+                                <div>
+                                  USt.{o.taxRate != null ? ` (${Math.round(o.taxRate * 100)} %)` : ""}: {formatEUR(o.vatCents)}
+                                </div>
+                                <div>
+                                  <strong>Gesamt brutto: {formatEUR(o.amountCents)}</strong>
+                                </div>
+                              </>
+                            ) : o.priceMode === "no_vat" ? (
+                              <>
+                                <div>
+                                  <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
+                                </div>
+                                <div>Keine Umsatzsteuer ausweisbar.</div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
+                                </div>
+                                <div>inkl. Umsatzsteuer</div>
+                              </>
+                            )}
                           </div>
 
                         </div>

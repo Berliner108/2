@@ -347,8 +347,15 @@ async function loadShopSales(cancelledRef?: { current: boolean }) {
     buyerRatingCount,
 
     amountCents: o.total_gross_cents,
-    itemCents: (o as any).price_gross_cents ?? null,
-    shippingCents: (o as any).shipping_gross_cents ?? null,
+    itemCents: o.price_gross_cents ?? null,
+    shippingCents: o.shipping_gross_cents ?? null,
+
+    priceMode: o.price_mode ?? "legacy_gross",
+    taxRate: o.tax_rate ?? null,
+    priceNetCents: o.price_net_cents ?? null,
+    shippingNetCents: o.shipping_net_cents ?? null,
+    totalNetCents: o.total_net_cents ?? null,
+    vatCents: o.vat_cents ?? null,
 
     dateIso: o.created_at,
     invoiceId: o.id,
@@ -936,7 +943,26 @@ const filteredSales = useMemo(() => {
     <div>
       Versand: {(s.shippingCents ?? 0) === 0 ? 'kostenlos' : formatEUR(s.shippingCents ?? 0)}
     </div>
-    <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+
+    {s.priceMode === "net" && s.totalNetCents != null && s.vatCents != null ? (
+      <>
+        <div>Netto: {formatEUR(s.totalNetCents)}</div>
+        <div>
+          USt.{s.taxRate != null ? ` (${Math.round(s.taxRate * 100)} %)` : ""}: {formatEUR(s.vatCents)}
+        </div>
+        <div><strong>Gesamt brutto: {formatEUR(s.amountCents)}</strong></div>
+      </>
+    ) : s.priceMode === "no_vat" ? (
+      <>
+        <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+        <div>Keine Umsatzsteuer ausweisbar.</div>
+      </>
+    ) : (
+      <>
+        <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+        <div>inkl. Umsatzsteuer</div>
+      </>
+    )}
   </div>
 </div>
 
