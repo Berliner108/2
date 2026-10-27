@@ -41,11 +41,13 @@ const ALLOWED: Record<string, true> = {
   account_type: true,
   company_name: true,
   vat_number: true,
+  tax_status: true,
   username: true,
   // camelCase Aliase:
   accountType: true,
   companyName: true,
   vatNumber: true,
+  taxStatus: true,
   imprint_email: true,
   imprint_phone: true,
   imprint_represented_by: true,
@@ -61,6 +63,7 @@ const ALIASES: Record<string, string> = {
   accountType: 'account_type',
   companyName: 'company_name',
   vatNumber: 'vat_number',
+  taxStatus: 'tax_status',
 };
 
 type Addr = {
@@ -72,6 +75,13 @@ type Addr = {
 };
 
 type DbAccountType = 'private' | 'business';
+type DbTaxStatus = 'private' | 'vat_registered' | 'vat_exempt';
+
+function normTaxStatus(val: unknown): DbTaxStatus | '' {
+  const s = String(val ?? '').trim().toLowerCase();
+  if (s === 'private' || s === 'vat_registered' || s === 'vat_exempt') return s as DbTaxStatus;
+  return '';
+}
 
 function normAccountType(val: unknown): DbAccountType | '' {
   const s = String(val ?? '').trim().toLowerCase();
@@ -133,6 +143,7 @@ export async function GET() {
         account_type,
         company_name,
         vat_number,
+        tax_status,
         address,
         imprint_email,
         imprint_phone,
@@ -150,6 +161,11 @@ export async function GET() {
       normAccountType(row?.account_type) ||
       normAccountType(meta.accountType) ||
       '';
+
+    const taxStatusNorm =
+      normTaxStatus(row?.tax_status) ||
+      normTaxStatus(meta.taxStatus) ||
+      (accountNorm === 'private' ? 'private' : '');
 
     const dbAddr = (row?.address as any) || {};
     const mdAddr = (meta.address as any) || {};
@@ -170,6 +186,7 @@ export async function GET() {
           account_type: accountNorm, // 'business' | 'private' | ''
           company: row?.company_name || meta.companyName || '',
           vatNumber: row?.vat_number || meta.vatNumber || '',
+          taxStatus: taxStatusNorm,
           address: {
             street: dbAddr.street ?? mdAddr.street ?? '',
             houseNumber: dbAddr.houseNumber ?? mdAddr.houseNumber ?? '',
@@ -242,56 +259,113 @@ export async function PUT(req: Request) {
       }
     }
 
-    // account_type / company_name / vat_number (gekoppelte Validierung)
-    let accountTypeDb: DbAccountType | undefined;
-    if (body.account_type != null) {
-      const norm = normAccountType(body.account_type);
-      if (!norm) {
+    // account_type / company_name / tax_status / vat_number (gekoppelte Validierung)
+    const hasAccountTaxFields =
+      'account_type' in body ||
+      'company_name' in body ||
+      'tax_status' in body ||
+      'vat_number' in body;
+
+    if (hasAccountTaxFields) {
+      const admin = supabaseAdmin();
+
+      const { data: currentProfile, error: currentProfileError } = await admin
+        .from('profiles')
+        .select('account_type, company_name, vat_number, tax_status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (currentProfileError) {
+        return NextResponse.json(
+          { ok: false, error: 'profile_read_failed', message: currentProfileError.message },
+          { status: 500 }
+        );
+      }
+
+      const currentAccountType =
+        normAccountType(currentProfile?.account_type) ||
+        normAccountType((user.user_metadata as any)?.accountType) ||
+        'private';
+
+      const accountTypeDb =
+        'account_type' in body
+          ? normAccountType(body.account_type)
+          : currentAccountType;
+
+      if (!accountTypeDb) {
         return NextResponse.json({ ok: false, error: 'invalid_account_type' }, { status: 400 });
       }
-      accountTypeDb = norm;
+
       update.account_type = accountTypeDb;
 
       if (accountTypeDb === 'private') {
-  update.company_name = null;
-  update.vat_number = null;
+        update.company_name = null;
+        update.vat_number = null;
+        update.tax_status = 'private';
 
-  update.imprint_email = null;
-  update.imprint_phone = null;
-  update.imprint_represented_by = null;
-  update.imprint_legal_form = null;
-  update.imprint_register_number = null;
-  update.imprint_register_court = null;
-  update.imprint_chamber = null;
-  update.imprint_supervisory_authority = null;
-} else {
-        const cn = String(body.company_name ?? '').trim();
-        if (!cn || cn.length > COMPANY_MAX) {
+        // Impressumsfelder nur löschen, wenn wirklich auf Privat umgestellt wird.
+        if ('account_type' in body) {
+          update.imprint_email = null;
+          update.imprint_phone = null;
+          update.imprint_represented_by = null;
+          update.imprint_legal_form = null;
+          update.imprint_register_number = null;
+          update.imprint_register_court = null;
+          update.imprint_chamber = null;
+          update.imprint_supervisory_authority = null;
+        }
+      } else {
+        const companyName =
+          'company_name' in body
+            ? String(body.company_name ?? '').trim()
+            : String(currentProfile?.company_name ?? '').trim();
+
+        if (!companyName || companyName.length > COMPANY_MAX) {
           return NextResponse.json({ ok: false, error: 'invalid_company_name' }, { status: 400 });
         }
-        update.company_name = cn;
 
-        const vat = String(body.vat_number ?? '').trim().toUpperCase();
-        if (!VAT_RE.test(vat)) {
-          return NextResponse.json({ ok: false, error: 'invalid_vat_number' }, { status: 400 });
+        update.company_name = companyName;
+
+        const currentVat = String(currentProfile?.vat_number ?? '').trim().toUpperCase();
+        const incomingVat =
+          'vat_number' in body
+            ? String(body.vat_number ?? '').trim().toUpperCase()
+            : currentVat;
+
+        let taxStatus: DbTaxStatus | '' = '';
+
+        if ('tax_status' in body) {
+          taxStatus = normTaxStatus(body.tax_status);
+          if (taxStatus !== 'vat_registered' && taxStatus !== 'vat_exempt') {
+            return NextResponse.json({ ok: false, error: 'invalid_tax_status' }, { status: 400 });
+          }
+        } else {
+          const existing = normTaxStatus(currentProfile?.tax_status);
+          if (existing === 'vat_registered' || existing === 'vat_exempt') {
+            taxStatus = existing;
+          } else if (VAT_RE.test(incomingVat)) {
+            // Rückwärtskompatibilität für alte Gewerbekonten ohne tax_status.
+            taxStatus = 'vat_registered';
+          }
         }
-        update.vat_number = vat;
-      }
-    } else {
-      // weich validieren, falls Felder einzeln kommen
-      if ('company_name' in body) {
-        const cn = String(body.company_name ?? '').trim();
-        if (cn === '') update.company_name = null;
-        else if (cn.length <= COMPANY_MAX) update.company_name = cn;
-        else return NextResponse.json({ ok: false, error: 'invalid_company_name' }, { status: 400 });
-      }
-      if ('vat_number' in body) {
-        const vat = String(body.vat_number ?? '').trim().toUpperCase();
-        if (vat === '') update.vat_number = null;
-        else if (VAT_RE.test(vat)) update.vat_number = vat;
-        else return NextResponse.json({ ok: false, error: 'invalid_vat_number' }, { status: 400 });
+
+        if (taxStatus !== 'vat_registered' && taxStatus !== 'vat_exempt') {
+          return NextResponse.json({ ok: false, error: 'missing_tax_status' }, { status: 400 });
+        }
+
+        update.tax_status = taxStatus;
+
+        if (taxStatus === 'vat_registered') {
+          if (!VAT_RE.test(incomingVat)) {
+            return NextResponse.json({ ok: false, error: 'invalid_vat_number' }, { status: 400 });
+          }
+          update.vat_number = incomingVat;
+        } else {
+          update.vat_number = null;
+        }
       }
     }
+
         const imprintFields = [
       'imprint_email',
       'imprint_phone',
