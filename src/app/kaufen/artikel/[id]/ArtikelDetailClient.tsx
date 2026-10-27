@@ -200,6 +200,21 @@ function euro(n: number) {
     maximumFractionDigits: 2,
   });
 }
+
+function normalizeCountryCode(v: unknown): "DE" | "AT" | "CH" | "LI" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+
+  if (s === "de" || s === "deutschland" || s === "germany") return "DE";
+  if (s === "at" || s === "österreich" || s === "oesterreich" || s === "austria") return "AT";
+  if (s === "ch" || s === "schweiz" || s === "switzerland") return "CH";
+  if (s === "li" || s === "liechtenstein") return "LI";
+
+  return null;
+}
+
+function standardVatRate(country: "DE" | "AT"): number {
+  return country === "DE" ? 0.19 : 0.20;
+}
 /* ===================== Seite ===================== */
 export default function ArtikelDetailPage() {
   const params = useParams<{ id: string }>();
@@ -216,6 +231,7 @@ export default function ArtikelDetailPage() {
   // Viewer (profiles.account_type)
   const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
+  const [viewerCountry, setViewerCountry] = useState<"DE" | "AT" | "CH" | "LI" | null>(null);
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -246,22 +262,31 @@ export default function ArtikelDetailPage() {
         const user = data.user;
 
         if (!user) {
-          if (!cancelled) setViewerIsBusiness(false);
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
           return;
         }
 
         const { data: prof, error } = await supa
           .from("profiles")
-          .select("account_type")
+          .select("account_type, address")
           .eq("id", user.id)
           .maybeSingle();
 
         if (error) {
-          if (!cancelled) setViewerIsBusiness(false);
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
           return;
         }
 
-        if (!cancelled) setViewerIsBusiness(prof?.account_type === "business");
+        if (!cancelled) {
+          setViewerIsBusiness(prof?.account_type === "business");
+          setViewerCountry(normalizeCountryCode((prof as any)?.address?.country));
+        }
       } finally {
         if (!cancelled) setViewerChecked(true);
       }
@@ -371,7 +396,15 @@ useEffect(() => {
     const mode = article?.price_mode ?? "legacy_gross";
 
     if (mode === "net") {
-      return "Die angezeigten Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer.";
+      if (viewerCountry === "DE") {
+        return "Die angezeigten Preise verstehen sich netto zzgl. 19 % deutscher Umsatzsteuer.";
+      }
+
+      if (viewerCountry === "AT") {
+        return "Die angezeigten Preise verstehen sich netto zzgl. 20 % österreichischer Umsatzsteuer.";
+      }
+
+      return "Die angezeigten Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer. Der endgültige Steuerbetrag wird im Checkout anhand des Käuferlands bestimmt.";
     }
 
     if (mode === "no_vat") {
@@ -379,7 +412,7 @@ useEffect(() => {
     }
 
     return "Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer.";
-  }, [article?.price_mode]);
+  }, [article?.price_mode, viewerCountry]);
 
   const availableUnits = useMemo(() => {
     const set = new Set<"kg" | "stueck">();
@@ -440,14 +473,61 @@ const chosenTier = useMemo(() => {
 
     const p = Number(chosenTier.price ?? 0);
     const ship = Number(chosenTier.shipping ?? 0);
+    const mode = article.price_mode ?? "legacy_gross";
 
-    if (article.sale_type === "gesamt") {
-      return { unitPrice: p, shipping: ship, total: p + ship };
+    const netArticle = article.sale_type === "gesamt" ? p : qty * p;
+    const netTotal = netArticle + ship;
+
+    if (mode !== "net") {
+      return {
+        unitPrice: p,
+        shipping: ship,
+        articleTotal: netArticle,
+        total: netTotal,
+        netTotal: mode === "no_vat" ? netTotal : null,
+        vat: mode === "no_vat" ? 0 : null,
+        grossTotal: netTotal,
+        vatRate: mode === "no_vat" ? 0 : null,
+      };
     }
 
-    const total = qty * p + ship;
-    return { unitPrice: p, shipping: ship, total };
-  }, [article, chosenTier, qty]);
+    if (viewerCountry !== "DE" && viewerCountry !== "AT") {
+      return {
+        unitPrice: p,
+        shipping: ship,
+        articleTotal: netArticle,
+        total: netTotal,
+        netTotal,
+        vat: null,
+        grossTotal: null,
+        vatRate: null,
+      };
+    }
+
+    const vatRate = standardVatRate(viewerCountry);
+
+    // Gleiche Rundungslogik wie im Checkout: Einzelpreis und Versand werden
+    // jeweils auf Cent brutto gerundet, danach wird die Menge multipliziert.
+    const unitGross = Math.round(p * 100 * (1 + vatRate)) / 100;
+    const shippingGross = Math.round(ship * 100 * (1 + vatRate)) / 100;
+    const grossTotal =
+      article.sale_type === "gesamt"
+        ? unitGross + shippingGross
+        : qty * unitGross + shippingGross;
+
+    const vat = grossTotal - netTotal;
+
+    return {
+      unitPrice: p,
+      shipping: ship,
+      articleTotal: netArticle,
+      total: netTotal,
+      netTotal,
+      vat,
+      grossTotal,
+      vatRate,
+    };
+  }, [article, chosenTier, qty, viewerCountry]);
 
   const disableBuy = useMemo(() => {
     if (!article) return true;
@@ -988,26 +1068,21 @@ if (!article) {
     {article.sale_type === "gesamt" ? (
       <>
         <div className={styles.buyPriceLine}>
-  <span>
-    Artikelpreis:
-    {packageQuantityText && (
-      <small className={styles.priceLineSub}>
-        {packageQuantityText}
-      </small>
-    )}
-  </span>
+          <span>
+            Artikelpreis:
+            {packageQuantityText && (
+              <small className={styles.priceLineSub}>
+                {packageQuantityText}
+              </small>
+            )}
+          </span>
 
-  <strong>{euro(priceCalc.unitPrice)} €</strong>
-</div>
+          <strong>{euro(priceCalc.unitPrice)} €</strong>
+        </div>
 
         <div className={styles.buyPriceLine}>
           <span>Versand:</span>
           <strong>{euro(priceCalc.shipping)} €</strong>
-        </div>
-
-        <div className={styles.buyTotal}>
-          <span>Gesamt:</span>
-          <strong>{euro(priceCalc.total)} €</strong>
         </div>
       </>
     ) : (
@@ -1022,26 +1097,54 @@ if (!article) {
         )}
 
         <div className={styles.buyPriceLine}>
-  <span>
-    Artikelpreis:
-    <small className={styles.priceLineSub}>
-      {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
-    </small>
-  </span>
+          <span>
+            Artikelpreis:
+            <small className={styles.priceLineSub}>
+              {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
+            </small>
+          </span>
 
-  <strong>{euro(qty * priceCalc.unitPrice)} €</strong>
-</div>
+          <strong>{euro(priceCalc.articleTotal)} €</strong>
+        </div>
 
         <div className={styles.buyPriceLine}>
           <span>Versand:</span>
           <strong>{euro(priceCalc.shipping)} €</strong>
         </div>
-
-        <div className={styles.buyTotal}>
-          <span>Gesamt:</span>
-          <strong>{euro(priceCalc.total)} €</strong>
-        </div>
       </>
+    )}
+
+    {article.price_mode === "net" ? (
+      <>
+        <div className={styles.buyPriceLine}>
+          <span>Netto:</span>
+          <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
+        </div>
+
+        {priceCalc.vat != null && priceCalc.vatRate != null ? (
+          <>
+            <div className={styles.buyPriceLine}>
+              <span>USt. ({Math.round(priceCalc.vatRate * 100)} %):</span>
+              <strong>{euro(priceCalc.vat)} €</strong>
+            </div>
+
+            <div className={styles.buyTotal}>
+              <span>Gesamt brutto:</span>
+              <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
+            </div>
+          </>
+        ) : (
+          <div className={styles.buyTotal}>
+            <span>Gesamt netto:</span>
+            <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
+          </div>
+        )}
+      </>
+    ) : (
+      <div className={styles.buyTotal}>
+        <span>Gesamt:</span>
+        <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
+      </div>
     )}
   </div>
 )}
