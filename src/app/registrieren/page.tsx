@@ -373,9 +373,6 @@ const Register = () => {
       <div className={styles.rightContainer}>
         <form className={styles.registerForm} onSubmit={handleSubmit}>
           <h1>Jetzt kostenlos registrieren</h1>
-          <p className={styles.requiredHint}>
-            Felder mit <span className={styles.required}>*</span> sind Pflichtfelder.
-          </p>
 
           <div
             className={styles.sliderContainer}
@@ -390,7 +387,7 @@ const Register = () => {
 
           <div className={styles.inputRow}>
             <div className={styles.inputContainer}>
-              <label>Vorname <span className={styles.required}>*</span></label>
+              <label>Vorname <span className={styles.requiredStar}>*</span></label>
               <input
                 type="text"
                 name="firstName"
@@ -404,7 +401,7 @@ const Register = () => {
               {errors.firstName && <p className={styles.error}>{errors.firstName}</p>}
             </div>
             <div className={styles.inputContainer}>
-              <label>Nachname <span className={styles.required}>*</span></label>
+              <label>Nachname <span className={styles.requiredStar}>*</span></label>
               <input
                 type="text"
                 name="lastName"
@@ -420,7 +417,7 @@ const Register = () => {
           </div>
 
           <div className={styles.inputContainer}>
-            <label>E-Mail <span className={styles.required}>*</span></label>
+            <label>E-Mail <span className={styles.requiredStar}>*</span></label>
             <input
               type="email"
               name="email"
@@ -434,7 +431,7 @@ const Register = () => {
           </div>
 
           <div className={styles.inputContainer}>
-            <label>Benutzername <span className={styles.required}>*</span></label>
+            <label>Benutzername <span className={styles.requiredStar}>*</span></label>
             <input
               type="text"
               name="username"
@@ -453,7 +450,7 @@ const Register = () => {
           </div>
 
           <div className={styles.inputContainer}>
-  <label>Passwort <span className={styles.required}>*</span></label>
+  <label>Passwort <span className={styles.requiredStar}>*</span></label>
   <div className={styles.passwordField}>
     <input
       type={showPassword ? 'text' : 'password'}
@@ -479,7 +476,7 @@ const Register = () => {
           
 
          <div className={styles.inputContainer}>
-  <label>Passwort bestätigen <span className={styles.required}>*</span></label>
+  <label>Passwort bestätigen <span className={styles.requiredStar}>*</span></label>
   <div className={styles.passwordField}>
     <input
       type={showConfirmPassword ? 'text' : 'password'}
@@ -502,7 +499,7 @@ const Register = () => {
 
           <div className={styles.inputRow}>
             <div className={styles.inputContainer}>
-              <label>Straße <span className={styles.required}>*</span></label>
+              <label>Straße <span className={styles.requiredStar}>*</span></label>
               <input
                 type="text"
                 name="street"
@@ -517,7 +514,7 @@ const Register = () => {
             </div>
 
             <div className={`${styles.inputContainer} ${styles.smallInput}`}>
-              <label>Hausnr. <span className={styles.required}>*</span></label>
+              <label>Hausnr. <span className={styles.requiredStar}>*</span></label>
               <input
                 type="text"
                 name="houseNumber"
@@ -537,7 +534,7 @@ const Register = () => {
           {isPrivatePerson ? (
             <>
               <div className={styles.inputContainer}>
-                <label>PLZ <span className={styles.required}>*</span></label>
+                <label>PLZ <span className={styles.requiredStar}>*</span></label>
                 <input
                   type="text"
                   name="zip"
@@ -552,7 +549,7 @@ const Register = () => {
               </div>
 
               <div className={styles.inputContainer}>
-                <label>Ort <span className={styles.required}>*</span></label>
+                <label>Ort <span className={styles.requiredStar}>*</span></label>
                 <input
                   type="text"
                   name="city"
@@ -567,7 +564,7 @@ const Register = () => {
               </div>
 
               <div className={styles.inputContainer}>
-                <label>Land <span className={styles.required}>*</span></label>
+                <label>Land <span className={styles.requiredStar}>*</span></label>
                 <select
                 name="country"
                 value={formData.country}
@@ -589,7 +586,7 @@ const Register = () => {
             <>
               <div className={styles.inputRow}>
                 <div className={styles.inputContainer}>
-                  <label>PLZ <span className={styles.required}>*</span></label>
+                  <label>PLZ <span className={styles.requiredStar}>*</span></label>
                   <input
                     type="text"
                     name="zip"
@@ -603,7 +600,7 @@ const Register = () => {
                   {errors.zip && <p className={styles.error}>{errors.zip}</p>}
                 </div>
                 <div className={styles.inputContainer}>
-                  <label>Ort <span className={styles.required}>*</span></label>
+                  <label>Ort <span className={styles.requiredStar}>*</span></label>
                   <input
                     type="text"
                     name="city"
@@ -619,7 +616,7 @@ const Register = () => {
               </div>
 
               <div className={styles.inputContainer}>
-                <label>Land <span className={styles.required}>*</span></label>
+                <label>Land <span className={styles.requiredStar}>*</span></label>
                 <select
                   name="country"
                   value={formData.country}
@@ -642,7 +639,7 @@ const Register = () => {
             <>
               <div className={styles.inputRow}>
                 <div className={styles.inputContainer}>
-                  <label>Firmenname <span className={styles.required}>*</span></label>
+                  <label>Firmenname <span className={styles.requiredStar}>*</span></label>
                   <input
                     type="text"
                     name="companyName"
@@ -656,7 +653,7 @@ const Register = () => {
                 </div>
 
                 <div className={styles.inputContainer}>
-                  <label>Umsatzsteuerstatus <span className={styles.required}>*</span></label>
+                  <label>Umsatzsteuerstatus <span className={styles.requiredStar}>*</span></label>
                   <select
                     name="taxStatus"
                     value={formData.taxStatus}
@@ -675,7 +672,7 @@ const Register = () => {
 
               {formData.taxStatus === 'vat_registered' && (
                 <div className={styles.inputContainer}>
-                  <label>Umsatzsteuer-ID <span className={styles.required}>*</span></label>
+                  <label>Umsatzsteuer-ID <span className={styles.requiredStar}>*</span></label>
                   <input
                     type="text"
                     name="vatNumber"

@@ -18,7 +18,7 @@
 .inputRow {
   display: flex;
   gap: 2rem;
-  width: 90%;
+  width: calc(90% + 22px);
   flex-wrap: nowrap;
   justify-content: left; /* linksbündig */
   align-items: flex-start;     /* vertikal bündig */
@@ -224,7 +224,7 @@
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 110%;
+  width: calc(100% + 22px);
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -566,4 +566,10 @@
   font-size: 13px;
   line-height: 1.35;
   color: #555;
+}
+
+
+.requiredStar {
+  color: #dc2626 !important;
+  margin-left: 2px;
 }
