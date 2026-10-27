@@ -50,8 +50,32 @@ type ProfileSnap = {
   account_type: string | null;
   company_name: string | null;
   vat_number: string | null;
+  tax_status: string | null;
   address: any | null;
 };
+
+type PriceMode = "legacy_gross" | "net" | "no_vat";
+
+function normalizePriceMode(v: unknown): PriceMode {
+  const s = String(v ?? "").trim();
+  if (s === "net" || s === "no_vat" || s === "legacy_gross") return s;
+  return "legacy_gross";
+}
+
+function normalizeCountryCode(v: unknown): "DE" | "AT" | "CH" | "LI" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+
+  if (s === "de" || s === "deutschland" || s === "germany") return "DE";
+  if (s === "at" || s === "österreich" || s === "oesterreich" || s === "austria") return "AT";
+  if (s === "ch" || s === "schweiz" || s === "switzerland") return "CH";
+  if (s === "li" || s === "liechtenstein") return "LI";
+
+  return null;
+}
+
+function standardVatRate(country: "DE" | "AT"): number {
+  return country === "DE" ? 0.19 : 0.20;
+}
 
 export async function POST(req: Request) {
   const supabase = await supabaseServer();
@@ -168,16 +192,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Menge zu groß." }, { status: 400 });
   }
 
-  const unitPriceCents = eurToCents((tier as any).price);
-  const shippingCents = eurToCents((tier as any).shipping);
-
-  const totalCents = saleType === "gesamt" ? unitPriceCents + shippingCents : qty * unitPriceCents + shippingCents;
+  const storedUnitPriceCents = eurToCents((tier as any).price);
+  const storedShippingCents = eurToCents((tier as any).shipping);
 
   // 5) profile snapshots
   const [{ data: buyerProf }, { data: sellerProf }] = await Promise.all([
   admin
     .from("profiles")
-    .select("username, account_type, company_name, vat_number, address")
+    .select("username, account_type, company_name, vat_number, tax_status, address")
     .eq("id", user.id)
     .maybeSingle(),
 
@@ -188,6 +210,7 @@ export async function POST(req: Request) {
       account_type,
       company_name,
       vat_number,
+      tax_status,
       address,
       imprint_email,
       imprint_phone,
@@ -207,6 +230,7 @@ export async function POST(req: Request) {
     account_type: (buyerProf as any)?.account_type ?? null,
     company_name: (buyerProf as any)?.company_name ?? null,
     vat_number: (buyerProf as any)?.vat_number ?? null,
+    tax_status: (buyerProf as any)?.tax_status ?? null,
     address: (buyerProf as any)?.address ?? null,
   };
 
@@ -215,11 +239,13 @@ export async function POST(req: Request) {
     account_type: (sellerProf as any)?.account_type ?? null,
     company_name: (sellerProf as any)?.company_name ?? null,
     vat_number: (sellerProf as any)?.vat_number ?? null,
+    tax_status: (sellerProf as any)?.tax_status ?? null,
     address: (sellerProf as any)?.address ?? null,
   };
   const sellerImprintSnapshot = {
   company_name: (sellerProf as any)?.company_name ?? null,
   vat_number: (sellerProf as any)?.vat_number ?? null,
+  tax_status: (sellerProf as any)?.tax_status ?? null,
   address: (sellerProf as any)?.address ?? null,
   imprint_email: (sellerProf as any)?.imprint_email ?? null,
   imprint_phone: (sellerProf as any)?.imprint_phone ?? null,
@@ -230,6 +256,114 @@ export async function POST(req: Request) {
   imprint_chamber: (sellerProf as any)?.imprint_chamber ?? null,
   imprint_supervisory_authority: (sellerProf as any)?.imprint_supervisory_authority ?? null,
 };
+
+  const priceMode = normalizePriceMode((article as any).price_mode);
+  const sellerCountry = normalizeCountryCode(sellerSnap.address?.country);
+  const buyerCountry = normalizeCountryCode(buyerSnap.address?.country);
+
+  let taxRate: number | null = null;
+  let taxCountryCode: "DE" | "AT" | null = null;
+  let taxTreatment = "legacy_gross";
+
+  let priceNetCents: number | null = null;
+  let shippingNetCents: number | null = null;
+  let totalNetCents: number | null = null;
+  let vatCents: number | null = null;
+
+  let unitPriceGrossCents = storedUnitPriceCents;
+  let shippingGrossCents = storedShippingCents;
+  let totalGrossCents =
+    saleType === "gesamt"
+      ? unitPriceGrossCents + shippingGrossCents
+      : qty * unitPriceGrossCents + shippingGrossCents;
+
+  if (priceMode === "no_vat") {
+    taxRate = 0;
+    taxTreatment = "no_vat";
+    priceNetCents = storedUnitPriceCents;
+    shippingNetCents = storedShippingCents;
+    totalNetCents =
+      saleType === "gesamt"
+        ? priceNetCents + shippingNetCents
+        : qty * priceNetCents + shippingNetCents;
+    vatCents = 0;
+
+    unitPriceGrossCents = priceNetCents;
+    shippingGrossCents = shippingNetCents;
+    totalGrossCents = totalNetCents;
+  }
+
+  if (priceMode === "net") {
+    if (sellerSnap.tax_status !== "vat_registered") {
+      return NextResponse.json(
+        { error: "Der Steuerstatus des Verkäufers passt nicht mehr zu diesem Netto-Artikel." },
+        { status: 409 }
+      );
+    }
+
+    if (!sellerCountry || !buyerCountry) {
+      return NextResponse.json(
+        { error: "Für die Steuerberechnung müssen Verkäufer- und Käuferland vollständig hinterlegt sein." },
+        { status: 400 }
+      );
+    }
+
+    // CH/LI werden bewusst separat behandelt.
+    if (sellerCountry === "CH" || sellerCountry === "LI" || buyerCountry === "CH" || buyerCountry === "LI") {
+      return NextResponse.json(
+        { error: "Käufe mit Schweiz oder Liechtenstein werden steuerlich separat behandelt und sind im automatischen Checkout noch nicht freigeschaltet." },
+        { status: 400 }
+      );
+    }
+
+    // Grenzüberschreitendes B2B DE↔AT mit USt-ID benötigt eine eigene
+    // innergemeinschaftliche/VIES-Logik. Bis diese vorhanden ist, nicht automatisch besteuern.
+    const crossBorderEuB2B =
+      sellerCountry !== buyerCountry &&
+      sellerSnap.account_type === "business" &&
+      buyerSnap.account_type === "business" &&
+      !!sellerSnap.vat_number &&
+      !!buyerSnap.vat_number;
+
+    if (crossBorderEuB2B) {
+      return NextResponse.json(
+        { error: "Grenzüberschreitende B2B-Käufe zwischen Deutschland und Österreich werden steuerlich separat geprüft und sind im automatischen Checkout noch nicht freigeschaltet." },
+        { status: 400 }
+      );
+    }
+
+    if (buyerCountry !== "DE" && buyerCountry !== "AT") {
+      return NextResponse.json(
+        { error: "Für dieses Käuferland ist noch keine automatische Umsatzsteuerberechnung eingerichtet." },
+        { status: 400 }
+      );
+    }
+
+    taxRate = standardVatRate(buyerCountry);
+    taxCountryCode = buyerCountry;
+    taxTreatment =
+      sellerCountry === buyerCountry
+        ? "domestic_standard_rate"
+        : "destination_standard_rate";
+
+    priceNetCents = storedUnitPriceCents;
+    shippingNetCents = storedShippingCents;
+
+    unitPriceGrossCents = Math.round(priceNetCents * (1 + taxRate));
+    shippingGrossCents = Math.round(shippingNetCents * (1 + taxRate));
+
+    totalNetCents =
+      saleType === "gesamt"
+        ? priceNetCents + shippingNetCents
+        : qty * priceNetCents + shippingNetCents;
+
+    totalGrossCents =
+      saleType === "gesamt"
+        ? unitPriceGrossCents + shippingGrossCents
+        : qty * unitPriceGrossCents + shippingGrossCents;
+
+    vatCents = totalGrossCents - totalNetCents;
+  }
 
   // ✅ (2) "gesamt" sofort reservieren (OHNE stock_status wegen DB-Constraint)
   if (saleType === "gesamt") {
@@ -257,6 +391,7 @@ export async function POST(req: Request) {
   category: (article as any).category ?? null,
   condition: (article as any).condition ?? null,
   sale_type: (article as any).sale_type ?? null,
+  price_mode: priceMode,
 
   qty_kg: (article as any).qty_kg ?? null,
   qty_piece: (article as any).qty_piece ?? null,
@@ -282,9 +417,17 @@ export async function POST(req: Request) {
   unit: body.unit,
   qty,
   tier_id: (tier as any).id,
-  price_gross_cents: unitPriceCents,
-  shipping_gross_cents: shippingCents,
-  total_gross_cents: totalCents,
+  price_net_cents: priceNetCents,
+  shipping_net_cents: shippingNetCents,
+  total_net_cents: totalNetCents,
+  vat_cents: vatCents,
+  tax_rate: taxRate,
+  tax_country_code: taxCountryCode,
+  tax_treatment: taxTreatment,
+
+  price_gross_cents: unitPriceGrossCents,
+  shipping_gross_cents: shippingGrossCents,
+  total_gross_cents: totalGrossCents,
 
   created_at: new Date().toISOString(),
 };
@@ -303,9 +446,21 @@ export async function POST(req: Request) {
       unit: body.unit,
       qty,
       tier_id: (tier as any).id,
-      price_gross_cents: unitPriceCents,
-      shipping_gross_cents: shippingCents,
-      total_gross_cents: totalCents,
+      price_mode: priceMode,
+      tax_rate: taxRate,
+      tax_country_code: taxCountryCode,
+      tax_treatment: taxTreatment,
+      seller_tax_status: sellerSnap.tax_status,
+      buyer_tax_status: buyerSnap.tax_status,
+
+      price_net_cents: priceNetCents,
+      shipping_net_cents: shippingNetCents,
+      total_net_cents: totalNetCents,
+      vat_cents: vatCents,
+
+      price_gross_cents: unitPriceGrossCents,
+      shipping_gross_cents: shippingGrossCents,
+      total_gross_cents: totalGrossCents,
 
       platform_fee_percent: 0.07,
 
@@ -344,7 +499,7 @@ export async function POST(req: Request) {
         price_data: {
           currency: "eur",
           product_data: { name: (article as any).title ?? "Artikel" },
-          unit_amount: totalCents,
+          unit_amount: totalGrossCents,
         },
         quantity: 1,
       },
