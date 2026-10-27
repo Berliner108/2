@@ -618,10 +618,20 @@ const checkSellerImprint = useCallback(async () => {
     const a = p?.address || {};
 
     const isBusiness = p?.account_type === 'business';
+    const taxStatus = p?.taxStatus;
+
+    const taxDataComplete =
+      !isBusiness ||
+      taxStatus === 'vat_exempt' ||
+      (taxStatus === 'vat_registered' && !!p?.vatNumber);
+
+    if (isBusiness && !taxDataComplete) {
+      router.replace('/konto/einstellungen#konto');
+      return;
+    }
 
     const imprintComplete =
       !!p?.company &&
-      !!p?.vatNumber &&
       !!a?.street &&
       !!a?.houseNumber &&
       !!a?.zip &&
