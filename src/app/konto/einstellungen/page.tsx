@@ -64,6 +64,7 @@ const COUNTRY_OPTIONS = [
 
 /* ---------- Types ---------- */
 type DbAccountType = 'private' | 'business'
+type DbTaxStatus = 'private' | 'vat_registered' | 'vat_exempt'
 
 type ApiGetResponse = {
   id: string
@@ -73,6 +74,7 @@ type ApiGetResponse = {
   account_type: '' | DbAccountType
   company: string
   vatNumber: string
+  taxStatus?: '' | DbTaxStatus
   address: { street: string; houseNumber: string; zip: string; city: string; country?: string }
 
   imprintEmail?: string
@@ -203,6 +205,7 @@ const [profileLoaded, setProfileLoaded] = useState(false)
   const [city, setCity] = useState('')
   const [country, setCountry] = useState<string>('') // dropdown value (Pflicht)
   const [companyName, setCompanyName] = useState('')
+  const [taxStatus, setTaxStatus] = useState<'' | DbTaxStatus>('')
   const [vatNumber, setVatNumber] = useState('')
   const [imprintEmail, setImprintEmail] = useState('')
 const [imprintPhone, setImprintPhone] = useState('')
@@ -471,6 +474,13 @@ const handleManagePaymentMethod = async () => {
         setCountry(a.country && (COUNTRY_OPTIONS as readonly string[]).includes(a.country) ? a.country : '')
 
         setCompanyName(j.profile.company || '')
+        setTaxStatus(
+          acct === 'private'
+            ? 'private'
+            : (j.profile.taxStatus === 'vat_registered' || j.profile.taxStatus === 'vat_exempt'
+                ? j.profile.taxStatus
+                : '')
+        )
         setVatNumber(j.profile.vatNumber || '')
         setImprintEmail(j.profile.imprintEmail || '')
         setImprintPhone(j.profile.imprintPhone || '')
@@ -637,7 +647,15 @@ const handleSaveKonto = async () => {
         return
       }
 
-      if (!VAT_RE.test(vatNumber.trim().toUpperCase())) {
+      if (taxStatus !== 'vat_registered' && taxStatus !== 'vat_exempt') {
+        setToast({ type: 'error', message: 'Bitte den Umsatzsteuerstatus auswählen.' })
+        return
+      }
+
+      if (
+        taxStatus === 'vat_registered' &&
+        !VAT_RE.test(vatNumber.trim().toUpperCase())
+      ) {
         setToast({ type: 'error', message: "USt-ID: 8–14 Zeichen (A–Z, 0–9, '-')." })
         return
       }
@@ -658,7 +676,11 @@ const handleSaveKonto = async () => {
         country,
       },
       companyName: isPrivatePerson ? null : companyName.trim(),
-      vatNumber: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
+      taxStatus: isPrivatePerson ? 'private' : taxStatus,
+      vatNumber:
+        isPrivatePerson || taxStatus === 'vat_exempt'
+          ? null
+          : vatNumber.trim().toUpperCase(),
     }
 
     const { error: metaErr } = await sb.auth.updateUser({ data: nextMeta })
@@ -675,7 +697,11 @@ const handleSaveKonto = async () => {
       account_type: acctTypeDB,
       address: { street, houseNumber, zip, city, country },
       company_name: isPrivatePerson ? null : companyName.trim(),
-      vat_number: isPrivatePerson ? null : vatNumber.trim().toUpperCase(),
+      tax_status: isPrivatePerson ? 'private' : taxStatus,
+      vat_number:
+        isPrivatePerson || taxStatus === 'vat_exempt'
+          ? null
+          : vatNumber.trim().toUpperCase(),
     })
 
     if (!ok) return
@@ -1054,9 +1080,12 @@ const canSaveKonto = useMemo(() => {
   }
 
   const companyOk = !!companyName.trim() && companyName.trim().length <= COMPANY_MAX
-  const vatOk = VAT_RE.test(vatNumber.trim().toUpperCase())
+  const taxStatusOk = taxStatus === 'vat_registered' || taxStatus === 'vat_exempt'
+  const vatOk =
+    taxStatus === 'vat_exempt' ||
+    (taxStatus === 'vat_registered' && VAT_RE.test(vatNumber.trim().toUpperCase()))
 
-  return streetOk && hnrOk && zipOk && cityOk && countryOk && companyOk && vatOk
+  return streetOk && hnrOk && zipOk && cityOk && countryOk && companyOk && taxStatusOk && vatOk
 }, [
   isPrivatePerson,
   street,
@@ -1065,6 +1094,7 @@ const canSaveKonto = useMemo(() => {
   city,
   country,
   companyName,
+  taxStatus,
   vatNumber,
 ])
 const canSaveImpressum = useMemo(() => {
@@ -1395,11 +1425,27 @@ const canSaveImpressum = useMemo(() => {
     {/* Kontoart */}
     <div className={styles.radioRow} role="radiogroup" aria-label="Kontoart wählen">
       <label className={styles.radioPill}>
-        <input type="radio" name="acct" checked={!isPrivatePerson} onChange={() => setIsPrivatePerson(false)} />
+        <input
+          type="radio"
+          name="acct"
+          checked={!isPrivatePerson}
+          onChange={() => {
+            setIsPrivatePerson(false)
+            if (taxStatus === 'private') setTaxStatus('')
+          }}
+        />
         Gewerblich
       </label>
       <label className={styles.radioPill}>
-        <input type="radio" name="acct" checked={isPrivatePerson} onChange={() => setIsPrivatePerson(true)} />
+        <input
+          type="radio"
+          name="acct"
+          checked={isPrivatePerson}
+          onChange={() => {
+            setIsPrivatePerson(true)
+            setTaxStatus('private')
+          }}
+        />
         Privatperson
       </label>
     </div>
@@ -1492,39 +1538,53 @@ const canSaveImpressum = useMemo(() => {
 
           {/* Firmenfelder (nur gewerblich) */}
           {!isPrivatePerson && (
-  <>
-    <div className={styles.inputRowCompany}>
-      <div className={styles.inputGroup}>
-        <label>Firmenname</label>
-        <input
-          type="text"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
-          required
-          inputMode="text"
-          className={styles.input}
-          maxLength={COMPANY_MAX}
-        />
-      </div>
+            <>
+              <div className={styles.inputGroup}>
+                <label>Firmenname</label>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value.slice(0, COMPANY_MAX))}
+                  required
+                  inputMode="text"
+                  className={styles.input}
+                  maxLength={COMPANY_MAX}
+                />
+              </div>
 
-      <div className={styles.inputGroup}>
-        <label>Umsatzsteuer-ID</label>
-        <input
-          type="text"
-          value={vatNumber}
-          onChange={(e) => onChangeVat(e.target.value)}
-          required
-          inputMode="text"
-          className={styles.input}
-          maxLength={14}
-          pattern="[A-Z0-9-]{8,14}"
-          title="8–14 Zeichen (A–Z, 0–9, '-')"
-          placeholder="z. B. DE123456789"
-        />
-      </div>
-    </div>
-  </>
-)}
+              <div className={styles.inputGroup}>
+                <label>Umsatzsteuerstatus</label>
+                <select
+                  value={taxStatus === 'private' ? '' : taxStatus}
+                  onChange={(e) => setTaxStatus(e.target.value as '' | DbTaxStatus)}
+                  className={styles.input}
+                  required
+                >
+                  <option value="">— Bitte wählen —</option>
+                  <option value="vat_registered">Umsatzsteuerpflichtig</option>
+                  <option value="vat_exempt">Keine Umsatzsteuer ausweisbar</option>
+                </select>
+              </div>
+
+              {taxStatus === 'vat_registered' && (
+                <div className={styles.inputGroup}>
+                  <label>Umsatzsteuer-ID</label>
+                  <input
+                    type="text"
+                    value={vatNumber}
+                    onChange={(e) => onChangeVat(e.target.value)}
+                    required
+                    inputMode="text"
+                    className={styles.input}
+                    maxLength={14}
+                    pattern="[A-Z0-9-]{8,14}"
+                    title="8–14 Zeichen (A–Z, 0–9, '-')"
+                    placeholder="z. B. DE123456789"
+                  />
+                </div>
+              )}
+            </>
+          )}
 
 
           {/* Änderungen speichern (Ende Container 1) */}
