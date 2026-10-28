@@ -1,668 +1,679 @@
 'use client';
 
-import { useEffect, useRef, useState, Suspense } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import styles from './kaufen.module.css';
+import Navbar from '../components/navbar/Navbar';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeftIcon } from '@heroicons/react/24/solid';
-import { ChevronRightIcon } from '@heroicons/react/24/solid';
-import Slideshow from './slideshow/slideshow';
-import CookieBanner from './components/CookieBanner';
-import Navbar from './components/navbar/Navbar';
-import styles from '../styles/Home.module.css';
-import { MapPin } from 'lucide-react';
-import SearchBox from './components/SearchBox';
+import ArtikelCard from '../components/ArtikelKarteShop';
+import { supabaseBrowser } from '@/lib/supabase-browser';
+import BoerseLoading from '../components/loading/BoerseLoading';
 
-/* ================= Helpers ================= */
-const toDate = (v: unknown): Date | undefined => {
-  if (v === undefined || v === null) return undefined;
-  if (v instanceof Date) return isNaN(v.getTime()) ? undefined : v;
-  const d = new Date(v as any);
-  return isNaN(d.getTime()) ? undefined : d;
+// ---- Helpers: Kategorie robust normalisieren ----
+const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
+const CAT_MAP: Record<string, 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'> = {
+  nasslack: 'Nasslack',
+  nasslacke: 'Nasslack',
+  pulverlack: 'Pulverlack',
+  pulverlacke: 'Pulverlack',
+  arbeitsmittel: 'Arbeitsmittel',
+  'arbeitsmittel & zubehör': 'Arbeitsmittel',
+  galvano_zubehoer: 'Galvano-Zubehör',
+  'galvano-zubehoer': 'Galvano-Zubehör',
+  'galvano-zubehör': 'Galvano-Zubehör',
+  galvanozubehoer: 'Galvano-Zubehör',
+  galvanozubehör: 'Galvano-Zubehör',
 };
-const formatDate = (d?: Date) =>
-  d instanceof Date && !isNaN(d.getTime()) ? d.toLocaleDateString('de-AT') : '-';
+const normalizeKategorie = (s?: string | null) => CAT_MAP[norm(s)] ?? '';
 
-const parseNum = (v: any): number | undefined => {
-  if (typeof v === 'number') return isFinite(v) ? v : undefined;
-  if (typeof v === 'string') {
-    const n = parseFloat(v.replace(',', '.'));
-    return isFinite(n) ? n : undefined;
-  }
-  return undefined;
-};
-const labelWarenausgabe = (v?: string | null) => {
-  const s = (v ?? '').trim().toLowerCase();
-  if (!s) return '-';
+const kategorien: Array<'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'> = ['Nasslack', 'Pulverlack', 'Arbeitsmittel', 'Galvano-Zubehör'];
+const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
-  if (s.includes('abhol')) return 'Abholung';
-  if (s.includes('selbst')) return 'Selbstanlieferung';
-
-  return '-';
-};
-
-const labelWarenrueckgabe = (v?: string | null) => {
-  const s = (v ?? '').trim().toLowerCase();
-  if (!s) return '-';
-
-  if (s.includes('anliefer') || s.includes('liefer')) return 'Anlieferung';
-  if (s.includes('selbst')) return 'Selbstabholung';
-
-  return '-';
-};
-
-
-
-const strOrEmpty = (...vals: any[]): string => {
-  for (const v of vals) {
-    if (typeof v === 'string' && v.trim()) return v.trim();
-  }
-  return '';
-};
-const normKategorie = (k?: string) => {
-  const v = (k ?? '').trim().toLowerCase();
-
-  if (v === 'pulverlack') return 'Pulverlack';
-  if (v === 'nasslack') return 'Nasslack';
-  if (v === 'arbeitsmittel') return 'Arbeitsmittel';
-  if (v === 'galvano_zubehoer') return 'Galvano-Zubehör';
-
-  return k ?? '';
-};
-const einheitFuerKategorie = (kategorie?: string | null) => {
-  const v = (kategorie ?? '').trim().toLowerCase();
-  if (v === 'nasslack') return 'Liter';
-  if (v === 'arbeitsmittel' || v === 'galvano_zubehoer') return 'Stück';
-  return 'kg';
-};
-
-/** Zustand formatieren mit „und“ statt „&“ */
-const stripDiacritics = (s: string) =>
-  s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
-const norm = (s?: string) => stripDiacritics((s ?? '').trim().toLowerCase());
-
-const formatZustand = (z?: string) => {
-  const n = norm(z);
-  if (!n) return '';
-  if (n === 'neu' || n.includes('ungeoffnet') || n.includes('ungeöffnet')) {
-    return 'Neu und ungeöffnet';
-  }
-  if (n.includes('geoffnet') || n.includes('geöffnet') || n === 'offen') {
-    return 'Geöffnet und einwandfrei';
-  }
-  const raw = (z ?? '').replace(/&/g, 'und');
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
-};
-
-/* ================= Delayed Skeleton (kein Flash) ================= */
-/* ================= Minimum Skeleton (kein Weiß, kein Flackern) ================= */
-function useMinimumSkeleton(loading: boolean, minMs = 220) {
-  const [show, setShow] = useState(loading);
-  const startRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    if (loading) {
-      startRef.current = Date.now();
-      setShow(true);
-      return;
-    }
-
-    const startedAt = startRef.current;
-    const elapsed = startedAt ? Date.now() - startedAt : minMs;
-    const remaining = Math.max(minMs - elapsed, 0);
-
-    timer = setTimeout(() => {
-      setShow(false);
-      startRef.current = null;
-    }, remaining);
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [loading, minMs]);
-
-  return show;
-}
-
-/* ================= Types ================= */
-type Auftrag = any; // kommt jetzt aus der echten Börse-API (Top 12)
-type Lackanfrage = {
-  id: string | number;
-  titel: string;
-  bilder: string[];
-  menge: number;
-  lieferdatum?: Date;
-  hersteller: string;
-  zustand: string;
-  kategorie: string;
-  ort: string;
-  preis?: number;
-  gesponsert?: boolean;
-  created_at?: Date;
-  farbton?: string;
-};
+const herstellerFilter = [
+  'Brillux',
+  'Sherwin Williams',
+  'PPG Industries',
+  'Nippon Paint',
+  'BASF',
+  'Asian Paints',
+  'Hempel',
+  'Adler Lacke',
+  'Berger',
+  'Nerolac',
+  'Benjamin Moore',
+  'RPM International',
+  'IGP',
+  'Tiger',
+  'Axalta',
+  'Frei Lacke',
+  'Grimm',
+  'Akzo Nobel',
+  'Teknos',
+  'Pulver Kimya',
+  'Kabe',
+  'Wörwag',
+  'Kansai',
+  'Helios',
+  'Pulverkönig',
+  'Bentatec',
+  'Pulmatech',
+  'Colortech',
+  'VAL',
+  'E-Pulverit',
+  'Braunsteiner',
+  'Ganzlin',
+  'Colors-Manufaktur',
+  'Aalbert',
+  'Motec-Pulverlack',
+  'DuPont',
+  'Jotun',
+  'Pulvertech.de',
+  'Pulverlacke24.de',
+  'Pulverlacke.de',
+  'Pulverlack-pro.de',
+  'Pulverlackshop.de',
+];
 
 type ShopArtikel = {
   id: string | number;
   titel: string;
-  bilder: string[];
-
-  lieferdatumISO: string | null;
-
+  menge?: number;
+  lieferdatum: Date;
   hersteller: string;
   zustand: string;
   kategorie: string;
+  preis: number;
+  versand?: number | null;
+  bilder: string[];
+  einheit: 'kg' | 'stueck';
+  seller_account_type?: "business" | "private" | null;
+  viewer_is_business?: boolean;
+  viewer_country?: "DE" | "AT" | null;
+  gesponsert?: boolean;
+  promo_score?: number;
+  gewerblich?: boolean;
+  privat?: boolean;
+  sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
 
-  stock_status: "auf_lager" | "begrenzt" | null;
-  qty_kg: number | null;
-  qty_piece: number | null;
-
-  price_from: number | null;
-  shipping_from: number | null;
-  price_unit: "kg" | "stueck" | null;
-  price_is_from: boolean;
-  price_mode: "legacy_gross" | "net" | "no_vat" | null;
 };
 
-/* ---------- Skeleton-Karten (Horizontalscroller) ---------- */
-function SkeletonRow({
-  cards = 12,
-  variant = 'auftrag',
-}: {
-  cards?: number;
-  variant?: 'auftrag' | 'shop' | 'lack';
-}) {
-  return (
-    <>
-      {Array.from({ length: cards }).map((_, i) => (
-        <div
-  key={i}
-  className={`${styles.skelCard} ${
-    variant === 'shop'
-      ? styles.skelCardShop
-      : variant === 'lack'
-        ? styles.skelCardLack
-        : styles.skelCardAuftrag
-  }`}
->
-          <div className={`${styles.skelImg} ${styles.skeleton}`} />
-          <div className={styles.skelBody}>
-            <div className={`${styles.skelLine} ${styles.skeleton} ${styles.w80}`} />
-            <div className={`${styles.skelLine} ${styles.skeleton} ${styles.w60}`} />
-            <div className={`${styles.skelLine} ${styles.skeleton} ${styles.w70}`} />
-            <div className={`${styles.skelLine} ${styles.skeleton} ${styles.w50}`} />
-          </div>
-        </div>
-      ))}
-    </>
-  );
+type ApiArticle = {
+  id: string;
+  title: string;
+  category?: string | null;
+  manufacturer?: string | null;
+  promo_score?: number | null;
+  delivery_date_iso?: string | null;
+  stock_status?: 'auf_lager' | 'begrenzt' | null;
+  qty_kg?: number | null;
+  qty_piece?: number | null;
+  image_urls?: string[] | null;
+  sell_to?: 'gewerblich' | 'beide' | null;
+  price_from?: number | null;
+  shipping_from?: number | null;
+  price_unit?: 'kg' | 'stueck' | null;
+  condition?: string | null; // optional, falls API liefert
+  zustand?: string | null;   // optional fallback
+  sale_type?: "gesamt" | "pro_kg" | "pro_stueck" | null;
+  price_mode?: "legacy_gross" | "net" | "no_vat" | null;
+
+};
+
+function safeNumber(v: any, fallback = 0) {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-export default function Page() {
-  // scroll-Refs
-  const scrollRefAuftraege = useRef<HTMLDivElement>(null);
-  const scrollRefShop = useRef<HTMLDivElement>(null);
-  const scrollRefLackanfragen = useRef<HTMLDivElement>(null);
+function normalizeCountryCode(v: unknown): "DE" | "AT" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "de" || s === "deutschland" || s === "germany") return "DE";
+  if (s === "at" || s === "österreich" || s === "oesterreich" || s === "austria") return "AT";
+  return null;
+}
 
-  /* ===== Aufträge (Top 12 aus echter Börse) ===== */
-  const [auftraege, setAuftraege] = useState<Auftrag[]>([]);
-  const [loadingAuftraege, setLoadingAuftraege] = useState(true);
+function isoToDate(iso: any): Date {
+  if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso)) return new Date(`${iso}T00:00:00`);
+  return new Date();
+}
+
+export default function Shopseite() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [viewerChecked, setViewerChecked] = useState(false);
+  const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
+  const [viewerCountry, setViewerCountry] = useState<"DE" | "AT" | null>(null);
+
+  const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
+  const [maxPreis, setMaxPreis] = useState(0);
+
+    // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
+  const [promoToast, setPromoToast] = useState<{
+    type: "success" | "info" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
-    let active = true;
-    const fetchAuftraege = async () => {
+    const promo = searchParams.get("promo");
+    if (!promo) return;
+
+    if (promo === "success") {
+      setPromoToast({ type: "success", text: "Bewerbung erfolgreich – dein Promo-Score wurde erhöht." });
+    } else if (promo === "cancel") {
+      setPromoToast({ type: "info", text: "Zahlung abgebrochen – keine Bewerbung durchgeführt." });
+    } else if (promo === "failed") {
+      setPromoToast({ type: "error", text: "Zahlung fehlgeschlagen – keine Bewerbung durchgeführt." });
+    }
+
+    // nach ein paar Sekunden automatisch ausblenden
+    const t = window.setTimeout(() => setPromoToast(null), 4500);
+
+    // URL bereinigen, damit Toast bei Reload nicht erneut kommt
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("promo");
+    params.delete("session_id"); // optional
+    const next = params.toString() ? `?${params.toString()}` : location.pathname;
+    router.replace(next, { scroll: false });
+
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+
+  // Suchfeld aus URL (?search=...)
+  const [suchbegriff, setSuchbegriff] = useState(() => searchParams.get('search') ?? '');
+  const [suchEingabe, setSuchEingabe] = useState(() => searchParams.get('search') ?? '');
+  useEffect(() => {
+    const q = searchParams.get('search') ?? '';
+    setSuchbegriff(q);
+    setSuchEingabe(q);
+  }, [searchParams]);
+
+  // Filter-States
+  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>('');
+  const [zustand, setZustand] = useState<string[]>([]);
+  const [hersteller, setHersteller] = useState<string[]>([]);
+  const [sortierung, setSortierung] = useState('');
+  const [gewerblich, setGewerblich] = useState(false);
+  const [privat, setPrivat] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
+
+  // Pagination aus URL
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const seitenGroesse = 50;
+  // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
+  useEffect(() => {
+    const qKat = searchParams.get('kategorie');
+    const normalized = normalizeKategorie(qKat);
+    if (normalized) setKategorie(normalized);
+    else if (!qKat) setKategorie('');
+  }, [searchParams]);
+
+  // ---- URL mit der gewählten Kategorie synchron halten ----
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (kategorie) params.set('kategorie', kategorie);
+    else params.delete('kategorie');
+
+    if (page !== 1) params.delete('page');
+
+    const next = params.toString() ? `?${params.toString()}` : location.pathname;
+    router.replace(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kategorie]);
+
+  // 1) Viewer Account-Type aus profiles holen (business/private)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadViewer() {
       try {
-        setLoadingAuftraege(true);
-        // ✅ neuer, schneller Endpoint (Route: /api/auftraege/top)
-        const res = await fetch('/api/auftraege/top')
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = (await res.json()) as Auftrag[];
-        if (!active) return;
-        setAuftraege(data);
-      } catch (e) {
-        console.warn('Top-Aufträge konnten nicht geladen werden:', e);
-        if (active) setAuftraege([]);
+        const supa = supabaseBrowser();
+        const { data } = await supa.auth.getUser();
+        const user = data.user;
+
+        if (!user) {
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
+          return;
+        }
+
+        const { data: prof, error } = await supa
+          .from('profiles')
+          .select('account_type, address')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          // falls RLS blockt, bleiben wir vorsichtig bei "private"
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setViewerIsBusiness(prof?.account_type === 'business');
+          setViewerCountry(normalizeCountryCode((prof as any)?.address?.country));
+        }
       } finally {
-        if (active) setLoadingAuftraege(false);
+        if (!cancelled) setViewerChecked(true);
       }
-    };
-    fetchAuftraege();
+    }
+
+    loadViewer();
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, []);
 
-  /* ===== Lackanfragen (TOP 12 aus der Börse) ===== */
-  const [lackanfragen, setLackanfragen] = useState<Lackanfrage[]>([]);
-  const [loadingLack, setLoadingLack] = useState(true);
-
-
+  // 2) Artikel serverseitig filtern/paginieren – gleiches Prinzip wie Lackanfragen
   useEffect(() => {
-    let active = true;
-    const fetchLack = async () => {
+    if (!viewerChecked) return;
+
+    let cancelled = false;
+
+    async function loadArticles() {
       try {
-        setLoadingLack(true);
-        const res = await fetch(
-        '/api/lackanfragen?sort=promo&order=desc&page=1&limit=12'
-        );
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        setLoading(true);
+        setLoadError(null);
 
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        params.set('limit', String(seitenGroesse));
+        params.set('viewerBusiness', viewerIsBusiness ? '1' : '0');
+
+        if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
+        if (kategorie) params.set('kategorie', kategorie);
+        if (zustand.length) params.set('zustand', zustand.join(','));
+        if (hersteller.length) params.set('hersteller', hersteller.join(','));
+        if (gewerblich) params.set('g', '1');
+        if (privat) params.set('p', '1');
+        if (sortierung) params.set('sort', sortierung);
+
+        // Beim ersten Laden ist der Slider noch nicht initialisiert.
+        // Sobald maxAvailablePrice bekannt ist, ist auch max=0 ein echter Filterwert.
+        if (maxAvailablePrice > 0 || maxPreis > 0) {
+          params.set('max', String(maxPreis));
+        }
+
+        const res = await fetch(`/api/articles?${params.toString()}`, {
+          cache: 'no-store',
+        });
         const json = await res.json();
-        const rawList: any[] = Array.isArray(json)
-          ? json
-          : Array.isArray(json?.items)
-            ? json.items
-            : [];
 
-        const mapped: Lackanfrage[] = rawList.map((a: any) => {
-          const attrs = a?.attributes || a?.data || {};
-          const o = { ...attrs, ...a };
+        if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
 
-          const ortKombi = [o.plz ?? o.zip, o.city ?? o.stadt].filter(Boolean).join(' ').trim();
-          const ort = strOrEmpty(o.ort, o.location, ortKombi);
+        const rows = (json.articles ?? []) as ApiArticle[];
 
-          let bilder: string[] = [];
-          if (Array.isArray(o.bilder) && o.bilder.length) bilder = o.bilder;
-          else if (Array.isArray(o.images) && o.images.length) bilder = o.images;
-          else if (typeof o.image === 'string') bilder = [o.image];
-          else if (typeof o.thumbnail === 'string') bilder = [o.thumbnail];
-          else bilder = ['/images/platzhalter.jpg'];
+        const mapped: ShopArtikel[] = rows.map((a) => {
+          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
 
-          const createdAt = toDate(a.created_at ?? o.created_at ?? o.createdAt ?? o.created);
-          const lieferdatum = toDate(
-            a.lieferdatum ?? a.delivery_at ?? o.lieferdatum ?? o.delivery_at ?? o.date,
-          );
+          const unit: 'kg' | 'stueck' =
+            a.price_unit === 'stueck'
+              ? 'stueck'
+              : a.price_unit === 'kg'
+                ? 'kg'
+                : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
+                  ? 'stueck'
+                  : 'kg';
 
-          const menge = parseNum(o.menge ?? o.quantity ?? o.amount ?? o.kg ?? o.mass_kg) ?? 0;
+          const qtyForUnit =
+            unit === 'stueck' ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
 
-          const farbton = strOrEmpty(
-            o.farbton,
-            o.farbtonbezeichnung,
-            o.farb_bezeichnung,
-            o.farb_name,
-            o.color_name,
-            o.color,
-            o.ral,
-            o.ncs,
-          );
-
-          const gesponsert =
-            Boolean(a.gesponsert) ||
-            Boolean(o.gesponsert) ||
-            Boolean(a.is_sponsored) ||
-            (typeof a.promo_score === 'number' && a.promo_score > 0);
+          const displayQty =
+            a.stock_status === 'begrenzt'
+              ? (typeof qtyForUnit === 'number' ? qtyForUnit : safeNumber(qtyForUnit, 0))
+              : undefined;
 
           return {
-            id:
-              o.id ??
-              a.id ??
-              o._id ??
-              o.uuid ??
-              `${o.titel ?? o.title ?? 'item'}-${Math.random().toString(36).slice(2)}`,
-            titel: strOrEmpty(o.titel, a.title, o.title, o.name, 'Unbenannt'),
-            bilder,
-            menge,
-            lieferdatum,
-            hersteller: strOrEmpty(o.hersteller, o.manufacturer, o.brand),
-            zustand: strOrEmpty(o.zustand, o.condition, o.state),
-            kategorie: normKategorie(strOrEmpty(o.kategorie, o.category, o.type)),
-            ort,
-            preis:
-              typeof o.preis === 'number'
-                ? o.preis
-                : typeof o.min_price === 'number'
-                  ? o.min_price
-                  : typeof o.price === 'number'
-                    ? o.price
-                    : undefined,
-            gesponsert,
-            created_at: createdAt,
-            farbton,
+            id: a.id,
+            titel: a.title ?? '',
+            hersteller: a.manufacturer ?? '—',
+            zustand: String(a.condition ?? a.zustand ?? '').trim() || '—',
+            kategorie: a.category ?? '—',
+            preis: safeNumber(a.price_from, 0),
+            versand:
+              a.shipping_from == null
+                ? null
+                : safeNumber(a.shipping_from, 0),
+            menge: displayQty,
+            lieferdatum: isoToDate(a.delivery_date_iso),
+            bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
+            seller_account_type: (a as any).seller_account_type ?? null,
+            viewer_is_business: viewerIsBusiness,
+            viewer_country: viewerCountry,
+            einheit: unit,
+            promo_score: safeNumber(a.promo_score, 0),
+            gesponsert: safeNumber(a.promo_score, 0) > 0,
+            gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
+            privat: sellTo === 'beide',
+            sale_type: a.sale_type ?? null,
+            price_mode: a.price_mode ?? "legacy_gross",
           };
         });
 
-        if (active) setLackanfragen(mapped);
-      } catch (e) {
-        console.warn('Lackanfragen konnten nicht geladen werden:', e);
-        if (active) setLackanfragen([]);
+        if (!cancelled) {
+          setArtikelDaten(mapped);
+          setTotalCount(safeNumber(json.total, 0));
+
+          const serverMax = safeNumber(json.max_price, 0);
+          setMaxAvailablePrice(serverMax);
+          setMaxPreis((prev) => {
+            if (prev === 0 && maxAvailablePrice === 0) return serverMax;
+            return Math.min(prev, serverMax);
+          });
+
+          setAnzahlAnzeigen(50);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setLoadError(e?.message ?? 'Unbekannter Fehler');
+          setArtikelDaten([]);
+          setTotalCount(0);
+        }
       } finally {
-        if (active) setLoadingLack(false);
+        if (!cancelled) setLoading(false);
       }
-    };
-    fetchLack();
-    return () => {
-      active = false;
-    };
-  }, []);
-  const [shopArtikel, setShopArtikel] = useState<ShopArtikel[]>([]);
-const [loadingShop, setLoadingShop] = useState(true);
-
-
-
-useEffect(() => {
-  let active = true;
-
-  const fetchShop = async () => {
-    try {
-      setLoadingShop(true);
-
-      // ✅ IMMER Top 12 – unabhängig von gesponsert
-      // ✅ gleiche API wie die Shopseite
-// ✅ Sortierung kommt aus /api/articles/route.ts
-const res = await fetch('/api/articles?limit=200&offset=0');
-
-if (!res.ok) throw new Error("HTTP " + res.status);
-
-const json = await res.json().catch(() => ({}));
-const raw = Array.isArray(json?.articles) ? (json.articles as any[]) : [];
-
-// ✅ exakt die ersten 12 aus der Shop-Reihenfolge
-const top12 = raw.slice(0, 12);
-
-const mapped: ShopArtikel[] = top12.map((a) => ({
-        id: a.id,
-        titel: a.title ?? "Unbenannt",
-        bilder: Array.isArray(a.image_urls) && a.image_urls.length ? a.image_urls : ["/images/platzhalter.jpg"],
-
-        lieferdatumISO: a.delivery_date_iso ?? null,
-
-        hersteller: a.manufacturer ?? "—",
-        zustand: a.condition ?? "—",
-        kategorie: normKategorie(a.category ?? "—"),
-
-        stock_status: a.stock_status ?? null,
-        qty_kg: a.qty_kg ?? null,
-        qty_piece: a.qty_piece ?? null,
-
-        price_from: a.price_from ?? null,
-        shipping_from: a.shipping_from ?? null,
-        price_unit: a.sale_type === "gesamt" ? null : a.price_unit ?? null,
-        price_is_from: !!a.price_is_from,
-        price_mode: a.price_mode ?? "legacy_gross",
-      }));
-
-      if (active) setShopArtikel(mapped);
-    } catch (e) {
-      console.warn("Shop-Artikel konnten nicht geladen werden:", e);
-      if (active) setShopArtikel([]); // kein Dummy-Fallback
-    } finally {
-      if (active) setLoadingShop(false);
     }
+
+    loadArticles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    viewerChecked,
+    viewerIsBusiness,
+    viewerCountry,
+    page,
+    suchbegriff,
+    kategorie,
+    zustand,
+    hersteller,
+    gewerblich,
+    privat,
+    sortierung,
+    maxPreis,
+    maxAvailablePrice,
+  ]);
+
+  // Infinite-Scroll
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (page !== 1) return;
+    observerRef.current?.disconnect();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setAnzahlAnzeigen((prev) => Math.min(prev + 10, artikelDaten.length));
+        }
+      },
+      { rootMargin: '100px' }
+    );
+    loadMoreRef.current && observerRef.current.observe(loadMoreRef.current);
+    return () => observerRef.current?.disconnect();
+  }, [artikelDaten, page]);
+
+  // Seite zurücksetzen, wenn andere Filter ändern (außer page)
+  useEffect(() => {
+    if (page !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
+      router.replace(neueUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
+
+  const pageHref = (targetPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (targetPage <= 1) params.delete('page');
+    else params.set('page', String(targetPage));
+
+    const qs = params.toString();
+    return qs ? `?${qs}` : location.pathname;
   };
 
-  fetchShop();
-  return () => {
-    active = false;
-  };
-}, []);
+    // Nur beim ersten Laden: einheitliches Börsen-Loading
+    const bootLoading = loading && artikelDaten.length === 0;
 
-
-  // Scroll-Helper
-  const handleScroll = (ref: React.RefObject<HTMLDivElement>, dir: number) => {
-    if (ref.current) ref.current.scrollLeft += dir * 200;
-  };
-
-  // ✅ Skeleton nur, wenn Laden wirklich dauert (kein Flash)
-const showSkeletonAuftraege = loadingAuftraege
-const showSkeletonShop = loadingShop
-const showSkeletonLack = loadingLack
-
-  return (
-    <>
-      <Navbar />
-      <Suspense fallback={<div>Seite lädt...</div>}>
-        <div className={styles.wrapper}>
-          {/* Suchformular */}
-          <Suspense fallback={<div>Suchfeld lädt...</div>}>
-            <SearchBox />
-          </Suspense>
-
-          <Slideshow />
-
-          <h1 className={styles.visuallyHidden}>
-            BeschichterScout – Auftragsbörse, Lackbörse und Shop für Beschichter
-          </h1>
-
-          {/* Auftragsbörse */}
-          <section className={styles.sectionWrapper}>
-            <div className={styles.articleLinkContainer}>
-              <Link href="/auftragsboerse" className={styles.articleLink}>
-                Top Deals aus der <span className={styles.colored}>Auftragsbörse</span>
-              </Link>
-            </div>
-
-            <div className={styles.scrollContainer}>
-              <div
-                className={styles.scrollContent}
-                ref={scrollRefAuftraege}
-                style={loadingAuftraege ? { minHeight: 280 } : undefined}
-              >
-                {showSkeletonAuftraege ? (
-                  <SkeletonRow cards={12} variant="auftrag" />
-                ) : (
-                  auftraege.map((a) => (
-                    <Link
-                      key={a.id}
-                      href={`/auftragsboerse/auftraege/${a.id}`}
-                      className={styles.articleBox}
-                    >
-                      <img
-                        src={a.bilder?.[0] ?? '/images/autrag-platzhalter.png'}
-                        alt={a.verfahren?.map((v: any) => v.name).join(' & ') || 'Auftrag'}
-                        className={styles.articleImg}
-                      />
-                      <div className={styles.articleText}>
-                        <h3>{a.verfahren?.map((v: any) => v.name).join(' & ') || 'Verfahren unbekannt'}</h3>
-                        <p><strong>Material:</strong> {a.material ?? '-'}</p>
-                        <p><strong>Warenausgabe per:</strong> {labelWarenausgabe(a.warenausgabeArt)}</p>                        
-                        <p><strong>Datum Warenausgabe:</strong> {formatDate(toDate(a.warenausgabeDatum))}</p>                        
-                        <p><strong>Warenrückgabe per:</strong> {labelWarenrueckgabe(a.warenannahmeArt)}</p>
-                        <p><strong>Datum Warenrückgabe:</strong> {formatDate(toDate(a.warenannahmeDatum))}</p>
-                        <p><strong>Max. Maße:</strong> {a.length ?? '-'} x {a.width ?? '-'} x {a.height ?? '-'} mm</p>
-                        <p><strong>Max. Masse:</strong> {a.masse ?? '-'} kg</p>
-                        <p>
-                          <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-                          {a.standort ?? '-'}
-                        </p>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-
-              <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefAuftraege, -1)}>
-                <ChevronLeftIcon className="h-6 w-6 text-black" />
-              </button>
-              <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefAuftraege, 1)}>
-                <ChevronRightIcon className="h-6 w-6 text-black" />
-              </button>
-            </div>
-
-            <div className={styles.imageContainer}>
-              <img src="/images/werbung.png" alt="Artikelbild" className={styles.articleImage} />
-            </div>
-          </section>
-
-          {/* Shop */}
-          <section className={styles.sectionWrapper}>
-            <div className={styles.articleLinkContainer}>
-              <Link href="/kaufen" className={styles.articleLink}>
-                Top Deals aus dem Beschichter <span className={styles.colored}>Shop</span>
-              </Link>
-            </div>
-
-            <div className={styles.scrollContainer}>
-              <div
-                className={styles.scrollContent}
-                ref={scrollRefShop}
-                style={loadingShop ? { minHeight: 280 } : undefined}
-              >
-                {showSkeletonShop ? (
-  <SkeletonRow cards={12} variant="shop" />
-) : (
-  shopArtikel.map((art) => {
-    const href = `/kaufen/artikel/${encodeURIComponent(String(art.id))}`;
-
-    const deliveryDate = art.lieferdatumISO
-      ? new Date(`${art.lieferdatumISO}T00:00:00`)
-      : undefined;
-
-    const availability =
-  art.stock_status === "auf_lager"
-    ? "Auf Lager"
-    : art.qty_kg != null
-    ? `${art.qty_kg} ${einheitFuerKategorie(art.kategorie)} verfügbar`
-    : art.qty_piece != null
-    ? `${art.qty_piece} Stück verfügbar`
-    : "Verfügbar";
-
-    const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
-
-const formatMoney = (value: number | null) =>
-  value != null
-    ? `${Number(value).toLocaleString("de-DE", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} €`
-    : "–";
-
-const priceText = formatMoney(art.price_from);
-const shippingText =
-  art.shipping_from == null
-    ? "–"
-    : Number(art.shipping_from) === 0
-      ? "kostenlos"
-      : formatMoney(art.shipping_from);
-
-const taxLabel =
-  art.price_mode === "net"
-    ? "netto"
-    : art.price_mode === "no_vat"
-      ? "ohne USt."
-      : "inkl. USt.";
-
-// ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
-const unitSuffix =
-  art.price_unit
-    ? ` / ${art.price_unit === "stueck" ? "Stück" : einheitFuerKategorie(art.kategorie)}`
-    : "";
-
+    if (bootLoading) {
+      return <BoerseLoading />;
+    }
 
     return (
-      <Link key={art.id} href={href} className={styles.articleBox2}>
-        <img
-          src={art.bilder?.[0] ?? "/images/platzhalter.jpg"}
-          alt={art.titel}
-          className={styles.articleImg}
-        />
-
-        <div className={styles.articleText}>
-          <h3>{art.titel}</h3>
-
-          <p><strong>Verfügbarkeit:</strong> {availability}</p>
-          <p><strong>Lieferdatum:</strong> {formatDate(deliveryDate)}</p>
-          <p><strong>Hersteller:</strong> {art.hersteller}</p>
-          <p><strong>Zustand:</strong> {formatZustand(art.zustand) || "—"}</p>
-          <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>
-
-          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginBottom: 4 }}>
-            <strong>{priceLabel}</strong> {priceText}{unitSuffix} · {taxLabel}
-          </p>
-          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginTop: 0 }}>
-            <strong>Versand:</strong> {shippingText}
-          </p>
+    <>
+      <Navbar />
+            {promoToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            right: 16,
+            bottom: 16,
+            zIndex: 9999,
+            maxWidth: 420,
+          }}
+        >
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.18)",
+              color: "#fff",
+              background:
+                promoToast.type === "success"
+                  ? "#16a34a"
+                  : promoToast.type === "error"
+                  ? "#dc2626"
+                  : "#334155",
+              fontWeight: 600,
+            }}
+          >
+            {promoToast.text}
+          </div>
         </div>
-      </Link>
-    );
-  })
-)}
-</div>
-                
+      )}
 
-              <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefShop, -1)}>
-                <ChevronLeftIcon className="h-6 w-6 text-black" />
-              </button>
-              <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefShop, 1)}>
-                <ChevronRightIcon className="h-6 w-6 text-black" />
-              </button>
-            </div>
-          </section>
 
-          <div className={styles.imageContainer}>
-            <picture>
-              <source
-                media="(max-width: 768px)"
-                srcSet="/images/sonderlacke2.jpg"
-              />
+      {/* Hamburger / Sidebar toggle */}
+      <button className={styles.hamburger} onClick={() => setSidebarOpen((open) => !open)} aria-label="Sidebar öffnen">
+        <span className={`${styles.bar} ${sidebarOpen ? styles.bar1open : ''}`} />
+        <span className={`${styles.bar} ${sidebarOpen ? styles.bar2open : ''}`} />
+        <span className={`${styles.bar} ${sidebarOpen ? styles.bar3open : ''}`} />
+      </button>
+      {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
-              <img
-                src="/images/sonderlacke.jpg"
-                alt="Industrielle Lackierung"
-                className={styles.articleImage}
-              />
-            </picture>
+      <div className={styles.wrapper}>
+        {/* SIDEBAR */}
+        <div className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+          <form
+            className={styles.searchRow}
+            onSubmit={(e) => {
+              e.preventDefault();
+
+              const q = suchEingabe.trim();
+              setSuchbegriff(q);
+
+              const params = new URLSearchParams(searchParams.toString());
+              if (q) params.set('search', q);
+              else params.delete('search');
+              params.delete('page');
+
+              const next = params.toString()
+                ? `${location.pathname}?${params.toString()}`
+                : location.pathname;
+
+              router.replace(next, { scroll: false });
+            }}
+          >
+            <input
+              className={styles.input}
+              type="text"
+              placeholder="Artikel finden..."
+              value={suchEingabe}
+              onChange={(e) => setSuchEingabe(e.target.value)}
+            />
+            <button type="submit" className={styles.searchButton}>
+              Suchen
+            </button>
+          </form>
+
+          {/* Sortierung */}
+          <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
+            <option value="">Sortieren</option>
+            <option value="lieferdatum-auf">Lieferdatum ↑</option>
+            <option value="lieferdatum-ab">Lieferdatum ↓</option>
+            <option value="titel-az">Titel A–Z</option>
+            <option value="titel-za">Titel Z–A</option>
+            <option value="menge-auf">Menge ↑</option>
+            <option value="menge-ab">Menge ↓</option>
+          </select>
+
+          {/* Preis-Slider */}
+          <input
+            className={styles.range}
+            type="range"
+            min={0}
+            max={maxAvailablePrice}
+            step={0.1}
+            value={maxPreis}
+            onChange={(e) => setMaxPreis(Number(e.target.value))}
+          />
+          <div className={styles.mengeText}>Max. Preis: {maxPreis.toFixed(2)} €</div>
+
+          {/* Kategorie */}
+          <div className={styles.checkboxGroup}>
+            <strong>Kategorie</strong>
+            {kategorien.map((k) => (
+              <label key={k} className={styles.checkboxLabel}>
+                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => setKategorie(k)} />
+                {k}
+              </label>
+            ))}
+            <label className={styles.checkboxLabel}>
+              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => setKategorie('')} />
+              Alle
+            </label>
           </div>
 
-          {/* Lackanfragen */}
-          <section className={styles.sectionWrapper}>
-            <div className={styles.articleLinkContainer}>
-              <Link href="/lackanfragen" className={styles.articleLink}>
-                Top Deals aus der <span className={styles.colored}>Lackanfragen-Börse</span>
-              </Link>
-            </div>
+          {/* Zustand */}
+          <div className={styles.checkboxGroup}>
+            <strong>Zustand</strong>
+            {zustandFilter.map((z) => (
+              <label key={z} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={zustand.includes(z)}
+                  onChange={() => setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z]))}
+                />
+                {z}
+              </label>
+            ))}
+          </div>
 
-            <div className={styles.scrollContainer}>
-              <div
-                className={styles.scrollContent}
-                ref={scrollRefLackanfragen}
-                style={loadingLack ? { minHeight: 280 } : undefined}
-              >
-                {showSkeletonLack ? (
-  <SkeletonRow cards={12} variant="lack" />
-) : loadingLack ? null : lackanfragen.length === 0 ? (
-  <div className={styles.emptyState}>Keine Einträge gefunden.</div>
-) : (
-  lackanfragen.map((anfrage) => (
-    <Link
-      key={anfrage.id}
-      href={`/lackanfragen/artikel/${anfrage.id}`}
-      className={styles.articleBox3}
-    >
-      <img
-        src={anfrage.bilder?.[0] ?? '/images/platzhalter.jpg'}
-        alt="Lackanfrage-Bild"
-        className={styles.articleImg}
-      />
-      <div className={styles.articleText}>
-        <h3>{anfrage.titel}</h3>
-        <p><strong>Menge:</strong> {anfrage.menge} {einheitFuerKategorie(anfrage.kategorie)}</p>
-        <p><strong>Lieferdatum:</strong> {formatDate(anfrage.lieferdatum)}</p>
-        <p><strong>Hersteller:</strong> {anfrage.hersteller || 'Alle'}</p>
-        <p><strong>Farbtonbezeichnung:</strong> {anfrage.farbton || '—'}</p>
-        <p><strong>Zustand:</strong> {formatZustand(anfrage.zustand) || '—'}</p>
-        <p><strong>Kategorie:</strong> {anfrage.kategorie || '—'}</p>
-        <p>
-          <MapPin size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-          {anfrage.ort || '—'}
-        </p>
-      </div>
-    </Link>
-  ))
-)}
-              </div>
+          {/* Hersteller */}
+          <div className={styles.checkboxGroup}>
+            <strong>Hersteller</strong>
+            {herstellerFilter.map((h) => (
+              <label key={h} className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={hersteller.includes(h)}
+                  onChange={() =>
+                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))
+                  }
+                />
+                {h}
+              </label>
+            ))}
+          </div>
 
-              <button className={styles.arrowLeft} onClick={() => handleScroll(scrollRefLackanfragen, -1)}>
-                <ChevronLeftIcon className="h-6 w-6 text-black" />
-              </button>
-              <button className={styles.arrowRight} onClick={() => handleScroll(scrollRefLackanfragen, 1)}>
-                <ChevronRightIcon className="h-6 w-6 text-black" />
-              </button>
-            </div>
-          </section>
-
-          <CookieBanner />
+          {/* Verkaufstyp */}
+          <div className={styles.checkboxGroup}>
+            <strong>Verkaufstyp</strong>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich((g) => !g)} />
+              Gewerblich
+            </label>
+            <label className={styles.checkboxLabel}>
+              <input type="checkbox" checked={privat} onChange={() => setPrivat((p) => !p)} />
+              Privat
+            </label>
+          </div>
         </div>
-      </Suspense>
+
+        {/* CONTENT */}
+        <div className={styles.content}>
+          <h3 className={styles.anfrageUeberschrift}>
+            {loading ? 'Lade...' : `${totalCount} Artikel im Shop`}
+          </h3>
+
+          {loadError && (
+            <div style={{ padding: '10px 0' }}>
+              <strong>Fehler:</strong> {loadError}
+            </div>
+          )}
+
+          {!loading && !loadError && totalCount === 0 && (
+            <div style={{ padding: '10px 0', opacity: 0.9 }}>
+              <strong>
+                {suchbegriff || kategorie || zustand.length || hersteller.length || gewerblich || privat
+                  ? 'Keine passenden Artikel gefunden.'
+                  : 'Keine Artikel im Shop.'}
+              </strong>
+            </div>
+          )}
+
+          <div className={styles.grid}>
+            {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
+              <ArtikelCard key={String(a.id)} artikel={a} />
+            ))}
+            {page === 1 && <div ref={loadMoreRef} />}
+          </div>
+
+          {/* Pagination */}
+          <div className={styles.seitenInfo}>
+            Seite {page} von {totalPages}
+          </div>
+          <div className={styles.pagination}>
+            {page > 1 && (
+              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
+                ←
+              </Link>
+            )}
+            {Array.from({ length: totalPages }, (_, i) => {
+              const p = i + 1;
+              const href = pageHref(p);
+              return (
+                <Link key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                  {p}
+                </Link>
+              );
+            })}
+            {page < totalPages && (
+              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
+                →
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
     </>
   );
 }

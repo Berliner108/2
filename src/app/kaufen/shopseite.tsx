@@ -87,6 +87,8 @@ type ShopArtikel = {
   bilder: string[];
   einheit: 'kg' | 'stueck';
   seller_account_type?: "business" | "private" | null;
+  viewer_is_business?: boolean;
+  viewer_country?: "DE" | "AT" | null;
   gesponsert?: boolean;
   promo_score?: number;
   gewerblich?: boolean;
@@ -123,6 +125,13 @@ function safeNumber(v: any, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function normalizeCountryCode(v: unknown): "DE" | "AT" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "de" || s === "deutschland" || s === "germany") return "DE";
+  if (s === "at" || s === "österreich" || s === "oesterreich" || s === "austria") return "AT";
+  return null;
+}
+
 function isoToDate(iso: any): Date {
   if (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso)) return new Date(`${iso}T00:00:00`);
   return new Date();
@@ -137,6 +146,7 @@ export default function Shopseite() {
 
   const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
+  const [viewerCountry, setViewerCountry] = useState<"DE" | "AT" | null>(null);
 
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -230,23 +240,32 @@ export default function Shopseite() {
         const user = data.user;
 
         if (!user) {
-          if (!cancelled) setViewerIsBusiness(false);
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
           return;
         }
 
         const { data: prof, error } = await supa
           .from('profiles')
-          .select('account_type')
+          .select('account_type, address')
           .eq('id', user.id)
           .maybeSingle();
 
         if (error) {
           // falls RLS blockt, bleiben wir vorsichtig bei "private"
-          if (!cancelled) setViewerIsBusiness(false);
+          if (!cancelled) {
+            setViewerIsBusiness(false);
+            setViewerCountry(null);
+          }
           return;
         }
 
-        if (!cancelled) setViewerIsBusiness(prof?.account_type === 'business');
+        if (!cancelled) {
+          setViewerIsBusiness(prof?.account_type === 'business');
+          setViewerCountry(normalizeCountryCode((prof as any)?.address?.country));
+        }
       } finally {
         if (!cancelled) setViewerChecked(true);
       }
@@ -332,6 +351,8 @@ export default function Shopseite() {
             lieferdatum: isoToDate(a.delivery_date_iso),
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
             seller_account_type: (a as any).seller_account_type ?? null,
+            viewer_is_business: viewerIsBusiness,
+            viewer_country: viewerCountry,
             einheit: unit,
             promo_score: safeNumber(a.promo_score, 0),
             gesponsert: safeNumber(a.promo_score, 0) > 0,
@@ -374,6 +395,7 @@ export default function Shopseite() {
   }, [
     viewerChecked,
     viewerIsBusiness,
+    viewerCountry,
     page,
     suchbegriff,
     kategorie,

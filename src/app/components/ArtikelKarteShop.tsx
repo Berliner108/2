@@ -26,6 +26,8 @@ type ArtikelProps = {
 
     // ✅ Verkäufer-Typ (profiles.account_type)
     seller_account_type?: 'business' | 'private' | null;
+    viewer_is_business?: boolean;
+    viewer_country?: "DE" | "AT" | null;
 
     gesponsert?: boolean;
 
@@ -80,12 +82,38 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
   const showSellLabel = Boolean(sellerLabel);
 
+  const vatRate =
+    artikel.viewer_country === "DE"
+      ? 0.19
+      : artikel.viewer_country === "AT"
+        ? 0.20
+        : null;
+
+  const showGrossForPrivate =
+    artikel.price_mode === "net" &&
+    artikel.viewer_is_business === false &&
+    vatRate != null;
+
+  const displayPrice =
+    typeof preis === "number"
+      ? showGrossForPrivate
+        ? Math.round(preis * 100 * (1 + vatRate!)) / 100
+        : preis
+      : null;
+
+  const displayShipping =
+    typeof versand === "number"
+      ? showGrossForPrivate
+        ? Math.round(versand * 100 * (1 + vatRate!)) / 100
+        : versand
+      : null;
+
   const taxLabel =
-    artikel.price_mode === 'net'
-      ? 'netto'
-      : artikel.price_mode === 'no_vat'
-        ? 'ohne USt.'
-        : 'inkl. USt.';
+    artikel.price_mode === "no_vat"
+      ? "ohne USt."
+      : showGrossForPrivate || artikel.price_mode === "legacy_gross"
+        ? "inkl. USt."
+        : "netto";
 
   const formatPrice = (value?: number | null) =>
     typeof value === 'number'
@@ -147,17 +175,17 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <div className={styles.cardText7}>
             {artikel.sale_type === "gesamt" ? (
               <>
-                Preis: {formatPrice(preis)} € · {taxLabel}
+                Preis: {formatPrice(displayPrice)} € · {taxLabel}
               </>
             ) : (
               <>
-                Preis ab: {formatPrice(preis)} € / {einheitLabel} · {taxLabel}
+                Preis ab: {formatPrice(displayPrice)} € / {einheitLabel} · {taxLabel}
               </>
             )}
           </div>
 
           <div className={styles.cardText7}>
-            Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`}
+            Versand: {displayShipping === 0 ? "kostenlos" : `${formatPrice(displayShipping)} €`}
           </div>
 
         </div>
