@@ -82,10 +82,18 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
 
   const taxLabel =
     artikel.price_mode === 'net'
-      ? 'Nettopreis'
+      ? 'netto'
       : artikel.price_mode === 'no_vat'
-        ? 'keine USt. ausweisbar'
+        ? 'ohne USt.'
         : 'inkl. USt.';
+
+  const formatPrice = (value?: number | null) =>
+    typeof value === 'number'
+      ? value.toLocaleString('de-DE', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : '—';
 
   return (
     <Link href={`/kaufen/artikel/${id}`} className={styles.cardLink}>
@@ -139,18 +147,13 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <div className={styles.cardText7}>
             {artikel.sale_type === "gesamt" ? (
               <>
-                Preis: {typeof preis === "number" ? preis.toFixed(2) : "—"} € · {taxLabel}
+                Preis: {formatPrice(preis)} € · Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`} · {taxLabel}
               </>
             ) : (
               <>
-                Preis ab: {typeof preis === "number" ? preis.toFixed(2) : "—"} € / {einheitLabel} · {taxLabel}
+                Preis ab: {formatPrice(preis)} € / {einheitLabel} · Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`} · {taxLabel}
               </>
             )}
-          </div>
-
-          <div className={styles.cardText7}>
-            Versand: {versand == null ? "—" : versand === 0 ? "kostenlos" : `${versand.toFixed(2)} €`}
-            {artikel.price_mode === "net" ? " · netto" : artikel.price_mode === "no_vat" ? " · ohne USt." : " · brutto"}
           </div>
 
         </div>
