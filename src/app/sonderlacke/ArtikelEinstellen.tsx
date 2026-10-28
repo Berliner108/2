@@ -626,6 +626,13 @@ useEffect(() => {
     'Anderer Hersteller / Marke',
   ];
 
+  const aktuelleHerstellerListe =
+    kategorie === 'nasslack'
+      ? herstellerListeNass
+      : kategorie === 'pulverlack'
+      ? herstellerListePulver
+      : [];
+
   // Farbpaletten
   const farbpalette = [
     { name: 'Nach Vorlage ', value: 'Nach Vorlage' },
