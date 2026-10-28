@@ -952,14 +952,19 @@ const filteredSales = useMemo(() => {
                             <div className={styles.metaCol}>
   <div className={styles.metaLabel}>Preis</div>
   <div className={styles.metaValue}>
-    <div>Artikel: {formatEUR(s.itemCents ?? 0)}</div>
-    <div>
-      Versand: {(s.shippingCents ?? 0) === 0 ? 'kostenlos' : formatEUR(s.shippingCents ?? 0)}
-    </div>
-
     {s.priceMode === "net" && s.totalNetCents != null && s.vatCents != null ? (
       <>
-        <div>Netto: {formatEUR(s.totalNetCents)}</div>
+        <div>
+          Artikel netto: {formatEUR(
+            Math.max(0, s.totalNetCents - (s.shippingNetCents ?? 0))
+          )}
+        </div>
+        <div>
+          Versand netto: {(s.shippingNetCents ?? 0) === 0
+            ? 'kostenlos'
+            : formatEUR(s.shippingNetCents ?? 0)}
+        </div>
+        <div>Gesamt netto: {formatEUR(s.totalNetCents)}</div>
         <div>
           USt.{s.taxRate != null ? ` (${Math.round(s.taxRate * 100)} %)` : ""}: {formatEUR(s.vatCents)}
         </div>
@@ -967,12 +972,32 @@ const filteredSales = useMemo(() => {
       </>
     ) : s.priceMode === "no_vat" ? (
       <>
-        <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+        <div>
+          Artikel: {formatEUR(
+            Math.max(0, s.amountCents - (s.shippingCents ?? 0))
+          )}
+        </div>
+        <div>
+          Versand: {(s.shippingCents ?? 0) === 0
+            ? 'kostenlos'
+            : formatEUR(s.shippingCents ?? 0)}
+        </div>
+        <div><strong>Gesamt (ohne USt.): {formatEUR(s.amountCents)}</strong></div>
         <div>Keine Umsatzsteuer ausweisbar.</div>
       </>
     ) : (
       <>
-        <div><strong>Gesamt: {formatEUR(s.amountCents)}</strong></div>
+        <div>
+          Artikel brutto: {formatEUR(
+            Math.max(0, s.amountCents - (s.shippingCents ?? 0))
+          )}
+        </div>
+        <div>
+          Versand brutto: {(s.shippingCents ?? 0) === 0
+            ? 'kostenlos'
+            : formatEUR(s.shippingCents ?? 0)}
+        </div>
+        <div><strong>Gesamt brutto: {formatEUR(s.amountCents)}</strong></div>
         <div>inkl. Umsatzsteuer</div>
       </>
     )}
