@@ -185,7 +185,7 @@ type Staffelzeile = {
 };
 const MAX_STAFFELN = 3;
 
-const STAFFEL_HARD_MAX = 99999;     // Ab/Bis max 99 999
+const STAFFEL_HARD_MAX = 999999;    // Ab/Bis max 999 999
 const MONEY_HARD_MAX   = 99999.99;  // Preis/Versand max 99 999.99
 
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
@@ -679,6 +679,22 @@ useEffect(() => {
   setStueckProEinheit(mengeStueck >= 1 ? String(mengeStueck) : '');
 }, [kategorie, aufLager, verkaufsArt, mengeStueck]);
 
+
+useEffect(() => {
+  // Bei begrenzter Menge 1 ist keine Staffel möglich.
+  // Falls die Menge nachträglich auf 1 reduziert wird, Staffelverkauf sauber zurücksetzen.
+  if (aufLager) return;
+
+  const limit = istStueckKategorie ? mengeStueck : menge;
+  const istStaffelverkauf = verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck";
+
+  if (istStaffelverkauf && limit <= 1) {
+    setVerkaufsArt("");
+    setStaffeln([{ minMenge: "1", maxMenge: "", preis: "", versand: "" }]);
+    setWarnungStaffeln("");
+    setWarnungVerkaufsArt("");
+  }
+}, [aufLager, istStueckKategorie, menge, mengeStueck, verkaufsArt]);
 
 useEffect(() => {
   if (!(verkaufsArt === "pro_kg" || verkaufsArt === "pro_stueck")) return;
@@ -1731,7 +1747,7 @@ if (versandNum > MONEY_HARD_MAX) return false;
 };
 
 function cleanInt(v: string) {
-  return v.replace(/\D/g, '').slice(0, 5); // max 5 Stellen
+  return v.replace(/\D/g, '').slice(0, 6); // max 6 Stellen
 }
 
 function toInt(v: string) {
