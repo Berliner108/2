@@ -89,6 +89,45 @@ function csv(value: string): string[] {
   return value.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+const HERSTELLER_ALIASES: Record<string, string[]> = {
+  'ADLER Lacke': ['Adler Lacke'],
+  'AkzoNobel': ['Akzo Nobel', 'Akzonobel'],
+  'Brillux Industrial Coatings': ['Brillux'],
+  'FreiLacke': ['Frei Lacke', 'Freilacke'],
+  'Grimm Pulverlacke': ['Grimm'],
+  'IGP Powder Coatings': ['IGP', 'IGP Pulvertechnik AG'],
+  'KABE Farben': ['Kabe', 'KABE', 'KABE Farben - Karl Bubenhofer AG'],
+  'KANSAI HELIOS': ['Kansai', 'Helios', 'Kansai Helios'],
+  'MOTEC Pulverlack': ['Motec-Pulverlack', 'Motec Pulverlack'],
+  'PPG': ['PPG Industries'],
+  'RIPOL': ['Ripol', 'RIPOL Sagl'],
+  'Sherwin-Williams': ['Sherwin Williams', 'Sherwin‑Williams'],
+  'ST Powder Coatings': ['ST Powder Coatings S.p.A.'],
+  'TIGER Coatings': ['Tiger'],
+  'Valspar': ['VAL'],
+};
+
+function expandHerstellerFilter(values: string[]): string[] {
+  const expanded = new Set<string>();
+
+  for (const value of values) {
+    expanded.add(value);
+
+    for (const alias of HERSTELLER_ALIASES[value] ?? []) {
+      expanded.add(alias);
+    }
+
+    for (const [canonical, aliases] of Object.entries(HERSTELLER_ALIASES)) {
+      if (aliases.includes(value)) {
+        expanded.add(canonical);
+        for (const alias of aliases) expanded.add(alias);
+      }
+    }
+  }
+
+  return Array.from(expanded);
+}
+
 function safeSearchValue(value: string): string {
   return value
     .trim()
@@ -119,7 +158,8 @@ export async function GET(req: Request) {
     const kategorieRaw = url.searchParams.get("kategorie") ?? "";
     const kategorieDb = kategorieRaw ? normalizeCategoryForDb(kategorieRaw) : "";
     const zustandList = csv(url.searchParams.get("zustand") ?? "");
-    const herstellerList = csv(url.searchParams.get("hersteller") ?? "");
+    const herstellerListRaw = csv(url.searchParams.get("hersteller") ?? "");
+    const herstellerList = expandHerstellerFilter(herstellerListRaw);
     const g = url.searchParams.get("g") ?? "";
     const p = url.searchParams.get("p") ?? "";
     const viewerBusiness = (url.searchParams.get("viewerBusiness") ?? "") === "1";
