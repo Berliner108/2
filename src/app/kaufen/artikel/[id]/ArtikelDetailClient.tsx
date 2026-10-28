@@ -790,6 +790,7 @@ if (!article) {
       ? ""
       : article.price_unit ? ` / ${unitLabel(article.price_unit, article.category)}` : ""
     }
+    {article.price_mode === "net" ? " · netto" : article.price_mode === "no_vat" ? " · ohne USt." : " · brutto"}
   </span>
 </div>
 
@@ -982,13 +983,13 @@ if (!article) {
   ) : article.sale_type === "gesamt" ? (
     <div className={styles.singlePriceBox}>
       <div>
-        Artikel: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
+        Artikel{article.price_mode === "net" ? " netto" : ""}: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
       </div>
       <div>
-        Versand: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
+        Versand{article.price_mode === "net" ? " netto" : ""}: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
       </div>
       <div className={styles.totalLine}>
-        Gesamt:{" "}
+        {article.price_mode === "net" ? "Gesamt netto:" : "Gesamt:"}{" "}
         <strong>
           {(Number(tiers[0]?.price ?? 0) + Number(tiers[0]?.shipping ?? 0)).toFixed(2)} €
         </strong>
@@ -998,8 +999,8 @@ if (!article) {
     <div className={styles.tiersTable}>
       <div className={styles.tiersHead}>
         <span>Menge</span>
-        <span>Preis / {unitLabel(unit, article.category)}</span>
-        <span>Versand</span>
+        <span>Preis / {unitLabel(unit, article.category)}{article.price_mode === "net" ? " netto" : ""}</span>
+        <span>Versand{article.price_mode === "net" ? " netto" : ""}</span>
       </div>
 
       {tiers
@@ -1122,7 +1123,7 @@ if (!article) {
         </div>
 
         <div className={styles.buyPriceLine}>
-          <span>Versand:</span>
+          <span>Versand{article.price_mode === "net" ? " netto" : ""}:</span>
           <strong>{euro(priceCalc.shipping)} €</strong>
         </div>
       </>
@@ -1130,7 +1131,7 @@ if (!article) {
       <>
         {hasStaffelpreise && (
           <div className={styles.buyPriceLine}>
-            <span>Einzelpreis:</span>
+            <span>Einzelpreis{article.price_mode === "net" ? " netto" : ""}:</span>
             <strong>
               {euro(priceCalc.unitPrice)} € / {unitLabel(unit, article.category)}
             </strong>
@@ -1149,7 +1150,7 @@ if (!article) {
         </div>
 
         <div className={styles.buyPriceLine}>
-          <span>Versand:</span>
+          <span>Versand{article.price_mode === "net" ? " netto" : ""}:</span>
           <strong>{euro(priceCalc.shipping)} €</strong>
         </div>
       </>
@@ -1183,7 +1184,7 @@ if (!article) {
       </>
     ) : (
       <div className={styles.buyTotal}>
-        <span>Gesamt:</span>
+        <span>{article.price_mode === "no_vat" ? "Gesamt (ohne USt.):" : "Gesamt:"}</span>
         <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
       </div>
     )}
