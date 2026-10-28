@@ -690,7 +690,7 @@ if (!article) {
               </div>
 
               <div className={styles.metaItem}>
-                <span className={styles.label}>Hersteller:</span>
+                <span className={styles.label}>Hersteller / Marke:</span>
                 <span className={styles.value}>{article.manufacturer ?? "—"}</span>
               </div>
 

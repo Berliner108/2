@@ -12,18 +12,88 @@ import { Star, Search, Crown, Loader2 } from 'lucide-react';
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { useArticleEditPrefill } from '@/hooks/useArticleEditPrefill';
 import PremiumRequiredModal from '../components/premium/PremiumRequiredModal';
+const herstellerListePulver = [
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'Bellaria',
+  'Berger',
+  'Bollmann & Co. Pulverlacke',
+  'Brillux Industrial Coatings',
+  'Bub',
+  'Colorine',
+  'COLORE',
+  'CWS Powder Coatings',
+  'DuPont',
+  'E-Pulverit',
+  'FreiLacke',
+  'Ganzlin',
+  'Grimm Pulverlacke',
+  'IGP Powder Coatings',
+  'INVER',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'MOTEC Pulverlack',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'Pulver Kimya',
+  'Pulverkönig',
+  'RELIUS',
+  'RIPOL',
+  'Serlac',
+  'Sherwin-Williams',
+  'ST Powder Coatings',
+  'Teknos',
+  'Teodur',
+  'TIGER Coatings',
+  'Valspar',
+  'Wörwag',
+];
 
-    const herstellerListePulver = [
-    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm', 'Akzo Nobel',
-    'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
-    'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
-    'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
-    'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
-    'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
-    ];
-    const herstellerListeNass = [
-  'Sherwin‑Williams', 'Brillux','PPG Industries',  'Akzo Nobel',  'Nippon Paint',  'RPM International',  'Axalta',  'BASF',  'Kansai',  'Asian Paints',  'Jotun',  'Hempel',  'Adler Lacke',
-  'Berger',  'Nerolac',  'Benjamin Moore'
+const herstellerListeNass = [
+  'ADLER Lacke',
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'BASF',
+  'Beckers Group',
+  'Benjamin Moore',
+  'Berger',
+  'Brillux Industrial Coatings',
+  'CIN',
+  'Colorine',
+  'DAW / Caparol',
+  'Dold',
+  'DuPont',
+  'Farben Morscher',
+  'FEYCOLOR',
+  'FreiLacke',
+  'GV Lacke',
+  'Hempel',
+  'Hesse Lignal',
+  'INVER',
+  'IVM Chemicals / Milesi',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'Mäder',
+  'Mankiewicz',
+  'Meffert',
+  'Mipa',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'RELIUS',
+  'Remmers',
+  'Sherwin-Williams',
+  'Sika',
+  'Stahl',
+  'Teknos',
+  'Tikkurila',
+  'Valspar',
+  'Wörwag',
 ];
 
 
@@ -2346,7 +2416,7 @@ return (
 
 <label className={styles.label1}>
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-    Hersteller: <span style={{ color: 'red' }}>*</span>
+    Hersteller / Marke: <span style={{ color: 'red' }}>*</span>
   </span>
   <select
     className={`${styles.platformNativeSelect} ${warnungHersteller ? styles.selectError : ''}`}
@@ -2377,7 +2447,7 @@ return (
 )}
 {hersteller === HERSTELLER_ANDERE_VALUE && (
   <label className={styles.label2}>
-    Hersteller (Andere):
+    Hersteller / Marke (Andere):
     <input
       type="text"
       className={styles.input}
@@ -2392,7 +2462,7 @@ return (
       onFocus={() => {
         if (warnungHersteller) setWarnungHersteller('');
       }}
-      placeholder="Hersteller eingeben…"
+      placeholder="Hersteller / Marke eingeben…"
     />
     <div className={styles.counter}>{herstellerAndere.length} / 30 Zeichen</div>
     
@@ -3783,7 +3853,7 @@ onFocus={() => {
           <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
           <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
           <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-          <p><strong>Hersteller:</strong> {
+          <p><strong>Hersteller / Marke:</strong> {
   hersteller === HERSTELLER_ANDERE_VALUE
     ? (herstellerAndere || '–')
     : (hersteller || '–')

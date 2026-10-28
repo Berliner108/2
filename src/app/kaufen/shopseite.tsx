@@ -29,7 +29,93 @@ const normalizeKategorie = (s?: string | null) => CAT_MAP[norm(s)] ?? '';
 const kategorien: Array<'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'> = ['Nasslack', 'Pulverlack', 'Arbeitsmittel', 'Galvano-Zubehör'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
-const herstellerFilter = [
+const herstellerFilterPulver = [
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'Bellaria',
+  'Berger',
+  'Bollmann & Co. Pulverlacke',
+  'Brillux Industrial Coatings',
+  'Bub',
+  'Colorine',
+  'COLORE',
+  'CWS Powder Coatings',
+  'DuPont',
+  'E-Pulverit',
+  'FreiLacke',
+  'Ganzlin',
+  'Grimm Pulverlacke',
+  'IGP Powder Coatings',
+  'INVER',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'MOTEC Pulverlack',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'Pulver Kimya',
+  'Pulverkönig',
+  'RELIUS',
+  'RIPOL',
+  'Serlac',
+  'Sherwin-Williams',
+  'ST Powder Coatings',
+  'Teknos',
+  'Teodur',
+  'TIGER Coatings',
+  'Valspar',
+  'Wörwag',
+];
+
+const herstellerFilterNass = [
+  'ADLER Lacke',
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'BASF',
+  'Beckers Group',
+  'Benjamin Moore',
+  'Berger',
+  'Brillux Industrial Coatings',
+  'CIN',
+  'Colorine',
+  'DAW / Caparol',
+  'Dold',
+  'DuPont',
+  'Farben Morscher',
+  'FEYCOLOR',
+  'FreiLacke',
+  'GV Lacke',
+  'Hempel',
+  'Hesse Lignal',
+  'INVER',
+  'IVM Chemicals / Milesi',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'Mäder',
+  'Mankiewicz',
+  'Meffert',
+  'Mipa',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'RELIUS',
+  'Remmers',
+  'Sherwin-Williams',
+  'Sika',
+  'Stahl',
+  'Teknos',
+  'Tikkurila',
+  'Valspar',
+  'Wörwag',
+];
+
+// Bis Arbeitsmittel und Galvano-Zubehör separat überarbeitet werden,
+// bleibt dort die bisherige Herstellerliste unverändert.
+const herstellerFilterSonstige = [
   'Brillux',
   'Sherwin Williams',
   'PPG Industries',
@@ -204,6 +290,19 @@ export default function Shopseite() {
   const [privat, setPrivat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [anzahlAnzeigen, setAnzahlAnzeigen] = useState(50);
+
+  const aktuelleHerstellerFilter =
+    kategorie === 'Nasslack'
+      ? herstellerFilterNass
+      : kategorie === 'Pulverlack'
+        ? herstellerFilterPulver
+        : herstellerFilterSonstige;
+
+  useEffect(() => {
+    setHersteller((prev) =>
+      prev.filter((name) => aktuelleHerstellerFilter.includes(name))
+    );
+  }, [kategorie]);
 
   // Pagination aus URL
   const page = parseInt(searchParams.get('page') || '1', 10);
@@ -591,8 +690,8 @@ export default function Shopseite() {
 
           {/* Hersteller */}
           <div className={styles.checkboxGroup}>
-            <strong>Hersteller</strong>
-            {herstellerFilter.map((h) => (
+            <strong>Hersteller / Marke</strong>
+            {aktuelleHerstellerFilter.map((h) => (
               <label key={h} className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
