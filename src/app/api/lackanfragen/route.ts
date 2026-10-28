@@ -71,6 +71,45 @@ function displayNameFromProfile(p?: any): string | undefined {
   return u || undefined
 }
 
+const HERSTELLER_ALIASES: Record<string, string[]> = {
+  'ADLER Lacke': ['Adler Lacke'],
+  'AkzoNobel': ['Akzo Nobel', 'Akzonobel'],
+  'Brillux Industrial Coatings': ['Brillux'],
+  'FreiLacke': ['Frei Lacke', 'Freilacke'],
+  'Grimm Pulverlacke': ['Grimm'],
+  'IGP Powder Coatings': ['IGP', 'IGP Pulvertechnik AG'],
+  'KABE Farben': ['Kabe', 'KABE', 'KABE Farben - Karl Bubenhofer AG'],
+  'KANSAI HELIOS': ['Kansai', 'Helios', 'Kansai Helios'],
+  'MOTEC Pulverlack': ['Motec-Pulverlack', 'Motec Pulverlack'],
+  'PPG': ['PPG Industries'],
+  'RIPOL': ['Ripol', 'RIPOL Sagl'],
+  'Sherwin-Williams': ['Sherwin Williams'],
+  'ST Powder Coatings': ['ST Powder Coatings S.p.A.'],
+  'TIGER Coatings': ['Tiger'],
+  'Valspar': ['VAL'],
+}
+
+function expandHerstellerFilter(values: string[]): string[] {
+  const expanded = new Set<string>()
+
+  for (const value of values) {
+    expanded.add(value)
+
+    for (const alias of HERSTELLER_ALIASES[value] ?? []) {
+      expanded.add(alias)
+    }
+
+    for (const [canonical, aliases] of Object.entries(HERSTELLER_ALIASES)) {
+      if (aliases.includes(value)) {
+        expanded.add(canonical)
+        for (const alias of aliases) expanded.add(alias)
+      }
+    }
+  }
+
+  return Array.from(expanded)
+}
+
 /* ------------ Route ------------ */
 
 export async function GET(req: Request) {
@@ -130,10 +169,12 @@ const normalizeZustandForDb = (value: string) => {
   .map((s) => normalizeZustandForDb(s.trim()))
   .filter(Boolean)
 
-    const herstellerList = herstellerRaw
+    const herstellerListRaw = herstellerRaw
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
+
+    const herstellerList = expandHerstellerFilter(herstellerListRaw)
 
     const maxMenge = maxRaw ? Number(maxRaw) : null
 
