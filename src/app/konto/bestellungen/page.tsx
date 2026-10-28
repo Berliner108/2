@@ -694,15 +694,19 @@ return (
                               Menge: {o.qty} {o.unit === "stueck" ? "Stück" : "kg"}
                             </div>
 
-                            <div>Artikel: {formatEUR(o.itemCents ?? 0)}</div>
-
-                            <div>
-                              Versand: {(o.shippingCents ?? 0) === 0 ? "kostenlos" : formatEUR(o.shippingCents ?? 0)}
-                            </div>
-
                             {o.priceMode === "net" && o.totalNetCents != null && o.vatCents != null ? (
                               <>
-                                <div>Netto: {formatEUR(o.totalNetCents)}</div>
+                                <div>
+                                  Artikel netto: {formatEUR(
+                                    Math.max(0, o.totalNetCents - (o.shippingNetCents ?? 0))
+                                  )}
+                                </div>
+                                <div>
+                                  Versand netto: {(o.shippingNetCents ?? 0) === 0
+                                    ? "kostenlos"
+                                    : formatEUR(o.shippingNetCents ?? 0)}
+                                </div>
+                                <div>Gesamt netto: {formatEUR(o.totalNetCents)}</div>
                                 <div>
                                   USt.{o.taxRate != null ? ` (${Math.round(o.taxRate * 100)} %)` : ""}: {formatEUR(o.vatCents)}
                                 </div>
@@ -713,14 +717,34 @@ return (
                             ) : o.priceMode === "no_vat" ? (
                               <>
                                 <div>
-                                  <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
+                                  Artikel: {formatEUR(
+                                    Math.max(0, o.amountCents - (o.shippingCents ?? 0))
+                                  )}
+                                </div>
+                                <div>
+                                  Versand: {(o.shippingCents ?? 0) === 0
+                                    ? "kostenlos"
+                                    : formatEUR(o.shippingCents ?? 0)}
+                                </div>
+                                <div>
+                                  <strong>Gesamt (ohne USt.): {formatEUR(o.amountCents)}</strong>
                                 </div>
                                 <div>Keine Umsatzsteuer ausweisbar.</div>
                               </>
                             ) : (
                               <>
                                 <div>
-                                  <strong>Gesamt: {formatEUR(o.amountCents)}</strong>
+                                  Artikel brutto: {formatEUR(
+                                    Math.max(0, o.amountCents - (o.shippingCents ?? 0))
+                                  )}
+                                </div>
+                                <div>
+                                  Versand brutto: {(o.shippingCents ?? 0) === 0
+                                    ? "kostenlos"
+                                    : formatEUR(o.shippingCents ?? 0)}
+                                </div>
+                                <div>
+                                  <strong>Gesamt brutto: {formatEUR(o.amountCents)}</strong>
                                 </div>
                                 <div>inkl. Umsatzsteuer</div>
                               </>
