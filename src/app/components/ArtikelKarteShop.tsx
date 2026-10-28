@@ -147,13 +147,17 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
           <div className={styles.cardText7}>
             {artikel.sale_type === "gesamt" ? (
               <>
-                Preis: {formatPrice(preis)} € · Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`} · {taxLabel}
+                Preis: {formatPrice(preis)} € · {taxLabel}
               </>
             ) : (
               <>
-                Preis ab: {formatPrice(preis)} € / {einheitLabel} · Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`} · {taxLabel}
+                Preis ab: {formatPrice(preis)} € / {einheitLabel} · {taxLabel}
               </>
             )}
+          </div>
+
+          <div className={styles.cardText7}>
+            Versand: {versand === 0 ? "kostenlos" : `${formatPrice(versand)} €`}
           </div>
 
         </div>
