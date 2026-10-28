@@ -536,10 +536,10 @@ const shippingText =
 
 const taxLabel =
   art.price_mode === "net"
-    ? "Preise netto"
+    ? "netto"
     : art.price_mode === "no_vat"
-      ? "Preise ohne USt."
-      : "Preise inkl. USt.";
+      ? "ohne USt."
+      : "inkl. USt.";
 
 // ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
 const unitSuffix =
@@ -566,10 +566,10 @@ const unitSuffix =
           <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>
 
           <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginBottom: 4 }}>
-            <strong>{priceLabel}</strong> {priceText}{unitSuffix}
+            <strong>{priceLabel}</strong> {priceText}{unitSuffix} · {taxLabel}
           </p>
           <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginTop: 0 }}>
-            <strong>Versand:</strong> {shippingText} · {taxLabel}
+            <strong>Versand:</strong> {shippingText}
           </p>
         </div>
       </Link>
