@@ -96,13 +96,16 @@ async function insertPriceTiersWithFallback(opts: {
   const fullTry = await supabase.from("article_price_tiers").insert(tiers);
   if (!fullTry.error) return;
 
-  const minimal = tiers.map((t) => ({
+  const fallbackTiers = tiers.map((t) => ({
     article_id: t.article_id,
     unit: t.unit,
+    min_qty: t.min_qty,
+    max_qty: t.max_qty,
     price: t.price,
+    shipping: t.shipping,
   }));
 
-  const minTry = await supabase.from("article_price_tiers").insert(minimal);
+  const minTry = await supabase.from("article_price_tiers").insert(fallbackTiers);
   if (minTry.error) {
     throw new Error(`PRICE_TIER_INSERT_FAILED: ${minTry.error.message}`);
   }

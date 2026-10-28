@@ -307,6 +307,9 @@ const agbRef = useRef<HTMLDivElement>(null)
 const [profileChecked, setProfileChecked] = useState(false);
 const [connect, setConnect] = useState<ConnectStatus | null>(null);
 const [connectLoaded, setConnectLoaded] = useState(false);
+const [sellerTaxStatus, setSellerTaxStatus] = useState<
+  'private' | 'vat_registered' | 'vat_exempt' | null
+>(null);
 const [warnungHersteller, setWarnungHersteller] = useState('');
 
 
@@ -619,6 +622,14 @@ const checkSellerImprint = useCallback(async () => {
 
     const isBusiness = p?.account_type === 'business';
     const taxStatus = p?.taxStatus;
+
+    setSellerTaxStatus(
+      !isBusiness
+        ? 'private'
+        : taxStatus === 'vat_registered' || taxStatus === 'vat_exempt'
+          ? taxStatus
+          : null
+    );
 
     const taxDataComplete =
       !isBusiness ||
@@ -3389,6 +3400,14 @@ onFocus={() => {
 )}
   </fieldset>
 )}
+{verkaufsArt && sellerTaxStatus && (
+  <p className={styles.hinweisText}>
+    {sellerTaxStatus === 'vat_registered'
+      ? 'Bitte alle Preise und Versandkosten netto eingeben. Die USt. wird beim Kauf automatisch berechnet.'
+      : 'Bitte alle Preise und Versandkosten ohne USt. eingeben.'}
+  </p>
+)}
+
 {(verkaufsArt === 'pro_kg' || verkaufsArt === 'pro_stueck') && (
   <div className={styles.staffelContainer}>
     <div className={styles.staffelHeaderRow}>
@@ -3425,9 +3444,9 @@ onFocus={() => {
       <div>
   Preis {verkaufsArt === 'pro_kg'
     ? `€/${kategorie === 'nasslack' ? 'Liter' : 'kg'}`
-    : '€/Stück'}
+    : '€/Stück'}{sellerTaxStatus === 'vat_registered' ? ' netto' : ''}
 </div>
-      <div>Versand (€)</div>
+      <div>Versand (€{sellerTaxStatus === 'vat_registered' ? ' netto' : ''})</div>
       <div></div>
     </div>
 
@@ -3466,7 +3485,7 @@ onFocus={() => {
 
         {/* Preis */}
         <div className={styles.staffelCell}>
-          <span className={styles.staffelMobileLabel}>Preis</span>
+          <span className={styles.staffelMobileLabel}>Preis{sellerTaxStatus === 'vat_registered' ? ' netto' : ''}</span>
           <input
   type="text"
   inputMode="decimal"
@@ -3482,7 +3501,7 @@ onFocus={() => {
 
         {/* Versand */}
         <div className={styles.staffelCell}>
-          <span className={styles.staffelMobileLabel}>Versand</span>
+          <span className={styles.staffelMobileLabel}>Versand{sellerTaxStatus === 'vat_registered' ? ' netto' : ''}</span>
           <input
   type="text"
   inputMode="decimal"
@@ -3570,7 +3589,7 @@ onFocus={() => {
   <div className={styles.preisVersandContainer}>
     <label className={styles.inputLabel}>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-        Gesamtpreis (€) <span style={{ color: 'red' }}>*</span>
+        Gesamtpreis (€{sellerTaxStatus === 'vat_registered' ? ' netto' : ''}) <span style={{ color: 'red' }}>*</span>
       </span>
       <input
         type="text"
@@ -3595,7 +3614,7 @@ onFocus={() => {
 
     <label className={styles.inputLabel}>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-        Versandkosten (€) <span style={{ color: 'red' }}>*</span>
+        Versandkosten (€{sellerTaxStatus === 'vat_registered' ? ' netto' : ''}) <span style={{ color: 'red' }}>*</span>
       </span>
       <input
         type="text"
