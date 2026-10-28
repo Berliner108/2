@@ -113,52 +113,9 @@ const herstellerFilterNass = [
   'Wörwag',
 ];
 
-// Bis Arbeitsmittel und Galvano-Zubehör separat überarbeitet werden,
-// bleibt dort die bisherige Herstellerliste unverändert.
-const herstellerFilterSonstige = [
-  'Brillux',
-  'Sherwin Williams',
-  'PPG Industries',
-  'Nippon Paint',
-  'BASF',
-  'Asian Paints',
-  'Hempel',
-  'Adler Lacke',
-  'Berger',
-  'Nerolac',
-  'Benjamin Moore',
-  'RPM International',
-  'IGP',
-  'Tiger',
-  'Axalta',
-  'Frei Lacke',
-  'Grimm',
-  'Akzo Nobel',
-  'Teknos',
-  'Pulver Kimya',
-  'Kabe',
-  'Wörwag',
-  'Kansai',
-  'Helios',
-  'Pulverkönig',
-  'Bentatec',
-  'Pulmatech',
-  'Colortech',
-  'VAL',
-  'E-Pulverit',
-  'Braunsteiner',
-  'Ganzlin',
-  'Colors-Manufaktur',
-  'Aalbert',
-  'Motec-Pulverlack',
-  'DuPont',
-  'Jotun',
-  'Pulvertech.de',
-  'Pulverlacke24.de',
-  'Pulverlacke.de',
-  'Pulverlack-pro.de',
-  'Pulverlackshop.de',
-];
+const herstellerFilterAlle = Array.from(
+  new Set([...herstellerFilterNass, ...herstellerFilterPulver])
+);
 
 type ShopArtikel = {
   id: string | number;
@@ -295,8 +252,8 @@ export default function Shopseite() {
     kategorie === 'Nasslack'
       ? herstellerFilterNass
       : kategorie === 'Pulverlack'
-        ? herstellerFilterPulver
-        : herstellerFilterSonstige;
+      ? herstellerFilterPulver
+      : herstellerFilterAlle;
 
   useEffect(() => {
     setHersteller((prev) =>
