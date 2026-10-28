@@ -540,19 +540,58 @@ useEffect(() => {
   });
 };
 
-  // Herstellerlisten
+  // Hersteller / Marken – getrennt nach Lackart
   const herstellerListePulver = [
-    'IGP', 'Tiger', 'Axalta', 'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel',
-    'Sherwin Williams', 'Brillux','Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
-    'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL',
-    'E-Pulverit', 'Braunsteiner', 'Ganzlin', 'Colors-Manufaktur', 'Aalbert',
-    'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de', 'Pulverlacke24.de',
-    'Pulverlacke.de', 'Pulverlack-pro.de', 'Pulverlackshop.de'
+    'AkzoNobel',
+    'Axalta',
+    'Bollmann & Co. Pulverlacke',
+    'Brillux Industrial Coatings',
+    'Colorine',
+    'COLORE',
+    'CWS Powder Coatings',
+    'DuPont',
+    'FreiLacke',
+    'Ganzlin',
+    'Grimm Pulverlacke',
+    'IGP Powder Coatings',
+    'INVER',
+    'Jotun',
+    'KABE Farben',
+    'KANSAI HELIOS',
+    'MOTEC Pulverlack',
+    'Nippon Paint',
+    'PPG',
+    'Pulver Kimya',
+    'RELIUS',
+    'RIPOL',
+    'Sherwin-Williams',
+    'ST Powder Coatings',
+    'Teknos',
+    'TIGER Coatings',
+    'Wörwag',
+    'Anderer Hersteller / Marke',
   ];
   const herstellerListeNass = [
-    'Sherwin-Williams', 'Brillux','PPG Industries','Akzo Nobel','Nippon Paint','RPM International','Axalta','BASF','Kansai',
-    'Asian Paints','Jotun','Hempel','Adler Lacke','Berger','Nerolac','Benjamin Moore',
-    'Anderer Hersteller'
+    'ADLER Lacke',
+    'AkzoNobel',
+    'Brillux Industrial Coatings',
+    'Colorine',
+    'FEYCOLOR',
+    'FreiLacke',
+    'GV Lacke',
+    'Hempel',
+    'Jotun',
+    'KABE Farben',
+    'KANSAI HELIOS',
+    'Mankiewicz',
+    'Mipa',
+    'Nippon Paint',
+    'PPG',
+    'RELIUS',
+    'Sherwin-Williams',
+    'Teknos',
+    'Wörwag',
+    'Anderer Hersteller / Marke',
   ];
   const aktuelleHerstellerListe =
     kategorie === 'nasslack'
@@ -1541,13 +1580,13 @@ if (bootLoading) {
 
                   {/* Hersteller */}
                   <label className={styles.label1}>
-                    Hersteller (optional):
+                    Hersteller / Marke (optional):
                     <select
                       className={styles.platformNativeSelect}
-                      value={hersteller === ANDERER_HERSTELLER ? 'Anderer Hersteller' : (hersteller || 'Alle')}
+                      value={hersteller === ANDERER_HERSTELLER ? 'Anderer Hersteller / Marke' : (hersteller || 'Alle')}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === 'Anderer Hersteller') {
+                        if (value === 'Anderer Hersteller / Marke') {
                           setHersteller(ANDERER_HERSTELLER);
                           return;
                         }
@@ -1564,7 +1603,7 @@ if (bootLoading) {
                   </label>
                   {hersteller === ANDERER_HERSTELLER && (
                     <label className={styles.label}>
-                      Anderen Hersteller eingeben:
+                      Anderen Hersteller / Marke eingeben:
                       <input
                         type="text"
                         className={styles.input}
@@ -2393,7 +2432,7 @@ if (bootLoading) {
               <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
               <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
               <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-              <p><strong>Hersteller:</strong> {displayHersteller(hersteller)}</p>
+              <p><strong>Hersteller / Marke:</strong> {displayHersteller(hersteller)}</p>
               <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
               <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
               <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>

@@ -16,14 +16,45 @@ const kategorien = ['Nasslack', 'Pulverlack'];
 
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
-const herstellerFilter = [
-  'Brillux', 'Sherwin-Williams', 'PPG Industries', 'Nippon Paint', 'BASF', 'Asian Paints', 'Hempel',
-  'Adler Lacke', 'Berger', 'Nerolac', 'Benjamin Moore', 'RPM International', 'IGP', 'Tiger', 'Axalta',
-  'Frei Lacke', 'Grimm Pulverlacke', 'Akzo Nobel', 'Teknos', 'Pulver Kimya', 'Kabe', 'Wörwag', 'Kansai',
-  'Helios', 'Pulverkönig', 'Bentatec', 'Pulmatech', 'Colortech', 'VAL', 'E-Pulverit', 'Braunsteiner',
-  'Ganzlin', 'Colors-Manufaktur', 'Aalbert', 'Motec-Pulverlack', 'DuPont', 'Jotun', 'Pulvertech.de',
-  'Pulverlacke24.de', 'Pulverlacke.de', 'Pulverlack-pro.de',
+const herstellerFilterPulver = [
+  'AkzoNobel', 'Axalta', 'Bollmann & Co. Pulverlacke', 'Brillux Industrial Coatings',
+  'Colorine', 'COLORE', 'CWS Powder Coatings', 'DuPont', 'FreiLacke', 'Ganzlin',
+  'Grimm Pulverlacke', 'IGP Powder Coatings', 'INVER', 'Jotun', 'KABE Farben',
+  'KANSAI HELIOS', 'MOTEC Pulverlack', 'Nippon Paint', 'PPG', 'Pulver Kimya',
+  'RELIUS', 'RIPOL', 'Sherwin-Williams', 'ST Powder Coatings', 'Teknos',
+  'TIGER Coatings', 'Wörwag',
 ];
+
+const herstellerFilterNass = [
+  'ADLER Lacke', 'AkzoNobel', 'Brillux Industrial Coatings', 'Colorine', 'FEYCOLOR',
+  'FreiLacke', 'GV Lacke', 'Hempel', 'Jotun', 'KABE Farben', 'KANSAI HELIOS',
+  'Mankiewicz', 'Mipa', 'Nippon Paint', 'PPG', 'RELIUS', 'Sherwin-Williams',
+  'Teknos', 'Wörwag',
+];
+
+const alleHerstellerFilter = Array.from(
+  new Set([...herstellerFilterPulver, ...herstellerFilterNass])
+).sort((a, b) => a.localeCompare(b, 'de'));
+
+const herstellerAliases: Record<string, string[]> = {
+  'ADLER Lacke': ['Adler Lacke'],
+  'AkzoNobel': ['Akzo Nobel', 'Akzonobel'],
+  'Brillux Industrial Coatings': ['Brillux'],
+  'FreiLacke': ['Frei Lacke', 'Freilacke'],
+  'IGP Powder Coatings': ['IGP', 'IGP Pulvertechnik AG'],
+  'KABE Farben': ['Kabe', 'KABE', 'KABE Farben - Karl Bubenhofer AG'],
+  'KANSAI HELIOS': ['Kansai', 'Helios'],
+  'MOTEC Pulverlack': ['Motec-Pulverlack'],
+  'PPG': ['PPG Industries'],
+  'Pulver Kimya': ['Kimya'],
+  'RIPOL': ['Ripol', 'RIPOL Sagl'],
+  'Sherwin-Williams': ['Sherwin Williams'],
+  'ST Powder Coatings': ['ST Powder Coatings S.p.A.'],
+  'TIGER Coatings': ['Tiger'],
+};
+
+const expandHerstellerForApi = (values: string[]) =>
+  Array.from(new Set(values.flatMap((value) => [value, ...(herstellerAliases[value] || [])])));
 
 /* ===================== Konstanten ===================== */
 
@@ -285,6 +316,19 @@ export default function KaufenSeite() {
   const [privat, setPrivat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const aktuelleHerstellerFilter =
+    kategorie === 'Pulverlack'
+      ? herstellerFilterPulver
+      : kategorie === 'Nasslack'
+        ? herstellerFilterNass
+        : alleHerstellerFilter;
+
+  useEffect(() => {
+    if (!kategorie) return;
+    const erlaubt = new Set(aktuelleHerstellerFilter);
+    setHersteller((prev) => prev.filter((value) => erlaubt.has(value)));
+  }, [kategorie]); // absichtlich nur bei Kategorienwechsel
+
   const [loading, setLoading] = useState(true);
   const [liste, setListe] = useState<CardArtikel[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -386,7 +430,7 @@ export default function KaufenSeite() {
         if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
         if (kategorie) params.set('kategorie', kategorie);
         if (zustand.length) params.set('zustand', zustand.join(','));
-        if (hersteller.length) params.set('hersteller', hersteller.join(','));
+        if (hersteller.length) params.set('hersteller', expandHerstellerForApi(hersteller).join(','));
         if (maxMenge !== MAX_MENGE) params.set('max', String(maxMenge));
         if (gewerblich) params.set('g', '1');
         if (privat) params.set('p', '1');
@@ -707,9 +751,9 @@ export default function KaufenSeite() {
           </div>
 
           <div className={styles.checkboxGroup}>
-            <strong>Hersteller</strong>
+            <strong>Hersteller / Marke</strong>
 
-            {herstellerFilter.map((h) => (
+            {aktuelleHerstellerFilter.map((h) => (
               <label key={h} className={styles.checkboxLabel}>
                 <input
                   type="checkbox"

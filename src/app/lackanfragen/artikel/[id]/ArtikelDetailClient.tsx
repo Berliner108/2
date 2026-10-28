@@ -1089,7 +1089,7 @@ const isSubmitDisabled =
                 </div>
               )}
               <div className={styles.metaItem}>
-                <span className={styles.label}>Hersteller:</span>
+                <span className={styles.label}>Hersteller / Marke:</span>
                 <span className={styles.value}>{(artikel.hersteller && artikel.hersteller.trim()) || 'Alle'}</span>
               </div>
 
