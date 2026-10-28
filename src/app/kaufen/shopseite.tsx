@@ -557,7 +557,7 @@ export default function Shopseite() {
             value={maxPreis}
             onChange={(e) => setMaxPreis(Number(e.target.value))}
           />
-          <div className={styles.mengeText}>Max. Preis: {maxPreis.toFixed(2)} €</div>
+          <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
           {/* Kategorie */}
           <div className={styles.checkboxGroup}>
