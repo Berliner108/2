@@ -129,42 +129,55 @@ export async function GET(req: Request) {
     const sortParam = (url.searchParams.get("sort") ?? "").toLowerCase();
     const isPriceSort = sortParam === "preis-auf" || sortParam === "preis-ab";
 
-    // Preis liegt in article_price_tiers. Passende Artikel-IDs zuerst auflösen,
-    // danach verwenden Count und Datenabfrage dieselbe applyFilters-Funktion.
+    // Preisfilter und Slider verwenden exakt dieselbe Basis wie die Anzeige:
+    // günstigste Preisstufe eines Artikels + der Versand dieser Preisstufe.
+    const { data: allPriceRows, error: allPriceError } = await admin
+      .from("article_price_tiers")
+      .select("article_id, price, shipping");
+
+    if (allPriceError) {
+      return NextResponse.json({ error: allPriceError.message }, { status: 500 });
+    }
+
+    const displayedTotalByArticle = new Map<string, { price: number; total: number }>();
+
+    for (const row of allPriceRows ?? []) {
+      const id = String(row.article_id ?? "");
+      const price = typeof row.price === "number" ? row.price : Number(row.price);
+      const shipping =
+        row.shipping == null
+          ? 0
+          : typeof row.shipping === "number"
+            ? row.shipping
+            : Number(row.shipping);
+
+      if (!id || !Number.isFinite(price)) continue;
+
+      const shippingValue = Number.isFinite(shipping) ? shipping : 0;
+      const total = price + shippingValue;
+      const current = displayedTotalByArticle.get(id);
+
+      if (
+        !current ||
+        price < current.price ||
+        (price === current.price && total < current.total)
+      ) {
+        displayedTotalByArticle.set(id, { price, total });
+      }
+    }
+
     let priceArticleIds: string[] | null = null;
 
     if (maxPreis !== null && Number.isFinite(maxPreis)) {
-      const { data: priceRows, error: priceError } = await admin
-        .from("article_price_tiers")
-        .select("article_id")
-        .lte("price", maxPreis);
-
-      if (priceError) {
-        return NextResponse.json({ error: priceError.message }, { status: 500 });
-      }
-
-      priceArticleIds = Array.from(
-        new Set(
-          (priceRows ?? [])
-            .map((row: any) => String(row.article_id ?? ""))
-            .filter(Boolean)
-        )
-      );
+      priceArticleIds = Array.from(displayedTotalByArticle.entries())
+        .filter(([, info]) => info.total <= maxPreis)
+        .map(([articleId]) => articleId);
     }
 
-    // Slider-Obergrenze.
-    const { data: maxPriceRows, error: maxPriceError } = await admin
-      .from("article_price_tiers")
-      .select("price")
-      .not("price", "is", null)
-      .order("price", { ascending: false })
-      .limit(1);
-
-    if (maxPriceError) {
-      return NextResponse.json({ error: maxPriceError.message }, { status: 500 });
-    }
-
-    const maxPriceAvailable = Number(maxPriceRows?.[0]?.price ?? 0);
+    const maxPriceAvailable = Array.from(displayedTotalByArticle.values()).reduce(
+      (max, info) => Math.max(max, info.total),
+      0
+    );
 
     const columns =
       "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, price_mode, condition, created_at, updated_at";
