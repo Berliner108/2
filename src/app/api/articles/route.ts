@@ -127,6 +127,7 @@ export async function GET(req: Request) {
     const maxRaw = url.searchParams.get("max");
     const maxPreis = maxRaw !== null && maxRaw !== "" ? Number(maxRaw) : null;
     const sortParam = (url.searchParams.get("sort") ?? "").toLowerCase();
+    const isPriceSort = sortParam === "preis-auf" || sortParam === "preis-ab";
 
     // Preis liegt in article_price_tiers. Passende Artikel-IDs zuerst auflösen,
     // danach verwenden Count und Datenabfrage dieselbe applyFilters-Funktion.
@@ -299,6 +300,14 @@ export async function GET(req: Request) {
         break;
       }
 
+      case "preis-auf":
+      case "preis-ab":
+        // Die echte Preissortierung erfolgt weiter unten anhand
+        // article_price_tiers: angezeigter Preis + zugehöriger Versand.
+        // Hier nur eine stabile Grundreihenfolge setzen.
+        dataQuery = dataQuery.order("created_at", { ascending: false });
+        break;
+
       default:
         dataQuery = dataQuery
           .order("promo_score", { ascending: false })
@@ -319,7 +328,12 @@ export async function GET(req: Request) {
       to = from + limit - 1;
     }
 
-    dataQuery = dataQuery.range(from, to);
+    // Bei Preis-Sortierung müssen wir vor der Pagination nach
+    // Artikelpreis + Versandkosten sortieren. Sonst wäre nur die
+    // aktuell geladene Seite korrekt sortiert.
+    if (!isPriceSort) {
+      dataQuery = dataQuery.range(from, to);
+    }
 
     const { data: articles, error } = await dataQuery;
 
@@ -328,7 +342,71 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const rows = articles ?? [];
+    let rows = articles ?? [];
+
+    if (isPriceSort && rows.length) {
+      const ids = rows.map((a: any) => a.id);
+      const { data: sortTiers, error: sortTierError } = await admin
+        .from("article_price_tiers")
+        .select("article_id, price, shipping")
+        .in("article_id", ids);
+
+      if (sortTierError) {
+        return NextResponse.json({ error: sortTierError.message }, { status: 500 });
+      }
+
+      // Gleiche Logik wie bei price_from/shipping_from:
+      // zuerst die günstigste Preisstufe bestimmen und deren Versand addieren.
+      const totalPriceByArticle = new Map<string, { price: number; total: number }>();
+
+      for (const tier of sortTiers ?? []) {
+        const id = String(tier.article_id ?? "");
+        const price = typeof tier.price === "number" ? tier.price : Number(tier.price);
+        const shipping =
+          tier.shipping == null
+            ? 0
+            : typeof tier.shipping === "number"
+              ? tier.shipping
+              : Number(tier.shipping);
+
+        if (!id || !Number.isFinite(price)) continue;
+
+        const shippingValue = Number.isFinite(shipping) ? shipping : 0;
+        const current = totalPriceByArticle.get(id);
+
+        if (
+          !current ||
+          price < current.price ||
+          (price === current.price && price + shippingValue < current.total)
+        ) {
+          totalPriceByArticle.set(id, {
+            price,
+            total: price + shippingValue,
+          });
+        }
+      }
+
+      const direction = sortParam === "preis-auf" ? 1 : -1;
+
+      rows = [...rows].sort((a: any, b: any) => {
+        const aInfo = totalPriceByArticle.get(String(a.id));
+        const bInfo = totalPriceByArticle.get(String(b.id));
+
+        // Artikel ohne Preis immer ans Ende.
+        if (!aInfo && !bInfo) return 0;
+        if (!aInfo) return 1;
+        if (!bInfo) return -1;
+
+        const diff = (aInfo.total - bInfo.total) * direction;
+        if (diff !== 0) return diff;
+
+        // Bei identischem Gesamtpreis: neuere Artikel zuerst.
+        return String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""));
+      });
+
+      rows = rows.slice(from, to + 1);
+    }
+
     const todayISO = getBerlinTodayISO();
 
     const maxDeliveryDays =

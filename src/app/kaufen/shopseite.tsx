@@ -543,6 +543,8 @@ export default function Shopseite() {
             <option value="titel-za">Titel Z–A</option>
             <option value="menge-auf">Menge ↑</option>
             <option value="menge-ab">Menge ↓</option>
+            <option value="preis-auf">Preis inkl. Versand ↑</option>
+            <option value="preis-ab">Preis inkl. Versand ↓</option>
           </select>
 
           {/* Preis-Slider */}
