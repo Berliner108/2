@@ -1111,7 +1111,7 @@ if (!article) {
       <>
         <div className={styles.buyPriceLine}>
           <span>
-            Artikelpreis:
+            Artikel{article.price_mode === "net" ? " netto" : ""}:
             {packageQuantityText && (
               <small className={styles.priceLineSub}>
                 {packageQuantityText}
@@ -1140,7 +1140,7 @@ if (!article) {
 
         <div className={styles.buyPriceLine}>
           <span>
-            Artikelpreis:
+            Artikel{article.price_mode === "net" ? " netto" : ""}:
             <small className={styles.priceLineSub}>
               {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
             </small>
@@ -1159,7 +1159,7 @@ if (!article) {
     {article.price_mode === "net" ? (
       <>
         <div className={styles.buyPriceLine}>
-          <span>Netto:</span>
+          <span>Gesamt netto:</span>
           <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
         </div>
 
@@ -1171,7 +1171,7 @@ if (!article) {
             </div>
 
             <div className={styles.buyTotal}>
-              <span>Gesamt brutto:</span>
+              <span>Gesamtbetrag:</span>
               <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
             </div>
           </>
