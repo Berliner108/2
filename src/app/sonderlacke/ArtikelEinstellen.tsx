@@ -540,16 +540,21 @@ useEffect(() => {
   });
 };
 
-  // Hersteller / Marken – getrennt nach Lackart
+  // Herstellerlisten
   const herstellerListePulver = [
     'AkzoNobel',
+    'Asian Paints',
     'Axalta',
+    'Bellaria',
+    'Berger',
     'Bollmann & Co. Pulverlacke',
     'Brillux Industrial Coatings',
+    'Bub',
     'Colorine',
     'COLORE',
     'CWS Powder Coatings',
     'DuPont',
+    'E-Pulverit',
     'FreiLacke',
     'Ganzlin',
     'Grimm Pulverlacke',
@@ -559,46 +564,67 @@ useEffect(() => {
     'KABE Farben',
     'KANSAI HELIOS',
     'MOTEC Pulverlack',
+    'Nerolac',
     'Nippon Paint',
     'PPG',
     'Pulver Kimya',
+    'Pulverkönig',
     'RELIUS',
     'RIPOL',
+    'Serlac',
     'Sherwin-Williams',
     'ST Powder Coatings',
     'Teknos',
+    'Teodur',
     'TIGER Coatings',
+    'Valspar',
     'Wörwag',
     'Anderer Hersteller / Marke',
   ];
   const herstellerListeNass = [
     'ADLER Lacke',
     'AkzoNobel',
+    'Asian Paints',
+    'Axalta',
+    'BASF',
+    'Beckers Group',
+    'Benjamin Moore',
+    'Berger',
     'Brillux Industrial Coatings',
+    'CIN',
     'Colorine',
+    'DAW / Caparol',
+    'Dold',
+    'DuPont',
+    'Farben Morscher',
     'FEYCOLOR',
     'FreiLacke',
     'GV Lacke',
     'Hempel',
+    'Hesse Lignal',
+    'INVER',
+    'IVM Chemicals / Milesi',
     'Jotun',
     'KABE Farben',
     'KANSAI HELIOS',
+    'Mäder',
     'Mankiewicz',
+    'Meffert',
     'Mipa',
+    'Nerolac',
     'Nippon Paint',
     'PPG',
     'RELIUS',
+    'Remmers',
     'Sherwin-Williams',
+    'Sika',
+    'Stahl',
     'Teknos',
+    'Tikkurila',
+    'Valspar',
     'Wörwag',
     'Anderer Hersteller / Marke',
   ];
-  const aktuelleHerstellerListe =
-    kategorie === 'nasslack'
-      ? herstellerListeNass
-      : kategorie === 'pulverlack'
-      ? herstellerListePulver
-      : [];
 
   // Farbpaletten
   const farbpalette = [
@@ -2432,7 +2458,7 @@ if (bootLoading) {
               <p><strong>Farbcode:</strong> {farbcode || '–'}</p>
               <p><strong>Glanzgrad:</strong> {glanzgrad || '–'}</p>
               <p><strong>Farbpalette:</strong> {farbpaletteWert || '–'}</p>
-              <p><strong>Hersteller / Marke:</strong> {displayHersteller(hersteller)}</p>
+              <p><strong>Hersteller:</strong> {displayHersteller(hersteller)}</p>
               <p><strong>Oberfläche:</strong> {oberflaeche || '–'}</p>
               <p><strong>Anwendung:</strong> {anwendung || '–'}</p>
               <p><strong>Effekte:</strong> {effekt.join(', ') || '–'}</p>

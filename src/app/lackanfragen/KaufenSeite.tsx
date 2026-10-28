@@ -17,44 +17,92 @@ const kategorien = ['Nasslack', 'Pulverlack'];
 const zustandFilter = ['Neu und ungeöffnet', 'Geöffnet und einwandfrei'];
 
 const herstellerFilterPulver = [
-  'AkzoNobel', 'Axalta', 'Bollmann & Co. Pulverlacke', 'Brillux Industrial Coatings',
-  'Colorine', 'COLORE', 'CWS Powder Coatings', 'DuPont', 'FreiLacke', 'Ganzlin',
-  'Grimm Pulverlacke', 'IGP Powder Coatings', 'INVER', 'Jotun', 'KABE Farben',
-  'KANSAI HELIOS', 'MOTEC Pulverlack', 'Nippon Paint', 'PPG', 'Pulver Kimya',
-  'RELIUS', 'RIPOL', 'Sherwin-Williams', 'ST Powder Coatings', 'Teknos',
-  'TIGER Coatings', 'Wörwag',
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'Bellaria',
+  'Berger',
+  'Bollmann & Co. Pulverlacke',
+  'Brillux Industrial Coatings',
+  'Bub',
+  'Colorine',
+  'COLORE',
+  'CWS Powder Coatings',
+  'DuPont',
+  'E-Pulverit',
+  'FreiLacke',
+  'Ganzlin',
+  'Grimm Pulverlacke',
+  'IGP Powder Coatings',
+  'INVER',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'MOTEC Pulverlack',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'Pulver Kimya',
+  'Pulverkönig',
+  'RELIUS',
+  'RIPOL',
+  'Serlac',
+  'Sherwin-Williams',
+  'ST Powder Coatings',
+  'Teknos',
+  'Teodur',
+  'TIGER Coatings',
+  'Valspar',
+  'Wörwag',
 ];
 
 const herstellerFilterNass = [
-  'ADLER Lacke', 'AkzoNobel', 'Brillux Industrial Coatings', 'Colorine', 'FEYCOLOR',
-  'FreiLacke', 'GV Lacke', 'Hempel', 'Jotun', 'KABE Farben', 'KANSAI HELIOS',
-  'Mankiewicz', 'Mipa', 'Nippon Paint', 'PPG', 'RELIUS', 'Sherwin-Williams',
-  'Teknos', 'Wörwag',
+  'ADLER Lacke',
+  'AkzoNobel',
+  'Asian Paints',
+  'Axalta',
+  'BASF',
+  'Beckers Group',
+  'Benjamin Moore',
+  'Berger',
+  'Brillux Industrial Coatings',
+  'CIN',
+  'Colorine',
+  'DAW / Caparol',
+  'Dold',
+  'DuPont',
+  'Farben Morscher',
+  'FEYCOLOR',
+  'FreiLacke',
+  'GV Lacke',
+  'Hempel',
+  'Hesse Lignal',
+  'INVER',
+  'IVM Chemicals / Milesi',
+  'Jotun',
+  'KABE Farben',
+  'KANSAI HELIOS',
+  'Mäder',
+  'Mankiewicz',
+  'Meffert',
+  'Mipa',
+  'Nerolac',
+  'Nippon Paint',
+  'PPG',
+  'RELIUS',
+  'Remmers',
+  'Sherwin-Williams',
+  'Sika',
+  'Stahl',
+  'Teknos',
+  'Tikkurila',
+  'Valspar',
+  'Wörwag',
 ];
 
-const alleHerstellerFilter = Array.from(
-  new Set([...herstellerFilterPulver, ...herstellerFilterNass])
-).sort((a, b) => a.localeCompare(b, 'de'));
-
-const herstellerAliases: Record<string, string[]> = {
-  'ADLER Lacke': ['Adler Lacke'],
-  'AkzoNobel': ['Akzo Nobel', 'Akzonobel'],
-  'Brillux Industrial Coatings': ['Brillux'],
-  'FreiLacke': ['Frei Lacke', 'Freilacke'],
-  'IGP Powder Coatings': ['IGP', 'IGP Pulvertechnik AG'],
-  'KABE Farben': ['Kabe', 'KABE', 'KABE Farben - Karl Bubenhofer AG'],
-  'KANSAI HELIOS': ['Kansai', 'Helios'],
-  'MOTEC Pulverlack': ['Motec-Pulverlack'],
-  'PPG': ['PPG Industries'],
-  'Pulver Kimya': ['Kimya'],
-  'RIPOL': ['Ripol', 'RIPOL Sagl'],
-  'Sherwin-Williams': ['Sherwin Williams'],
-  'ST Powder Coatings': ['ST Powder Coatings S.p.A.'],
-  'TIGER Coatings': ['Tiger'],
-};
-
-const expandHerstellerForApi = (values: string[]) =>
-  Array.from(new Set(values.flatMap((value) => [value, ...(herstellerAliases[value] || [])])));
+const herstellerFilterAlle = Array.from(
+  new Set([...herstellerFilterNass, ...herstellerFilterPulver])
+);
 
 /* ===================== Konstanten ===================== */
 
@@ -317,17 +365,11 @@ export default function KaufenSeite() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const aktuelleHerstellerFilter =
-    kategorie === 'Pulverlack'
+    kategorie === 'Nasslack'
+      ? herstellerFilterNass
+      : kategorie === 'Pulverlack'
       ? herstellerFilterPulver
-      : kategorie === 'Nasslack'
-        ? herstellerFilterNass
-        : alleHerstellerFilter;
-
-  useEffect(() => {
-    if (!kategorie) return;
-    const erlaubt = new Set(aktuelleHerstellerFilter);
-    setHersteller((prev) => prev.filter((value) => erlaubt.has(value)));
-  }, [kategorie]); // absichtlich nur bei Kategorienwechsel
+      : herstellerFilterAlle;
 
   const [loading, setLoading] = useState(true);
   const [liste, setListe] = useState<CardArtikel[]>([]);
@@ -430,7 +472,7 @@ export default function KaufenSeite() {
         if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
         if (kategorie) params.set('kategorie', kategorie);
         if (zustand.length) params.set('zustand', zustand.join(','));
-        if (hersteller.length) params.set('hersteller', expandHerstellerForApi(hersteller).join(','));
+        if (hersteller.length) params.set('hersteller', hersteller.join(','));
         if (maxMenge !== MAX_MENGE) params.set('max', String(maxMenge));
         if (gewerblich) params.set('g', '1');
         if (privat) params.set('p', '1');
