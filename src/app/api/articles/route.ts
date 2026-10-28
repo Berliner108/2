@@ -384,13 +384,18 @@ export async function GET(req: Request) {
     const articleIds = rows.map((a: any) => a.id);
     const minPriceByArticle: Record<
       string,
-      { price_from: number | null; unit: "kg" | "stueck" | null; tier_count: number }
+      {
+        price_from: number | null;
+        shipping_from: number | null;
+        unit: "kg" | "stueck" | null;
+        tier_count: number;
+      }
     > = {};
 
     if (articleIds.length) {
       const { data: tiers, error: tierError } = await admin
         .from("article_price_tiers")
-        .select("article_id, unit, price")
+        .select("article_id, unit, price, shipping")
         .in("article_id", articleIds);
 
       if (tierError) {
@@ -400,6 +405,12 @@ export async function GET(req: Request) {
       for (const tier of tiers ?? []) {
         const key = String(tier.article_id);
         const price = typeof tier.price === "number" ? tier.price : Number(tier.price);
+        const shipping =
+          tier.shipping == null
+            ? 0
+            : typeof tier.shipping === "number"
+              ? tier.shipping
+              : Number(tier.shipping);
         const unit = tier.unit as "kg" | "stueck";
 
         if (!key) continue;
@@ -409,7 +420,12 @@ export async function GET(req: Request) {
         const current = minPriceByArticle[key];
 
         if (!current) {
-          minPriceByArticle[key] = { price_from: price, unit, tier_count: 1 };
+          minPriceByArticle[key] = {
+            price_from: price,
+            shipping_from: Number.isFinite(shipping) ? shipping : 0,
+            unit,
+            tier_count: 1,
+          };
           continue;
         }
 
@@ -417,6 +433,7 @@ export async function GET(req: Request) {
 
         if (current.price_from === null || price < current.price_from) {
           current.price_from = price;
+          current.shipping_from = Number.isFinite(shipping) ? shipping : 0;
           current.unit = unit;
         }
       }
@@ -434,6 +451,7 @@ export async function GET(req: Request) {
         ...article,
         image_urls: sortImageUrls(article.image_urls),
         price_from: priceInfo?.price_from ?? null,
+        shipping_from: priceInfo?.shipping_from ?? null,
         price_unit: priceInfo?.unit ?? null,
         price_is_from:
           (article.sale_type ?? "gesamt") !== "gesamt" &&

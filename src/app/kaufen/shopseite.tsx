@@ -83,6 +83,7 @@ type ShopArtikel = {
   zustand: string;
   kategorie: string;
   preis: number;
+  versand?: number | null;
   bilder: string[];
   einheit: 'kg' | 'stueck';
   seller_account_type?: "business" | "private" | null;
@@ -108,6 +109,7 @@ type ApiArticle = {
   image_urls?: string[] | null;
   sell_to?: 'gewerblich' | 'beide' | null;
   price_from?: number | null;
+  shipping_from?: number | null;
   price_unit?: 'kg' | 'stueck' | null;
   condition?: string | null; // optional, falls API liefert
   zustand?: string | null;   // optional fallback
@@ -322,6 +324,10 @@ export default function Shopseite() {
             zustand: String(a.condition ?? a.zustand ?? '').trim() || '—',
             kategorie: a.category ?? '—',
             preis: safeNumber(a.price_from, 0),
+            versand:
+              a.shipping_from == null
+                ? null
+                : safeNumber(a.shipping_from, 0),
             menge: displayQty,
             lieferdatum: isoToDate(a.delivery_date_iso),
             bilder: Array.isArray(a.image_urls) ? a.image_urls : [],

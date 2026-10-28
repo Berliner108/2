@@ -17,6 +17,7 @@ type ArtikelProps = {
     zustand?: string | null;
     kategorie?: string | null;
     preis?: number;
+    versand?: number | null;
     bilder?: string[] | null;
     // kommt aus DB (price_unit)
     einheit: 'kg' | 'stueck';
@@ -53,6 +54,7 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
     zustand,
     kategorie,
     preis,
+    versand,
     bilder,
     gesponsert,
   } = artikel;
@@ -144,6 +146,11 @@ export default function ArtikelCard({ artikel }: ArtikelProps) {
                 Preis ab: {typeof preis === "number" ? preis.toFixed(2) : "—"} € / {einheitLabel} · {taxLabel}
               </>
             )}
+          </div>
+
+          <div className={styles.cardText7}>
+            Versand: {versand == null ? "—" : versand === 0 ? "kostenlos" : `${versand.toFixed(2)} €`}
+            {artikel.price_mode === "net" ? " · netto" : artikel.price_mode === "no_vat" ? " · ohne USt." : " · brutto"}
           </div>
 
         </div>
