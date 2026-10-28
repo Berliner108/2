@@ -158,6 +158,7 @@ type ShopArtikel = {
   qty_piece: number | null;
 
   price_from: number | null;
+  shipping_from: number | null;
   price_unit: "kg" | "stueck" | null;
   price_is_from: boolean;
   price_mode: "legacy_gross" | "net" | "no_vat" | null;
@@ -374,6 +375,7 @@ const mapped: ShopArtikel[] = top12.map((a) => ({
         qty_piece: a.qty_piece ?? null,
 
         price_from: a.price_from ?? null,
+        shipping_from: a.shipping_from ?? null,
         price_unit: a.sale_type === "gesamt" ? null : a.price_unit ?? null,
         price_is_from: !!a.price_is_from,
         price_mode: a.price_mode ?? "legacy_gross",
@@ -515,14 +517,29 @@ const showSkeletonLack = loadingLack
     : "Verfügbar";
 
     const priceLabel = art.price_is_from ? "Preis ab:" : "Preis:";
-const priceText = art.price_from != null ? `${Number(art.price_from).toFixed(2)} €` : "–";
+
+const formatMoney = (value: number | null) =>
+  value != null
+    ? `${Number(value).toLocaleString("de-DE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} €`
+    : "–";
+
+const priceText = formatMoney(art.price_from);
+const shippingText =
+  art.shipping_from == null
+    ? "–"
+    : Number(art.shipping_from) === 0
+      ? "kostenlos"
+      : formatMoney(art.shipping_from);
 
 const taxLabel =
   art.price_mode === "net"
-    ? "netto"
+    ? "Preise netto"
     : art.price_mode === "no_vat"
-      ? "ohne USt."
-      : "brutto";
+      ? "Preise ohne USt."
+      : "Preise inkl. USt.";
 
 // ✅ Einheit anzeigen, wenn es kein Gesamtpreis ist
 const unitSuffix =
@@ -548,8 +565,11 @@ const unitSuffix =
           <p><strong>Zustand:</strong> {formatZustand(art.zustand) || "—"}</p>
           <p><strong>Kategorie:</strong> {art.kategorie || "—"}</p>
 
-          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray" }}>
-            <strong>{priceLabel}</strong> {priceText}{unitSuffix} · {taxLabel}
+          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginBottom: 4 }}>
+            <strong>{priceLabel}</strong> {priceText}{unitSuffix}
+          </p>
+          <p style={{ fontSize: "1rem", fontWeight: 500, color: "gray", marginTop: 0 }}>
+            <strong>Versand:</strong> {shippingText} · {taxLabel}
           </p>
         </div>
       </Link>
