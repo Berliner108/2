@@ -9,7 +9,7 @@ const AgbPage = () => {
       <h1 className={styles.heading}>Allgemeine Geschäftsbedingungen (AGB)</h1>
       <section className={styles.section}>
   <p>
-    <strong>Stand:</strong> 23.10.2026
+    <strong>Stand:</strong> 28.10.2026
   </p>
   <p>
     Diese AGB gelten ergänzend zum Impressum, zur Datenschutzerklärung sowie zu allen auf der Plattform
@@ -207,9 +207,12 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>13. Anbieterstatus, Preise und Pflichten</h2>
       <section className={styles.section}>
         <p>
-          Anbieter:innen sind verpflichtet, ihren Status (privat/gewerblich) korrekt anzugeben. Anbieter:innen sind für die Einhaltung ihrer
-          gesetzlichen Pflichten verantwortlich (insbesondere Informationspflichten, Gewährleistung/Widerruf soweit anwendbar, Steuern,
-          Rechnungslegung). Preise sind als Bruttopreise anzugeben, soweit gesetzlich erforderlich.
+          Anbieter:innen sind verpflichtet, ihren Status als privat oder gewerblich sowie ihren umsatzsteuerlichen Status vollständig und
+          wahrheitsgemäß anzugeben und Änderungen unverzüglich zu aktualisieren. Anbieter:innen sind für die Einhaltung ihrer gesetzlichen
+          Pflichten verantwortlich, insbesondere hinsichtlich Informationspflichten, Gewährleistung, Widerruf, Steuern und Rechnungslegung.
+        </p>
+        <p>
+          Die Eingabe und Darstellung von Preisen richtet sich nach der in Ziffer 14 beschriebenen Preis- und Umsatzsteuerlogik der Plattform.
         </p>
       </section>
       <h2 className={styles.subheading}>13a. Verkäuferangaben und Anbieter-Impressum</h2>
@@ -269,12 +272,34 @@ const AgbPage = () => {
       <h2 className={styles.subheading}>14. Steuern, Rechnungen und Preisangaben</h2>
       <section className={styles.section}>
         <p>
-          Anbieter:innen sind allein verantwortlich für die korrekte steuerliche Behandlung ihrer Umsätze, die Erfüllung von
-          Informationspflichten sowie – soweit erforderlich – die Ausstellung von Rechnungen und sonstigen Belegen gegenüber Käufer:innen.
+          Anbieter:innen sind allein verantwortlich für die korrekte steuerliche Behandlung ihrer Umsätze, die Erfüllung steuerlicher und
+          sonstiger gesetzlicher Informationspflichten sowie – soweit erforderlich – die Ausstellung ordnungsgemäßer Rechnungen und sonstiger
+          Belege gegenüber Käufer:innen.
         </p>
         <p>
-          Preisangaben und Leistungsbeschreibungen müssen vollständig, richtig und nachvollziehbar sein. Die Plattform übernimmt keine
-          Prüfungspflicht und keine Haftung für steuerliche oder rechtliche Richtigkeit von Angaben der Nutzer:innen.
+          Umsatzsteuerpflichtige gewerbliche Anbieter:innen geben Artikelpreise, Staffelpreise und Versandkosten auf der Plattform grundsätzlich
+          als Nettobeträge ein. Die auf den jeweiligen Verkauf anwendbare Umsatzsteuer wird im Kaufprozess auf Grundlage der auf der Plattform
+          hinterlegten Angaben und der für die Transaktion maßgeblichen steuerlichen Behandlung zusätzlich berechnet und ausgewiesen.
+        </p>
+        <p>
+          Private Anbieter:innen sowie gewerbliche Anbieter:innen, deren Umsätze im jeweiligen Fall ohne Umsatzsteuer abzurechnen sind, geben
+          ihre Preise und Versandkosten ohne Umsatzsteuer ein. In diesen Fällen wird durch die Plattform keine Umsatzsteuer auf den angegebenen
+          Preis aufgeschlagen, soweit sich aus den für die konkrete Transaktion maßgeblichen gesetzlichen Vorschriften nichts anderes ergibt.
+        </p>
+        <p>
+          Die steuerliche Behandlung kann insbesondere vom Status des Anbieters und des Käufers, vom Liefer- bzw. Bestimmungsland und von
+          sonstigen für die jeweilige Transaktion maßgeblichen steuerlichen Umständen abhängen. Der im Kaufprozess vor Abschluss der Bestellung
+          angezeigte Gesamtbetrag einschließlich gegebenenfalls anfallender Umsatzsteuer und Versandkosten ist für die über die Plattform
+          abzuwickelnde Zahlung maßgeblich.
+        </p>
+        <p>
+          Versandkosten unterliegen grundsätzlich derselben für die jeweilige Transaktion ermittelten steuerlichen Behandlung wie die zugehörige
+          Warenlieferung, soweit gesetzlich nichts Abweichendes gilt.
+        </p>
+        <p>
+          Preisangaben, steuerliche Angaben und Leistungsbeschreibungen müssen vollständig, richtig und nachvollziehbar sein. Anbieter:innen sind
+          insbesondere verpflichtet, ihren hinterlegten umsatzsteuerlichen Status aktuell zu halten. Die Plattform übernimmt keine Gewähr dafür,
+          dass von Nutzer:innen hinterlegte steuerliche Angaben vollständig oder rechtlich zutreffend sind.
         </p>
       </section>
 
