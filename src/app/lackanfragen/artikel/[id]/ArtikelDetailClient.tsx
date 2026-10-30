@@ -1054,6 +1054,7 @@ const chatParams = new URLSearchParams({
   recipientId: String(artikel.user_id),
   sourceType: 'lack_request',
   sourceId: String(artikel.id),
+  displayName: artikel.user || 'User',
 });
 
 router.push(`/messages/new?${chatParams.toString()}`);

@@ -488,6 +488,7 @@ const chatParams = new URLSearchParams({
   recipientId: seller.id,
   sourceType: "article",
   sourceId: String(article.id),
+  displayName: seller.username || "User",
 });
 
 router.push(`/messages/new?${chatParams.toString()}`);

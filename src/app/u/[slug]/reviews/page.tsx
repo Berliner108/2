@@ -641,18 +641,23 @@ export default function UserReviewsPage() {
       return
     }
 
-    if (!res.ok || !json?.conversationId) {
-      setChatError(
-        json?.message ||
-          json?.error ||
-          'Unterhaltung konnte nicht gestartet werden.'
-      )
-      return
-    }
+    if (!res.ok || !json?.ready) {
+  setChatError(
+    json?.message ||
+      json?.error ||
+      'Unterhaltung konnte nicht vorbereitet werden.'
+  )
+  return
+}
 
-    router.push(
-      `/messages/${encodeURIComponent(String(json.conversationId))}`
-    )
+const chatParams = new URLSearchParams({
+  recipientId: data.profile.id,
+  sourceType: 'rating_profile',
+  sourceId: data.profile.id,
+  displayName: data.profile.username || 'User',
+})
+
+router.push(`/messages/new?${chatParams.toString()}`)
   } catch {
     setChatError('Unterhaltung konnte nicht gestartet werden.')
   } finally {
