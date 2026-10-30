@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap');
+
+.page {
+  width: min(1100px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+  font-family: 'Oswald', sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.header p {
+  margin: 0;
+  color: #666;
+}
+
+.refreshButton {
+  border: 1px solid #222;
+  border-radius: 5px;
+  background: #222;
+  color: #fff;
+  padding: 0.55rem 1rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.refreshButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #c40000;
+  border-radius: 6px;
+  color: #a00000;
+  background: #fff3f3;
+}
+
+.loading,
+.empty {
+  padding: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  color: #666;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.item {
+  display: block;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  text-decoration: none;
+}
+
+.item:hover {
+  border-color: #777;
+  background: #fafafa;
+}
+
+.itemTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.itemTop strong {
+  font-size: 1.05rem;
+}
+
+.itemTop span {
+  color: #777;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.preview {
+  overflow: hidden;
+  color: #555;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closed {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #eee;
+  color: #555;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .page {
+    width: min(100% - 24px, 1100px);
+    padding-top: 1.25rem;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .refreshButton {
+    width: 100%;
+  }
+
+  .itemTop {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}
