@@ -764,3 +764,17 @@
     width: 100%;
   }
 }
+.supportLink {
+  display: block;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.supportLink:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

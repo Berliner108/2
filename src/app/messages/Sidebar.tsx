@@ -80,6 +80,14 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <h2>Nachrichten</h2>
+      <Link
+  href="/messages/support"
+  className={
+    styles.supportLink
+  }
+>
+  Beschichter Scout Support
+</Link>
 
       {loading ? (
         <div className={styles.sidebarInfo}>
