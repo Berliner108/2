@@ -150,18 +150,6 @@ type Message = {
 
 
 
-type ConversationListItem = {
-
-  id: string
-
-  type: 'user' | 'support'
-
-  displayName: string
-
-}
-
-
-
 // =====================================================
 
 // HELPER
@@ -886,136 +874,6 @@ const newDisplayName =
 
   // =====================================================
 
-  // CHATNAME LADEN
-
-  // =====================================================
-
-
-
-  const loadConversationName =
-
-    useCallback(async () => {
-
-      if (!chatId) {
-
-        return
-
-      }
-
-
-
-      try {
-
-        const res =
-
-          await fetch(
-
-            '/api/messages',
-
-            {
-
-              cache:
-
-                'no-store',
-
-
-
-              credentials:
-
-                'include',
-
-            }
-
-          )
-
-
-
-        const json =
-
-          await res
-
-            .json()
-
-            .catch(
-
-              () => null
-
-            )
-
-
-
-        if (
-
-          !res.ok ||
-
-          !json?.ok
-
-        ) {
-
-          return
-
-        }
-
-
-
-        const chats =
-
-          (
-
-            json.conversations ??
-
-            []
-
-          ) as ConversationListItem[]
-
-
-
-        const chat =
-
-          chats.find(
-
-            (item) =>
-
-              item.id ===
-
-              chatId
-
-          )
-
-
-
-        if (chat) {
-
-          setDisplayName(
-
-            chat.displayName
-
-          )
-
-        }
-
-      } catch (
-
-        error
-
-      ) {
-
-        console.error(
-
-          '[chat] name load:',
-
-          error
-
-        )
-
-      }
-
-    }, [chatId])
-
-
-
-  // =====================================================
-
   // LESESTATUS
 
   // =====================================================
@@ -1346,13 +1204,19 @@ const newDisplayName =
 
 
 
-        setConversationType(
+        const loadedConversationType =
 
           json.conversation
 
             ?.type ??
 
             null
+
+
+
+        setConversationType(
+
+          loadedConversationType
 
         )
 
@@ -1392,6 +1256,24 @@ const newDisplayName =
 
 
 
+        if (
+
+          loadedConversationType ===
+
+          'user'
+
+        ) {
+
+          await loadBlockStatus()
+
+        } else {
+
+          setBlocked(false)
+
+        }
+
+
+
         await markRead()
 
       } catch (
@@ -1425,6 +1307,8 @@ const newDisplayName =
     }, [
 
       chatId,
+
+      loadBlockStatus,
 
       markRead,
 
@@ -1476,81 +1360,37 @@ const newDisplayName =
 
     if (isNewChat) {
 
-  setMessages([])
+      setMessages([])
 
-  setMyParticipantId(null)
+      setMyParticipantId(null)
 
-  setConversationType('user')
+      setConversationType('user')
 
-  setDisplayName(newDisplayName)
+      setDisplayName(newDisplayName)
 
-  setLoading(false)
+      setLoading(false)
 
-  return
+      return
 
-}
+    }
 
 
 
-void Promise.all([
+    setLoading(true)
 
-  loadConversationName(),
-
-  loadInitialMessages(),
-
-])
+    void loadInitialMessages()
 
   }, [
 
     chatId,
 
-    loadConversationName,
+    isNewChat,
+
+    newDisplayName,
 
     loadInitialMessages,
 
   ])
-
-
-
-  // =====================================================
-
-  // BLOCK-STATUS NACH CONVERSATION-LADEN
-
-  // =====================================================
-
-
-
-  useEffect(() => {
-
-  if (isNewChat) {
-
-    setBlocked(false)
-
-    return
-
-  }
-
-
-
-  if (conversationType === 'user') {
-
-    void loadBlockStatus()
-
-  } else {
-
-    setBlocked(false)
-
-  }
-
-}, [
-
-  isNewChat,
-
-  conversationType,
-
-  loadBlockStatus,
-
-])
 
 
 
@@ -3580,6 +3420,84 @@ window.dispatchEvent(
 
 
 
+  if (loading && !isNewChat) {
+
+    return (
+
+      <div
+
+        className={styles.chatPage}
+
+      >
+
+        <div
+
+          style={{
+
+            minHeight: '60vh',
+
+            display: 'flex',
+
+            alignItems: 'center',
+
+            justifyContent: 'center',
+
+          }}
+
+        >
+
+          <div
+
+            role="status"
+
+            aria-live="polite"
+
+            aria-label="Chat wird geladen"
+
+            style={{
+
+              width: 36,
+
+              height: 36,
+
+              border: '3px solid #e5e5e5',
+
+              borderTopColor: '#111',
+
+              borderRadius: '50%',
+
+              animation: 'chatSpin 0.8s linear infinite',
+
+            }}
+
+          />
+
+
+
+          <style jsx>{`
+
+            @keyframes chatSpin {
+
+              to {
+
+                transform: rotate(360deg);
+
+              }
+
+            }
+
+          `}</style>
+
+        </div>
+
+      </div>
+
+    )
+
+  }
+
+
+
   return (
 
     <div
@@ -3660,27 +3578,7 @@ window.dispatchEvent(
 
 
 
-        {loading ? (
-
-          <div
-
-            className={
-
-              styles.chatLoading
-
-            }
-
-          >
-
-            Nachrichten werden
-
-            geladen …
-
-          </div>
-
-        ) : (
-
-          <ul
+        <ul
 
             className={
 
@@ -3947,8 +3845,6 @@ window.dispatchEvent(
             )}
 
           </ul>
-
-        )}
 
 
 
