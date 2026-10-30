@@ -1,4 +1,5 @@
 // /src/app/admin/layout.tsx
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -8,9 +9,16 @@ import { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase-server'
 
-export default async function AdminLayout({ children }: { children: ReactNode }) {
+export default async function AdminLayout({
+  children,
+}: {
+  children: ReactNode
+}) {
   const sb = await supabaseServer()
-  const { data: { user } } = await sb.auth.getUser()
+
+  const {
+    data: { user },
+  } = await sb.auth.getUser()
 
   // 1) Nicht eingeloggt -> Login
   if (!user) {
@@ -18,31 +26,59 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   // 2) Whitelist per ENV
-  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+  const adminEmails = (
+    process.env.ADMIN_EMAILS ?? ''
+  )
     .split(',')
-    .map(s => s.trim().toLowerCase())
+    .map((s) =>
+      s
+        .trim()
+        .toLowerCase()
+    )
     .filter(Boolean)
 
-  const myEmail = (user.email ?? '').toLowerCase()
-  if (!adminEmails.includes(myEmail)) {
+  const myEmail = (
+    user.email ?? ''
+  ).toLowerCase()
+
+  if (
+    !adminEmails.includes(
+      myEmail
+    )
+  ) {
     redirect('/')
   }
 
   // 3) Rolle im Profil prüfen
-  const { data: me } = await sb
+  const {
+    data: me,
+  } = await sb
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (me?.role !== 'admin') {
+  if (
+    me?.role !== 'admin'
+  ) {
     redirect('/')
   }
 
   // 4) Layout + Navigation
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
-      <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#f7f7fb',
+      }}
+    >
+      <header
+        style={{
+          background: '#fff',
+          borderBottom:
+            '1px solid #e5e7eb',
+        }}
+      >
         <nav
           style={{
             maxWidth: 1200,
@@ -55,30 +91,81 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         >
           <a
             href="/"
-            style={{ fontWeight: 600, textDecoration: 'none', color: '#111827' }}
+            style={{
+              fontWeight: 600,
+              textDecoration:
+                'none',
+              color: '#111827',
+            }}
           >
             ← Zur Seite
           </a>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div
+            style={{
+              marginLeft:
+                'auto',
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}
+          >
             <a
               href="/admin"
               className="admin-nav-link"
-              style={{ padding: '6px 10px', borderRadius: 10, textDecoration: 'none', color: '#111827' }}
+              style={{
+                padding:
+                  '6px 10px',
+                borderRadius: 10,
+                textDecoration:
+                  'none',
+                color: '#111827',
+              }}
             >
               Dashboard
             </a>
+
             <a
               href="/admin/users"
               className="admin-nav-link"
-              style={{ padding: '6px 10px', borderRadius: 10, textDecoration: 'none', color: '#111827' }}
+              style={{
+                padding:
+                  '6px 10px',
+                borderRadius: 10,
+                textDecoration:
+                  'none',
+                color: '#111827',
+              }}
             >
               Nutzer
             </a>
+
+            <a
+              href="/admin/messages"
+              className="admin-nav-link"
+              style={{
+                padding:
+                  '6px 10px',
+                borderRadius: 10,
+                textDecoration:
+                  'none',
+                color: '#111827',
+              }}
+            >
+              Nachrichten
+            </a>
+
             <a
               href="/admin/loeschanfragen"
               className="admin-nav-link"
-              style={{ padding: '6px 10px', borderRadius: 10, textDecoration: 'none', color: '#111827' }}
+              style={{
+                padding:
+                  '6px 10px',
+                borderRadius: 10,
+                textDecoration:
+                  'none',
+                color: '#111827',
+              }}
             >
               Löschanfragen
             </a>
@@ -86,7 +173,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </nav>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: '0 auto' }}>{children}</main>
+      <main
+        style={{
+          maxWidth: 1200,
+          margin: '0 auto',
+        }}
+      >
+        {children}
+      </main>
     </div>
   )
 }
