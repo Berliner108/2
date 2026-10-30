@@ -2,27 +2,39 @@ import { NextResponse } from 'next/server'
 
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { hasPremiumAccess } from '@/lib/premium'
 
 import {
+  CHAT_ATTACHMENT_BUCKET,
   CHAT_MAX_MESSAGE_LENGTH,
 } from '@/lib/chat/constants'
 
 import {
-  getChatDisplayName,
-  getChatParticipant,
-  hasSupportAccess,
-  isBlockedBetweenUsers,
-  isSupportAgent,
+  getFileExtension,
 } from '@/lib/chat/helpers'
+
+import {
+  validateChatFile,
+} from '@/lib/chat/files'
+
+import {
+  ensureChatSendAccess,
+} from '@/lib/chat/send-permission'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+type AttachmentBody = {
+  storagePath?: string
+  originalFilename?: string
+  mimeType?: string
+  fileSize?: number
+}
 
 type Body = {
   conversationId?: string
   content?: string
   clientMessageId?: string
+  attachment?: AttachmentBody | null
 }
 
 function isUuid(value: string) {
@@ -33,10 +45,6 @@ function isUuid(value: string) {
 
 export async function POST(req: Request) {
   try {
-    // =====================================================
-    // 1) Auth
-    // =====================================================
-
     const sb = await supabaseServer()
 
     const {
@@ -49,29 +57,17 @@ export async function POST(req: Request) {
         {
           ok: false,
           error: 'not_authenticated',
-          message: 'Nicht eingeloggt.',
         },
         { status: 401 }
       )
     }
 
-    const userId = user.id
-    const admin = supabaseAdmin()
-
-    // =====================================================
-    // 2) Request lesen
-    // =====================================================
-
-    const raw = (await req.json().catch(() => ({}))) as Body
+    const raw =
+      (await req.json().catch(() => ({}))) as Body
 
     const conversationId =
       typeof raw.conversationId === 'string'
         ? raw.conversationId.trim()
-        : ''
-
-    const content =
-      typeof raw.content === 'string'
-        ? raw.content.trim()
         : ''
 
     const clientMessageId =
@@ -79,489 +75,417 @@ export async function POST(req: Request) {
         ? raw.clientMessageId.trim()
         : ''
 
-    if (!conversationId || !isUuid(conversationId)) {
+    const content =
+      typeof raw.content === 'string'
+        ? raw.content.trim()
+        : ''
+
+    if (
+      !conversationId ||
+      !isUuid(conversationId)
+    ) {
       return NextResponse.json(
         {
           ok: false,
           error: 'invalid_conversation_id',
-          message: 'Ungültiger Chat.',
         },
         { status: 400 }
       )
     }
 
-    if (!clientMessageId || !isUuid(clientMessageId)) {
+    if (
+      !clientMessageId ||
+      !isUuid(clientMessageId)
+    ) {
       return NextResponse.json(
         {
           ok: false,
           error: 'invalid_client_message_id',
-          message: 'Ungültige Nachrichten-ID.',
         },
         { status: 400 }
       )
     }
 
-    if (!content) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'empty_message',
-          message: 'Die Nachricht darf nicht leer sein.',
-        },
-        { status: 400 }
-      )
-    }
-
-    if (content.length > CHAT_MAX_MESSAGE_LENGTH) {
+    if (
+      content.length >
+      CHAT_MAX_MESSAGE_LENGTH
+    ) {
       return NextResponse.json(
         {
           ok: false,
           error: 'message_too_long',
-          message: `Die Nachricht darf höchstens ${CHAT_MAX_MESSAGE_LENGTH} Zeichen enthalten.`,
+          message:
+            `Die Nachricht darf höchstens ${CHAT_MAX_MESSAGE_LENGTH} Zeichen enthalten.`,
         },
         { status: 400 }
       )
     }
 
-    // =====================================================
-    // 3) Conversation laden
-    // =====================================================
+    const hasAttachment =
+      Boolean(raw.attachment)
 
-    const {
-      data: conversation,
-      error: conversationError,
-    } = await admin
-      .from('conversations')
-      .select(`
-        id,
-        type,
-        closed_at
-      `)
-      .eq('id', conversationId)
-      .maybeSingle()
-
-    if (conversationError) {
-      console.error(
-        '[messages/send] conversation lookup failed:',
-        conversationError
-      )
-
+    if (!content && !hasAttachment) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'conversation_lookup_failed',
+          error: 'empty_message',
+          message:
+            'Die Nachricht darf nicht leer sein.',
         },
-        { status: 500 }
+        { status: 400 }
       )
     }
 
-    if (!conversation) {
+    const permission =
+      await ensureChatSendAccess(
+        conversationId,
+        user.id
+      )
+
+    if (!permission.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'conversation_not_found',
-          message: 'Chat wurde nicht gefunden.',
+          error: permission.error,
+          reason:
+            permission.error ===
+            'premium_required'
+              ? 'premium_required'
+              : undefined,
+          message: permission.message,
         },
-        { status: 404 }
+        { status: permission.status }
       )
     }
 
-    if (conversation.closed_at) {
+    const admin = supabaseAdmin()
+
+    // =====================================================
+    // NORMALE TEXTNACHRICHT
+    // =====================================================
+
+    if (!raw.attachment) {
+      const {
+        data: message,
+        error,
+      } = await admin
+        .from('messages')
+        .insert({
+          conversation_id:
+            conversationId,
+
+          sender_participant_id:
+            permission.participant.id,
+
+          message_type: 'text',
+
+          content,
+
+          client_message_id:
+            clientMessageId,
+        })
+        .select(`
+          id,
+          conversation_id,
+          sender_participant_id,
+          message_type,
+          content,
+          client_message_id,
+          created_at
+        `)
+        .single()
+
+      if (error) {
+        if (error.code === '23505') {
+          const {
+            data: existing,
+          } = await admin
+            .from('messages')
+            .select(`
+              id,
+              conversation_id,
+              sender_participant_id,
+              message_type,
+              content,
+              client_message_id,
+              created_at
+            `)
+            .eq(
+              'conversation_id',
+              conversationId
+            )
+            .eq(
+              'sender_participant_id',
+              permission.participant.id
+            )
+            .eq(
+              'client_message_id',
+              clientMessageId
+            )
+            .maybeSingle()
+
+          if (existing) {
+            return NextResponse.json({
+              ok: true,
+              duplicate: true,
+              message: existing,
+            })
+          }
+        }
+
+        console.error(
+          '[messages/send] text insert:',
+          error
+        )
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'message_create_failed',
+          },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json(
+        {
+          ok: true,
+          duplicate: false,
+          message,
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store',
+          },
+        }
+      )
+    }
+
+    // =====================================================
+    // DATEINACHRICHT
+    // =====================================================
+
+    const attachment = raw.attachment
+
+    const storagePath =
+      typeof attachment.storagePath === 'string'
+        ? attachment.storagePath.trim()
+        : ''
+
+    const originalFilename =
+      typeof attachment.originalFilename ===
+      'string'
+        ? attachment.originalFilename
+        : ''
+
+    const mimeType =
+      typeof attachment.mimeType === 'string'
+        ? attachment.mimeType
+        : ''
+
+    const fileSize =
+      typeof attachment.fileSize === 'number'
+        ? attachment.fileSize
+        : NaN
+
+    const fileCheck = validateChatFile({
+      filename: originalFilename,
+      size: fileSize,
+      mimeType,
+    })
+
+    if (!fileCheck.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'conversation_closed',
-          message: 'Dieser Chat ist geschlossen.',
+          error: fileCheck.error,
+          message: fileCheck.message,
+        },
+        { status: 400 }
+      )
+    }
+
+    const expectedPrefix =
+      `${conversationId}/${permission.participant.id}/`
+
+    if (
+      !storagePath ||
+      !storagePath.startsWith(
+        expectedPrefix
+      )
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'invalid_storage_path',
         },
         { status: 403 }
       )
     }
 
-    // =====================================================
-    // 4) Eigenen Participant suchen
-    // =====================================================
+    const filenameInStorage =
+      storagePath.slice(
+        expectedPrefix.length
+      )
 
-    let myParticipant = await getChatParticipant(
-      conversationId,
-      userId
-    )
+    const storageExtension =
+      getFileExtension(
+        filenameInStorage
+      )
 
-    // =====================================================
-    // 5) NORMALER USERCHAT
-    // =====================================================
-
-    if (conversation.type === 'user') {
-      /*
-       * Admin-Mitleserecht bedeutet NICHT:
-       * Admin darf unsichtbar in fremden Chats schreiben.
-       *
-       * Zum Senden muss man echter Teilnehmer sein.
-       */
-      if (!myParticipant) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'not_participant',
-            message: 'Kein Zugriff auf diesen Chat.',
-          },
-          { status: 403 }
-        )
-      }
-
-      // -----------------------------------------------------
-      // Premium beim SENDEN erneut prüfen.
-      //
-      // Ein Nutzer kann den Chat weiterhin lesen,
-      // wenn Premium später abläuft.
-      // Schreiben geht dann nicht mehr.
-      // -----------------------------------------------------
-
-      const {
-        data: premiumProfile,
-        error: premiumError,
-      } = await admin
-        .from('profiles')
-        .select(`
-          premium_exempt,
-          premium_trial_ends_at,
-          premium_until
-        `)
-        .eq('id', userId)
-        .maybeSingle()
-
-      if (premiumError || !premiumProfile) {
-        console.error(
-          '[messages/send] premium lookup failed:',
-          premiumError
-        )
-
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'premium_check_failed',
-            message:
-              'Premium-Status konnte nicht geprüft werden.',
-          },
-          { status: 500 }
-        )
-      }
-
-      if (!hasPremiumAccess(premiumProfile)) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'premium_required',
-            reason: 'premium_required',
-            message:
-              'Zum Schreiben von Nachrichten benötigst du eine aktive Premium Mitgliedschaft.',
-          },
-          { status: 403 }
-        )
-      }
-
-      // -----------------------------------------------------
-      // Anderen User bestimmen
-      // -----------------------------------------------------
-
-      const {
-        data: otherParticipants,
-        error: otherParticipantsError,
-      } = await admin
-        .from('conversation_participants')
-        .select(`
-          id,
-          user_id
-        `)
-        .eq('conversation_id', conversationId)
-        .is('left_at', null)
-        .neq('id', myParticipant.id)
-
-      if (otherParticipantsError) {
-        console.error(
-          '[messages/send] participant lookup failed:',
-          otherParticipantsError
-        )
-
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'participant_lookup_failed',
-          },
-          { status: 500 }
-        )
-      }
-
-      /*
-       * Ein Direktchat darf genau zwei aktive
-       * Teilnehmer besitzen.
-       */
-      if (
-        !otherParticipants ||
-        otherParticipants.length !== 1
-      ) {
-        console.error(
-          '[messages/send] invalid direct conversation:',
-          conversationId
-        )
-
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'invalid_direct_conversation',
-          },
-          { status: 500 }
-        )
-      }
-
-      const otherUserId =
-        otherParticipants[0].user_id
-
-      /*
-       * Wenn der andere Account inzwischen gelöscht wurde,
-       * bleibt der Verlauf erhalten, aber es kann natürlich
-       * niemand mehr angeschrieben werden.
-       */
-      if (!otherUserId) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'recipient_deleted',
-            message:
-              'Dieser Nutzer ist nicht mehr verfügbar.',
-          },
-          { status: 410 }
-        )
-      }
-
-      // -----------------------------------------------------
-      // Blockierung in BEIDE Richtungen
-      // -----------------------------------------------------
-
-      const blocked =
-        await isBlockedBetweenUsers(
-          userId,
-          otherUserId
-        )
-
-      if (blocked) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'chat_blocked',
-            message:
-              'Zwischen diesen Nutzern können keine Nachrichten gesendet werden.',
-          },
-          { status: 403 }
-        )
-      }
-    }
-
-    // =====================================================
-    // 6) SUPPORTCHAT
-    // =====================================================
-
-    else if (conversation.type === 'support') {
-      /*
-       * Fall A:
-       * normaler Nutzer ist bereits Participant.
-       */
-      if (
-        myParticipant &&
-        myParticipant.role === 'member'
-      ) {
-        const allowed =
-          await hasSupportAccess(userId)
-
-        if (!allowed) {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: 'support_access_denied',
-              message:
-                'Der Support-Chat ist für diesen Account derzeit nicht freigeschaltet.',
-            },
-            { status: 403 }
-          )
-        }
-      }
-
-      /*
-       * Fall B:
-       * Support-Mitarbeiter.
-       *
-       * Er darf einen Supportchat sehen, auch bevor er
-       * Participant ist. Beim ersten Antworten wird er
-       * sauber als Support-Participant eingetragen.
-       */
-      else {
-        const agent =
-          await isSupportAgent(userId)
-
-        if (!agent) {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: 'not_support_agent',
-              message: 'Kein Zugriff auf diesen Support-Chat.',
-            },
-            { status: 403 }
-          )
-        }
-
-        if (!myParticipant) {
-          const {
-            data: profile,
-            error: profileError,
-          } = await admin
-            .from('profiles')
-            .select(`
-              username,
-              company_name
-            `)
-            .eq('id', userId)
-            .maybeSingle()
-
-          if (profileError || !profile) {
-            console.error(
-              '[messages/send] support profile lookup:',
-              profileError
-            )
-
-            return NextResponse.json(
-              {
-                ok: false,
-                error: 'profile_lookup_failed',
-              },
-              { status: 500 }
-            )
-          }
-
-          const {
-            data: participantId,
-            error: joinError,
-          } = await admin.rpc(
-            'chat_join_support_agent',
-            {
-              p_conversation_id: conversationId,
-              p_user_id: userId,
-              p_display_name:
-                getChatDisplayName(profile),
-            }
-          )
-
-          if (joinError || !participantId) {
-            console.error(
-              '[messages/send] join support failed:',
-              joinError
-            )
-
-            return NextResponse.json(
-              {
-                ok: false,
-                error: 'support_join_failed',
-              },
-              { status: 500 }
-            )
-          }
-
-          myParticipant = await getChatParticipant(
-            conversationId,
-            userId
-          )
-
-          if (!myParticipant) {
-            return NextResponse.json(
-              {
-                ok: false,
-                error: 'support_join_failed',
-              },
-              { status: 500 }
-            )
-          }
-        }
-
-        if (myParticipant.role !== 'support') {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: 'invalid_support_role',
-            },
-            { status: 403 }
-          )
-        }
-      }
-    }
-
-    // =====================================================
-    // 7) Ungültiger Conversation-Typ
-    // =====================================================
-
-    else {
+    if (
+      storageExtension !==
+      fileCheck.extension
+    ) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'invalid_conversation_type',
+          error: 'file_extension_mismatch',
+        },
+        { status: 400 }
+      )
+    }
+
+    /*
+     * Es darf nur exakt eine UUID-Datei in diesem
+     * Ordner sein, z.B.
+     *
+     * conversation/participant/uuid.pdf
+     */
+    const storageBaseName =
+      filenameInStorage.slice(
+        0,
+        -(
+          storageExtension.length +
+          1
+        )
+      )
+
+    if (!isUuid(storageBaseName)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'invalid_storage_filename',
+        },
+        { status: 400 }
+      )
+    }
+
+    // =====================================================
+    // Prüfen, ob Datei wirklich hochgeladen wurde
+    // =====================================================
+
+    const folder =
+      `${conversationId}/${permission.participant.id}`
+
+    const {
+      data: storedFiles,
+      error: storageError,
+    } = await admin.storage
+      .from(CHAT_ATTACHMENT_BUCKET)
+      .list(folder, {
+        limit: 10,
+        search: filenameInStorage,
+      })
+
+    if (storageError) {
+      console.error(
+        '[messages/send] storage verify:',
+        storageError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'storage_verify_failed',
         },
         { status: 500 }
       )
     }
 
-    if (!myParticipant) {
+    const storedFile =
+      storedFiles?.find(
+        (file) =>
+          file.name ===
+          filenameInStorage
+      )
+
+    if (!storedFile?.id) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'participant_missing',
+          error: 'uploaded_file_not_found',
+          message:
+            'Die hochgeladene Datei wurde nicht gefunden.',
         },
-        { status: 500 }
+        { status: 400 }
+      )
+    }
+
+    const realSize =
+      Number(
+        storedFile.metadata?.size ??
+        0
+      )
+
+    if (
+      !realSize ||
+      realSize !== fileCheck.fileSize
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'file_size_mismatch',
+          message:
+            'Die Dateigröße stimmt nicht mit dem Upload überein.',
+        },
+        { status: 400 }
       )
     }
 
     // =====================================================
-    // 8) Nachricht speichern
+    // Atomar Nachricht + Attachment speichern
     // =====================================================
 
     const {
-      data: message,
-      error: messageError,
-    } = await admin
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
+      data: messageId,
+      error: insertError,
+    } = await admin.rpc(
+      'chat_insert_file_message',
+      {
+        p_conversation_id:
+          conversationId,
 
-        sender_participant_id:
-          myParticipant.id,
+        p_sender_participant_id:
+          permission.participant.id,
 
-        message_type: 'text',
-
-        content,
-
-        client_message_id:
+        p_client_message_id:
           clientMessageId,
-      })
-      .select(`
-        id,
-        conversation_id,
-        sender_participant_id,
-        message_type,
-        content,
-        client_message_id,
-        created_at
-      `)
-      .single()
 
-    // =====================================================
-    // 9) Idempotenz
-    //
-    // Falls derselbe clientMessageId durch Retry erneut
-    // geschickt wird, geben wir die bereits existierende
-    // Nachricht zurück statt einen Fehler zu zeigen.
-    // =====================================================
+        p_content:
+          content || null,
 
-    if (messageError) {
-      if (messageError.code === '23505') {
+        p_storage_path:
+          storagePath,
+
+        p_original_filename:
+          fileCheck.originalFilename,
+
+        p_mime_type:
+          fileCheck.mimeType,
+
+        p_file_extension:
+          fileCheck.extension,
+
+        p_file_size:
+          fileCheck.fileSize,
+      }
+    )
+
+    if (insertError) {
+      if (insertError.code === '23505') {
         const {
-          data: existingMessage,
-          error: existingError,
+          data: existing,
         } = await admin
           .from('messages')
           .select(`
@@ -571,7 +495,15 @@ export async function POST(req: Request) {
             message_type,
             content,
             client_message_id,
-            created_at
+            created_at,
+            message_attachments (
+              id,
+              original_filename,
+              mime_type,
+              file_extension,
+              file_size,
+              storage_path
+            )
           `)
           .eq(
             'conversation_id',
@@ -579,7 +511,7 @@ export async function POST(req: Request) {
           )
           .eq(
             'sender_participant_id',
-            myParticipant.id
+            permission.participant.id
           )
           .eq(
             'client_message_id',
@@ -587,59 +519,73 @@ export async function POST(req: Request) {
           )
           .maybeSingle()
 
-        if (
-          !existingError &&
-          existingMessage
-        ) {
-          return NextResponse.json(
-            {
-              ok: true,
-              message: existingMessage,
-              duplicate: true,
-            },
-            {
-              status: 200,
-              headers: {
-                'Cache-Control': 'no-store',
-              },
-            }
-          )
+        if (existing) {
+          return NextResponse.json({
+            ok: true,
+            duplicate: true,
+            message: existing,
+          })
         }
       }
 
       console.error(
-        '[messages/send] insert failed:',
-        messageError
+        '[messages/send] file insert:',
+        insertError
       )
 
       return NextResponse.json(
         {
           ok: false,
-          error: 'message_create_failed',
-          message: 'Nachricht konnte nicht gesendet werden.',
+          error: 'file_message_create_failed',
+          message:
+            'Datei konnte nicht gesendet werden.',
         },
         { status: 500 }
       )
     }
 
-    // =====================================================
-    // 10) Erfolg
-    //
-    // conversation.last_message_at
-    // unread_count
-    // Realtime Broadcast
-    //
-    // macht unser PostgreSQL-Trigger automatisch.
-    // =====================================================
+    const {
+      data: message,
+      error: messageLoadError,
+    } = await admin
+      .from('messages')
+      .select(`
+        id,
+        conversation_id,
+        sender_participant_id,
+        message_type,
+        content,
+        client_message_id,
+        created_at,
+        message_attachments (
+          id,
+          original_filename,
+          mime_type,
+          file_extension,
+          file_size,
+          storage_path
+        )
+      `)
+      .eq('id', messageId)
+      .single()
+
+    if (messageLoadError) {
+      console.error(
+        '[messages/send] reload file message:',
+        messageLoadError
+      )
+    }
 
     return NextResponse.json(
       {
         ok: true,
-        message,
         duplicate: false,
+        message:
+          message ?? {
+            id: messageId,
+          },
       },
       {
-        status: 200,
         headers: {
           'Cache-Control': 'no-store',
         },
@@ -647,7 +593,7 @@ export async function POST(req: Request) {
     )
   } catch (error) {
     console.error(
-      '[messages/send] unexpected error:',
+      '[messages/send] unexpected:',
       error
     )
 
@@ -655,7 +601,8 @@ export async function POST(req: Request) {
       {
         ok: false,
         error: 'internal_error',
-        message: 'Nachricht konnte nicht gesendet werden.',
+        message:
+          'Nachricht konnte nicht gesendet werden.',
       },
       { status: 500 }
     )
