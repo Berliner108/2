@@ -650,6 +650,15 @@ export default function UserReviewsPage() {
   return
 }
 
+if (json?.conversationId) {
+  router.push(
+    `/messages/${encodeURIComponent(
+      String(json.conversationId)
+    )}`
+  )
+  return
+}
+
 const chatParams = new URLSearchParams({
   recipientId: data.profile.id,
   sourceType: 'rating_profile',

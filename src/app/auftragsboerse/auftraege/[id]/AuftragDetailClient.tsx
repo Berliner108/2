@@ -721,6 +721,15 @@ const reviewsHref = username
   return;
 }
 
+if (data?.conversationId) {
+  router.push(
+    `/messages/${encodeURIComponent(
+      String(data.conversationId)
+    )}`
+  );
+  return;
+}
+
 const chatParams = new URLSearchParams({
   recipientId: String(auftrag.userId),
   sourceType: 'job',

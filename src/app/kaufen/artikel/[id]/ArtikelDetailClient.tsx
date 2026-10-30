@@ -484,6 +484,15 @@ const startArticleChat = async () => {
   return;
 }
 
+if (json?.conversationId) {
+  router.push(
+    `/messages/${encodeURIComponent(
+      String(json.conversationId)
+    )}`
+  );
+  return;
+}
+
 const chatParams = new URLSearchParams({
   recipientId: seller.id,
   sourceType: "article",

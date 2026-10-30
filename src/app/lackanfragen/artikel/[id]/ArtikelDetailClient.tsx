@@ -1050,6 +1050,15 @@ function PageBody() {
   return;
 }
 
+if (json?.conversationId) {
+  router.push(
+    `/messages/${encodeURIComponent(
+      String(json.conversationId)
+    )}`
+  );
+  return;
+}
+
 const chatParams = new URLSearchParams({
   recipientId: String(artikel.user_id),
   sourceType: 'lack_request',
