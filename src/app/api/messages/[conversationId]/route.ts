@@ -52,15 +52,25 @@ function decodeCursor(
       return null
     }
 
-    const date = new Date(decoded.createdAt)
+    const date =
+      new Date(
+        decoded.createdAt
+      )
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
       return null
     }
 
     return {
-      createdAt: date.toISOString(),
-      id: decoded.id,
+      createdAt:
+        date.toISOString(),
+
+      id:
+        decoded.id,
     }
   } catch {
     return null
@@ -79,65 +89,94 @@ export async function GET(
 ) {
   try {
     // =====================================================
-    // 1) Conversation-ID
+    // 1) CONVERSATION-ID
     // =====================================================
 
-    const { conversationId } = await params
+    const {
+      conversationId,
+    } = await params
 
     if (
       !conversationId ||
-      !isUuid(conversationId)
+      !isUuid(
+        conversationId
+      )
     ) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'invalid_conversation_id',
+          error:
+            'invalid_conversation_id',
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       )
     }
 
     // =====================================================
-    // 2) Auth
+    // 2) AUTH
     // =====================================================
 
-    const sb = await supabaseServer()
+    const sb =
+      await supabaseServer()
 
     const {
-      data: { user },
-      error: authError,
-    } = await sb.auth.getUser()
+      data: {
+        user,
+      },
+      error:
+        authError,
+    } =
+      await sb.auth.getUser()
 
-    if (authError || !user) {
+    if (
+      authError ||
+      !user
+    ) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'not_authenticated',
+          error:
+            'not_authenticated',
         },
-        { status: 401 }
+        {
+          status: 401,
+        }
       )
     }
 
-    const admin = supabaseAdmin()
+    const admin =
+      supabaseAdmin()
 
     // =====================================================
-    // 3) Conversation laden
+    // 3) CONVERSATION LADEN
     // =====================================================
 
     const {
-      data: conversation,
-      error: conversationError,
-    } = await admin
-      .from('conversations')
-      .select(`
-        id,
-        type,
-        closed_at
-      `)
-      .eq('id', conversationId)
-      .maybeSingle()
+      data:
+        conversation,
+      error:
+        conversationError,
+    } =
+      await admin
+        .from(
+          'conversations'
+        )
+        .select(`
+          id,
+          type,
+          closed_at
+        `)
+        .eq(
+          'id',
+          conversationId
+        )
+        .maybeSingle()
 
-    if (conversationError) {
+    if (
+      conversationError
+    ) {
       console.error(
         '[messages/detail] conversation lookup failed:',
         conversationError
@@ -146,24 +185,32 @@ export async function GET(
       return NextResponse.json(
         {
           ok: false,
-          error: 'conversation_lookup_failed',
+          error:
+            'conversation_lookup_failed',
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       )
     }
 
-    if (!conversation) {
+    if (
+      !conversation
+    ) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'conversation_not_found',
+          error:
+            'conversation_not_found',
         },
-        { status: 404 }
+        {
+          status: 404,
+        }
       )
     }
 
     // =====================================================
-    // 4) Zugriff prüfen
+    // 4) ZUGRIFF PRÜFEN
     // =====================================================
 
     const participant =
@@ -179,122 +226,280 @@ export async function GET(
      * Supportchat:
      * Teilnehmer oder freigeschalteter Support-Agent.
      */
-    if (!participant) {
-      if (conversation.type !== 'support') {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: 'not_participant',
-          },
-          { status: 403 }
-        )
-      }
-
-      const supportAgent =
-        await isSupportAgent(user.id)
-
+    if (
+      !participant
+    ) {
       if (
-        !supportAgent ||
-        supportAgent.can_view_all_support !== true
+        conversation.type !==
+        'support'
       ) {
         return NextResponse.json(
           {
             ok: false,
-            error: 'not_authorized',
+            error:
+              'not_participant',
           },
-          { status: 403 }
+          {
+            status: 403,
+          }
         )
       }
-    }
 
-    // =====================================================
-    // 5) Cursor lesen
-    // =====================================================
+      const supportAgent =
+        await isSupportAgent(
+          user.id
+        )
 
-    const url = new URL(req.url)
-
-    const cursorRaw =
-      url.searchParams.get('before')
-
-    let cursor: Cursor | null = null
-
-    if (cursorRaw) {
-      cursor = decodeCursor(cursorRaw)
-
-      if (!cursor) {
+      if (
+        !supportAgent ||
+        supportAgent
+          .can_view_all_support !==
+          true
+      ) {
         return NextResponse.json(
           {
             ok: false,
-            error: 'invalid_cursor',
+            error:
+              'not_authorized',
           },
-          { status: 400 }
+          {
+            status: 403,
+          }
         )
       }
     }
 
     // =====================================================
-    // 6) Nachrichten laden
+    // 5) ANZEIGENAME BESTIMMEN
     // =====================================================
 
-    let query = admin
-      .from('messages')
-      .select(`
-        id,
-        conversation_id,
-        sender_participant_id,
-        message_type,
-        content,
-        client_message_id,
-        created_at,
-        message_attachments (
-          id,
-          original_filename,
-          mime_type,
-          file_extension,
-          file_size,
-          storage_path,
-          created_at
+    let displayName =
+      'Unterhaltung'
+
+    if (
+      conversation.type ===
+      'support'
+    ) {
+      if (
+        participant?.role ===
+        'member'
+      ) {
+        /*
+         * Der normale Nutzer sieht
+         * "Beschichter Scout Support".
+         */
+        displayName =
+          'Beschichter Scout Support'
+      } else {
+        /*
+         * Support-Mitarbeiter sieht
+         * den eigentlichen Nutzer.
+         */
+        const {
+          data: member,
+          error:
+            memberError,
+        } =
+          await admin
+            .from(
+              'conversation_participants'
+            )
+            .select(
+              'display_name_snapshot'
+            )
+            .eq(
+              'conversation_id',
+              conversationId
+            )
+            .eq(
+              'role',
+              'member'
+            )
+            .is(
+              'left_at',
+              null
+            )
+            .maybeSingle()
+
+        if (
+          memberError
+        ) {
+          console.error(
+            '[messages/detail] support member lookup failed:',
+            memberError
+          )
+        }
+
+        displayName =
+          member
+            ?.display_name_snapshot ||
+          'Nutzer'
+      }
+    } else if (
+      participant?.id
+    ) {
+      /*
+       * Normaler Direktchat:
+       * Name des anderen Teilnehmers.
+       */
+      const {
+        data:
+          otherParticipant,
+        error:
+          otherParticipantError,
+      } =
+        await admin
+          .from(
+            'conversation_participants'
+          )
+          .select(
+            'display_name_snapshot'
+          )
+          .eq(
+            'conversation_id',
+            conversationId
+          )
+          .neq(
+            'id',
+            participant.id
+          )
+          .is(
+            'left_at',
+            null
+          )
+          .maybeSingle()
+
+      if (
+        otherParticipantError
+      ) {
+        console.error(
+          '[messages/detail] direct participant lookup failed:',
+          otherParticipantError
         )
-      `)
-      .eq(
-        'conversation_id',
-        conversationId
-      )
-      .order(
-        'created_at',
-        {
-          ascending: false,
-        }
-      )
-      .order(
-        'id',
-        {
-          ascending: false,
-        }
-      )
-      .limit(
-        CHAT_MESSAGE_PAGE_SIZE + 1
-      )
+      }
+
+      displayName =
+        otherParticipant
+          ?.display_name_snapshot ||
+        'Nutzer'
+    }
 
     // =====================================================
-    // 7) Infinite-Scroll-Cursor
+    // 6) CURSOR LESEN
     // =====================================================
 
-    if (cursor) {
-      query = query.or(
-        [
-          `created_at.lt.${cursor.createdAt}`,
-          `and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
-        ].join(',')
+    const url =
+      new URL(req.url)
+
+    const cursorRaw =
+      url.searchParams.get(
+        'before'
       )
+
+    let cursor:
+      | Cursor
+      | null = null
+
+    if (
+      cursorRaw
+    ) {
+      cursor =
+        decodeCursor(
+          cursorRaw
+        )
+
+      if (
+        !cursor
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              'invalid_cursor',
+          },
+          {
+            status: 400,
+          }
+        )
+      }
+    }
+
+    // =====================================================
+    // 7) NACHRICHTEN LADEN
+    // =====================================================
+
+    let query =
+      admin
+        .from(
+          'messages'
+        )
+        .select(`
+          id,
+          conversation_id,
+          sender_participant_id,
+          message_type,
+          content,
+          client_message_id,
+          created_at,
+          message_attachments (
+            id,
+            original_filename,
+            mime_type,
+            file_extension,
+            file_size,
+            storage_path,
+            created_at
+          )
+        `)
+        .eq(
+          'conversation_id',
+          conversationId
+        )
+        .order(
+          'created_at',
+          {
+            ascending:
+              false,
+          }
+        )
+        .order(
+          'id',
+          {
+            ascending:
+              false,
+          }
+        )
+        .limit(
+          CHAT_MESSAGE_PAGE_SIZE +
+            1
+        )
+
+    // =====================================================
+    // 8) INFINITE-SCROLL-CURSOR
+    // =====================================================
+
+    if (
+      cursor
+    ) {
+      query =
+        query.or(
+          [
+            `created_at.lt.${cursor.createdAt}`,
+            `and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+          ].join(',')
+        )
     }
 
     const {
       data: rows,
-      error: messageError,
-    } = await query
+      error:
+        messageError,
+    } =
+      await query
 
-    if (messageError) {
+    if (
+      messageError
+    ) {
       console.error(
         '[messages/detail] messages load failed:',
         messageError
@@ -303,38 +508,46 @@ export async function GET(
       return NextResponse.json(
         {
           ok: false,
-          error: 'messages_load_failed',
+          error:
+            'messages_load_failed',
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       )
     }
 
-    const result = rows ?? []
+    const result =
+      rows ?? []
 
     // =====================================================
-    // 8) Prüfen, ob noch ältere Nachrichten vorhanden sind
+    // 9) PAGINATION
     // =====================================================
 
     const hasMore =
       result.length >
       CHAT_MESSAGE_PAGE_SIZE
 
-    const page = hasMore
-      ? result.slice(
-          0,
-          CHAT_MESSAGE_PAGE_SIZE
-        )
-      : result
+    const page =
+      hasMore
+        ? result.slice(
+            0,
+            CHAT_MESSAGE_PAGE_SIZE
+          )
+        : result
 
     const oldest =
-      page.length > 0
+      page.length >
+      0
         ? page[
-            page.length - 1
+            page.length -
+              1
           ]
         : null
 
     const nextBefore =
-      hasMore && oldest
+      hasMore &&
+      oldest
         ? encodeCursor({
             createdAt:
               oldest.created_at,
@@ -352,29 +565,25 @@ export async function GET(
      * oldest -> newest
      */
     const messages =
-      [...page].reverse()
+      [
+        ...page,
+      ].reverse()
 
     // =====================================================
-    // 9) Response
+    // 10) RESPONSE
     // =====================================================
 
     return NextResponse.json(
       {
         ok: true,
 
-        /*
-         * Wichtig für die UI:
-         * Eigene Nachrichten können damit zuverlässig
-         * rechts dargestellt werden.
-         *
-         * Support-Agent ohne Participant bekommt hier null,
-         * bis er dem Chat beim Antworten beitritt.
-         */
         myParticipantId:
-          participant?.id ?? null,
+          participant?.id ??
+          null,
 
         conversation: {
-          id: conversation.id,
+          id:
+            conversation.id,
 
           type:
             conversation.type,
@@ -383,6 +592,8 @@ export async function GET(
             Boolean(
               conversation.closed_at
             ),
+
+          displayName,
         },
 
         messages,
@@ -400,7 +611,9 @@ export async function GET(
         },
       }
     )
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       '[messages/detail] unexpected error:',
       error
@@ -409,9 +622,12 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        error: 'internal_error',
+        error:
+          'internal_error',
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     )
   }
 }
