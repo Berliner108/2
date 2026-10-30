@@ -728,6 +728,12 @@ const chatParams = new URLSearchParams({
 });
 
 router.push(`/messages/new?${chatParams.toString()}`);
+  } catch {
+    toastError('Unterhaltung konnte nicht gestartet werden.');
+  } finally {
+    setChatStarting(false);
+  }
+};
 
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
