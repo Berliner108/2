@@ -12,6 +12,7 @@ import "yet-another-react-lightbox/plugins/thumbnails.css";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { FaFilePdf } from "react-icons/fa";
 import ArtikelNichtGefunden from "./ArtikelNichtGefunden";
+import PremiumRequiredModal from "../../../components/premium/PremiumRequiredModal";
 
 /* ===================== Typen ===================== */
 type Tier = {
@@ -238,6 +239,9 @@ export default function ArtikelDetailPage() {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [seller, setSeller] = useState<Seller | null>(null);
   const [impressumOpen, setImpressumOpen] = useState(false);
+  const [chatStarting, setChatStarting] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
 
   // Viewer (profiles.account_type)
   const [viewerChecked, setViewerChecked] = useState(false);
@@ -406,8 +410,89 @@ useEffect(() => {
       ? styles.privat
       : "";
 
-  const reviewsHref = useMemo(() => profileReviewsHref(seller?.username ?? null), [seller?.username]);
-  const messageTarget = useMemo(() => encodeURIComponent(seller?.username ?? ""), [seller?.username]);
+  const reviewsHref = useMemo(
+  () => profileReviewsHref(seller?.username ?? null),
+  [seller?.username]
+);
+const startArticleChat = async () => {
+  if (chatStarting) return;
+
+  if (!seller?.id || !article?.id) {
+    setChatError("Der Verkäufer konnte nicht eindeutig ermittelt werden.");
+    return;
+  }
+
+  setChatStarting(true);
+  setChatError(null);
+
+  try {
+    const res = await fetch("/api/messages/start", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipientId: seller.id,
+        sourceType: "article",
+        sourceId: String(article.id),
+      }),
+    });
+
+    const json = await res.json().catch(() => ({} as any));
+
+    if (res.status === 401) {
+      router.push("/login");
+      return;
+    }
+
+    if (
+      res.status === 403 &&
+      (
+        json?.error === "premium_required" ||
+        json?.reason === "premium_required"
+      )
+    ) {
+      setPremiumModalOpen(true);
+      return;
+    }
+
+    if (
+      json?.error === "cannot_message_self" ||
+      json?.error === "self_message_not_allowed"
+    ) {
+      setChatError("Du kannst dir selbst keine Nachricht senden.");
+      return;
+    }
+
+    if (
+      json?.error === "chat_blocked" ||
+      json?.error === "blocked"
+    ) {
+      setChatError(
+        "Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden."
+      );
+      return;
+    }
+
+    if (!res.ok || !json?.conversationId) {
+      setChatError(
+        json?.message ||
+          json?.error ||
+          "Unterhaltung konnte nicht gestartet werden."
+      );
+      return;
+    }
+
+    router.push(
+      `/messages/${encodeURIComponent(String(json.conversationId))}`
+    );
+  } catch {
+    setChatError("Unterhaltung konnte nicht gestartet werden.");
+  } finally {
+    setChatStarting(false);
+  }
+};
   const showSellerImprint = seller?.account_type === "business";
   const sellerAddress = seller?.address ?? null;
   const sellerCountry = normalizeCountryCode(seller?.address?.country);
@@ -852,10 +937,37 @@ if (!article) {
                   </div>
 
                   <div style={{ marginTop: 6 }}>
-                    <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
-                      User kontaktieren
-                    </Link>
-                  </div>
+  <button
+    type="button"
+    className={styles.kontaktLink}
+    onClick={() => void startArticleChat()}
+    disabled={chatStarting}
+    style={{
+      background: "none",
+      border: 0,
+      padding: 0,
+      margin: 0,
+      cursor: chatStarting ? "default" : "pointer",
+      font: "inherit",
+    }}
+  >
+    {chatStarting
+      ? "Unterhaltung wird geöffnet …"
+      : "User kontaktieren"}
+  </button>
+
+  {chatError && (
+    <div
+      style={{
+        marginTop: 6,
+        color: "#b00020",
+        fontSize: "0.9rem",
+      }}
+    >
+      {chatError}
+    </div>
+  )}
+</div>
                 </div>
               )}
               {/* Verkäufer-Impressum */}
@@ -1274,6 +1386,11 @@ if (!article) {
           on={{ view: ({ index }) => setPhotoIndex(index) }}
         />
       )}
+      <PremiumRequiredModal
+  open={premiumModalOpen}
+  onClose={() => setPremiumModalOpen(false)}
+  actionText="den Verkäufer zu kontaktieren"
+/>
     </>
   );
 }
