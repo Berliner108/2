@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import styles from './ArtikelDetail.module.css';
@@ -24,6 +24,10 @@ type ApiItem = {
   data?: Record<string, any> | null;
   ort?: string;
   bilder?: string[];
+
+  user_id?: string | null;
+  owner_id?: string | null;
+
   user?: string;
   user_rating?: number | null;
   user_rating_count?: number | null;
@@ -41,6 +45,7 @@ type ArtikelView = {
   menge: number | null;
   ort: string;
   kategorie: string;
+  user_id?: string | null;
   user?: string;
   user_rating?: number | null;
   user_rating_count?: number | null;
@@ -464,6 +469,19 @@ function toApiItemFromDetail(a: any, id: string): ApiItem {
     data: a?.data ?? a ?? {},
     ort: typeof a?.ort === 'string' ? a.ort : undefined,
     bilder: Array.isArray(a?.bilder) ? a.bilder : undefined,
+    user_id:
+    typeof a?.user_id === 'string'
+      ? a.user_id
+      : typeof a?.owner_id === 'string'
+        ? a.owner_id
+        : null,
+
+    owner_id:
+    typeof a?.owner_id === 'string'
+      ? a.owner_id
+      : typeof a?.user_id === 'string'
+        ? a.user_id
+        : null,
     user: typeof a?.user === 'string' ? a.user : undefined,
     user_rating: typeof a?.user_rating === 'number' ? a.user_rating : null,
     user_rating_count: typeof a?.user_rating_count === 'number' ? a.user_rating_count : null,
@@ -532,6 +550,7 @@ async function findByIdViaList(id: string): Promise<ApiItem | null> {
 /* ===================== Seite ===================== */
 function PageBody() {
   const { id: rawParam } = useParams<{ id?: string }>();
+  const router = useRouter();
   const [artikel, setArtikel] = useState<ArtikelView | null>(null);
   const [loading, setLoading] = useState(true);
   const { success, error: toastError } = useLocalToast();
@@ -552,6 +571,7 @@ function PageBody() {
   const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
   const [premiumLoaded, setPremiumLoaded] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
+  const [chatStarting, setChatStarting] = useState(false);
 
   const requestId = rawParam ? decodeURIComponent(String(rawParam)) : '';
 
@@ -956,12 +976,89 @@ function PageBody() {
 
   /* === NEU: Reviews-/Kontakt-Links berechnen (UI-only) === */
   const reviewsHref = profileReviewsHrefFromView(artikel);
-  const messageTarget = encodeURIComponent(artikel.user_handle || artikel.user || '');
   const darfAngebotAbgeben =
     premiumLoaded &&
     hasPremium &&
     connectLoaded &&
     connect?.ready === true;
+    const startLackRequestChat = async () => {
+  if (chatStarting) return;
+
+  if (!artikel.user_id) {
+    toastError('Der Nutzer konnte nicht eindeutig ermittelt werden.');
+    return;
+  }
+
+  setChatStarting(true);
+
+  try {
+    const res = await fetch('/api/messages/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId: artikel.user_id,
+        sourceType: 'lack_request',
+        sourceId: String(artikel.id),
+      }),
+    });
+
+    const json = await res.json().catch(() => ({} as any));
+
+    if (res.status === 401) {
+      toastError('Bitte melde dich an, um eine Nachricht zu senden.');
+      return;
+    }
+
+    if (
+      res.status === 403 &&
+      (
+        json?.error === 'premium_required' ||
+        json?.reason === 'premium_required'
+      )
+    ) {
+      setPremiumModalOpen(true);
+      return;
+    }
+
+    if (
+      json?.error === 'cannot_message_self' ||
+      json?.error === 'self_message_not_allowed'
+    ) {
+      toastError('Du kannst dir selbst keine Nachricht senden.');
+      return;
+    }
+
+    if (
+      json?.error === 'chat_blocked' ||
+      json?.error === 'blocked'
+    ) {
+      toastError(
+        'Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.'
+      );
+      return;
+    }
+
+    if (!res.ok || !json?.conversationId) {
+      toastError(
+        json?.message ||
+        json?.error ||
+        'Unterhaltung konnte nicht gestartet werden.'
+      );
+      return;
+    }
+
+    router.push(
+      `/messages/${encodeURIComponent(String(json.conversationId))}`
+    );
+  } catch {
+    toastError('Unterhaltung konnte nicht gestartet werden.');
+  } finally {
+    setChatStarting(false);
+  }
+};
 
   const premiumBlockiertAngebot =
     premiumLoaded &&
@@ -1143,10 +1240,25 @@ const isSubmitDisabled =
                   </div>
 
                   <div style={{ marginTop: 6 }}>
-                    <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
-                      User kontaktieren
-                    </Link>
-                  </div>
+  <button
+    type="button"
+    className={styles.kontaktLink}
+    onClick={() => void startLackRequestChat()}
+    disabled={chatStarting}
+    style={{
+      background: 'none',
+      border: 0,
+      padding: 0,
+      margin: 0,
+      cursor: chatStarting ? 'default' : 'pointer',
+      font: 'inherit',
+    }}
+  >
+    {chatStarting
+      ? 'Unterhaltung wird geöffnet …'
+      : 'User kontaktieren'}
+  </button>
+</div>
                 </div>
               )}
               <div className={styles.metaItem1}>
@@ -1396,6 +1508,7 @@ function mapItem(it: ApiItem): ArtikelView {
 
   return {
     id: it.id,
+    user_id: it.user_id || it.owner_id || null,
     titel: d.titel || it.title || 'Unbenannt',
     bilder,
     lieferdatum,
