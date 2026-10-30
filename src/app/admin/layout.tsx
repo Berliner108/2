@@ -31,9 +31,7 @@ export default async function AdminLayout({
   )
     .split(',')
     .map((s) =>
-      s
-        .trim()
-        .toLowerCase()
+      s.trim().toLowerCase()
     )
     .filter(Boolean)
 
@@ -50,13 +48,12 @@ export default async function AdminLayout({
   }
 
   // 3) Rolle im Profil prüfen
-  const {
-    data: me,
-  } = await sb
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .maybeSingle()
+  const { data: me } =
+    await sb
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
 
   if (
     me?.role !== 'admin'
@@ -153,6 +150,21 @@ export default async function AdminLayout({
               }}
             >
               Nachrichten
+            </a>
+
+            <a
+              href="/admin/messages/reports"
+              className="admin-nav-link"
+              style={{
+                padding:
+                  '6px 10px',
+                borderRadius: 10,
+                textDecoration:
+                  'none',
+                color: '#111827',
+              }}
+            >
+              Meldungen
             </a>
 
             <a
