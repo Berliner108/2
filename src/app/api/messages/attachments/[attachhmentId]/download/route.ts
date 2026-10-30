@@ -26,15 +26,18 @@ export async function GET(
   {
     params,
   }: {
-    params: Promise<{
-      attachmentId: string
-    }>
+    params: Promise<Record<string, string>>
   }
 ) {
   try {
-    const {
-      attachmentId,
-    } = await params
+    const resolvedParams =
+      await params
+
+    const attachmentId =
+      resolvedParams.attachmentId ||
+      resolvedParams.id ||
+      Object.values(resolvedParams)[0] ||
+      ''
 
     if (
       !attachmentId ||
