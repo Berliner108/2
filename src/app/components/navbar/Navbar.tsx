@@ -2,17 +2,34 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useLayoutEffect, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  useState,
+} from 'react'
+
 import styles from './navbar.module.css'
 import { NAV_ITEMS } from './nav.config'
+import { supabaseBrowser } from '@/lib/supabase-browser'
 
 type ForAccountResponseOffers = {
-  received?: Array<{ id: string; createdAt?: string; created_at?: string }>
+  received?: Array<{
+    id: string
+    createdAt?: string
+    created_at?: string
+  }>
 }
 
 type LackOrder = {
   kind: 'vergeben' | 'angenommen'
-  status?: 'in_progress' | 'reported' | 'disputed' | 'confirmed'
+
+  status?:
+    | 'in_progress'
+    | 'reported'
+    | 'disputed'
+    | 'confirmed'
+
   acceptedAt: string
   shippedAt?: string
   deliveredReportedAt?: string
@@ -23,9 +40,11 @@ type LackOrder = {
   lastEventAt?: string
 }
 
-type OrdersResp = { vergeben: LackOrder[]; angenommen: LackOrder[] }
+type OrdersResp = {
+  vergeben: LackOrder[]
+  angenommen: LackOrder[]
+}
 
-// ✅ Shop (Verkäufer) – /api/konto/shop-verkaufen
 type ShopSalesResp = {
   orders?: Array<{
     id: string
@@ -39,7 +58,6 @@ type ShopSalesResp = {
   }>
 }
 
-// ✅ Shop (Käufer) – /api/konto/shop-bestellungen (falls deine Route anders heißt: hier Pfad ändern)
 type ShopBuysResp = {
   orders?: Array<{
     id: string
@@ -51,16 +69,34 @@ type ShopBuysResp = {
     updated_at?: string | null
   }>
 }
+
 type JobOffersReceivedResp = {
   ok?: boolean
-  offers?: Array<{ id: string; created_at?: string }>
+  offers?: Array<{
+    id: string
+    created_at?: string
+  }>
 }
+
 type JobAccountOrdersResp = {
   orders?: Array<{
     jobId: string | number
-    kind: 'vergeben' | 'angenommen'
-    jobPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
-    offerPayStatus?: 'paid' | 'released' | 'refunded' | 'disputed'
+    kind:
+      | 'vergeben'
+      | 'angenommen'
+
+    jobPayStatus?:
+      | 'paid'
+      | 'released'
+      | 'refunded'
+      | 'disputed'
+
+    offerPayStatus?:
+      | 'paid'
+      | 'released'
+      | 'refunded'
+      | 'disputed'
+
     acceptedAt?: string
     paidAt?: string
     releasedAt?: string
@@ -71,29 +107,79 @@ type JobAccountOrdersResp = {
     lastEventAt?: string
   }>
 }
-const JOB_OFFERS_RECEIVED_API = '/api/offers/received'
-const JOB_OFFERS_LASTSEEN_KEY = 'jobOffers:lastSeen'
-const JOB_ORDERS_API = '/api/konto/auftraege'
-const JOB_ORDERS_LASTSEEN_KEY = 'jobOrders:lastSeen'
-const NAV_SCROLL_KEY = 'navbar:scrollLeft'
 
-// ✅ wenn deine Buyer-API anders heißt, NUR diesen String anpassen:
-const SHOP_BUYS_API = '/api/konto/shop-bestellungen'
+const JOB_OFFERS_RECEIVED_API =
+  '/api/offers/received'
+
+const JOB_OFFERS_LASTSEEN_KEY =
+  'jobOffers:lastSeen'
+
+const JOB_ORDERS_API =
+  '/api/konto/auftraege'
+
+const JOB_ORDERS_LASTSEEN_KEY =
+  'jobOrders:lastSeen'
+
+const NAV_SCROLL_KEY =
+  'navbar:scrollLeft'
+
+const SHOP_BUYS_API =
+  '/api/konto/shop-bestellungen'
 
 export default function Navbar() {
-  const pathname = usePathname()
-  const [kontoNew, setKontoNew] = useState(0)
+  const pathname =
+    usePathname()
 
-  // Refs für Overlay/Erkennung
-  const navbarRef = useRef<HTMLDivElement | null>(null)       // scrollbarer Container
-  const kontoLinkRef = useRef<HTMLAnchorElement | null>(null) // "Mein Konto"-Link
-  const reloadCountsRef = useRef<null | (() => void)>(null) // ✅ damit Badge sofort neu berechnet wird
-  const [showEdgeBadge, setShowEdgeBadge] = useState(false)
-  const [edgeTop, setEdgeTop] = useState<number>(8)
+  const [
+    kontoNew,
+    setKontoNew,
+  ] =
+    useState(0)
 
-  const tsOf = (iso?: string | null) => (iso ? +new Date(iso) : 0)
+  const [
+    messageUnread,
+    setMessageUnread,
+  ] =
+    useState(0)
 
-  function lastEventTs(o: LackOrder): number {
+  const navbarRef =
+    useRef<HTMLDivElement | null>(
+      null
+    )
+
+  const kontoLinkRef =
+    useRef<HTMLAnchorElement | null>(
+      null
+    )
+
+  const reloadCountsRef =
+    useRef<
+      null |
+      (() => void)
+    >(null)
+
+  const [
+    showEdgeBadge,
+    setShowEdgeBadge,
+  ] =
+    useState(false)
+
+  const [
+    edgeTop,
+    setEdgeTop,
+  ] =
+    useState<number>(8)
+
+  const tsOf = (
+    iso?: string | null
+  ) =>
+    iso
+      ? +new Date(iso)
+      : 0
+
+  function lastEventTs(
+    o: LackOrder
+  ): number {
     const fallback =
       o.deliveredConfirmedAt ??
       o.disputeOpenedAt ??
@@ -101,16 +187,37 @@ export default function Navbar() {
       o.shippedAt ??
       o.refundedAt ??
       o.acceptedAt
-    return tsOf(o.lastEventAt || fallback || o.acceptedAt)
+
+    return tsOf(
+      o.lastEventAt ||
+      fallback ||
+      o.acceptedAt
+    )
   }
 
-  function needsAction(o: LackOrder): boolean {
-    if (o.kind === 'angenommen') return (o.status ?? 'in_progress') === 'in_progress'
-    return o.status === 'reported'
+  function needsAction(
+    o: LackOrder
+  ): boolean {
+    if (
+      o.kind ===
+      'angenommen'
+    ) {
+      return (
+        o.status ??
+        'in_progress'
+      ) ===
+        'in_progress'
+    }
+
+    return (
+      o.status ===
+      'reported'
+    )
   }
 
-  // ✅ Shop-Verkäufer: Event-Zeitpunkt (für "neu" wie Lacke)
-  function shopSellerEventTs(o: any): number {
+  function shopSellerEventTs(
+    o: any
+  ): number {
     return (
       tsOf(o.refunded_at) ||
       tsOf(o.released_at) ||
@@ -120,8 +227,9 @@ export default function Navbar() {
     )
   }
 
-  // ✅ Shop-Käufer: Event-Zeitpunkt (Versand zählt als Event)
-  function shopBuyerEventTs(o: any): number {
+  function shopBuyerEventTs(
+    o: any
+  ): number {
     return (
       tsOf(o.shipped_at) ||
       tsOf(o.refunded_at) ||
@@ -131,383 +239,1257 @@ export default function Navbar() {
     )
   }
 
+  // =====================================================
+  // BESTEHENDE KONTO-ZÄHLER
+  // =====================================================
+
   useEffect(() => {
     let alive = true
 
     async function loadAllCounts() {
       try {
-        const now = Date.now()
-        const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
-        const sevenDaysAgo = now - SEVEN_DAYS
+        const now =
+          Date.now()
 
-        // 1) neue Lack-Angebote
+        const SEVEN_DAYS =
+          7 *
+          24 *
+          60 *
+          60 *
+          1000
+
+        const sevenDaysAgo =
+          now -
+          SEVEN_DAYS
+
+        // =================================================
+        // 1) LACK-ANGEBOTE
+        // =================================================
+
         let offersNew = 0
+
         try {
-          const res = await fetch('/api/lack/offers/for-account', { cache: 'no-store' })
+          const res =
+            await fetch(
+              '/api/lack/offers/for-account',
+              {
+                cache:
+                  'no-store',
+              }
+            )
+
           if (res.ok) {
-            const j: ForAccountResponseOffers = await res.json()
-            const received = Array.isArray(j?.received) ? j.received : []
+            const j:
+              ForAccountResponseOffers =
+              await res.json()
 
-            const rawLastSeenOffers = Number(localStorage.getItem('offers:lastSeen') || '0')
-            const lastSeenOffers = Math.max(rawLastSeenOffers || 0, sevenDaysAgo)
+            const received =
+              Array.isArray(
+                j?.received
+              )
+                ? j.received
+                : []
 
-            offersNew = received.reduce((acc, o) => {
-              const ts = +new Date((o as any).createdAt || (o as any).created_at)
-              // „neu“ nur, wenn nach lastSeen UND jünger als 7 Tage
-              return ts > lastSeenOffers ? acc + 1 : acc
-            }, 0)
+            const rawLastSeenOffers =
+              Number(
+                localStorage.getItem(
+                  'offers:lastSeen'
+                ) || '0'
+              )
+
+            const lastSeenOffers =
+              Math.max(
+                rawLastSeenOffers ||
+                  0,
+                sevenDaysAgo
+              )
+
+            offersNew =
+              received.reduce(
+                (
+                  acc,
+                  o
+                ) => {
+                  const ts =
+                    +new Date(
+                      (o as any)
+                        .createdAt ||
+                        (o as any)
+                          .created_at
+                    )
+
+                  return (
+                    ts >
+                    lastSeenOffers
+                  )
+                    ? acc + 1
+                    : acc
+                },
+                0
+              )
           }
         } catch {
           // ignore
         }
 
-        // 2) Orders + Handlungsbedarf
+        // =================================================
+        // 2) LACK-ORDERS
+        // =================================================
+
         let ordersBadge = 0
+
         try {
-          const res = await fetch('/api/orders/for-account', {
-            cache: 'no-store',
-            credentials: 'include',
-          })
-          if (res.ok) {
-            const j: OrdersResp = await res.json()
-            const merged = [...(j.vergeben ?? []), ...(j.angenommen ?? [])]
-
-            const rawLastSeenOrders = Number(localStorage.getItem('lackOrders:lastSeen') || '0')
-            const lastSeenOrders = Math.max(rawLastSeenOrders || 0, sevenDaysAgo)
-
-            // neue Events nur, wenn nach lastSeenOrders (der selbst max. 7 Tage alt ist)
-            const newEvents = merged.reduce(
-              (n, o) => n + (lastEventTs(o) > lastSeenOrders ? 1 : 0),
-              0
+          const res =
+            await fetch(
+              '/api/orders/for-account',
+              {
+                cache:
+                  'no-store',
+                credentials:
+                  'include',
+              }
             )
 
-            // Handlungsbedarf zählt nur, wenn Event jünger als 7 Tage
-            const pending = merged.reduce(
-              (n, o) => n + (needsAction(o) && lastEventTs(o) > sevenDaysAgo ? 1 : 0),
-              0
+          if (res.ok) {
+            const j:
+              OrdersResp =
+              await res.json()
+
+            const merged = [
+              ...(j.vergeben ??
+                []),
+              ...(j.angenommen ??
+                []),
+            ]
+
+            const rawLastSeenOrders =
+              Number(
+                localStorage.getItem(
+                  'lackOrders:lastSeen'
+                ) || '0'
+              )
+
+            const lastSeenOrders =
+              Math.max(
+                rawLastSeenOrders ||
+                  0,
+                sevenDaysAgo
+              )
+
+            const newEvents =
+              merged.reduce(
+                (
+                  n,
+                  o
+                ) =>
+                  n +
+                  (
+                    lastEventTs(
+                      o
+                    ) >
+                    lastSeenOrders
+                      ? 1
+                      : 0
+                  ),
+                0
+              )
+
+            const pending =
+              merged.reduce(
+                (
+                  n,
+                  o
+                ) =>
+                  n +
+                  (
+                    needsAction(
+                      o
+                    ) &&
+                    lastEventTs(
+                      o
+                    ) >
+                    sevenDaysAgo
+                      ? 1
+                      : 0
+                  ),
+                0
+              )
+
+            ordersBadge =
+              newEvents +
+              pending
+          }
+        } catch {
+          // ignore
+        }
+
+        // =================================================
+        // 3) SHOP VERKÄUFE
+        // =================================================
+
+        let shopSalesNew =
+          0
+
+        try {
+          const res =
+            await fetch(
+              '/api/konto/shop-verkaufen',
+              {
+                cache:
+                  'no-store',
+              }
             )
 
-            ordersBadge = newEvents + pending
-          }
-        } catch {
-          // ignore
-        }
-
-
-
-        // 3) ✅ Shop-Verkäufe (NUR Verkäufer) – neu wie Lacke (lastSeen + 7 Tage Cap)
-        let shopSalesNew = 0
-        try {
-          const res = await fetch('/api/konto/shop-verkaufen', { cache: 'no-store' })
           if (res.ok) {
-            const j: ShopSalesResp = await res.json()
-            const orders = Array.isArray(j?.orders) ? j.orders : []
+            const j:
+              ShopSalesResp =
+              await res.json()
 
-            const rawLastSeen = Number(localStorage.getItem('shopSales:lastSeen') || '0')
-            const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+            const orders =
+              Array.isArray(
+                j?.orders
+              )
+                ? j.orders
+                : []
 
-            shopSalesNew = orders.reduce((acc, o) => {
-              const ts = shopSellerEventTs(o)
-              const relevant = ['paid', 'released', 'refunded', 'complaint_open'].includes(o.status)
-              return relevant && ts > lastSeen ? acc + 1 : acc
-            }, 0)
-          } else {
-            shopSalesNew = 0
+            const rawLastSeen =
+              Number(
+                localStorage.getItem(
+                  'shopSales:lastSeen'
+                ) || '0'
+              )
+
+            const lastSeen =
+              Math.max(
+                rawLastSeen ||
+                  0,
+                sevenDaysAgo
+              )
+
+            shopSalesNew =
+              orders.reduce(
+                (
+                  acc,
+                  o
+                ) => {
+                  const ts =
+                    shopSellerEventTs(
+                      o
+                    )
+
+                  const relevant =
+                    [
+                      'paid',
+                      'released',
+                      'refunded',
+                      'complaint_open',
+                    ].includes(
+                      o.status
+                    )
+
+                  return (
+                    relevant &&
+                    ts >
+                    lastSeen
+                  )
+                    ? acc + 1
+                    : acc
+                },
+                0
+              )
           }
         } catch {
           // ignore
         }
 
-        // 4) ✅ Shop-Käufe (Käufer) – Badge hoch, wenn Verkäufer Versand meldet (shipped)
-        let shopBuysNew = 0
+        // =================================================
+        // 4) SHOP KÄUFE
+        // =================================================
+
+        let shopBuysNew =
+          0
+
         try {
-          const res = await fetch(SHOP_BUYS_API, { cache: 'no-store' })
+          const res =
+            await fetch(
+              SHOP_BUYS_API,
+              {
+                cache:
+                  'no-store',
+              }
+            )
+
           if (res.ok) {
-            const j: ShopBuysResp = await res.json()
-            const orders = Array.isArray(j?.orders) ? j.orders : []
+            const j:
+              ShopBuysResp =
+              await res.json()
 
-            const rawLastSeen = Number(localStorage.getItem('shopBuys:lastSeen') || '0')
-            const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+            const orders =
+              Array.isArray(
+                j?.orders
+              )
+                ? j.orders
+                : []
 
-            shopBuysNew = orders.reduce((acc, o) => {
-              const ts = shopBuyerEventTs(o)
-              // Käufer soll reagieren, wenn Versand gemeldet wurde (optional auch released/refunded)
-              const relevant = ['shipped', 'released', 'refunded'].includes(o.status)
-              return relevant && ts > lastSeen ? acc + 1 : acc
-            }, 0)
-          } else {
-            shopBuysNew = 0
+            const rawLastSeen =
+              Number(
+                localStorage.getItem(
+                  'shopBuys:lastSeen'
+                ) || '0'
+              )
+
+            const lastSeen =
+              Math.max(
+                rawLastSeen ||
+                  0,
+                sevenDaysAgo
+              )
+
+            shopBuysNew =
+              orders.reduce(
+                (
+                  acc,
+                  o
+                ) => {
+                  const ts =
+                    shopBuyerEventTs(
+                      o
+                    )
+
+                  const relevant =
+                    [
+                      'shipped',
+                      'released',
+                      'refunded',
+                    ].includes(
+                      o.status
+                    )
+
+                  return (
+                    relevant &&
+                    ts >
+                    lastSeen
+                  )
+                    ? acc + 1
+                    : acc
+                },
+                0
+              )
           }
         } catch {
           // ignore
         }
-                // 5) ✅ Job-Angebote (received) – neu wie Lacke (lastSeen + 7 Tage Cap)
-let jobOffersNew = 0
-try {
-  const res = await fetch(JOB_OFFERS_RECEIVED_API, { cache: 'no-store', credentials: 'include' })
-  if (res.ok) {
-    const j: JobOffersReceivedResp = await res.json()
-    const offers = Array.isArray(j?.offers) ? j.offers : []
 
-    const rawLastSeen = Number(localStorage.getItem(JOB_OFFERS_LASTSEEN_KEY) || '0')
-    const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+        // =================================================
+        // 5) JOB-ANGEBOTE
+        // =================================================
 
-    jobOffersNew = offers.reduce((acc, o) => {
-      const ts = +new Date((o as any).created_at)
-      return ts > lastSeen ? acc + 1 : acc
-    }, 0)
-  }
-} catch {
-  // ignore
-}
-// 6) ✅ Job-Aufträge – bezahlt / freigegeben / erstattet
-let jobOrdersNew = 0
+        let jobOffersNew =
+          0
 
-try {
-  const res = await fetch(JOB_ORDERS_API, {
-    cache: 'no-store',
-    credentials: 'include',
-  })
+        try {
+          const res =
+            await fetch(
+              JOB_OFFERS_RECEIVED_API,
+              {
+                cache:
+                  'no-store',
+                credentials:
+                  'include',
+              }
+            )
 
-  if (res.ok) {
-    const j: JobAccountOrdersResp = await res.json()
-    const orders = Array.isArray(j?.orders) ? j.orders : []
+          if (res.ok) {
+            const j:
+              JobOffersReceivedResp =
+              await res.json()
 
-    const rawLastSeen = Number(localStorage.getItem(JOB_ORDERS_LASTSEEN_KEY) || '0')
-    const lastSeen = Math.max(rawLastSeen || 0, sevenDaysAgo)
+            const offers =
+              Array.isArray(
+                j?.offers
+              )
+                ? j.offers
+                : []
 
-    jobOrdersNew = orders.reduce((acc, o) => {
-      const payStatus = o.kind === 'vergeben' ? o.jobPayStatus : o.offerPayStatus
+            const rawLastSeen =
+              Number(
+                localStorage.getItem(
+                  JOB_OFFERS_LASTSEEN_KEY
+                ) || '0'
+              )
 
-      const relevant =
-        payStatus === 'paid' ||
-        payStatus === 'released' ||
-        payStatus === 'refunded' ||
-        payStatus === 'disputed'
+            const lastSeen =
+              Math.max(
+                rawLastSeen ||
+                  0,
+                sevenDaysAgo
+              )
 
-      if (!relevant) return acc
+            jobOffersNew =
+              offers.reduce(
+                (
+                  acc,
+                  o
+                ) => {
+                  const ts =
+                    +new Date(
+                      (o as any)
+                        .created_at
+                    )
 
-      const ts =
-        tsOf(o.lastEventAt) ||
-        tsOf(o.refundedAt) ||
-        tsOf(o.releasedAt) ||
-        tsOf(o.deliveredConfirmedAt) ||
-        tsOf(o.deliveredReportedAt) ||
-        tsOf(o.disputeOpenedAt) ||
-        tsOf(o.paidAt) ||
-        tsOf(o.acceptedAt)
+                  return (
+                    ts >
+                    lastSeen
+                  )
+                    ? acc + 1
+                    : acc
+                },
+                0
+              )
+          }
+        } catch {
+          // ignore
+        }
 
-      return ts > lastSeen ? acc + 1 : acc
-    }, 0)
-  }
-} catch {
-  // ignore
-}
+        // =================================================
+        // 6) JOB-AUFTRÄGE
+        // =================================================
+
+        let jobOrdersNew =
+          0
+
+        try {
+          const res =
+            await fetch(
+              JOB_ORDERS_API,
+              {
+                cache:
+                  'no-store',
+                credentials:
+                  'include',
+              }
+            )
+
+          if (res.ok) {
+            const j:
+              JobAccountOrdersResp =
+              await res.json()
+
+            const orders =
+              Array.isArray(
+                j?.orders
+              )
+                ? j.orders
+                : []
+
+            const rawLastSeen =
+              Number(
+                localStorage.getItem(
+                  JOB_ORDERS_LASTSEEN_KEY
+                ) || '0'
+              )
+
+            const lastSeen =
+              Math.max(
+                rawLastSeen ||
+                  0,
+                sevenDaysAgo
+              )
+
+            jobOrdersNew =
+              orders.reduce(
+                (
+                  acc,
+                  o
+                ) => {
+                  const payStatus =
+                    o.kind ===
+                    'vergeben'
+                      ? o.jobPayStatus
+                      : o.offerPayStatus
+
+                  const relevant =
+                    payStatus ===
+                      'paid' ||
+                    payStatus ===
+                      'released' ||
+                    payStatus ===
+                      'refunded' ||
+                    payStatus ===
+                      'disputed'
+
+                  if (
+                    !relevant
+                  ) {
+                    return acc
+                  }
+
+                  const ts =
+                    tsOf(
+                      o.lastEventAt
+                    ) ||
+                    tsOf(
+                      o.refundedAt
+                    ) ||
+                    tsOf(
+                      o.releasedAt
+                    ) ||
+                    tsOf(
+                      o.deliveredConfirmedAt
+                    ) ||
+                    tsOf(
+                      o.deliveredReportedAt
+                    ) ||
+                    tsOf(
+                      o.disputeOpenedAt
+                    ) ||
+                    tsOf(
+                      o.paidAt
+                    ) ||
+                    tsOf(
+                      o.acceptedAt
+                    )
+
+                  return (
+                    ts >
+                    lastSeen
+                  )
+                    ? acc + 1
+                    : acc
+                },
+                0
+              )
+          }
+        } catch {
+          // ignore
+        }
+
         if (alive) {
-  setKontoNew(
-    offersNew +
-      ordersBadge +
-      shopSalesNew +
-      shopBuysNew +
-      jobOffersNew +
-      jobOrdersNew
-  )
-}
+          setKontoNew(
+            offersNew +
+              ordersBadge +
+              shopSalesNew +
+              shopBuysNew +
+              jobOffersNew +
+              jobOrdersNew
+          )
+        }
       } catch {
         // ignore
       }
     }
-    reloadCountsRef.current = loadAllCounts // ✅ sofortiges Neuzählen von außen möglich
 
+    reloadCountsRef.current =
+      loadAllCounts
 
     loadAllCounts()
-    const id = setInterval(loadAllCounts, 60_000)
 
-    const onBadge = (e: any) => {
+    const id =
+      setInterval(
+        loadAllCounts,
+        60_000
+      )
+
+    const onBadge = (
+      e: any
+    ) => {
       try {
-        const det = e?.detail || {}
-        if (typeof det.total === 'number') setKontoNew(det.total)
+        const det =
+          e?.detail || {}
+
+        if (
+          typeof det.total ===
+          'number'
+        ) {
+          setKontoNew(
+            det.total
+          )
+        }
       } catch {
         // ignore
       }
     }
-    window.addEventListener('navbar:badge', onBadge as any)
+
+    window.addEventListener(
+      'navbar:badge',
+      onBadge as any
+    )
 
     return () => {
-  alive = false
-  clearInterval(id)
-  window.removeEventListener('navbar:badge', onBadge as any)
-  reloadCountsRef.current = null
-}
+      alive = false
+      clearInterval(id)
 
+      window.removeEventListener(
+        'navbar:badge',
+        onBadge as any
+      )
+
+      reloadCountsRef.current =
+        null
+    }
   }, [])
 
-  useEffect(() => {
-    const nav = navbarRef.current
-    if (!nav) return
+  // =====================================================
+  // CHAT UNREAD
+  // INITIAL + REALTIME, KEIN POLLING
+  // =====================================================
 
-    const save = () => {
+  useEffect(() => {
+    let alive = true
+
+    const supabase =
+      supabaseBrowser()
+
+    let channel:
+      ReturnType<
+        typeof supabase.channel
+      > |
+      null =
+        null
+
+    async function loadMessageUnread() {
       try {
-        sessionStorage.setItem(NAV_SCROLL_KEY, String(nav.scrollLeft))
-      } catch {
-        // ignore
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            'chat_my_unread_count'
+          )
+
+        if (error) {
+          console.error(
+            '[navbar] chat unread:',
+            error
+          )
+
+          return
+        }
+
+        if (alive) {
+          const count =
+            Number(
+              data ?? 0
+            )
+
+          setMessageUnread(
+            Number.isFinite(
+              count
+            ) &&
+            count > 0
+              ? count
+              : 0
+          )
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          '[navbar] chat unread:',
+          error
+        )
       }
     }
 
-    nav.addEventListener('scroll', save, { passive: true })
-    return () => nav.removeEventListener('scroll', save)
-  }, [])
-useLayoutEffect(() => {
-  const nav = navbarRef.current
-  if (!nav) return
+    async function startRealtime() {
+      const {
+        data: {
+          session,
+        },
+      } =
+        await supabase
+          .auth
+          .getSession()
 
-  let x = 0
-  try {
-    x = Number(sessionStorage.getItem(NAV_SCROLL_KEY) || '0')
-  } catch {
-    // ignore
-  }
+      const user =
+        session?.user
 
-  // 2 Frames warten, damit active-styles + Layout fertig sind
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      nav.scrollTo({ left: x, behavior: 'auto' })
-    })
-  })
-}, [pathname])
+      if (
+        !alive ||
+        !user
+      ) {
+        if (alive) {
+          setMessageUnread(
+            0
+          )
+        }
 
-  // --- Sichtbarkeitsprüfung per BoundingClientRect ---
-  useEffect(() => {
-    const updateOverlay = () => {
-      const nav = navbarRef.current
-      const konto = kontoLinkRef.current
-      if (!nav || !konto) {
-        setShowEdgeBadge(false)
         return
       }
 
-      const navRect = nav.getBoundingClientRect()
-      const kontoRect = konto.getBoundingClientRect()
+      supabase.realtime.setAuth(
+        session.access_token
+      )
 
-      // Position des Overlays an die Navbar kleben (oberer Rand)
-      setEdgeTop(Math.max(2, Math.round(navRect.top) + 4))
+      await loadMessageUnread()
 
-      // Nur wenn die Navbar überhaupt horizontal overflowt
-      const isOverflowing = nav.scrollWidth > nav.clientWidth + 1
-
-      // Ist "Mein Konto" rechts außerhalb des sichtbaren Bereichs der Navbar?
-      const offToRight = kontoRect.right > navRect.right + 1
-
-      setShowEdgeBadge(isOverflowing && kontoNew > 0 && offToRight)
+      channel =
+        supabase
+          .channel(
+            `chat-user:${user.id}`,
+            {
+              config: {
+                private:
+                  true,
+              },
+            }
+          )
+          .on(
+            'broadcast',
+            {
+              event:
+                'message_inserted',
+            },
+            () => {
+              void loadMessageUnread()
+            }
+          )
+          .on(
+            'broadcast',
+            {
+              event:
+                'unread_changed',
+            },
+            () => {
+              void loadMessageUnread()
+            }
+          )
+          .subscribe()
     }
 
-    // initial + bei Änderungen
-    updateOverlay()
-    const rAFUpdate = () => requestAnimationFrame(updateOverlay)
+    const handleChatRefresh =
+      () => {
+        void loadMessageUnread()
+      }
 
-    // Scroll- & Resize-Listener
-    const nav = navbarRef.current
-    nav?.addEventListener('scroll', rAFUpdate, { passive: true })
-    window.addEventListener('resize', rAFUpdate, { passive: true })
-    window.addEventListener('scroll', rAFUpdate, { passive: true })
+    window.addEventListener(
+      'chat:refresh',
+      handleChatRefresh
+    )
+
+    void startRealtime()
 
     return () => {
-      nav?.removeEventListener('scroll', rAFUpdate)
-      window.removeEventListener('resize', rAFUpdate)
-      window.removeEventListener('scroll', rAFUpdate)
-    }
-  }, [kontoNew, pathname])
+      alive = false
 
-  // Beim Besuch relevanter Konto-Seiten alles Gesehene stempeln
+      window.removeEventListener(
+        'chat:refresh',
+        handleChatRefresh
+      )
+
+      if (channel) {
+        void supabase.removeChannel(
+          channel
+        )
+      }
+    }
+  }, [])
+
+  // =====================================================
+  // NAVBAR SCROLLPOSITION SPEICHERN
+  // =====================================================
+
   useEffect(() => {
-    if (!pathname) return
-    try {
-  if (pathname.startsWith('/konto/lackangebote')) {
-    localStorage.setItem('lackOrders:lastSeen', String(Date.now()))
-    reloadCountsRef.current?.()
-  }
-  if (pathname.startsWith('/konto/lackanfragen')) {
-    localStorage.setItem('offers:lastSeen', String(Date.now()))
-    reloadCountsRef.current?.()
-  }
+    const nav =
+      navbarRef.current
 
-  // ✅ Verkäufer: Shop-Verkäufe nur als "gesehen", wenn der Verkäufe-Tab offen ist
-  if (pathname.startsWith('/konto/verkaufen')) {
-    const sp = new URLSearchParams(window.location.search)
-    if (sp.get('tab') === 'verkaeufe') {
-      localStorage.setItem('shopSales:lastSeen', String(Date.now()))
-      reloadCountsRef.current?.()
+    if (!nav) {
+      return
     }
 
-  }
+    const save = () => {
+      try {
+        sessionStorage.setItem(
+          NAV_SCROLL_KEY,
+          String(
+            nav.scrollLeft
+          )
+        )
+      } catch {
+        // ignore
+      }
+    }
 
-  // ✅ Käufer: sobald er /konto/bestellungen öffnet, gilt Versand/Shop-Events als gesehen
-  if (pathname.startsWith('/konto/bestellungen')) {
-    localStorage.setItem('shopBuys:lastSeen', String(Date.now()))
-    reloadCountsRef.current?.()
-  }
-      // ✅ NEU: Job-Angebote als gesehen markieren
-  if (pathname.startsWith('/konto/angebote')) {
-    localStorage.setItem(JOB_OFFERS_LASTSEEN_KEY, String(Date.now()))
-    reloadCountsRef.current?.()
-  }
-  // ✅ Job-Aufträge als gesehen markieren
-if (pathname.startsWith('/konto/auftraege')) {
-  localStorage.setItem(JOB_ORDERS_LASTSEEN_KEY, String(Date.now()))
-  reloadCountsRef.current?.()
-}
-} catch {
-  // ignore
-}
+    nav.addEventListener(
+      'scroll',
+      save,
+      {
+        passive: true,
+      }
+    )
 
+    return () =>
+      nav.removeEventListener(
+        'scroll',
+        save
+      )
+  }, [])
+
+  useLayoutEffect(() => {
+    const nav =
+      navbarRef.current
+
+    if (!nav) {
+      return
+    }
+
+    let x = 0
+
+    try {
+      x =
+        Number(
+          sessionStorage.getItem(
+            NAV_SCROLL_KEY
+          ) || '0'
+        )
+    } catch {
+      // ignore
+    }
+
+    requestAnimationFrame(
+      () => {
+        requestAnimationFrame(
+          () => {
+            nav.scrollTo({
+              left: x,
+              behavior:
+                'auto',
+            })
+          }
+        )
+      }
+    )
   }, [pathname])
 
-  const displayCounter = kontoNew > 9 ? '9+' : String(kontoNew)
+  // =====================================================
+  // FIXIERTER BADGE BEI HORIZONTALER NAVBAR
+  // =====================================================
+
+  useEffect(() => {
+    const updateOverlay =
+      () => {
+        const nav =
+          navbarRef.current
+
+        const konto =
+          kontoLinkRef.current
+
+        if (
+          !nav ||
+          !konto
+        ) {
+          setShowEdgeBadge(
+            false
+          )
+
+          return
+        }
+
+        const navRect =
+          nav.getBoundingClientRect()
+
+        const kontoRect =
+          konto.getBoundingClientRect()
+
+        setEdgeTop(
+          Math.max(
+            2,
+            Math.round(
+              navRect.top
+            ) + 4
+          )
+        )
+
+        const isOverflowing =
+          nav.scrollWidth >
+          nav.clientWidth +
+            1
+
+        const offToRight =
+          kontoRect.right >
+          navRect.right +
+            1
+
+        setShowEdgeBadge(
+          isOverflowing &&
+          (
+            kontoNew +
+            messageUnread
+          ) >
+            0 &&
+          offToRight
+        )
+      }
+
+    updateOverlay()
+
+    const rAFUpdate =
+      () =>
+        requestAnimationFrame(
+          updateOverlay
+        )
+
+    const nav =
+      navbarRef.current
+
+    nav?.addEventListener(
+      'scroll',
+      rAFUpdate,
+      {
+        passive: true,
+      }
+    )
+
+    window.addEventListener(
+      'resize',
+      rAFUpdate,
+      {
+        passive: true,
+      }
+    )
+
+    window.addEventListener(
+      'scroll',
+      rAFUpdate,
+      {
+        passive: true,
+      }
+    )
+
+    return () => {
+      nav?.removeEventListener(
+        'scroll',
+        rAFUpdate
+      )
+
+      window.removeEventListener(
+        'resize',
+        rAFUpdate
+      )
+
+      window.removeEventListener(
+        'scroll',
+        rAFUpdate
+      )
+    }
+  }, [
+    kontoNew,
+    messageUnread,
+    pathname,
+  ])
+
+  // =====================================================
+  // BESTEHENDE LAST-SEEN LOGIK
+  // =====================================================
+
+  useEffect(() => {
+    if (!pathname) {
+      return
+    }
+
+    try {
+      if (
+        pathname.startsWith(
+          '/konto/lackangebote'
+        )
+      ) {
+        localStorage.setItem(
+          'lackOrders:lastSeen',
+          String(
+            Date.now()
+          )
+        )
+
+        reloadCountsRef
+          .current?.()
+      }
+
+      if (
+        pathname.startsWith(
+          '/konto/lackanfragen'
+        )
+      ) {
+        localStorage.setItem(
+          'offers:lastSeen',
+          String(
+            Date.now()
+          )
+        )
+
+        reloadCountsRef
+          .current?.()
+      }
+
+      if (
+        pathname.startsWith(
+          '/konto/verkaufen'
+        )
+      ) {
+        const sp =
+          new URLSearchParams(
+            window.location.search
+          )
+
+        if (
+          sp.get('tab') ===
+          'verkaeufe'
+        ) {
+          localStorage.setItem(
+            'shopSales:lastSeen',
+            String(
+              Date.now()
+            )
+          )
+
+          reloadCountsRef
+            .current?.()
+        }
+      }
+
+      if (
+        pathname.startsWith(
+          '/konto/bestellungen'
+        )
+      ) {
+        localStorage.setItem(
+          'shopBuys:lastSeen',
+          String(
+            Date.now()
+          )
+        )
+
+        reloadCountsRef
+          .current?.()
+      }
+
+      if (
+        pathname.startsWith(
+          '/konto/angebote'
+        )
+      ) {
+        localStorage.setItem(
+          JOB_OFFERS_LASTSEEN_KEY,
+          String(
+            Date.now()
+          )
+        )
+
+        reloadCountsRef
+          .current?.()
+      }
+
+      if (
+        pathname.startsWith(
+          '/konto/auftraege'
+        )
+      ) {
+        localStorage.setItem(
+          JOB_ORDERS_LASTSEEN_KEY,
+          String(
+            Date.now()
+          )
+        )
+
+        reloadCountsRef
+          .current?.()
+      }
+    } catch {
+      // ignore
+    }
+  }, [pathname])
+
+  // =====================================================
+  // COUNTER
+  // =====================================================
+
+  const totalNavbarCount =
+    kontoNew +
+    messageUnread
+
+  const displayCounter =
+    totalNavbarCount >
+    9
+      ? '9+'
+      : String(
+          totalNavbarCount
+        )
+
+  const displayMessageCounter =
+    messageUnread >
+    9
+      ? '9+'
+      : String(
+          messageUnread
+        )
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
-    <div className={styles.wrapper}>
-      {/* scrollbarer Container => ref hier */}
-      <nav className={styles.navbar} ref={navbarRef}>
-        <ul className={styles.navList}>
-          {NAV_ITEMS.map((item, i) => {
-            const isActive = pathname?.startsWith(item.href)
-            const isKonto = item.title === 'Mein Konto'
-            return (
-              <li key={i} className={styles.navItem}>
-                <Link
-                  href={item.href}
-                  ref={isKonto ? kontoLinkRef : undefined}
-                  className={`${styles.navButton} ${isActive ? styles.navButtonActive : ''}`}
-                >
-                  <span className={styles.navButtonLabel}>{item.title}</span>
-                  {isKonto && kontoNew > 0 && (
-                    <span
-                      className={styles.counter}
-                      aria-label={`${kontoNew} neue Ereignisse / Aktionen`}
-                      title={`${kontoNew} neue Ereignisse / Aktionen`}
-                    >
-                      {displayCounter}
-                    </span>
-                  )}
-                </Link>
+    <div
+      className={
+        styles.wrapper
+      }
+    >
+      <nav
+        className={
+          styles.navbar
+        }
+        ref={
+          navbarRef
+        }
+      >
+        <ul
+          className={
+            styles.navList
+          }
+        >
+          {NAV_ITEMS.map(
+            (
+              item,
+              i
+            ) => {
+              const isActive =
+                pathname
+                  ?.startsWith(
+                    item.href
+                  )
 
-                <div className={styles.dropdown}>
-                  {item.links.map((link, j) => (
-                    <Link key={j} href={link.href} className={styles.dropdownLink}>
-                      {link.text}
-                    </Link>
-                  ))}
-                </div>
-              </li>
-            )
-          })}
+              const isKonto =
+                item.title ===
+                'Mein Konto'
+
+              return (
+                <li
+                  key={
+                    i
+                  }
+                  className={
+                    styles.navItem
+                  }
+                >
+                  <Link
+                    href={
+                      item.href
+                    }
+                    ref={
+                      isKonto
+                        ? kontoLinkRef
+                        : undefined
+                    }
+                    className={`${styles.navButton} ${
+                      isActive
+                        ? styles.navButtonActive
+                        : ''
+                    }`}
+                  >
+                    <span
+                      className={
+                        styles.navButtonLabel
+                      }
+                    >
+                      {
+                        item.title
+                      }
+                    </span>
+
+                    {isKonto &&
+                      totalNavbarCount >
+                        0 && (
+                        <span
+                          className={
+                            styles.counter
+                          }
+                          aria-label={`${totalNavbarCount} neue Ereignisse / Aktionen`}
+                          title={`${totalNavbarCount} neue Ereignisse / Aktionen`}
+                        >
+                          {
+                            displayCounter
+                          }
+                        </span>
+                      )}
+                  </Link>
+
+                  <div
+                    className={
+                      styles.dropdown
+                    }
+                  >
+                    {item.links.map(
+                      (
+                        link,
+                        j
+                      ) => {
+                        const isMessagesLink =
+                          link.href ===
+                          '/messages'
+
+                        return (
+                          <Link
+                            key={
+                              j
+                            }
+                            href={
+                              link.href
+                            }
+                            className={
+                              styles.dropdownLink
+                            }
+                          >
+                            <span
+                              className={
+                                styles.dropdownLinkContent
+                              }
+                            >
+                              <span>
+                                {
+                                  link.text
+                                }
+                              </span>
+
+                              {isMessagesLink &&
+                                messageUnread >
+                                  0 && (
+                                  <span
+                                    className={
+                                      styles.dropdownCounter
+                                    }
+                                    aria-label={`${messageUnread} ungelesene Nachrichten`}
+                                    title={`${messageUnread} ungelesene Nachrichten`}
+                                  >
+                                    {
+                                      displayMessageCounter
+                                    }
+                                  </span>
+                                )}
+                            </span>
+                          </Link>
+                        )
+                      }
+                    )}
+                  </div>
+                </li>
+              )
+            }
+          )}
         </ul>
       </nav>
 
-      {/* Fixierter Badge am rechten Bildschirmrand */}
       {showEdgeBadge && (
-        <div className={styles.edgeBadge} style={{ top: edgeTop }} aria-hidden>
-          {displayCounter}
+        <div
+          className={
+            styles.edgeBadge
+          }
+          style={{
+            top:
+              edgeTop,
+          }}
+          aria-hidden
+        >
+          {
+            displayCounter
+          }
         </div>
       )}
     </div>

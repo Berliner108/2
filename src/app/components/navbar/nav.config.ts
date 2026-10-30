@@ -97,7 +97,7 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/konto/lackangebote',   text: 'Lackanfragen-Deals' },
       { href: '/konto/verkaufen',      text: 'Verkaufen' },
       { href: '/konto/einstellungen',  text: 'Einstellungen' },
-      { href: '/messages?empfaenger=${messageTarget}',    text: 'Nachrichten' }
+      { href: '/messages', text: 'Nachrichten' }
     ]
   }
 ]

@@ -198,3 +198,31 @@
     padding: 12px 14px;
   }
 }
+/* ===== Nachrichten-Zähler im Konto-Dropdown ===== */
+
+.dropdownLinkContent {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.dropdownCounter {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ef4444;
+  color: #fff;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
