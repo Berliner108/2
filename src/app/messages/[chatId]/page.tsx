@@ -554,6 +554,112 @@ export default function ChatPage() {
   // =====================================================
   // Ältere Nachrichten laden
   // =====================================================
+  const refreshLatestMessages =
+  useCallback(async () => {
+    if (!chatId) return
+
+    try {
+      const res = await fetch(
+        `/api/messages/${encodeURIComponent(
+          chatId
+        )}`,
+        {
+          cache: 'no-store',
+          credentials: 'include',
+        }
+      )
+
+      const json =
+        await res
+          .json()
+          .catch(() => null)
+
+      if (
+        !res.ok ||
+        !json?.ok ||
+        !Array.isArray(json.messages)
+      ) {
+        return
+      }
+
+      setMyParticipantId(
+        json.myParticipantId ?? null
+      )
+
+      setMessages((current) => {
+        const map =
+          new Map<string, Message>()
+
+        /*
+         * Bereits geladene ältere Nachrichten behalten.
+         */
+        for (const message of current) {
+          map.set(
+            message.id,
+            message
+          )
+        }
+
+        /*
+         * Neueste Seite darüber aktualisieren.
+         */
+        for (const message of json.messages) {
+          map.set(
+            message.id,
+            message
+          )
+        }
+
+        return Array.from(
+          map.values()
+        ).sort(
+          (a, b) =>
+            new Date(
+              a.created_at
+            ).getTime() -
+            new Date(
+              b.created_at
+            ).getTime()
+        )
+      })
+
+      /*
+       * Wenn wir diesen Chat gerade offen haben,
+       * ist die eingehende Nachricht gelesen.
+       */
+      await markRead()
+
+      requestAnimationFrame(
+        scrollToBottom
+      )
+    } catch (error) {
+      console.error(
+        '[chat] realtime refresh:',
+        error
+      )
+    }
+  }, [
+    chatId,
+    markRead,
+    scrollToBottom,
+  ])
+  useEffect(() => {
+  const handleRealtimeMessage = () => {
+    void refreshLatestMessages()
+  }
+
+  window.addEventListener(
+    'chat:message-inserted',
+    handleRealtimeMessage
+  )
+
+  return () => {
+    window.removeEventListener(
+      'chat:message-inserted',
+      handleRealtimeMessage
+    )
+  }
+}, [refreshLatestMessages])
 
   const loadOlderMessages =
     useCallback(async () => {

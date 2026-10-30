@@ -2,6 +2,7 @@
 
 import Navbar from '../components/navbar/Navbar'
 import Sidebar from './Sidebar'
+import ChatRealtimeBridge from './ChatRealtimeBridge'
 import styles from './messages.module.css'
 
 export default function MessagesLayout({
@@ -12,6 +13,8 @@ export default function MessagesLayout({
   return (
     <>
       <Navbar />
+
+      <ChatRealtimeBridge />
 
       <div className={styles.container}>
         <Sidebar />
