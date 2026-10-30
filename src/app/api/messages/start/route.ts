@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import { requirePremiumAccess } from '@/lib/require-premium'
+import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { hasPremiumAccess } from '@/lib/premium'
 
 import {
   CHAT_SOURCE_TYPES,
@@ -26,24 +27,80 @@ type Body = {
 
 export async function POST(req: Request) {
   try {
-    /*
-     * Auth + Premium werden zentral über deinen
-     * bestehenden Guard geprüft.
-     */
-    const premium = await requirePremiumAccess()
+    // =====================================================
+    // 1) Auth
+    // =====================================================
 
-    if (!premium.ok) {
+    const sb = await supabaseServer()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await sb.auth.getUser()
+
+    if (authError || !user) {
       return NextResponse.json(
         {
           ok: false,
-          error: premium.reason,
-          message: premium.error,
+          error: 'not_authenticated',
+          message: 'Nicht eingeloggt.',
         },
-        { status: premium.status }
+        { status: 401 }
       )
     }
 
-    const userId = premium.userId
+    const userId = user.id
+    const admin = supabaseAdmin()
+
+    // =====================================================
+    // 2) Premium prüfen
+    // =====================================================
+
+    const {
+      data: premiumProfile,
+      error: premiumError,
+    } = await admin
+      .from('profiles')
+      .select(`
+        premium_exempt,
+        premium_trial_ends_at,
+        premium_until
+      `)
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (premiumError || !premiumProfile) {
+      console.error(
+        '[messages/start] premium lookup failed:',
+        premiumError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'premium_check_failed',
+          message: 'Premium-Status konnte nicht geprüft werden.',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!hasPremiumAccess(premiumProfile)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'premium_required',
+          reason: 'premium_required',
+          message:
+            'Zum Starten eines Chats benötigst du eine aktive Premium Mitgliedschaft.',
+        },
+        { status: 403 }
+      )
+    }
+
+    // =====================================================
+    // 3) Request lesen
+    // =====================================================
 
     const raw = (await req.json().catch(() => ({}))) as Body
 
@@ -62,22 +119,34 @@ export async function POST(req: Request) {
         ? raw.sourceId.trim()
         : ''
 
+    // =====================================================
+    // 4) Basisvalidierung
+    // =====================================================
+
     if (!recipientId) {
       return NextResponse.json(
-        { ok: false, error: 'recipient_required' },
+        {
+          ok: false,
+          error: 'recipient_required',
+          message: 'Empfänger fehlt.',
+        },
         { status: 400 }
       )
     }
 
     if (recipientId === userId) {
       return NextResponse.json(
-        { ok: false, error: 'cannot_message_self' },
+        {
+          ok: false,
+          error: 'cannot_message_self',
+          message: 'Du kannst dir nicht selbst schreiben.',
+        },
         { status: 400 }
       )
     }
 
     /*
-     * Neue Direktchats dürfen nur von einer echten
+     * Neue Direktchats dürfen nur aus einer echten
      * Plattformoberfläche gestartet werden.
      */
     if (
@@ -85,56 +154,91 @@ export async function POST(req: Request) {
       !CHAT_SOURCE_TYPES.has(sourceType as ChatSourceType)
     ) {
       return NextResponse.json(
-        { ok: false, error: 'source_required' },
+        {
+          ok: false,
+          error: 'source_required',
+          message: 'Chat-Ursprung fehlt oder ist ungültig.',
+        },
         { status: 400 }
       )
     }
 
     if (!sourceId) {
       return NextResponse.json(
-        { ok: false, error: 'source_id_required' },
+        {
+          ok: false,
+          error: 'source_id_required',
+          message: 'ID des Chat-Ursprungs fehlt.',
+        },
         { status: 400 }
       )
     }
 
-    const admin = supabaseAdmin()
+    // =====================================================
+    // 5) Sender + Empfänger laden
+    // =====================================================
 
-    const { data: profiles, error: profilesError } =
-      await admin
-        .from('profiles')
-        .select('id, username, company_name')
-        .in('id', [userId, recipientId])
+    const {
+      data: profiles,
+      error: profilesError,
+    } = await admin
+      .from('profiles')
+      .select(`
+        id,
+        username,
+        company_name
+      `)
+      .in('id', [userId, recipientId])
 
     if (profilesError) {
       console.error(
-        '[messages/start] profile lookup:',
+        '[messages/start] profile lookup failed:',
         profilesError
       )
 
       return NextResponse.json(
-        { ok: false, error: 'profile_lookup_failed' },
+        {
+          ok: false,
+          error: 'profile_lookup_failed',
+          message: 'Profile konnten nicht geprüft werden.',
+        },
         { status: 500 }
       )
     }
 
-    const me = profiles?.find((p) => p.id === userId)
+    const me = profiles?.find(
+      (profile) => profile.id === userId
+    )
+
     const recipient = profiles?.find(
-      (p) => p.id === recipientId
+      (profile) => profile.id === recipientId
     )
 
     if (!me) {
       return NextResponse.json(
-        { ok: false, error: 'profile_not_found' },
+        {
+          ok: false,
+          error: 'profile_not_found',
+          message: 'Eigenes Profil wurde nicht gefunden.',
+        },
         { status: 404 }
       )
     }
 
     if (!recipient) {
       return NextResponse.json(
-        { ok: false, error: 'recipient_not_found' },
+        {
+          ok: false,
+          error: 'recipient_not_found',
+          message: 'Empfänger wurde nicht gefunden.',
+        },
         { status: 404 }
       )
     }
+
+    // =====================================================
+    // 6) Blockierung prüfen
+    // =====================================================
 
     const blocked = await isBlockedBetweenUsers(
       userId,
@@ -152,6 +256,10 @@ export async function POST(req: Request) {
         { status: 403 }
       )
     }
+
+    // =====================================================
+    // 7) Chat-Ursprung prüfen
+    // =====================================================
 
     const sourceCheck = await validateChatSource({
       sourceType: sourceType as ChatSourceType,
@@ -171,12 +279,16 @@ export async function POST(req: Request) {
       )
     }
 
-    /*
-     * Atomar:
-     * bestehender Chat wird zurückgegeben oder neuer erstellt.
-     */
-    const { data: conversationId, error: rpcError } =
-      await admin.rpc('chat_get_or_create_direct', {
+    // =====================================================
+    // 8) Chat atomar erstellen oder vorhandenen verwenden
+    // =====================================================
+
+    const {
+      data: conversationId,
+      error: rpcError,
+    } = await admin.rpc(
+      'chat_get_or_create_direct',
+      {
         p_user_a: userId,
         p_user_b: recipientId,
 
@@ -186,29 +298,53 @@ export async function POST(req: Request) {
         p_source_type: sourceType,
         p_source_id: sourceId,
         p_source_snapshot: sourceCheck.snapshot,
-      })
+      }
+    )
 
     if (rpcError || !conversationId) {
       console.error(
-        '[messages/start] rpc failed:',
+        '[messages/start] chat_get_or_create_direct failed:',
         rpcError
       )
 
       return NextResponse.json(
-        { ok: false, error: 'conversation_create_failed' },
+        {
+          ok: false,
+          error: 'conversation_create_failed',
+          message: 'Chat konnte nicht gestartet werden.',
+        },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({
-      ok: true,
-      conversationId,
-    })
-  } catch (error) {
-    console.error('[messages/start] fatal:', error)
+    // =====================================================
+    // 9) Erfolg
+    // =====================================================
 
     return NextResponse.json(
-      { ok: false, error: 'internal_error' },
+      {
+        ok: true,
+        conversationId,
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    )
+  } catch (error) {
+    console.error(
+      '[messages/start] unexpected error:',
+      error
+    )
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'internal_error',
+        message: 'Chat konnte nicht gestartet werden.',
+      },
       { status: 500 }
     )
   }
