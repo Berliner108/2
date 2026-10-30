@@ -9,6 +9,8 @@ import {
 
 import {
   useParams,
+  useRouter,
+  useSearchParams,
 } from 'next/navigation'
 
 import {
@@ -189,12 +191,31 @@ export default function ChatPage() {
   const params = useParams()
 
   const rawChatId =
-    params.chatId
+  params.chatId
 
-  const chatId =
-    Array.isArray(rawChatId)
-      ? rawChatId[0]
-      : rawChatId
+const chatId =
+  Array.isArray(rawChatId)
+    ? rawChatId[0]
+    : rawChatId
+
+const router = useRouter()
+const searchParams = useSearchParams()
+
+const isNewChat = chatId === 'new'
+
+const newRecipientId =
+  searchParams.get('recipientId') || ''
+
+const newSourceType =
+  searchParams.get('sourceType') || ''
+
+const newSourceId =
+  searchParams.get('sourceId') || ''
+
+const newDisplayName =
+  searchParams.get('displayName') || 'Unterhaltung'
+
+
 
   // =====================================================
   // STATES
@@ -715,10 +736,19 @@ export default function ChatPage() {
     setReportReason('')
     setReportDetails('')
 
-    void Promise.all([
-      loadConversationName(),
-      loadInitialMessages(),
-    ])
+    if (isNewChat) {
+  setMessages([])
+  setMyParticipantId(null)
+  setConversationType('user')
+  setDisplayName(newDisplayName)
+  setLoading(false)
+  return
+}
+
+void Promise.all([
+  loadConversationName(),
+  loadInitialMessages(),
+])
   }, [
     chatId,
     loadConversationName,
@@ -730,18 +760,21 @@ export default function ChatPage() {
   // =====================================================
 
   useEffect(() => {
-    if (
-      conversationType ===
-      'user'
-    ) {
-      void loadBlockStatus()
-    } else {
-      setBlocked(false)
-    }
-  }, [
-    conversationType,
-    loadBlockStatus,
-  ])
+  if (isNewChat) {
+    setBlocked(false)
+    return
+  }
+
+  if (conversationType === 'user') {
+    void loadBlockStatus()
+  } else {
+    setBlocked(false)
+  }
+}, [
+  isNewChat,
+  conversationType,
+  loadBlockStatus,
+])
 
   // =====================================================
   // INITIAL NACH UNTEN SCROLLEN
@@ -1367,6 +1400,54 @@ export default function ChatPage() {
       crypto.randomUUID()
 
     try {
+      let activeConversationId = chatId
+
+if (isNewChat) {
+  if (
+    !newRecipientId ||
+    !newSourceType ||
+    !newSourceId
+  ) {
+    throw new Error(
+      'Die Unterhaltung konnte nicht vorbereitet werden.'
+    )
+  }
+
+  const startRes = await fetch(
+    '/api/messages/start',
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId: newRecipientId,
+        sourceType: newSourceType,
+        sourceId: newSourceId,
+        create: true,
+      }),
+    }
+  )
+
+  const startJson =
+    await startRes
+      .json()
+      .catch(() => null)
+
+  if (
+    !startRes.ok ||
+    !startJson?.conversationId
+  ) {
+    throw new Error(
+      startJson?.message ||
+        'Unterhaltung konnte nicht gestartet werden.'
+    )
+  }
+
+  activeConversationId =
+    String(startJson.conversationId)
+}
       let attachment:
         | {
             storagePath:
@@ -1410,7 +1491,7 @@ export default function ChatPage() {
               body:
                 JSON.stringify({
                   conversationId:
-                    chatId,
+                  activeConversationId,
 
                   filename:
                     selectedFile.name,
@@ -1536,7 +1617,7 @@ export default function ChatPage() {
             body:
               JSON.stringify({
                 conversationId:
-                  chatId,
+  activeConversationId,
 
                 content,
 
@@ -1633,9 +1714,17 @@ export default function ChatPage() {
       }
 
       setInputValue('')
-      setSelectedFile(null)
+setSelectedFile(null)
 
-      window.dispatchEvent(
+if (isNewChat) {
+  router.replace(
+    `/messages/${encodeURIComponent(
+      activeConversationId
+    )}`
+  )
+}
+
+window.dispatchEvent(
         new Event(
           'chat:refresh'
         )
@@ -2078,27 +2167,23 @@ export default function ChatPage() {
                 styles.chatActions
               }
             >
-              <button
-                type="button"
-                className={
-                  styles.reportButton
-                }
-                onClick={() => {
-                  setReportOpen(
-                    true
-                  )
+              {!isNewChat && (
+  <button
+    type="button"
+    className={
+      styles.reportButton
+    }
+    onClick={() => {
+      setReportOpen(true)
+      setReportSuccess(false)
+    }}
+  >
+    Unterhaltung / Nutzer melden
+  </button>
+)}
 
-                  setReportSuccess(
-                    false
-                  )
-                }}
-              >
-                Unterhaltung /
-                Nutzer melden
-              </button>
-
-              {conversationType ===
-                'user' && (
+              {!isNewChat &&
+                    conversationType === 'user' && (
                   <button
                     type="button"
                     className={
