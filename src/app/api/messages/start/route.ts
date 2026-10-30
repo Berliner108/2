@@ -23,6 +23,7 @@ type Body = {
   recipientId?: string
   sourceType?: string
   sourceId?: string
+  create?: boolean
 }
 
 export async function POST(req: Request) {
@@ -118,6 +119,7 @@ export async function POST(req: Request) {
       typeof raw.sourceId === 'string'
         ? raw.sourceId.trim()
         : ''
+    const create = raw.create === true
 
     // =====================================================
     // 4) Basisvalidierung
@@ -278,6 +280,28 @@ export async function POST(req: Request) {
         { status: sourceCheck.status }
       )
     }
+    if (!create) {
+  return NextResponse.json(
+    {
+      ok: true,
+      ready: true,
+      recipient: {
+        id: recipient.id,
+        displayName: getChatDisplayName(recipient),
+      },
+      source: {
+        type: sourceType,
+        id: sourceId,
+      },
+    },
+    {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    }
+  )
+}
 
     // =====================================================
     // 8) Chat atomar erstellen oder vorhandenen verwenden
