@@ -119,6 +119,7 @@ export async function POST(req: Request) {
       typeof raw.sourceId === 'string'
         ? raw.sourceId.trim()
         : ''
+
     const create = raw.create === true
 
     // =====================================================
@@ -280,31 +281,167 @@ export async function POST(req: Request) {
         { status: sourceCheck.status }
       )
     }
-    if (!create) {
-  return NextResponse.json(
-    {
-      ok: true,
-      ready: true,
-      recipient: {
-        id: recipient.id,
-        displayName: getChatDisplayName(recipient),
-      },
-      source: {
-        type: sourceType,
-        id: sourceId,
-      },
-    },
-    {
-      status: 200,
-      headers: {
-        'Cache-Control': 'no-store',
-      },
-    }
-  )
-}
 
     // =====================================================
-    // 8) Chat atomar erstellen oder vorhandenen verwenden
+    // 8) Vorhandenen Direktchat zwischen den beiden Nutzern suchen
+    // =====================================================
+
+    const {
+      data: myParticipantRows,
+      error: myParticipantsError,
+    } = await admin
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', userId)
+      .eq('role', 'member')
+      .is('left_at', null)
+
+    if (myParticipantsError) {
+      console.error(
+        '[messages/start] existing chat lookup (sender) failed:',
+        myParticipantsError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'conversation_lookup_failed',
+          message: 'Bestehende Unterhaltung konnte nicht geprüft werden.',
+        },
+        { status: 500 }
+      )
+    }
+
+    const myConversationIds = Array.from(
+      new Set(
+        (myParticipantRows ?? [])
+          .map((row) => row.conversation_id)
+          .filter(Boolean)
+      )
+    )
+
+    let existingConversationId: string | null = null
+
+    if (myConversationIds.length > 0) {
+      const {
+        data: recipientParticipantRows,
+        error: recipientParticipantsError,
+      } = await admin
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', recipientId)
+        .eq('role', 'member')
+        .is('left_at', null)
+        .in('conversation_id', myConversationIds)
+
+      if (recipientParticipantsError) {
+        console.error(
+          '[messages/start] existing chat lookup (recipient) failed:',
+          recipientParticipantsError
+        )
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'conversation_lookup_failed',
+            message: 'Bestehende Unterhaltung konnte nicht geprüft werden.',
+          },
+          { status: 500 }
+        )
+      }
+
+      const sharedConversationIds = Array.from(
+        new Set(
+          (recipientParticipantRows ?? [])
+            .map((row) => row.conversation_id)
+            .filter(Boolean)
+        )
+      )
+
+      if (sharedConversationIds.length > 0) {
+        const {
+          data: existingConversation,
+          error: existingConversationError,
+        } = await admin
+          .from('conversations')
+          .select('id')
+          .in('id', sharedConversationIds)
+          .eq('type', 'user')
+          .is('closed_at', null)
+          .order('last_message_at', {
+            ascending: false,
+            nullsFirst: false,
+          })
+          .order('created_at', {
+            ascending: false,
+          })
+          .limit(1)
+          .maybeSingle()
+
+        if (existingConversationError) {
+          console.error(
+            '[messages/start] existing direct conversation lookup failed:',
+            existingConversationError
+          )
+
+          return NextResponse.json(
+            {
+              ok: false,
+              error: 'conversation_lookup_failed',
+              message: 'Bestehende Unterhaltung konnte nicht geprüft werden.',
+            },
+            { status: 500 }
+          )
+        }
+
+        existingConversationId =
+          existingConversation?.id ?? null
+      }
+    }
+
+    if (!create) {
+      return NextResponse.json(
+        {
+          ok: true,
+          ready: true,
+          conversationId: existingConversationId,
+          recipient: {
+            id: recipient.id,
+            displayName: getChatDisplayName(recipient),
+          },
+          source: {
+            type: sourceType,
+            id: sourceId,
+          },
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store',
+          },
+        }
+      )
+    }
+
+    // Wenn create=true ist und bereits ein Chat existiert,
+    // sofort dessen ID zurückgeben. Es wird nichts neu angelegt.
+    if (existingConversationId) {
+      return NextResponse.json(
+        {
+          ok: true,
+          conversationId: existingConversationId,
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store',
+          },
+        }
+      )
+    }
+
+    // =====================================================
+    // 9) Chat atomar erstellen
     // =====================================================
 
     const {
@@ -342,7 +479,7 @@ export async function POST(req: Request) {
     }
 
     // =====================================================
-    // 9) Erfolg
+    // 10) Erfolg
     // =====================================================
 
     return NextResponse.json(
