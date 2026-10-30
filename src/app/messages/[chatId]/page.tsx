@@ -552,8 +552,8 @@ export default function ChatPage() {
   ])
 
   // =====================================================
-  // Ältere Nachrichten laden
-  // =====================================================
+// Realtime – neueste Nachrichten aktualisieren
+// =====================================================
   const refreshLatestMessages =
   useCallback(async () => {
     if (!chatId) return
@@ -660,7 +660,9 @@ export default function ChatPage() {
     )
   }
 }, [refreshLatestMessages])
-
+// =====================================================
+// Ältere Nachrichten laden
+// =====================================================
   const loadOlderMessages =
     useCallback(async () => {
       if (
