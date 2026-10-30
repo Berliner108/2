@@ -54,12 +54,15 @@ type MessageRow = {
   message_attachments?: AttachmentRow[]
 }
 
-function formatDate(value: string | null) {
+function formatDate(
+  value: string | null
+) {
   if (!value) {
     return '—'
   }
 
-  const date = new Date(value)
+  const date =
+    new Date(value)
 
   if (
     Number.isNaN(
@@ -82,7 +85,9 @@ function formatDate(value: string | null) {
   ).format(date)
 }
 
-function formatFileSize(bytes: number) {
+function formatFileSize(
+  bytes: number
+) {
   if (bytes < 1024) {
     return `${bytes} B`
   }
@@ -733,21 +738,30 @@ export default async function AdminMessageDetailPage({
                       (
                         attachment
                       ) => (
-                        <div
+                        <a
                           key={
                             attachment.id
                           }
+                          href={`/api/admin/messages/attachments/${attachment.id}/download`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{
+                            display:
+                              'block',
                             marginTop:
                               10,
                             padding:
-                              '9px 10px',
+                              '10px 12px',
                             border:
                               '1px solid #e5e7eb',
                             borderRadius:
                               8,
                             background:
                               '#f8fafc',
+                            color:
+                              '#111827',
+                            textDecoration:
+                              'none',
                           }}
                         >
                           <strong>
@@ -773,8 +787,10 @@ export default async function AdminMessageDetailPage({
                             {
                               attachment.file_extension
                             }
+                            {' · '}
+                            Herunterladen
                           </div>
-                        </div>
+                        </a>
                       )
                     )}
 
