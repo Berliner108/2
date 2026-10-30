@@ -305,7 +305,7 @@ export async function GET(
               'conversation_participants'
             )
             .select(
-              'display_name_snapshot'
+              'user_id'
             )
             .eq(
               'conversation_id',
@@ -330,10 +330,46 @@ export async function GET(
           )
         }
 
-        displayName =
-          member
-            ?.display_name_snapshot ||
-          'Nutzer'
+        if (
+          member?.user_id
+        ) {
+          const {
+            data:
+              memberProfile,
+            error:
+              memberProfileError,
+          } =
+            await admin
+              .from(
+                'profiles'
+              )
+              .select(
+                'username'
+              )
+              .eq(
+                'id',
+                member.user_id
+              )
+              .maybeSingle()
+
+          if (
+            memberProfileError
+          ) {
+            console.error(
+              '[messages/detail] support member profile lookup failed:',
+              memberProfileError
+            )
+          }
+
+          displayName =
+            memberProfile
+              ?.username
+              ?.trim() ||
+            'Nutzer'
+        } else {
+          displayName =
+            'Gelöschter Nutzer'
+        }
       }
     } else if (
       participant?.id
@@ -353,7 +389,7 @@ export async function GET(
             'conversation_participants'
           )
           .select(
-            'display_name_snapshot'
+            'user_id'
           )
           .eq(
             'conversation_id',
@@ -378,10 +414,46 @@ export async function GET(
         )
       }
 
-      displayName =
-        otherParticipant
-          ?.display_name_snapshot ||
-        'Nutzer'
+      if (
+        otherParticipant?.user_id
+      ) {
+        const {
+          data:
+            otherProfile,
+          error:
+            otherProfileError,
+        } =
+          await admin
+            .from(
+              'profiles'
+            )
+            .select(
+              'username'
+            )
+            .eq(
+              'id',
+              otherParticipant.user_id
+            )
+            .maybeSingle()
+
+        if (
+          otherProfileError
+        ) {
+          console.error(
+            '[messages/detail] direct profile lookup failed:',
+            otherProfileError
+          )
+        }
+
+        displayName =
+          otherProfile
+            ?.username
+            ?.trim() ||
+          'Nutzer'
+      } else {
+        displayName =
+          'Gelöschter Nutzer'
+      }
     }
 
     // =====================================================

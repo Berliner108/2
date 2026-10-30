@@ -109,6 +109,60 @@ export async function GET() {
       )
     }
 
+    const participantUserIds = Array.from(
+      new Set(
+        (participants ?? [])
+          .map((p: any) => p.user_id)
+          .filter(
+            (id: unknown): id is string =>
+              typeof id === 'string' &&
+              id.length > 0
+          )
+      )
+    )
+
+    const usernameMap =
+      new Map<string, string>()
+
+    if (participantUserIds.length) {
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await admin
+        .from('profiles')
+        .select('id, username')
+        .in('id', participantUserIds)
+
+      if (profilesError) {
+        console.error(
+          '[messages/list] profiles failed:',
+          profilesError
+        )
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: 'profile_list_failed',
+          },
+          { status: 500 }
+        )
+      }
+
+      for (const profile of profiles ?? []) {
+        const username =
+          typeof profile.username === 'string'
+            ? profile.username.trim()
+            : ''
+
+        if (username) {
+          usernameMap.set(
+            profile.id,
+            username
+          )
+        }
+      }
+    }
+
     const lastMessageIds = participations
       .map(
         (row: any) =>
@@ -201,9 +255,13 @@ export async function GET() {
                     null,
 
                   displayName:
-                    otherParticipant
-                      ?.display_name_snapshot ??
-                    'Gelöschter Nutzer',
+                    otherParticipant?.account_deleted_at
+                      ? 'Gelöschter Nutzer'
+                      : otherParticipant?.user_id
+                        ? usernameMap.get(
+                            otherParticipant.user_id
+                          ) ?? 'Nutzer'
+                        : 'Gelöschter Nutzer',
 
                   deleted:
                     Boolean(
@@ -216,9 +274,13 @@ export async function GET() {
           displayName:
             conversation.type === 'support'
               ? 'Beschichter Scout Support'
-              : otherParticipant
-                  ?.display_name_snapshot ??
-                'Gelöschter Nutzer',
+              : otherParticipant?.account_deleted_at
+                ? 'Gelöschter Nutzer'
+                : otherParticipant?.user_id
+                  ? usernameMap.get(
+                      otherParticipant.user_id
+                    ) ?? 'Nutzer'
+                  : 'Gelöschter Nutzer',
 
           lastMessage,
         }
