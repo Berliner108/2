@@ -35,6 +35,13 @@ type MessageRow = {
   created_at: string
 }
 
+type ReportRow = {
+  id: string
+  conversation_id: string
+  status: string
+  created_at: string
+}
+
 function formatDate(
   value:
     | string
@@ -331,6 +338,67 @@ export default async function AdminMessagesPage() {
     }
   }
 
+  // =====================================================
+  // 4) OFFENE / IN PRÜFUNG BEFINDLICHE MELDUNGEN
+  // =====================================================
+
+  let activeReports:
+    ReportRow[] = []
+
+  if (
+    conversationIds.length >
+    0
+  ) {
+    const {
+      data,
+      error,
+    } =
+      await admin
+        .from(
+          'chat_reports'
+        )
+        .select(`
+          id,
+          conversation_id,
+          status,
+          created_at
+        `)
+        .in(
+          'conversation_id',
+          conversationIds
+        )
+        .in(
+          'status',
+          [
+            'open',
+            'reviewing',
+          ]
+        )
+        .order(
+          'created_at',
+          {
+            ascending: false,
+          }
+        )
+
+    if (error) {
+      console.error(
+        '[admin/messages] reports:',
+        error
+      )
+    } else {
+      activeReports =
+        (
+          data ??
+          []
+        ) as ReportRow[]
+    }
+  }
+
+  // =====================================================
+  // 5) MAPS
+  // =====================================================
+
   const participantsByConversation =
     new Map<
       string,
@@ -371,8 +439,33 @@ export default async function AdminMessagesPage() {
       )
     )
 
+  const reportsByConversation =
+    new Map<
+      string,
+      ReportRow[]
+    >()
+
+  for (
+    const report
+    of activeReports
+  ) {
+    const current =
+      reportsByConversation.get(
+        report.conversation_id
+      ) ?? []
+
+    current.push(
+      report
+    )
+
+    reportsByConversation.set(
+      report.conversation_id,
+      current
+    )
+  }
+
   // =====================================================
-  // 4) STATISTIK
+  // 6) STATISTIK
   // =====================================================
 
   const directCount =
@@ -389,8 +482,14 @@ export default async function AdminMessagesPage() {
         'support'
     ).length
 
+  const reportedConversationCount =
+    reportsByConversation.size
+
+  const activeReportCount =
+    activeReports.length
+
   // =====================================================
-  // 5) UI
+  // 7) UI
   // =====================================================
 
   return (
@@ -500,6 +599,30 @@ export default async function AdminMessagesPage() {
               }
             </div>
           </div>
+
+          <div
+            className={
+              styles.kpiCard
+            }
+          >
+            <div
+              className={
+                styles.kpiTop
+              }
+            >
+              Aktive Meldungen
+            </div>
+
+            <div
+              className={
+                styles.kpiValue
+              }
+            >
+              {
+                activeReportCount
+              }
+            </div>
+          </div>
         </div>
 
         <div
@@ -515,6 +638,24 @@ export default async function AdminMessagesPage() {
         />
       </section>
 
+      <div
+        className={
+          styles.actions
+        }
+      >
+        <Link
+          href="/admin/messages/reports"
+          className={
+            styles.linkBtn
+          }
+        >
+          Meldungen verwalten
+          {activeReportCount > 0
+            ? ` (${activeReportCount})`
+            : ''}
+        </Link>
+      </div>
+
       <section
         className={
           styles.section
@@ -528,6 +669,21 @@ export default async function AdminMessagesPage() {
           <h2>
             Alle Unterhaltungen
           </h2>
+
+          {reportedConversationCount >
+            0 && (
+            <span>
+              {
+                reportedConversationCount
+              }{' '}
+              Unterhaltung
+              {reportedConversationCount ===
+              1
+                ? ''
+                : 'en'}{' '}
+              mit aktiver Meldung
+            </span>
+          )}
         </div>
 
         <div
@@ -583,6 +739,14 @@ export default async function AdminMessagesPage() {
                     styles.th
                   }
                 >
+                  Meldung
+                </th>
+
+                <th
+                  className={
+                    styles.th
+                  }
+                >
                   Status
                 </th>
 
@@ -621,6 +785,29 @@ export default async function AdminMessagesPage() {
                       conversation,
                       conversationParticipants
                     )
+
+                  const reports =
+                    reportsByConversation.get(
+                      conversation.id
+                    ) ??
+                    []
+
+                  const openReports =
+                    reports.filter(
+                      (report) =>
+                        report.status ===
+                        'open'
+                    )
+
+                  const reviewingReports =
+                    reports.filter(
+                      (report) =>
+                        report.status ===
+                        'reviewing'
+                    )
+
+                  const reportCount =
+                    reports.length
 
                   return (
                     <tr
@@ -703,6 +890,62 @@ export default async function AdminMessagesPage() {
                           styles.td
                         }
                       >
+                        {reportCount ===
+                        0 ? (
+                          <span
+                            style={{
+                              color:
+                                '#6b7280',
+                            }}
+                          >
+                            —
+                          </span>
+                        ) : (
+                          <div
+                            style={{
+                              display:
+                                'flex',
+                              flexDirection:
+                                'column',
+                              gap: 5,
+                              alignItems:
+                                'flex-start',
+                            }}
+                          >
+                            {openReports.length >
+                              0 && (
+                              <span
+                                className={`${styles.badge} ${styles.badgeWarn}`}
+                              >
+                                {
+                                  openReports.length
+                                }{' '}
+                                offen
+                              </span>
+                            )}
+
+                            {reviewingReports.length >
+                              0 && (
+                              <span
+                                className={
+                                  styles.badge
+                                }
+                              >
+                                {
+                                  reviewingReports.length
+                                }{' '}
+                                in Prüfung
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      <td
+                        className={
+                          styles.td
+                        }
+                      >
                         {conversation.closed_at ? (
                           <span
                             className={`${styles.badge} ${styles.badgeWarn}`}
@@ -723,14 +966,45 @@ export default async function AdminMessagesPage() {
                           styles.td
                         }
                       >
-                        <Link
-                          href={`/admin/messages/${conversation.id}`}
-                          className={
-                            styles.linkBtn
-                          }
+                        <div
+                          style={{
+                            display:
+                              'flex',
+                            flexDirection:
+                              'column',
+                            gap: 6,
+                            alignItems:
+                              'flex-start',
+                          }}
                         >
-                          Öffnen
-                        </Link>
+                          <Link
+                            href={`/admin/messages/${conversation.id}`}
+                            className={
+                              styles.linkBtn
+                            }
+                          >
+                            Öffnen
+                          </Link>
+
+                          {reportCount >
+                            0 && (
+                            <Link
+                              href="/admin/messages/reports"
+                              style={{
+                                fontSize:
+                                  '0.8rem',
+                                color:
+                                  '#b45309',
+                                fontWeight:
+                                  600,
+                                textDecoration:
+                                  'none',
+                              }}
+                            >
+                              Meldung prüfen →
+                            </Link>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
@@ -745,7 +1019,7 @@ export default async function AdminMessagesPage() {
                       styles.td
                     }
                     colSpan={
-                      6
+                      7
                     }
                     style={{
                       textAlign:
