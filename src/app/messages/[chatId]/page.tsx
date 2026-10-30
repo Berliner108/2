@@ -4234,33 +4234,34 @@ window.dispatchEvent(
 
             >
 
-              {!isNewChat && (
+              {!isNewChat &&
+                conversationType === 'user' && (
 
-  <button
+                  <button
 
-    type="button"
+                    type="button"
 
-    className={
+                    className={
 
-      styles.reportButton
+                      styles.reportButton
 
-    }
+                    }
 
-    onClick={() => {
+                    onClick={() => {
 
-      setReportOpen(true)
+                      setReportOpen(true)
 
-      setReportSuccess(false)
+                      setReportSuccess(false)
 
-    }}
+                    }}
 
-  >
+                  >
 
-    Unterhaltung / Nutzer melden
+                    Unterhaltung / Nutzer melden
 
-  </button>
+                  </button>
 
-)}
+                )}
 
 
 
@@ -4318,7 +4319,8 @@ window.dispatchEvent(
 
 
 
-            {reportOpen && (
+            {reportOpen &&
+              conversationType === 'user' && (
 
               <div
 
