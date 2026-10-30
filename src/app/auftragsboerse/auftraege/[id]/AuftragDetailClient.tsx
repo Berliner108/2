@@ -697,37 +697,37 @@ const reviewsHref = username
       return;
     }
 
-    if (!res.ok || !data?.conversationId) {
-      if (
-        data?.error === 'cannot_message_self' ||
-        data?.error === 'self_message_not_allowed'
-      ) {
-        toastError('Du kannst dir selbst keine Nachricht senden.');
-        return;
-      }
-
-      if (data?.error === 'chat_blocked') {
-        toastError('Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.');
-        return;
-      }
-
-      toastError(
-        data?.message ||
-        data?.error ||
-        'Unterhaltung konnte nicht gestartet werden.'
-      );
-      return;
-    }
-
-    router.push(
-      `/messages/${encodeURIComponent(String(data.conversationId))}`
-    );
-  } catch {
-    toastError('Unterhaltung konnte nicht gestartet werden.');
-  } finally {
-    setChatStarting(false);
+    if (!res.ok || !data?.ready) {
+  if (
+    data?.error === 'cannot_message_self' ||
+    data?.error === 'self_message_not_allowed'
+  ) {
+    toastError('Du kannst dir selbst keine Nachricht senden.');
+    return;
   }
-};
+
+  if (data?.error === 'chat_blocked') {
+    toastError(
+      'Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.'
+    );
+    return;
+  }
+
+  toastError(
+    data?.message ||
+    data?.error ||
+    'Unterhaltung konnte nicht vorbereitet werden.'
+  );
+  return;
+}
+
+const chatParams = new URLSearchParams({
+  recipientId: String(auftrag.userId),
+  sourceType: 'job',
+  sourceId: String(auftrag.id),
+});
+
+router.push(`/messages/new?${chatParams.toString()}`);
 
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
