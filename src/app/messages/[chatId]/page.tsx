@@ -256,7 +256,7 @@ function formatFileSize(
 
   if (bytes < 1024) {
 
-    return \`${bytes} B\`
+    return `${bytes} B`
 
   }
 
