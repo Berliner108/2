@@ -1041,18 +1041,22 @@ function PageBody() {
       return;
     }
 
-    if (!res.ok || !json?.conversationId) {
-      toastError(
-        json?.message ||
-        json?.error ||
-        'Unterhaltung konnte nicht gestartet werden.'
-      );
-      return;
-    }
+    if (!res.ok || !json?.ready) {
+  toastError(
+    json?.message ||
+    json?.error ||
+    'Unterhaltung konnte nicht vorbereitet werden.'
+  );
+  return;
+}
 
-    router.push(
-      `/messages/${encodeURIComponent(String(json.conversationId))}`
-    );
+const chatParams = new URLSearchParams({
+  recipientId: String(artikel.user_id),
+  sourceType: 'lack_request',
+  sourceId: String(artikel.id),
+});
+
+router.push(`/messages/new?${chatParams.toString()}`);
   } catch {
     toastError('Unterhaltung konnte nicht gestartet werden.');
   } finally {
