@@ -725,6 +725,7 @@ const chatParams = new URLSearchParams({
   recipientId: String(auftrag.userId),
   sourceType: 'job',
   sourceId: String(auftrag.id),
+  displayName: username,
 });
 
 router.push(`/messages/new?${chatParams.toString()}`);
