@@ -479,3 +479,165 @@
     font-size: 0.75rem;
   }
 }
+/* =====================================================
+   ECHTER CHAT
+   ===================================================== */
+
+.sidebarInfo {
+  font-size: 0.9rem;
+  color: #bbb;
+  line-height: 1.4;
+}
+
+.sidebarConversation,
+.sidebarConversationActive {
+  margin-bottom: 0.5rem !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sidebarConversationActive {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sidebarLink {
+  display: block;
+  padding: 0.65rem 0.55rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+.sidebarConversationTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sidebarConversationTop strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sidebarPreview {
+  display: block;
+  margin-top: 0.2rem;
+  color: #bbb;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sidebarUnread {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e60000;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.emptyConversation {
+  width: 100%;
+  padding: 2rem;
+  color: #555;
+  box-sizing: border-box;
+}
+
+.chatLoading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.chatError {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #d33;
+  border-radius: 6px;
+  color: #a40000;
+  background: #fff5f5;
+}
+
+.loadOlderInfo,
+.noMessages {
+  list-style: none;
+  align-self: center;
+  font-size: 0.82rem;
+  color: #777;
+  text-align: center;
+  padding: 0.3rem;
+}
+
+.messageLink {
+  color: #0077cc;
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.attachment {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #1c5c84;
+  text-decoration: none;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.attachment:hover {
+  text-decoration: underline;
+}
+
+.attachmentName {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.attachmentSize {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.uploadStatus {
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.sendButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.fileInput:disabled,
+.textInput:disabled {
+  opacity: 0.65;
+}
+
+@media (max-width: 768px) {
+  .sidebarConversation,
+  .sidebarConversationActive {
+    margin-bottom: 0.35rem !important;
+  }
+
+  .attachment {
+    width: 100%;
+  }
+
+  .emptyConversation {
+    padding: 1rem;
+  }
+}

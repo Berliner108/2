@@ -78,6 +78,10 @@ export async function GET(
   }
 ) {
   try {
+    // =====================================================
+    // 1) Conversation-ID
+    // =====================================================
+
     const { conversationId } = await params
 
     if (
@@ -92,6 +96,10 @@ export async function GET(
         { status: 400 }
       )
     }
+
+    // =====================================================
+    // 2) Auth
+    // =====================================================
 
     const sb = await supabaseServer()
 
@@ -112,6 +120,10 @@ export async function GET(
 
     const admin = supabaseAdmin()
 
+    // =====================================================
+    // 3) Conversation laden
+    // =====================================================
+
     const {
       data: conversation,
       error: conversationError,
@@ -125,10 +137,22 @@ export async function GET(
       .eq('id', conversationId)
       .maybeSingle()
 
-    if (
-      conversationError ||
-      !conversation
-    ) {
+    if (conversationError) {
+      console.error(
+        '[messages/detail] conversation lookup failed:',
+        conversationError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'conversation_lookup_failed',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!conversation) {
       return NextResponse.json(
         {
           ok: false,
@@ -138,6 +162,10 @@ export async function GET(
       )
     }
 
+    // =====================================================
+    // 4) Zugriff prüfen
+    // =====================================================
+
     const participant =
       await getChatParticipant(
         conversationId,
@@ -145,10 +173,10 @@ export async function GET(
       )
 
     /*
-     * Normaler Chat:
-     * ausschließlich Teilnehmer.
+     * Direktchat:
+     * nur echte Teilnehmer dürfen lesen.
      *
-     * Support:
+     * Supportchat:
      * Teilnehmer oder freigeschalteter Support-Agent.
      */
     if (!participant) {
@@ -179,7 +207,12 @@ export async function GET(
       }
     }
 
+    // =====================================================
+    // 5) Cursor lesen
+    // =====================================================
+
     const url = new URL(req.url)
+
     const cursorRaw =
       url.searchParams.get('before')
 
@@ -198,6 +231,10 @@ export async function GET(
         )
       }
     }
+
+    // =====================================================
+    // 6) Nachrichten laden
+    // =====================================================
 
     let query = admin
       .from('messages')
@@ -225,22 +262,25 @@ export async function GET(
       )
       .order(
         'created_at',
-        { ascending: false }
+        {
+          ascending: false,
+        }
       )
       .order(
         'id',
-        { ascending: false }
+        {
+          ascending: false,
+        }
       )
       .limit(
         CHAT_MESSAGE_PAGE_SIZE + 1
       )
 
+    // =====================================================
+    // 7) Infinite-Scroll-Cursor
+    // =====================================================
+
     if (cursor) {
-      /*
-       * created_at < cursor
-       * ODER
-       * created_at = cursor und id < cursor.id
-       */
       query = query.or(
         [
           `created_at.lt.${cursor.createdAt}`,
@@ -256,7 +296,7 @@ export async function GET(
 
     if (messageError) {
       console.error(
-        '[messages/detail] load failed:',
+        '[messages/detail] messages load failed:',
         messageError
       )
 
@@ -271,6 +311,10 @@ export async function GET(
 
     const result = rows ?? []
 
+    // =====================================================
+    // 8) Prüfen, ob noch ältere Nachrichten vorhanden sind
+    // =====================================================
+
     const hasMore =
       result.length >
       CHAT_MESSAGE_PAGE_SIZE
@@ -283,8 +327,10 @@ export async function GET(
       : result
 
     const oldest =
-      page.length
-        ? page[page.length - 1]
+      page.length > 0
+        ? page[
+            page.length - 1
+          ]
         : null
 
     const nextBefore =
@@ -292,23 +338,47 @@ export async function GET(
         ? encodeCursor({
             createdAt:
               oldest.created_at,
-            id: oldest.id,
+
+            id:
+              oldest.id,
           })
         : null
 
     /*
-     * DB liefert newest → oldest.
-     * UI soll oldest → newest bekommen.
+     * DB:
+     * newest -> oldest
+     *
+     * UI:
+     * oldest -> newest
      */
-    const messages = [...page].reverse()
+    const messages =
+      [...page].reverse()
+
+    // =====================================================
+    // 9) Response
+    // =====================================================
 
     return NextResponse.json(
       {
         ok: true,
 
+        /*
+         * Wichtig für die UI:
+         * Eigene Nachrichten können damit zuverlässig
+         * rechts dargestellt werden.
+         *
+         * Support-Agent ohne Participant bekommt hier null,
+         * bis er dem Chat beim Antworten beitritt.
+         */
+        myParticipantId:
+          participant?.id ?? null,
+
         conversation: {
           id: conversation.id,
-          type: conversation.type,
+
+          type:
+            conversation.type,
+
           closed:
             Boolean(
               conversation.closed_at
@@ -318,11 +388,15 @@ export async function GET(
         messages,
 
         hasMore,
+
         nextBefore,
       },
       {
+        status: 200,
+
         headers: {
-          'Cache-Control': 'no-store',
+          'Cache-Control':
+            'no-store',
         },
       }
     )
