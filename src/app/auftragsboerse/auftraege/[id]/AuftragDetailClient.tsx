@@ -460,6 +460,7 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
   const [premiumLoaded, setPremiumLoaded] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
+  const [chatStarting, setChatStarting] = useState(false);
   const [accountType, setAccountType] = useState<string>('');
   const [profileLoaded, setProfileLoaded] = useState(false);
   const fetchPremium = useCallback(async () => {
@@ -557,10 +558,10 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   const [logistikPreis, setLogistikPreis] = useState<string>('');
   const [preisError, setPreisError] = useState<string | null>(null);
   const username = auftrag.user ?? '';
-  const messageTarget = encodeURIComponent(username);
-  const reviewsHref = username
-    ? `/u/${encodeURIComponent(username)}/reviews`
-    : null;
+
+const reviewsHref = username
+  ? `/u/${encodeURIComponent(username)}/reviews`
+  : null;
   const ratingValue =
     typeof auftrag.userRatingAvg === 'number' && Number.isFinite(auftrag.userRatingAvg)
       ? auftrag.userRatingAvg
@@ -657,6 +658,76 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
       return false;
     }
   }
+  const startJobChat = async () => {
+  if (chatStarting) return;
+
+  if (!auftrag.userId) {
+    toastError('Der Nutzer konnte nicht eindeutig ermittelt werden.');
+    return;
+  }
+
+  setChatStarting(true);
+
+  try {
+    const res = await fetch('/api/messages/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId: auftrag.userId,
+        sourceType: 'job',
+        sourceId: String(auftrag.id),
+      }),
+    });
+
+    const data = await res.json().catch(() => ({} as any));
+
+    if (res.status === 401) {
+      toastError('Bitte melde dich an, um eine Nachricht zu senden.');
+      return;
+    }
+
+    if (
+      res.status === 403 &&
+      data?.error === 'premium_required'
+    ) {
+      setPremiumModalOpen(true);
+      return;
+    }
+
+    if (!res.ok || !data?.conversationId) {
+      if (
+        data?.error === 'cannot_message_self' ||
+        data?.error === 'self_message_not_allowed'
+      ) {
+        toastError('Du kannst dir selbst keine Nachricht senden.');
+        return;
+      }
+
+      if (data?.error === 'chat_blocked') {
+        toastError('Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.');
+        return;
+      }
+
+      toastError(
+        data?.message ||
+        data?.error ||
+        'Unterhaltung konnte nicht gestartet werden.'
+      );
+      return;
+    }
+
+    router.push(
+      `/messages/${encodeURIComponent(String(data.conversationId))}`
+    );
+  } catch {
+    toastError('Unterhaltung konnte nicht gestartet werden.');
+  } finally {
+    setChatStarting(false);
+  }
+};
 
   const onPreisSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -1056,10 +1127,25 @@ if ((auftrag as any).ndaLocked) {
                       )}
                     </div>
                     <div style={{ marginTop: 6 }}>
-                      <Link href={`/messages?empfaenger=${messageTarget}`} className={styles.kontaktLink}>
-                        User kontaktieren
-                      </Link>
-                    </div>
+                    <button
+                      type="button"
+                      className={styles.kontaktLink}
+                      onClick={() => void startJobChat()}
+                      disabled={chatStarting}
+                      style={{
+                        background: 'none',
+                        border: 0,
+                        padding: 0,
+                        margin: 0,
+                        cursor: chatStarting ? 'default' : 'pointer',
+                        font: 'inherit',
+                      }}
+                    >
+                      {chatStarting
+                        ? 'Unterhaltung wird geöffnet …'
+                        : 'User kontaktieren'}
+                    </button>
+                  </div>
                   </div>
                 )}                {serienauftragAktiv && (
                   <div className={styles.metaItem}>

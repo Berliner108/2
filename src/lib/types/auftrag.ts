@@ -31,6 +31,7 @@ serien_termine?: any[]
   beschreibung?: string | null
 
   // ✅ User + Rating
+  userId?: string | null
   user?: string | null
   userRatingAvg?: number | null
   userRatingCount?: number | null

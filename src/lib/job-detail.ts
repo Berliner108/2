@@ -270,6 +270,7 @@ export async function fetchJobDetail(jobId: string): Promise<Auftrag | null> {
 
     beschreibung: ndaLocked ? '' : j.description ?? '',
 
+    userId: j.user_id,
     user: username,
     userRatingAvg: Number.isFinite(ratingAvg) ? ratingAvg : null,
     userRatingCount: Number.isFinite(ratingCount) ? ratingCount : null,
