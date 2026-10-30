@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { useSearchParams, useParams, useRouter } from 'next/navigation'
 import Navbar from '@/app/components/navbar/Navbar'
+import PremiumRequiredModal from '@/app/components/premium/PremiumRequiredModal'
 import styles from './user-reviews.module.css'
 
 type ReviewItem = {
@@ -518,6 +519,9 @@ export default function UserReviewsPage() {
   const params = useParams<{ slug: string }>()
   const search = useSearchParams()
   const router = useRouter()
+  const [chatStarting, setChatStarting] = React.useState(false)
+  const [chatError, setChatError] = React.useState<string | null>(null)
+  const [premiumModalOpen, setPremiumModalOpen] = React.useState(false)
 
   React.useEffect(() => {
     if ('scrollRestoration' in history) {
@@ -581,6 +585,80 @@ export default function UserReviewsPage() {
     const u = data.profile.username?.replace(/^@+/, '')
     return u || 'Nutzer'
   }
+  const startProfileChat = async () => {
+  if (chatStarting || !data?.profile?.id) return
+
+  setChatStarting(true)
+  setChatError(null)
+
+  try {
+    const res = await fetch('/api/messages/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId: data.profile.id,
+        sourceType: 'rating_profile',
+        sourceId: data.profile.id,
+      }),
+    })
+
+    const json = await res.json().catch(() => ({} as any))
+
+    if (res.status === 401) {
+      setChatError('Bitte melde dich an, um eine Nachricht zu senden.')
+      return
+    }
+
+    if (
+      res.status === 403 &&
+      (
+        json?.error === 'premium_required' ||
+        json?.reason === 'premium_required'
+      )
+    ) {
+      setPremiumModalOpen(true)
+      return
+    }
+
+    if (
+      json?.error === 'cannot_message_self' ||
+      json?.error === 'self_message_not_allowed'
+    ) {
+      setChatError('Du kannst dir selbst keine Nachricht senden.')
+      return
+    }
+
+    if (
+      json?.error === 'chat_blocked' ||
+      json?.error === 'blocked'
+    ) {
+      setChatError(
+        'Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.'
+      )
+      return
+    }
+
+    if (!res.ok || !json?.conversationId) {
+      setChatError(
+        json?.message ||
+          json?.error ||
+          'Unterhaltung konnte nicht gestartet werden.'
+      )
+      return
+    }
+
+    router.push(
+      `/messages/${encodeURIComponent(String(json.conversationId))}`
+    )
+  } catch {
+    setChatError('Unterhaltung konnte nicht gestartet werden.')
+  } finally {
+    setChatStarting(false)
+  }
+}
 
   return (
     <>
@@ -607,40 +685,70 @@ export default function UserReviewsPage() {
         {data && !isLoading && (
           <>
             {/* HEADER */}
-            <div className={`${styles.card} ${styles.headerCard}`}>
-              <div className={styles.headerTop}>
-                <h1 className={styles.headerTitle}>Bewertungen für {renderProfileTitle()}</h1>
-                <div className={styles.headerBadge}>
-                  <Stars
-                    value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2}
-                    className={styles.starsYellow}
-                    size={20}
-                  />
-                </div>
-              </div>
+<div className={`${styles.card} ${styles.headerCard}`}>
+  <div className={styles.headerTop}>
+    <h1 className={styles.headerTitle}>
+      Bewertungen für {renderProfileTitle()}
+    </h1>
 
-              <div className={styles.headerStats}>
-                <div className={styles.statBox}>
-                  <div className={styles.statLabel}>Durchschnitt</div>
-                  <div className={styles.statValue}>
-                    {typeof data.profile.ratingAvg === 'number' ? data.profile.ratingAvg.toFixed(1) : '—'}
-                    <span>/5</span>
-                  </div>
-                </div>
-                <div className={styles.statBox}>
-                  <div className={styles.statLabel}>Anzahl</div>
-                  <div className={styles.statValue}>{data.profile.ratingCount ?? 0}</div>
-                </div>
-              </div>
+    <div className={styles.headerActions}>
+      <div className={styles.headerBadge}>
+        <Stars
+          value={Math.round((data.profile.ratingAvg ?? 0) * 2) / 2}
+          className={styles.starsYellow}
+          size={20}
+        />
+      </div>
 
-              {/* Verteilung + Sortierung bleiben IMMER sichtbar */}
-              <RatingBreakdown items={sortedItems} />
+      <button
+        type="button"
+        className={styles.messageButton}
+        onClick={() => void startProfileChat()}
+        disabled={chatStarting}
+      >
+        {chatStarting
+          ? 'Unterhaltung wird geöffnet …'
+          : 'Nachricht senden'}
+      </button>
+    </div>
+  </div>
 
-              <div className={styles.controls}>
-                <SortDropdown value={sortBy} onChange={setSortBy} />
-              </div>
-            </div>
+  {chatError && (
+    <div className={styles.chatError} role="alert">
+      {chatError}
+    </div>
+  )}
 
+  <div className={styles.headerStats}>
+    <div className={styles.statBox}>
+      <div className={styles.statLabel}>Durchschnitt</div>
+
+      <div className={styles.statValue}>
+        {typeof data.profile.ratingAvg === 'number'
+          ? data.profile.ratingAvg.toFixed(1)
+          : '—'}
+        <span>/5</span>
+      </div>
+    </div>
+
+    <div className={styles.statBox}>
+      <div className={styles.statLabel}>Anzahl</div>
+
+      <div className={styles.statValue}>
+        {data.profile.ratingCount ?? 0}
+      </div>
+    </div>
+  </div>
+
+  <RatingBreakdown items={sortedItems} />
+
+  <div className={styles.controls}>
+    <SortDropdown
+      value={sortBy}
+      onChange={setSortBy}
+    />
+  </div>
+</div>
             {/* LISTE oder Empty */}
             {sortedItems.length === 0 ? (
               <div className={styles.card}>
@@ -743,6 +851,11 @@ export default function UserReviewsPage() {
           </>
         )}
       </div>
+      <PremiumRequiredModal
+  open={premiumModalOpen}
+  onClose={() => setPremiumModalOpen(false)}
+  actionText={`eine Unterhaltung mit ${renderProfileTitle()} zu starten`}
+/>
     </>
   )
 }

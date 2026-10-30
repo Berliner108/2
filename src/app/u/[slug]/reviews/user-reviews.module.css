@@ -833,3 +833,72 @@
     -webkit-text-fill-color: var(--text);
   }
 }
+/* ===== Chat / Nutzer kontaktieren ===== */
+
+.headerActions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+
+.messageButton{
+  min-height:38px;
+  padding:8px 14px;
+
+  border:1px solid #0ea5c6;
+  border-radius:999px;
+
+  background:#00b4d8;
+  color:#fff;
+
+  font-family:'Oswald', system-ui, sans-serif;
+  font-size:15px;
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:
+    background .15s ease,
+    box-shadow .15s ease,
+    transform .05s ease;
+}
+
+.messageButton:hover:not(:disabled){
+  background:#009fc0;
+  box-shadow:0 3px 12px rgba(0,180,216,.25);
+}
+
+.messageButton:active:not(:disabled){
+  transform:translateY(1px);
+}
+
+.messageButton:disabled{
+  opacity:.6;
+  cursor:default;
+}
+
+.chatError{
+  margin:-2px 0 12px;
+  padding:9px 12px;
+
+  border:1px solid #fecaca;
+  border-radius:10px;
+
+  background:#fef2f2;
+  color:#b91c1c;
+
+  font-size:14px;
+}
+
+@media (max-width:640px){
+  .headerActions{
+    width:100%;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+
+  .messageButton{
+    min-height:42px;
+  }
+}
