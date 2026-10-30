@@ -7,15 +7,218 @@ import { getChatParticipant } from '@/lib/chat/helpers'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-type Body = {
-  conversationId?: string
-  blocked?: boolean
-}
-
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
   )
+}
+
+async function getOtherUser(
+  conversationId: string,
+  userId: string
+) {
+  const admin = supabaseAdmin()
+
+  const {
+    data: conversation,
+    error: conversationError,
+  } = await admin
+    .from('conversations')
+    .select('id, type')
+    .eq('id', conversationId)
+    .maybeSingle()
+
+  if (conversationError || !conversation) {
+    return {
+      ok: false as const,
+      status: 404,
+      error: 'conversation_not_found',
+    }
+  }
+
+  if (conversation.type !== 'user') {
+    return {
+      ok: false as const,
+      status: 400,
+      error: 'blocking_not_available',
+    }
+  }
+
+  const myParticipant =
+    await getChatParticipant(
+      conversationId,
+      userId
+    )
+
+  if (!myParticipant) {
+    return {
+      ok: false as const,
+      status: 403,
+      error: 'not_participant',
+    }
+  }
+
+  const {
+    data: others,
+    error: participantError,
+  } = await admin
+    .from('conversation_participants')
+    .select('user_id')
+    .eq(
+      'conversation_id',
+      conversationId
+    )
+    .is('left_at', null)
+    .neq('id', myParticipant.id)
+
+  if (
+    participantError ||
+    !others ||
+    others.length !== 1
+  ) {
+    return {
+      ok: false as const,
+      status: 500,
+      error: 'recipient_lookup_failed',
+    }
+  }
+
+  const otherUserId =
+    others[0].user_id
+
+  if (!otherUserId) {
+    return {
+      ok: false as const,
+      status: 410,
+      error: 'recipient_deleted',
+    }
+  }
+
+  return {
+    ok: true as const,
+    otherUserId,
+  }
+}
+
+// =====================================================
+// STATUS
+// =====================================================
+
+export async function GET(req: Request) {
+  try {
+    const sb = await supabaseServer()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await sb.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'not_authenticated',
+        },
+        { status: 401 }
+      )
+    }
+
+    const url = new URL(req.url)
+
+    const conversationId =
+      url.searchParams
+        .get('conversationId')
+        ?.trim() ?? ''
+
+    if (
+      !conversationId ||
+      !isUuid(conversationId)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'invalid_conversation_id',
+        },
+        { status: 400 }
+      )
+    }
+
+    const target =
+      await getOtherUser(
+        conversationId,
+        user.id
+      )
+
+    if (!target.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: target.error,
+        },
+        { status: target.status }
+      )
+    }
+
+    const admin = supabaseAdmin()
+
+    const {
+      data: block,
+      error,
+    } = await admin
+      .from('user_blocks')
+      .select('id')
+      .eq(
+        'blocker_user_id',
+        user.id
+      )
+      .eq(
+        'blocked_user_id',
+        target.otherUserId
+      )
+      .maybeSingle()
+
+    if (error) {
+      console.error(
+        '[messages/block] status:',
+        error
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'block_status_failed',
+        },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      ok: true,
+      blocked: Boolean(block),
+    })
+  } catch (error) {
+    console.error(
+      '[messages/block] GET unexpected:',
+      error
+    )
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'internal_error',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// =====================================================
+// BLOCKIEREN / ENTSPERREN
+// =====================================================
+
+type Body = {
+  conversationId?: string
+  blocked?: boolean
 }
 
 export async function POST(req: Request) {
@@ -58,93 +261,23 @@ export async function POST(req: Request) {
       )
     }
 
-    const admin = supabaseAdmin()
-
-    const {
-      data: conversation,
-      error: conversationError,
-    } = await admin
-      .from('conversations')
-      .select('id, type')
-      .eq('id', conversationId)
-      .maybeSingle()
-
-    if (conversationError || !conversation) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'conversation_not_found',
-        },
-        { status: 404 }
-      )
-    }
-
-    /*
-     * Blockieren gilt nur für User-zu-User-Chats.
-     * Support kann nicht blockiert werden.
-     */
-    if (conversation.type !== 'user') {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'blocking_not_available',
-        },
-        { status: 400 }
-      )
-    }
-
-    const myParticipant =
-      await getChatParticipant(
+    const target =
+      await getOtherUser(
         conversationId,
         user.id
       )
 
-    if (!myParticipant) {
+    if (!target.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'not_participant',
+          error: target.error,
         },
-        { status: 403 }
+        { status: target.status }
       )
     }
 
-    const {
-      data: others,
-      error: participantError,
-    } = await admin
-      .from('conversation_participants')
-      .select('user_id')
-      .eq('conversation_id', conversationId)
-      .is('left_at', null)
-      .neq('id', myParticipant.id)
-
-    if (
-      participantError ||
-      !others ||
-      others.length !== 1
-    ) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'recipient_lookup_failed',
-        },
-        { status: 500 }
-      )
-    }
-
-    const otherUserId =
-      others[0].user_id
-
-    if (!otherUserId) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'recipient_deleted',
-        },
-        { status: 410 }
-      )
-    }
+    const admin = supabaseAdmin()
 
     if (body.blocked === false) {
       const { error } = await admin
@@ -156,7 +289,7 @@ export async function POST(req: Request) {
         )
         .eq(
           'blocked_user_id',
-          otherUserId
+          target.otherUserId
         )
 
       if (error) {
@@ -185,7 +318,8 @@ export async function POST(req: Request) {
       .upsert(
         {
           blocker_user_id: user.id,
-          blocked_user_id: otherUserId,
+          blocked_user_id:
+            target.otherUserId,
         },
         {
           onConflict:
@@ -215,7 +349,7 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error(
-      '[messages/block] unexpected:',
+      '[messages/block] POST unexpected:',
       error
     )
 

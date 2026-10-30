@@ -58,6 +58,7 @@ type Message = {
   id: string
   conversation_id: string
   sender_participant_id: string | null
+
   message_type:
     | 'text'
     | 'file'
@@ -77,6 +78,10 @@ type ConversationListItem = {
   displayName: string
 }
 
+// =====================================================
+// HELPER
+// =====================================================
+
 function getExtension(
   filename: string
 ) {
@@ -85,8 +90,7 @@ function getExtension(
 
   if (
     index <= 0 ||
-    index ===
-      filename.length - 1
+    index === filename.length - 1
   ) {
     return ''
   }
@@ -182,6 +186,10 @@ function LinkifiedText({
   )
 }
 
+// =====================================================
+// PAGE
+// =====================================================
+
 export default function ChatPage() {
   const params = useParams()
 
@@ -193,25 +201,45 @@ export default function ChatPage() {
       ? rawChatId[0]
       : rawChatId
 
-  const [messages, setMessages] =
+  // =====================================================
+  // STATES
+  // =====================================================
+
+  const [
+    messages,
+    setMessages,
+  ] =
     useState<Message[]>([])
 
   const [
     myParticipantId,
     setMyParticipantId,
-  ] = useState<string | null>(
-    null
-  )
+  ] =
+    useState<string | null>(
+      null
+    )
+
+  const [
+    conversationType,
+    setConversationType,
+  ] =
+    useState<
+      'user' | 'support' | null
+    >(null)
 
   const [
     displayName,
     setDisplayName,
-  ] = useState('Unterhaltung')
+  ] =
+    useState(
+      'Unterhaltung'
+    )
 
   const [
     inputValue,
     setInputValue,
-  ] = useState('')
+  ] =
+    useState('')
 
   const [
     selectedFile,
@@ -224,17 +252,20 @@ export default function ChatPage() {
   const [
     loading,
     setLoading,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
     loadingOlder,
     setLoadingOlder,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
     sending,
     setSending,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
     uploadStatus,
@@ -255,7 +286,8 @@ export default function ChatPage() {
   const [
     hasMore,
     setHasMore,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
     nextBefore,
@@ -265,6 +297,60 @@ export default function ChatPage() {
       null
     )
 
+  // =====================================================
+  // BLOCKIEREN
+  // =====================================================
+
+  const [
+    blocked,
+    setBlocked,
+  ] =
+    useState(false)
+
+  const [
+    blockLoading,
+    setBlockLoading,
+  ] =
+    useState(false)
+
+  // =====================================================
+  // MELDEN
+  // =====================================================
+
+  const [
+    reportOpen,
+    setReportOpen,
+  ] =
+    useState(false)
+
+  const [
+    reportReason,
+    setReportReason,
+  ] =
+    useState('')
+
+  const [
+    reportDetails,
+    setReportDetails,
+  ] =
+    useState('')
+
+  const [
+    reportLoading,
+    setReportLoading,
+  ] =
+    useState(false)
+
+  const [
+    reportSuccess,
+    setReportSuccess,
+  ] =
+    useState(false)
+
+  // =====================================================
+  // REFS
+  // =====================================================
+
   const messageListRef =
     useRef<HTMLUListElement>(
       null
@@ -273,6 +359,10 @@ export default function ChatPage() {
   const initialScrollDone =
     useRef(false)
 
+  // =====================================================
+  // SCROLL
+  // =====================================================
+
   const scrollToBottom =
     useCallback(() => {
       requestAnimationFrame(
@@ -280,7 +370,9 @@ export default function ChatPage() {
           const element =
             messageListRef.current
 
-          if (!element) return
+          if (!element) {
+            return
+          }
 
           element.scrollTop =
             element.scrollHeight
@@ -289,7 +381,7 @@ export default function ChatPage() {
     }, [])
 
   // =====================================================
-  // Premium-Checkout
+  // PREMIUM-CHECKOUT
   // =====================================================
 
   const startPremiumCheckout =
@@ -308,7 +400,9 @@ export default function ChatPage() {
         const json =
           await res
             .json()
-            .catch(() => null)
+            .catch(
+              () => null
+            )
 
         if (
           res.ok &&
@@ -316,6 +410,7 @@ export default function ChatPage() {
         ) {
           window.location.href =
             json.url
+
           return
         }
 
@@ -331,19 +426,23 @@ export default function ChatPage() {
     }, [])
 
   // =====================================================
-  // Chatliste für Namen laden
+  // CHATNAME LADEN
   // =====================================================
 
   const loadConversationName =
     useCallback(async () => {
-      if (!chatId) return
+      if (!chatId) {
+        return
+      }
 
       try {
         const res =
           await fetch(
             '/api/messages',
             {
-              cache: 'no-store',
+              cache:
+                'no-store',
+
               credentials:
                 'include',
             }
@@ -352,7 +451,9 @@ export default function ChatPage() {
         const json =
           await res
             .json()
-            .catch(() => null)
+            .catch(
+              () => null
+            )
 
         if (
           !res.ok ||
@@ -370,7 +471,8 @@ export default function ChatPage() {
         const chat =
           chats.find(
             (item) =>
-              item.id === chatId
+              item.id ===
+              chatId
           )
 
         if (chat) {
@@ -378,7 +480,9 @@ export default function ChatPage() {
             chat.displayName
           )
         }
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           '[chat] name load:',
           error
@@ -387,19 +491,22 @@ export default function ChatPage() {
     }, [chatId])
 
   // =====================================================
-  // Als gelesen markieren
+  // LESESTATUS
   // =====================================================
 
   const markRead =
     useCallback(async () => {
-      if (!chatId) return
+      if (!chatId) {
+        return
+      }
 
       try {
         const res =
           await fetch(
             '/api/messages/read',
             {
-              method: 'POST',
+              method:
+                'POST',
 
               headers: {
                 'Content-Type':
@@ -424,7 +531,9 @@ export default function ChatPage() {
             )
           )
         }
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           '[chat] mark read:',
           error
@@ -433,15 +542,70 @@ export default function ChatPage() {
     }, [chatId])
 
   // =====================================================
-  // Erste Nachrichten laden
+  // BLOCK-STATUS LADEN
+  // =====================================================
+
+  const loadBlockStatus =
+    useCallback(async () => {
+      if (!chatId) {
+        return
+      }
+
+      try {
+        const res =
+          await fetch(
+            `/api/messages/block?conversationId=${encodeURIComponent(
+              chatId
+            )}`,
+            {
+              cache:
+                'no-store',
+
+              credentials:
+                'include',
+            }
+          )
+
+        const json =
+          await res
+            .json()
+            .catch(
+              () => null
+            )
+
+        if (
+          res.ok &&
+          json?.ok
+        ) {
+          setBlocked(
+            Boolean(
+              json.blocked
+            )
+          )
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          '[chat] block status:',
+          error
+        )
+      }
+    }, [chatId])
+
+  // =====================================================
+  // ERSTE NACHRICHTEN LADEN
   // =====================================================
 
   const loadInitialMessages =
     useCallback(async () => {
-      if (!chatId) return
+      if (!chatId) {
+        return
+      }
 
       setLoading(true)
       setErrorMessage(null)
+
       initialScrollDone.current =
         false
 
@@ -452,7 +616,9 @@ export default function ChatPage() {
               chatId
             )}`,
             {
-              cache: 'no-store',
+              cache:
+                'no-store',
+
               credentials:
                 'include',
             }
@@ -461,7 +627,9 @@ export default function ChatPage() {
         const json =
           await res
             .json()
-            .catch(() => null)
+            .catch(
+              () => null
+            )
 
         if (
           !res.ok ||
@@ -488,6 +656,12 @@ export default function ChatPage() {
             null
         )
 
+        setConversationType(
+          json.conversation
+            ?.type ??
+            null
+        )
+
         setHasMore(
           Boolean(
             json.hasMore
@@ -500,7 +674,9 @@ export default function ChatPage() {
         )
 
         await markRead()
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           '[chat] initial load:',
           error
@@ -517,11 +693,26 @@ export default function ChatPage() {
       markRead,
     ])
 
+  // =====================================================
+  // CHATWECHSEL
+  // =====================================================
+
   useEffect(() => {
     setMessages([])
     setSelectedFile(null)
     setInputValue('')
     setErrorMessage(null)
+
+    setConversationType(
+      null
+    )
+
+    setBlocked(false)
+
+    setReportOpen(false)
+    setReportSuccess(false)
+    setReportReason('')
+    setReportDetails('')
 
     void Promise.all([
       loadConversationName(),
@@ -532,6 +723,28 @@ export default function ChatPage() {
     loadConversationName,
     loadInitialMessages,
   ])
+
+  // =====================================================
+  // BLOCK-STATUS NACH CONVERSATION-LADEN
+  // =====================================================
+
+  useEffect(() => {
+    if (
+      conversationType ===
+      'user'
+    ) {
+      void loadBlockStatus()
+    } else {
+      setBlocked(false)
+    }
+  }, [
+    conversationType,
+    loadBlockStatus,
+  ])
+
+  // =====================================================
+  // INITIAL NACH UNTEN SCROLLEN
+  // =====================================================
 
   useEffect(() => {
     if (
@@ -552,117 +765,148 @@ export default function ChatPage() {
   ])
 
   // =====================================================
-// Realtime – neueste Nachrichten aktualisieren
-// =====================================================
+  // REALTIME – NEUESTE NACHRICHTEN AKTUALISIEREN
+  // =====================================================
+
   const refreshLatestMessages =
-  useCallback(async () => {
-    if (!chatId) return
-
-    try {
-      const res = await fetch(
-        `/api/messages/${encodeURIComponent(
-          chatId
-        )}`,
-        {
-          cache: 'no-store',
-          credentials: 'include',
-        }
-      )
-
-      const json =
-        await res
-          .json()
-          .catch(() => null)
-
-      if (
-        !res.ok ||
-        !json?.ok ||
-        !Array.isArray(json.messages)
-      ) {
+    useCallback(async () => {
+      if (!chatId) {
         return
       }
 
-      setMyParticipantId(
-        json.myParticipantId ?? null
-      )
+      try {
+        const res =
+          await fetch(
+            `/api/messages/${encodeURIComponent(
+              chatId
+            )}`,
+            {
+              cache:
+                'no-store',
 
-      setMessages((current) => {
-        const map =
-          new Map<string, Message>()
-
-        /*
-         * Bereits geladene ältere Nachrichten behalten.
-         */
-        for (const message of current) {
-          map.set(
-            message.id,
-            message
+              credentials:
+                'include',
+            }
           )
+
+        const json =
+          await res
+            .json()
+            .catch(
+              () => null
+            )
+
+        if (
+          !res.ok ||
+          !json?.ok ||
+          !Array.isArray(
+            json.messages
+          )
+        ) {
+          return
         }
 
-        /*
-         * Neueste Seite darüber aktualisieren.
-         */
-        for (const message of json.messages) {
-          map.set(
-            message.id,
-            message
-          )
-        }
-
-        return Array.from(
-          map.values()
-        ).sort(
-          (a, b) =>
-            new Date(
-              a.created_at
-            ).getTime() -
-            new Date(
-              b.created_at
-            ).getTime()
+        setMyParticipantId(
+          json.myParticipantId ??
+            null
         )
-      })
 
-      /*
-       * Wenn wir diesen Chat gerade offen haben,
-       * ist die eingehende Nachricht gelesen.
-       */
-      await markRead()
+        setConversationType(
+          json.conversation
+            ?.type ??
+            null
+        )
 
-      requestAnimationFrame(
-        scrollToBottom
-      )
-    } catch (error) {
-      console.error(
-        '[chat] realtime refresh:',
+        setMessages(
+          (current) => {
+            const map =
+              new Map<
+                string,
+                Message
+              >()
+
+            for (
+              const message
+              of current
+            ) {
+              map.set(
+                message.id,
+                message
+              )
+            }
+
+            for (
+              const message
+              of json.messages
+            ) {
+              map.set(
+                message.id,
+                message
+              )
+            }
+
+            return Array.from(
+              map.values()
+            ).sort(
+              (a, b) =>
+                new Date(
+                  a.created_at
+                ).getTime() -
+                new Date(
+                  b.created_at
+                ).getTime()
+            )
+          }
+        )
+
+        await markRead()
+
+        requestAnimationFrame(
+          scrollToBottom
+        )
+      } catch (
         error
-      )
-    }
-  }, [
-    chatId,
-    markRead,
-    scrollToBottom,
-  ])
+      ) {
+        console.error(
+          '[chat] realtime refresh:',
+          error
+        )
+      }
+    }, [
+      chatId,
+      markRead,
+      scrollToBottom,
+    ])
+
+  // =====================================================
+  // REALTIME LISTENER
+  // =====================================================
+
   useEffect(() => {
-  const handleRealtimeMessage = () => {
-    void refreshLatestMessages()
-  }
+    const handleRealtimeMessage =
+      () => {
+        void refreshLatestMessages()
+      }
 
-  window.addEventListener(
-    'chat:message-inserted',
-    handleRealtimeMessage
-  )
-
-  return () => {
-    window.removeEventListener(
+    window.addEventListener(
       'chat:message-inserted',
       handleRealtimeMessage
     )
-  }
-}, [refreshLatestMessages])
-// =====================================================
-// Ältere Nachrichten laden
-// =====================================================
+
+    return () => {
+      window.removeEventListener(
+        'chat:message-inserted',
+        handleRealtimeMessage
+      )
+    }
+  }, [
+    refreshLatestMessages,
+  ])
+
+  // =====================================================
+  // ÄLTERE NACHRICHTEN LADEN
+  // =====================================================
+
   const loadOlderMessages =
     useCallback(async () => {
       if (
@@ -677,9 +921,13 @@ export default function ChatPage() {
       const list =
         messageListRef.current
 
-      if (!list) return
+      if (!list) {
+        return
+      }
 
-      setLoadingOlder(true)
+      setLoadingOlder(
+        true
+      )
 
       const previousHeight =
         list.scrollHeight
@@ -693,7 +941,9 @@ export default function ChatPage() {
               nextBefore
             )}`,
             {
-              cache: 'no-store',
+              cache:
+                'no-store',
+
               credentials:
                 'include',
             }
@@ -702,7 +952,9 @@ export default function ChatPage() {
         const json =
           await res
             .json()
-            .catch(() => null)
+            .catch(
+              () => null
+            )
 
         if (
           !res.ok ||
@@ -741,7 +993,9 @@ export default function ChatPage() {
             const currentList =
               messageListRef.current
 
-            if (!currentList) {
+            if (
+              !currentList
+            ) {
               return
             }
 
@@ -753,13 +1007,17 @@ export default function ChatPage() {
               previousHeight
           }
         )
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           '[chat] older messages:',
           error
         )
       } finally {
-        setLoadingOlder(false)
+        setLoadingOlder(
+          false
+        )
       }
     }, [
       chatId,
@@ -772,21 +1030,228 @@ export default function ChatPage() {
     const list =
       messageListRef.current
 
-    if (!list) return
+    if (!list) {
+      return
+    }
 
-    if (list.scrollTop < 80) {
+    if (
+      list.scrollTop <
+      80
+    ) {
       void loadOlderMessages()
     }
   }
 
   // =====================================================
-  // Dateiauswahl
+  // BLOCKIEREN / ENTSPERREN
+  // =====================================================
+
+  async function toggleBlock() {
+    if (
+      !chatId ||
+      blockLoading
+    ) {
+      return
+    }
+
+    if (
+      !blocked &&
+      !window.confirm(
+        `Möchtest du ${displayName} wirklich blockieren? Danach könnt ihr euch gegenseitig keine neuen Nachrichten mehr senden.`
+      )
+    ) {
+      return
+    }
+
+    setBlockLoading(
+      true
+    )
+
+    setErrorMessage(
+      null
+    )
+
+    try {
+      const res =
+        await fetch(
+          '/api/messages/block',
+          {
+            method:
+              'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            credentials:
+              'include',
+
+            body:
+              JSON.stringify({
+                conversationId:
+                  chatId,
+
+                blocked:
+                  !blocked,
+              }),
+          }
+        )
+
+      const json =
+        await res
+          .json()
+          .catch(
+            () => null
+          )
+
+      if (
+        !res.ok ||
+        !json?.ok
+      ) {
+        throw new Error(
+          blocked
+            ? 'Blockierung konnte nicht aufgehoben werden.'
+            : 'Nutzer konnte nicht blockiert werden.'
+        )
+      }
+
+      const nowBlocked =
+        Boolean(
+          json.blocked
+        )
+
+      setBlocked(
+        nowBlocked
+      )
+
+      if (nowBlocked) {
+        setSelectedFile(
+          null
+        )
+      }
+    } catch (
+      error
+    ) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Aktion konnte nicht durchgeführt werden.'
+      )
+    } finally {
+      setBlockLoading(
+        false
+      )
+    }
+  }
+
+  // =====================================================
+  // MELDUNG ABSENDEN
+  // =====================================================
+
+  async function submitReport() {
+    if (
+      !chatId ||
+      !reportReason ||
+      reportLoading
+    ) {
+      return
+    }
+
+    setReportLoading(
+      true
+    )
+
+    setErrorMessage(
+      null
+    )
+
+    try {
+      const res =
+        await fetch(
+          '/api/messages/report',
+          {
+            method:
+              'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+
+            credentials:
+              'include',
+
+            body:
+              JSON.stringify({
+                conversationId:
+                  chatId,
+
+                reason:
+                  reportReason,
+
+                details:
+                  reportDetails.trim(),
+              }),
+          }
+        )
+
+      const json =
+        await res
+          .json()
+          .catch(
+            () => null
+          )
+
+      if (
+        !res.ok ||
+        !json?.ok
+      ) {
+        throw new Error(
+          json?.message ||
+            'Meldung konnte nicht gesendet werden.'
+        )
+      }
+
+      setReportSuccess(
+        true
+      )
+
+      setReportReason('')
+      setReportDetails('')
+    } catch (
+      error
+    ) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Meldung konnte nicht gesendet werden.'
+      )
+    } finally {
+      setReportLoading(
+        false
+      )
+    }
+  }
+
+  // =====================================================
+  // DATEIAUSWAHL
   // =====================================================
 
   function selectFile(
     file: File
   ) {
-    setErrorMessage(null)
+    setErrorMessage(
+      null
+    )
+
+    if (blocked) {
+      setErrorMessage(
+        'Du hast diesen Nutzer blockiert.'
+      )
+
+      return
+    }
 
     if (
       file.size >
@@ -795,6 +1260,7 @@ export default function ChatPage() {
       setErrorMessage(
         'Dateien dürfen höchstens 25 MB groß sein.'
       )
+
       return
     }
 
@@ -811,10 +1277,13 @@ export default function ChatPage() {
       setErrorMessage(
         'Dieser Dateityp ist im Chat nicht erlaubt.'
       )
+
       return
     }
 
-    setSelectedFile(file)
+    setSelectedFile(
+      file
+    )
   }
 
   function handleFileInputChange(
@@ -825,7 +1294,8 @@ export default function ChatPage() {
       event.target
         .files?.[0]
 
-    event.target.value = ''
+    event.target.value =
+      ''
 
     if (file) {
       selectFile(file)
@@ -837,6 +1307,10 @@ export default function ChatPage() {
       React.DragEvent<HTMLDivElement>
   ) {
     event.preventDefault()
+
+    if (blocked) {
+      return
+    }
 
     const file =
       event.dataTransfer
@@ -857,13 +1331,14 @@ export default function ChatPage() {
   }
 
   // =====================================================
-  // Nachricht senden
+  // NACHRICHT SENDEN
   // =====================================================
 
   async function sendMessage() {
     if (
       !chatId ||
-      sending
+      sending ||
+      blocked
     ) {
       return
     }
@@ -887,16 +1362,23 @@ export default function ChatPage() {
     try {
       let attachment:
         | {
-            storagePath: string
-            originalFilename: string
-            mimeType: string
-            fileSize: number
+            storagePath:
+              string
+
+            originalFilename:
+              string
+
+            mimeType:
+              string
+
+            fileSize:
+              number
           }
         | undefined
 
-      // -------------------------------------------------
-      // Datei vorbereiten + direkt zu Supabase hochladen
-      // -------------------------------------------------
+      // =================================================
+      // DATEI VORBEREITEN
+      // =================================================
 
       if (selectedFile) {
         setUploadStatus(
@@ -907,7 +1389,8 @@ export default function ChatPage() {
           await fetch(
             '/api/messages/attachments/prepare',
             {
-              method: 'POST',
+              method:
+                'POST',
 
               headers: {
                 'Content-Type':
@@ -938,17 +1421,21 @@ export default function ChatPage() {
         const prepareJson =
           await prepareRes
             .json()
-            .catch(() => null)
+            .catch(
+              () => null
+            )
 
         if (
           !prepareRes.ok ||
           !prepareJson?.ok
         ) {
           if (
-            prepareJson?.error ===
+            prepareJson
+              ?.error ===
             'premium_required'
           ) {
             await startPremiumCheckout()
+
             return
           }
 
@@ -957,6 +1444,10 @@ export default function ChatPage() {
               'Datei-Upload konnte nicht vorbereitet werden.'
           )
         }
+
+        // =================================================
+        // DIREKT ZU SUPABASE STORAGE
+        // =================================================
 
         setUploadStatus(
           'Datei wird hochgeladen …'
@@ -969,9 +1460,11 @@ export default function ChatPage() {
           supabaseBrowser()
 
         const {
-          error: uploadError,
+          error:
+            uploadError,
         } =
-          await supabase.storage
+          await supabase
+            .storage
             .from(
               'chat-attachments'
             )
@@ -987,7 +1480,9 @@ export default function ChatPage() {
               }
             )
 
-        if (uploadError) {
+        if (
+          uploadError
+        ) {
           throw new Error(
             `Upload fehlgeschlagen: ${uploadError.message}`
           )
@@ -1012,15 +1507,16 @@ export default function ChatPage() {
         )
       }
 
-      // -------------------------------------------------
-      // Nachricht speichern
-      // -------------------------------------------------
+      // =================================================
+      // NACHRICHT SPEICHERN
+      // =================================================
 
       const sendRes =
         await fetch(
           '/api/messages/send',
           {
-            method: 'POST',
+            method:
+              'POST',
 
             headers: {
               'Content-Type':
@@ -1049,7 +1545,9 @@ export default function ChatPage() {
       const sendJson =
         await sendRes
           .json()
-          .catch(() => null)
+          .catch(
+            () => null
+          )
 
       if (
         !sendRes.ok ||
@@ -1060,7 +1558,17 @@ export default function ChatPage() {
           'premium_required'
         ) {
           await startPremiumCheckout()
+
           return
+        }
+
+        if (
+          sendJson?.error ===
+          'chat_blocked'
+        ) {
+          throw new Error(
+            'Zwischen diesen Nutzern können derzeit keine Nachrichten gesendet werden.'
+          )
         }
 
         throw new Error(
@@ -1069,16 +1577,25 @@ export default function ChatPage() {
         )
       }
 
+      // =================================================
+      // LOKAL SOFORT ANZEIGEN
+      // =================================================
+
       if (
-        sendJson.message?.id
+        sendJson.message
+          ?.id
       ) {
         setMessages(
           (current) => {
             const exists =
               current.some(
-                (message) =>
+                (
+                  message
+                ) =>
                   message.id ===
-                  sendJson.message.id
+                  sendJson
+                    .message
+                    .id
               )
 
             if (exists) {
@@ -1105,7 +1622,9 @@ export default function ChatPage() {
       requestAnimationFrame(
         scrollToBottom
       )
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         '[chat] send:',
         error
@@ -1122,12 +1641,18 @@ export default function ChatPage() {
     }
   }
 
+  // =====================================================
+  // ENTER = SENDEN
+  // SHIFT + ENTER = ZEILENUMBRUCH
+  // =====================================================
+
   function handleKeyDown(
     event:
       React.KeyboardEvent<HTMLTextAreaElement>
   ) {
     if (
-      event.key === 'Enter' &&
+      event.key ===
+        'Enter' &&
       !event.shiftKey
     ) {
       event.preventDefault()
@@ -1136,6 +1661,10 @@ export default function ChatPage() {
     }
   }
 
+  // =====================================================
+  // KEIN CHAT
+  // =====================================================
+
   if (!chatId) {
     return (
       <p>
@@ -1143,6 +1672,10 @@ export default function ChatPage() {
       </p>
     )
   }
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
     <div
@@ -1154,7 +1687,9 @@ export default function ChatPage() {
         className={
           styles.chatWrapper
         }
-        onDrop={handleDrop}
+        onDrop={
+          handleDrop
+        }
         onDragOver={
           handleDragOver
         }
@@ -1163,6 +1698,10 @@ export default function ChatPage() {
           Unterhaltung mit{' '}
           {displayName}
         </h1>
+
+        {/* =================================================
+            FEHLER
+        ================================================= */}
 
         {errorMessage && (
           <div
@@ -1173,6 +1712,10 @@ export default function ChatPage() {
             {errorMessage}
           </div>
         )}
+
+        {/* =================================================
+            NACHRICHTEN
+        ================================================= */}
 
         {loading ? (
           <div
@@ -1221,21 +1764,23 @@ export default function ChatPage() {
 
             {messages.length ===
               0 && (
-              <li
-                className={
-                  styles.noMessages
-                }
-              >
-                Noch keine Nachrichten.
-              </li>
-            )}
+                <li
+                  className={
+                    styles.noMessages
+                  }
+                >
+                  Noch keine
+                  Nachrichten.
+                </li>
+              )}
 
             {messages.map(
               (message) => {
                 const mine =
                   Boolean(
                     myParticipantId &&
-                    message.sender_participant_id ===
+                    message
+                      .sender_participant_id ===
                       myParticipantId
                   )
 
@@ -1318,6 +1863,27 @@ export default function ChatPage() {
           </ul>
         )}
 
+        {/* =================================================
+            BLOCKIERUNG
+        ================================================= */}
+
+        {blocked && (
+          <div
+            className={
+              styles.blockNotice
+            }
+          >
+            Du hast diesen Nutzer blockiert.
+            Neue Nachrichten sind nicht
+            möglich, bis du die Blockierung
+            aufhebst.
+          </div>
+        )}
+
+        {/* =================================================
+            DATEIVORSCHAU
+        ================================================= */}
+
         {selectedFile && (
           <div
             className={
@@ -1350,6 +1916,10 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* =================================================
+            UPLOADSTATUS
+        ================================================= */}
+
         {uploadStatus && (
           <div
             className={
@@ -1360,6 +1930,10 @@ export default function ChatPage() {
           </div>
         )}
 
+        {/* =================================================
+            EINGABE
+        ================================================= */}
+
         <div
           className={
             styles.inputWrapper
@@ -1369,7 +1943,11 @@ export default function ChatPage() {
             className={
               styles.textInput
             }
-            placeholder="Antwort schreiben..."
+            placeholder={
+              blocked
+                ? 'Nutzer ist blockiert'
+                : 'Antwort schreiben...'
+            }
             value={
               inputValue
             }
@@ -1377,8 +1955,7 @@ export default function ChatPage() {
               event
             ) =>
               setInputValue(
-                event.target
-                  .value
+                event.target.value
               )
             }
             onKeyDown={
@@ -1389,7 +1966,8 @@ export default function ChatPage() {
               10000
             }
             disabled={
-              sending
+              sending ||
+              blocked
             }
           />
 
@@ -1403,6 +1981,7 @@ export default function ChatPage() {
             }
             disabled={
               sending ||
+              blocked ||
               (!inputValue.trim() &&
                 !selectedFile)
             }
@@ -1412,6 +1991,10 @@ export default function ChatPage() {
               : 'Senden'}
           </button>
         </div>
+
+        {/* =================================================
+            EXTRAS
+        ================================================= */}
 
         <div
           className={
@@ -1433,9 +2016,12 @@ export default function ChatPage() {
               onChange={
                 handleFileInputChange
               }
-              multiple={false}
+              multiple={
+                false
+              }
               disabled={
-                sending
+                sending ||
+                blocked
               }
               accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx,.dxf,.dwg,.step,.stp,.iges,.igs"
             />
@@ -1449,25 +2035,227 @@ export default function ChatPage() {
             <p>
               Bitte nur ethisch
               vertretbare Inhalte
-              schreiben – im Einklang
-              mit unseren AGB.
+              schreiben – im
+              Einklang mit unseren
+              AGB.
             </p>
 
             <p>
-              Diese Unterhaltung kann
-              zur Qualitätssicherung
+              Diese Unterhaltung
+              kann zur
+              Qualitätssicherung
               mitgelesen werden.
             </p>
 
-            <button
-              type="button"
+            {/* =============================================
+                AKTIONEN
+            ============================================= */}
+
+            <div
               className={
-                styles.reportButton
+                styles.chatActions
               }
             >
-              Unterhaltung / Nutzer
-              melden
-            </button>
+              <button
+                type="button"
+                className={
+                  styles.reportButton
+                }
+                onClick={() => {
+                  setReportOpen(
+                    true
+                  )
+
+                  setReportSuccess(
+                    false
+                  )
+                }}
+              >
+                Unterhaltung /
+                Nutzer melden
+              </button>
+
+              {conversationType ===
+                'user' && (
+                <button
+                  type="button"
+                  className={
+                    styles.blockButton
+                  }
+                  onClick={() =>
+                    void toggleBlock()
+                  }
+                  disabled={
+                    blockLoading
+                  }
+                >
+                  {blockLoading
+                    ? 'Bitte warten …'
+                    : blocked
+                      ? 'Blockierung aufheben'
+                      : 'Nutzer blockieren'}
+                </button>
+              )}
+            </div>
+
+            {/* =============================================
+                MELDEBOX
+            ============================================= */}
+
+            {reportOpen && (
+              <div
+                className={
+                  styles.reportBox
+                }
+              >
+                {reportSuccess ? (
+                  <>
+                    <strong>
+                      Meldung wurde
+                      übermittelt.
+                    </strong>
+
+                    <p>
+                      Wir prüfen die
+                      Unterhaltung.
+                    </p>
+
+                    <button
+                      type="button"
+                      className={
+                        styles.reportCancelButton
+                      }
+                      onClick={() =>
+                        setReportOpen(
+                          false
+                        )
+                      }
+                    >
+                      Schließen
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <strong>
+                      Unterhaltung melden
+                    </strong>
+
+                    <select
+                      className={
+                        styles.reportSelect
+                      }
+                      value={
+                        reportReason
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setReportReason(
+                          event
+                            .target
+                            .value
+                        )
+                      }
+                    >
+                      <option value="">
+                        Grund auswählen
+                      </option>
+
+                      <option value="spam">
+                        Spam / Werbung
+                      </option>
+
+                      <option value="beleidigung">
+                        Beleidigung /
+                        Belästigung
+                      </option>
+
+                      <option value="betrug">
+                        Betrug /
+                        Täuschung
+                      </option>
+
+                      <option value="unangemessene_inhalte">
+                        Unangemessene
+                        Inhalte
+                      </option>
+
+                      <option value="sonstiges">
+                        Sonstiges
+                      </option>
+                    </select>
+
+                    <textarea
+                      className={
+                        styles.reportTextarea
+                      }
+                      value={
+                        reportDetails
+                      }
+                      maxLength={
+                        2000
+                      }
+                      placeholder="Optional: Beschreibe kurz, was passiert ist."
+                      onChange={(
+                        event
+                      ) =>
+                        setReportDetails(
+                          event
+                            .target
+                            .value
+                        )
+                      }
+                    />
+
+                    <div
+                      className={
+                        styles.reportActions
+                      }
+                    >
+                      <button
+                        type="button"
+                        className={
+                          styles.reportCancelButton
+                        }
+                        onClick={() => {
+                          setReportOpen(
+                            false
+                          )
+
+                          setReportReason(
+                            ''
+                          )
+
+                          setReportDetails(
+                            ''
+                          )
+                        }}
+                      >
+                        Abbrechen
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          styles.reportSubmitButton
+                        }
+                        disabled={
+                          !reportReason ||
+                          reportLoading
+                        }
+                        onClick={() =>
+                          void submitReport()
+                        }
+                      >
+                        {reportLoading
+                          ? 'Wird gesendet …'
+                          : 'Meldung senden'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
