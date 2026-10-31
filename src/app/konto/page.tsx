@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { supabaseBrowser } from '@/lib/supabase-browser'
 import {
   PencilIcon,
   ShoppingCartIcon,
@@ -92,6 +93,7 @@ export default function Page() {
   // ✅ NEU: Job-Angebote Badge für /konto/angebote
   const [jobOffersBadge, setJobOffersBadge] = useState(0)
   const [jobOrdersBadge, setJobOrdersBadge] = useState(0)
+  const [messageUnread, setMessageUnread] = useState(0)
 
   const tsOf = (iso?: string | null) => (iso ? +new Date(iso) : 0)
   const lastEventTs = (o: LackOrder) =>
@@ -391,6 +393,102 @@ useEffect(() => {
       clearInterval(id)
     }
   }, [])
+  useEffect(() => {
+  let alive = true
+
+  const supabase = supabaseBrowser()
+
+  let channel: ReturnType<typeof supabase.channel> | null = null
+
+  async function loadMessageUnread() {
+    try {
+      const { data, error } = await supabase.rpc('chat_my_unread_count')
+
+      if (error) {
+        console.error('[konto] chat unread:', error)
+        return
+      }
+
+      if (alive) {
+        const count = Number(data ?? 0)
+
+        setMessageUnread(
+          Number.isFinite(count) && count > 0
+            ? count
+            : 0
+        )
+      }
+    } catch (error) {
+      console.error('[konto] chat unread:', error)
+    }
+  }
+
+  async function startRealtime() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const user = session?.user
+
+    if (!alive || !user) {
+      if (alive) {
+        setMessageUnread(0)
+      }
+      return
+    }
+
+    supabase.realtime.setAuth(session.access_token)
+
+    await loadMessageUnread()
+
+    channel = supabase
+      .channel(`chat-user:${user.id}`, {
+        config: {
+          private: true,
+        },
+      })
+      .on(
+        'broadcast',
+        {
+          event: 'message_inserted',
+        },
+        () => {
+          void loadMessageUnread()
+        }
+      )
+      .on(
+        'broadcast',
+        {
+          event: 'unread_changed',
+        },
+        () => {
+          void loadMessageUnread()
+        }
+      )
+      .subscribe()
+  }
+
+  const handleChatRefresh = () => {
+    void loadMessageUnread()
+  }
+
+  window.addEventListener('chat:refresh', handleChatRefresh)
+
+  void startRealtime()
+
+  return () => {
+    alive = false
+
+    window.removeEventListener(
+      'chat:refresh',
+      handleChatRefresh
+    )
+
+    if (channel) {
+      void supabase.removeChannel(channel)
+    }
+  }
+}, [])
 
   const tiles = [
     {
@@ -436,7 +534,7 @@ useEffect(() => {
       icon: <CogIcon className="w-6 h-6 text-purple-500 fill-current stroke-current" />,
     },
     {
-      href: '/messages?empfaenger=${messageTarget}',
+      href: '/messages',
       text: 'Nachrichten',
       sub: 'Übersicht über deine Nachrichten und Chatverläufe mit anderen Usern',
       icon: <EnvelopeIcon className="w-6 h-6 text-blue-600 fill-current stroke-current" />,
@@ -449,6 +547,8 @@ useEffect(() => {
   const displayShopBuys = shopBuysBadge > 9 ? '9+' : String(shopBuysBadge)
   const displayJobOffers = jobOffersBadge > 9 ? '9+' : String(jobOffersBadge)
   const displayJobOrders = jobOrdersBadge > 9 ? '9+' : String(jobOrdersBadge)
+  const displayMessageUnread =
+  messageUnread > 9 ? '9+' : String(messageUnread)
 
   return (
     <>
@@ -523,6 +623,15 @@ useEffect(() => {
                       title={`${shopBuysBadge} Versand-Updates`}
                     >
                       {displayShopBuys}
+                    </span>
+                  )}
+                  {item.href === '/messages' && messageUnread > 0 && (
+                    <span
+                      className={styles.kontoCardBadge}
+                      aria-label={`${messageUnread} ungelesene Nachrichten`}
+                      title={`${messageUnread} ungelesene Nachrichten`}
+                    >
+                      {displayMessageUnread}
                     </span>
                   )}
 
