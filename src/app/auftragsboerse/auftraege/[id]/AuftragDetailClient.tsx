@@ -460,6 +460,8 @@ function AuftragDetailClientBody({ auftrag }: { auftrag: Auftrag }) {
   const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
   const [premiumLoaded, setPremiumLoaded] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
+  const [premiumModalAction, setPremiumModalAction] =
+  useState<'offer' | 'contact'>('offer');
   const [chatStarting, setChatStarting] = useState(false);
   const [accountType, setAccountType] = useState<string>('');
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -649,6 +651,7 @@ const reviewsHref = username
       setPremiumStatus(status);
       setPremiumLoaded(true);
       if (!ok) {
+        setPremiumModalAction('offer');
         setPremiumModalOpen(true);
         return false;
       }
@@ -690,12 +693,13 @@ const reviewsHref = username
     }
 
     if (
-      res.status === 403 &&
-      data?.error === 'premium_required'
-    ) {
-      setPremiumModalOpen(true);
-      return;
-    }
+    res.status === 403 &&
+    data?.error === 'premium_required'
+  ) {
+    setPremiumModalAction('contact');
+    setPremiumModalOpen(true);
+    return;
+  }
 
     if (!res.ok || !data?.ready) {
   if (
@@ -828,6 +832,7 @@ try {
         ) {
           setPremiumStatus('expired');
           setPremiumLoaded(true);
+          setPremiumModalAction('offer');
           setPremiumModalOpen(true);
           return;
         }
@@ -1388,7 +1393,11 @@ if ((auftrag as any).ndaLocked) {
       <PremiumRequiredModal
         open={premiumModalOpen}
         onClose={() => setPremiumModalOpen(false)}
-        actionText="auf diesen Auftrag zu bieten"
+        actionText={
+          premiumModalAction === 'contact'
+            ? 'den Auftraggeber zu kontaktieren'
+            : 'auf diesen Auftrag zu bieten'
+        }
       />
 
       {/* Lightbox */}
