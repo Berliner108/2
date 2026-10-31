@@ -149,6 +149,41 @@ type Message = {
 }
 
 
+type OwnReport = {
+  id: string
+  conversation_id: string
+  reason: string
+  details: string | null
+  status:
+    | 'open'
+    | 'reviewing'
+    | 'resolved'
+    | 'rejected'
+  created_at: string
+}
+
+function getReportStatusLabel(
+  status: OwnReport['status']
+) {
+  switch (status) {
+    case 'open':
+      return 'Offen'
+
+    case 'reviewing':
+      return 'In Prüfung'
+
+    case 'resolved':
+      return 'Erledigt'
+
+    case 'rejected':
+      return 'Abgewiesen'
+
+    default:
+      return status
+  }
+}
+
+
 
 // =====================================================
 
@@ -715,6 +750,15 @@ const newDisplayName =
     useState(false)
 
 
+  const [
+    ownReport,
+    setOwnReport,
+  ] =
+    useState<OwnReport | null>(
+      null
+    )
+
+
 
   // =====================================================
 
@@ -1079,6 +1123,60 @@ const newDisplayName =
 
 
   // =====================================================
+  // EIGENE MELDUNG LADEN
+  // =====================================================
+
+  const loadOwnReport =
+    useCallback(async () => {
+      if (
+        !chatId ||
+        isNewChat
+      ) {
+        setOwnReport(null)
+        return
+      }
+
+      try {
+        const res =
+          await fetch(
+            `/api/messages/report?conversationId=${encodeURIComponent(
+              chatId
+            )}`,
+            {
+              cache: 'no-store',
+              credentials:
+                'include',
+            }
+          )
+
+        const json =
+          await res
+            .json()
+            .catch(() => null)
+
+        if (
+          !res.ok ||
+          !json?.ok
+        ) {
+          return
+        }
+
+        setOwnReport(
+          json.report ?? null
+        )
+      } catch (error) {
+        console.error(
+          '[chat] own report:',
+          error
+        )
+      }
+    }, [
+      chatId,
+      isNewChat,
+    ])
+
+
+  // =====================================================
 
   // ERSTE NACHRICHTEN LADEN
 
@@ -1264,11 +1362,15 @@ const newDisplayName =
 
         ) {
 
-          await loadBlockStatus()
+          await Promise.all([
+            loadBlockStatus(),
+            loadOwnReport(),
+          ])
 
         } else {
 
           setBlocked(false)
+          setOwnReport(null)
 
         }
 
@@ -1309,6 +1411,8 @@ const newDisplayName =
       chatId,
 
       loadBlockStatus,
+
+      loadOwnReport,
 
       markRead,
 
@@ -1355,6 +1459,8 @@ const newDisplayName =
     setReportReason('')
 
     setReportDetails('')
+
+    setOwnReport(null)
 
 
 
@@ -2361,6 +2467,8 @@ const newDisplayName =
       setReportReason('')
 
       setReportDetails('')
+
+      await loadOwnReport()
 
     } catch (
 
@@ -4213,6 +4321,31 @@ window.dispatchEvent(
               mitgelesen werden.
 
             </p>
+
+
+
+            {conversationType === 'user' &&
+              ownReport && (
+                <div
+                  className={
+                    styles.reportStatusBox
+                  }
+                >
+                  <strong>
+                    Status deiner Meldung:
+                  </strong>
+
+                  <span
+                    className={
+                      styles.reportStatusValue
+                    }
+                  >
+                    {getReportStatusLabel(
+                      ownReport.status
+                    )}
+                  </span>
+                </div>
+              )}
 
 
 
