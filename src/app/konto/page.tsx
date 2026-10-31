@@ -293,13 +293,13 @@ useEffect(() => {
         // Optional: auch Navbar live „pingen“
         try {
           const total =
-          (offersNew || 0) +
-          newEvents +
-          pending +
-          (shopSalesBadge || 0) +
-          (shopBuysBadge || 0) +
-          (jobOffersBadge || 0) +
-          (jobOrdersBadge || 0)
+        (offersNew || 0) +
+        newEvents +
+        pending +
+        (shopSalesBadge || 0) +
+        (shopBuysBadge || 0) +
+        (jobOffersBadge || 0) +
+        (jobOrdersBadge || 0)
 
           window.dispatchEvent(new CustomEvent('navbar:badge', { detail: { total } }))
         } catch {}
@@ -311,7 +311,13 @@ useEffect(() => {
       alive = false
       clearInterval(id)
     }
-  }, [offersNew, shopSalesBadge, shopBuysBadge, jobOffersBadge, jobOrdersBadge])
+      }, [
+      offersNew,
+      shopSalesBadge,
+      shopBuysBadge,
+      jobOffersBadge,
+      jobOrdersBadge,
+    ])
 
   // ✅ NEU: Shop-Verkäufe Badge (Verkäufer) – zählt paid + complaint_open + released + refunded (wie "Events")
   useEffect(() => {
