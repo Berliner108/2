@@ -661,13 +661,33 @@ const newDisplayName =
 
   const [
 
-    blocked,
+    blockedByMe,
 
-    setBlocked,
+    setBlockedByMe,
 
   ] =
 
     useState(false)
+
+
+
+  const [
+
+    blockedByOther,
+
+    setBlockedByOther,
+
+  ] =
+
+    useState(false)
+
+
+
+  const blocked =
+
+    blockedByMe ||
+
+    blockedByOther
 
 
 
@@ -1090,11 +1110,23 @@ const newDisplayName =
 
         ) {
 
-          setBlocked(
+          setBlockedByMe(
 
             Boolean(
 
-              json.blocked
+              json.blockedByMe
+
+            )
+
+          )
+
+
+
+          setBlockedByOther(
+
+            Boolean(
+
+              json.blockedByOther
 
             )
 
@@ -1369,7 +1401,8 @@ const newDisplayName =
 
         } else {
 
-          setBlocked(false)
+          setBlockedByMe(false)
+          setBlockedByOther(false)
           setOwnReport(null)
 
         }
@@ -1448,7 +1481,9 @@ const newDisplayName =
 
 
 
-    setBlocked(false)
+    setBlockedByMe(false)
+
+    setBlockedByOther(false)
 
 
 
@@ -2140,7 +2175,7 @@ const newDisplayName =
 
     if (
 
-      !blocked &&
+      !blockedByMe &&
 
       !window.confirm(
 
@@ -2216,7 +2251,7 @@ const newDisplayName =
 
                 blocked:
 
-                  !blocked,
+                  !blockedByMe,
 
               }),
 
@@ -2250,7 +2285,7 @@ const newDisplayName =
 
         throw new Error(
 
-          blocked
+          blockedByMe
 
             ? 'Blockierung konnte nicht aufgehoben werden.'
 
@@ -2262,19 +2297,45 @@ const newDisplayName =
 
 
 
-      const nowBlocked =
+      const nowBlockedByMe =
 
         Boolean(
 
-          json.blocked
+          json.blockedByMe
 
         )
 
 
 
-      setBlocked(
+      const nowBlockedByOther =
 
-        nowBlocked
+        Boolean(
+
+          json.blockedByOther
+
+        )
+
+
+
+      const nowBlocked =
+
+        nowBlockedByMe ||
+
+        nowBlockedByOther
+
+
+
+      setBlockedByMe(
+
+        nowBlockedByMe
+
+      )
+
+
+
+      setBlockedByOther(
+
+        nowBlockedByOther
 
       )
 
@@ -2526,7 +2587,11 @@ const newDisplayName =
 
       setErrorMessage(
 
-        'Du hast diesen Nutzer blockiert.'
+        blockedByMe
+
+          ? 'Du hast diesen Nutzer blockiert.'
+
+          : 'Dieser Nutzer hat dich blockiert.'
 
       )
 
@@ -3976,13 +4041,49 @@ window.dispatchEvent(
 
           >
 
-            Du hast diesen Nutzer blockiert.
+            {blockedByMe &&
 
-            Neue Nachrichten sind nicht
+            blockedByOther ? (
 
-            möglich, bis du die Blockierung
+              <>
 
-            aufhebst.
+                Du hast diesen Nutzer blockiert.
+
+                Dieser Nutzer hat dich ebenfalls
+
+                blockiert. Neue Nachrichten sind
+
+                derzeit nicht möglich.
+
+              </>
+
+            ) : blockedByMe ? (
+
+              <>
+
+                Du hast diesen Nutzer blockiert.
+
+                Neue Nachrichten sind nicht
+
+                möglich, bis du die Blockierung
+
+                aufhebst.
+
+              </>
+
+            ) : (
+
+              <>
+
+                Dieser Nutzer hat dich blockiert.
+
+                Du kannst derzeit keine neuen
+
+                Nachrichten senden.
+
+              </>
+
+            )}
 
           </div>
 
@@ -4430,7 +4531,7 @@ window.dispatchEvent(
 
                       ? 'Bitte warten …'
 
-                      : blocked
+                      : blockedByMe
 
                         ? 'Blockierung aufheben'
 

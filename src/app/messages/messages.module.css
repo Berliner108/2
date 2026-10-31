@@ -472,8 +472,10 @@
     line-height: 1.15;
   }
 
-  .reportButton {
-    width: auto;
+  .reportButton,
+  .blockButton {
+    width: 190px;
+    min-height: 30px;
     margin-top: 0.2rem;
     padding: 0.2rem 0.55rem;
     font-size: 0.75rem;
@@ -648,6 +650,16 @@
   margin-top: 0.5rem;
 }
 
+.chatActions .reportButton,
+.chatActions .blockButton {
+  width: 220px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .blockButton {
   align-self: flex-start;
   background: transparent;
@@ -778,6 +790,11 @@
 .supportLink:hover {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* =====================================================
+   MELDESTATUS
+   ===================================================== */
+
 .reportStatusBox {
   display: flex;
   align-items: center;
