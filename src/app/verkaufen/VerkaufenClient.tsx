@@ -2107,18 +2107,6 @@ const stripeReady = connectLoaded && connect?.ready === true;
 const submitDisabled = ladeStatus || bilderWerdenOptimiert || !profileChecked;
 
 
-// Kein Premium: Verkaufsformular gar nicht anzeigen
-if (premiumInitialCheckDone && premiumAccess === false) {
-  return (
-    <PremiumRequiredModal
-      open={true}
-      onClose={() => router.back()}
-      actionText="Artikel zum Verkauf einzustellen"
-    />
-  );
-}
-
-
 return (
     
     <>
@@ -3994,6 +3982,11 @@ onFocus={() => {
 </div>
 
       </form>
+      <PremiumRequiredModal
+        open={premiumInitialCheckDone && premiumAccess === false}
+        onClose={() => router.back()}
+        actionText="Artikel zum Verkauf einzustellen"
+      />
 
       <AnimatePresence>
   {ladeStatus && (
