@@ -2297,51 +2297,13 @@ const newDisplayName =
 
 
 
-      const nowBlockedByMe =
+      const requestedBlocked =
 
-        Boolean(
-
-          json.blockedByMe
-
-        )
+        !blockedByMe
 
 
 
-      const nowBlockedByOther =
-
-        Boolean(
-
-          json.blockedByOther
-
-        )
-
-
-
-      const nowBlocked =
-
-        nowBlockedByMe ||
-
-        nowBlockedByOther
-
-
-
-      setBlockedByMe(
-
-        nowBlockedByMe
-
-      )
-
-
-
-      setBlockedByOther(
-
-        nowBlockedByOther
-
-      )
-
-
-
-      if (nowBlocked) {
+      if (requestedBlocked) {
 
         setSelectedFile(
 
@@ -2350,6 +2312,10 @@ const newDisplayName =
         )
 
       }
+
+
+
+      await loadBlockStatus()
 
     } catch (
 

@@ -116,6 +116,7 @@ async function getBlockState(
       .select('id')
       .eq('blocker_user_id', userId)
       .eq('blocked_user_id', otherUserId)
+      .limit(1)
       .maybeSingle(),
 
     admin
@@ -123,6 +124,7 @@ async function getBlockState(
       .select('id')
       .eq('blocker_user_id', otherUserId)
       .eq('blocked_user_id', userId)
+      .limit(1)
       .maybeSingle(),
   ])
 
@@ -353,87 +355,73 @@ export async function POST(req: Request) {
         )
       }
 
-      const blockState =
-        await getBlockState(
-          user.id,
-          target.otherUserId
+      return NextResponse.json({
+        ok: true,
+        blockedByMe: false,
+      })
+    }
+
+    const {
+      data: existingBlocks,
+      error: existingBlockError,
+    } = await admin
+      .from('user_blocks')
+      .select('id')
+      .eq(
+        'blocker_user_id',
+        user.id
+      )
+      .eq(
+        'blocked_user_id',
+        target.otherUserId
+      )
+      .limit(1)
+
+    if (existingBlockError) {
+      console.error(
+        '[messages/block] existing block:',
+        existingBlockError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'block_check_failed',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!existingBlocks?.length) {
+      const { error: insertError } =
+        await admin
+          .from('user_blocks')
+          .insert({
+            blocker_user_id:
+              user.id,
+            blocked_user_id:
+              target.otherUserId,
+          })
+
+      if (insertError) {
+        console.error(
+          '[messages/block] block:',
+          insertError
         )
 
-      if (!blockState.ok) {
         return NextResponse.json(
           {
             ok: false,
-            error: blockState.error,
+            error: 'block_failed',
           },
           { status: 500 }
         )
       }
-
-      return NextResponse.json({
-        ok: true,
-        blocked:
-          blockState.blocked,
-        blockedByMe:
-          blockState.blockedByMe,
-        blockedByOther:
-          blockState.blockedByOther,
-      })
-    }
-
-    const { error } = await admin
-      .from('user_blocks')
-      .upsert(
-        {
-          blocker_user_id: user.id,
-          blocked_user_id:
-            target.otherUserId,
-        },
-        {
-          onConflict:
-            'blocker_user_id,blocked_user_id',
-          ignoreDuplicates: true,
-        }
-      )
-
-    if (error) {
-      console.error(
-        '[messages/block] block:',
-        error
-      )
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error: 'block_failed',
-        },
-        { status: 500 }
-      )
-    }
-
-    const blockState =
-      await getBlockState(
-        user.id,
-        target.otherUserId
-      )
-
-    if (!blockState.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: blockState.error,
-        },
-        { status: 500 }
-      )
     }
 
     return NextResponse.json({
       ok: true,
-      blocked:
-        blockState.blocked,
-      blockedByMe:
-        blockState.blockedByMe,
-      blockedByOther:
-        blockState.blockedByOther,
+      blockedByMe: true,
     })
   } catch (error) {
     console.error(
