@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+import {
+  isSupportAgent,
+} from '@/lib/chat/helpers'
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -143,6 +147,13 @@ if (canViewAllSupport) {
     })
   }
 }
+    if (!listRows.length) {
+      return NextResponse.json({
+        ok: true,
+        conversations: [],
+        totalUnread: 0,
+      })
+    }
 
     const conversationIds = listRows
       .map((row: any) => row.conversation_id)
