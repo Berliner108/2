@@ -26,7 +26,118 @@ function isUuid(value: string) {
     value
   )
 }
+export async function GET(req: Request) {
+  try {
+    const sb = await supabaseServer()
 
+    const {
+      data: { user },
+      error: authError,
+    } = await sb.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'not_authenticated',
+        },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } =
+      new URL(req.url)
+
+    const conversationId =
+      searchParams.get('conversationId')?.trim() || ''
+
+    if (
+      !conversationId ||
+      !isUuid(conversationId)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'invalid_conversation_id',
+        },
+        { status: 400 }
+      )
+    }
+
+    const admin = supabaseAdmin()
+
+    const {
+      data: reports,
+      error: reportError,
+    } = await admin
+      .from('chat_reports')
+      .select(`
+        id,
+        conversation_id,
+        reason,
+        details,
+        status,
+        created_at
+      `)
+      .eq(
+        'conversation_id',
+        conversationId
+      )
+      .eq(
+        'reporter_user_id',
+        user.id
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
+      .limit(1)
+
+    if (reportError) {
+      console.error(
+        '[messages/report] load:',
+        reportError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'report_load_failed',
+        },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(
+      {
+        ok: true,
+        report:
+          reports?.[0] ?? null,
+      },
+      {
+        headers: {
+          'Cache-Control':
+            'no-store',
+        },
+      }
+    )
+  } catch (error) {
+    console.error(
+      '[messages/report] GET unexpected:',
+      error
+    )
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'internal_error',
+      },
+      { status: 500 }
+    )
+  }
+}
 export async function POST(req: Request) {
   try {
     const sb = await supabaseServer()
