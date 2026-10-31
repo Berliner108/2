@@ -100,6 +100,64 @@ async function getOtherUser(
   }
 }
 
+
+async function getBlockState(
+  userId: string,
+  otherUserId: string
+) {
+  const admin = supabaseAdmin()
+
+  const [
+    blockedByMeResult,
+    blockedByOtherResult,
+  ] = await Promise.all([
+    admin
+      .from('user_blocks')
+      .select('id')
+      .eq('blocker_user_id', userId)
+      .eq('blocked_user_id', otherUserId)
+      .maybeSingle(),
+
+    admin
+      .from('user_blocks')
+      .select('id')
+      .eq('blocker_user_id', otherUserId)
+      .eq('blocked_user_id', userId)
+      .maybeSingle(),
+  ])
+
+  if (
+    blockedByMeResult.error ||
+    blockedByOtherResult.error
+  ) {
+    console.error(
+      '[messages/block] status:',
+      blockedByMeResult.error ||
+        blockedByOtherResult.error
+    )
+
+    return {
+      ok: false as const,
+      error: 'block_status_failed',
+    }
+  }
+
+  const blockedByMe =
+    Boolean(blockedByMeResult.data)
+
+  const blockedByOther =
+    Boolean(blockedByOtherResult.data)
+
+  return {
+    ok: true as const,
+    blockedByMe,
+    blockedByOther,
+    blocked:
+      blockedByMe ||
+      blockedByOther,
+  }
+}
+
 // =====================================================
 // STATUS
 // =====================================================
@@ -159,34 +217,17 @@ export async function GET(req: Request) {
       )
     }
 
-    const admin = supabaseAdmin()
-
-    const {
-      data: block,
-      error,
-    } = await admin
-      .from('user_blocks')
-      .select('id')
-      .eq(
-        'blocker_user_id',
-        user.id
-      )
-      .eq(
-        'blocked_user_id',
+    const blockState =
+      await getBlockState(
+        user.id,
         target.otherUserId
       )
-      .maybeSingle()
 
-    if (error) {
-      console.error(
-        '[messages/block] status:',
-        error
-      )
-
+    if (!blockState.ok) {
       return NextResponse.json(
         {
           ok: false,
-          error: 'block_status_failed',
+          error: blockState.error,
         },
         { status: 500 }
       )
@@ -194,7 +235,12 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      blocked: Boolean(block),
+      blocked:
+        blockState.blocked,
+      blockedByMe:
+        blockState.blockedByMe,
+      blockedByOther:
+        blockState.blockedByOther,
     })
   } catch (error) {
     console.error(
@@ -307,9 +353,30 @@ export async function POST(req: Request) {
         )
       }
 
+      const blockState =
+        await getBlockState(
+          user.id,
+          target.otherUserId
+        )
+
+      if (!blockState.ok) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: blockState.error,
+          },
+          { status: 500 }
+        )
+      }
+
       return NextResponse.json({
         ok: true,
-        blocked: false,
+        blocked:
+          blockState.blocked,
+        blockedByMe:
+          blockState.blockedByMe,
+        blockedByOther:
+          blockState.blockedByOther,
       })
     }
 
@@ -343,9 +410,30 @@ export async function POST(req: Request) {
       )
     }
 
+    const blockState =
+      await getBlockState(
+        user.id,
+        target.otherUserId
+      )
+
+    if (!blockState.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: blockState.error,
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       ok: true,
-      blocked: true,
+      blocked:
+        blockState.blocked,
+      blockedByMe:
+        blockState.blockedByMe,
+      blockedByOther:
+        blockState.blockedByOther,
     })
   } catch (error) {
     console.error(
