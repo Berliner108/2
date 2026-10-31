@@ -2112,7 +2112,19 @@ return (
     <>
     
 
-<form onSubmit={handleSubmit} className={styles.container}>
+<form
+  onSubmit={handleSubmit}
+  className={styles.container}
+  style={
+    !premiumInitialCheckDone
+      ? {
+          opacity: 0.45,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }
+      : undefined
+  }
+>
   <motion.div
     {...fadeIn}
     className={styles.infoBox}
