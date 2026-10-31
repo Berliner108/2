@@ -571,6 +571,7 @@ function PageBody() {
   const [premiumStatus, setPremiumStatus] = useState<string | null>(null);
   const [premiumLoaded, setPremiumLoaded] = useState(false);
   const [premiumModalOpen, setPremiumModalOpen] = useState(false);
+  const [premiumModalAction, setPremiumModalAction] = useState<'offer' | 'contact'>('offer');
   const [chatStarting, setChatStarting] = useState(false);
 
   const requestId = rawParam ? decodeURIComponent(String(rawParam)) : '';
@@ -795,6 +796,7 @@ function PageBody() {
       setPremiumLoaded(true);
 
       if (!ok) {
+        setPremiumModalAction('offer');
         setPremiumModalOpen(true);
         return false;
       }
@@ -900,6 +902,7 @@ function PageBody() {
         ) {
           setPremiumStatus('expired');
           setPremiumLoaded(true);
+          setPremiumModalAction('offer');
           setPremiumModalOpen(true);
           return;
         }
@@ -1011,7 +1014,6 @@ function PageBody() {
       toastError('Bitte melde dich an, um eine Nachricht zu senden.');
       return;
     }
-
     if (
       res.status === 403 &&
       (
@@ -1019,9 +1021,12 @@ function PageBody() {
         json?.reason === 'premium_required'
       )
     ) {
+      setPremiumModalAction('contact');
       setPremiumModalOpen(true);
       return;
     }
+
+    
 
     if (
       json?.error === 'cannot_message_self' ||
@@ -1481,7 +1486,11 @@ const isSubmitDisabled =
       <PremiumRequiredModal
         open={premiumModalOpen}
         onClose={() => setPremiumModalOpen(false)}
-        actionText="auf diese Lackanfrage zu bieten"
+        actionText={
+          premiumModalAction === 'contact'
+            ? 'den Verkäufer zu kontaktieren'
+            : 'auf diese Lackanfrage zu bieten'
+        }
       />
 
       {slides.length > 0 && (
