@@ -26,6 +26,14 @@ export async function GET() {
     }
 
     const admin = supabaseAdmin()
+    const supportAgent =
+      await isSupportAgent(user.id)
+
+    const canViewAllSupport =
+      Boolean(
+        supportAgent &&
+        supportAgent.can_view_all_support === true
+      )
 
     const {
       data: participations,
@@ -65,16 +73,78 @@ export async function GET() {
         { status: 500 }
       )
     }
+    let listRows: any[] = [
+  ...(participations ?? []),
+]
 
-    if (!participations?.length) {
-      return NextResponse.json({
-        ok: true,
-        conversations: [],
-        totalUnread: 0,
-      })
+if (canViewAllSupport) {
+  const {
+    data: supportConversations,
+    error: supportConversationsError,
+  } = await admin
+    .from('conversations')
+    .select(`
+      id,
+      type,
+      last_message_id,
+      last_message_at,
+      created_at,
+      closed_at
+    `)
+    .eq('type', 'support')
+
+  if (supportConversationsError) {
+    console.error(
+      '[messages/list] support conversations failed:',
+      supportConversationsError
+    )
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'support_conversation_list_failed',
+      },
+      { status: 500 }
+    )
+  }
+
+  const existingConversationIds =
+    new Set(
+      listRows
+        .map(
+          (row: any) =>
+            row.conversation_id
+        )
+        .filter(Boolean)
+    )
+
+  for (
+    const conversation
+    of supportConversations ?? []
+  ) {
+    if (
+      existingConversationIds.has(
+        conversation.id
+      )
+    ) {
+      continue
     }
 
-    const conversationIds = participations
+    listRows.push({
+      id: null,
+      conversation_id:
+        conversation.id,
+      role: 'support',
+      unread_count: 0,
+      last_read_at: null,
+      joined_at: null,
+      conversations:
+        conversation,
+    })
+  }
+}
+
+    const conversationIds = listRows
       .map((row: any) => row.conversation_id)
       .filter(Boolean)
 
@@ -163,7 +233,7 @@ export async function GET() {
       }
     }
 
-    const lastMessageIds = participations
+    const lastMessageIds = listRows
       .map(
         (row: any) =>
           row.conversations?.last_message_id
@@ -207,7 +277,7 @@ export async function GET() {
       messages.map((m: any) => [m.id, m])
     )
 
-    const conversations = participations
+    const conversations = listRows
       .map((row: any) => {
         const conversation = row.conversations
 
@@ -226,6 +296,13 @@ export async function GET() {
                 (p: any) => p.user_id !== user.id
               )
             : null
+        const supportMember =
+        conversation.type === 'support'
+          ? chatParticipants.find(
+              (p: any) =>
+                p.role === 'member'
+            )
+          : null
 
         const lastMessage =
           conversation.last_message_id
@@ -272,9 +349,17 @@ export async function GET() {
               : null,
 
           displayName:
-            conversation.type === 'support'
-              ? 'Beschichter Scout Support'
-              : otherParticipant?.account_deleted_at
+          conversation.type === 'support'
+            ? canViewAllSupport
+              ? supportMember?.account_deleted_at
+                ? 'Gelöschter Nutzer'
+                : supportMember?.user_id
+                  ? usernameMap.get(
+                      supportMember.user_id
+                    ) ?? 'Nutzer'
+                  : 'Gelöschter Nutzer'
+              : 'Beschichter Scout Support'
+            : otherParticipant?.account_deleted_at
                 ? 'Gelöschter Nutzer'
                 : otherParticipant?.user_id
                   ? usernameMap.get(
@@ -298,7 +383,7 @@ export async function GET() {
         return bTime - aTime
       })
 
-    const totalUnread = participations.reduce(
+    const totalUnread = listRows.reduce(
       (sum: number, row: any) =>
         sum + Number(row.unread_count ?? 0),
       0
