@@ -575,6 +575,61 @@ router.push(`/messages/new?${chatParams.toString()}`);
     return tiers.filter((t) => t.unit === unit).length > 1;
   }, [article, tiers, unit]);
 
+  const displayedTiers = useMemo(() => {
+    if (!article) return [];
+
+    const mode = article.price_mode ?? "legacy_gross";
+    const vatRate =
+      mode === "net" &&
+      (viewerCountry === "DE" || viewerCountry === "AT") &&
+      !isCrossBorderEuB2B
+        ? standardVatRate(viewerCountry)
+        : 0;
+
+    return tiers
+      .filter((t) => t.unit === unit)
+      .sort((a, b) => a.min_qty - b.min_qty)
+      .map((t) => {
+        const storedPriceCents = Math.round(Number(t.price ?? 0) * 100);
+        const storedShippingCents = Math.round(Number(t.shipping ?? 0) * 100);
+
+        const priceCents =
+          mode === "net" && vatRate > 0
+            ? Math.round(storedPriceCents * (1 + vatRate))
+            : storedPriceCents;
+
+        const shippingCents =
+          mode === "net" && vatRate > 0
+            ? Math.round(storedShippingCents * (1 + vatRate))
+            : storedShippingCents;
+
+        return {
+          ...t,
+          displayPrice: priceCents / 100,
+          displayShipping: shippingCents / 100,
+        };
+      });
+  }, [article, tiers, unit, viewerCountry, isCrossBorderEuB2B]);
+
+  const showTierPricesAsNet =
+    article?.price_mode === "net" &&
+    (isCrossBorderEuB2B || (viewerCountry !== "DE" && viewerCountry !== "AT"));
+
+  const maxTierDiscountPercent = useMemo(() => {
+    if (displayedTiers.length < 2) return 0;
+
+    const firstPrice = displayedTiers[0]?.displayPrice ?? 0;
+    if (firstPrice <= 0) return 0;
+
+    const lowestPrice = Math.min(
+      ...displayedTiers.map((t) => Number(t.displayPrice ?? firstPrice))
+    );
+
+    if (lowestPrice >= firstPrice) return 0;
+
+    return Math.round(((firstPrice - lowestPrice) / firstPrice) * 100);
+  }, [displayedTiers]);
+
 const stockLimit = useMemo(() => {
   if (!article) return null;
 
@@ -1118,53 +1173,63 @@ if (!article) {
                 <p className={styles.preserveNewlines}>{article.description}</p>
               </div>
             )}
-{/* Staffelpreise nur bei Mengen-/Stückverkauf */}
-{article.sale_type !== "gesamt" && (
+{/* Staffelpreise nur anzeigen, wenn mindestens 2 Staffeln vorhanden sind */}
+{hasStaffelpreise && (
   <div className={styles.priceCard}>
+    {maxTierDiscountPercent > 0 && (
+      <div
+        style={{
+          marginBottom: 14,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.01em",
+        }}
+      >
+        💰 Spare bis zu <strong>{maxTierDiscountPercent} %</strong> mit Mengenrabatt
+      </div>
+    )}
+
     <div className={styles.priceHeader}>
       <h2 className={styles.priceTitle}>Staffelpreise</h2>
     </div>
 
-    {tiers.length === 0 ? (
-      <p>Keine Preisinformationen gefunden.</p>
-    ) : (
-      <div className={styles.tiersTable}>
-        <div className={styles.tiersHead}>
-          <span>Menge</span>
-          <span>
-            Preis / {unitLabel(unit, article.category)}
-            {article.price_mode === "net" ? " netto" : ""}
-          </span>
-          <span>Versand{article.price_mode === "net" ? " netto" : ""}</span>
-        </div>
-
-        {tiers
-          .filter((t) => t.unit === unit)
-          .map((t) => {
-            const isActive = chosenTier?.id === t.id;
-            const range =
-              t.max_qty != null
-                ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit, article.category)}`
-                : `ab ${t.min_qty} ${unitLabel(t.unit, article.category)}`;
-
-            return (
-              <div
-                key={t.id}
-                className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
-                aria-current={isActive ? "true" : undefined}
-              >
-                <span className={styles.tiersRange}>
-                  {range}
-                  {isActive ? <span className={styles.activePill}>aktiv</span> : null}
-                </span>
-
-                <span><strong>{euro(Number(t.price))} €</strong></span>
-                <span>{t.shipping != null ? `${euro(Number(t.shipping))} €` : "—"}</span>
-              </div>
-            );
-          })}
+    <div className={styles.tiersTable}>
+      <div className={styles.tiersHead}>
+        <span>Menge</span>
+        <span>
+          Preis / {unitLabel(unit, article.category)}
+          {showTierPricesAsNet ? " netto" : ""}
+        </span>
+        <span>Versand{showTierPricesAsNet ? " netto" : ""}</span>
       </div>
-    )}
+
+      {displayedTiers.map((t) => {
+        const isActive = chosenTier?.id === t.id;
+        const range =
+          t.max_qty != null
+            ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit, article.category)}`
+            : `ab ${t.min_qty} ${unitLabel(t.unit, article.category)}`;
+
+        return (
+          <div
+            key={t.id}
+            className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
+            aria-current={isActive ? "true" : undefined}
+          >
+            <span className={styles.tiersRange}>
+              {range}
+              {isActive ? <span className={styles.activePill}>aktiv</span> : null}
+            </span>
+
+            <span>
+              <strong>{euro(t.displayPrice)} €</strong>
+            </span>
+
+            <span>{euro(t.displayShipping)} €</span>
+          </div>
+        );
+      })}
+    </div>
   </div>
 )}
 
