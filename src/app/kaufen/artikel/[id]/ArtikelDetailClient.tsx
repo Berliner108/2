@@ -33,6 +33,7 @@ type Seller = {
 
   company_name?: string | null;
   vat_number?: string | null;
+  tax_status?: string | null;
   address?: {
     street?: string;
     houseNumber?: string;
@@ -248,6 +249,7 @@ export default function ArtikelDetailPage() {
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
   const [viewerCountry, setViewerCountry] = useState<"DE" | "AT" | "CH" | "LI" | null>(null);
   const [viewerVatNumber, setViewerVatNumber] = useState<string | null>(null);
+  const [viewerTaxStatus, setViewerTaxStatus] = useState<string | null>(null);
 
   // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -282,14 +284,14 @@ export default function ArtikelDetailPage() {
             setViewerIsBusiness(false);
             setViewerCountry(null);
             setViewerVatNumber(null);
-            setViewerVatNumber(null);
+            setViewerTaxStatus(null);
           }
           return;
         }
 
         const { data: prof, error } = await supa
           .from("profiles")
-          .select("account_type, address, vat_number")
+          .select("account_type, address, vat_number, tax_status")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -297,6 +299,7 @@ export default function ArtikelDetailPage() {
           if (!cancelled) {
             setViewerIsBusiness(false);
             setViewerCountry(null);
+            setViewerTaxStatus(null);
           }
           return;
         }
@@ -307,6 +310,11 @@ export default function ArtikelDetailPage() {
           setViewerVatNumber(
             typeof (prof as any)?.vat_number === "string" && (prof as any).vat_number.trim()
               ? (prof as any).vat_number.trim()
+              : null
+          );
+          setViewerTaxStatus(
+            typeof (prof as any)?.tax_status === "string" && (prof as any).tax_status.trim()
+              ? (prof as any).tax_status.trim()
               : null
           );
         }
@@ -514,7 +522,9 @@ router.push(`/messages/new?${chatParams.toString()}`);
   const isCrossBorderEuB2B = useMemo(() => {
     if (!viewerIsBusiness) return false;
     if (!viewerVatNumber) return false;
+    if (viewerTaxStatus !== "vat_registered") return false;
     if (seller?.account_type !== "business") return false;
+    if (seller?.tax_status !== "vat_registered") return false;
     if (!seller?.vat_number) return false;
     if (viewerCountry !== "DE" && viewerCountry !== "AT") return false;
     if (sellerCountry !== "DE" && sellerCountry !== "AT") return false;
@@ -522,8 +532,10 @@ router.push(`/messages/new?${chatParams.toString()}`);
   }, [
     viewerIsBusiness,
     viewerVatNumber,
+    viewerTaxStatus,
     viewerCountry,
     seller?.account_type,
+    seller?.tax_status,
     seller?.vat_number,
     sellerCountry,
   ]);
@@ -533,22 +545,18 @@ router.push(`/messages/new?${chatParams.toString()}`);
 
     if (mode === "net") {
       if (isCrossBorderEuB2B) {
-        return "Grenzüberschreitender B2B-Kauf DE/AT: Vorschau mit 0 % Umsatzsteuer. Die endgültige steuerliche Behandlung wird im Checkout geprüft.";
+        return "Grenzüberschreitender B2B-Kauf DE/AT mit 0 % USt.; die steuerliche Behandlung wird im Checkout nochmals geprüft.";
       }
 
-      if (viewerCountry === "DE") {
-        return "Die angezeigten Preise verstehen sich netto zzgl. 19 % deutscher Umsatzsteuer.";
+      if (viewerCountry === "DE" || viewerCountry === "AT") {
+        return "Der angezeigte Gesamtbetrag enthält die für diesen Kauf berechnete Umsatzsteuer.";
       }
 
-      if (viewerCountry === "AT") {
-        return "Die angezeigten Preise verstehen sich netto zzgl. 20 % österreichischer Umsatzsteuer.";
-      }
-
-      return "Die angezeigten Preise verstehen sich netto zzgl. gesetzlicher Umsatzsteuer. Der endgültige Steuerbetrag wird im Checkout anhand des Käuferlands bestimmt.";
+      return "Die endgültige steuerliche Behandlung wird im Checkout geprüft.";
     }
 
     if (mode === "no_vat") {
-      return "Die angezeigten Preise enthalten keine ausweisbare Umsatzsteuer.";
+      return "Keine ausweisbare Umsatzsteuer.";
     }
 
     return "Die angezeigten Preise verstehen sich inklusive gesetzlicher Umsatzsteuer.";
@@ -611,33 +619,49 @@ const chosenTier = useMemo(() => {
   const priceCalc = useMemo<PriceCalc | null>(() => {
     if (!article || !chosenTier) return null;
 
-    const p = Number(chosenTier.price ?? 0);
-    const ship = Number(chosenTier.shipping ?? 0);
+    const storedUnitPriceCents = Math.round(Number(chosenTier.price ?? 0) * 100);
+    const storedShippingCents = Math.round(Number(chosenTier.shipping ?? 0) * 100);
     const mode = article.price_mode ?? "legacy_gross";
 
-    const netArticle = article.sale_type === "gesamt" ? p : qty * p;
-    const netTotal = netArticle + ship;
+    const baseArticleCents =
+      article.sale_type === "gesamt"
+        ? storedUnitPriceCents
+        : qty * storedUnitPriceCents;
+    const baseTotalCents = baseArticleCents + storedShippingCents;
+
+    if (mode === "no_vat") {
+      return {
+        unitPrice: storedUnitPriceCents / 100,
+        shipping: storedShippingCents / 100,
+        articleTotal: baseArticleCents / 100,
+        total: baseTotalCents / 100,
+        netTotal: baseTotalCents / 100,
+        vat: 0,
+        grossTotal: baseTotalCents / 100,
+        vatRate: 0,
+      };
+    }
 
     if (mode !== "net") {
       return {
-        unitPrice: p,
-        shipping: ship,
-        articleTotal: netArticle,
-        total: netTotal,
-        netTotal: mode === "no_vat" ? netTotal : null,
-        vat: mode === "no_vat" ? 0 : null,
-        grossTotal: netTotal,
-        vatRate: mode === "no_vat" ? 0 : null,
+        unitPrice: storedUnitPriceCents / 100,
+        shipping: storedShippingCents / 100,
+        articleTotal: baseArticleCents / 100,
+        total: baseTotalCents / 100,
+        netTotal: null,
+        vat: null,
+        grossTotal: baseTotalCents / 100,
+        vatRate: null,
       };
     }
 
     if (viewerCountry !== "DE" && viewerCountry !== "AT") {
       return {
-        unitPrice: p,
-        shipping: ship,
-        articleTotal: netArticle,
-        total: netTotal,
-        netTotal,
+        unitPrice: storedUnitPriceCents / 100,
+        shipping: storedShippingCents / 100,
+        articleTotal: baseArticleCents / 100,
+        total: baseTotalCents / 100,
+        netTotal: baseTotalCents / 100,
         vat: null,
         grossTotal: null,
         vatRate: null,
@@ -646,25 +670,23 @@ const chosenTier = useMemo(() => {
 
     const vatRate = isCrossBorderEuB2B ? 0 : standardVatRate(viewerCountry);
 
-    // Gleiche Rundungslogik wie im Checkout: Einzelpreis und Versand werden
-    // jeweils auf Cent brutto gerundet, danach wird die Menge multipliziert.
-    const unitGross = Math.round(p * 100 * (1 + vatRate)) / 100;
-    const shippingGross = Math.round(ship * 100 * (1 + vatRate)) / 100;
-    const grossTotal =
+    const unitGrossCents = Math.round(storedUnitPriceCents * (1 + vatRate));
+    const shippingGrossCents = Math.round(storedShippingCents * (1 + vatRate));
+    const articleGrossCents =
       article.sale_type === "gesamt"
-        ? unitGross + shippingGross
-        : qty * unitGross + shippingGross;
-
-    const vat = grossTotal - netTotal;
+        ? unitGrossCents
+        : qty * unitGrossCents;
+    const grossTotalCents = articleGrossCents + shippingGrossCents;
+    const vatCents = grossTotalCents - baseTotalCents;
 
     return {
-      unitPrice: p,
-      shipping: ship,
-      articleTotal: netArticle,
-      total: netTotal,
-      netTotal,
-      vat,
-      grossTotal,
+      unitPrice: unitGrossCents / 100,
+      shipping: shippingGrossCents / 100,
+      articleTotal: articleGrossCents / 100,
+      total: grossTotalCents / 100,
+      netTotal: baseTotalCents / 100,
+      vat: vatCents / 100,
+      grossTotal: grossTotalCents / 100,
       vatRate,
     };
   }, [article, chosenTier, qty, viewerCountry, isCrossBorderEuB2B]);
@@ -1096,69 +1118,55 @@ if (!article) {
                 <p className={styles.preserveNewlines}>{article.description}</p>
               </div>
             )}
-{/* Staffelpreise / Preisübersicht (userfreundlich) */}
-<div className={styles.priceCard}>
-  <div className={styles.priceHeader}>
-    <h2 className={styles.priceTitle}>
-      {article.sale_type === "gesamt" ? "Preisübersicht" : "Staffelpreise"}
-    </h2>
+{/* Staffelpreise nur bei Mengen-/Stückverkauf */}
+{article.sale_type !== "gesamt" && (
+  <div className={styles.priceCard}>
+    <div className={styles.priceHeader}>
+      <h2 className={styles.priceTitle}>Staffelpreise</h2>
     </div>
 
-  {tiers.length === 0 ? (
-    <p>Keine Preisinformationen gefunden.</p>
-  ) : article.sale_type === "gesamt" ? (
-    <div className={styles.singlePriceBox}>
-      <div>
-        Artikel{article.price_mode === "net" ? " netto" : ""}: <strong>{Number(tiers[0]?.price ?? 0).toFixed(2)} €</strong>
+    {tiers.length === 0 ? (
+      <p>Keine Preisinformationen gefunden.</p>
+    ) : (
+      <div className={styles.tiersTable}>
+        <div className={styles.tiersHead}>
+          <span>Menge</span>
+          <span>
+            Preis / {unitLabel(unit, article.category)}
+            {article.price_mode === "net" ? " netto" : ""}
+          </span>
+          <span>Versand{article.price_mode === "net" ? " netto" : ""}</span>
+        </div>
+
+        {tiers
+          .filter((t) => t.unit === unit)
+          .map((t) => {
+            const isActive = chosenTier?.id === t.id;
+            const range =
+              t.max_qty != null
+                ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit, article.category)}`
+                : `ab ${t.min_qty} ${unitLabel(t.unit, article.category)}`;
+
+            return (
+              <div
+                key={t.id}
+                className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <span className={styles.tiersRange}>
+                  {range}
+                  {isActive ? <span className={styles.activePill}>aktiv</span> : null}
+                </span>
+
+                <span><strong>{euro(Number(t.price))} €</strong></span>
+                <span>{t.shipping != null ? `${euro(Number(t.shipping))} €` : "—"}</span>
+              </div>
+            );
+          })}
       </div>
-      <div>
-        Versand{article.price_mode === "net" ? " netto" : ""}: <strong>{Number(tiers[0]?.shipping ?? 0).toFixed(2)} €</strong>
-      </div>
-      <div className={styles.totalLine}>
-        {article.price_mode === "net" ? "Gesamt netto:" : "Gesamt:"}{" "}
-        <strong>
-          {(Number(tiers[0]?.price ?? 0) + Number(tiers[0]?.shipping ?? 0)).toFixed(2)} €
-        </strong>
-      </div>
-    </div>
-  ) : (
-    <div className={styles.tiersTable}>
-      <div className={styles.tiersHead}>
-        <span>Menge</span>
-        <span>Preis / {unitLabel(unit, article.category)}{article.price_mode === "net" ? " netto" : ""}</span>
-        <span>Versand{article.price_mode === "net" ? " netto" : ""}</span>
-      </div>
-
-      {tiers
-        .filter((t) => t.unit === unit)
-        .map((t) => {
-          const isActive = chosenTier?.id === t.id;
-          const range =
-            t.max_qty != null
-              ? `${t.min_qty}–${t.max_qty} ${unitLabel(t.unit, article.category)}`
-              : `ab ${t.min_qty} ${unitLabel(t.unit, article.category)}`;
-
-          return (
-            <div
-              key={t.id}
-              className={`${styles.tiersRow} ${isActive ? styles.tiersRowActive : ""}`}
-              aria-current={isActive ? "true" : undefined}
-            >
-              <span className={styles.tiersRange}>
-                {range}
-                {isActive ? <span className={styles.activePill}>aktiv</span> : null}
-              </span>
-
-              <span><strong>{Number(t.price).toFixed(2)} €</strong></span>
-
-              <span>{t.shipping != null ? `${Number(t.shipping).toFixed(2)} €` : "—"}</span>
-            </div>
-          );
-        })}
-    </div>
-  )}
-</div>
-
+    )}
+  </div>
+)}
 
             {/* Kaufen UI (ohne Warenkorb) */}
             <div className={styles.offerBox}>
@@ -1233,86 +1241,106 @@ if (!article) {
 
                 {chosenTier && priceCalc && (
   <div className={styles.buyPriceSummary}>
-    {article.sale_type === "gesamt" ? (
+    {article.price_mode === "net" &&
+    !isCrossBorderEuB2B &&
+    priceCalc.vat != null &&
+    priceCalc.vatRate != null ? (
       <>
         <div className={styles.buyPriceLine}>
           <span>
-            Artikel{article.price_mode === "net" ? " netto" : ""}:
-            {packageQuantityText && (
+            Artikel:
+            {article.sale_type === "gesamt" && packageQuantityText && (
+              <small className={styles.priceLineSub}>{packageQuantityText}</small>
+            )}
+            {article.sale_type !== "gesamt" && (
               <small className={styles.priceLineSub}>
-                {packageQuantityText}
+                {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
               </small>
             )}
           </span>
-
-          <strong>{euro(priceCalc.unitPrice)} €</strong>
-        </div>
-
-        <div className={styles.buyPriceLine}>
-          <span>Versand{article.price_mode === "net" ? " netto" : ""}:</span>
-          <strong>{euro(priceCalc.shipping)} €</strong>
-        </div>
-      </>
-    ) : (
-      <>
-        {hasStaffelpreise && (
-          <div className={styles.buyPriceLine}>
-            <span>Einzelpreis{article.price_mode === "net" ? " netto" : ""}:</span>
-            <strong>
-              {euro(priceCalc.unitPrice)} € / {unitLabel(unit, article.category)}
-            </strong>
-          </div>
-        )}
-
-        <div className={styles.buyPriceLine}>
-          <span>
-            Artikel{article.price_mode === "net" ? " netto" : ""}:
-            <small className={styles.priceLineSub}>
-              {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
-            </small>
-          </span>
-
           <strong>{euro(priceCalc.articleTotal)} €</strong>
         </div>
 
         <div className={styles.buyPriceLine}>
-          <span>Versand{article.price_mode === "net" ? " netto" : ""}:</span>
+          <span>Versand:</span>
           <strong>{euro(priceCalc.shipping)} €</strong>
         </div>
-      </>
-    )}
 
-    {article.price_mode === "net" ? (
+        <div className={styles.buyTotal}>
+          <span>Gesamtbetrag:</span>
+          <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
+        </div>
+
+        <div className={styles.buyPriceLine}>
+          <span>inkl. USt. ({Math.round(priceCalc.vatRate * 100)} %):</span>
+          <strong>{euro(priceCalc.vat)} €</strong>
+        </div>
+      </>
+    ) : article.price_mode === "net" && isCrossBorderEuB2B ? (
       <>
         <div className={styles.buyPriceLine}>
+          <span>
+            Artikel netto:
+            {article.sale_type === "gesamt" && packageQuantityText && (
+              <small className={styles.priceLineSub}>{packageQuantityText}</small>
+            )}
+            {article.sale_type !== "gesamt" && (
+              <small className={styles.priceLineSub}>
+                {qty} {unitLabel(unit, article.category)} × {euro(Number(chosenTier.price))} €
+              </small>
+            )}
+          </span>
+          <strong>
+            {euro(
+              article.sale_type === "gesamt"
+                ? Number(chosenTier.price)
+                : qty * Number(chosenTier.price)
+            )} €
+          </strong>
+        </div>
+
+        <div className={styles.buyPriceLine}>
+          <span>Versand netto:</span>
+          <strong>{euro(Number(chosenTier.shipping ?? 0))} €</strong>
+        </div>
+
+        <div className={styles.buyTotal}>
           <span>Gesamt netto:</span>
           <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
         </div>
 
-        {priceCalc.vat != null && priceCalc.vatRate != null ? (
-          <>
-            <div className={styles.buyPriceLine}>
-              <span>USt. ({Math.round(priceCalc.vatRate * 100)} %):</span>
-              <strong>{euro(priceCalc.vat)} €</strong>
-            </div>
-
-            <div className={styles.buyTotal}>
-              <span>Gesamtbetrag:</span>
-              <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
-            </div>
-          </>
-        ) : (
-          <div className={styles.buyTotal}>
-            <span>Gesamt netto:</span>
-            <strong>{euro(priceCalc.netTotal ?? priceCalc.total)} €</strong>
-          </div>
-        )}
+        <div className={styles.buyPriceLine}>
+          <span>USt.:</span>
+          <strong>0,00 €</strong>
+        </div>
       </>
     ) : (
-      <div className={styles.buyTotal}>
-        <span>{article.price_mode === "no_vat" ? "Gesamt (ohne USt.):" : "Gesamt:"}</span>
-        <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
-      </div>
+      <>
+        <div className={styles.buyPriceLine}>
+          <span>
+            Artikel:
+            {article.sale_type === "gesamt" && packageQuantityText && (
+              <small className={styles.priceLineSub}>{packageQuantityText}</small>
+            )}
+            {article.sale_type !== "gesamt" && (
+              <small className={styles.priceLineSub}>
+                {qty} {unitLabel(unit, article.category)} × {euro(priceCalc.unitPrice)} €
+              </small>
+            )}
+          </span>
+          <strong>{euro(priceCalc.articleTotal)} €</strong>
+        </div>
+
+        <div className={styles.buyPriceLine}>
+          <span>Versand:</span>
+          <strong>{euro(priceCalc.shipping)} €</strong>
+        </div>
+
+        <div className={styles.buyTotal}>
+          <span>{article.price_mode === "no_vat" ? "Gesamtbetrag:" : "Gesamt:"}</span>
+          <strong>{euro(priceCalc.grossTotal ?? priceCalc.total)} €</strong>
+        </div>
+      </>
     )}
   </div>
 )}
@@ -1381,7 +1409,9 @@ if (!article) {
 
                 <p className={styles.offerNote}>
                   {taxPriceNote}{" "}
-                  Mit dem Kauf bestätigst du die geltenden AGB zu akzeptieren.
+                  Mit dem Kauf bestätigst du, die geltenden{" "}
+                  <Link href="/agb" className={styles.kontaktLink}>AGB</Link>{" "}
+                  zu akzeptieren.
                 </p>
               </div>
             </div>

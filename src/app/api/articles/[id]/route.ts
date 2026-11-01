@@ -192,6 +192,7 @@ export async function GET(req: Request) {
 
   company_name: string | null;
   vat_number: string | null;
+  tax_status: string | null;
   address: any | null;
   imprint_email: string | null;
   imprint_phone: string | null;
@@ -215,6 +216,7 @@ export async function GET(req: Request) {
   rating_count,
   company_name,
   vat_number,
+  tax_status,
   address,
   imprint_email,
   imprint_phone,
@@ -239,6 +241,7 @@ export async function GET(req: Request) {
 
   company_name: (prof as any).company_name ?? null,
   vat_number: (prof as any).vat_number ?? null,
+  tax_status: (prof as any).tax_status ?? null,
   address: (prof as any).address ?? null,
   imprint_email: (prof as any).imprint_email ?? null,
   imprint_phone: (prof as any).imprint_phone ?? null,
