@@ -263,6 +263,7 @@ export default function ArtikelDetailPage() {
 }, [article]);
 
   const [qty, setQty] = useState<number>(1);
+  const [qtyInput, setQtyInput] = useState<string>("1");
 
   const [qtyHint, setQtyHint] = useState<string | null>(null);
     const [buyLoading, setBuyLoading] = useState(false);
@@ -651,18 +652,20 @@ const packageQuantityText = useMemo(() => {
 useEffect(() => {
   if (stockLimit != null && qty > stockLimit) {
     setQty(stockLimit);
-    setQtyHint(`Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article?.category)}`);
+    setQtyInput(String(stockLimit));
+    setQtyHint(null);
     return;
+  }
+
+  if (qty < 1) {
+    setQty(1);
+    setQtyInput("1");
   }
 
   if (qtyHint) {
     setQtyHint(null);
   }
-
-  if (qty < 1) {
-    setQty(1);
-  }
-}, [stockLimit, qty, unit, article?.category, qtyHint]);
+}, [stockLimit, qty, qtyHint]);
 
 const chosenTier = useMemo(() => {
   if (!article) return null;
@@ -1256,41 +1259,40 @@ if (!article) {
         min={1}
         max={stockLimit ?? undefined}
         step={1}
-        value={qty}
+        value={qtyInput}
         onChange={(e) => {
           const raw = e.target.value;
+          setQtyInput(raw);
 
           if (raw === "") {
-            setQty(1);
             return;
           }
 
           const num = Number(raw);
+          if (!Number.isFinite(num)) return;
 
-          if (!Number.isFinite(num)) {
+          const next = Math.max(1, Math.floor(num));
+          setQty(next);
+          setQtyHint(null);
+        }}
+        onBlur={() => {
+          const num = Number(qtyInput);
+
+          if (!Number.isFinite(num) || qtyInput.trim() === "" || num < 1) {
             setQty(1);
+            setQtyInput("1");
             return;
           }
 
-          let next = Math.max(1, Math.floor(num));
+          let next = Math.floor(num);
 
           if (stockLimit != null && next > stockLimit) {
             next = stockLimit;
-            setQtyHint(
-              `Maximal verfügbar: ${stockLimit} ${unitLabel(unit, article.category)}`
-            );
-          } else {
-            setQtyHint(null);
           }
 
           setQty(next);
-        }}
-        onBlur={() => {
-          if (qty < 1) setQty(1);
-
-          if (stockLimit != null && qty > stockLimit) {
-            setQty(stockLimit);
-          }
+          setQtyInput(String(next));
+          setQtyHint(null);
         }}
       />
 
@@ -1301,8 +1303,6 @@ if (!article) {
   )}
 </div></div>
 
-
-                {qtyHint && <div className={styles.qtyHint}>{qtyHint}</div>}
 
                 {chosenTier && priceCalc && (
   <div className={styles.buyPriceSummary}>
