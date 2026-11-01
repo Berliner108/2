@@ -113,7 +113,7 @@ async function getBlockState(
   ] = await Promise.all([
     admin
       .from('user_blocks')
-      .select('id')
+      .select('blocker_user_id')
       .eq('blocker_user_id', userId)
       .eq('blocked_user_id', otherUserId)
       .limit(1)
@@ -121,7 +121,7 @@ async function getBlockState(
 
     admin
       .from('user_blocks')
-      .select('id')
+      .select('blocker_user_id')
       .eq('blocker_user_id', otherUserId)
       .eq('blocked_user_id', userId)
       .limit(1)
@@ -366,7 +366,7 @@ export async function POST(req: Request) {
       error: existingBlockError,
     } = await admin
       .from('user_blocks')
-      .select('id')
+      .select('blocker_user_id')
       .eq(
         'blocker_user_id',
         user.id
