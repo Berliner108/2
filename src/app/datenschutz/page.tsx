@@ -92,6 +92,40 @@ const DatenschutzPage = () => {
 </section>
 
       <section className={styles.section}>
+        <h2 className={styles.subheading}>3a. Chatfunktion und Prüfung von Kommunikationsinhalten</h2>
+        <p>
+          Wenn Sie die Chatfunktion der Plattform nutzen, verarbeiten wir die dabei übermittelten Kommunikationsdaten.
+          Hierzu können insbesondere Chatnachrichten, übermittelte Dateien und Anhänge, beteiligte Nutzerkonten,
+          Zeitpunkte der Kommunikation sowie technische Kommunikationsdaten gehören.
+        </p>
+        <p>
+          Die Verarbeitung erfolgt zur Bereitstellung und Durchführung der Chatfunktion sowie, soweit erforderlich,
+          zur Bearbeitung von Supportanfragen, Meldungen und Beschwerden, zur Qualitätssicherung, zur Verhinderung und
+          Aufklärung von Missbrauch oder Betrug, zur Durchsetzung unserer Nutzungsbedingungen, zur Gewährleistung der
+          Sicherheit der Plattform und zur Klärung von Streitfällen.
+        </p>
+        <p>
+          Soweit die Verarbeitung zur Bereitstellung der von Ihnen genutzten Kommunikationsfunktion erforderlich ist,
+          erfolgt sie auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO. Soweit wir Kommunikationsinhalte zur
+          Missbrauchsabwehr, Betrugsprävention, Qualitätssicherung, Sicherheit oder Rechtsdurchsetzung prüfen, erfolgt
+          die Verarbeitung auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt
+          insbesondere im sicheren und ordnungsgemäßen Betrieb der Plattform sowie im Schutz der Plattform und ihrer
+          Nutzer:innen vor Missbrauch und rechtswidrigem Verhalten.
+        </p>
+        <p>
+          Chatnachrichten und sonstige Kommunikationsinhalte können zu diesen Zwecken durch hierzu berechtigte Personen
+          des Plattformbetreibers eingesehen und geprüft werden. Ein Zugriff erfolgt nur im Rahmen der jeweiligen
+          Aufgaben und Zwecke.
+        </p>
+        <p>
+          Die Kommunikationsdaten werden nur so lange gespeichert, wie dies für die genannten Zwecke erforderlich ist.
+          Eine längere Speicherung kann erfolgen, soweit gesetzliche Aufbewahrungspflichten bestehen oder die Daten zur
+          Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen benötigt werden. Danach werden die Daten
+          gelöscht oder anonymisiert, soweit keine gesetzlichen Pflichten entgegenstehen.
+        </p>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.subheading}>4. E-mail-Newsletter</h2>
         <p>
         Wenn Sie sich zu unserem Newsletter anmelden, verwenden wir die hierfür erforderlichen oder gesondert von Ihnen mitgeteilten Daten, um Ihnen 

@@ -9,7 +9,7 @@ const AgbPage = () => {
       <h1 className={styles.heading}>Allgemeine Geschäftsbedingungen (AGB)</h1>
       <section className={styles.section}>
   <p>
-    <strong>Stand:</strong> 28.10.2026
+    <strong>Stand:</strong> 01.11.2026
   </p>
   <p>
     Diese AGB gelten ergänzend zum Impressum, zur Datenschutzerklärung sowie zu allen auf der Plattform
@@ -673,6 +673,31 @@ const AgbPage = () => {
         <p>
           Bei der Auswahl von Maßnahmen können Schwere und Art des Verstoßes, ein etwaiges Verschulden sowie wiederholte Verstöße
           berücksichtigt werden. Betroffene können über wesentliche Maßnahmen in geeigneter Weise informiert werden.
+        </p>
+      </section>
+
+      <h2 className={styles.subheading}>23a. Chatfunktion, Einsicht und Moderation</h2>
+      <section className={styles.section}>
+        <p>
+          Die Plattform stellt registrierten Nutzer:innen eine Chatfunktion zur Kommunikation mit anderen Nutzer:innen
+          sowie mit dem Support von Beschichter Scout zur Verfügung.
+        </p>
+        <p>
+          Chatnachrichten, übermittelte Dateien und sonstige Kommunikationsinhalte können durch hierzu berechtigte
+          Personen des Plattformbetreibers eingesehen und geprüft werden, soweit dies insbesondere zur Bearbeitung von
+          Meldungen, Beschwerden oder Supportanfragen, zur Qualitätssicherung, zur Verhinderung und Aufklärung von
+          Missbrauch oder Betrug, zur Durchsetzung dieser AGB, zur Gewährleistung der Sicherheit der Plattform oder zur
+          Klärung von Streitfällen erforderlich ist.
+        </p>
+        <p>
+          Nutzer:innen sind verpflichtet, die Chatfunktion sachlich und rechtmäßig zu verwenden. Insbesondere dürfen
+          keine rechtswidrigen, beleidigenden, diskriminierenden, betrügerischen, bedrohenden oder sonstigen unzulässigen
+          Inhalte übermittelt werden. Bei Verstößen kann die Plattform nach Maßgabe dieser AGB geeignete Maßnahmen
+          ergreifen.
+        </p>
+        <p>
+          Weitere Informationen zur Verarbeitung personenbezogener Daten im Zusammenhang mit der Chatfunktion ergeben
+          sich aus der Datenschutzerklärung.
         </p>
       </section>
 
