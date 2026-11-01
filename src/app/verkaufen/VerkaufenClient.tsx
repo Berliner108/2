@@ -260,6 +260,30 @@ const MONEY_HARD_MAX   = 99999.99;  // Preis/Versand max 99 999.99
 
 type ConnectStatus = { ready: boolean; reason?: string | null; mode?: 'test' | 'live' };
 
+function connectReasonText(reason?: string | null): string | null {
+  const r = String(reason ?? '').trim();
+
+  if (!r) return null;
+
+  if (r === 'requirements.past_due') {
+    return 'Für dein Stripe-Auszahlungskonto fehlen noch erforderliche Angaben oder Verifizierungen.';
+  }
+
+  if (r === 'requirements.currently_due') {
+    return 'Für dein Stripe-Auszahlungskonto sind noch Angaben oder Verifizierungen erforderlich.';
+  }
+
+  if (r === 'requirements.pending_verification') {
+    return 'Stripe prüft derzeit deine Angaben. Sobald die Prüfung abgeschlossen ist, kannst du Artikel einstellen.';
+  }
+
+  if (r === 'charges_disabled' || r === 'payouts_disabled') {
+    return 'Dein Stripe-Auszahlungskonto ist noch nicht vollständig freigeschaltet.';
+  }
+
+  return 'Dein Stripe-Auszahlungskonto ist noch nicht vollständig verifiziert.';
+}
+
 function ArtikelEinstellen() {
   const router = useRouter()
 const [overlayTitle, setOverlayTitle] = useState('Wir stellen deinen Artikel ein …')
@@ -2104,7 +2128,7 @@ const blurStaffelMoney = (index: number, field: 'preis' | 'versand') => {
 
 const progress = berechneFortschritt();
 const stripeReady = connectLoaded && connect?.ready === true;
-const submitDisabled = ladeStatus || bilderWerdenOptimiert || !profileChecked;
+const submitDisabled = ladeStatus || bilderWerdenOptimiert || !profileChecked || !stripeReady;
 
 
 return (
@@ -2141,8 +2165,10 @@ return (
         Um Auszahlungen empfangen zu können, musst du ein Auszahlungsprofil bei Stripe anlegen.
       </p>
 
-      {connect?.reason && (
-        <p style={{ margin: 0, fontWeight: 500 }}>{connect.reason}</p>
+      {connectReasonText(connect?.reason) && (
+        <p style={{ margin: 0, fontWeight: 500 }}>
+          {connectReasonText(connect?.reason)}
+        </p>
       )}
 
       <div className={styles.connectActions}>
