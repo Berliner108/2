@@ -214,6 +214,17 @@
   background-color: #00e5ff;
 }
 
+.submitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background-color: #94a3b8;
+  pointer-events: none;
+}
+
+.submitBtn:disabled:hover {
+  background-color: #94a3b8;
+}
+
 /* Kategorie-Icons */
 
 .kategorieContainer {
