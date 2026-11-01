@@ -1465,13 +1465,6 @@ if (!article) {
                   </p>
                 )}
 
-
-                {disableBuy && (
-                  <p className={styles.offerNote} style={{ color: "#b00020" }}>
-                    Bitte Menge/Einheit prüfen (oder Bestand überschritten).
-                  </p>
-                )}
-
                 <p className={styles.offerNote}>
                   {taxPriceNote}{" "}
                   Mit dem Kauf bestätigst du, die geltenden{" "}
