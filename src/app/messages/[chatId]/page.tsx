@@ -4362,17 +4362,14 @@ window.dispatchEvent(
           >
 
             <p>
-
-              Bitte nur ethisch
-
-              vertretbare Inhalte
-
-              schreiben – im
-
-              Einklang mit unseren
-
-              AGB.
-
+              Bitte achte auf einen respektvollen und sachlichen Austausch. Es gelten unsere{' '}
+              <a
+                href="/agb"
+                className={styles.noticeLink}
+              >
+                AGB
+              </a>
+              .
             </p>
 
 

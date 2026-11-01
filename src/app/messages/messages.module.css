@@ -660,6 +660,14 @@
   box-sizing: border-box;
   margin-top: 0.5rem;
 }
+.noticeLink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.noticeLink:hover {
+  text-decoration-thickness: 2px;
+}
 
 .blockButton {
   align-self: flex-start;
