@@ -167,10 +167,11 @@ if (canViewAllSupport) {
       .select(`
         id,
         conversation_id,
-        user_id,
-        role,
-        display_name_snapshot,
-        account_deleted_at
+        sender_participant_id,
+        message_type,
+        content,
+        deleted_at,
+        created_at
       `)
       .in('conversation_id', conversationIds)
       .is('left_at', null)
@@ -315,12 +316,24 @@ if (canViewAllSupport) {
             )
           : null
 
-        const lastMessage =
-          conversation.last_message_id
-            ? messageMap.get(
-                conversation.last_message_id
-              ) ?? null
-            : null
+        const rawLastMessage =
+  conversation.last_message_id
+    ? messageMap.get(
+        conversation.last_message_id
+      ) ?? null
+    : null
+
+const lastMessage =
+  rawLastMessage
+    ? {
+        ...rawLastMessage,
+
+        content:
+          rawLastMessage.deleted_at
+            ? 'Nachricht gelöscht'
+            : rawLastMessage.content,
+      }
+    : null
 
         return {
           id: conversation.id,
