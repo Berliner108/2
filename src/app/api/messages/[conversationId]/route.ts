@@ -520,6 +520,7 @@ export async function GET(
           message_type,
           content,
           client_message_id,
+          reply_to_message_id,
           created_at,
           message_attachments (
             id,
@@ -649,6 +650,99 @@ export async function GET(
         ...page,
       ].reverse()
 
+    const replyIds =
+      Array.from(
+        new Set(
+          messages
+            .map(
+              (message: any) =>
+                message
+                  .reply_to_message_id
+            )
+            .filter(
+              (
+                id: unknown
+              ): id is string =>
+                typeof id ===
+                  'string' &&
+                id.length > 0
+            )
+        )
+      )
+
+    const replyMap =
+      new Map<string, any>()
+
+    if (replyIds.length) {
+      const {
+        data:
+          replyMessages,
+        error:
+          replyMessagesError,
+      } =
+        await admin
+          .from('messages')
+          .select(`
+            id,
+            conversation_id,
+            sender_participant_id,
+            message_type,
+            content,
+            message_attachments (
+              id,
+              original_filename,
+              mime_type,
+              file_extension,
+              file_size,
+              storage_path,
+              created_at
+            )
+          `)
+          .in(
+            'id',
+            replyIds
+          )
+          .eq(
+            'conversation_id',
+            conversationId
+          )
+
+      if (
+        replyMessagesError
+      ) {
+        console.error(
+          '[messages/detail] reply messages load failed:',
+          replyMessagesError
+        )
+      } else {
+        for (
+          const replyMessage
+          of replyMessages ?? []
+        ) {
+          replyMap.set(
+            replyMessage.id,
+            replyMessage
+          )
+        }
+      }
+    }
+
+    const messagesWithReplies =
+      messages.map(
+        (message: any) => ({
+          ...message,
+
+          reply_to_message:
+            message
+              .reply_to_message_id
+              ? replyMap.get(
+                  message
+                    .reply_to_message_id
+                ) ?? null
+              : null,
+        })
+      )
+
     // =====================================================
     // 10) RESPONSE
     // =====================================================
@@ -678,7 +772,8 @@ export async function GET(
           otherLastReadAt,
         },
 
-        messages,
+        messages:
+          messagesWithReplies,
 
         hasMore,
 

@@ -142,6 +142,16 @@ type Message = {
 
   created_at: string
 
+  reply_to_message_id?: string | null
+
+  reply_to_message?: {
+    id: string
+    sender_participant_id: string | null
+    message_type: string
+    content: string | null
+    message_attachments?: Attachment[]
+  } | null
+
 
 
   message_attachments?: Attachment[]
@@ -564,6 +574,22 @@ const newDisplayName =
   ] =
 
     useState<File | null>(
+
+      null
+
+    )
+
+
+
+  const [
+
+    replyingTo,
+
+    setReplyingTo,
+
+  ] =
+
+    useState<Message | null>(
 
       null
 
@@ -1494,6 +1520,8 @@ const newDisplayName =
     setMessages([])
 
     setSelectedFile(null)
+
+    setReplyingTo(null)
 
     setInputValue('')
 
@@ -2849,6 +2877,96 @@ const newDisplayName =
 
   // =====================================================
 
+  // AUF NACHRICHT ANTWORTEN / ZUR ORIGINALNACHRICHT
+
+  // =====================================================
+
+
+
+  function startReply(
+
+    message: Message
+
+  ) {
+
+    setReplyingTo(
+
+      message
+
+    )
+
+  }
+
+
+
+  function scrollToMessage(
+
+    messageId: string
+
+  ) {
+
+    const element =
+
+      document.querySelector<HTMLElement>(
+
+        `[data-message-id="${messageId}"]`
+
+      )
+
+
+
+    if (!element) {
+
+      return
+
+    }
+
+
+
+    element.scrollIntoView({
+
+      behavior: 'smooth',
+
+      block: 'center',
+
+    })
+
+
+
+    element.animate(
+
+      [
+
+        {
+
+          opacity: 0.55,
+
+        },
+
+        {
+
+          opacity: 1,
+
+        },
+
+      ],
+
+      {
+
+        duration: 700,
+
+        easing: 'ease-out',
+
+      }
+
+    )
+
+  }
+
+
+
+  // =====================================================
+
   // NACHRICHT SENDEN
 
   // =====================================================
@@ -3353,6 +3471,14 @@ if (isNewChat) {
 
 
 
+                replyToMessageId:
+
+                  replyingTo?.id ??
+
+                  null,
+
+
+
                 attachment:
 
                   attachment ??
@@ -3536,6 +3662,8 @@ if (isNewChat) {
       setInputValue('')
 
 setSelectedFile(null)
+
+setReplyingTo(null)
 
 
 
@@ -4011,6 +4139,12 @@ window.dispatchEvent(
 
                     }
 
+                    data-message-id={
+
+                      message.id
+
+                    }
+
                     className={`${styles.messageItem} ${
 
                       mine
@@ -4022,6 +4156,138 @@ window.dispatchEvent(
                     }`}
 
                   >
+
+                    {message.reply_to_message && (
+
+                      <button
+
+                        type="button"
+
+                        onClick={() =>
+
+                          scrollToMessage(
+
+                            message
+
+                              .reply_to_message!
+
+                              .id
+
+                          )
+
+                        }
+
+                        style={{
+
+                          display: 'block',
+
+                          width: '100%',
+
+                          marginBottom: 8,
+
+                          padding: '7px 9px',
+
+                          border: 'none',
+
+                          borderLeft:
+
+                            '3px solid currentColor',
+
+                          borderRadius: 6,
+
+                          background:
+
+                            'rgba(0, 0, 0, 0.06)',
+
+                          color: 'inherit',
+
+                          textAlign: 'left',
+
+                          cursor: 'pointer',
+
+                          font: 'inherit',
+
+                        }}
+
+                        aria-label="Zur ursprünglichen Nachricht springen"
+
+                      >
+
+                        <strong
+
+                          style={{
+
+                            display: 'block',
+
+                            marginBottom: 2,
+
+                            fontSize: '0.82em',
+
+                          }}
+
+                        >
+
+                          {message
+
+                            .reply_to_message
+
+                            .sender_participant_id ===
+
+                          myParticipantId
+
+                            ? 'Du'
+
+                            : displayName}
+
+                        </strong>
+
+                        <span
+
+                          style={{
+
+                            display: 'block',
+
+                            overflow: 'hidden',
+
+                            textOverflow:
+
+                              'ellipsis',
+
+                            whiteSpace: 'nowrap',
+
+                            fontSize: '0.9em',
+
+                            opacity: 0.8,
+
+                          }}
+
+                        >
+
+                          {message
+
+                            .reply_to_message
+
+                            .content
+
+                            ?.trim() ||
+
+                            message
+
+                              .reply_to_message
+
+                              .message_attachments?.[0]
+
+                              ?.original_filename ||
+
+                            'Nachricht'}
+
+                        </span>
+
+                      </button>
+
+                    )}
+
+
 
                     {message.content && (
 
@@ -4161,6 +4427,74 @@ window.dispatchEvent(
 
                     </div>
 
+
+
+                    {message.message_type !==
+
+                      'system' && (
+
+                      <button
+
+                        type="button"
+
+                        onClick={() =>
+
+                          startReply(
+
+                            message
+
+                          )
+
+                        }
+
+                        disabled={
+
+                          sending ||
+
+                          blocked
+
+                        }
+
+                        style={{
+
+                          marginTop: 4,
+
+                          padding: 0,
+
+                          border: 'none',
+
+                          background:
+
+                            'transparent',
+
+                          color: 'inherit',
+
+                          font: 'inherit',
+
+                          fontSize: '0.78em',
+
+                          opacity: 0.65,
+
+                          cursor:
+
+                            sending ||
+
+                            blocked
+
+                              ? 'default'
+
+                              : 'pointer',
+
+                        }}
+
+                      >
+
+                        Antworten
+
+                      </button>
+
+                    )}
+
                   </li>
 
                 )
@@ -4236,6 +4570,168 @@ window.dispatchEvent(
               </>
 
             )}
+
+          </div>
+
+        )}
+
+
+
+        {/* =================================================
+
+            ANTWORTVORSCHAU
+
+        ================================================= */}
+
+
+
+        {replyingTo && (
+
+          <div
+
+            style={{
+
+              display: 'flex',
+
+              alignItems: 'center',
+
+              justifyContent:
+
+                'space-between',
+
+              gap: 12,
+
+              marginBottom: 8,
+
+              padding: '8px 10px',
+
+              borderLeft:
+
+                '3px solid #111',
+
+              borderRadius: 6,
+
+              background: '#f3f3f3',
+
+            }}
+
+          >
+
+            <div
+
+              style={{
+
+                minWidth: 0,
+
+              }}
+
+            >
+
+              <strong
+
+                style={{
+
+                  display: 'block',
+
+                  marginBottom: 2,
+
+                  fontSize: '0.82rem',
+
+                }}
+
+              >
+
+                Antwort auf{' '}
+
+                {replyingTo
+
+                  .sender_participant_id ===
+
+                myParticipantId
+
+                  ? 'dich'
+
+                  : displayName}
+
+              </strong>
+
+              <div
+
+                style={{
+
+                  overflow: 'hidden',
+
+                  textOverflow:
+
+                    'ellipsis',
+
+                  whiteSpace: 'nowrap',
+
+                  fontSize: '0.9rem',
+
+                }}
+
+              >
+
+                {replyingTo.content
+
+                  ?.trim() ||
+
+                  replyingTo
+
+                    .message_attachments?.[0]
+
+                    ?.original_filename ||
+
+                  'Nachricht'}
+
+              </div>
+
+            </div>
+
+
+
+            <button
+
+              type="button"
+
+              onClick={() =>
+
+                setReplyingTo(
+
+                  null
+
+                )
+
+              }
+
+              disabled={sending}
+
+              aria-label="Antwort abbrechen"
+
+              style={{
+
+                flex: '0 0 auto',
+
+                border: 'none',
+
+                background:
+
+                  'transparent',
+
+                fontSize: '1.3rem',
+
+                lineHeight: 1,
+
+                cursor: 'pointer',
+
+              }}
+
+            >
+
+              ×
+
+            </button>
 
           </div>
 

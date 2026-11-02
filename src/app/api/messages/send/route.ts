@@ -34,6 +34,7 @@ type Body = {
   conversationId?: string
   content?: string
   clientMessageId?: string
+  replyToMessageId?: string | null
   attachment?: AttachmentBody | null
 }
 
@@ -80,6 +81,11 @@ export async function POST(req: Request) {
         ? raw.content.trim()
         : ''
 
+    const replyToMessageId =
+      typeof raw.replyToMessageId === 'string'
+        ? raw.replyToMessageId.trim()
+        : ''
+
     if (
       !conversationId ||
       !isUuid(conversationId)
@@ -101,6 +107,19 @@ export async function POST(req: Request) {
         {
           ok: false,
           error: 'invalid_client_message_id',
+        },
+        { status: 400 }
+      )
+    }
+
+    if (
+      replyToMessageId &&
+      !isUuid(replyToMessageId)
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'invalid_reply_message_id',
         },
         { status: 400 }
       )
@@ -160,6 +179,37 @@ export async function POST(req: Request) {
 
     const admin = supabaseAdmin()
 
+    if (replyToMessageId) {
+      const {
+        data: replyMessage,
+        error: replyMessageError,
+      } = await admin
+        .from('messages')
+        .select('id')
+        .eq('id', replyToMessageId)
+        .eq(
+          'conversation_id',
+          conversationId
+        )
+        .maybeSingle()
+
+      if (
+        replyMessageError ||
+        !replyMessage
+      ) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              'reply_message_not_found',
+            message:
+              'Die Nachricht, auf die du antworten möchtest, wurde nicht gefunden.',
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     // =====================================================
     // NORMALE TEXTNACHRICHT
     // =====================================================
@@ -183,6 +233,10 @@ export async function POST(req: Request) {
 
           client_message_id:
             clientMessageId,
+
+          reply_to_message_id:
+            replyToMessageId ||
+            null,
         })
         .select(`
           id,
@@ -191,6 +245,7 @@ export async function POST(req: Request) {
           message_type,
           content,
           client_message_id,
+          reply_to_message_id,
           created_at
         `)
         .single()
@@ -208,6 +263,7 @@ export async function POST(req: Request) {
               message_type,
               content,
               client_message_id,
+              reply_to_message_id,
               created_at
             `)
             .eq(
@@ -495,6 +551,7 @@ export async function POST(req: Request) {
             message_type,
             content,
             client_message_id,
+            reply_to_message_id,
             created_at,
             message_attachments (
               id,
@@ -544,6 +601,43 @@ export async function POST(req: Request) {
       )
     }
 
+    if (
+      replyToMessageId &&
+      messageId
+    ) {
+      const {
+        error: replyUpdateError,
+      } = await admin
+        .from('messages')
+        .update({
+          reply_to_message_id:
+            replyToMessageId,
+        })
+        .eq('id', messageId)
+        .eq(
+          'conversation_id',
+          conversationId
+        )
+
+      if (replyUpdateError) {
+        console.error(
+          '[messages/send] file reply update:',
+          replyUpdateError
+        )
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              'reply_update_failed',
+            message:
+              'Die Antwortverknüpfung konnte nicht gespeichert werden.',
+          },
+          { status: 500 }
+        )
+      }
+    }
+
     const {
       data: message,
       error: messageLoadError,
@@ -556,6 +650,7 @@ export async function POST(req: Request) {
         message_type,
         content,
         client_message_id,
+        reply_to_message_id,
         created_at,
         message_attachments (
           id,
