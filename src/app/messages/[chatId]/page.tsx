@@ -858,6 +858,12 @@ const newDisplayName =
 
 
 
+  const userAtBottomRef =
+
+    useRef(true)
+
+
+
   // =====================================================
 
   // SCROLL
@@ -888,6 +894,12 @@ const newDisplayName =
 
 
 
+          userAtBottomRef.current =
+
+            true
+
+
+
           element.scrollTop =
 
             element.scrollHeight
@@ -895,44 +907,6 @@ const newDisplayName =
           setHasNewMessageBelow(false)
 
         }
-
-      )
-
-    }, [])
-
-
-
-  const isNearBottom =
-
-    useCallback(() => {
-
-      const element =
-
-        messageListRef.current
-
-
-
-      if (!element) {
-
-        return true
-
-      }
-
-
-
-      const distanceFromBottom =
-
-        element.scrollHeight -
-
-        element.scrollTop -
-
-        element.clientHeight
-
-
-
-      return (
-
-        distanceFromBottom <= 120
 
       )
 
@@ -1599,6 +1573,10 @@ const newDisplayName =
 
     setHasNewMessageBelow(false)
 
+    userAtBottomRef.current =
+
+      true
+
 
 
     setBlockedByMe(false)
@@ -1721,7 +1699,7 @@ const newDisplayName =
 
       const shouldStayAtBottom =
 
-        isNearBottom()
+        userAtBottomRef.current
 
 
 
@@ -2024,8 +2002,6 @@ const newDisplayName =
       markRead,
 
       scrollToBottom,
-
-      isNearBottom,
 
       messages,
 
@@ -2433,11 +2409,19 @@ const newDisplayName =
 
 
 
-    if (
+    const atBottom =
 
-      distanceFromBottom <= 120
+      distanceFromBottom <= 40
 
-    ) {
+
+
+    userAtBottomRef.current =
+
+      atBottom
+
+
+
+    if (atBottom) {
 
       setHasNewMessageBelow(
 
