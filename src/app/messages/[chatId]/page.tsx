@@ -693,6 +693,18 @@ const newDisplayName =
 
 
 
+  const [
+
+    hasNewMessageBelow,
+
+    setHasNewMessageBelow,
+
+  ] =
+
+    useState(false)
+
+
+
   // =====================================================
 
   // BLOCKIEREN
@@ -880,7 +892,47 @@ const newDisplayName =
 
             element.scrollHeight
 
+          setHasNewMessageBelow(false)
+
         }
+
+      )
+
+    }, [])
+
+
+
+  const isNearBottom =
+
+    useCallback(() => {
+
+      const element =
+
+        messageListRef.current
+
+
+
+      if (!element) {
+
+        return true
+
+      }
+
+
+
+      const distanceFromBottom =
+
+        element.scrollHeight -
+
+        element.scrollTop -
+
+        element.clientHeight
+
+
+
+      return (
+
+        distanceFromBottom <= 120
 
       )
 
@@ -1545,6 +1597,10 @@ const newDisplayName =
 
 
 
+    setHasNewMessageBelow(false)
+
+
+
     setBlockedByMe(false)
 
     setBlockedByOther(false)
@@ -1663,6 +1719,28 @@ const newDisplayName =
 
 
 
+      const shouldStayAtBottom =
+
+        isNearBottom()
+
+
+
+      const knownMessageIds =
+
+        new Set(
+
+          messages.map(
+
+            (message) =>
+
+              message.id
+
+          )
+
+        )
+
+
+
       try {
 
         const res =
@@ -1724,6 +1802,40 @@ const newDisplayName =
           return
 
         }
+
+
+
+        const currentParticipantId =
+
+          json.myParticipantId ??
+
+          myParticipantId
+
+
+
+        const hasIncomingNewMessage =
+
+          json.messages.some(
+
+            (message: Message) =>
+
+              !knownMessageIds.has(
+
+                message.id
+
+              ) &&
+
+              Boolean(
+
+                currentParticipantId
+
+              ) &&
+
+              message.sender_participant_id !==
+
+                currentParticipantId
+
+          )
 
 
 
@@ -1861,11 +1973,31 @@ const newDisplayName =
 
 
 
-        requestAnimationFrame(
+        if (
 
-          scrollToBottom
+          shouldStayAtBottom
 
-        )
+        ) {
+
+          requestAnimationFrame(
+
+            scrollToBottom
+
+          )
+
+        } else if (
+
+          hasIncomingNewMessage
+
+        ) {
+
+          setHasNewMessageBelow(
+
+            true
+
+          )
+
+        }
 
       } catch (
 
@@ -1892,6 +2024,12 @@ const newDisplayName =
       markRead,
 
       scrollToBottom,
+
+      isNearBottom,
+
+      messages,
+
+      myParticipantId,
 
     ])
 
@@ -2280,6 +2418,32 @@ const newDisplayName =
     if (!list) {
 
       return
+
+    }
+
+
+
+    const distanceFromBottom =
+
+      list.scrollHeight -
+
+      list.scrollTop -
+
+      list.clientHeight
+
+
+
+    if (
+
+      distanceFromBottom <= 120
+
+    ) {
+
+      setHasNewMessageBelow(
+
+        false
+
+      )
 
     }
 
@@ -4504,6 +4668,70 @@ window.dispatchEvent(
             )}
 
           </ul>
+
+
+
+        {hasNewMessageBelow && (
+
+          <button
+
+            type="button"
+
+            onClick={
+
+              scrollToBottom
+
+            }
+
+            style={{
+
+              display: 'block',
+
+              margin:
+
+                '8px auto 12px',
+
+              padding:
+
+                '8px 14px',
+
+              border:
+
+                '1px solid #d5d5d5',
+
+              borderRadius:
+
+                999,
+
+              background:
+
+                '#fff',
+
+              color: '#111',
+
+              font: 'inherit',
+
+              fontSize:
+
+                '0.9rem',
+
+              cursor:
+
+                'pointer',
+
+              boxShadow:
+
+                '0 2px 8px rgba(0,0,0,0.08)',
+
+            }}
+
+          >
+
+            Neue Nachricht ↓
+
+          </button>
+
+        )}
 
 
 
