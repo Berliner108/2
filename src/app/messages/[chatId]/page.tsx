@@ -142,6 +142,10 @@ type Message = {
 
   created_at: string
 
+  edited_at?: string | null
+
+  deleted_at?: string | null
+
   reply_to_message_id?: string | null
 
   reply_to_message?: {
@@ -149,6 +153,8 @@ type Message = {
     sender_participant_id: string | null
     message_type: string
     content: string | null
+    edited_at?: string | null
+    deleted_at?: string | null
     message_attachments?: Attachment[]
   } | null
 
@@ -590,6 +596,22 @@ const newDisplayName =
   ] =
 
     useState<Message | null>(
+
+      null
+
+    )
+
+
+
+  const [
+
+    editingMessageId,
+
+    setEditingMessageId,
+
+  ] =
+
+    useState<string | null>(
 
       null
 
@@ -1548,6 +1570,8 @@ const newDisplayName =
     setSelectedFile(null)
 
     setReplyingTo(null)
+
+    setEditingMessageId(null)
 
     setInputValue('')
 
@@ -3115,6 +3139,302 @@ const newDisplayName =
 
   // =====================================================
 
+  // EIGENE NACHRICHT BEARBEITEN / LÖSCHEN
+
+  // =====================================================
+
+
+
+  function startEdit(
+
+    message: Message
+
+  ) {
+
+    if (
+
+      message.message_type !==
+
+        'text' ||
+
+      message.deleted_at
+
+    ) {
+
+      return
+
+    }
+
+
+
+    setReplyingTo(null)
+
+    setSelectedFile(null)
+
+    setEditingMessageId(
+
+      message.id
+
+    )
+
+    setInputValue(
+
+      message.content ?? ''
+
+    )
+
+  }
+
+
+
+  function cancelEdit() {
+
+    setEditingMessageId(null)
+
+    setInputValue('')
+
+  }
+
+
+
+  async function deleteOwnMessage(
+
+    message: Message
+
+  ) {
+
+    if (
+
+      !window.confirm(
+
+        'Möchtest du diese Nachricht wirklich löschen?'
+
+      )
+
+    ) {
+
+      return
+
+    }
+
+
+
+    setErrorMessage(null)
+
+
+
+    try {
+
+      const res =
+
+        await fetch(
+
+          '/api/messages/message',
+
+          {
+
+            method: 'DELETE',
+
+            credentials:
+
+              'include',
+
+            headers: {
+
+              'Content-Type':
+
+                'application/json',
+
+            },
+
+            body:
+
+              JSON.stringify({
+
+                messageId:
+
+                  message.id,
+
+              }),
+
+          }
+
+        )
+
+
+
+      const json =
+
+        await res
+
+          .json()
+
+          .catch(
+
+            () => null
+
+          )
+
+
+
+      if (
+
+        !res.ok ||
+
+        !json?.ok
+
+      ) {
+
+        throw new Error(
+
+          json?.message ||
+
+            'Nachricht konnte nicht gelöscht werden.'
+
+        )
+
+      }
+
+
+
+      const deletedAt =
+
+        json.message
+
+          ?.deleted_at ??
+
+        new Date().toISOString()
+
+
+
+      setMessages(
+
+        (current) =>
+
+          current.map(
+
+            (item) => {
+
+              const ownDeleted =
+
+                item.id ===
+
+                message.id
+
+
+
+              const replyDeleted =
+
+                item
+
+                  .reply_to_message
+
+                  ?.id ===
+
+                message.id
+
+
+
+              return {
+
+                ...item,
+
+                ...(ownDeleted
+
+                  ? {
+
+                      content:
+
+                        null,
+
+                      deleted_at:
+
+                        deletedAt,
+
+                      message_attachments:
+
+                        [],
+
+                    }
+
+                  : {}),
+
+                ...(replyDeleted
+
+                  ? {
+
+                      reply_to_message:
+
+                        {
+
+                          ...item
+
+                            .reply_to_message!,
+
+                          content:
+
+                            null,
+
+                          deleted_at:
+
+                            deletedAt,
+
+                          message_attachments:
+
+                            [],
+
+                        },
+
+                    }
+
+                  : {}),
+
+              }
+
+            }
+
+          )
+
+      )
+
+
+
+      if (
+
+        editingMessageId ===
+
+        message.id
+
+      ) {
+
+        cancelEdit()
+
+      }
+
+    } catch (
+
+      error
+
+    ) {
+
+      setErrorMessage(
+
+        error instanceof Error
+
+          ? error.message
+
+          : 'Nachricht konnte nicht gelöscht werden.'
+
+      )
+
+    }
+
+  }
+
+
+
+  // =====================================================
+
   // NACHRICHT SENDEN
 
   // =====================================================
@@ -3142,6 +3462,220 @@ const newDisplayName =
     const content =
 
       inputValue.trim()
+
+
+
+    if (
+
+      editingMessageId
+
+    ) {
+
+      if (!content) {
+
+        return
+
+      }
+
+
+
+      setSending(true)
+
+      setErrorMessage(null)
+
+
+
+      try {
+
+        const res =
+
+          await fetch(
+
+            '/api/messages/message',
+
+            {
+
+              method: 'PATCH',
+
+              credentials:
+
+                'include',
+
+              headers: {
+
+                'Content-Type':
+
+                  'application/json',
+
+              },
+
+              body:
+
+                JSON.stringify({
+
+                  messageId:
+
+                    editingMessageId,
+
+                  content,
+
+                }),
+
+            }
+
+          )
+
+
+
+        const json =
+
+          await res
+
+            .json()
+
+            .catch(
+
+              () => null
+
+            )
+
+
+
+        if (
+
+          !res.ok ||
+
+          !json?.ok ||
+
+          !json?.message
+
+        ) {
+
+          throw new Error(
+
+            json?.message ||
+
+              'Nachricht konnte nicht bearbeitet werden.'
+
+          )
+
+        }
+
+
+
+        setMessages(
+
+          (current) =>
+
+            current.map(
+
+              (message) => ({
+
+                ...message,
+
+                ...(message.id ===
+
+                editingMessageId
+
+                  ? {
+
+                      content:
+
+                        json.message
+
+                          .content,
+
+                      edited_at:
+
+                        json.message
+
+                          .edited_at,
+
+                    }
+
+                  : {}),
+
+                ...(message
+
+                  .reply_to_message
+
+                  ?.id ===
+
+                editingMessageId
+
+                  ? {
+
+                      reply_to_message:
+
+                        {
+
+                          ...message
+
+                            .reply_to_message!,
+
+                          content:
+
+                            json.message
+
+                              .content,
+
+                          edited_at:
+
+                            json.message
+
+                              .edited_at,
+
+                        },
+
+                    }
+
+                  : {}),
+
+              }))
+
+        )
+
+
+
+        setEditingMessageId(
+
+          null
+
+        )
+
+        setInputValue('')
+
+
+
+        return
+
+      } catch (
+
+        error
+
+      ) {
+
+        setErrorMessage(
+
+          error instanceof Error
+
+            ? error.message
+
+            : 'Nachricht konnte nicht bearbeitet werden.'
+
+        )
+
+
+
+        return
+
+      } finally {
+
+        setSending(false)
+
+      }
+
+    }
 
 
 
@@ -4415,19 +4949,27 @@ window.dispatchEvent(
 
                             .reply_to_message
 
-                            .content
+                            .deleted_at
 
-                            ?.trim() ||
+                            ? 'Nachricht gelöscht'
 
-                            message
+                            : message
 
-                              .reply_to_message
+                                .reply_to_message
 
-                              .message_attachments?.[0]
+                                .content
 
-                              ?.original_filename ||
+                                ?.trim() ||
 
-                            'Nachricht'}
+                              message
+
+                                .reply_to_message
+
+                                .message_attachments?.[0]
+
+                                ?.original_filename ||
+
+                              'Nachricht'}
 
                         </span>
 
@@ -4437,7 +4979,27 @@ window.dispatchEvent(
 
 
 
-                    {message.content && (
+                    {message.deleted_at ? (
+
+                      <div
+
+                        style={{
+
+                          fontStyle:
+
+                            'italic',
+
+                          opacity: 0.65,
+
+                        }}
+
+                      >
+
+                        Nachricht gelöscht
+
+                      </div>
+
+                    ) : message.content ? (
 
                       <div>
 
@@ -4453,11 +5015,13 @@ window.dispatchEvent(
 
                       </div>
 
-                    )}
+                    ) : null}
 
 
 
-                    {message
+                    {!message.deleted_at &&
+
+                    message
 
                       .message_attachments
 
@@ -4557,6 +5121,18 @@ window.dispatchEvent(
 
                       )}
 
+                      {message.edited_at &&
+
+                        !message.deleted_at && (
+
+                          <>
+
+                            {' '}· bearbeitet
+
+                          </>
+
+                        )}
+
                       {mine &&
 
                         latestOwnMessage?.id ===
@@ -4579,67 +5155,231 @@ window.dispatchEvent(
 
                     {message.message_type !==
 
-                      'system' && (
+                      'system' &&
 
-                      <button
+                      !message.deleted_at && (
 
-                        type="button"
-
-                        onClick={() =>
-
-                          startReply(
-
-                            message
-
-                          )
-
-                        }
-
-                        disabled={
-
-                          sending ||
-
-                          blocked
-
-                        }
+                      <div
 
                         style={{
 
+                          display: 'flex',
+
+                          gap: 10,
+
                           marginTop: 4,
-
-                          padding: 0,
-
-                          border: 'none',
-
-                          background:
-
-                            'transparent',
-
-                          color: 'inherit',
-
-                          font: 'inherit',
-
-                          fontSize: '0.78em',
-
-                          opacity: 0.65,
-
-                          cursor:
-
-                            sending ||
-
-                            blocked
-
-                              ? 'default'
-
-                              : 'pointer',
 
                         }}
 
                       >
 
-                        Antworten
+                        <button
 
-                      </button>
+                          type="button"
+
+                          onClick={() =>
+
+                            startReply(
+
+                              message
+
+                            )
+
+                          }
+
+                          disabled={
+
+                            sending ||
+
+                            blocked
+
+                          }
+
+                          style={{
+
+                            padding: 0,
+
+                            border: 'none',
+
+                            background:
+
+                              'transparent',
+
+                            color: 'inherit',
+
+                            font: 'inherit',
+
+                            fontSize:
+
+                              '0.78em',
+
+                            opacity: 0.65,
+
+                            cursor:
+
+                              sending ||
+
+                              blocked
+
+                                ? 'default'
+
+                                : 'pointer',
+
+                          }}
+
+                        >
+
+                          Antworten
+
+                        </button>
+
+
+
+                        {mine &&
+
+                          message
+
+                            .message_type ===
+
+                            'text' && (
+
+                            <button
+
+                              type="button"
+
+                              onClick={() =>
+
+                                startEdit(
+
+                                  message
+
+                                )
+
+                              }
+
+                              disabled={
+
+                                sending ||
+
+                                blocked
+
+                              }
+
+                              style={{
+
+                                padding: 0,
+
+                                border:
+
+                                  'none',
+
+                                background:
+
+                                  'transparent',
+
+                                color:
+
+                                  'inherit',
+
+                                font:
+
+                                  'inherit',
+
+                                fontSize:
+
+                                  '0.78em',
+
+                                opacity:
+
+                                  0.65,
+
+                                cursor:
+
+                                  sending ||
+
+                                  blocked
+
+                                    ? 'default'
+
+                                    : 'pointer',
+
+                              }}
+
+                            >
+
+                              Bearbeiten
+
+                            </button>
+
+                          )}
+
+
+
+                        {mine && (
+
+                          <button
+
+                            type="button"
+
+                            onClick={() =>
+
+                              void deleteOwnMessage(
+
+                                message
+
+                              )
+
+                            }
+
+                            disabled={
+
+                              sending
+
+                            }
+
+                            style={{
+
+                              padding: 0,
+
+                              border: 'none',
+
+                              background:
+
+                                'transparent',
+
+                              color:
+
+                                'inherit',
+
+                              font:
+
+                                'inherit',
+
+                              fontSize:
+
+                                '0.78em',
+
+                              opacity: 0.65,
+
+                              cursor:
+
+                                sending
+
+                                  ? 'default'
+
+                                  : 'pointer',
+
+                            }}
+
+                          >
+
+                            Löschen
+
+                          </button>
+
+                        )}
+
+                      </div>
 
                     )}
 
@@ -4782,6 +5522,88 @@ window.dispatchEvent(
               </>
 
             )}
+
+          </div>
+
+        )}
+
+
+
+        {editingMessageId && (
+
+          <div
+
+            style={{
+
+              display: 'flex',
+
+              alignItems: 'center',
+
+              justifyContent:
+
+                'space-between',
+
+              gap: 12,
+
+              marginBottom: 8,
+
+              padding: '8px 10px',
+
+              borderLeft:
+
+                '3px solid #111',
+
+              borderRadius: 6,
+
+              background: '#f3f3f3',
+
+            }}
+
+          >
+
+            <strong>
+
+              Nachricht bearbeiten
+
+            </strong>
+
+
+
+            <button
+
+              type="button"
+
+              onClick={
+
+                cancelEdit
+
+              }
+
+              disabled={sending}
+
+              aria-label="Bearbeiten abbrechen"
+
+              style={{
+
+                border: 'none',
+
+                background:
+
+                  'transparent',
+
+                fontSize: '1.3rem',
+
+                lineHeight: 1,
+
+                cursor: 'pointer',
+
+              }}
+
+            >
+
+              ×
+
+            </button>
 
           </div>
 
@@ -5083,7 +5905,9 @@ window.dispatchEvent(
 
                 ? 'Nutzer ist blockiert'
 
-                : 'Antwort schreiben...'
+                : editingMessageId
+                  ? 'Nachricht bearbeiten...'
+                  : 'Antwort schreiben...'
 
             }
 
@@ -5165,9 +5989,13 @@ window.dispatchEvent(
 
             {sending
 
-              ? 'Senden …'
+              ? editingMessageId
+                ? 'Speichern …'
+                : 'Senden …'
 
-              : 'Senden'}
+              : editingMessageId
+                ? 'Speichern'
+                : 'Senden'}
 
           </button>
 
@@ -5233,7 +6061,13 @@ window.dispatchEvent(
 
                 sending ||
 
-                blocked
+                blocked ||
+
+                Boolean(
+
+                  editingMessageId
+
+                )
 
               }
 

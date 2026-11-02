@@ -521,6 +521,8 @@ export async function GET(
           content,
           client_message_id,
           reply_to_message_id,
+          edited_at,
+          deleted_at,
           created_at,
           message_attachments (
             id,
@@ -688,6 +690,8 @@ export async function GET(
             sender_participant_id,
             message_type,
             content,
+            edited_at,
+            deleted_at,
             message_attachments (
               id,
               original_filename,
@@ -727,18 +731,42 @@ export async function GET(
       }
     }
 
+    const sanitizeMessage =
+      (message: any) => {
+        if (!message) {
+          return null
+        }
+
+        if (
+          message.deleted_at
+        ) {
+          return {
+            ...message,
+            content: null,
+            message_attachments:
+              [],
+          }
+        }
+
+        return message
+      }
+
     const messagesWithReplies =
       messages.map(
         (message: any) => ({
-          ...message,
+          ...sanitizeMessage(
+            message
+          ),
 
           reply_to_message:
             message
               .reply_to_message_id
-              ? replyMap.get(
-                  message
-                    .reply_to_message_id
-                ) ?? null
+              ? sanitizeMessage(
+                  replyMap.get(
+                    message
+                      .reply_to_message_id
+                  ) ?? null
+                )
               : null,
         })
       )
