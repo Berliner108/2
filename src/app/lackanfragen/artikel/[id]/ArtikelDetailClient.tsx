@@ -1471,8 +1471,11 @@ const isSubmitDisabled =
 </button>
 
                 <p className={styles.offerNote}>
-  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere AGB zu akzeptieren. Dein Angebot ist
-  72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
+  Mit der Angebotsabgabe bestätigst du, die Anforderungen zur Gänze erfüllen zu können und unsere{" "}
+  <Link href="/agb" className={styles.kontaktLink}>
+    AGB
+  </Link>{" "}
+  zu akzeptieren. Dein Angebot ist 72&nbsp;h gültig. Halte nach dem Versand bitte unbedingt stets einen Versandnachweis bereit.
 </p>
       </>
     )}
