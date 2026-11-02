@@ -276,6 +276,10 @@ export async function GET(
     let displayName =
       'Unterhaltung'
 
+    let otherLastReadAt:
+      | string
+      | null = null
+
     if (
       conversation.type ===
       'support'
@@ -389,7 +393,7 @@ export async function GET(
             'conversation_participants'
           )
           .select(
-            'user_id'
+            'user_id, last_read_at'
           )
           .eq(
             'conversation_id',
@@ -413,6 +417,10 @@ export async function GET(
           otherParticipantError
         )
       }
+
+      otherLastReadAt =
+        otherParticipant?.last_read_at ??
+        null
 
       if (
         otherParticipant?.user_id
@@ -666,6 +674,8 @@ export async function GET(
             ),
 
           displayName,
+
+          otherLastReadAt,
         },
 
         messages,

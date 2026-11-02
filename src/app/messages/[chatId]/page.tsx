@@ -529,6 +529,22 @@ const newDisplayName =
 
   const [
 
+    otherLastReadAt,
+
+    setOtherLastReadAt,
+
+  ] =
+
+    useState<string | null>(
+
+      null
+
+    )
+
+
+
+  const [
+
     inputValue,
 
     setInputValue,
@@ -1364,6 +1380,18 @@ const newDisplayName =
 
 
 
+        setOtherLastReadAt(
+
+          json.conversation
+
+            ?.otherLastReadAt ??
+
+            null
+
+        )
+
+
+
         setHasMore(
 
           Boolean(
@@ -1474,6 +1502,14 @@ const newDisplayName =
 
 
     setConversationType(
+
+      null
+
+    )
+
+
+
+    setOtherLastReadAt(
 
       null
 
@@ -1697,6 +1733,18 @@ const newDisplayName =
 
 
 
+        setOtherLastReadAt(
+
+          json.conversation
+
+            ?.otherLastReadAt ??
+
+            null
+
+        )
+
+
+
         setMessages(
 
           (current) => {
@@ -1864,6 +1912,82 @@ const newDisplayName =
     }
 
   }, [
+
+    refreshLatestMessages,
+
+  ])
+
+
+
+  // =====================================================
+
+  // LESESTATUS DES ANDEREN AKTUALISIEREN
+
+  // =====================================================
+
+
+
+  useEffect(() => {
+
+    if (
+
+      !chatId ||
+
+      isNewChat ||
+
+      conversationType !== 'user'
+
+    ) {
+
+      return
+
+    }
+
+
+
+    const intervalId =
+
+      window.setInterval(
+
+        () => {
+
+          if (
+
+            document.visibilityState ===
+
+            'visible'
+
+          ) {
+
+            void refreshLatestMessages()
+
+          }
+
+        },
+
+        5000
+
+      )
+
+
+
+    return () => {
+
+      window.clearInterval(
+
+        intervalId
+
+      )
+
+    }
+
+  }, [
+
+    chatId,
+
+    isNewChat,
+
+    conversationType,
 
     refreshLatestMessages,
 
@@ -3559,6 +3683,52 @@ window.dispatchEvent(
 
 
 
+  const latestOwnMessage =
+
+    myParticipantId
+
+      ? [...messages]
+
+          .reverse()
+
+          .find(
+
+            (message) =>
+
+              message.sender_participant_id ===
+
+              myParticipantId
+
+          ) ?? null
+
+      : null
+
+
+
+  const latestOwnMessageRead =
+
+    Boolean(
+
+      latestOwnMessage &&
+
+      otherLastReadAt &&
+
+      new Date(
+
+        otherLastReadAt
+
+      ).getTime() >=
+
+        new Date(
+
+          latestOwnMessage.created_at
+
+        ).getTime()
+
+    )
+
+
+
   if (loading && !isNewChat) {
 
     return (
@@ -3972,6 +4142,22 @@ window.dispatchEvent(
                         message.created_at
 
                       )}
+
+                      {mine &&
+
+                        latestOwnMessage?.id ===
+
+                          message.id &&
+
+                        latestOwnMessageRead && (
+
+                          <>
+
+                            {' '}· ✓✓
+
+                          </>
+
+                        )}
 
                     </div>
 
