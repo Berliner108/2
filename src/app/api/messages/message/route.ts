@@ -408,7 +408,6 @@ export async function DELETE(
       await owned.admin
         .from('messages')
         .update({
-          content: null,
           deleted_at:
             deletedAt,
         })
