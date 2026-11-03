@@ -285,15 +285,23 @@
     min-height: auto;
     overflow-x: hidden;
   }
-
   .sidebar {
     width: 100%;
     max-width: 100%;
-    height: auto;
-    max-height: none;
+
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+
     border-radius: 0;
     box-sizing: border-box;
+    flex-shrink: 0;
   }
+
 
   .chatWrapper {
     width: 100%;
