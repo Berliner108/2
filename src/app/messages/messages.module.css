@@ -1081,11 +1081,9 @@
   .messagesDetail .reportStatusBox {
     margin-top: 0.25rem;
   }
-
   .messagesDetail .reportBox {
     margin-top: 0.4rem;
     max-height: 40dvh;
     overflow-y: auto;
   }
 }
-
