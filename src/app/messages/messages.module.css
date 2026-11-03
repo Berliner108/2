@@ -827,3 +827,265 @@
     gap: 0.2rem;
   }
 }
+
+/* =====================================================
+   MOBILE CHAT NAVIGATION
+   ===================================================== */
+
+.mobileChatHeader,
+.mobileAttachButton {
+  display: none;
+}
+
+.desktopChatTitle {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  /* /messages = reine Unterhaltungsübersicht */
+  .messagesRoot {
+    display: block;
+    height: auto;
+    min-height: calc(100dvh - 80px);
+  }
+
+  .messagesRoot .sidebar {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: calc(100dvh - 80px);
+    min-height: calc(100dvh - 80px);
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
+    box-sizing: border-box;
+  }
+
+  .messagesRoot .content {
+    display: none;
+  }
+
+  /* /messages/[chatId] = nur geöffneter Chat */
+  .messagesDetail {
+    display: block;
+    height: calc(100dvh - 80px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .messagesDetail .sidebar {
+    display: none;
+  }
+
+  .messagesDetail .content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .messagesDetail .chatPage {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .messagesDetail .chatWrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    padding: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .messagesDetail .messageList {
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin-bottom: 0.55rem;
+  }
+
+  .desktopChatTitle {
+    display: none;
+  }
+
+  .mobileChatHeader {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 44px;
+    margin-bottom: 0.55rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .mobileBackButton {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    color: #222;
+    font-family: inherit;
+    font-size: 1.55rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .mobileChatTitle {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #222;
+  }
+
+  .mobileChatMenu {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    justify-self: end;
+  }
+
+  .mobileChatMenu summary {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    list-style: none;
+    cursor: pointer;
+    font-size: 1.55rem;
+    line-height: 1;
+  }
+
+  .mobileChatMenu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobileChatMenuPanel {
+    position: absolute;
+    top: 42px;
+    right: 0;
+    z-index: 20;
+    width: 210px;
+    padding: 0.35rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.14);
+  }
+
+  .mobileChatMenuPanel button {
+    width: 100%;
+    padding: 0.7rem 0.75rem;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #222;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .mobileChatMenuPanel button:hover:not(:disabled) {
+    background: #f2f2f2;
+  }
+
+  .mobileChatMenuPanel button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .mobileChatMenuSpacer {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Kompakte Eingabe mit Büroklammer */
+  .messagesDetail .inputWrapper {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    padding-top: 0.45rem;
+  }
+
+  .messagesDetail .textInput {
+    width: auto;
+    min-height: 48px;
+    height: 48px;
+    max-height: 96px;
+    padding: 0.65rem 0.7rem;
+  }
+
+  .messagesDetail .sendButton {
+    width: auto;
+    min-width: 76px;
+    height: 48px;
+    padding: 0 0.8rem;
+  }
+
+  .mobileAttachButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 48px;
+    flex: 0 0 44px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-sizing: border-box;
+  }
+
+  .mobileAttachInput {
+    display: none;
+  }
+
+  /* Das große Desktop-Dateifeld und die doppelten Aktionen
+     brauchen wir mobil nicht. */
+  .messagesDetail .fileLabel {
+    display: none;
+  }
+
+  .messagesDetail .chatActions {
+    display: none;
+  }
+
+  .messagesDetail .chatExtras {
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+    gap: 0.3rem;
+  }
+
+  /* Die beiden langen Standardhinweise würden den Chat mobil
+     unnötig verkleinern. Status/Meldebox bleiben sichtbar. */
+  .messagesDetail .notice > p {
+    display: none;
+  }
+
+  .messagesDetail .reportStatusBox {
+    margin-top: 0.25rem;
+  }
+
+  .messagesDetail .reportBox {
+    margin-top: 0.4rem;
+    max-height: 40dvh;
+    overflow-y: auto;
+  }
+}
+
