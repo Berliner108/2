@@ -4635,7 +4635,7 @@ window.dispatchEvent(
 
           style={{
 
-            minHeight: '100%',
+            minHeight: '60vh',
 
             display: 'flex',
 
@@ -4732,16 +4732,6 @@ window.dispatchEvent(
         }
 
       >
-
-        <button
-          type="button"
-          className={styles.mobileBackButton}
-          onClick={() =>
-            router.push('/messages')
-          }
-        >
-          ← Nachrichten
-        </button>
 
         <h1>
 
