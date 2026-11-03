@@ -11,7 +11,13 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function POST() {
+type Body = {
+  create?: boolean
+}
+
+export async function POST(
+  req: Request
+) {
   try {
     // =====================================================
     // 1) Auth
@@ -38,6 +44,14 @@ export async function POST() {
     const userId = user.id
     const admin = supabaseAdmin()
 
+    const raw =
+      (await req
+        .json()
+        .catch(() => ({}))) as Body
+
+    const create =
+      raw.create === true
+
     // =====================================================
     // 2) Support-Zugang prüfen
     // Kein Premium notwendig
@@ -59,7 +73,88 @@ export async function POST() {
     }
 
     // =====================================================
-    // 3) Profil laden
+    // 3) Bestehenden Support-Chat suchen
+    // =====================================================
+
+    const {
+      data: existingParticipation,
+      error: existingError,
+    } = await admin
+      .from('conversation_participants')
+      .select(`
+        conversation_id,
+        conversations!inner (
+          id,
+          type
+        )
+      `)
+      .eq('user_id', userId)
+      .is('left_at', null)
+      .eq(
+        'conversations.type',
+        'support'
+      )
+      .limit(1)
+      .maybeSingle()
+
+    if (existingError) {
+      console.error(
+        '[messages/support/start] existing support lookup failed:',
+        existingError
+      )
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            'support_chat_lookup_failed',
+          message:
+            'Support-Chat konnte nicht geöffnet werden.',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (
+      existingParticipation
+        ?.conversation_id
+    ) {
+      return NextResponse.json(
+        {
+          ok: true,
+          conversationId:
+            existingParticipation
+              .conversation_id,
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control':
+              'no-store',
+          },
+        }
+      )
+    }
+
+    if (!create) {
+      return NextResponse.json(
+        {
+          ok: true,
+          ready: true,
+          conversationId: null,
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control':
+              'no-store',
+          },
+        }
+      )
+    }
+
+    // =====================================================
+    // 4) Profil laden
     // =====================================================
 
     const {

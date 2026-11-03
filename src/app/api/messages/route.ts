@@ -130,6 +130,12 @@ export async function GET() {
         of supportConversations ?? []
       ) {
         if (
+          !conversation.last_message_id
+        ) {
+          continue
+        }
+
+        if (
           existingConversationIds.has(
             conversation.id
           )

@@ -445,6 +445,10 @@ const searchParams = useSearchParams()
 
 const isNewChat = chatId === 'new'
 
+const isNewSupportChat =
+  isNewChat &&
+  searchParams.get('support') === '1'
+
 
 
 const newRecipientId =
@@ -1627,9 +1631,17 @@ const newDisplayName =
 
       setMyParticipantId(null)
 
-      setConversationType('user')
+      setConversationType(
+        isNewSupportChat
+          ? 'support'
+          : 'user'
+      )
 
-      setDisplayName(newDisplayName)
+      setDisplayName(
+        isNewSupportChat
+          ? 'Beschichter Scout Support'
+          : newDisplayName
+      )
 
       setLoading(false)
 
@@ -1648,6 +1660,8 @@ const newDisplayName =
     chatId,
 
     isNewChat,
+
+    isNewSupportChat,
 
     newDisplayName,
 
@@ -3713,93 +3727,161 @@ const newDisplayName =
 
 if (isNewChat) {
 
-  if (
+  if (isNewSupportChat) {
 
-    !newRecipientId ||
+    const startRes = await fetch(
 
-    !newSourceType ||
+      '/api/messages/support/start',
 
-    !newSourceId
+      {
 
-  ) {
+        method: 'POST',
 
-    throw new Error(
+        credentials: 'include',
 
-      'Die Unterhaltung konnte nicht vorbereitet werden.'
+        headers: {
+
+          'Content-Type': 'application/json',
+
+        },
+
+        body: JSON.stringify({
+
+          create: true,
+
+        }),
+
+      }
 
     )
 
-  }
+
+
+    const startJson =
+
+      await startRes
+
+        .json()
+
+        .catch(() => null)
 
 
 
-  const startRes = await fetch(
+    if (
 
-    '/api/messages/start',
+      !startRes.ok ||
 
-    {
+      !startJson?.conversationId
 
-      method: 'POST',
+    ) {
 
-      credentials: 'include',
+      throw new Error(
 
-      headers: {
+        startJson?.message ||
 
-        'Content-Type': 'application/json',
+          'Support-Chat konnte nicht gestartet werden.'
 
-      },
-
-      body: JSON.stringify({
-
-        recipientId: newRecipientId,
-
-        sourceType: newSourceType,
-
-        sourceId: newSourceId,
-
-        create: true,
-
-      }),
+      )
 
     }
 
-  )
+
+
+    activeConversationId =
+
+      String(startJson.conversationId)
+
+  } else {
+
+    if (
+
+      !newRecipientId ||
+
+      !newSourceType ||
+
+      !newSourceId
+
+    ) {
+
+      throw new Error(
+
+        'Die Unterhaltung konnte nicht vorbereitet werden.'
+
+      )
+
+    }
 
 
 
-  const startJson =
+    const startRes = await fetch(
 
-    await startRes
+      '/api/messages/start',
 
-      .json()
+      {
 
-      .catch(() => null)
+        method: 'POST',
 
+        credentials: 'include',
 
+        headers: {
 
-  if (
+          'Content-Type': 'application/json',
 
-    !startRes.ok ||
+        },
 
-    !startJson?.conversationId
+        body: JSON.stringify({
 
-  ) {
+          recipientId: newRecipientId,
 
-    throw new Error(
+          sourceType: newSourceType,
 
-      startJson?.message ||
+          sourceId: newSourceId,
 
-        'Unterhaltung konnte nicht gestartet werden.'
+          create: true,
+
+        }),
+
+      }
 
     )
 
+
+
+    const startJson =
+
+      await startRes
+
+        .json()
+
+        .catch(() => null)
+
+
+
+    if (
+
+      !startRes.ok ||
+
+      !startJson?.conversationId
+
+    ) {
+
+      throw new Error(
+
+        startJson?.message ||
+
+          'Unterhaltung konnte nicht gestartet werden.'
+
+      )
+
+    }
+
+
+
+    activeConversationId =
+
+      String(startJson.conversationId)
+
   }
-
-
-
-  activeConversationId =
-
-    String(startJson.conversationId)
 
 }
 

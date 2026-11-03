@@ -36,6 +36,13 @@ export default function SupportPage() {
                 method: 'POST',
                 credentials:
                   'include',
+                headers: {
+                  'Content-Type':
+                    'application/json',
+                },
+                body: JSON.stringify({
+                  create: false,
+                }),
               }
             )
 
@@ -52,19 +59,31 @@ export default function SupportPage() {
 
           if (
             !res.ok ||
-            !json?.ok ||
-            !json?.conversationId
+            !json?.ok
           ) {
             setError(
               json?.message ||
                 'Support-Chat konnte nicht geöffnet werden.'
             )
-
             return
           }
 
-          router.replace(
-            `/messages/${json.conversationId}`
+          if (json.conversationId) {
+            router.replace(
+              `/messages/${json.conversationId}`
+            )
+            return
+          }
+
+          if (json.ready) {
+            router.replace(
+              '/messages/new?support=1&displayName=Beschichter%20Scout%20Support'
+            )
+            return
+          }
+
+          setError(
+            'Support-Chat konnte nicht geöffnet werden.'
           )
         } catch {
           if (!cancelled) {
