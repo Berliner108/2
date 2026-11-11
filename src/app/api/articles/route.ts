@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -128,21 +128,13 @@ function expandHerstellerFilter(values: string[]): string[] {
   return Array.from(expanded);
 }
 
-function safeSearchValue(value: string): string {
-  return value
-    .trim()
-    .replace(/,/g, " ")
-    .replace(/%/g, "\\%")
-    .replace(/_/g, "\\_");
-}
-
 export async function GET(req: Request) {
   try {
     const admin = supabaseAdmin();
     const url = new URL(req.url);
 
     const limitRaw = parseInt(url.searchParams.get("limit") ?? "50", 10);
-    const limit = Math.min(Number.isNaN(limitRaw) ? 50 : limitRaw, 200);
+    const limit = Math.min(Math.max(Number.isNaN(limitRaw) ? 50 : limitRaw, 1), 200);
 
     const pageRaw = parseInt(url.searchParams.get("page") ?? "1", 10);
     const page = Math.max(Number.isNaN(pageRaw) ? 1 : pageRaw, 1);
@@ -152,7 +144,8 @@ export async function GET(req: Request) {
       url.searchParams.get("skip") ??
       url.searchParams.get("start");
 
-    const offset = offsetParam ? Math.max(parseInt(offsetParam, 10), 0) : null;
+    const parsedOffset = offsetParam !== null ? Number.parseInt(offsetParam, 10) : NaN;
+    const offset = Number.isFinite(parsedOffset) ? Math.max(parsedOffset, 0) : null;
 
     const search = url.searchParams.get("q") ?? url.searchParams.get("search") ?? "";
     const kategorieRaw = url.searchParams.get("kategorie") ?? "";
@@ -167,297 +160,52 @@ export async function GET(req: Request) {
     const maxRaw = url.searchParams.get("max");
     const maxPreis = maxRaw !== null && maxRaw !== "" ? Number(maxRaw) : null;
     const sortParam = (url.searchParams.get("sort") ?? "").toLowerCase();
-    const isPriceSort = sortParam === "preis-auf" || sortParam === "preis-ab";
-
-    // Preisfilter und Slider verwenden exakt dieselbe Basis wie die Anzeige:
-    // günstigste Preisstufe eines Artikels + der Versand dieser Preisstufe.
-    const { data: allPriceRows, error: allPriceError } = await admin
-      .from("article_price_tiers")
-      .select("article_id, price, shipping");
-
-    if (allPriceError) {
-      return NextResponse.json({ error: allPriceError.message }, { status: 500 });
-    }
-
-    const displayedTotalByArticle = new Map<string, { price: number; total: number }>();
-
-    for (const row of allPriceRows ?? []) {
-      const id = String(row.article_id ?? "");
-      const price = typeof row.price === "number" ? row.price : Number(row.price);
-      const shipping =
-        row.shipping == null
-          ? 0
-          : typeof row.shipping === "number"
-            ? row.shipping
-            : Number(row.shipping);
-
-      if (!id || !Number.isFinite(price)) continue;
-
-      const shippingValue = Number.isFinite(shipping) ? shipping : 0;
-      const total = price + shippingValue;
-      const current = displayedTotalByArticle.get(id);
-
-      if (
-        !current ||
-        price < current.price ||
-        (price === current.price && total < current.total)
-      ) {
-        displayedTotalByArticle.set(id, { price, total });
-      }
-    }
-
-    let priceArticleIds: string[] | null = null;
-
-    if (maxPreis !== null && Number.isFinite(maxPreis)) {
-      priceArticleIds = Array.from(displayedTotalByArticle.entries())
-        .filter(([, info]) => info.total <= maxPreis)
-        .map(([articleId]) => articleId);
-    }
-
-    const maxPriceAvailable = Array.from(displayedTotalByArticle.values()).reduce(
-      (max, info) => Math.max(max, info.total),
-      0
-    );
-
     const columns =
       "id, owner_id, title, description, category, sell_to, manufacturer, promo_score, delivery_days, stock_status, qty_kg, qty_piece, image_urls, sale_type, price_mode, condition, created_at, updated_at";
 
-    const applyFilters = (query: any) => {
-      let next = query;
+    // Alle Filter, die Relevanzsortierung, Preisfilter und Pagination laufen
+    // in PostgreSQL. Es werden nur die IDs der angeforderten Seite übertragen.
+    const { data: result, error: rpcError } = await admin.rpc("get_shop_article_ids", {
+      p_query: search.trim(),
+      p_category: kategorieDb || null,
+      p_conditions: zustandList.length ? zustandList : null,
+      p_manufacturers: herstellerList.length ? herstellerList : null,
+      p_viewer_business: viewerBusiness,
+      p_gewerblich: g === "1",
+      p_privat: p === "1",
+      p_max_price: maxPreis !== null && Number.isFinite(maxPreis) ? maxPreis : null,
+      p_sort: sortParam,
+      p_page: page,
+      p_limit: Math.max(1, limit),
+      p_offset: offset,
+    });
 
-      next = next.eq("published", true);
-      next = next.eq("sold_out", false);
-      next = next.eq("archived", false);
-
-      if (!viewerBusiness) {
-        next = next.eq("sell_to", "beide");
-      }
-
-      if (kategorieDb) {
-        next = next.eq("category", kategorieDb);
-      }
-
-      if (zustandList.length) {
-        next = next.in("condition", zustandList);
-      }
-
-      if (herstellerList.length) {
-        next = next.in("manufacturer", herstellerList);
-      }
-
-      if (g === "1" && p !== "1") {
-        next = next.in("sell_to", ["gewerblich", "beide"]);
-      }
-
-      if (p === "1" && g !== "1") {
-        next = next.eq("sell_to", "beide");
-      }
-
-      if (priceArticleIds !== null) {
-        if (priceArticleIds.length === 0) {
-          next = next.eq("id", "__no_matching_article__");
-        } else {
-          next = next.in("id", priceArticleIds);
-        }
-      }
-
-      if (search.trim()) {
-        const s = safeSearchValue(search);
-
-        if (s) {
-          next = next.or(
-            [
-              `title.ilike.%${s}%`,
-              `manufacturer.ilike.%${s}%`,
-              `condition.ilike.%${s}%`,
-              `category.ilike.%${s}%`,
-            ].join(",")
-          );
-        }
-      }
-
-      return next;
-    };
-
-    // Count-Abfrage: exakt wie bei Lackanfragen.
-    const countQuery = applyFilters(
-      admin.from("articles").select("id", { count: "exact", head: true })
-    );
-
-    const { count: total, error: countError } = await countQuery;
-
-    if (countError) {
-      console.error("[articles] count failed:", countError);
-      return NextResponse.json({ error: countError.message }, { status: 500 });
+    if (rpcError) {
+      console.error("[articles] RPC failed:", rpcError);
+      return NextResponse.json({ error: rpcError.message }, { status: 500 });
     }
 
-    // Daten-Abfrage: dieselben Filter, anschließend Sortierung + range.
-    let dataQuery = applyFilters(admin.from("articles").select(columns));
+    const payload = result as {
+      article_ids?: string[];
+      total?: number;
+      max_price?: number;
+    } | null;
+    const ids = Array.isArray(payload?.article_ids) ? payload.article_ids : [];
+    const total = Number(payload?.total ?? 0);
+    const maxPriceAvailable = Number(payload?.max_price ?? 0);
+    let rows: any[] = [];
 
-    switch (sortParam) {
-      case "lieferdatum-auf":
-        dataQuery = dataQuery
-          .order("delivery_days", { ascending: true })
-          .order("promo_score", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
+    if (ids.length) {
+      const { data: articles, error: articleError } = await admin
+        .from("articles")
+        .select(columns)
+        .in("id", ids);
 
-      case "lieferdatum-ab":
-        dataQuery = dataQuery
-          .order("delivery_days", { ascending: false })
-          .order("promo_score", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-
-      case "titel-az":
-        dataQuery = dataQuery
-          .order("title", { ascending: true })
-          .order("promo_score", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-
-      case "titel-za":
-        dataQuery = dataQuery
-          .order("title", { ascending: false })
-          .order("promo_score", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-
-      case "menge-auf": {
-        const pieceCategory =
-          kategorieDb === "arbeitsmittel" || kategorieDb === "galvano_zubehoer";
-
-        dataQuery = pieceCategory
-          ? dataQuery
-              .order("qty_piece", { ascending: true })
-              .order("created_at", { ascending: false })
-          : dataQuery
-              .order("qty_kg", { ascending: true })
-              .order("qty_piece", { ascending: true })
-              .order("created_at", { ascending: false });
-        break;
+      if (articleError) {
+        return NextResponse.json({ error: articleError.message }, { status: 500 });
       }
-
-      case "menge-ab": {
-        const pieceCategory =
-          kategorieDb === "arbeitsmittel" || kategorieDb === "galvano_zubehoer";
-
-        dataQuery = pieceCategory
-          ? dataQuery
-              .order("qty_piece", { ascending: false })
-              .order("created_at", { ascending: false })
-          : dataQuery
-              .order("qty_kg", { ascending: false })
-              .order("qty_piece", { ascending: false })
-              .order("created_at", { ascending: false });
-        break;
-      }
-
-      case "preis-auf":
-      case "preis-ab":
-        // Die echte Preissortierung erfolgt weiter unten anhand
-        // article_price_tiers: angezeigter Preis + zugehöriger Versand.
-        // Hier nur eine stabile Grundreihenfolge setzen.
-        dataQuery = dataQuery.order("created_at", { ascending: false });
-        break;
-
-      default:
-        dataQuery = dataQuery
-          .order("promo_score", { ascending: false })
-          .order("delivery_days", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-    }
-
-    let from = 0;
-    let to = limit - 1;
-
-    if (offset !== null) {
-      from = offset;
-      to = from + limit - 1;
-    } else {
-      from = (page - 1) * limit;
-      to = from + limit - 1;
-    }
-
-    // Bei Preis-Sortierung müssen wir vor der Pagination nach
-    // Artikelpreis + Versandkosten sortieren. Sonst wäre nur die
-    // aktuell geladene Seite korrekt sortiert.
-    if (!isPriceSort) {
-      dataQuery = dataQuery.range(from, to);
-    }
-
-    const { data: articles, error } = await dataQuery;
-
-    if (error) {
-      console.error("[articles] query failed:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    let rows = articles ?? [];
-
-    if (isPriceSort && rows.length) {
-      const ids = rows.map((a: any) => a.id);
-      const { data: sortTiers, error: sortTierError } = await admin
-        .from("article_price_tiers")
-        .select("article_id, price, shipping")
-        .in("article_id", ids);
-
-      if (sortTierError) {
-        return NextResponse.json({ error: sortTierError.message }, { status: 500 });
-      }
-
-      // Gleiche Logik wie bei price_from/shipping_from:
-      // zuerst die günstigste Preisstufe bestimmen und deren Versand addieren.
-      const totalPriceByArticle = new Map<string, { price: number; total: number }>();
-
-      for (const tier of sortTiers ?? []) {
-        const id = String(tier.article_id ?? "");
-        const price = typeof tier.price === "number" ? tier.price : Number(tier.price);
-        const shipping =
-          tier.shipping == null
-            ? 0
-            : typeof tier.shipping === "number"
-              ? tier.shipping
-              : Number(tier.shipping);
-
-        if (!id || !Number.isFinite(price)) continue;
-
-        const shippingValue = Number.isFinite(shipping) ? shipping : 0;
-        const current = totalPriceByArticle.get(id);
-
-        if (
-          !current ||
-          price < current.price ||
-          (price === current.price && price + shippingValue < current.total)
-        ) {
-          totalPriceByArticle.set(id, {
-            price,
-            total: price + shippingValue,
-          });
-        }
-      }
-
-      const direction = sortParam === "preis-auf" ? 1 : -1;
-
-      rows = [...rows].sort((a: any, b: any) => {
-        const aInfo = totalPriceByArticle.get(String(a.id));
-        const bInfo = totalPriceByArticle.get(String(b.id));
-
-        // Artikel ohne Preis immer ans Ende.
-        if (!aInfo && !bInfo) return 0;
-        if (!aInfo) return 1;
-        if (!bInfo) return -1;
-
-        const diff = (aInfo.total - bInfo.total) * direction;
-        if (diff !== 0) return diff;
-
-        // Bei identischem Gesamtpreis: neuere Artikel zuerst.
-        return String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""));
-      });
-
-      rows = rows.slice(from, to + 1);
+      const byId = new Map((articles ?? []).map((a: any) => [String(a.id), a]));
+      rows = ids.map(id => byId.get(String(id))).filter(Boolean);
     }
 
     const todayISO = getBerlinTodayISO();
@@ -513,60 +261,29 @@ export async function GET(req: Request) {
     }
 
     const articleIds = rows.map((a: any) => a.id);
-    const minPriceByArticle: Record<
-      string,
-      {
-        price_from: number | null;
-        shipping_from: number | null;
-        unit: "kg" | "stueck" | null;
-        tier_count: number;
-      }
-    > = {};
+    const minPriceByArticle: Record<string, {
+      price_from: number | null;
+      shipping_from: number | null;
+      unit: "kg" | "stueck" | null;
+      tier_count: number;
+    }> = {};
 
     if (articleIds.length) {
-      const { data: tiers, error: tierError } = await admin
-        .from("article_price_tiers")
-        .select("article_id, unit, price, shipping")
+      const { data: prices, error: priceError } = await admin
+        .from("shop_article_prices")
+        .select("article_id, price_from, shipping_from, price_unit, tier_count")
         .in("article_id", articleIds);
-
-      if (tierError) {
-        return NextResponse.json({ error: tierError.message }, { status: 500 });
+      if (priceError) {
+        return NextResponse.json({ error: priceError.message }, { status: 500 });
       }
-
-      for (const tier of tiers ?? []) {
-        const key = String(tier.article_id);
-        const price = typeof tier.price === "number" ? tier.price : Number(tier.price);
-        const shipping =
-          tier.shipping == null
-            ? 0
-            : typeof tier.shipping === "number"
-              ? tier.shipping
-              : Number(tier.shipping);
-        const unit = tier.unit as "kg" | "stueck";
-
-        if (!key) continue;
-        if (!Number.isFinite(price)) continue;
-        if (unit !== "kg" && unit !== "stueck") continue;
-
-        const current = minPriceByArticle[key];
-
-        if (!current) {
-          minPriceByArticle[key] = {
-            price_from: price,
-            shipping_from: Number.isFinite(shipping) ? shipping : 0,
-            unit,
-            tier_count: 1,
-          };
-          continue;
-        }
-
-        current.tier_count += 1;
-
-        if (current.price_from === null || price < current.price_from) {
-          current.price_from = price;
-          current.shipping_from = Number.isFinite(shipping) ? shipping : 0;
-          current.unit = unit;
-        }
+      for (const price of prices ?? []) {
+        minPriceByArticle[String(price.article_id)] = {
+          price_from: price.price_from == null ? null : Number(price.price_from),
+          shipping_from: price.shipping_from == null ? null : Number(price.shipping_from),
+          unit: (price.price_unit === "kg" || price.price_unit === "stueck")
+            ? price.price_unit : null,
+          tier_count: Number(price.tier_count ?? 0),
+        };
       }
     }
 
@@ -605,7 +322,7 @@ export async function GET(req: Request) {
       {
         status: 200,
         headers: {
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "no-store",
         },
       }
     );

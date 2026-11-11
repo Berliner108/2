@@ -693,14 +693,14 @@ const Register = () => {
             <strong>14 Tage Premium kostenlos testen</strong>
 
             <p>
-              Dein Scouti-Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
+              Dein Konto bleibt dauerhaft kostenlos nutzbar. Direkt nach der
               Registrierung erhältst du zusätzlich 14 Tage Zugriff auf alle
               Premium-Anbieterfunktionen.
             </p>
 
             <p>
               Premium benötigst du, wenn du auf Aufträge oder Lackanfragen bieten,
-              Artikel kostenlos einstellen oder neue geschäftliche Kontakte starten möchtest.
+              Artikel einstellen oder neue geschäftliche Unterhaltungen starten möchtest.
               Aufträge und Lackanfragen einstellen, Artikel kaufen sowie die Plattform durchsuchen
               bleibt kostenlos.
             </p>
