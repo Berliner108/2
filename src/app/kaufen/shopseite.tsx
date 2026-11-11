@@ -180,6 +180,56 @@ function isoToDate(iso: any): Date {
   return new Date();
 }
 
+// Einheitliches Mapping für Suchtreffer und Empfehlungen.
+function mapApiArticles(rows: ApiArticle[], viewerIsBusiness: boolean, viewerCountry: "DE" | "AT" | null): ShopArtikel[] {
+  return rows.map((a) => {
+          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
+
+          const unit: 'kg' | 'stueck' =
+            a.price_unit === 'stueck'
+              ? 'stueck'
+              : a.price_unit === 'kg'
+                ? 'kg'
+                : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
+                  ? 'stueck'
+                  : 'kg';
+
+          const qtyForUnit =
+            unit === 'stueck' ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
+
+          const displayQty =
+            a.stock_status === 'begrenzt'
+              ? (typeof qtyForUnit === 'number' ? qtyForUnit : safeNumber(qtyForUnit, 0))
+              : undefined;
+
+          return {
+            id: a.id,
+            titel: a.title ?? '',
+            hersteller: a.manufacturer ?? '—',
+            zustand: String(a.condition ?? a.zustand ?? '').trim() || '—',
+            kategorie: a.category ?? '—',
+            preis: safeNumber(a.price_from, 0),
+            versand:
+              a.shipping_from == null
+                ? null
+                : safeNumber(a.shipping_from, 0),
+            menge: displayQty,
+            lieferdatum: isoToDate(a.delivery_date_iso),
+            bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
+            seller_account_type: (a as any).seller_account_type ?? null,
+            viewer_is_business: viewerIsBusiness,
+            viewer_country: viewerCountry,
+            einheit: unit,
+            promo_score: safeNumber(a.promo_score, 0),
+            gesponsert: safeNumber(a.promo_score, 0) > 0,
+            gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
+            privat: sellTo === 'beide',
+            sale_type: a.sale_type ?? null,
+            price_mode: a.price_mode ?? "legacy_gross",
+          };
+  });
+}
+
 export default function Shopseite() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -194,6 +244,7 @@ export default function Shopseite() {
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [zeigeAlternativen, setZeigeAlternativen] = useState(false);
+  const [weitereArtikel, setWeitereArtikel] = useState<ShopArtikel[]>([]);
   const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
   const [maxPreis, setMaxPreis] = useState(0);
 
@@ -395,55 +446,49 @@ export default function Shopseite() {
 
         const rows = (json.articles ?? []) as ApiArticle[];
 
-        const mapped: ShopArtikel[] = rows.map((a) => {
-          const sellTo = (a.sell_to ?? 'beide') as 'gewerblich' | 'beide';
+        const mapped = mapApiArticles(rows, viewerIsBusiness, viewerCountry);
 
-          const unit: 'kg' | 'stueck' =
-            a.price_unit === 'stueck'
-              ? 'stueck'
-              : a.price_unit === 'kg'
-                ? 'kg'
-                : norm(a.category) === 'arbeitsmittel' || norm(a.category) === 'galvano_zubehoer'
-                  ? 'stueck'
-                  : 'kg';
+        // Bei 1–3 echten Treffern zusätzliche, klar getrennte Shopartikel anzeigen.
+        // Keine Änderung am Suchergebnis, der Trefferzahl oder der Pagination.
+        let empfehlungen: ShopArtikel[] = [];
+        const wenigeTreffer = page === 1 && !!suchbegriff.trim()
+          && !alternativSuche && safeNumber(json.total, 0) > 0
+          && safeNumber(json.total, 0) <= 3;
 
-          const qtyForUnit =
-            unit === 'stueck' ? (a.qty_piece ?? null) : (a.qty_kg ?? null);
+        if (wenigeTreffer) {
+          try {
+            const weitereParams = new URLSearchParams({
+              page: '1',
+              limit: '50',
+              viewerBusiness: viewerIsBusiness ? '1' : '0',
+            });
+            const weitereRes = await fetch(`/api/articles?${weitereParams.toString()}`, {
+              cache: 'no-store',
+            });
+            if (weitereRes.ok) {
+              const weitereJson = await weitereRes.json();
+              const trefferIds = new Set(mapped.map(a => String(a.id)));
+              const moegliche = mapApiArticles(
+                Array.isArray(weitereJson.articles) ? weitereJson.articles : [],
+                viewerIsBusiness, viewerCountry
+              ).filter(a => !trefferIds.has(String(a.id)));
 
-          const displayQty =
-            a.stock_status === 'begrenzt'
-              ? (typeof qtyForUnit === 'number' ? qtyForUnit : safeNumber(qtyForUnit, 0))
-              : undefined;
-
-          return {
-            id: a.id,
-            titel: a.title ?? '',
-            hersteller: a.manufacturer ?? '—',
-            zustand: String(a.condition ?? a.zustand ?? '').trim() || '—',
-            kategorie: a.category ?? '—',
-            preis: safeNumber(a.price_from, 0),
-            versand:
-              a.shipping_from == null
-                ? null
-                : safeNumber(a.shipping_from, 0),
-            menge: displayQty,
-            lieferdatum: isoToDate(a.delivery_date_iso),
-            bilder: Array.isArray(a.image_urls) ? a.image_urls : [],
-            seller_account_type: (a as any).seller_account_type ?? null,
-            viewer_is_business: viewerIsBusiness,
-            viewer_country: viewerCountry,
-            einheit: unit,
-            promo_score: safeNumber(a.promo_score, 0),
-            gesponsert: safeNumber(a.promo_score, 0) > 0,
-            gewerblich: sellTo === 'gewerblich' || sellTo === 'beide',
-            privat: sellTo === 'beide',
-            sale_type: a.sale_type ?? null,
-            price_mode: a.price_mode ?? "legacy_gross",
-          };
-        });
+              // Artikel derselben Kategorie zuerst, danach andere Shopartikel.
+              const kategorienTreffer = new Set(mapped.map(a => norm(a.kategorie)));
+              empfehlungen = [
+                ...moegliche.filter(a => kategorienTreffer.has(norm(a.kategorie))),
+                ...moegliche.filter(a => !kategorienTreffer.has(norm(a.kategorie))),
+              ].slice(0, 12);
+            }
+          } catch (e) {
+            console.warn('Weitere Shopartikel konnten nicht geladen werden:', e);
+            // Empfehlungen sind optional und dürfen echte Treffer nicht blockieren.
+          }
+        }
 
         if (!cancelled) {
           setArtikelDaten(mapped);
+          setWeitereArtikel(empfehlungen);
           setZeigeAlternativen(alternativSuche && mapped.length > 0);
           setTotalCount(safeNumber(json.total, 0));
 
@@ -460,6 +505,7 @@ export default function Shopseite() {
         if (!cancelled) {
           setLoadError(e?.message ?? 'Unbekannter Fehler');
           setZeigeAlternativen(false);
+          setWeitereArtikel([]);
           setArtikelDaten([]);
           setTotalCount(0);
         }
@@ -704,7 +750,9 @@ export default function Shopseite() {
         {/* CONTENT */}
         <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {loading ? 'Lade...' : `${totalCount} Artikel im Shop`}
+            {loading ? 'Lade...' : suchbegriff.trim() && !zeigeAlternativen
+              ? `${totalCount} ${totalCount === 1 ? 'Suchtreffer' : 'Suchtreffer'}`
+              : `${totalCount} Artikel im Shop`}
           </h3>
 
           {loadError && (
@@ -729,6 +777,20 @@ export default function Shopseite() {
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
           </div>
+
+          {!loading && !loadError && weitereArtikel.length > 0 && (
+            <section aria-label="Weitere Artikel entdecken" style={{ marginTop: 32 }}>
+              <h3 className={styles.anfrageUeberschrift}>Weitere Artikel entdecken</h3>
+              <p style={{ margin: '8px 0 20px', opacity: 0.85 }}>
+                Zusätzlich zu deinen Suchtreffern könnten dich diese Artikel interessieren.
+              </p>
+              <div className={styles.grid}>
+                {weitereArtikel.map((a) => (
+                  <ArtikelCard key={`weitere-${String(a.id)}`} artikel={a} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Pagination */}
           {!zeigeAlternativen && <div className={styles.seitenInfo}>
