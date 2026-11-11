@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import BoerseLoading from '../components/loading/BoerseLoading';
@@ -245,10 +246,7 @@ export default function Shopseite() {
   const [zeigeAlternativen, setZeigeAlternativen] = useState(false);
   const [weitereArtikel, setWeitereArtikel] = useState<ShopArtikel[]>([]);
   const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
-  // null = kein Preisfilter; der Slider zeigt dann lediglich den verfügbaren Maximalpreis.
-  // So führt die Initialisierung des Sliders nicht zu einer zweiten Artikelabfrage.
-  const [preisLimit, setPreisLimit] = useState<number | null>(null);
-  const maxPreis = preisLimit === null ? maxAvailablePrice : Math.min(preisLimit, maxAvailablePrice);
+  const [maxPreis, setMaxPreis] = useState(0);
 
     // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
   const [promoToast, setPromoToast] = useState<{
@@ -293,9 +291,7 @@ export default function Shopseite() {
   }, [searchParams]);
 
   // Filter-States
-  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>(
-    () => normalizeKategorie(searchParams.get('kategorie'))
-  );
+  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>('');
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
@@ -318,8 +314,7 @@ export default function Shopseite() {
   }, [kategorie]);
 
   // Pagination aus URL
-  const pageRaw = Number.parseInt(searchParams.get('page') || '1', 10);
-  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+  const page = parseInt(searchParams.get('page') || '1', 10);
   const seitenGroesse = 50;
   // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
@@ -329,29 +324,18 @@ export default function Shopseite() {
     else if (!qKat) setKategorie('');
   }, [searchParams]);
 
-  // Seitenwechsel dürfen nicht durch Filter-Synchronisierung zurückgesetzt werden.
-  // Nur echte Nutzeränderungen an Filtern setzen auf Seite 1 zurück.
-  const resetPageForFilter = () => {
+  // ---- URL mit der gewählten Kategorie synchron halten ----
+  useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
-    if (!params.has('page')) return;
-    params.delete('page');
-    const next = params.toString()
-      ? `${window.location.pathname}?${params.toString()}`
-      : window.location.pathname;
-    router.replace(next, { scroll: false });
-  };
-
-  const changeKategorie = (nextKategorie: typeof kategorie) => {
-    setKategorie(nextKategorie);
-    const params = new URLSearchParams(searchParams.toString());
-    if (nextKategorie) params.set('kategorie', nextKategorie);
+    if (kategorie) params.set('kategorie', kategorie);
     else params.delete('kategorie');
-    params.delete('page');
-    const next = params.toString()
-      ? `${window.location.pathname}?${params.toString()}`
-      : window.location.pathname;
-    router.replace(next, { scroll: false });
-  };
+
+    if (page !== 1) params.delete('page');
+
+    const next = params.toString() ? `?${params.toString()}` : location.pathname;
+    router.replace(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kategorie]);
 
   // 1) Viewer Account-Type aus profiles holen (business/private)
   useEffect(() => {
@@ -425,9 +409,10 @@ export default function Shopseite() {
         if (privat) params.set('p', '1');
         if (sortierung) params.set('sort', sortierung);
 
-        // Nur eine bewusste Änderung am Slider aktiviert den Preisfilter.
-        if (preisLimit !== null) {
-          params.set('max', String(preisLimit));
+        // Beim ersten Laden ist der Slider noch nicht initialisiert.
+        // Sobald maxAvailablePrice bekannt ist, ist auch max=0 ein echter Filterwert.
+        if (maxAvailablePrice > 0 || maxPreis > 0) {
+          params.set('max', String(maxPreis));
         }
 
         const res = await fetch(`/api/articles?${params.toString()}`, {
@@ -509,6 +494,10 @@ export default function Shopseite() {
 
           const serverMax = safeNumber(json.max_price, 0);
           setMaxAvailablePrice(serverMax);
+          setMaxPreis((prev) => {
+            if (prev === 0 && maxAvailablePrice === 0) return serverMax;
+            return Math.min(prev, serverMax);
+          });
 
           setAnzahlAnzeigen(50);
         }
@@ -542,7 +531,8 @@ export default function Shopseite() {
     gewerblich,
     privat,
     sortierung,
-    preisLimit,
+    maxPreis,
+    maxAvailablePrice,
   ]);
 
   // Infinite-Scroll
@@ -563,25 +553,27 @@ export default function Shopseite() {
     return () => observerRef.current?.disconnect();
   }, [artikelDaten, page]);
 
+  // Seite zurücksetzen, wenn andere Filter ändern (außer page)
+  useEffect(() => {
+    if (page !== 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
+      router.replace(neueUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
+
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
 
-  // Echte Dokument-Navigation bei Seitenwechseln: URL und Serverabfrage
-  // können nicht durch veralteten React-Zustand auseinanderlaufen.
   const pageHref = (targetPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (targetPage <= 1) params.delete('page');
     else params.set('page', String(targetPage));
 
     const qs = params.toString();
-    return qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    return qs ? `?${qs}` : location.pathname;
   };
-
-    // Nur beim ersten Laden: einheitliches Börsen-Loading
-    const bootLoading = loading && artikelDaten.length === 0;
-
-    if (bootLoading) {
-      return <BoerseLoading />;
-    }
 
     return (
     <>
@@ -663,7 +655,7 @@ export default function Shopseite() {
           </form>
 
           {/* Sortierung */}
-          <select className={styles.sortSelect} value={sortierung} onChange={(e) => { setSortierung(e.target.value); resetPageForFilter(); }}>
+          <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
             <option value="">Sortieren</option>
             <option value="lieferdatum-auf">Lieferdatum ↑</option>
             <option value="lieferdatum-ab">Lieferdatum ↓</option>
@@ -683,7 +675,7 @@ export default function Shopseite() {
             max={maxAvailablePrice}
             step={0.1}
             value={maxPreis}
-            onChange={(e) => { setPreisLimit(Number(e.target.value)); resetPageForFilter(); }}
+            onChange={(e) => setMaxPreis(Number(e.target.value))}
           />
           <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
@@ -692,12 +684,12 @@ export default function Shopseite() {
             <strong>Kategorie</strong>
             {kategorien.map((k) => (
               <label key={k} className={styles.checkboxLabel}>
-                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => changeKategorie(k)} />
+                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => setKategorie(k)} />
                 {k}
               </label>
             ))}
             <label className={styles.checkboxLabel}>
-              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => changeKategorie('')} />
+              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => setKategorie('')} />
               Alle
             </label>
           </div>
@@ -710,7 +702,7 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={zustand.includes(z)}
-                  onChange={() => { setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z])); resetPageForFilter(); }}
+                  onChange={() => setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z]))}
                 />
                 {z}
               </label>
@@ -725,10 +717,9 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={hersteller.includes(h)}
-                  onChange={() => {
-                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]));
-                    resetPageForFilter();
-                  }}
+                  onChange={() =>
+                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))
+                  }
                 />
                 {h}
               </label>
@@ -739,11 +730,11 @@ export default function Shopseite() {
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={gewerblich} onChange={() => { setGewerblich((g) => !g); resetPageForFilter(); }} />
+              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich((g) => !g)} />
               Gewerblich
             </label>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={privat} onChange={() => { setPrivat((p) => !p); resetPageForFilter(); }} />
+              <input type="checkbox" checked={privat} onChange={() => setPrivat((p) => !p)} />
               Privat
             </label>
           </div>
@@ -751,18 +742,15 @@ export default function Shopseite() {
 
         {/* CONTENT */}
         <div className={styles.content}>
+          {loading ? (
+            <BoerseLoading />
+          ) : (
+            <>
           <h3 className={styles.anfrageUeberschrift}>
-            {loading ? 'Lade...' : suchbegriff.trim() && !zeigeAlternativen
-              ? `${totalCount} ${totalCount === 1 ? 'Suchtreffer' : 'Suchtreffer'}`
+            {suchbegriff.trim() && !zeigeAlternativen
+              ? `${totalCount} Suchtreffer`
               : `${totalCount} Artikel im Shop`}
           </h3>
-
-          {!loading && !loadError && zeigeAlternativen && (
-            <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
-              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
-              {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
-            </div>
-          )}
 
           {loadError && (
             <div style={{ padding: '10px 0' }}>
@@ -781,7 +769,7 @@ export default function Shopseite() {
           )}
 
           <div className={styles.grid}>
-            {(!loading ? (page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten) : []).map((a) => (
+            {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
               <ArtikelCard key={String(a.id)} artikel={a} />
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
@@ -807,25 +795,27 @@ export default function Shopseite() {
           </div>}
           {!zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
-              <a href={pageHref(page - 1)} className={styles.pageArrow}>
+              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
-              </a>
+              </Link>
             )}
             {Array.from({ length: totalPages }, (_, i) => {
               const p = i + 1;
               const href = pageHref(p);
               return (
-                <a key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                <Link key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
-                </a>
+                </Link>
               );
             })}
             {page < totalPages && (
-              <a href={pageHref(page + 1)} className={styles.pageArrow}>
+              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
                 →
-              </a>
+              </Link>
             )}
           </div>}
+            </>
+          )}
         </div>
       </div>
     </>
