@@ -49,3 +49,8 @@
 @media (prefers-reduced-motion: reduce) {
   .puls { animation: none; }
 }
+@media (max-width: 599px) {
+  .skeletonContainer {
+    margin-top: 20px;
+  }
+}
