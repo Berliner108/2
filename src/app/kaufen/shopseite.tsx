@@ -193,6 +193,7 @@ export default function Shopseite() {
 
   const [artikelDaten, setArtikelDaten] = useState<ShopArtikel[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [zeigeAlternativen, setZeigeAlternativen] = useState(false);
   const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
   const [maxPreis, setMaxPreis] = useState(0);
 
@@ -366,9 +367,31 @@ export default function Shopseite() {
         const res = await fetch(`/api/articles?${params.toString()}`, {
           cache: 'no-store',
         });
-        const json = await res.json();
+        let json = await res.json();
 
         if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
+
+        // Keine Treffer? Statt einer leeren Shopseite andere verfügbare Artikel
+        // zeigen. Diese zweite Anfrage ignoriert Suchbegriff und enge Filter,
+        // respektiert aber weiterhin die Sichtbarkeit für Privat/Gewerbe.
+        const keineTreffer = safeNumber(json.total, 0) === 0;
+        const alternativSuche = page === 1 && keineTreffer && !!suchbegriff.trim();
+
+        if (alternativSuche) {
+          const alternativeParams = new URLSearchParams({
+            page: '1',
+            limit: String(seitenGroesse),
+            viewerBusiness: viewerIsBusiness ? '1' : '0',
+          });
+          const alternativeRes = await fetch(`/api/articles?${alternativeParams.toString()}`, {
+            cache: 'no-store',
+          });
+          const alternativeJson = await alternativeRes.json();
+          if (!alternativeRes.ok) {
+            throw new Error(alternativeJson?.error ?? 'Fehler beim Laden alternativer Artikel');
+          }
+          json = alternativeJson;
+        }
 
         const rows = (json.articles ?? []) as ApiArticle[];
 
@@ -421,6 +444,7 @@ export default function Shopseite() {
 
         if (!cancelled) {
           setArtikelDaten(mapped);
+          setZeigeAlternativen(alternativSuche && mapped.length > 0);
           setTotalCount(safeNumber(json.total, 0));
 
           const serverMax = safeNumber(json.max_price, 0);
@@ -435,6 +459,7 @@ export default function Shopseite() {
       } catch (e: any) {
         if (!cancelled) {
           setLoadError(e?.message ?? 'Unbekannter Fehler');
+          setZeigeAlternativen(false);
           setArtikelDaten([]);
           setTotalCount(0);
         }
@@ -682,6 +707,13 @@ export default function Shopseite() {
             {loading ? 'Lade...' : `${totalCount} Artikel im Shop`}
           </h3>
 
+          {!loading && !loadError && zeigeAlternativen && (
+            <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
+              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
+              {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
+            </div>
+          )}
+
           {loadError && (
             <div style={{ padding: '10px 0' }}>
               <strong>Fehler:</strong> {loadError}
@@ -706,10 +738,10 @@ export default function Shopseite() {
           </div>
 
           {/* Pagination */}
-          <div className={styles.seitenInfo}>
+          {!zeigeAlternativen && <div className={styles.seitenInfo}>
             Seite {page} von {totalPages}
-          </div>
-          <div className={styles.pagination}>
+          </div>}
+          {!zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
               <Link href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
@@ -729,7 +761,7 @@ export default function Shopseite() {
                 →
               </Link>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </>
