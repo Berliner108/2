@@ -6,7 +6,7 @@ import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
-import BoerseLoading from '../components/loading/BoerseLoading';
+import ArtikelKartenSkeleton from '../components/loading/ArtikelKartenSkeleton';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
@@ -579,13 +579,6 @@ export default function Shopseite() {
     return qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
   };
 
-    // Nur beim ersten Laden: einheitliches Börsen-Loading
-    const bootLoading = loading && artikelDaten.length === 0;
-
-    if (bootLoading) {
-      return <BoerseLoading />;
-    }
-
     return (
     <>
       <Navbar />
@@ -754,11 +747,13 @@ export default function Shopseite() {
 
         {/* CONTENT */}
         <div className={styles.content}>
-          <h3 className={styles.anfrageUeberschrift}>
-            {loading ? 'Lade...' : suchbegriff.trim() && !zeigeAlternativen
-              ? `${totalCount} ${totalCount === 1 ? 'Suchtreffer' : 'Suchtreffer'}`
-              : `${totalCount} Artikel im Shop`}
-          </h3>
+          {!loading && (
+            <h3 className={styles.anfrageUeberschrift}>
+              {suchbegriff.trim() && !zeigeAlternativen
+                ? `${totalCount} Suchtreffer`
+                : `${totalCount} Artikel im Shop`}
+            </h3>
+          )}
 
           {!loading && !loadError && zeigeAlternativen && (
             <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
@@ -783,12 +778,16 @@ export default function Shopseite() {
             </div>
           )}
 
-          <div className={styles.grid}>
-            {(!loading ? (page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten) : []).map((a) => (
-              <ArtikelCard key={String(a.id)} artikel={a} />
-            ))}
-            {page === 1 && <div ref={loadMoreRef} />}
-          </div>
+          {loading ? (
+            <ArtikelKartenSkeleton anzahl={6} />
+          ) : (
+            <div className={styles.grid}>
+              {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
+                <ArtikelCard key={String(a.id)} artikel={a} />
+              ))}
+              {page === 1 && <div ref={loadMoreRef} />}
+            </div>
+          )}
 
           {!loading && !loadError && weitereArtikel.length > 0 && (
             <section aria-label="Weitere Artikel entdecken" style={{ marginTop: 32 }}>
@@ -805,10 +804,10 @@ export default function Shopseite() {
           )}
 
           {/* Pagination */}
-          {!zeigeAlternativen && <div className={styles.seitenInfo}>
+          {!loading && !zeigeAlternativen && <div className={styles.seitenInfo}>
             Seite {page} von {totalPages}
           </div>}
-          {!zeigeAlternativen && <div className={styles.pagination}>
+          {!loading && !zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
               <a href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
