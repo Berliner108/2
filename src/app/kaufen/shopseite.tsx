@@ -245,7 +245,10 @@ export default function Shopseite() {
   const [zeigeAlternativen, setZeigeAlternativen] = useState(false);
   const [weitereArtikel, setWeitereArtikel] = useState<ShopArtikel[]>([]);
   const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
-  const [maxPreis, setMaxPreis] = useState(0);
+  // null = kein Preisfilter; der Slider zeigt dann lediglich den verfügbaren Maximalpreis.
+  // So führt die Initialisierung des Sliders nicht zu einer zweiten Artikelabfrage.
+  const [preisLimit, setPreisLimit] = useState<number | null>(null);
+  const maxPreis = preisLimit === null ? maxAvailablePrice : Math.min(preisLimit, maxAvailablePrice);
 
     // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
   const [promoToast, setPromoToast] = useState<{
@@ -422,10 +425,9 @@ export default function Shopseite() {
         if (privat) params.set('p', '1');
         if (sortierung) params.set('sort', sortierung);
 
-        // Beim ersten Laden ist der Slider noch nicht initialisiert.
-        // Sobald maxAvailablePrice bekannt ist, ist auch max=0 ein echter Filterwert.
-        if (maxAvailablePrice > 0 || maxPreis > 0) {
-          params.set('max', String(maxPreis));
+        // Nur eine bewusste Änderung am Slider aktiviert den Preisfilter.
+        if (preisLimit !== null) {
+          params.set('max', String(preisLimit));
         }
 
         const res = await fetch(`/api/articles?${params.toString()}`, {
@@ -507,10 +509,6 @@ export default function Shopseite() {
 
           const serverMax = safeNumber(json.max_price, 0);
           setMaxAvailablePrice(serverMax);
-          setMaxPreis((prev) => {
-            if (prev === 0 && maxAvailablePrice === 0) return serverMax;
-            return Math.min(prev, serverMax);
-          });
 
           setAnzahlAnzeigen(50);
         }
@@ -544,8 +542,7 @@ export default function Shopseite() {
     gewerblich,
     privat,
     sortierung,
-    maxPreis,
-    maxAvailablePrice,
+    preisLimit,
   ]);
 
   // Infinite-Scroll
@@ -686,7 +683,7 @@ export default function Shopseite() {
             max={maxAvailablePrice}
             step={0.1}
             value={maxPreis}
-            onChange={(e) => { setMaxPreis(Number(e.target.value)); resetPageForFilter(); }}
+            onChange={(e) => { setPreisLimit(Number(e.target.value)); resetPageForFilter(); }}
           />
           <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
