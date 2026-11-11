@@ -246,6 +246,10 @@ export default function Shopseite() {
   const [weitereArtikel, setWeitereArtikel] = useState<ShopArtikel[]>([]);
   const [maxAvailablePrice, setMaxAvailablePrice] = useState(0);
   const [maxPreis, setMaxPreis] = useState(0);
+  // Der Slider wird erst nach einer bewussten Nutzeränderung zum API-Filter.
+  // Sonst löst die Initialisierung des Höchstpreises eine zweite Abfrage aus.
+  const [preisFilterAktiv, setPreisFilterAktiv] = useState(false);
+  const wirksamerMaxPreis = preisFilterAktiv ? maxPreis : null;
 
     // ✅ Toast für Promo-Erfolg/Abbruch/Fehler (kommt über ?promo=success|cancel|failed)
   const [promoToast, setPromoToast] = useState<{
@@ -422,10 +426,9 @@ export default function Shopseite() {
         if (privat) params.set('p', '1');
         if (sortierung) params.set('sort', sortierung);
 
-        // Beim ersten Laden ist der Slider noch nicht initialisiert.
-        // Sobald maxAvailablePrice bekannt ist, ist auch max=0 ein echter Filterwert.
-        if (maxAvailablePrice > 0 || maxPreis > 0) {
-          params.set('max', String(maxPreis));
+        // Erst eine aktive Nutzeränderung des Sliders filtert nach Höchstpreis.
+        if (wirksamerMaxPreis !== null) {
+          params.set('max', String(wirksamerMaxPreis));
         }
 
         const res = await fetch(`/api/articles?${params.toString()}`, {
@@ -544,8 +547,7 @@ export default function Shopseite() {
     gewerblich,
     privat,
     sortierung,
-    maxPreis,
-    maxAvailablePrice,
+    wirksamerMaxPreis,
   ]);
 
   // Infinite-Scroll
@@ -679,7 +681,7 @@ export default function Shopseite() {
             max={maxAvailablePrice}
             step={0.1}
             value={maxPreis}
-            onChange={(e) => { setMaxPreis(Number(e.target.value)); resetPageForFilter(); }}
+            onChange={(e) => { setPreisFilterAktiv(true); setMaxPreis(Number(e.target.value)); resetPageForFilter(); }}
           />
           <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
@@ -747,13 +749,11 @@ export default function Shopseite() {
 
         {/* CONTENT */}
         <div className={styles.content}>
-          {!loading && (
-            <h3 className={styles.anfrageUeberschrift}>
-              {suchbegriff.trim() && !zeigeAlternativen
-                ? `${totalCount} Suchtreffer`
-                : `${totalCount} Artikel im Shop`}
-            </h3>
-          )}
+          <h3 className={styles.anfrageUeberschrift} style={loading ? { visibility: 'hidden' } : undefined}>
+            {suchbegriff.trim() && !zeigeAlternativen
+              ? `${totalCount} Suchtreffer`
+              : `${totalCount} Artikel im Shop`}
+          </h3>
 
           {!loading && !loadError && zeigeAlternativen && (
             <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
