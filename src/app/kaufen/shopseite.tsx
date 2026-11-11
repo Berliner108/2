@@ -291,7 +291,9 @@ export default function Shopseite() {
   }, [searchParams]);
 
   // Filter-States
-  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>('');
+  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>(
+    () => normalizeKategorie(searchParams.get('kategorie'))
+  );
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
@@ -324,18 +326,29 @@ export default function Shopseite() {
     else if (!qKat) setKategorie('');
   }, [searchParams]);
 
-  // ---- URL mit der gewählten Kategorie synchron halten ----
-  useEffect(() => {
+  // Seitenwechsel dürfen nicht durch Filter-Synchronisierung zurückgesetzt werden.
+  // Nur echte Nutzeränderungen an Filtern setzen auf Seite 1 zurück.
+  const resetPageForFilter = () => {
     const params = new URLSearchParams(searchParams.toString());
-    if (kategorie) params.set('kategorie', kategorie);
+    if (!params.has('page')) return;
+    params.delete('page');
+    const next = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    router.replace(next, { scroll: false });
+  };
+
+  const changeKategorie = (nextKategorie: typeof kategorie) => {
+    setKategorie(nextKategorie);
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextKategorie) params.set('kategorie', nextKategorie);
     else params.delete('kategorie');
-
-    if (page !== 1) params.delete('page');
-
-    const next = params.toString() ? `?${params.toString()}` : location.pathname;
-    router.replace(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kategorie]);
+    params.delete('page');
+    const next = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    router.replace(next, { scroll: false });
+  };
 
   // 1) Viewer Account-Type aus profiles holen (business/private)
   useEffect(() => {
@@ -553,17 +566,6 @@ export default function Shopseite() {
     return () => observerRef.current?.disconnect();
   }, [artikelDaten, page]);
 
-  // Seite zurücksetzen, wenn andere Filter ändern (außer page)
-  useEffect(() => {
-    if (page !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('page');
-      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
-      router.replace(neueUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
-
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
 
   const pageHref = (targetPage: number) => {
@@ -662,7 +664,7 @@ export default function Shopseite() {
           </form>
 
           {/* Sortierung */}
-          <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
+          <select className={styles.sortSelect} value={sortierung} onChange={(e) => { setSortierung(e.target.value); resetPageForFilter(); }}>
             <option value="">Sortieren</option>
             <option value="lieferdatum-auf">Lieferdatum ↑</option>
             <option value="lieferdatum-ab">Lieferdatum ↓</option>
@@ -682,7 +684,7 @@ export default function Shopseite() {
             max={maxAvailablePrice}
             step={0.1}
             value={maxPreis}
-            onChange={(e) => setMaxPreis(Number(e.target.value))}
+            onChange={(e) => { setMaxPreis(Number(e.target.value)); resetPageForFilter(); }}
           />
           <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
@@ -691,12 +693,12 @@ export default function Shopseite() {
             <strong>Kategorie</strong>
             {kategorien.map((k) => (
               <label key={k} className={styles.checkboxLabel}>
-                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => setKategorie(k)} />
+                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => changeKategorie(k)} />
                 {k}
               </label>
             ))}
             <label className={styles.checkboxLabel}>
-              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => setKategorie('')} />
+              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => changeKategorie('')} />
               Alle
             </label>
           </div>
@@ -709,7 +711,7 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={zustand.includes(z)}
-                  onChange={() => setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z]))}
+                  onChange={() => { setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z])); resetPageForFilter(); }}
                 />
                 {z}
               </label>
@@ -724,9 +726,10 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={hersteller.includes(h)}
-                  onChange={() =>
-                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))
-                  }
+                  onChange={() => {
+                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]));
+                    resetPageForFilter();
+                  }}
                 />
                 {h}
               </label>
@@ -737,11 +740,11 @@ export default function Shopseite() {
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich((g) => !g)} />
+              <input type="checkbox" checked={gewerblich} onChange={() => { setGewerblich((g) => !g); resetPageForFilter(); }} />
               Gewerblich
             </label>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={privat} onChange={() => setPrivat((p) => !p)} />
+              <input type="checkbox" checked={privat} onChange={() => { setPrivat((p) => !p); resetPageForFilter(); }} />
               Privat
             </label>
           </div>
@@ -754,6 +757,13 @@ export default function Shopseite() {
               ? `${totalCount} ${totalCount === 1 ? 'Suchtreffer' : 'Suchtreffer'}`
               : `${totalCount} Artikel im Shop`}
           </h3>
+
+          {!loading && !loadError && zeigeAlternativen && (
+            <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
+              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
+              {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
+            </div>
+          )}
 
           {loadError && (
             <div style={{ padding: '10px 0' }}>
