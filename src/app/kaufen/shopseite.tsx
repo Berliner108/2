@@ -707,13 +707,6 @@ export default function Shopseite() {
             {loading ? 'Lade...' : `${totalCount} Artikel im Shop`}
           </h3>
 
-          {!loading && !loadError && zeigeAlternativen && (
-            <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
-              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
-              {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
-            </div>
-          )}
-
           {loadError && (
             <div style={{ padding: '10px 0' }}>
               <strong>Fehler:</strong> {loadError}
