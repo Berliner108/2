@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import BoerseLoading from '../components/loading/BoerseLoading';
@@ -316,7 +315,8 @@ export default function Shopseite() {
   }, [kategorie]);
 
   // Pagination aus URL
-  const page = parseInt(searchParams.get('page') || '1', 10);
+  const pageRaw = Number.parseInt(searchParams.get('page') || '1', 10);
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
   const seitenGroesse = 50;
   // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
@@ -568,13 +568,15 @@ export default function Shopseite() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
 
+  // Echte Dokument-Navigation bei Seitenwechseln: URL und Serverabfrage
+  // können nicht durch veralteten React-Zustand auseinanderlaufen.
   const pageHref = (targetPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (targetPage <= 1) params.delete('page');
     else params.set('page', String(targetPage));
 
     const qs = params.toString();
-    return qs ? `?${qs}` : location.pathname;
+    return qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
   };
 
     // Nur beim ersten Laden: einheitliches Börsen-Loading
@@ -782,7 +784,7 @@ export default function Shopseite() {
           )}
 
           <div className={styles.grid}>
-            {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
+            {(!loading ? (page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten) : []).map((a) => (
               <ArtikelCard key={String(a.id)} artikel={a} />
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
@@ -808,23 +810,23 @@ export default function Shopseite() {
           </div>}
           {!zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
-              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
+              <a href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
-              </Link>
+              </a>
             )}
             {Array.from({ length: totalPages }, (_, i) => {
               const p = i + 1;
               const href = pageHref(p);
               return (
-                <Link key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                <a key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
-                </Link>
+                </a>
               );
             })}
             {page < totalPages && (
-              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
+              <a href={pageHref(page + 1)} className={styles.pageArrow}>
                 →
-              </Link>
+              </a>
             )}
           </div>}
         </div>
