@@ -8,6 +8,7 @@ import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import BoerseLoading from '../components/loading/BoerseLoading';
+import loaderStyles from '../auftragsboerse/auftragsboerse.module.css';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
@@ -235,6 +236,8 @@ export default function Shopseite() {
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
+  const articleAreaRef = useRef<HTMLDivElement>(null);
+  const lastPageRef = useRef<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [viewerChecked, setViewerChecked] = useState(false);
@@ -316,6 +319,15 @@ export default function Shopseite() {
   // Pagination aus URL
   const page = parseInt(searchParams.get('page') || '1', 10);
   const seitenGroesse = 50;
+
+  // Bei einem Seitenwechsel zum Anfang der Artikelliste, nicht zur Navbar.
+  // Bei Filteränderungen bleibt die aktuelle Scrollposition erhalten.
+  useEffect(() => {
+    if (lastPageRef.current !== null && lastPageRef.current !== page) {
+      articleAreaRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
+    lastPageRef.current = page;
+  }, [page]);
   // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
     const qKat = searchParams.get('kategorie');
@@ -741,9 +753,11 @@ export default function Shopseite() {
         </div>
 
         {/* CONTENT */}
-        <div className={styles.content}>
+        <div className={styles.content} ref={articleAreaRef}>
           {loading ? (
-            <BoerseLoading />
+            <div className="shop-inline-loading" role="status" aria-label="Shopartikel werden geladen" aria-busy="true">
+              <BoerseLoading showNavbar={false} />
+            </div>
           ) : (
             <>
           <h3 className={styles.anfrageUeberschrift}>
@@ -795,7 +809,7 @@ export default function Shopseite() {
           </div>}
           {!zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
-              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
+              <Link href={pageHref(page - 1)} scroll={false} className={styles.pageArrow}>
                 ←
               </Link>
             )}
@@ -803,13 +817,13 @@ export default function Shopseite() {
               const p = i + 1;
               const href = pageHref(p);
               return (
-                <Link key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                <Link key={p} href={href} scroll={false} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
                 </Link>
               );
             })}
             {page < totalPages && (
-              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
+              <Link href={pageHref(page + 1)} scroll={false} className={styles.pageArrow}>
                 →
               </Link>
             )}
@@ -818,6 +832,41 @@ export default function Shopseite() {
           )}
         </div>
       </div>
+      {/* Nur die Darstellung des globalen Loaders im Shop einschränken.
+          Keine Änderung an BoerseLoading oder dessen CSS-Datei. */}
+      <style>{`
+        .shop-inline-loading > .${loaderStyles.topLoader},
+        .shop-inline-loading .${loaderStyles.loadingSidebar} {
+          display: none !important;
+        }
+        .shop-inline-loading .${loaderStyles.wrapper}.${loaderStyles.loadingWrapper} {
+          display: block !important;
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          position: static !important;
+          transform: none !important;
+        }
+        .shop-inline-loading .${loaderStyles.content} {
+          display: block !important;
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          position: static !important;
+          transform: none !important;
+        }
+        .shop-inline-loading .${loaderStyles.skeletonPage},
+        .shop-inline-loading .${loaderStyles.largeSkeletonPage} {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+        }
+      `}</style>
     </>
   );
 }
