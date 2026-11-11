@@ -4,11 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import BoerseLoading from '../components/loading/BoerseLoading';
-import loaderStyles from '../auftragsboerse/auftragsboerse.module.css';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
@@ -236,8 +234,6 @@ export default function Shopseite() {
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
-  const articleAreaRef = useRef<HTMLDivElement>(null);
-  const lastPageRef = useRef<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [viewerChecked, setViewerChecked] = useState(false);
@@ -294,7 +290,9 @@ export default function Shopseite() {
   }, [searchParams]);
 
   // Filter-States
-  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>('');
+  const [kategorie, setKategorie] = useState<'' | 'Nasslack' | 'Pulverlack' | 'Arbeitsmittel' | 'Galvano-Zubehör'>(
+    () => normalizeKategorie(searchParams.get('kategorie'))
+  );
   const [zustand, setZustand] = useState<string[]>([]);
   const [hersteller, setHersteller] = useState<string[]>([]);
   const [sortierung, setSortierung] = useState('');
@@ -317,17 +315,9 @@ export default function Shopseite() {
   }, [kategorie]);
 
   // Pagination aus URL
-  const page = parseInt(searchParams.get('page') || '1', 10);
+  const pageRaw = Number.parseInt(searchParams.get('page') || '1', 10);
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
   const seitenGroesse = 50;
-
-  // Bei einem Seitenwechsel zum Anfang der Artikelliste, nicht zur Navbar.
-  // Bei Filteränderungen bleibt die aktuelle Scrollposition erhalten.
-  useEffect(() => {
-    if (lastPageRef.current !== null && lastPageRef.current !== page) {
-      articleAreaRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
-    }
-    lastPageRef.current = page;
-  }, [page]);
   // ---- Vorselektion Kategorie aus Navbar (?kategorie=...) ----
   useEffect(() => {
     const qKat = searchParams.get('kategorie');
@@ -336,18 +326,29 @@ export default function Shopseite() {
     else if (!qKat) setKategorie('');
   }, [searchParams]);
 
-  // ---- URL mit der gewählten Kategorie synchron halten ----
-  useEffect(() => {
+  // Seitenwechsel dürfen nicht durch Filter-Synchronisierung zurückgesetzt werden.
+  // Nur echte Nutzeränderungen an Filtern setzen auf Seite 1 zurück.
+  const resetPageForFilter = () => {
     const params = new URLSearchParams(searchParams.toString());
-    if (kategorie) params.set('kategorie', kategorie);
+    if (!params.has('page')) return;
+    params.delete('page');
+    const next = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    router.replace(next, { scroll: false });
+  };
+
+  const changeKategorie = (nextKategorie: typeof kategorie) => {
+    setKategorie(nextKategorie);
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextKategorie) params.set('kategorie', nextKategorie);
     else params.delete('kategorie');
-
-    if (page !== 1) params.delete('page');
-
-    const next = params.toString() ? `?${params.toString()}` : location.pathname;
-    router.replace(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kategorie]);
+    params.delete('page');
+    const next = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname;
+    router.replace(next, { scroll: false });
+  };
 
   // 1) Viewer Account-Type aus profiles holen (business/private)
   useEffect(() => {
@@ -565,27 +566,25 @@ export default function Shopseite() {
     return () => observerRef.current?.disconnect();
   }, [artikelDaten, page]);
 
-  // Seite zurücksetzen, wenn andere Filter ändern (außer page)
-  useEffect(() => {
-    if (page !== 1) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('page');
-      const neueUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
-      router.replace(neueUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suchbegriff, maxPreis, zustand, hersteller, sortierung, gewerblich, privat]);
-
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse));
 
+  // Echte Dokument-Navigation bei Seitenwechseln: URL und Serverabfrage
+  // können nicht durch veralteten React-Zustand auseinanderlaufen.
   const pageHref = (targetPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (targetPage <= 1) params.delete('page');
     else params.set('page', String(targetPage));
 
     const qs = params.toString();
-    return qs ? `?${qs}` : location.pathname;
+    return qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
   };
+
+    // Nur beim ersten Laden: einheitliches Börsen-Loading
+    const bootLoading = loading && artikelDaten.length === 0;
+
+    if (bootLoading) {
+      return <BoerseLoading />;
+    }
 
     return (
     <>
@@ -667,7 +666,7 @@ export default function Shopseite() {
           </form>
 
           {/* Sortierung */}
-          <select className={styles.sortSelect} value={sortierung} onChange={(e) => setSortierung(e.target.value)}>
+          <select className={styles.sortSelect} value={sortierung} onChange={(e) => { setSortierung(e.target.value); resetPageForFilter(); }}>
             <option value="">Sortieren</option>
             <option value="lieferdatum-auf">Lieferdatum ↑</option>
             <option value="lieferdatum-ab">Lieferdatum ↓</option>
@@ -687,7 +686,7 @@ export default function Shopseite() {
             max={maxAvailablePrice}
             step={0.1}
             value={maxPreis}
-            onChange={(e) => setMaxPreis(Number(e.target.value))}
+            onChange={(e) => { setMaxPreis(Number(e.target.value)); resetPageForFilter(); }}
           />
           <div className={styles.mengeText}>Max. Preis inkl. Versand: {maxPreis.toFixed(2)} €</div>
 
@@ -696,12 +695,12 @@ export default function Shopseite() {
             <strong>Kategorie</strong>
             {kategorien.map((k) => (
               <label key={k} className={styles.checkboxLabel}>
-                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => setKategorie(k)} />
+                <input type="radio" name="kategorie" checked={kategorie === k} onChange={() => changeKategorie(k)} />
                 {k}
               </label>
             ))}
             <label className={styles.checkboxLabel}>
-              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => setKategorie('')} />
+              <input type="radio" name="kategorie" checked={kategorie === ''} onChange={() => changeKategorie('')} />
               Alle
             </label>
           </div>
@@ -714,7 +713,7 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={zustand.includes(z)}
-                  onChange={() => setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z]))}
+                  onChange={() => { setZustand((prev) => (prev.includes(z) ? prev.filter((i) => i !== z) : [...prev, z])); resetPageForFilter(); }}
                 />
                 {z}
               </label>
@@ -729,9 +728,10 @@ export default function Shopseite() {
                 <input
                   type="checkbox"
                   checked={hersteller.includes(h)}
-                  onChange={() =>
-                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]))
-                  }
+                  onChange={() => {
+                    setHersteller((prev) => (prev.includes(h) ? prev.filter((i) => i !== h) : [...prev, h]));
+                    resetPageForFilter();
+                  }}
                 />
                 {h}
               </label>
@@ -742,29 +742,30 @@ export default function Shopseite() {
           <div className={styles.checkboxGroup}>
             <strong>Verkaufstyp</strong>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={gewerblich} onChange={() => setGewerblich((g) => !g)} />
+              <input type="checkbox" checked={gewerblich} onChange={() => { setGewerblich((g) => !g); resetPageForFilter(); }} />
               Gewerblich
             </label>
             <label className={styles.checkboxLabel}>
-              <input type="checkbox" checked={privat} onChange={() => setPrivat((p) => !p)} />
+              <input type="checkbox" checked={privat} onChange={() => { setPrivat((p) => !p); resetPageForFilter(); }} />
               Privat
             </label>
           </div>
         </div>
 
         {/* CONTENT */}
-        <div className={styles.content} ref={articleAreaRef}>
-          {loading ? (
-            <div className="shop-inline-loading" role="status" aria-label="Shopartikel werden geladen" aria-busy="true">
-              <BoerseLoading showNavbar={false} />
-            </div>
-          ) : (
-            <>
+        <div className={styles.content}>
           <h3 className={styles.anfrageUeberschrift}>
-            {suchbegriff.trim() && !zeigeAlternativen
-              ? `${totalCount} Suchtreffer`
+            {loading ? 'Lade...' : suchbegriff.trim() && !zeigeAlternativen
+              ? `${totalCount} ${totalCount === 1 ? 'Suchtreffer' : 'Suchtreffer'}`
               : `${totalCount} Artikel im Shop`}
           </h3>
+
+          {!loading && !loadError && zeigeAlternativen && (
+            <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
+              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
+              {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
+            </div>
+          )}
 
           {loadError && (
             <div style={{ padding: '10px 0' }}>
@@ -783,7 +784,7 @@ export default function Shopseite() {
           )}
 
           <div className={styles.grid}>
-            {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (
+            {(!loading ? (page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten) : []).map((a) => (
               <ArtikelCard key={String(a.id)} artikel={a} />
             ))}
             {page === 1 && <div ref={loadMoreRef} />}
@@ -809,64 +810,27 @@ export default function Shopseite() {
           </div>}
           {!zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
-              <Link href={pageHref(page - 1)} scroll={false} className={styles.pageArrow}>
+              <a href={pageHref(page - 1)} className={styles.pageArrow}>
                 ←
-              </Link>
+              </a>
             )}
             {Array.from({ length: totalPages }, (_, i) => {
               const p = i + 1;
               const href = pageHref(p);
               return (
-                <Link key={p} href={href} scroll={false} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                <a key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
-                </Link>
+                </a>
               );
             })}
             {page < totalPages && (
-              <Link href={pageHref(page + 1)} scroll={false} className={styles.pageArrow}>
+              <a href={pageHref(page + 1)} className={styles.pageArrow}>
                 →
-              </Link>
+              </a>
             )}
           </div>}
-            </>
-          )}
         </div>
       </div>
-      {/* Nur die Darstellung des globalen Loaders im Shop einschränken.
-          Keine Änderung an BoerseLoading oder dessen CSS-Datei. */}
-      <style>{`
-        .shop-inline-loading > .${loaderStyles.topLoader},
-        .shop-inline-loading .${loaderStyles.loadingSidebar} {
-          display: none !important;
-        }
-        .shop-inline-loading .${loaderStyles.wrapper}.${loaderStyles.loadingWrapper} {
-          display: block !important;
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          position: static !important;
-          transform: none !important;
-        }
-        .shop-inline-loading .${loaderStyles.content} {
-          display: block !important;
-          width: 100% !important;
-          max-width: none !important;
-          min-width: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          position: static !important;
-          transform: none !important;
-        }
-        .shop-inline-loading .${loaderStyles.skeletonPage},
-        .shop-inline-loading .${loaderStyles.largeSkeletonPage} {
-          width: 100% !important;
-          max-width: none !important;
-          margin: 0 !important;
-        }
-      `}</style>
     </>
   );
 }
