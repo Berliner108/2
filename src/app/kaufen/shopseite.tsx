@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './kaufen.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -233,6 +233,74 @@ export default function Shopseite() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Scrollposition unabhängig vom Ladezustand der Artikel erhalten.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollZielRef = useRef<{ typ: 'position' | 'artikelliste'; y?: number } | null>(null);
+  const initialisiertRef = useRef(false);
+
+  // Rückkehr von der Artikeldetailseite und echte Seitenwechsel (Pagination).
+  useLayoutEffect(() => {
+    if (initialisiertRef.current) return;
+    initialisiertRef.current = true;
+    const url = window.location.pathname + window.location.search;
+    try {
+      const pageNav = window.sessionStorage.getItem('shop:seitenwechsel');
+      if (pageNav === url) {
+        window.sessionStorage.removeItem('shop:seitenwechsel');
+        scrollZielRef.current = { typ: 'artikelliste' };
+        return;
+      }
+      const rueckkehrRaw = window.sessionStorage.getItem('shop:rueckkehr');
+      if (rueckkehrRaw) {
+        const rueckkehr = JSON.parse(rueckkehrRaw) as { url: string; y: number; hoehe: number };
+        if (rueckkehr.url === url && Number.isFinite(rueckkehr.y)) {
+          window.sessionStorage.removeItem('shop:rueckkehr');
+          scrollZielRef.current = { typ: 'position', y: rueckkehr.y };
+          if (contentRef.current && rueckkehr.hoehe > 0) {
+            contentRef.current.style.minHeight = `${Math.ceil(rueckkehr.hoehe)}px`;
+          }
+        }
+      }
+    } catch {
+      // Storage kann im Privatmodus blockiert sein; der Shop funktioniert trotzdem.
+    }
+  }, []);
+
+  // Nach Abschluss des Ladens die gespeicherte Position wiederherstellen.
+  useLayoutEffect(() => {
+    if (loading || !scrollZielRef.current) return;
+    const ziel = scrollZielRef.current;
+    scrollZielRef.current = null;
+    window.requestAnimationFrame(() => {
+      if (ziel.typ === 'artikelliste') {
+        const oben = contentRef.current?.getBoundingClientRect().top ?? 0;
+        window.scrollTo({ top: window.scrollY + oben, behavior: 'instant' });
+      } else {
+        window.scrollTo({ top: ziel.y ?? 0, behavior: 'instant' });
+      }
+    });
+  }, [loading]);
+
+  const artikelNavigationMerken = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!(event.target instanceof Element)) return;
+    const link = event.target.closest('a[href]');
+    if (!link || !link.getAttribute('href')?.startsWith('/kaufen/artikel/')) return;
+    try {
+      window.sessionStorage.setItem('shop:rueckkehr', JSON.stringify({
+        url: window.location.pathname + window.location.search,
+        y: window.scrollY,
+        hoehe: contentRef.current?.getBoundingClientRect().height ?? 0,
+      }));
+    } catch { /* Storage optional */ }
+  };
+
+  const seitenwechselMerken = (url: string) => {
+    try {
+      window.sessionStorage.setItem('shop:seitenwechsel', url);
+      window.sessionStorage.removeItem('shop:rueckkehr');
+    } catch { /* Storage optional */ }
+  };
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -410,6 +478,17 @@ export default function Shopseite() {
 
     async function loadArticles() {
       try {
+        // Der Loader ist kürzer als die echte Artikelliste. Ohne reservierte Höhe
+        // würde der Browser am Seitenende die Scrollposition nach oben begrenzen.
+        if (contentRef.current) {
+          const bisherigeHoehe = contentRef.current.getBoundingClientRect().height;
+          const reserviert = Number.parseFloat(contentRef.current.style.minHeight) || 0;
+          contentRef.current.style.minHeight = `${Math.ceil(Math.max(bisherigeHoehe, reserviert))}px`;
+        }
+        // Bei Filtern/Suche/Sortierung bleibt die Position unverändert.
+        if (!scrollZielRef.current) {
+          scrollZielRef.current = { typ: 'position', y: window.scrollY };
+        }
         setLoading(true);
         setLoadError(null);
 
@@ -748,7 +827,7 @@ export default function Shopseite() {
         </div>
 
         {/* CONTENT */}
-        <div className={styles.content}>
+        <div className={styles.content} ref={contentRef} onClickCapture={artikelNavigationMerken}>
           <h3 className={styles.anfrageUeberschrift} style={loading ? { visibility: 'hidden' } : undefined}>
             {suchbegriff.trim() && !zeigeAlternativen
               ? `${totalCount} Suchtreffer`
@@ -809,7 +888,7 @@ export default function Shopseite() {
           </div>}
           {!loading && !zeigeAlternativen && <div className={styles.pagination}>
             {page > 1 && (
-              <a href={pageHref(page - 1)} className={styles.pageArrow}>
+              <a href={pageHref(page - 1)} onClick={() => seitenwechselMerken(pageHref(page - 1))} className={styles.pageArrow}>
                 ←
               </a>
             )}
@@ -817,13 +896,13 @@ export default function Shopseite() {
               const p = i + 1;
               const href = pageHref(p);
               return (
-                <a key={p} href={href} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
+                <a key={p} href={href} onClick={() => { if (p !== page) seitenwechselMerken(href); }} className={`${styles.pageLink} ${page === p ? styles.activePage : ''}`}>
                   {p}
                 </a>
               );
             })}
             {page < totalPages && (
-              <a href={pageHref(page + 1)} className={styles.pageArrow}>
+              <a href={pageHref(page + 1)} onClick={() => seitenwechselMerken(pageHref(page + 1))} className={styles.pageArrow}>
                 →
               </a>
             )}
