@@ -96,6 +96,7 @@ export default function AuftragsboerseSeite() {
   const sp = useSearchParams()
   const boolFromQuery = (key: string) => sp.get(key) === '1'
   const [jobs, setJobs] = useState<Auftrag[]>([])
+  const [empfehlungen, setEmpfehlungen] = useState<Auftrag[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -310,8 +311,45 @@ export default function AuftragsboerseSeite() {
           dateien: (job as any).dateien ?? [],
         }))
         if (cancelled) return
+        const trefferzahl = toFiniteNumber(json.total, 0)
+        const hatAktiveFilter = Boolean(
+          suchbegriff.trim() || verfahren || gewerblich || privat ||
+          waSelbst || waAbhol || wnZust || wnSelbst ||
+          maxLength !== null || maxWidth !== null ||
+          maxHeight !== null || maxMasse !== null
+        )
+        let weitereAuftraege: Auftrag[] = []
+        // Die Treffer und ihre Zahl bleiben immer unverändert.
+        // Empfehlungen bei 0 bis 3 Treffern, nur auf Seite 1 mit aktiven Filtern.
+        if (page === 1 && hatAktiveFilter && trefferzahl <= 3) {
+          try {
+            const empfehlungsParams = new URLSearchParams({
+              recommendations: '1', page: '1', limit: String(seitenGroesse + 3),
+            })
+            const empfehlungsRes = await fetch(`/api/auftraege?${empfehlungsParams}`, {
+              cache: 'no-store',
+            })
+            if (!empfehlungsRes.ok) throw new Error('Empfehlungen konnten nicht geladen werden.')
+            const empfehlungsJson = (await empfehlungsRes.json()) as ApiResponse
+            const vorhandeneIds = new Set(mapped.map((a) => String(a.id)))
+            weitereAuftraege = (empfehlungsJson.items ?? [])
+              .filter((a) => !vorhandeneIds.has(String(a.id)))
+              .slice(0, seitenGroesse)
+              .map((a): Auftrag => ({
+                ...(a as unknown as Auftrag),
+                warenausgabeDatum: toDate(a.warenausgabeDatum),
+                warenannahmeDatum: toDate(a.warenannahmeDatum),
+                dateien: (a as any).dateien ?? [],
+              }))
+          } catch (empfehlungsFehler) {
+            // Fehler bei Empfehlungen dürfen die eigentlichen Suchtreffer nicht verdecken.
+            console.warn('[auftragsboerse] Empfehlungen fehlgeschlagen:', empfehlungsFehler)
+          }
+        }
+        if (cancelled) return
+        setEmpfehlungen(weitereAuftraege)
         setJobs(mapped)
-        setTotalCount(toFiniteNumber(json.total, 0))
+        setTotalCount(trefferzahl)
         const nextLimits: Limits = {
           length: Math.max(
             DEFAULT_LIMITS.length,
@@ -340,6 +378,7 @@ export default function AuftragsboerseSeite() {
         if (cancelled) return
         setLoadError(error?.message ?? 'Aufträge konnten nicht geladen werden.')
         setJobs([])
+        setEmpfehlungen([])
         setTotalCount(0)
       } finally {
         if (!cancelled) setLoading(false)
@@ -614,6 +653,16 @@ export default function AuftragsboerseSeite() {
               ))}
               {page === 1 && <div ref={loadMoreRef} />}
             </div>
+          )}
+          {!loading && !loadError && empfehlungen.length > 0 && (
+            <section aria-label="Weitere Aufträge entdecken" style={{ marginTop: 32 }}>
+              <h3 className={styles.anfrageUeberschrift}>Weitere Aufträge entdecken</h3>
+              <div className={styles.grid}>
+                {empfehlungen.map((auftrag) => (
+                  <ArtikelContainerAuftragsboerse key={`empfehlung-${auftrag.id}`} artikel={auftrag} />
+                ))}
+              </div>
+            </section>
           )}
           {!loading && (
             <div className={styles.pagination}>
