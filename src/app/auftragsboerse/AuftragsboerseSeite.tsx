@@ -94,8 +94,6 @@ export default function AuftragsboerseSeite() {
   const router = useRouter()
   const pathname = usePathname()
   const sp = useSearchParams()
-  const numFromQuery = (key: string, fallback: number) =>
-    sp.get(key) !== null ? Number(sp.get(key)) : fallback
   const boolFromQuery = (key: string) => sp.get(key) === '1'
   const [jobs, setJobs] = useState<Auftrag[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -115,17 +113,19 @@ export default function AuftragsboerseSeite() {
   const [waAbhol, setWaAbhol] = useState(() => boolFromQuery('wa_a'))
   const [wnZust, setWnZust] = useState(() => boolFromQuery('wn_z'))
   const [wnSelbst, setWnSelbst] = useState(() => boolFromQuery('wn_s'))
-  const [maxLength, setMaxLength] = useState(() =>
-    numFromQuery('l', DEFAULT_LIMITS.length)
+  // null = kein gesetzter Filter; der Slider zeigt das API-Maximum an.
+  // So löst das Einlesen der Maximalwerte keinen zweiten Request aus.
+  const [maxLength, setMaxLength] = useState<number | null>(() =>
+    sp.has('l') ? Number(sp.get('l')) : null
   )
-  const [maxWidth, setMaxWidth] = useState(() =>
-    numFromQuery('w', DEFAULT_LIMITS.width)
+  const [maxWidth, setMaxWidth] = useState<number | null>(() =>
+    sp.has('w') ? Number(sp.get('w')) : null
   )
-  const [maxHeight, setMaxHeight] = useState(() =>
-    numFromQuery('h', DEFAULT_LIMITS.height)
+  const [maxHeight, setMaxHeight] = useState<number | null>(() =>
+    sp.has('h') ? Number(sp.get('h')) : null
   )
-  const [maxMasse, setMaxMasse] = useState(() =>
-    numFromQuery('m', DEFAULT_LIMITS.masse)
+  const [maxMasse, setMaxMasse] = useState<number | null>(() =>
+    sp.has('m') ? Number(sp.get('m')) : null
   )
   const page = Math.max(1, parseInt(sp.get('page') || '1', 10) || 1)
   const seitenGroesse = 50
@@ -218,28 +218,12 @@ export default function AuftragsboerseSeite() {
     setWaAbhol(sp.get('wa_a') === '1')
     setWnZust(sp.get('wn_z') === '1')
     setWnSelbst(sp.get('wn_s') === '1')
-    setMaxLength(
-      sp.get('l')
-        ? Math.min(Number(sp.get('l')), limits.length)
-        : limits.length
-    )
-    setMaxWidth(
-      sp.get('w')
-        ? Math.min(Number(sp.get('w')), limits.width)
-        : limits.width
-    )
-    setMaxHeight(
-      sp.get('h')
-        ? Math.min(Number(sp.get('h')), limits.height)
-        : limits.height
-    )
-    setMaxMasse(
-      sp.get('m')
-        ? Math.min(Number(sp.get('m')), limits.masse)
-        : limits.masse
-    )
+    setMaxLength(sp.has('l') ? Number(sp.get('l')) : null)
+    setMaxWidth(sp.has('w') ? Number(sp.get('w')) : null)
+    setMaxHeight(sp.has('h') ? Number(sp.get('h')) : null)
+    setMaxMasse(sp.has('m') ? Number(sp.get('m')) : null)
     setAnzeigenLimit(50)
-  }, [spKey, limits.length, limits.width, limits.height, limits.masse])
+  }, [spKey])
   // State -> URL. Wie bisher wird bei Filteränderungen Seite 1 verwendet.
   useEffect(() => {
     if (fromUrlRef.current) {
@@ -256,10 +240,10 @@ export default function AuftragsboerseSeite() {
     if (waAbhol) params.set('wa_a', '1')
     if (wnZust) params.set('wn_z', '1')
     if (wnSelbst) params.set('wn_s', '1')
-    if (maxLength !== limits.length) params.set('l', String(maxLength))
-    if (maxWidth !== limits.width) params.set('w', String(maxWidth))
-    if (maxHeight !== limits.height) params.set('h', String(maxHeight))
-    if (maxMasse !== limits.masse) params.set('m', String(maxMasse))
+    if (maxLength !== null) params.set('l', String(maxLength))
+    if (maxWidth !== null) params.set('w', String(maxWidth))
+    if (maxHeight !== null) params.set('h', String(maxHeight))
+    if (maxMasse !== null) params.set('m', String(maxMasse))
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
     setAnzeigenLimit(50)
@@ -308,10 +292,10 @@ export default function AuftragsboerseSeite() {
         if (waAbhol) params.set('wa_a', '1')
         if (wnZust) params.set('wn_z', '1')
         if (wnSelbst) params.set('wn_s', '1')
-        if (maxLength !== limits.length) params.set('l', String(maxLength))
-        if (maxWidth !== limits.width) params.set('w', String(maxWidth))
-        if (maxHeight !== limits.height) params.set('h', String(maxHeight))
-        if (maxMasse !== limits.masse) params.set('m', String(maxMasse))
+        if (maxLength !== null) params.set('l', String(maxLength))
+        if (maxWidth !== null) params.set('w', String(maxWidth))
+        if (maxHeight !== null) params.set('h', String(maxHeight))
+        if (maxMasse !== null) params.set('m', String(maxMasse))
         const res = await fetch(`/api/auftraege?${params.toString()}`, {
           cache: 'no-store',
         })
@@ -347,12 +331,6 @@ export default function AuftragsboerseSeite() {
           ),
         }
         setLimits(nextLimits)
-        // Wenn der Nutzer keinen Sliderwert in der URL gesetzt hat,
-        // bleibt der Slider automatisch auf dem echten Maximum.
-        if (!sp.get('l')) setMaxLength(nextLimits.length)
-        if (!sp.get('w')) setMaxWidth(nextLimits.width)
-        if (!sp.get('h')) setMaxHeight(nextLimits.height)
-        if (!sp.get('m')) setMaxMasse(nextLimits.masse)
         setVerfahrenCounts({
           ...Object.fromEntries(VERFAHREN.map((v) => [v, 0])),
           ...(json.verfahren_counts ?? {}),
@@ -386,11 +364,6 @@ export default function AuftragsboerseSeite() {
     maxWidth,
     maxHeight,
     maxMasse,
-    limits.length,
-    limits.width,
-    limits.height,
-    limits.masse,
-    spKey,
   ])
   useEffect(() => {
     if (page !== 1) return
@@ -488,50 +461,50 @@ export default function AuftragsboerseSeite() {
             </button>
           </form>
           <label className={styles.sliderLabel}>
-            Max. Länge: {maxLength} mm
+            Max. Länge: {maxLength ?? limits.length} mm
           </label>
           <input
             type="range"
             min={0}
             max={limits.length}
             step={10}
-            value={maxLength}
+            value={Math.min(maxLength ?? limits.length, limits.length)}
             onChange={(e) => setMaxLength(+e.target.value)}
             className={styles.range}
           />
           <label className={styles.sliderLabel}>
-            Max. Breite: {maxWidth} mm
+            Max. Breite: {maxWidth ?? limits.width} mm
           </label>
           <input
             type="range"
             min={0}
             max={limits.width}
             step={10}
-            value={maxWidth}
+            value={Math.min(maxWidth ?? limits.width, limits.width)}
             onChange={(e) => setMaxWidth(+e.target.value)}
             className={styles.range}
           />
           <label className={styles.sliderLabel}>
-            Max. Höhe: {maxHeight} mm
+            Max. Höhe: {maxHeight ?? limits.height} mm
           </label>
           <input
             type="range"
             min={0}
             max={limits.height}
             step={10}
-            value={maxHeight}
+            value={Math.min(maxHeight ?? limits.height, limits.height)}
             onChange={(e) => setMaxHeight(+e.target.value)}
             className={styles.range}
           />
           <label className={styles.sliderLabel}>
-            Max. Masse: {maxMasse} kg
+            Max. Masse: {maxMasse ?? limits.masse} kg
           </label>
           <input
             type="range"
             min={0}
             max={limits.masse}
             step={10}
-            value={maxMasse}
+            value={Math.min(maxMasse ?? limits.masse, limits.masse)}
             onChange={(e) => setMaxMasse(+e.target.value)}
             className={styles.range}
           />
