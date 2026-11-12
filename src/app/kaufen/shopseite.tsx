@@ -7,6 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import ArtikelCard from '../components/ArtikelKarteShop';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import ArtikelKartenSkeleton from '../components/loading/ArtikelKartenSkeleton';
+import boerseLoadingStyles from '../auftragsboerse/auftragsboerse.module.css';
 
 // ---- Helpers: Kategorie robust normalisieren ----
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
@@ -644,6 +645,11 @@ export default function Shopseite() {
     return (
     <>
       <Navbar />
+      {loading && (
+        <div className={boerseLoadingStyles.topLoader} aria-hidden="true">
+          <div className={boerseLoadingStyles.topLoaderInner} />
+        </div>
+      )}
             {promoToast && (
         <div
           role="status"
