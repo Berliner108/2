@@ -163,16 +163,20 @@ export default function AuftragsboerseSeite() {
   }, [])
 
   useLayoutEffect(() => {
-    if (loading || !scrollZielRef.current) return
+    if (loading) return
     const ziel = scrollZielRef.current
     scrollZielRef.current = null
     const frame = window.requestAnimationFrame(() => {
-      if (ziel.typ === 'liste') {
+      if (ziel?.typ === 'liste') {
         const top = contentRef.current?.getBoundingClientRect().top ?? 0
         window.scrollTo({ top: window.scrollY + top, behavior: 'instant' })
-      } else {
+      } else if (ziel?.typ === 'position') {
         window.scrollTo({ top: ziel.y ?? 0, behavior: 'instant' })
       }
+      // Nur während des Ladens Höhe reservieren. Sobald die neuen Treffer
+      // sichtbar sind, muss die Liste wieder auf ihre echte Höhe schrumpfen.
+      // Bei weniger Treffern begrenzt der Browser die Scrollposition automatisch.
+      if (contentRef.current) contentRef.current.style.minHeight = ''
     })
     return () => window.cancelAnimationFrame(frame)
   }, [loading])
