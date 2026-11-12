@@ -858,9 +858,7 @@ export default function Shopseite() {
           {!loading && !loadError && weitereArtikel.length > 0 && (
             <section aria-label="Weitere Artikel entdecken" style={{ marginTop: 32 }}>
               <h3 className={styles.anfrageUeberschrift}>Weitere Artikel entdecken</h3>
-              <p style={{ margin: '8px 0 20px', opacity: 0.85 }}>
-                Unabhängig von deinen aktuellen Filtern könnten dich diese Artikel interessieren.
-              </p>
+              
               <div className={styles.grid}>
                 {weitereArtikel.map((a) => (
                   <ArtikelCard key={`weitere-${String(a.id)}`} artikel={a} />

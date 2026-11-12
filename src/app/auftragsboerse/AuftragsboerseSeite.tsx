@@ -1,11 +1,11 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import styles from './auftragsboerse.module.css'
 import Navbar from '../components/navbar/Navbar'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import ArtikelContainerAuftragsboerse from '../components/ArtikelContainerAuftragsboerse'
-import BoerseLoading from '../components/loading/BoerseLoading'
+import ArtikelKartenSkeleton from '../components/loading/ArtikelKartenSkeleton'
 import type { Auftrag } from '@/lib/types/auftrag'
 const VERFAHREN = [
   'Nasslackieren',
@@ -132,6 +132,59 @@ export default function AuftragsboerseSeite() {
   const [anzeigenLimit, setAnzeigenLimit] = useState(50)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  // Wiederherstellung der Scrollposition bei Filtern, Rückkehr und Pagination.
+  const scrollZielRef = useRef<{ typ: 'position' | 'liste'; y?: number } | null>(null)
+  const scrollInitialisiertRef = useRef(false)
+
+  useLayoutEffect(() => {
+    if (scrollInitialisiertRef.current) return
+    scrollInitialisiertRef.current = true
+    const url = window.location.pathname + window.location.search
+    try {
+      const seitenwechsel = window.sessionStorage.getItem('auftragsboerse:seitenwechsel')
+      if (seitenwechsel === url) {
+        window.sessionStorage.removeItem('auftragsboerse:seitenwechsel')
+        scrollZielRef.current = { typ: 'liste' }
+        return
+      }
+      const raw = window.sessionStorage.getItem('auftragsboerse:rueckkehr')
+      if (raw) {
+        const gespeichert = JSON.parse(raw) as { url: string; y: number; hoehe: number }
+        if (gespeichert.url === url && Number.isFinite(gespeichert.y)) {
+          window.sessionStorage.removeItem('auftragsboerse:rueckkehr')
+          scrollZielRef.current = { typ: 'position', y: gespeichert.y }
+          if (contentRef.current && gespeichert.hoehe > 0) {
+            contentRef.current.style.minHeight = `${Math.ceil(gespeichert.hoehe)}px`
+          }
+        }
+      }
+    } catch { /* Session-Storage ist optional. */ }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (loading || !scrollZielRef.current) return
+    const ziel = scrollZielRef.current
+    scrollZielRef.current = null
+    const frame = window.requestAnimationFrame(() => {
+      if (ziel.typ === 'liste') {
+        const top = contentRef.current?.getBoundingClientRect().top ?? 0
+        window.scrollTo({ top: window.scrollY + top, behavior: 'instant' })
+      } else {
+        window.scrollTo({ top: ziel.y ?? 0, behavior: 'instant' })
+      }
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [loading])
+
+  const seitenwechselMerken = (href: string) => {
+    const url = new URL(href, window.location.href)
+    scrollZielRef.current = { typ: 'liste' }
+    try {
+      window.sessionStorage.setItem('auftragsboerse:seitenwechsel', url.pathname + url.search)
+      window.sessionStorage.removeItem('auftragsboerse:rueckkehr')
+    } catch { /* Session-Storage ist optional. */ }
+  }
+
   const sidebarRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -231,6 +284,16 @@ export default function AuftragsboerseSeite() {
     let cancelled = false
     async function loadJobs() {
       try {
+        // Der Skeleton ist kürzer als eine volle Auftragsliste. Platz reservieren,
+        // damit der Browser beim Filtern nicht zum Seitenanfang springt.
+        if (contentRef.current) {
+          const bisher = contentRef.current.getBoundingClientRect().height
+          const reserviert = Number.parseFloat(contentRef.current.style.minHeight) || 0
+          contentRef.current.style.minHeight = `${Math.ceil(Math.max(bisher, reserviert))}px`
+        }
+        if (!scrollZielRef.current) {
+          scrollZielRef.current = { typ: 'position', y: window.scrollY }
+        }
         setLoading(true)
         setLoadError(null)
         const params = new URLSearchParams()
@@ -354,23 +417,26 @@ export default function AuftragsboerseSeite() {
   }
   const totalPages = Math.max(1, Math.ceil(totalCount / seitenGroesse))
   const anzeigen = page === 1 ? jobs.slice(0, anzeigenLimit) : jobs
-  const scrollTopBeforeDetailOpen = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement
-    const link = target.closest('a')
-    if (!link) return
-    const href = link.getAttribute('href') || ''
-    if (!href.includes('/auftragsboerse/auftraege/')) return
-    window.scrollTo(0, 0)
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-  }
-  const bootLoading = loading && jobs.length === 0
-  if (bootLoading) {
-    return <BoerseLoading />
+  const auftragNavigationMerken = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!(e.target instanceof Element)) return
+    const link = e.target.closest('a[href]')
+    if (!link || !link.getAttribute('href')?.includes('/auftragsboerse/auftraege/')) return
+    try {
+      window.sessionStorage.setItem('auftragsboerse:rueckkehr', JSON.stringify({
+        url: window.location.pathname + window.location.search,
+        y: window.scrollY,
+        hoehe: contentRef.current?.getBoundingClientRect().height ?? 0,
+      }))
+    } catch { /* Session-Storage ist optional. */ }
   }
   return (
     <>
       <Navbar />
+      {loading && (
+        <div className={styles.topLoader} aria-hidden="true">
+          <div className={styles.topLoaderInner} />
+        </div>
+      )}
       <button
         className={styles.hamburger}
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -550,15 +616,11 @@ export default function AuftragsboerseSeite() {
             </label>
           </div>
         </div>
-        <div ref={contentRef} className={styles.content}>
-          <h3 className={styles.anfrageUeberschrift}>
-            {loading
-              ? 'Lade...'
-              : `${totalCount} ${
-                  totalCount === 1 ? 'offener Auftrag' : 'offene Aufträge'
-                }`}
+        <div ref={contentRef} className={styles.content} onClickCapture={auftragNavigationMerken}>
+          <h3 className={styles.anfrageUeberschrift} style={loading ? { visibility: 'hidden' } : undefined}>
+            {`${totalCount} ${totalCount === 1 ? 'offener Auftrag' : 'offene Aufträge'}`}
           </h3>
-          {loadError && (
+          {!loading && loadError && (
             <div style={{ padding: '10px 0' }}>
               <strong>Fehler:</strong> {loadError}
             </div>
@@ -568,35 +630,45 @@ export default function AuftragsboerseSeite() {
               <strong>Keine passenden Aufträge gefunden.</strong>
             </div>
           )}
-          <div className={styles.grid} onClickCapture={scrollTopBeforeDetailOpen}>
-            {anzeigen.map((a) => (
-              <ArtikelContainerAuftragsboerse key={a.id} artikel={a} />
-            ))}
-            {page === 1 && <div ref={loadMoreRef} />}
-          </div>
-          <div className={styles.pagination}>
-            {page > 1 && (
-              <Link href={pageHref(page - 1)} className={styles.pageArrow}>
-                ←
-              </Link>
-            )}
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Link
-                key={i + 1}
-                href={pageHref(i + 1)}
-                className={`${styles.pageLink} ${
-                  page === i + 1 ? styles.activePage : ''
-                }`}
-              >
-                {i + 1}
-              </Link>
-            ))}
-            {page < totalPages && (
-              <Link href={pageHref(page + 1)} className={styles.pageArrow}>
-                →
-              </Link>
-            )}
-          </div>
+          {loading ? (
+            <div className={styles.auftragSkeletonAbstand}>
+              <ArtikelKartenSkeleton anzahl={6} />
+            </div>
+          ) : (
+            <div className={styles.grid}>
+              {anzeigen.map((a) => (
+                <ArtikelContainerAuftragsboerse key={a.id} artikel={a} />
+              ))}
+              {page === 1 && <div ref={loadMoreRef} />}
+            </div>
+          )}
+          {!loading && (
+            <div className={styles.pagination}>
+              {page > 1 && (
+                <Link href={pageHref(page - 1)} scroll={false} onClick={() => seitenwechselMerken(pageHref(page - 1))} className={styles.pageArrow}>
+                  ←
+                </Link>
+              )}
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Link
+                  key={i + 1}
+                  href={pageHref(i + 1)}
+                  scroll={false}
+                  onClick={() => seitenwechselMerken(pageHref(i + 1))}
+                  className={`${styles.pageLink} ${
+                    page === i + 1 ? styles.activePage : ''
+                  }`}
+                >
+                  {i + 1}
+                </Link>
+              ))}
+              {page < totalPages && (
+                <Link href={pageHref(page + 1)} scroll={false} onClick={() => seitenwechselMerken(pageHref(page + 1))} className={styles.pageArrow}>
+                  →
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>
