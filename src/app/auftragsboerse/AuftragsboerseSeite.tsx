@@ -207,11 +207,21 @@ export default function AuftragsboerseSeite() {
       })
     })
   }
-  const fromUrlRef = useRef(false)
+  // Merkt sich die Filter aus der URL statt nur ein Boolean-Flag.
+  // Ein bloßes Flag kann beim Seitenwechsel gesetzt bleiben und dann
+  // die nächste echte Nutzeränderung (z. B. „Alle“) verschlucken.
+  const fromUrlRef = useRef<string | null>(null)
   const spKey = sp.toString()
   // URL -> State
   useEffect(() => {
-    fromUrlRef.current = true
+    // Nur die aktiven Filter vergleichen, nicht den page-Parameter.
+    const urlFilter = new URLSearchParams()
+    const filterKeys = ['q', 'verfahren', 'g', 'p', 'sort', 'wa_s', 'wa_a', 'wn_z', 'wn_s', 'l', 'w', 'h', 'm']
+    for (const key of filterKeys) {
+      const value = sp.get(key)
+      if (value !== null && value !== '') urlFilter.set(key, value)
+    }
+    fromUrlRef.current = urlFilter.toString()
     const qFromUrl = sp.get('q') ?? ''
     setSuchbegriff(qFromUrl)
     setSuchEingabe(qFromUrl)
@@ -231,10 +241,6 @@ export default function AuftragsboerseSeite() {
   }, [spKey])
   // State -> URL. Wie bisher wird bei Filteränderungen Seite 1 verwendet.
   useEffect(() => {
-    if (fromUrlRef.current) {
-      fromUrlRef.current = false
-      return
-    }
     const params = new URLSearchParams()
     if (suchbegriff) params.set('q', suchbegriff)
     if (verfahren) params.set('verfahren', verfahren)
@@ -250,7 +256,19 @@ export default function AuftragsboerseSeite() {
     if (maxHeight !== null) params.set('h', String(maxHeight))
     if (maxMasse !== null) params.set('m', String(maxMasse))
     const qs = params.toString()
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    // URL-Synchronisation darf nicht die nächste Nutzeränderung unterdrücken.
+    if (fromUrlRef.current === qs) {
+      fromUrlRef.current = null
+      return
+    }
+    fromUrlRef.current = null
+    // Bei einer echten Filteränderung die URL aktualisieren und page entfernen.
+    // Ohne Änderung kein unnötiges router.replace auslösen.
+    const currentParams = new URLSearchParams(sp.toString())
+    currentParams.delete('page')
+    if (currentParams.toString() !== qs || sp.has('page')) {
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    }
     setAnzeigenLimit(50)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
