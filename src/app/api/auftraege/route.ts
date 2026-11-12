@@ -157,6 +157,7 @@ export async function GET(req: Request) {
       parsedOffset !== null && Number.isFinite(parsedOffset)
         ? Math.max(parsedOffset, 0)
         : null
+    const recommendationsMode = url.searchParams.get('recommendations') === '1'
     const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
     const verfahren = url.searchParams.get('verfahren') ?? ''
     const sortierung = (url.searchParams.get('sort') ?? '').toLowerCase()
@@ -176,12 +177,12 @@ export async function GET(req: Request) {
     const maxMasse = mRaw !== null ? Number(mRaw) : null
     let accountProfileIds: string[] | null = null
     // Exakt wie bisher im Frontend: nur wenn genau einer der beiden Typfilter aktiv ist.
-    if (g && !p) {
+    if (!recommendationsMode && g && !p) {
       accountProfileIds = await fetchProfileIdsByAccountType(supabase, 'business')
-    } else if (p && !g) {
+    } else if (!recommendationsMode && p && !g) {
       accountProfileIds = await fetchProfileIdsByAccountType(supabase, 'private')
     }
-    const locationProfileIds = search.trim()
+    const locationProfileIds = !recommendationsMode && search.trim()
       ? await fetchLocationProfileIds(supabase, search)
       : []
     const applyFilters = (
@@ -245,14 +246,19 @@ export async function GET(req: Request) {
       }
       return next
     }
-    // 1) Count-Abfrage – identisches Grundmuster wie bei Lackanfragen.
-    const countQuery = applyFilters(
-      supabase.from('jobs').select('id', { count: 'exact', head: true })
-    )
-    const { count: total, error: countError } = await countQuery
-    if (countError) {
-      console.error('[auftraege] count failed:', countError)
-      return NextResponse.json({ error: countError.message }, { status: 500 })
+    // Empfehlung: keine Trefferzählung, Standortsuche, Slider-Maxima oder Verfahren-Zähler.
+    // Nur veröffentlichte, offene Aufträge (gleiche Sichtbarkeit wie die reguläre Liste).
+    let total: number | null = null
+    if (!recommendationsMode) {
+      const countQuery = applyFilters(
+        supabase.from('jobs').select('id', { count: 'exact', head: true })
+      )
+      const { count, error: countError } = await countQuery
+      if (countError) {
+        console.error('[auftraege] count failed:', countError)
+        return NextResponse.json({ error: countError.message }, { status: 500 })
+      }
+      total = count
     }
     // 2) Daten-Abfrage – nur die aktuelle Seite.
     const columns = `
@@ -276,8 +282,10 @@ export async function GET(req: Request) {
       published,
       status
     `
-    let dataQuery = applyFilters(supabase.from('jobs').select(columns))
-    switch (sortierung) {
+    let dataQuery = recommendationsMode
+      ? supabase.from('jobs').select(columns).eq('published', true).eq('status', 'open')
+      : applyFilters(supabase.from('jobs').select(columns))
+    switch (recommendationsMode ? '' : sortierung) {
       case 'warenausgabe-auf':
         dataQuery = dataQuery
           .order('liefer_datum_utc', { ascending: true })
@@ -396,6 +404,9 @@ export async function GET(req: Request) {
         user: null,
       }
     })
+    if (recommendationsMode) {
+      return NextResponse.json({ items, total: 0, page, limit }, { status: 200 })
+    }
     // 5) Slider-Maxima serverseitig ermitteln.
     const [maxL, maxW, maxH, maxM] = await Promise.all([
       getNumericMaximum(supabase, 'laenge_mm', DEFAULT_LIMITS.length),
