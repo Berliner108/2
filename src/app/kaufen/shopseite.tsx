@@ -233,6 +233,9 @@ export default function Shopseite() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   // Scrollposition unabhängig vom Ladezustand der Artikel erhalten.
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollZielRef = useRef<{ typ: 'position' | 'artikelliste'; y?: number } | null>(null);
@@ -300,9 +303,6 @@ export default function Shopseite() {
       window.sessionStorage.removeItem('shop:rueckkehr');
     } catch { /* Storage optional */ }
   };
-
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [viewerChecked, setViewerChecked] = useState(false);
   const [viewerIsBusiness, setViewerIsBusiness] = useState(false);
@@ -517,41 +517,22 @@ export default function Shopseite() {
 
         if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
 
-        // Keine Treffer? Statt einer leeren Shopseite andere verfügbare Artikel
-        // zeigen. Diese zweite Anfrage ignoriert Suchbegriff und enge Filter,
-        // respektiert aber weiterhin die Sichtbarkeit für Privat/Gewerbe.
-        const keineTreffer = safeNumber(json.total, 0) === 0;
-        const alternativSuche = page === 1 && keineTreffer && !!suchbegriff.trim();
-
-        if (alternativSuche) {
-          const alternativeParams = new URLSearchParams({
-            page: '1',
-            limit: String(seitenGroesse),
-            viewerBusiness: viewerIsBusiness ? '1' : '0',
-          });
-          const alternativeRes = await fetch(`/api/articles?${alternativeParams.toString()}`, {
-            cache: 'no-store',
-          });
-          const alternativeJson = await alternativeRes.json();
-          if (!alternativeRes.ok) {
-            throw new Error(alternativeJson?.error ?? 'Fehler beim Laden alternativer Artikel');
-          }
-          json = alternativeJson;
-        }
-
+        // Die echten Treffer bleiben unverändert. Empfehlungen erscheinen
+        // bei 0–3 Treffern einer Suche ODER eines aktiven Filters separat.
+        const echteTrefferzahl = safeNumber(json.total, 0);
+        const hatAktivenFilter = Boolean(
+          suchbegriff.trim() || kategorie || zustand.length || hersteller.length ||
+          gewerblich || privat || preisFilterAktiv
+        );
+        const empfehlungenAnzeigen = page === 1 && hatAktivenFilter && echteTrefferzahl <= 3;
         const rows = (json.articles ?? []) as ApiArticle[];
-
         const mapped = mapApiArticles(rows, viewerIsBusiness, viewerCountry);
-
-        // Bei 1–3 echten Treffern zusätzliche, klar getrennte Shopartikel anzeigen.
-        // Keine Änderung am Suchergebnis, der Trefferzahl oder der Pagination.
         let empfehlungen: ShopArtikel[] = [];
-        const wenigeTreffer = page === 1 && !!suchbegriff.trim()
-          && !alternativSuche && safeNumber(json.total, 0) > 0
-          && safeNumber(json.total, 0) <= 3;
 
-        if (wenigeTreffer) {
+        if (empfehlungenAnzeigen) {
           try {
+            // Bewusst ohne Such-/Kategorie-/Zustands-/Hersteller-/Verkaufstyp-
+            // oder Preisfilter; die Sichtbarkeit je Käuferprofil bleibt bestehen.
             const weitereParams = new URLSearchParams({
               page: '1',
               limit: '50',
@@ -568,7 +549,7 @@ export default function Shopseite() {
                 viewerIsBusiness, viewerCountry
               ).filter(a => !trefferIds.has(String(a.id)));
 
-              // Artikel derselben Kategorie zuerst, danach andere Shopartikel.
+              // Falls es echte Treffer gibt: gleiche Kategorie bevorzugen.
               const kategorienTreffer = new Set(mapped.map(a => norm(a.kategorie)));
               empfehlungen = [
                 ...moegliche.filter(a => kategorienTreffer.has(norm(a.kategorie))),
@@ -584,8 +565,8 @@ export default function Shopseite() {
         if (!cancelled) {
           setArtikelDaten(mapped);
           setWeitereArtikel(empfehlungen);
-          setZeigeAlternativen(alternativSuche && mapped.length > 0);
-          setTotalCount(safeNumber(json.total, 0));
+          setZeigeAlternativen(empfehlungenAnzeigen && echteTrefferzahl === 0 && empfehlungen.length > 0);
+          setTotalCount(echteTrefferzahl);
 
           const serverMax = safeNumber(json.max_price, 0);
           setMaxAvailablePrice(serverMax);
@@ -836,7 +817,7 @@ export default function Shopseite() {
 
           {!loading && !loadError && zeigeAlternativen && (
             <div role="status" style={{ padding: '12px 0', lineHeight: 1.5 }}>
-              Für <strong>„{suchbegriff}“</strong> wurden keine passenden Artikel gefunden.
+              Für deine aktuellen Such- und Filtereinstellungen wurden keine passenden Artikel gefunden.
               {' '}Hier findest du stattdessen andere verfügbare Artikel aus dem Shop.
             </div>
           )}
@@ -847,10 +828,10 @@ export default function Shopseite() {
             </div>
           )}
 
-          {!loading && !loadError && totalCount === 0 && (
+          {!loading && !loadError && totalCount === 0 && !zeigeAlternativen && (
             <div style={{ padding: '10px 0', opacity: 0.9 }}>
               <strong>
-                {suchbegriff || kategorie || zustand.length || hersteller.length || gewerblich || privat
+                {suchbegriff || kategorie || zustand.length || hersteller.length || gewerblich || privat || preisFilterAktiv
                   ? 'Keine passenden Artikel gefunden.'
                   : 'Keine Artikel im Shop.'}
               </strong>
@@ -872,7 +853,7 @@ export default function Shopseite() {
             <section aria-label="Weitere Artikel entdecken" style={{ marginTop: 32 }}>
               <h3 className={styles.anfrageUeberschrift}>Weitere Artikel entdecken</h3>
               <p style={{ margin: '8px 0 20px', opacity: 0.85 }}>
-                Zusätzlich zu deinen Suchtreffern könnten dich diese Artikel interessieren.
+                Unabhängig von deinen aktuellen Filtern könnten dich diese Artikel interessieren.
               </p>
               <div className={styles.grid}>
                 {weitereArtikel.map((a) => (
