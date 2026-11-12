@@ -442,6 +442,7 @@ export async function GET(req: Request) {
       if (rows.length < countChunk) break
       countFrom += countChunk
     }
+    
     return NextResponse.json(
       {
         items,
