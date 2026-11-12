@@ -7,9 +7,11 @@
   width: 100%;
 }
 .puls {
-  background: linear-gradient(90deg, #e8ddf4 0%, #ceb6e8 46%, #e8ddf4 100%);
-  background-size: 200% 100%;
-  animation: artikelSkeletonPuls 1.6s ease-in-out infinite;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.0) 25%, rgba(255,255,255,.6) 37%, rgba(255,255,255,0) 63%),
+    linear-gradient(0deg, #e0f2fe, #fae8ff);
+  background-size: 200% 100%, 100% 100%;
+  animation: artikelSkeletonPuls 1.2s linear infinite;
   border-radius: 6px;
 }
 .bild { width: 100%; height: 100%; }
@@ -30,8 +32,8 @@
   border: 0;
 }
 @keyframes artikelSkeletonPuls {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% { background-position: -200% 0, 0 0; }
+  100% { background-position: 200% 0, 0 0; }
 }
 @media (max-width: 599px) {
   .liste { gap: 20px; }
