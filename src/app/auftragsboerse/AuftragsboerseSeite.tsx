@@ -130,6 +130,7 @@ export default function AuftragsboerseSeite() {
   )
   const page = Math.max(1, parseInt(sp.get('page') || '1', 10) || 1)
   const seitenGroesse = 50
+  const empfehlungenGesamtLimit = 100
   const [anzeigenLimit, setAnzeigenLimit] = useState(50)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -342,11 +343,12 @@ export default function AuftragsboerseSeite() {
         )
         let weitereAuftraege: Auftrag[] = []
         // Die Treffer und ihre Zahl bleiben immer unverändert.
-        // Empfehlungen bei 0 bis 3 Treffern, nur auf Seite 1 mit aktiven Filtern.
-        if (page === 1 && hatAktiveFilter && trefferzahl <= 3) {
+        // Bei weniger als 100 Treffern die erste Ergebnisseite mit weiteren offenen Aufträgen auf bis zu 100 Karten ergänzen.
+        // Nur auf Seite 1 und bei aktiven Such-/Filterkriterien; Trefferzahl bleibt unverändert.
+        if (page === 1 && hatAktiveFilter && trefferzahl < empfehlungenGesamtLimit) {
           try {
             const empfehlungsParams = new URLSearchParams({
-              recommendations: '1', page: '1', limit: String(seitenGroesse + 3),
+              recommendations: '1', page: '1', limit: '200',
             })
             const empfehlungsRes = await fetch(`/api/auftraege?${empfehlungsParams}`, {
               cache: 'no-store',
@@ -356,7 +358,7 @@ export default function AuftragsboerseSeite() {
             const vorhandeneIds = new Set(mapped.map((a) => String(a.id)))
             weitereAuftraege = (empfehlungsJson.items ?? [])
               .filter((a) => !vorhandeneIds.has(String(a.id)))
-              .slice(0, seitenGroesse)
+              .slice(0, Math.max(0, empfehlungenGesamtLimit - mapped.length))
               .map((a): Auftrag => ({
                 ...(a as unknown as Auftrag),
                 warenausgabeDatum: toDate(a.warenausgabeDatum),
