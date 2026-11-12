@@ -141,20 +141,8 @@ async function getNumericMaximum(
   return Math.max(fallback, finiteNumber(data?.[0]?.[column], fallback))
 }
 export async function GET(req: Request) {
-  // Temporäre Diagnose: ausschließlich Laufzeiten, keine Suchbegriffe oder IDs protokollieren.
-  const diagnoseStart = performance.now()
-  let diagnoseLetzterZeitpunkt = diagnoseStart
-  const diagnoseAbschnitte: Record<string, number> = {}
-  const diagnoseMark = (abschnitt: string) => {
-    const jetzt = performance.now()
-    diagnoseAbschnitte[abschnitt] = Math.round((jetzt - diagnoseLetzterZeitpunkt) * 10) / 10
-    diagnoseLetzterZeitpunkt = jetzt
-  }
-  let diagnoseModus = 'normal'
-  let diagnoseBatches = 0
   try {
     const supabase = await supabaseServer()
-    diagnoseMark('supabaseServer')
     const url = new URL(req.url)
     const limitRaw = parseInt(url.searchParams.get('limit') ?? '50', 10)
     const limit = Math.min(Math.max(Number.isNaN(limitRaw) ? 50 : limitRaw, 1), 200)
@@ -170,7 +158,6 @@ export async function GET(req: Request) {
         ? Math.max(parsedOffset, 0)
         : null
     const recommendationsMode = url.searchParams.get('recommendations') === '1'
-    diagnoseModus = recommendationsMode ? 'empfehlungen' : 'normal'
     const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
     const verfahren = url.searchParams.get('verfahren') ?? ''
     const sortierung = (url.searchParams.get('sort') ?? '').toLowerCase()
@@ -198,7 +185,6 @@ export async function GET(req: Request) {
     const locationProfileIds = !recommendationsMode && search.trim()
       ? await fetchLocationProfileIds(supabase, search)
       : []
-    diagnoseMark('profile-und-standortfilter')
     const applyFilters = (
       query: any,
       options: { includeVerfahren?: boolean; includeSearch?: boolean } = {}
@@ -274,7 +260,6 @@ export async function GET(req: Request) {
       }
       total = count
     }
-    diagnoseMark('trefferzaehlung')
     // 2) Daten-Abfrage – nur die aktuelle Seite.
     const columns = `
       id,
@@ -336,7 +321,6 @@ export async function GET(req: Request) {
       console.error('[auftraege] query failed:', jobError)
       return NextResponse.json({ error: jobError.message }, { status: 500 })
     }
-    diagnoseMark('auftraege-laden')
     const jobs = jobData ?? []
     // 3) Profile nur für die aktuelle Seite laden.
     const userIds = Array.from(
@@ -356,7 +340,6 @@ export async function GET(req: Request) {
         }
       }
     }
-    diagnoseMark('profile-laden')
     // 4) Titelbild nur für die aktuelle Seite laden.
     const jobIds = jobs.map((job: any) => job.id)
     const titleImgByJob = new Map<string, string>()
@@ -380,7 +363,6 @@ export async function GET(req: Request) {
         }
       }
     }
-    diagnoseMark('bilder-laden')
     const items = jobs.map((job: any) => {
       const verfahrenList: { name: string; felder: Record<string, never> }[] = []
       if (job.verfahren_1) {
@@ -422,7 +404,6 @@ export async function GET(req: Request) {
         user: null,
       }
     })
-    diagnoseMark('antwort-aufbereiten')
     if (recommendationsMode) {
       return NextResponse.json({ items, total: 0, page, limit }, { status: 200 })
     }
@@ -433,7 +414,6 @@ export async function GET(req: Request) {
       getNumericMaximum(supabase, 'hoehe_mm', DEFAULT_LIMITS.height),
       getNumericMaximum(supabase, 'masse_kg', DEFAULT_LIMITS.masse),
     ])
-    diagnoseMark('slider-maxima')
     // 6) Verfahren-Zähler: wie vorher mit allen aktiven Filtern außer
     // Verfahren selbst und Suchbegriff.
     const verfahrenCounts: Record<string, number> = Object.fromEntries(
@@ -442,7 +422,6 @@ export async function GET(req: Request) {
     const countChunk = 1000
     let countFrom = 0
     while (true) {
-      diagnoseBatches += 1
       const countBaseQuery = applyFilters(
         supabase.from('jobs').select('verfahren_1, verfahren_2'),
         { includeVerfahren: false, includeSearch: false }
@@ -463,7 +442,6 @@ export async function GET(req: Request) {
       if (rows.length < countChunk) break
       countFrom += countChunk
     }
-    diagnoseMark('verfahrenszaehler')
     return NextResponse.json(
       {
         items,
@@ -486,12 +464,5 @@ export async function GET(req: Request) {
       { error: error?.message ?? 'Aufträge konnten nicht geladen werden.' },
       { status: 500 }
     )
-  } finally {
-    console.info('[auftraege-perf]', JSON.stringify({
-      modus: diagnoseModus,
-      abschnitte_ms: diagnoseAbschnitte,
-      verfahrenszaehler_batches: diagnoseBatches,
-      gesamt_ms: Math.round((performance.now() - diagnoseStart) * 10) / 10,
-    }))
   }
 }
