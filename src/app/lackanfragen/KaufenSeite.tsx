@@ -2,13 +2,12 @@
 // -----------------------------------------------------
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import styles from './auftragsboerse.module.css';
 import Navbar from '../components/navbar/Navbar';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import ArtikelCard from '../components/ArtikelCard';
-import BoerseLoading from '../components/loading/BoerseLoading';
 
 /* ===================== Filterlisten ===================== */
 
@@ -349,6 +348,25 @@ const toBool = (v: unknown): boolean =>
         ? v !== 0
         : !!v;
 
+/* === Skeleton-Karten im Ergebnisbereich, unabhängig von der Filterleiste === */
+function LackanfragenSkeleton({ anzahl = 12 }: { anzahl?: number }) {
+  return (
+    <div className={styles.grid} role="status" aria-live="polite" aria-busy="true" aria-label="Lackanfragen werden geladen">
+      {Array.from({ length: anzahl }, (_, i) => (
+        <div className={styles.lackSkeletonCard} key={i} aria-hidden="true">
+          <div className={styles.lackSkeletonImage} />
+          <div className={styles.lackSkeletonDetails}>
+            <div className={`${styles.lackSkeletonLine} ${styles.lackSkeletonTitle}`} />
+            <div className={`${styles.lackSkeletonLine} ${styles.lackSkeletonLineLong}`} />
+            <div className={`${styles.lackSkeletonLine} ${styles.lackSkeletonLineMedium}`} />
+            <div className={`${styles.lackSkeletonLine} ${styles.lackSkeletonLineShort}`} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ===================== Seite ===================== */
 
 export default function KaufenSeite() {
@@ -376,89 +394,119 @@ export default function KaufenSeite() {
   const [totalCount, setTotalCount] = useState(0);
   const [urlReady, setUrlReady] = useState(false);
 
-  const didSkipFirstUrlSync = useRef(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollZielRef = useRef<number | null>(null);
+
+  // Während neuer Filterergebnisse genügend Höhe reservieren, damit die
+  // Scrollposition nicht durch die temporären Skeletons verändert wird.
+  useLayoutEffect(() => {
+    if (loading) return;
+    const ziel = scrollZielRef.current;
+    scrollZielRef.current = null;
+    const frame = window.requestAnimationFrame(() => {
+      if (ziel !== null) window.scrollTo({ top: ziel, behavior: 'instant' });
+      if (contentRef.current) contentRef.current.style.minHeight = '';
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading]);
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const searchParamsKey = searchParams.toString();
   const page = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1);
 
-  /* === Initialzustand einmalig aus URL übernehmen === */
+  // Filtervergleich ohne Pagination: Ein Seitenwechsel darf keine Filteränderung
+  // auslösen. Identische Filterzustände ergeben stets dieselbe Signatur.
+  const toFilterParams = (
+    q: string, kat: string, zust: string[], herst: string[], sort: string,
+    menge: number, gew: boolean, priv: boolean,
+  ) => {
+    const params = new URLSearchParams();
+    if (q.trim()) params.set('q', q.trim());
+    if (kat) params.set('kategorie', kat);
+    if (zust.length) params.set('zustand', zust.join(','));
+    if (herst.length) params.set('hersteller', herst.join(','));
+    if (sort) params.set('sort', sort);
+    if (menge !== MAX_MENGE) params.set('max', String(menge));
+    if (gew) params.set('g', '1');
+    if (priv) params.set('p', '1');
+    return params;
+  };
+
+  const lokaleFilter = toFilterParams(
+    suchbegriff, kategorie, zustand, hersteller, sortierung,
+    maxMenge, gewerblich, privat,
+  ).toString();
+  const urlFilter = toFilterParams(
+    searchParams.get('q') || '', searchParams.get('kategorie') || '',
+    (searchParams.get('zustand') || '').split(',').filter(Boolean),
+    (searchParams.get('hersteller') || '').split(',').filter(Boolean),
+    searchParams.get('sort') || '',
+    clamp(Number(searchParams.get('max') || MAX_MENGE)),
+    searchParams.get('g') === '1', searchParams.get('p') === '1',
+  ).toString();
+
+  const ausUrlRef = useRef<string | null>(null);
+  const eigeneUrlRef = useRef<string | null>(null);
+
+  // URL → Filter: auch Zurück/Vorwärts und Links mit gesetzten Filtern abbilden.
+  // Während einer eigenen router.replace-Navigation nicht mit alten URL-Werten
+  // die gerade ausgewählten Filter überschreiben.
   useEffect(() => {
-    const arr = (s: string | null) => (s ? s.split(',').filter(Boolean) : []);
-
-    const qFromUrl = searchParams.get('q') || '';
-    setSuchbegriff(qFromUrl);
-    setSuchEingabe(qFromUrl);
-    setKategorie(searchParams.get('kategorie') || '');
-    setZustand(arr(searchParams.get('zustand')));
-    setHersteller(arr(searchParams.get('hersteller')));
-    setSortierung(searchParams.get('sort') || '');
-
-    const initMax = Number(searchParams.get('max') || MAX_MENGE);
-    const v = clamp(isNaN(initMax) ? MAX_MENGE : initMax);
-
-    setMaxMenge(v);
-    setMaxMengeInput(String(v));
-    setGewerblich(searchParams.get('g') === '1');
-    setPrivat(searchParams.get('p') === '1');
-
-    setUrlReady(true);
+    if (eigeneUrlRef.current !== null) {
+      if (urlFilter !== eigeneUrlRef.current) return;
+      eigeneUrlRef.current = null;
+    }
+    if (urlFilter !== lokaleFilter || !urlReady) {
+      ausUrlRef.current = urlFilter;
+      const q = searchParams.get('q') || '';
+      setSuchbegriff(q);
+      setSuchEingabe(q);
+      setKategorie(searchParams.get('kategorie') || '');
+      setZustand((searchParams.get('zustand') || '').split(',').filter(Boolean));
+      setHersteller((searchParams.get('hersteller') || '').split(',').filter(Boolean));
+      setSortierung(searchParams.get('sort') || '');
+      const wert = clamp(Number(searchParams.get('max') || MAX_MENGE));
+      setMaxMenge(wert);
+      setMaxMengeInput(String(wert));
+      setGewerblich(searchParams.get('g') === '1');
+      setPrivat(searchParams.get('p') === '1');
+    }
+    if (!urlReady) setUrlReady(true);
+    // Nur auf Navigationsänderungen reagieren, nicht auf laufende Formulareingaben.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParamsKey]);
 
-  /* === Filter/Sortierzustand in URL spiegeln === */
+  // Filter → URL: erst nach initialer Übernahme, nur bei echter Nutzeränderung.
   useEffect(() => {
     if (!urlReady) return;
-
-    // ersten Lauf nach Initialisierung überspringen,
-    // damit /lackanfragen?page=2 nicht sofort auf Seite 1 zurückgesetzt wird
-    if (!didSkipFirstUrlSync.current) {
-      didSkipFirstUrlSync.current = true;
+    if (ausUrlRef.current !== null) {
+      // Bei Browser-Zurück/Vorwärts zuerst den neuen URL-Zustand übernehmen,
+      // nicht die noch alten lokalen Filter zurück in die URL schreiben.
+      if (ausUrlRef.current === lokaleFilter) ausUrlRef.current = null;
       return;
     }
-
-    const params = new URLSearchParams();
-
-    if (suchbegriff.trim()) params.set('q', suchbegriff.trim());
-    if (kategorie) params.set('kategorie', kategorie);
-    if (zustand.length) params.set('zustand', zustand.join(','));
-    if (hersteller.length) params.set('hersteller', hersteller.join(','));
-    if (sortierung) params.set('sort', sortierung);
-    if (maxMenge !== MAX_MENGE) params.set('max', String(maxMenge));
-    if (gewerblich) params.set('g', '1');
-    if (privat) params.set('p', '1');
-
-    // page bewusst nicht übernehmen:
-    // Filteränderung soll immer auf Seite 1 springen
-    const next = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`;
-    const current = `${pathname}${window.location.search}`;
-
-    if (next !== current) {
-      router.replace(next, { scroll: false });
-    }
-  }, [
-    urlReady,
-    suchbegriff,
-    kategorie,
-    zustand,
-    hersteller,
-    sortierung,
-    maxMenge,
-    gewerblich,
-    privat,
-    pathname,
-    router,
-  ]);
+    if (lokaleFilter === urlFilter) return;
+    eigeneUrlRef.current = lokaleFilter;
+    router.replace(lokaleFilter ? `${pathname}?${lokaleFilter}` : pathname, { scroll: false });
+  }, [urlReady, lokaleFilter, urlFilter, router, pathname]);
 
   /* === Daten laden: Pagination + Filter laufen über API === */
   useEffect(() => {
-    if (!urlReady) return;
+    // Ein Filterwechsel auf Seite 2 darf nicht erst Seite 2 und anschließend
+    // Seite 1 abfragen. Auf die passende URL warten.
+    if (!urlReady || lokaleFilter !== urlFilter) return;
 
     let active = true;
 
     (async () => {
+      if (contentRef.current) {
+        const aktuelleHoehe = contentRef.current.getBoundingClientRect().height;
+        const reserviert = Number.parseFloat(contentRef.current.style.minHeight) || 0;
+        contentRef.current.style.minHeight = `${Math.ceil(Math.max(aktuelleHoehe, reserviert))}px`;
+      }
+      if (scrollZielRef.current === null) scrollZielRef.current = window.scrollY;
       setLoading(true);
 
       try {
@@ -569,6 +617,7 @@ export default function KaufenSeite() {
     };
   }, [
     urlReady,
+    urlFilter,
     page,
     suchbegriff,
     kategorie,
@@ -647,15 +696,14 @@ export default function KaufenSeite() {
     setMaxMengeInput(String(v));
   };
 
-  const bootLoading = loading && liste.length === 0;
-
-  if (bootLoading) {
-    return <BoerseLoading />;
-  }
-
   return (
     <>
       <Navbar />
+      {loading && (
+        <div className={styles.topLoader} aria-hidden="true">
+          <div className={styles.topLoaderInner} />
+        </div>
+      )}
 
       <button
         className={styles.hamburger}
@@ -836,19 +884,23 @@ export default function KaufenSeite() {
           </div>
         </div>
 
-        <div className={styles.content}>
-          <h3 className={styles.anfrageUeberschrift}>
-            {loading
-              ? 'Lade...'
-              : `${totalCount} ${totalCount === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}`}
+        <div ref={contentRef} className={styles.content}>
+          <h3 className={styles.anfrageUeberschrift} style={loading ? { visibility: 'hidden' } : undefined}>
+            {`${totalCount} ${totalCount === 1 ? 'offene Lackanfrage' : 'offene Lackanfragen'}`}
           </h3>
 
-          <div className={styles.grid}>
-            {angezeigteArtikel.map((a) => (
-              <ArtikelCard key={a.id} artikel={a} />
-            ))}
-          </div>
+          {loading ? (
+            <LackanfragenSkeleton anzahl={12} />
+          ) : (
+            <div className={styles.grid}>
+              {angezeigteArtikel.map((a) => (
+                <ArtikelCard key={a.id} artikel={a} />
+              ))}
+            </div>
+          )}
 
+          {!loading && (
+            <>
           <div className={styles.seitenInfo}>
             Seite {page} von {totalPages}
           </div>
@@ -908,6 +960,8 @@ export default function KaufenSeite() {
               );
             })()}
           </div>
+            </>
+          )}
         </div>
       </div>
     </>

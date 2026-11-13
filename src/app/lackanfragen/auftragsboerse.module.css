@@ -804,3 +804,81 @@
     min-height: 36px;
   }
 }
+/* === Lackanfragen: Ladestreifen ohne zusätzlichen Layoutabstand === */
+.topLoader {
+  position: sticky;
+  top: 0;
+  height: 0;
+  width: 100%;
+  z-index: 60;
+  overflow: visible;
+  background: transparent;
+}
+
+.topLoaderInner {
+  height: 4px;
+  width: 30%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6, #60a5fa);
+  background-size: 300% 100%;
+  animation: lackLoaderSweep 1.1s ease-in-out infinite;
+  transform: translateX(-50%);
+}
+
+@keyframes lackLoaderSweep {
+  0% { transform: translateX(-50%); background-position: 0% 0; }
+  100% { transform: translateX(350%); background-position: 100% 0; }
+}
+
+/* Skeletons orientieren sich an den tatsächlichen Lackanfragen-Karten. */
+.lackSkeletonCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  min-height: 260px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+}
+
+.lackSkeletonImage,
+.lackSkeletonLine {
+  background: linear-gradient(90deg, #e0f2fe 0%, #fae8ff 50%, #e0f2fe 100%);
+  background-size: 200% 100%;
+  animation: lackSkeletonShimmer 1.2s linear infinite;
+  border-radius: 8px;
+}
+
+.lackSkeletonImage { width: 220px; height: 220px; flex: 0 0 220px; }
+.lackSkeletonDetails { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; padding-top: 5px; }
+.lackSkeletonLine { height: 18px; }
+.lackSkeletonTitle { width: 54%; height: 26px; }
+.lackSkeletonLineLong { width: 80%; }
+.lackSkeletonLineMedium { width: 66%; }
+.lackSkeletonLineShort { width: 42%; }
+
+@keyframes lackSkeletonShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 599px) {
+  .lackSkeletonCard { gap: 12px; min-height: 140px; padding: 12px; }
+  .lackSkeletonImage { width: 110px; height: 110px; flex-basis: 110px; }
+  .lackSkeletonDetails { gap: 10px; }
+  .lackSkeletonLine { height: 12px; }
+  .lackSkeletonTitle { height: 18px; }
+}
+
+@media (min-width: 1600px) {
+  .lackSkeletonCard { gap: 24px; min-height: 294px; padding: 22px 24px; }
+  .lackSkeletonImage { width: 250px; height: 250px; flex-basis: 250px; }
+}
+
+@media (min-width: 2400px) {
+  .lackSkeletonCard { gap: 44px; min-height: 456px; padding: 38px 44px; }
+  .lackSkeletonImage { width: 380px; height: 380px; flex-basis: 380px; }
+}
