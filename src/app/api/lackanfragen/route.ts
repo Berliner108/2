@@ -117,10 +117,8 @@ export async function GET(req: Request) {
     const supabase = await supabaseServer()
     const url = new URL(req.url)
 
-    // Eigener Modus für zusätzliche öffentliche Lackanfragen. Keine privaten Datensätze.
-    const recommendations = url.searchParams.get('recommendations') === '1'
     const limitRaw = parseInt(url.searchParams.get('limit') ?? '50', 10)
-    const limit = Math.min(Math.max(Number.isNaN(limitRaw) ? 50 : limitRaw, 1), 200)
+    const limit = Math.min(Number.isNaN(limitRaw) ? 50 : limitRaw, 200)
 
     const pageRaw = parseInt(url.searchParams.get('page') ?? '1', 10)
     const page = Math.max(Number.isNaN(pageRaw) ? 1 : pageRaw, 1)
@@ -153,18 +151,9 @@ const normalizeZustandForDb = (value: string) => {
     const idsRaw = url.searchParams.get('ids') ?? ''
     const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
 
-    const includeUnpublished = !recommendations && ['1', 'true', 'yes'].includes(
+    const includeUnpublished = ['1', 'true', 'yes'].includes(
       (url.searchParams.get('includeUnpublished') ?? '').toLowerCase()
     )
-
-    // UUIDs prüfen, bevor sie in einen PostgREST-in-Filter eingesetzt werden.
-    const excludeIds = recommendations
-      ? (url.searchParams.get('exclude_ids') ?? '')
-          .split(',')
-          .map((s) => s.trim())
-          .filter((s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s))
-          .slice(0, 200)
-      : []
 
     const sortParam = (url.searchParams.get('sort') ?? 'promo').toLowerCase()
     const orderParam = (url.searchParams.get('order') ?? 'desc').toLowerCase()
@@ -204,15 +193,15 @@ const normalizeZustandForDb = (value: string) => {
         next = next.eq('published', true)
       }
 
-      if (!recommendations && kategorieDb) {
+      if (kategorieDb) {
   next = next.eq('data->>kategorie', kategorieDb)
 }
 
-      if (!recommendations && zustandList.length) {
+      if (zustandList.length) {
         next = next.in('data->>zustand', zustandList)
       }
 
-      if (!recommendations && herstellerList.length) {
+      if (herstellerList.length) {
         next = next.in('data->>hersteller', herstellerList)
       }
 
@@ -221,7 +210,7 @@ const normalizeZustandForDb = (value: string) => {
        * data->>menge ist JSON/Text.
        * Das ist für den Start okay, langfristig besser als echte numeric-Spalte.
        */
-      if (!recommendations && maxMenge !== null && !Number.isNaN(maxMenge)) {
+      if (maxMenge !== null && !Number.isNaN(maxMenge)) {
   next = next.lte('menge_numeric', maxMenge)
 }
 
@@ -231,27 +220,27 @@ const normalizeZustandForDb = (value: string) => {
        * p=1 = privat
        * Wenn beide aktiv sind, wird nicht eingeschränkt.
        */
-      if (!recommendations && g === '1' && p !== '1') {
+      if (g === '1' && p !== '1') {
         next = next.or(
           'data->>istGewerblich.eq.true,data->>gewerblich.eq.true,data->>account_type.eq.business'
         )
       }
 
-      if (!recommendations && p === '1' && g !== '1') {
+      if (p === '1' && g !== '1') {
         next = next.or(
           'data->>istGewerblich.eq.false,data->>gewerblich.eq.false,data->>account_type.eq.private'
         )
       }
 
-      if (!recommendations && id) {
+      if (id) {
         next = next.eq('id', id)
       }
 
-      if (!recommendations && ids.length) {
+      if (ids.length) {
         next = next.in('id', ids)
       }
 
-      if (!recommendations && search.trim()) {
+      if (search.trim()) {
         const safeSearch = search
           .trim()
           .replace(/,/g, ' ')
@@ -270,24 +259,24 @@ const normalizeZustandForDb = (value: string) => {
         )
       }
 
-      if (excludeIds.length) {
-        next = next.not('id', 'in', `(${excludeIds.join(',')})`)
-      }
-
       return next
     }
 
-    // Bei Empfehlungen ist die Gesamtzahl der Treffer unerheblich: keine COUNT-Abfrage.
-    let total: number | null = null
-    if (!recommendations) {
-      const { count, error: countError } = await applyFilters(
-        supabase.from('lack_requests').select('id', { count: 'exact', head: true })
-      )
-      if (countError) {
-        console.error('[lackanfragen] count failed:', countError)
-        return NextResponse.json({ error: countError.message }, { status: 500 })
-      }
-      total = count
+    /**
+     * Count-Abfrage:
+     * Zählt alle passenden Einträge für die Pagination.
+     */
+    const countQuery = applyFilters(
+      supabase
+        .from('lack_requests')
+        .select('id', { count: 'exact', head: true })
+    )
+
+    const { count: total, error: countError } = await countQuery
+
+    if (countError) {
+      console.error('[lackanfragen] count failed:', countError)
+      return NextResponse.json({ error: countError.message }, { status: 500 })
     }
 
     /**
@@ -311,16 +300,24 @@ const normalizeZustandForDb = (value: string) => {
       to = from + limit - 1
     }
 
-    // Die Datenbank sortiert VOR Pagination global und deterministisch.
-    // Dadurch können gesponserte Anfragen nicht zwischen Seiten verschwinden.
-    if (sortParam === 'promo' || recommendations) {
-      q = q.order('promo_score', { ascending: isAsc, nullsFirst: false })
-        .order('created_at', { ascending: isAsc })
-        .order('id', { ascending: isAsc })
-        .range(from, to)
+    if (sortParam === 'promo') {
+      /**
+       * Promo-Sortierung:
+       * Overfetch, danach stabile Sortierung in JS.
+       */
+      const factor = 4
+
+      const overTo =
+        offset !== null
+          ? offset + limit * factor - 1
+          : page * limit * factor - 1
+
+      q = q
+        .order('created_at', { ascending: false })
+        .range(0, overTo)
     } else {
-      q = q.order('created_at', { ascending: isAsc })
-        .order('id', { ascending: isAsc })
+      q = q
+        .order('created_at', { ascending: isAsc })
         .range(from, to)
     }
 
@@ -352,7 +349,28 @@ const normalizeZustandForDb = (value: string) => {
       }
     }
 
-    const sortedRows = rows
+    let sortedRows = rows
+
+    if (sortParam === 'promo') {
+      sortedRows = [...rows].sort((a: any, b: any) => {
+        const pa = Number.parseInt(String(a?.promo_score ?? 0), 10) || 0
+        const pb = Number.parseInt(String(b?.promo_score ?? 0), 10) || 0
+
+        const byPromo = pb - pa
+        if (byPromo !== 0) return isAsc ? -byPromo : byPromo
+
+        const ta = new Date(a?.created_at ?? 0).getTime()
+        const tb = new Date(b?.created_at ?? 0).getTime()
+
+        const byCreated = tb - ta
+        return isAsc ? -byCreated : byCreated
+      })
+
+      const start = offset !== null ? offset : (page - 1) * limit
+      const end = start + limit
+
+      sortedRows = sortedRows.slice(start, end)
+    }
 
     const items = sortedRows.map((row: any) => {
       const d = row.data || {}
