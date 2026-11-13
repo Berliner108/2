@@ -216,8 +216,9 @@ const normalizeZustandForDb = (value: string) => {
         }
         matches = fuzzyRows ?? []
       }
-      searchIds = matches.map((row: { id: string }) => row.id)
-      if (searchIds.length === 0) {
+      const gefundeneIds: string[] = matches.map((row: { id: string }) => row.id)
+      searchIds = gefundeneIds
+      if (gefundeneIds.length === 0) {
         return NextResponse.json({ items: [], total: 0, page, limit })
       }
     }
