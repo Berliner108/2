@@ -116,6 +116,8 @@ export async function GET(req: Request) {
   try {
     const supabase = await supabaseServer()
     const url = new URL(req.url)
+    // Nur für ergänzende Lackanfragen; reguläre Börsenabfragen bleiben unverändert.
+    const recommendations = url.searchParams.get('recommendations') === '1'
 
     const limitRaw = parseInt(url.searchParams.get('limit') ?? '50', 10)
     const limit = Math.min(Number.isNaN(limitRaw) ? 50 : limitRaw, 200)
@@ -151,7 +153,7 @@ const normalizeZustandForDb = (value: string) => {
     const idsRaw = url.searchParams.get('ids') ?? ''
     const search = url.searchParams.get('q') ?? url.searchParams.get('search') ?? ''
 
-    const includeUnpublished = ['1', 'true', 'yes'].includes(
+    const includeUnpublished = !recommendations && ['1', 'true', 'yes'].includes(
       (url.searchParams.get('includeUnpublished') ?? '').toLowerCase()
     )
 
@@ -163,6 +165,14 @@ const normalizeZustandForDb = (value: string) => {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
+
+    // Schon angezeigte UUIDs bei Empfehlungen direkt in der Datenbank ausschließen.
+    const excludedIds = recommendations
+      ? (url.searchParams.get('exclude_ids') ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s))
+      : []
 
     const zustandList = zustandRaw
   .split(',')
@@ -193,15 +203,15 @@ const normalizeZustandForDb = (value: string) => {
         next = next.eq('published', true)
       }
 
-      if (kategorieDb) {
+      if (!recommendations && kategorieDb) {
   next = next.eq('data->>kategorie', kategorieDb)
 }
 
-      if (zustandList.length) {
+      if (!recommendations && zustandList.length) {
         next = next.in('data->>zustand', zustandList)
       }
 
-      if (herstellerList.length) {
+      if (!recommendations && herstellerList.length) {
         next = next.in('data->>hersteller', herstellerList)
       }
 
@@ -210,7 +220,7 @@ const normalizeZustandForDb = (value: string) => {
        * data->>menge ist JSON/Text.
        * Das ist für den Start okay, langfristig besser als echte numeric-Spalte.
        */
-      if (maxMenge !== null && !Number.isNaN(maxMenge)) {
+      if (!recommendations && maxMenge !== null && !Number.isNaN(maxMenge)) {
   next = next.lte('menge_numeric', maxMenge)
 }
 
@@ -220,27 +230,27 @@ const normalizeZustandForDb = (value: string) => {
        * p=1 = privat
        * Wenn beide aktiv sind, wird nicht eingeschränkt.
        */
-      if (g === '1' && p !== '1') {
+      if (!recommendations && g === '1' && p !== '1') {
         next = next.or(
           'data->>istGewerblich.eq.true,data->>gewerblich.eq.true,data->>account_type.eq.business'
         )
       }
 
-      if (p === '1' && g !== '1') {
+      if (!recommendations && p === '1' && g !== '1') {
         next = next.or(
           'data->>istGewerblich.eq.false,data->>gewerblich.eq.false,data->>account_type.eq.private'
         )
       }
 
-      if (id) {
+      if (!recommendations && id) {
         next = next.eq('id', id)
       }
 
-      if (ids.length) {
+      if (!recommendations && ids.length) {
         next = next.in('id', ids)
       }
 
-      if (search.trim()) {
+      if (!recommendations && search.trim()) {
         const safeSearch = search
           .trim()
           .replace(/,/g, ' ')
@@ -259,6 +269,10 @@ const normalizeZustandForDb = (value: string) => {
         )
       }
 
+      if (excludedIds.length) {
+        next = next.not('id', 'in', `(${excludedIds.join(',')})`)
+      }
+
       return next
     }
 
@@ -266,17 +280,20 @@ const normalizeZustandForDb = (value: string) => {
      * Count-Abfrage:
      * Zählt alle passenden Einträge für die Pagination.
      */
-    const countQuery = applyFilters(
-      supabase
-        .from('lack_requests')
-        .select('id', { count: 'exact', head: true })
-    )
+    let total: number | null = null
+    if (!recommendations) {
+      const countQuery = applyFilters(
+        supabase
+          .from('lack_requests')
+          .select('id', { count: 'exact', head: true })
+      )
 
-    const { count: total, error: countError } = await countQuery
-
-    if (countError) {
-      console.error('[lackanfragen] count failed:', countError)
-      return NextResponse.json({ error: countError.message }, { status: 500 })
+      const { count, error: countError } = await countQuery
+      if (countError) {
+        console.error('[lackanfragen] count failed:', countError)
+        return NextResponse.json({ error: countError.message }, { status: 500 })
+      }
+      total = count
     }
 
     /**
