@@ -1,6 +1,7 @@
 // src/app/api/auftraege/route.ts
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 const VERFAHREN = [
@@ -175,6 +176,15 @@ export async function GET(req: Request) {
     const maxWidth = wRaw !== null ? Number(wRaw) : null
     const maxHeight = hRaw !== null ? Number(hRaw) : null
     const maxMasse = mRaw !== null ? Number(mRaw) : null
+    // Ausschliesslich serverseitiger RPC-Client. Niemals an den Browser weitergeben.
+    // Ohne Service-Key bleibt die bisherige API voll funktionsfaehig.
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const serviceUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const rpcClient = !recommendationsMode && serviceKey && serviceUrl
+      ? createClient(serviceUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        })
+      : null
     let accountProfileIds: string[] | null = null
     // Exakt wie bisher im Frontend: nur wenn genau einer der beiden Typfilter aktiv ist.
     if (!recommendationsMode && g && !p) {
@@ -249,6 +259,31 @@ export async function GET(req: Request) {
     // Unabhaengige Metadatenabfragen parallel zur Seitenauswahl starten.
     // Empfehlungen laden diese Daten weiterhin nicht.
     const metadataPromise = recommendationsMode ? null : (async () => {
+      if (rpcClient) {
+        const { data, error } = await rpcClient.rpc('get_auftrag_metadata_candidate', {
+          p_gewerblich: g,
+          p_privat: p,
+          p_wa_selbst: waSelbst,
+          p_wa_abhol: waAbhol,
+          p_wn_zust: wnZust,
+          p_wn_selbst: wnSelbst,
+          p_max_length: Number.isFinite(maxLength) ? maxLength : null,
+          p_max_width: Number.isFinite(maxWidth) ? maxWidth : null,
+          p_max_height: Number.isFinite(maxHeight) ? maxHeight : null,
+          p_max_masse: Number.isFinite(maxMasse) ? maxMasse : null,
+        })
+        if (!error && data?.limits && data?.verfahren_counts) {
+          return {
+            maxL: finiteNumber(data.limits.length, DEFAULT_LIMITS.length),
+            maxW: finiteNumber(data.limits.width, DEFAULT_LIMITS.width),
+            maxH: finiteNumber(data.limits.height, DEFAULT_LIMITS.height),
+            maxM: finiteNumber(data.limits.masse, DEFAULT_LIMITS.masse),
+            verfahrenCounts: data.verfahren_counts as Record<string, number>,
+          }
+        }
+        console.warn('[auftraege] Metadaten-RPC fehlgeschlagen, verwende bisherige Berechnung:', error)
+      }
+      // Sichere Rueckfallebene mit unveraenderter Berechnung.
       const maximaPromise = Promise.all([
         getNumericMaximum(supabase, 'laenge_mm', DEFAULT_LIMITS.length),
         getNumericMaximum(supabase, 'breite_mm', DEFAULT_LIMITS.width),
@@ -289,7 +324,7 @@ export async function GET(req: Request) {
     )
 
     // Die Trefferzaehlung laeuft parallel zur Abfrage der aktuellen Seite.
-    const countPromise = recommendationsMode
+    const countPromise = recommendationsMode || rpcClient
       ? Promise.resolve({ count: null, error: null })
       : Promise.resolve(applyFilters(
           supabase.from('jobs').select('id', { count: 'exact', head: true })
@@ -351,7 +386,63 @@ export async function GET(req: Request) {
     const from = offset !== null ? offset : (page - 1) * limit
     const to = from + limit - 1
     dataQuery = dataQuery.range(from, to)
-    const [jobResult, countResult] = await Promise.all([dataQuery, countPromise])
+    let jobResult: { data: any[] | null; error: any }
+    let countResult: { count: number | null; error: any }
+
+    if (rpcClient) {
+      // Der SQL-Kandidat liefert nur IDs und Trefferzahl, keine vertraulichen Auftragsdaten.
+      const { data: selection, error: selectionError } = await rpcClient.rpc(
+        'get_auftrag_ids_candidate',
+        {
+          p_query: search,
+          p_verfahren: verfahren || null,
+          p_gewerblich: g,
+          p_privat: p,
+          p_wa_selbst: waSelbst,
+          p_wa_abhol: waAbhol,
+          p_wn_zust: wnZust,
+          p_wn_selbst: wnSelbst,
+          p_max_length: Number.isFinite(maxLength) ? maxLength : null,
+          p_max_width: Number.isFinite(maxWidth) ? maxWidth : null,
+          p_max_height: Number.isFinite(maxHeight) ? maxHeight : null,
+          p_max_masse: Number.isFinite(maxMasse) ? maxMasse : null,
+          p_sort: sortierung,
+          p_page: page,
+          p_limit: limit,
+          p_offset: offset,
+          p_include_total: true,
+        }
+      )
+      if (!selectionError && Array.isArray(selection?.auftrag_ids) &&
+          typeof selection?.total === 'number') {
+        const ids: string[] = selection.auftrag_ids
+        if (ids.length) {
+          // Daten weiterhin ueber den bisherigen Session-Client laden (RLS beachten).
+          const { data: selectedJobs, error: selectedError } = await supabase
+            .from('jobs')
+            .select(columns)
+            .eq('published', true)
+            .eq('status', 'open')
+            .in('id', ids)
+          const byId = new Map((selectedJobs ?? []).map((job: any) => [job.id, job]))
+          jobResult = {
+            data: ids.map((id) => byId.get(id)).filter(Boolean),
+            error: selectedError,
+          }
+        } else {
+          jobResult = { data: [], error: null }
+        }
+        countResult = { count: selection.total, error: null }
+      } else {
+        console.warn('[auftraege] Auswahl-RPC fehlgeschlagen, verwende bisherige Abfrage:', selectionError)
+        const legacyCountQuery = applyFilters(
+          supabase.from('jobs').select('id', { count: 'exact', head: true })
+        )
+        ;[jobResult, countResult] = await Promise.all([dataQuery, legacyCountQuery])
+      }
+    } else {
+      ;[jobResult, countResult] = await Promise.all([dataQuery, countPromise])
+    }
     const { data: jobData, error: jobError } = jobResult
     if (jobError) {
       console.error('[auftraege] query failed:', jobError)
