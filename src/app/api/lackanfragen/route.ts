@@ -191,6 +191,37 @@ const normalizeZustandForDb = (value: string) => {
     const columns =
   'id,title,status,delivery_at,lieferdatum,data,created_at,published,owner_id,promo_score,menge_numeric'
 
+    let searchIds: string[] | null = null
+    if (!recommendations && search.trim()) {
+      // Erst normalisiert/exakt suchen, nur bei null Treffern Tippfehler zulassen.
+      // Eine fehlende SQL-Funktion wird klar als Fehler gemeldet, statt
+      // unbemerkt eine abweichende Suche oder falsche Treffer zu liefern.
+      const { data: exactRows, error: exactError } = await supabase.rpc(
+        'search_lack_request_ids',
+        { p_query: search, p_fuzzy: false }
+      )
+      if (exactError) {
+        console.error('[lackanfragen] search RPC failed:', exactError)
+        return NextResponse.json({ error: 'Die neue Suchfunktion muss zuerst in Supabase installiert werden.' }, { status: 500 })
+      }
+      let matches = exactRows ?? []
+      if (matches.length === 0) {
+        const { data: fuzzyRows, error: fuzzyError } = await supabase.rpc(
+          'search_lack_request_ids',
+          { p_query: search, p_fuzzy: true }
+        )
+        if (fuzzyError) {
+          console.error('[lackanfragen] fuzzy search failed:', fuzzyError)
+          return NextResponse.json({ error: 'Fehlertolerante Suche fehlgeschlagen.' }, { status: 500 })
+        }
+        matches = fuzzyRows ?? []
+      }
+      searchIds = matches.map((row: { id: string }) => row.id)
+      if (searchIds.length === 0) {
+        return NextResponse.json({ items: [], total: 0, page, limit })
+      }
+    }
+
     const applyFilters = (query: any) => {
       let next = query
 
@@ -250,23 +281,10 @@ const normalizeZustandForDb = (value: string) => {
         next = next.in('id', ids)
       }
 
-      if (!recommendations && search.trim()) {
-        const safeSearch = search
-          .trim()
-          .replace(/,/g, ' ')
-          .replace(/%/g, '\\%')
-          .replace(/_/g, '\\_')
-
-        next = next.or(
-          [
-            `title.ilike.%${safeSearch}%`,
-            `data->>titel.ilike.%${safeSearch}%`,
-            `data->>hersteller.ilike.%${safeSearch}%`,
-            `data->>farbton.ilike.%${safeSearch}%`,
-            `data->>farbtonbezeichnung.ilike.%${safeSearch}%`,
-            `data->>farbcode.ilike.%${safeSearch}%`,
-          ].join(',')
-        )
+      // Die Treffer-IDs werden vor der regulären Count-/Datenabfrage bestimmt.
+      // Dadurch bleiben Sponsor-Flags, Promo-Sortierung und Pagination unverändert.
+      if (!recommendations && search.trim() && searchIds !== null) {
+        next = next.in('id', searchIds)
       }
 
       if (excludedIds.length) {
