@@ -391,6 +391,7 @@ export default function KaufenSeite() {
 
   const [loading, setLoading] = useState(true);
   const [liste, setListe] = useState<CardArtikel[]>([]);
+  const [weitereLackanfragen, setWeitereLackanfragen] = useState<CardArtikel[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [urlReady, setUrlReady] = useState(false);
 
@@ -536,7 +537,7 @@ export default function KaufenSeite() {
         const rawItems: ApiItem[] = json?.items || [];
         const nextTotal = Number(json?.total ?? 0);
 
-        const mapped: CardArtikel[] = rawItems.map((it) => {
+        const mapLackanfragen = (rows: ApiItem[]): CardArtikel[] => rows.map((it) => {
           const d = it.data || {};
 
           const bilder = resolveBilder(d);
@@ -596,8 +597,57 @@ export default function KaufenSeite() {
           };
         });
 
+        const mapped = mapLackanfragen(rawItems);
+        let weitere: CardArtikel[] = [];
+
+        // Echte Treffer bleiben unverändert. Nur auf Seite 1 werden bei aktiver
+        // Suche/Filterung zusätzliche veröffentlichte Lackanfragen vorgeschlagen.
+        const hatFilter = Boolean(
+          suchbegriff.trim() || kategorie || zustand.length || hersteller.length ||
+          maxMenge !== MAX_MENGE || gewerblich || privat
+        );
+        if (page === 1 && hatFilter && nextTotal < SEITEN_GROESSE) {
+          try {
+            const vorhanden = new Set(mapped.map((item) => String(item.id)));
+            const andereParams = new URLSearchParams({
+              recommendations: '1',
+              sort: 'promo',
+              order: 'desc',
+              page: '1',
+              limit: '100',
+              exclude_ids: [...vorhanden].join(','),
+            });
+            const andereRes = await fetch(`/api/lackanfragen?${andereParams}`, {
+              cache: 'no-store',
+            });
+            if (!andereRes.ok) throw new Error(`HTTP ${andereRes.status}`);
+            const andereJson = await andereRes.json();
+            const andereRows: ApiItem[] = Array.isArray(andereJson?.items)
+              ? andereJson.items : [];
+            const kandidaten = mapLackanfragen(andereRows).filter((item) => {
+              const id = String(item.id);
+              if (vorhanden.has(id)) return false;
+              vorhanden.add(id);
+              return true;
+            });
+            // Bei Kategorie-Filtern oder entsprechenden Treffern verwandte
+            // Lackanfragen vorziehen; innerhalb einer Gruppe Promo-Reihenfolge lassen.
+            const passendeKategorien = new Set(
+              kategorie ? [kategorie] : mapped.map((item) => item.kategorie).filter(Boolean)
+            );
+            weitere = [
+              ...kandidaten.filter((item) => passendeKategorien.has(item.kategorie)),
+              ...kandidaten.filter((item) => !passendeKategorien.has(item.kategorie)),
+            ].slice(0, SEITEN_GROESSE - mapped.length);
+          } catch (error) {
+            // Empfehlungen sind optional und verdecken keine echten Treffer.
+            console.warn('[lackanfragen] Weitere Lackanfragen fehlgeschlagen:', error);
+          }
+        }
+
         if (active) {
           setListe(mapped);
+          setWeitereLackanfragen(weitere);
           setTotalCount(nextTotal);
         }
       } catch (e) {
@@ -605,6 +655,7 @@ export default function KaufenSeite() {
 
         if (active) {
           setListe([]);
+          setWeitereLackanfragen([]);
           setTotalCount(0);
         }
       } finally {
@@ -897,6 +948,18 @@ export default function KaufenSeite() {
                 <ArtikelCard key={a.id} artikel={a} />
               ))}
             </div>
+          )}
+
+
+          {!loading && weitereLackanfragen.length > 0 && (
+            <section aria-label="Weitere Lackanfragen entdecken" className={styles.weitereLackanfragen}>
+              <h3 className={styles.anfrageUeberschrift}>Weitere Lackanfragen entdecken</h3>
+              <div className={styles.grid}>
+                {weitereLackanfragen.map((artikel) => (
+                  <ArtikelCard key={`weitere-${artikel.id}`} artikel={artikel} />
+                ))}
+              </div>
+            </section>
           )}
 
           {!loading && (
