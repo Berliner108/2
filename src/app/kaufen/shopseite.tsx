@@ -519,13 +519,13 @@ export default function Shopseite() {
         if (!res.ok) throw new Error(json?.error ?? 'Fehler beim Laden der Artikel');
 
         // Die echten Treffer bleiben unverändert. Empfehlungen erscheinen
-        // bei 0–3 Treffern einer Suche ODER eines aktiven Filters separat.
+        // bei weniger als 50 Treffern einer Suche ODER eines aktiven Filters separat.
         const echteTrefferzahl = safeNumber(json.total, 0);
         const hatAktivenFilter = Boolean(
           suchbegriff.trim() || kategorie || zustand.length || hersteller.length ||
           gewerblich || privat || preisFilterAktiv
         );
-        const empfehlungenAnzeigen = page === 1 && hatAktivenFilter && echteTrefferzahl <= 3;
+        const empfehlungenAnzeigen = page === 1 && hatAktivenFilter && echteTrefferzahl < seitenGroesse;
         const rows = (json.articles ?? []) as ApiArticle[];
         const mapped = mapApiArticles(rows, viewerIsBusiness, viewerCountry);
         let empfehlungen: ShopArtikel[] = [];
@@ -536,7 +536,7 @@ export default function Shopseite() {
             // oder Preisfilter; die Sichtbarkeit je Käuferprofil bleibt bestehen.
             const weitereParams = new URLSearchParams({
               page: '1',
-              limit: '50',
+              limit: '100',
               viewerBusiness: viewerIsBusiness ? '1' : '0',
             });
             const weitereRes = await fetch(`/api/articles?${weitereParams.toString()}`, {
@@ -555,7 +555,7 @@ export default function Shopseite() {
               empfehlungen = [
                 ...moegliche.filter(a => kategorienTreffer.has(norm(a.kategorie))),
                 ...moegliche.filter(a => !kategorienTreffer.has(norm(a.kategorie))),
-              ].slice(0, 12);
+              ].slice(0, Math.max(0, seitenGroesse - mapped.length));
             }
           } catch (e) {
             console.warn('Weitere Shopartikel konnten nicht geladen werden:', e);
