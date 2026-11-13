@@ -845,7 +845,7 @@ export default function Shopseite() {
           )}
 
           {loading ? (
-            <ArtikelKartenSkeleton anzahl={6} />
+            <ArtikelKartenSkeleton anzahl={12} />
           ) : (
             <div className={styles.grid}>
               {(page === 1 ? artikelDaten.slice(0, anzahlAnzeigen) : artikelDaten).map((a) => (

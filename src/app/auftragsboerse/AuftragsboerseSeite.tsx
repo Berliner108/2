@@ -668,7 +668,7 @@ export default function AuftragsboerseSeite() {
           )}
           {loading ? (
             <div className={styles.auftragSkeletonAbstand}>
-              <ArtikelKartenSkeleton anzahl={6} />
+              <ArtikelKartenSkeleton anzahl={12} />
             </div>
           ) : (
             <div className={styles.grid}>
