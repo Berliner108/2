@@ -246,20 +246,55 @@ export async function GET(req: Request) {
       }
       return next
     }
-    // Empfehlung: keine Trefferzählung, Standortsuche, Slider-Maxima oder Verfahren-Zähler.
-    // Nur veröffentlichte, offene Aufträge (gleiche Sichtbarkeit wie die reguläre Liste).
-    let total: number | null = null
-    if (!recommendationsMode) {
-      const countQuery = applyFilters(
-        supabase.from('jobs').select('id', { count: 'exact', head: true })
+    // Unabhaengige Metadatenabfragen parallel zur Seitenauswahl starten.
+    // Empfehlungen laden diese Daten weiterhin nicht.
+    const metadataPromise = recommendationsMode ? null : (async () => {
+      const maximaPromise = Promise.all([
+        getNumericMaximum(supabase, 'laenge_mm', DEFAULT_LIMITS.length),
+        getNumericMaximum(supabase, 'breite_mm', DEFAULT_LIMITS.width),
+        getNumericMaximum(supabase, 'hoehe_mm', DEFAULT_LIMITS.height),
+        getNumericMaximum(supabase, 'masse_kg', DEFAULT_LIMITS.masse),
+      ])
+
+      // Verfahren-Zaehler: identische Filter und identische 1000er-Batches wie bisher.
+      const verfahrenCounts: Record<string, number> = Object.fromEntries(
+        VERFAHREN.map((v) => [v, 0])
       )
-      const { count, error: countError } = await countQuery
-      if (countError) {
-        console.error('[auftraege] count failed:', countError)
-        return NextResponse.json({ error: countError.message }, { status: 500 })
+      const countChunk = 1000
+      let countFrom = 0
+      while (true) {
+        const countBaseQuery = applyFilters(
+          supabase.from('jobs').select('verfahren_1, verfahren_2'),
+          { includeVerfahren: false, includeSearch: false }
+        ).range(countFrom, countFrom + countChunk - 1)
+        const { data: countRows, error: countRowsError } = await countBaseQuery
+        if (countRowsError) {
+          console.warn('[auftraege] Verfahren-Zähler fehlgeschlagen:', countRowsError)
+          break
+        }
+        const rows = countRows ?? []
+        for (const row of rows) {
+          for (const value of [row.verfahren_1, row.verfahren_2]) {
+            if (value && value in verfahrenCounts) verfahrenCounts[value] += 1
+          }
+        }
+        if (rows.length < countChunk) break
+        countFrom += countChunk
       }
-      total = count
-    }
+      const [maxL, maxW, maxH, maxM] = await maximaPromise
+      return { maxL, maxW, maxH, maxM, verfahrenCounts }
+    })().then(
+      (value) => ({ ok: true as const, value }),
+      (error: unknown) => ({ ok: false as const, error })
+    )
+
+    // Die Trefferzaehlung laeuft parallel zur Abfrage der aktuellen Seite.
+    const countPromise = recommendationsMode
+      ? Promise.resolve({ count: null, error: null })
+      : Promise.resolve(applyFilters(
+          supabase.from('jobs').select('id', { count: 'exact', head: true })
+        ))
+
     // 2) Daten-Abfrage – nur die aktuelle Seite.
     const columns = `
       id,
@@ -316,53 +351,58 @@ export async function GET(req: Request) {
     const from = offset !== null ? offset : (page - 1) * limit
     const to = from + limit - 1
     dataQuery = dataQuery.range(from, to)
-    const { data: jobData, error: jobError } = await dataQuery
+    const [jobResult, countResult] = await Promise.all([dataQuery, countPromise])
+    const { data: jobData, error: jobError } = jobResult
     if (jobError) {
       console.error('[auftraege] query failed:', jobError)
       return NextResponse.json({ error: jobError.message }, { status: 500 })
     }
+    if (countResult.error) {
+      console.error('[auftraege] count failed:', countResult.error)
+      return NextResponse.json({ error: countResult.error.message }, { status: 500 })
+    }
+    const total = countResult.count
     const jobs = jobData ?? []
-    // 3) Profile nur für die aktuelle Seite laden.
+    // Profile und Titelbilder sind unabhaengig und werden parallel geladen.
     const userIds = Array.from(
       new Set(jobs.map((job: any) => job.user_id).filter(Boolean))
     ) as string[]
-    const profileById = new Map<string, any>()
-    if (userIds.length) {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, account_type, address')
-        .in('id', userIds)
-      if (profileError) {
-        console.warn('[auftraege] profiles lookup failed:', profileError)
-      } else {
-        for (const profile of profileData ?? []) {
-          profileById.set(profile.id, profile)
-        }
-      }
-    }
-    // 4) Titelbild nur für die aktuelle Seite laden.
     const jobIds = jobs.map((job: any) => job.id)
+    const profileById = new Map<string, any>()
     const titleImgByJob = new Map<string, string>()
-    if (jobIds.length) {
-      const { data: filesData, error: filesError } = await supabase
-        .from('job_files')
-        .select('id, job_id, kind, bucket, path, original_name, created_at')
-        .in('job_id', jobIds)
-        .eq('kind', 'image')
-        .order('created_at', { ascending: true })
-        .order('id', { ascending: true })
-      if (filesError) {
-        console.warn('[auftraege] job_files lookup failed:', filesError)
-      } else {
-        for (const file of filesData ?? []) {
-          if (titleImgByJob.has(file.job_id)) continue
-          const { data } = supabase.storage
-            .from(file.bucket)
-            .getPublicUrl(file.path)
-          titleImgByJob.set(file.job_id, data.publicUrl)
+    await Promise.all([
+      (async () => {
+        if (!userIds.length) return
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, account_type, address')
+          .in('id', userIds)
+        if (profileError) {
+          console.warn('[auftraege] profiles lookup failed:', profileError)
+        } else {
+          for (const profile of profileData ?? []) profileById.set(profile.id, profile)
         }
-      }
-    }
+      })(),
+      (async () => {
+        if (!jobIds.length) return
+        const { data: filesData, error: filesError } = await supabase
+          .from('job_files')
+          .select('id, job_id, kind, bucket, path, original_name, created_at')
+          .in('job_id', jobIds)
+          .eq('kind', 'image')
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true })
+        if (filesError) {
+          console.warn('[auftraege] job_files lookup failed:', filesError)
+        } else {
+          for (const file of filesData ?? []) {
+            if (titleImgByJob.has(file.job_id)) continue
+            const { data } = supabase.storage.from(file.bucket).getPublicUrl(file.path)
+            titleImgByJob.set(file.job_id, data.publicUrl)
+          }
+        }
+      })(),
+    ])
     const items = jobs.map((job: any) => {
       const verfahrenList: { name: string; felder: Record<string, never> }[] = []
       if (job.verfahren_1) {
@@ -407,42 +447,10 @@ export async function GET(req: Request) {
     if (recommendationsMode) {
       return NextResponse.json({ items, total: 0, page, limit }, { status: 200 })
     }
-    // 5) Slider-Maxima serverseitig ermitteln.
-    const [maxL, maxW, maxH, maxM] = await Promise.all([
-      getNumericMaximum(supabase, 'laenge_mm', DEFAULT_LIMITS.length),
-      getNumericMaximum(supabase, 'breite_mm', DEFAULT_LIMITS.width),
-      getNumericMaximum(supabase, 'hoehe_mm', DEFAULT_LIMITS.height),
-      getNumericMaximum(supabase, 'masse_kg', DEFAULT_LIMITS.masse),
-    ])
-    // 6) Verfahren-Zähler: wie vorher mit allen aktiven Filtern außer
-    // Verfahren selbst und Suchbegriff.
-    const verfahrenCounts: Record<string, number> = Object.fromEntries(
-      VERFAHREN.map((v) => [v, 0])
-    )
-    const countChunk = 1000
-    let countFrom = 0
-    while (true) {
-      const countBaseQuery = applyFilters(
-        supabase.from('jobs').select('verfahren_1, verfahren_2'),
-        { includeVerfahren: false, includeSearch: false }
-      ).range(countFrom, countFrom + countChunk - 1)
-      const { data: countRows, error: countRowsError } = await countBaseQuery
-      if (countRowsError) {
-        console.warn('[auftraege] Verfahren-Zähler fehlgeschlagen:', countRowsError)
-        break
-      }
-      const rows = countRows ?? []
-      for (const row of rows) {
-        for (const value of [row.verfahren_1, row.verfahren_2]) {
-          if (value && value in verfahrenCounts) {
-            verfahrenCounts[value] += 1
-          }
-        }
-      }
-      if (rows.length < countChunk) break
-      countFrom += countChunk
-    }
-    
+    // Bereits parallel zur Seitenauswahl berechnet; Ausgabeformat unveraendert.
+    const metadataResult = await metadataPromise!
+    if (!metadataResult.ok) throw metadataResult.error
+    const { maxL, maxW, maxH, maxM, verfahrenCounts } = metadataResult.value
     return NextResponse.json(
       {
         items,
